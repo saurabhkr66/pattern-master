@@ -128,7 +128,7 @@ export default async function DashboardPage() {
                       <p className="text-[10px] bg-gray-100 text-gray-500 font-black px-2 py-0.5 rounded-md inline-block uppercase">{pattern.subject}</p>
                     </div>
                     <a 
-                      href={`/?patternId=${pattern.id}`}
+                      href={`/practice?patternId=${pattern.id}`}
                       className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-4 py-2 rounded-lg transition-transform active:scale-95 shadow-lg shadow-blue-200 uppercase"
                     >
                       Solve Again →

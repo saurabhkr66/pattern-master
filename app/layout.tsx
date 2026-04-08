@@ -20,8 +20,18 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "PatternMaster – AI-Powered Exam Practice",
-  description: "Master SAT & GATE patterns with AI-generated questions and spaced repetition.",
+  title: {
+    default: "PatternMaster – AI-Powered GATE CSE Preparation",
+    template: "%s – PatternMaster",
+  },
+  description:
+    "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Adaptive difficulty, instant explanations, progress tracking. Free to start.",
+  metadataBase: new URL("https://patternmaster.in"),
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({
@@ -35,9 +45,6 @@ export default function RootLayout({
         lang="en"
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </head>
         <body className="min-h-full flex flex-col bg-[#0a0a0a] text-white">
           <Header />
           <main className="flex-1">{children}</main>
