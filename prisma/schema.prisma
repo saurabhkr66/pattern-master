@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Pattern {
+  id           String   @id @default(uuid())
+  exam_type    String   // SAT or GATE [cite: 94]
+  branch       String   // e.g., CS, Mechanical
+  subject      String   // e.g., Algorithms, COA
+  topic_name   String   @unique // e.g., Dijkstra's [cite: 94]
+  atomic_logic String   @db.Text // The specific rule for AI [cite: 94]
+  questions    GeneratedQuestion[]
+}
+model Attempt {
+  id              String   @id @default(uuid())
+  user_id         String   @default("guest_user") // Placeholder until we add Auth
+  question_id     String
+  question        GeneratedQuestion @relation(fields: [question_id], references: [id])
+  is_correct      Boolean
+  created_at      DateTime @default(now())
+}
+
+model GeneratedQuestion {
+  id               String   @id @default(uuid())
+  pattern_id       String
+  pattern          Pattern  @relation(fields: [pattern_id], references: [id])
+  question_text    String   @db.Text
+  options          Json     // ["A..", "B..", "C..", "D.."] [cite: 100]
+  correct_answer   String   // e.g., "B" [cite: 100]
+  explanation      String   @db.Text
+  difficulty_level String   // Easy, Medium, Hard [cite: 100]
+  semantic_hash    String   @unique // Anti-duplicate key [cite: 100, 157]
+  created_at       DateTime @default(now())
+  attempts         Attempt[]
+}
