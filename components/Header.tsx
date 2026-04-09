@@ -12,6 +12,7 @@ import {
 import {
   Brain,
   LayoutDashboard,
+  BookOpen,
   RotateCcw,
   XCircle,
   User,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 const navLinks = [
+  { href: "/practice", label: "Practice", icon: BookOpen },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/review", label: "Review", icon: RotateCcw },
   { href: "/mistakes", label: "Mistakes", icon: XCircle },
