@@ -93,7 +93,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion }
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: question.id,
+          questionId: question._isPyq ? undefined : question.id,
+          pyqId: question._isPyq ? question.id : undefined,
           isCorrect: isCorrect,
         }),
       });

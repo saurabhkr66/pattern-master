@@ -1,4 +1,5 @@
 "use server"
+// This is a Server Action file
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"

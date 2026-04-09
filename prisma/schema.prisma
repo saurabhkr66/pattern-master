@@ -28,8 +28,25 @@ model Pattern {
   atomic_logic String
   branch       String
   questions    GeneratedQuestion[]
+  pyqs         PYQ[]
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
+}
+
+model PYQ {
+  id             String   @id @default(uuid())
+  pattern_id     String
+  question_text  String
+  options        Json
+  correct_answer String
+  explanation    String
+  year           Int
+  exam_type      String
+  created_at     DateTime @default(now())
+  attempts       Attempt[]
+  pattern        Pattern  @relation(fields: [pattern_id], references: [id])
+
+  @@unique([pattern_id, question_text], name: "pyq_identifier")
 }
 
 model GeneratedQuestion {
@@ -47,10 +64,12 @@ model GeneratedQuestion {
 }
 
 model Attempt {
-  id          String            @id @default(uuid())
+  id          String             @id @default(uuid())
   user_id     String
-  question_id String
+  question_id String?
+  pyq_id      String?
   is_correct  Boolean
-  created_at  DateTime          @default(now())
-  question    GeneratedQuestion @relation(fields: [question_id], references: [id])
+  created_at  DateTime           @default(now())
+  question    GeneratedQuestion? @relation(fields: [question_id], references: [id])
+  pyq         PYQ?               @relation(fields: [pyq_id], references: [id])
 }

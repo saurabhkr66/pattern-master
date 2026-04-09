@@ -13,7 +13,8 @@ function getCachedDashboardData(userId: string) {
         prisma.attempt.findMany({
           where: { user_id: userId },
           include: {
-            question: { include: { pattern: true } }
+            question: { include: { pattern: true } },
+            pyq: { include: { pattern: true } }
           },
           orderBy: { created_at: "desc" },
           take: 5,
@@ -21,7 +22,8 @@ function getCachedDashboardData(userId: string) {
         prisma.attempt.findMany({
           where: { user_id: userId, is_correct: false },
           include: {
-            question: { include: { pattern: true } }
+            question: { include: { pattern: true } },
+            pyq: { include: { pattern: true } }
           },
           orderBy: { created_at: "desc" },
           take: 15,
@@ -49,7 +51,10 @@ export default async function DashboardPage() {
 
   // Get unique patterns which need review from the recent failures
   const needsReviewPatterns = Array.from(
-    new Map(recentFailures.map((a: any) => [a.question.pattern.id, a.question.pattern])).values()
+    new Map(recentFailures.map((a: any) => {
+      const pattern = a.question ? a.question.pattern : a.pyq?.pattern;
+      return [pattern?.id, pattern];
+    }).filter(([id, pattern]) => id && pattern)).values()
   );
 
   return (
@@ -93,7 +98,9 @@ export default async function DashboardPage() {
               {lastFiveAttempts.map((attempt: any) => (
                 <div key={attempt.id} className="flex items-center justify-between bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow">
                   <div>
-                    <p className="font-bold text-gray-900 text-sm">{attempt.question.pattern.topic_name}</p>
+                    <p className="font-bold text-gray-900 text-sm">
+                      {attempt.question ? attempt.question.pattern.topic_name : attempt.pyq?.pattern.topic_name}
+                    </p>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(attempt.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className="flex items-center gap-3">

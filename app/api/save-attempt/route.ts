@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { revalidateTag } from "next/cache";
 
 
 export async function POST(req: NextRequest) {
@@ -13,20 +14,24 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { questionId, isCorrect } = body;
+        const { questionId, pyqId, isCorrect } = body;
 
-        if (!questionId || isCorrect === undefined) {
+        if ((!questionId && !pyqId) || isCorrect === undefined) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Save the attempt to the database with the real userId
         const attempt = await prisma.attempt.create({
             data: {
-                question_id: questionId,
+                question_id: questionId || null,
+                pyq_id: pyqId || null,
                 is_correct: isCorrect,
                 user_id: userId,
             },
         });
+
+        // Revalidate caches so progress shows up instantly on the client
+        revalidateTag("patterns");
+        revalidateTag("dashboard");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {
