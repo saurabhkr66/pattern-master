@@ -211,7 +211,15 @@ export default async function HomePage() {
   // Fetch real patterns from DB for the topics section (public, no user context)
   const gatePatterns = await prisma.pattern.findMany({
     where: { exam_type: "GATE", branch: "CSE" },
-    select: { id: true, topic_name: true, subject: true, atomic_logic: true },
+    select: { 
+      id: true, 
+      topic_name: true, 
+      subject: true, 
+      atomic_logic: true,
+      _count: {
+        select: { pyqs: true }
+      }
+    },
     orderBy: { subject: "asc" },
     take: 24, // Show a representative preview
   });
@@ -398,6 +406,11 @@ export default async function HomePage() {
                           <span className="text-xs font-semibold text-white/70 group-hover:text-white/90 transition-colors">
                             {p.topic_name}
                           </span>
+                          {p._count.pyqs > 0 && (
+                            <span className="ml-2 text-[8px] font-black bg-orange-500/10 text-orange-400 px-1 py-0.5 rounded uppercase tracking-tighter">
+                              {p._count.pyqs} PYQ
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

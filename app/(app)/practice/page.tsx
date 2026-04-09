@@ -31,6 +31,16 @@ const getCachedPatterns = (userId: string | null, examType: string, branch: stri
             },
             orderBy: { created_at: "desc" },
           },
+          pyqs: {
+            include: {
+              attempts: {
+                where: userId ? { user_id: userId } : { user_id: "none" },
+                orderBy: { created_at: "desc" },
+                take: 1,
+              },
+            },
+            orderBy: { year: "desc" },
+          },
         },
         orderBy: { topic_name: "asc" },
       });
