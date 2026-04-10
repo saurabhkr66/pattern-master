@@ -1,8 +1,9 @@
 // components/patterns/PracticeButton.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import MathRenderer from "@/components/ui/MathRenderer";
 
 interface PracticeButtonProps {
   patternId: string;
@@ -23,21 +24,45 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const [natValue, setNatValue] = useState("");
   const [isRevealed, setIsRevealed] = useState(false);
   const [aiModel, setAiModel] = useState<"gemini" | "deepseek" | "gemma">("gemini");
+  const lastInitialIdRef = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only reset everything IF the parent has explicitly changed the question ID.
+    // This prevents the "vanishing explanation" AND the "Next Question reset" bugs.
+    const currentInitialId = initialQuestion?.id || null;
+    
     if (initialQuestion) {
-      setQuestion(initialQuestion);
-      setQuestionQueue(initialQueue || []);
-      setIsRevealed(false);
-      setSelectedAnswer(null);
-      setMsqSelections([]);
-      setNatValue("");
-      setError(null);
+      if (currentInitialId !== lastInitialIdRef.current) {
+        setQuestion(initialQuestion);
+        setQuestionQueue(initialQueue || []);
+        setIsRevealed(false);
+        setSelectedAnswer(null);
+        setMsqSelections([]);
+        setNatValue("");
+        setError(null);
+        lastInitialIdRef.current = currentInitialId;
+      }
     } else {
-      setQuestion(null);
+      // Transition back to AI Mode
+      if (lastInitialIdRef.current !== null) {
+        setQuestion(null);
+        setQuestionQueue([]);
+        lastInitialIdRef.current = null;
+      }
     }
   }, [initialQuestion, initialQueue]);
+ 
+  // Scroll into view when a question is opened
+  useEffect(() => {
+    if (question && containerRef.current) {
+      containerRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, [question?.id, !!question]);
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -150,8 +175,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   ];
 
   return (
-    <div className="w-full">
-      {/* ── Generate Screen (no question loaded) ── */}
+    <div ref={containerRef} className="w-full scroll-mt-20">
+      {/* 1. The Action/Reset Button */}
       {!question ? (
         <div className="space-y-5">
           {/* Difficulty */}
@@ -232,7 +257,11 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           </div>
 
           {/* Question card */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 md:p-6 mb-4">
+          <div className={`rounded-2xl border-2 p-5 md:p-6 mb-4 bg-white dark:bg-[#111] transition-all ${
+            question._isPyq 
+              ? 'border-orange-100 dark:border-orange-500/20 shadow-orange-500/5' 
+              : 'border-gray-50 dark:border-white/5 shadow-blue-500/5'
+          }`}>
             {/* Meta bar */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="text-xs font-black bg-blue-600 text-white px-2.5 py-1 rounded-lg uppercase tracking-wide">
@@ -257,11 +286,12 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 </span>
               )}
             </div>
-
-            {/* Question text */}
-            <p className="text-gray-900 font-bold text-base leading-relaxed mb-5">
-              {question.question_text}
-            </p>
+            <div className="space-y-4 md:space-y-6">
+              <MathRenderer 
+                content={question.question_text} 
+                className="text-sm md:text-base font-bold text-gray-700 dark:text-gray-300 leading-relaxed" 
+              />
+            </div>
 
             {/* MCQ / MSQ options */}
             {(question.question_type === "MCQ" || question.question_type === "MSQ" || !question.question_type) && (
@@ -274,13 +304,6 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                       ? msqSelections.includes(letter)
                       : selectedAnswer === letter;
 
-                  let cls = "border-gray-100 bg-gray-50 hover:bg-blue-50/40 hover:border-blue-200";
-                  if (isRevealed) {
-                    if (isActuallyCorrect) cls = "border-emerald-400 bg-emerald-50";
-                    else if (isSelected) cls = "border-red-400 bg-red-50 opacity-80";
-                    else cls = "border-gray-100 bg-gray-50 opacity-40";
-                  }
-
                   return (
                     <button
                       key={i}
@@ -289,7 +312,15 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                         if (question.question_type === "MSQ") toggleMsqSelection(letter);
                         else handleSubmit(letter);
                       }}
-                      className={`w-full text-left flex items-center gap-3 p-3 border-2 rounded-xl transition-all touch-manipulation ${cls}`}
+                      className={`w-full text-left flex items-center gap-3 p-3 border-2 rounded-xl transition-all touch-manipulation ${
+                        isRevealed
+                          ? isActuallyCorrect
+                            ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/10"
+                            : isSelected
+                            ? "border-red-400 dark:border-red-500/50 bg-red-50 dark:bg-red-500/10 opacity-80"
+                            : "border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 opacity-40"
+                          : "border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 hover:bg-blue-50/40 dark:hover:bg-blue-500/10 hover:border-blue-200 dark:hover:border-blue-500/30"
+                      }`}
                     >
                       <span
                         className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-lg font-black text-xs border-2 transition-colors ${
@@ -297,14 +328,15 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                             ? "bg-emerald-500 border-emerald-500 text-white"
                             : isSelected
                             ? "bg-blue-600 border-blue-600 text-white"
-                            : "bg-white border-gray-200 text-gray-400"
+                            : "bg-white dark:bg-white/10 border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500"
                         }`}
                       >
                         {letter}
                       </span>
-                      <span className="text-sm font-medium text-gray-800 leading-snug">
-                        {option.includes(".") ? option.split(".").slice(1).join(".").trim() : option}
-                      </span>
+                      <MathRenderer 
+                        content={option.includes('.') ? option.split('.').slice(1).join('.').trim() : option} 
+                        className="font-bold text-xs md:text-base leading-tight text-gray-700 dark:text-gray-300" 
+                      />
                     </button>
                   );
                 })}
@@ -313,7 +345,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   <button
                     onClick={() => handleSubmit()}
                     disabled={msqSelections.length === 0}
-                    className="mt-3 w-full bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-black text-sm py-3 rounded-xl transition-colors"
+                    className="mt-3 w-full bg-gray-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 disabled:bg-gray-200 dark:disabled:bg-white/5 text-white font-black text-sm py-3 rounded-xl transition-colors shadow-lg shadow-blue-500/10"
                   >
                     Submit Answer
                   </button>
@@ -330,7 +362,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   value={natValue}
                   onChange={(e) => setNatValue(e.target.value)}
                   disabled={isRevealed}
-                  className="w-full p-4 border-2 border-gray-100 rounded-xl focus:border-blue-400 focus:outline-none font-bold text-center text-lg bg-gray-50"
+                  className="w-full p-4 border-2 border-gray-100 dark:border-white/5 rounded-xl focus:border-blue-400 focus:outline-none font-bold text-center text-lg bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white"
                 />
                 {!isRevealed && (
                   <button
@@ -352,15 +384,27 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
           {/* Explanation (after reveal) */}
           {isRevealed && (
-            <div className="animate-in slide-in-from-bottom-3 duration-300 rounded-2xl bg-gray-900 text-white p-5 md:p-6">
-              <p className="text-blue-400 font-black text-[10px] uppercase tracking-widest mb-2">Logic Breakdown</p>
-              <p className="text-gray-300 text-sm leading-relaxed">{question.explanation}</p>
-              <button
-                onClick={handleNextFromQueue}
-                className="mt-5 w-full bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/10 text-white text-sm font-bold py-3 rounded-xl transition-colors touch-manipulation"
-              >
-                {questionQueue.length > 0 ? "Next Question →" : "Generate 5 More →"}
-              </button>
+            <div className="animate-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-gray-900 text-white p-5 md:p-6 rounded-2xl shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl md:text-6xl font-black">?</div>
+                <h4 className="text-blue-400 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2 md:mb-3">Logic Breakdown</h4>
+                <MathRenderer 
+                  content={question.explanation} 
+                  className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10" 
+                />
+                
+                <div className="mt-4 md:mt-6 flex gap-3">
+                  <button 
+                    onClick={handleNextFromQueue}
+                    className="flex-1 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-[10px] md:text-xs font-bold py-3 md:py-3.5 rounded-lg transition-colors border border-white/10 touch-manipulation"
+                  >
+                    {questionQueue.length > 0 
+                      ? "Next Question →"
+                      : "Generate 5 More →"
+                    }
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

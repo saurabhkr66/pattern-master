@@ -33,6 +33,18 @@
 @theme inline {
   --color-background: var(--bg-base);
   --color-foreground: var(--text-primary);
+  
+  --color-surface: var(--bg-surface);
+  --color-surface-2: var(--bg-surface-2);
+  
+  --color-border-theme: var(--border);
+  --color-border-strong: var(--border-strong);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -49,11 +61,11 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
-/* Remove blue tap highlight on mobile for a native feel */
 * {
   -webkit-tap-highlight-color: transparent;
 }

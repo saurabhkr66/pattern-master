@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import MathRenderer from "@/components/ui/MathRenderer";
 
 type Flashcard = {
   id: string;
@@ -98,16 +99,21 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
               )}
             </div>
 
-            <p className="font-semibold text-gray-900 text-base leading-relaxed whitespace-pre-wrap flex-1">
-              {card.question_text}
-            </p>
+            <MathRenderer 
+              content={card.question_text} 
+              className="text-white font-medium text-base leading-relaxed whitespace-pre-wrap flex-1" 
+            />
 
-            <div className="mt-5 space-y-1.5">
-              {card.options.map((opt) => (
-                <div key={opt} className="px-3 py-2 rounded-lg text-sm border border-gray-100 bg-gray-50 text-gray-500 font-medium">
-                  {opt}
-                </div>
-              ))}
+            <div className="mt-6 flex items-center justify-between">
+              <div className="space-y-1.5 w-full">
+                {card.options.map((opt) => (
+                    <MathRenderer 
+                      content={opt} 
+                      className="px-3 py-2 rounded-lg text-sm text-gray-400 bg-white/[0.03] border border-white/5" 
+                      key={opt}
+                    />
+                ))}
+              </div>
             </div>
 
             <p className="text-center text-gray-400 text-xs mt-5 font-medium">Tap to reveal answer</p>
@@ -128,14 +134,26 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
               <span className="text-[10px] font-bold text-gray-400 truncate">{card.topic_name}</span>
             </div>
 
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-4">
-              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Correct Answer</p>
-              <p className="text-emerald-800 font-bold text-sm">{correctOption}</p>
+            {/* Correct answer highlight */}
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-3 mb-5">
+              <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1">
+                Correct Answer
+              </p>
+              <MathRenderer 
+                content={correctOption} 
+                className="text-green-300 font-bold text-sm" 
+              />
             </div>
 
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex-1">
-              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Explanation</p>
-              <p className="text-blue-900/80 text-sm leading-relaxed">{card.explanation}</p>
+            {/* Explanation */}
+            <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex-1">
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">
+                Explanation
+              </p>
+              <MathRenderer 
+                content={card.explanation} 
+                className="text-blue-200/80 text-sm leading-relaxed" 
+              />
             </div>
 
             <Link

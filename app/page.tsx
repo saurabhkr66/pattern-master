@@ -244,7 +244,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
 
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
 
         {/* ═══════════════════════════════════════
             HERO
