@@ -35,7 +35,6 @@ function getCachedDashboardData(userId: string) {
         prisma.attempt.findMany({
           where: {
             user_id: userId,
-            is_correct: true,
             created_at: { gte: sixMonthsAgo }
           },
           select: { created_at: true },
@@ -85,13 +84,13 @@ export default async function DashboardPage() {
 
   const accuracy = totalAttempted > 0 ? Math.round((correctAttempts / totalAttempted) * 100) : 0;
 
-  // Get unique patterns which need review from the recent failures
-  const needsReviewPatterns = Array.from(
-    new Map(recentFailures.map((a: any) => {
-      const pattern = a.question ? a.question.pattern : a.pyq?.pattern;
-      return [pattern?.id, pattern];
-    }).filter(([id, pattern]) => id && pattern)).values()
-  );
+  // Build review items from recent wrong attempts
+  const reviewItems = recentFailures.map((a: any) => {
+    const isGenerated = !!a.question;
+    const q = isGenerated ? a.question : a.pyq;
+    const pattern = q?.pattern;
+    return { id: a.id, question_text: q?.question_text, correct_answer: q?.correct_answer, explanation: q?.explanation, topic_name: pattern?.topic_name, subject: pattern?.subject, pattern_id: pattern?.id };
+  }).filter((r: any) => r.question_text);
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-8">
@@ -160,30 +159,32 @@ export default async function DashboardPage() {
           <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
             <span>🔥</span> Critical Review
           </h2>
-          {needsReviewPatterns.length === 0 ? (
+          {reviewItems.length === 0 ? (
             <div className="bg-green-50 border-2 border-dashed border-green-200 rounded-2xl p-8 text-center">
               <p className="text-green-600 text-sm font-medium italic">Perfect score! No topics need review.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {needsReviewPatterns.map((pattern: any) => (
-                <div key={pattern.id} className="bg-white border-2 border-red-50 p-5 rounded-2xl shadow-sm">
+              {reviewItems.map((item: any) => (
+                <div key={item.id} className="bg-white border-2 border-red-50 p-5 rounded-2xl shadow-sm">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h4 className="font-black text-gray-900 leading-tight mb-1">{pattern.topic_name}</h4>
-                      <p className="text-[10px] bg-gray-100 text-gray-500 font-black px-2 py-0.5 rounded-md inline-block uppercase">{pattern.subject}</p>
+                      <h4 className="font-black text-gray-900 leading-tight mb-1">{item.topic_name}</h4>
+                      <p className="text-[10px] bg-gray-100 text-gray-500 font-black px-2 py-0.5 rounded-md inline-block uppercase">{item.subject}</p>
                     </div>
-                    <a 
-                      href={`/practice?patternId=${pattern.id}`}
+                    <a
+                      href={`/practice?patternId=${item.pattern_id}`}
                       className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-4 py-2 rounded-lg transition-transform active:scale-95 shadow-lg shadow-blue-200 uppercase"
                     >
                       Solve Again →
                     </a>
                   </div>
-                  <div className="bg-red-50 p-3 rounded-xl border border-red-100">
-                    <p className="text-[11px] text-red-600 font-bold italic leading-relaxed">
-                      Logic Error: {pattern.atomic_logic}
-                    </p>
+                  <div className="bg-red-50 p-3 rounded-xl border border-red-100 space-y-2">
+                    <p className="text-[11px] text-gray-800 font-semibold leading-relaxed">{item.question_text}</p>
+                    <p className="text-[11px] text-green-700 font-bold">Correct Answer: {item.correct_answer}</p>
+                    {item.explanation && (
+                      <p className="text-[11px] text-red-600 italic leading-relaxed">{item.explanation}</p>
+                    )}
                   </div>
                 </div>
               ))}
