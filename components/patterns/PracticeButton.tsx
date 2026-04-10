@@ -141,6 +141,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           questionId: question._isPyq ? undefined : question.id,
           pyqId: question._isPyq ? question.id : undefined,
           isCorrect,
+          userAnswer: finalAnswer,
         }),
       });
       router.refresh();

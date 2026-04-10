@@ -84,8 +84,8 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
         >
           {/* Front — Question */}
           <div
-            className="absolute inset-0 rounded-2xl p-6 md:p-8 flex flex-col border bg-white"
-            style={{ backfaceVisibility: "hidden", borderColor: "var(--border)" }}
+            className="absolute inset-0 rounded-2xl p-6 md:p-8 flex flex-col border border-gray-100 dark:border-white/5 bg-white dark:bg-[#111] shadow-xl shadow-blue-500/5"
+            style={{ backfaceVisibility: "hidden" }}
           >
             <div className="flex flex-wrap items-center gap-2 mb-5">
               <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{card.subject}</span>
@@ -101,7 +101,7 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
 
             <MathRenderer 
               content={card.question_text} 
-              className="text-white font-medium text-base leading-relaxed whitespace-pre-wrap flex-1" 
+              className="text-gray-900 dark:text-white font-bold text-lg leading-relaxed whitespace-pre-wrap flex-1 mt-2" 
             />
 
             <div className="mt-6 flex items-center justify-between">
@@ -109,7 +109,7 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
                 {card.options.map((opt) => (
                     <MathRenderer 
                       content={opt} 
-                      className="px-3 py-2 rounded-lg text-sm text-gray-400 bg-white/[0.03] border border-white/5" 
+                      className="px-4 py-2.5 rounded-xl text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10" 
                       key={opt}
                     />
                 ))}
@@ -121,11 +121,10 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
 
           {/* Back — Answer */}
           <div
-            className="absolute inset-0 rounded-2xl p-6 md:p-8 flex flex-col border bg-white"
+            className="absolute inset-0 rounded-2xl p-6 md:p-8 flex flex-col border border-indigo-200/50 dark:border-indigo-500/30 bg-white dark:bg-[#111] shadow-xl shadow-indigo-500/5"
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
-              borderColor: "rgba(99,102,241,0.25)",
             }}
           >
             <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -135,24 +134,24 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
             </div>
 
             {/* Correct answer highlight */}
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-3 mb-5">
-              <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1">
+            <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl px-4 py-3 mb-5">
+              <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">
                 Correct Answer
               </p>
               <MathRenderer 
                 content={correctOption} 
-                className="text-green-300 font-bold text-sm" 
+                className="text-emerald-700 dark:text-emerald-300 font-bold text-sm" 
               />
             </div>
 
             {/* Explanation */}
-            <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex-1">
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">
-                Explanation
+            <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl p-4 flex-1">
+              <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
+                Logic Breakdown
               </p>
               <MathRenderer 
                 content={card.explanation} 
-                className="text-blue-200/80 text-sm leading-relaxed" 
+                className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed" 
               />
             </div>
 

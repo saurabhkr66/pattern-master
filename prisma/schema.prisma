@@ -72,6 +72,7 @@ model Attempt {
   user_id     String
   question_id String?
   pyq_id      String?
+  user_answer String?
   is_correct  Boolean
   created_at  DateTime           @default(now())
   user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
