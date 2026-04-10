@@ -13,20 +13,18 @@ interface PracticeButtonProps {
 
 export default function PracticeButton({ patternId, topicName, initialQuestion, initialQueue }: PracticeButtonProps) {
   const router = useRouter();
-  
-  // State Management
+
   const [isLoading, setIsLoading] = useState(false);
   const [question, setQuestion] = useState<any>(null);
   const [questionQueue, setQuestionQueue] = useState<any[]>([]);
   const [difficulty, setDifficulty] = useState("Medium");
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null); // For MCQ
-  const [msqSelections, setMsqSelections] = useState<string[]>([]); // For MSQ
-  const [natValue, setNatValue] = useState(""); // For NAT
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [msqSelections, setMsqSelections] = useState<string[]>([]);
+  const [natValue, setNatValue] = useState("");
   const [isRevealed, setIsRevealed] = useState(false);
   const [aiModel, setAiModel] = useState<"gemini" | "deepseek" | "gemma">("gemini");
   const [error, setError] = useState<string | null>(null);
 
-  // Sync state when a user selects a question from the History/Question Bank
   useEffect(() => {
     if (initialQuestion) {
       setQuestion(initialQuestion);
@@ -41,7 +39,6 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     }
   }, [initialQuestion, initialQueue]);
 
-  // Generate 5 questions in one API call
   const handleGenerate = async () => {
     setIsLoading(true);
     setError(null);
@@ -51,18 +48,14 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     setMsqSelections([]);
     setNatValue("");
     setIsRevealed(false);
-
     try {
       const response = await fetch("/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ patternId, difficulty, provider: aiModel }),
       });
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Generation failed");
-
-      // Set current question and queue the rest
       setQuestion(data.current);
       setQuestionQueue(data.queue || []);
       router.refresh();
@@ -73,7 +66,6 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     }
   };
 
-  // Load next question from the queue (no API call needed!)
   const handleNextFromQueue = () => {
     if (questionQueue.length > 0) {
       const [next, ...rest] = questionQueue;
@@ -84,35 +76,27 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       setNatValue("");
       setIsRevealed(false);
     } else {
-      // Queue empty — fetch 5 more
       handleGenerate();
     }
   };
 
-  // Toggle MSQ Selection
   const toggleMsqSelection = (letter: string) => {
     if (isRevealed) return;
-    setMsqSelections(prev => 
-      prev.includes(letter) 
-        ? prev.filter(l => l !== letter) 
-        : [...prev, letter].sort()
+    setMsqSelections((prev) =>
+      prev.includes(letter) ? prev.filter((l) => l !== letter) : [...prev, letter].sort()
     );
   };
 
-  // Submit Answer to Database
   const handleSubmit = async (finalAnswerOverride?: string) => {
     if (isRevealed) return;
-
     let isCorrect = false;
     let finalAnswer = finalAnswerOverride || "";
-
     const type = question.question_type || "MCQ";
 
     if (type === "MCQ") {
       isCorrect = finalAnswer.trim().toUpperCase() === question.correct_answer.trim().toUpperCase();
       setSelectedAnswer(finalAnswer);
     } else if (type === "MSQ") {
-      // Logic for MSQ: "A, B" vs "A, B"
       const userAns = msqSelections.sort().join(", ");
       const correctAns = question.correct_answer.split(",").map((s: string) => s.trim()).sort().join(", ");
       isCorrect = userAns === correctAns;
@@ -131,7 +115,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         body: JSON.stringify({
           questionId: question._isPyq ? undefined : question.id,
           pyqId: question._isPyq ? question.id : undefined,
-          isCorrect: isCorrect,
+          isCorrect,
         }),
       });
       router.refresh();
@@ -145,170 +129,156 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     const type = question.question_type || "MCQ";
     if (type === "MCQ") return selectedAnswer === question.correct_answer;
     if (type === "MSQ") {
-        const userAns = msqSelections.sort().join(", ");
-        const correctAns = question.correct_answer.split(",").map((s: string) => s.trim()).sort().join(", ");
-        return userAns === correctAns;
+      const userAns = msqSelections.sort().join(", ");
+      const correctAns = question.correct_answer.split(",").map((s: string) => s.trim()).sort().join(", ");
+      return userAns === correctAns;
     }
     if (type === "NAT") return natValue.trim() === question.correct_answer.trim();
     return false;
   };
 
+  const difficultyConfig: Record<string, { label: string; active: string }> = {
+    Easy: { label: "Easy", active: "text-emerald-600 bg-white shadow-sm" },
+    Medium: { label: "Medium", active: "text-amber-600 bg-white shadow-sm" },
+    Hard: { label: "Hard", active: "text-red-600 bg-white shadow-sm" },
+  };
+
+  const modelConfig = [
+    { id: "gemini" as const, label: "Gemini", icon: "♊" },
+    { id: "deepseek" as const, label: "DeepSeek", icon: "🐳" },
+    { id: "gemma" as const, label: "Gemma", icon: "💎" },
+  ];
+
   return (
     <div className="w-full">
-      {/* 1. The Action/Reset Button */}
+      {/* ── Generate Screen (no question loaded) ── */}
       {!question ? (
-        <div className="space-y-4">
-          <div className="space-y-3">
-            <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Complexity Level</h4>
-            <div className="flex flex-wrap items-center gap-2 p-1 bg-gray-100 rounded-xl w-fit">
-              {["Easy", "Medium", "Hard"].map((lvl) => (
+        <div className="space-y-5">
+          {/* Difficulty */}
+          <div>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Difficulty</p>
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+              {Object.entries(difficultyConfig).map(([lvl, cfg]) => (
                 <button
                   key={lvl}
                   onClick={() => setDifficulty(lvl)}
-                  className={`px-3 md:px-4 py-1.5 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
-                    difficulty === lvl 
-                      ? "bg-white text-blue-600 shadow-sm" 
-                      : "text-gray-400 hover:text-gray-600"
+                  className={`px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wide transition-all ${
+                    difficulty === lvl ? cfg.active : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
-                  {lvl}
+                  {cfg.label}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Select Brain Engine</h4>
-            <div className="flex flex-wrap items-center gap-2 p-1 bg-gray-100 rounded-2xl w-fit">
-              <button
-                onClick={() => setAiModel("gemini")}
-                className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                  aiModel === "gemini" 
-                    ? "bg-white text-blue-600 shadow-sm" 
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                <span>♊</span> Gemini
-              </button>
-              <button
-                onClick={() => setAiModel("deepseek")}
-                className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                  aiModel === "deepseek" 
-                    ? "bg-white text-indigo-600 shadow-sm" 
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                <span>🐳</span> DeepSeek
-              </button>
-              <button
-                onClick={() => setAiModel("gemma")}
-                className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                  aiModel === "gemma" 
-                    ? "bg-white text-emerald-600 shadow-sm" 
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                <span>💎</span> Gemma
-              </button>
+          {/* AI Model */}
+          <div>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">AI Engine</p>
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+              {modelConfig.map(({ id, label, icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setAiModel(id)}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wide transition-all ${
+                    aiModel === id ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  <span>{icon}</span>
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* Generate button */}
           <button
             onClick={handleGenerate}
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform active:scale-95 transition-all disabled:bg-blue-300 flex items-center justify-center gap-3"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-black py-3.5 px-6 rounded-xl shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
-                <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
-                Generating with {aiModel}...
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Generating…
               </>
             ) : (
-              <>
-                <span>🚀</span> Generate 5 Questions ({aiModel})
-              </>
+              <>🚀 Generate 5 Questions</>
             )}
           </button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between mb-4">
-          <button 
-            onClick={() => { setQuestion(null); setQuestionQueue([]); }}
-            className="text-gray-500 font-bold text-xs uppercase tracking-widest hover:text-blue-600 flex items-center gap-2 transition-colors"
-          >
-            <span>←</span> Back to Topic Overview
-          </button>
-          {questionQueue.length > 0 && (
-            <span className="text-[10px] font-black bg-blue-100 text-blue-600 px-2.5 py-1 rounded-full uppercase">
-              {questionQueue.length} more queued
-            </span>
+
+          {error && (
+            <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+              ⚠️ {error}
+            </p>
           )}
         </div>
-      )}
+      ) : (
+        /* ── Question Mode ── */
+        <div>
+          {/* Back bar */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => { setQuestion(null); setQuestionQueue([]); }}
+              className="text-xs font-black text-gray-400 hover:text-blue-600 uppercase tracking-widest transition-colors py-1"
+            >
+              ← Back
+            </button>
+            {questionQueue.length > 0 && (
+              <span className="text-[10px] font-black bg-blue-50 text-blue-500 px-2.5 py-1 rounded-full">
+                {questionQueue.length} queued
+              </span>
+            )}
+          </div>
 
-      {error && <p className="text-red-500 text-sm mt-3 p-3 bg-red-50 rounded-lg border border-red-100">⚠️ {error}</p>}
-
-      {/* 2. The Question Display Area */}
-      {question && (
-        <div className="mt-2 animate-in fade-in zoom-in-95 duration-300">
-          <div className="p-5 md:p-8 bg-white rounded-[32px] border border-blue-100 shadow-sm mb-6 relative overflow-hidden">
-            {/* Subject Indicator Glow */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600 opacity-[0.02] blur-3xl -mr-16 -mt-16 rounded-full"></div>
-
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[9px] font-black bg-blue-600 text-white px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                  {topicName}
-                </span>
-                <span className={`text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${
-                  question.difficulty_level === "Easy" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                  question.difficulty_level === "Hard" ? "bg-red-50 text-red-600 border border-red-100" :
-                  "bg-amber-50 text-amber-600 border border-amber-100"
-                }`}>
-                  {question.difficulty_level || "Medium"}
-                </span>
-                <span className="text-[9px] font-black bg-gray-50 text-gray-400 border border-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                  {question.question_type || "MCQ"}
-                </span>
-              </div>
+          {/* Question card */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 md:p-6 mb-4">
+            {/* Meta bar */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="text-xs font-black bg-blue-600 text-white px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                {topicName}
+              </span>
+              <span className={`text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wide border ${
+                question.difficulty_level === "Easy"
+                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                  : question.difficulty_level === "Hard"
+                  ? "bg-red-50 text-red-600 border-red-100"
+                  : "bg-amber-50 text-amber-600 border-amber-100"
+              }`}>
+                {question.difficulty_level || "Medium"}
+              </span>
+              <span className="text-xs font-black bg-gray-50 text-gray-400 border border-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                {question.question_type || "MCQ"}
+              </span>
               {isRevealed && (
-                <span className={`text-[10px] items-center gap-1.5 font-bold uppercase tracking-widest flex ${checkIsCorrect() ? 'text-emerald-600' : 'text-rose-600'}`}>
-                   <span className={`w-2 h-2 rounded-full ${checkIsCorrect() ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-                   {checkIsCorrect() ? "Mastered" : "Needs Review"}
+                <span className={`ml-auto text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 ${checkIsCorrect() ? "text-emerald-600" : "text-rose-600"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${checkIsCorrect() ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                  {checkIsCorrect() ? "Correct!" : "Wrong"}
                 </span>
               )}
             </div>
-            
-            <p className="text-gray-900 font-bold text-base md:text-[18px] leading-relaxed mb-8 relative z-10">
+
+            {/* Question text */}
+            <p className="text-gray-900 font-bold text-base leading-relaxed mb-5">
               {question.question_text}
             </p>
 
-            {/* --- RENDERING BASED ON TYPE --- */}
-            
-            {/* MCQ / MSQ Rendering */}
+            {/* MCQ / MSQ options */}
             {(question.question_type === "MCQ" || question.question_type === "MSQ" || !question.question_type) && (
-              <div className="grid grid-cols-1 gap-2 md:gap-3">
+              <div className="space-y-2">
                 {question.options.map((option: string, i: number) => {
                   const letter = option.trim().charAt(0).toUpperCase();
                   const isActuallyCorrect = question.correct_answer.includes(letter);
-                  
-                  let isSelected = false;
-                  if (question.question_type === "MSQ") {
-                    isSelected = msqSelections.includes(letter);
-                  } else {
-                    isSelected = selectedAnswer === letter;
-                  }
+                  const isSelected =
+                    question.question_type === "MSQ"
+                      ? msqSelections.includes(letter)
+                      : selectedAnswer === letter;
 
-                  let buttonStyle = "border-gray-100 bg-gray-50 active:bg-blue-50";
-                  
+                  let cls = "border-gray-100 bg-gray-50 hover:bg-blue-50/40 hover:border-blue-200";
                   if (isRevealed) {
-                    if (isActuallyCorrect) {
-                      buttonStyle = "border-green-500 bg-green-50 text-green-800 ring-1 ring-green-500";
-                    } else if (isSelected) {
-                      buttonStyle = "border-red-500 bg-red-50 text-red-800";
-                    } else {
-                      buttonStyle = "opacity-40 border-gray-100 grayscale-[0.5]";
-                    }
+                    if (isActuallyCorrect) cls = "border-emerald-400 bg-emerald-50";
+                    else if (isSelected) cls = "border-red-400 bg-red-50 opacity-80";
+                    else cls = "border-gray-100 bg-gray-50 opacity-40";
                   }
 
                   return (
@@ -316,23 +286,24 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                       key={i}
                       disabled={isRevealed}
                       onClick={() => {
-                        if (question.question_type === "MSQ") {
-                          toggleMsqSelection(letter);
-                        } else {
-                          handleSubmit(letter);
-                        }
+                        if (question.question_type === "MSQ") toggleMsqSelection(letter);
+                        else handleSubmit(letter);
                       }}
-                      className={`group w-full text-left p-3 md:p-4 border-2 rounded-xl transition-all flex items-center gap-3 md:gap-4 select-none touch-manipulation ${buttonStyle}`}
+                      className={`w-full text-left flex items-center gap-3 p-3 border-2 rounded-xl transition-all touch-manipulation ${cls}`}
                     >
-                      <span className={`w-7 h-7 md:w-8 md:h-8 shrink-0 flex items-center justify-center rounded-lg font-bold text-xs md:text-sm border-2 transition-colors ${
-                        (isRevealed && isActuallyCorrect) || isSelected
-                          ? "bg-blue-600 text-white border-blue-600" 
-                          : "bg-white text-gray-400 border-gray-200 group-hover:border-blue-400"
-                      } ${isRevealed && isActuallyCorrect ? "bg-green-500 border-green-500" : ""}`}>
+                      <span
+                        className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-lg font-black text-xs border-2 transition-colors ${
+                          isRevealed && isActuallyCorrect
+                            ? "bg-emerald-500 border-emerald-500 text-white"
+                            : isSelected
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "bg-white border-gray-200 text-gray-400"
+                        }`}
+                      >
                         {letter}
                       </span>
-                      <span className="font-medium text-xs md:text-base leading-tight">
-                        {option.includes('.') ? option.split('.').slice(1).join('.').trim() : option}
+                      <span className="text-sm font-medium text-gray-800 leading-snug">
+                        {option.includes(".") ? option.split(".").slice(1).join(".").trim() : option}
                       </span>
                     </button>
                   );
@@ -342,36 +313,36 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   <button
                     onClick={() => handleSubmit()}
                     disabled={msqSelections.length === 0}
-                    className="mt-4 w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-black disabled:bg-gray-200 transition-all"
+                    className="mt-3 w-full bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-black text-sm py-3 rounded-xl transition-colors"
                   >
-                    Submit MSQ Answer
+                    Submit Answer
                   </button>
                 )}
               </div>
             )}
 
-            {/* NAT Rendering */}
+            {/* NAT input */}
             {question.question_type === "NAT" && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <input
                   type="text"
-                  placeholder="Enter numerical value..."
+                  placeholder="Enter numerical answer…"
                   value={natValue}
                   onChange={(e) => setNatValue(e.target.value)}
                   disabled={isRevealed}
-                  className="w-full p-4 border-2 border-blue-100 rounded-xl focus:border-blue-500 focus:outline-none font-bold text-center text-lg"
+                  className="w-full p-4 border-2 border-gray-100 rounded-xl focus:border-blue-400 focus:outline-none font-bold text-center text-lg bg-gray-50"
                 />
                 {!isRevealed && (
                   <button
                     onClick={() => handleSubmit()}
                     disabled={!natValue.trim()}
-                    className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-black disabled:bg-gray-200 transition-all"
+                    className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-black text-sm py-3 rounded-xl transition-colors"
                   >
-                    Submit Numerical Answer
+                    Submit
                   </button>
                 )}
                 {isRevealed && (
-                  <div className={`p-4 rounded-xl border-2 text-center font-bold ${checkIsCorrect() ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                  <div className={`p-4 rounded-xl text-center font-bold text-sm border-2 ${checkIsCorrect() ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>
                     Correct Answer: {question.correct_answer}
                   </div>
                 )}
@@ -379,28 +350,17 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
             )}
           </div>
 
-          {/* 3. Explanation Section */}
+          {/* Explanation (after reveal) */}
           {isRevealed && (
-            <div className="animate-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-gray-900 text-white p-5 md:p-6 rounded-2xl shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl md:text-6xl font-black">?</div>
-                <h4 className="text-blue-400 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2 md:mb-3">Logic Breakdown</h4>
-                <p className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10">
-                  {question.explanation}
-                </p>
-                
-                <div className="mt-4 md:mt-6 flex gap-3">
-                  <button 
-                    onClick={handleNextFromQueue}
-                    className="flex-1 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-[10px] md:text-xs font-bold py-3 md:py-3.5 rounded-lg transition-colors border border-white/10 touch-manipulation"
-                  >
-                    {questionQueue.length > 0 
-                      ? "Next Question →"
-                      : "Generate 5 More →"
-                    }
-                  </button>
-                </div>
-              </div>
+            <div className="animate-in slide-in-from-bottom-3 duration-300 rounded-2xl bg-gray-900 text-white p-5 md:p-6">
+              <p className="text-blue-400 font-black text-[10px] uppercase tracking-widest mb-2">Logic Breakdown</p>
+              <p className="text-gray-300 text-sm leading-relaxed">{question.explanation}</p>
+              <button
+                onClick={handleNextFromQueue}
+                className="mt-5 w-full bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/10 text-white text-sm font-bold py-3 rounded-xl transition-colors touch-manipulation"
+              >
+                {questionQueue.length > 0 ? "Next Question →" : "Generate 5 More →"}
+              </button>
             </div>
           )}
         </div>

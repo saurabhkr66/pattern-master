@@ -105,38 +105,32 @@ export default async function PracticePage({
 
     return (
       <div className="max-w-4xl mx-auto py-8 md:py-12 px-4">
-        <header className="mb-8 md:mb-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-tight uppercase">PREP TRACKER</h1>
-                <span className="bg-blue-600 text-white text-[9px] md:text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-blue-500/20">
-                  {activeExamType} {activeBranch && `• ${activeBranch}`}
-                </span>
-              </div>
-              <p className="text-gray-400 font-medium">
-                Master every {activeExamType} topic with laser-focused AI questions.
-              </p>
-            </div>
-
-            <ExamSwitcher
-              currentExam={activeExamType}
-              currentBranch={activeBranch}
-              availableExams={examMeta.exams}
-              availableBranches={availableBranches}
-            />
+        <header className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase" style={{ color: "var(--text-primary)" }}>
+              Prep Tracker
+            </h1>
+            <span className="bg-blue-600 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+              {activeExamType}{activeBranch ? ` · ${activeBranch}` : ""}
+            </span>
           </div>
+          <p className="text-sm font-medium mb-4" style={{ color: "var(--text-secondary)" }}>
+            Master every topic with AI-generated pattern questions.
+          </p>
+          <ExamSwitcher
+            currentExam={activeExamType}
+            currentBranch={activeBranch}
+            availableExams={examMeta.exams}
+            availableBranches={availableBranches}
+          />
         </header>
 
         {patterns.length === 0 ? (
-          <div className="bg-gray-800/20 border border-gray-700/50 rounded-2xl p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-800 rounded-full mb-4 text-gray-500">
-              <span className="text-2xl">🔍</span>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">No patterns found</h3>
-            <p className="text-gray-400 max-w-sm mx-auto">
-              We haven&apos;t added study patterns for {activeExamType}{" "}
-              {activeBranch ? `in ${activeBranch}` : ""} yet. Check back soon!
+          <div className="rounded-2xl p-12 text-center" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 text-2xl" style={{ background: "var(--bg-surface-2)" }}>🔍</div>
+            <h3 className="text-lg font-black mb-1" style={{ color: "var(--text-primary)" }}>No patterns found</h3>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              We haven&apos;t added study patterns for {activeExamType}{activeBranch ? ` in ${activeBranch}` : ""} yet.
             </p>
           </div>
         ) : (

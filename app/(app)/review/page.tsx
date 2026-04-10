@@ -22,7 +22,6 @@ export default async function ReviewPage() {
     orderBy: { created_at: "desc" },
   });
 
-  // Deduplicate by question/pyq id
   const seen = new Set<string>();
   const cards = wrongAttempts
     .filter((a) => {
@@ -52,17 +51,17 @@ export default async function ReviewPage() {
 
   return (
     <div className="max-w-3xl mx-auto py-8 md:py-12 px-4">
-      <header className="mb-8 text-center">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+      <header className="mb-8">
+        <div className="flex items-center gap-3 mb-1">
+          <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight" style={{ color: "var(--text-primary)" }}>
             Flashcard Review
           </h1>
-          <span className="bg-indigo-600/80 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
-            {cards.length} Cards
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-600/10 text-indigo-600 uppercase tracking-widest">
+            {cards.length} cards
           </span>
         </div>
-        <p className="text-gray-400 font-medium">
-          Tap a card to reveal the answer. Use arrows to navigate.
+        <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+          Tap a card to reveal the answer. Use Prev / Next to navigate.
         </p>
       </header>
 
