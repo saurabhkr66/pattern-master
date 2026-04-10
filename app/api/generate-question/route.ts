@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { geminiModel } from "@/lib/gemini";
+import { generateQuestionsWithDeepSeek } from "@/lib/deepseek";
+import { generateQuestionsWithOpenRouter } from "@/lib/openrouter";
 import { buildQuestionPrompt } from "@/lib/prompts";
 import { generateSemanticHash } from "@/lib/hash";
 
@@ -9,7 +11,9 @@ import { generateSemanticHash } from "@/lib/hash";
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { patternId, difficulty = "Medium" } = body;
+        const { patternId, difficulty = "Medium", provider = "gemini" } = body;
+
+        console.log(`[API] Generation Request - Provider: ${provider}, Topic: ${patternId}`);
 
         if (!patternId) {
             return NextResponse.json({ error: "patternId is required" }, { status: 400 });
@@ -35,7 +39,7 @@ export async function POST(req: NextRequest) {
             ? recentQuestions.map((q) => q.question_text).join(" | ")
             : "None";
 
-        // Build prompt and call Gemini ONCE for 5 questions
+        // Build prompt
         const prompt = buildQuestionPrompt(
             pattern.exam_type,
             pattern.subject,
@@ -45,13 +49,37 @@ export async function POST(req: NextRequest) {
             recentContext
         );
 
-        const result = await geminiModel.generateContent(prompt);
-        const textResponse = result.response.text();
-        const cleanedText = textResponse.replace(/```json/g, "").replace(/```/g, "").trim();
-        const parsedArray = JSON.parse(cleanedText);
+        let questionsArray = [];
 
-        // Ensure we got an array
-        const questionsArray = Array.isArray(parsedArray) ? parsedArray : [parsedArray];
+        if (provider === "deepseek") {
+            console.log("[API] Calling DeepSeek Utility...");
+            const parsedArray = await generateQuestionsWithDeepSeek(prompt);
+            questionsArray = Array.isArray(parsedArray) ? parsedArray : [parsedArray];
+            if (!Array.isArray(questionsArray) && typeof questionsArray === "object") {
+                const keys = Object.keys(questionsArray);
+                if (keys.length === 1 && Array.isArray(questionsArray[keys[0]])) {
+                    questionsArray = questionsArray[keys[0]];
+                }
+            }
+        } else if (provider === "gemma") {
+            console.log("[API] Calling OpenRouter (Gemma) Utility...");
+            const parsedArray = await generateQuestionsWithOpenRouter(prompt);
+            questionsArray = Array.isArray(parsedArray) ? parsedArray : [parsedArray];
+            if (!Array.isArray(questionsArray) && typeof questionsArray === "object") {
+                const keys = Object.keys(questionsArray);
+                if (keys.length === 1 && Array.isArray(questionsArray[keys[0]])) {
+                    questionsArray = questionsArray[keys[0]];
+                }
+            }
+        } else {
+            // Default: Gemini
+            console.log("[API] Calling Gemini Utility...");
+            const result = await geminiModel.generateContent(prompt);
+            const textResponse = result.response.text();
+            const cleanedText = textResponse.replace(/```json/g, "").replace(/```/g, "").trim();
+            const parsedArray = JSON.parse(cleanedText);
+            questionsArray = Array.isArray(parsedArray) ? parsedArray : [parsedArray];
+        }
 
         // Save all unique questions to DB
         const savedQuestions = [];
@@ -74,6 +102,7 @@ export async function POST(req: NextRequest) {
                     correct_answer: q.correct_answer,
                     explanation: q.explanation,
                     difficulty_level: difficulty,
+                    question_type: q.question_type || "MCQ",
                     semantic_hash: hash,
                 },
             });

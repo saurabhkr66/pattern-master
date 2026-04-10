@@ -20,7 +20,16 @@ export default function PatternTable({
   const subjects = ["All", ...Object.keys(subjectCounts)];
 
   const [activeSubject, setActiveSubject] = useState("All");
+  const [openPatternId, setOpenPatternId] = useState<string | null>(highlightPatternId || null);
   const tableRef = useRef<HTMLDivElement>(null);
+
+  // Load persisted subject on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("activeSubject");
+    if (saved && subjects.includes(saved)) {
+      setActiveSubject(saved);
+    }
+  }, []);
 
   // Auto-filter if a highlightPatternId is provided (from Dashboard "Solve Again")
   useEffect(() => {
@@ -28,13 +37,16 @@ export default function PatternTable({
       const targetPattern = patterns.find(p => p.id === highlightPatternId);
       if (targetPattern) {
         setActiveSubject(targetPattern.subject);
+        setOpenPatternId(highlightPatternId);
+        localStorage.setItem("activeSubject", targetPattern.subject);
       }
     }
-  }, [highlightPatternId]);
+  }, [highlightPatternId, patterns]);
 
   // Smooth scroll to the table when a filter is clicked
   const handleFilterClick = (subject: string) => {
     setActiveSubject(subject);
+    localStorage.setItem("activeSubject", subject);
     // Scroll the table into view smoothly
     setTimeout(() => {
       tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -50,7 +62,7 @@ export default function PatternTable({
     <div className="w-full space-y-6">
       {/* --- STICKY SUBJECT FILTER BAR --- */}
       <div className="sticky top-[60px] z-30 -mx-4 px-4 py-3 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/5">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {subjects.map((s) => {
             const count = s === "All" ? patterns.length : subjectCounts[s];
             return (
@@ -93,6 +105,8 @@ export default function PatternTable({
                 key={pattern.id} 
                 pattern={pattern} 
                 isHighlighted={pattern.id === highlightPatternId}
+                isOpen={openPatternId === pattern.id}
+                onToggle={() => setOpenPatternId(openPatternId === pattern.id ? null : pattern.id)}
               />
             ))
           ) : (

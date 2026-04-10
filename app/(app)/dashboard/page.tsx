@@ -2,12 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { unstable_cache } from "next/cache";
+import ActivityHeatmap from "@/components/dashboard/ActivityHeatmap";
 
 // Cache dashboard data per user for 30 seconds
 function getCachedDashboardData(userId: string) {
   return unstable_cache(
     async () => {
-      const [totalAttempted, correctAttempts, lastFiveAttempts, recentFailures] = await Promise.all([
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const [totalAttempted, correctAttempts, lastFiveAttempts, recentFailures, rawActivity] = await Promise.all([
         prisma.attempt.count({ where: { user_id: userId } }),
         prisma.attempt.count({ where: { user_id: userId, is_correct: true } }),
         prisma.attempt.findMany({
@@ -28,9 +32,41 @@ function getCachedDashboardData(userId: string) {
           orderBy: { created_at: "desc" },
           take: 15,
         }),
+        prisma.attempt.findMany({
+          where: {
+            user_id: userId,
+            is_correct: true,
+            created_at: { gte: sixMonthsAgo }
+          },
+          select: { created_at: true },
+        }),
       ]);
 
-      return { totalAttempted, correctAttempts, lastFiveAttempts, recentFailures };
+      // Aggregate activity data by date (YYYY-MM-DD)
+      const activityData: Record<string, number> = {};
+      rawActivity.forEach((attempt) => {
+        const date = new Date(attempt.created_at).toISOString().split("T")[0];
+        activityData[date] = (activityData[date] || 0) + 1;
+      });
+
+      // Calculate Current Streak
+      let currentStreak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let checkDate = new Date(today);
+      const toISO = (d: Date) => d.toISOString().split("T")[0];
+
+      // If no activity today, check if yesterday was the end of a streak
+      if (!activityData[toISO(checkDate)]) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      while (activityData[toISO(checkDate)]) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      return { totalAttempted, correctAttempts, lastFiveAttempts, recentFailures, activityData, currentStreak };
     },
     [`dashboard-${userId}`],
     { revalidate: 30, tags: ["dashboard"] }
@@ -44,7 +80,7 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  const { totalAttempted, correctAttempts, lastFiveAttempts, recentFailures } = 
+  const { totalAttempted, correctAttempts, lastFiveAttempts, recentFailures, activityData, currentStreak } = 
     await getCachedDashboardData(userId);
 
   const accuracy = totalAttempted > 0 ? Math.round((correctAttempts / totalAttempted) * 100) : 0;
@@ -77,9 +113,12 @@ export default async function DashboardPage() {
 
         <div className="bg-white p-6 rounded-xl border shadow-sm">
           <h3 className="text-sm font-medium text-gray-500 mb-1">Current Streak</h3>
-          <p className="text-4xl font-bold text-blue-600">1 🔥</p>
+          <p className="text-4xl font-bold text-blue-600">{currentStreak} {currentStreak === 1 ? 'Day' : 'Days'} 🔥</p>
         </div>
       </div>
+      
+      {/* Activity Heatmap */}
+      <ActivityHeatmap data={activityData} currentStreak={currentStreak} />
 
       {/* Recent Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-12">

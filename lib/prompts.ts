@@ -1,52 +1,56 @@
 export function buildQuestionPrompt(
-    examType: string,
-    subject: string,
-    topicName: string,
-    atomicLogic: string,
-    difficultyLevel: string,
-    recentQuestionsContext: string = "None"
+   examType: string,
+   subject: string,
+   topicName: string,
+   atomicLogic: string,
+   difficultyLevel: string,
+   recentQuestionsContext: string = "None"
 ): string {
-    return `
-You are an expert question setter for the ${examType} examination (e.g., GATE), known for creating conceptually deep and tricky questions.
+   return `
+You are an expert question setter for the ${examType} exam (e.g., GATE).
 
-Generate FIVE high-quality multiple-choice question.
+Generate EXACTLY 5 high-quality, conceptually deep questions.
 
-SUBJECT: ${subject}
-TOPIC: ${topicName}
-CORE CONCEPT (Atomic Logic): ${atomicLogic}
-DIFFICULTY: ${difficultyLevel}
+CONTEXT:
+- Subject: ${subject}
+- Topic: ${topicName}
+- Core Concept: ${atomicLogic}
+- Difficulty: ${difficultyLevel}
 
-STRICT REQUIREMENTS:
+QUESTION MIX (MANDATORY):
+- At least 1 MCQ (1 correct out of 4)
+- At least 1 MSQ (multiple correct; clearly mention "Select one or more correct options")
+- At least 1 NAT (numeric answer, no options)
 
-1. The question MUST strictly test ONLY the given atomic logic, but at a deep conceptual level.
-2. The question should require multi-step reasoning, calculation, or conceptual deduction (not direct formula substitution).
-3. Avoid storytelling. Use concise, technical, exam-style language similar to actual GATE papers.
-4. Include realistic numerical values where appropriate (integers, fractions, or standard constants).
-5. The difficulty must match ${difficultyLevel}:
-   - EASY → single concept, direct reasoning
-   - MEDIUM → 2-step reasoning
-   - HARD → tricky, multi-step, conceptual traps
-
-6. Options must:
-   - Be very close to each other (to test precision)
-   - Include common conceptual mistakes as distractors
-   - Be non-obvious (avoid easy elimination)
-
-7. Do NOT repeat patterns, numbers, or structures from:
+RULES:
+1. Questions must strictly test ONLY the given core concept.
+2. Avoid repetition from:
    ${recentQuestionsContext}
+3. Difficulty:
+   - EASY: direct, single-step
+   - MEDIUM: 2-step reasoning
+   - HARD: multi-step, tricky, conceptual traps
+4. Options (MCQ/MSQ):
+   - Exactly 4 options (A–D)
+   - Include plausible distractors based on common mistakes
+5. NAT:
+   - Single numeric answer (integer or decimal only, no range)
+6. Ensure all 5 questions are DISTINCT in structure, values, and reasoning.
+7. The questions should be challenging and thought-provoking, requiring deep understanding of the subject matter.
 
-8. Ensure the question is solvable and unambiguous.
-
-OUTPUT FORMAT (STRICT JSON ARRAY, NO EXTRA TEXT):
+OUTPUT FORMAT (STRICT JSON ARRAY ONLY):
 [
   {
     "question_text": "string",
-    "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-    "correct_answer": "A | B | C | D",
-    "explanation": "Step-by-step clear explanation with reasoning"
+    "question_type": "MCQ | MSQ | NAT",
+    "options": ["A. ...", "B. ...", "C. ...", "D. ..."] OR [],
+    "correct_answer": "A" OR "A, C" OR "42.5",
+    "explanation": "Clear step-by-step reasoning"
   }
 ]
 
-Return exactly 5 objects in the array. No markdown, no preamble.
+IMPORTANT:
+- Return ONLY valid JSON (no markdown, no extra text)
+- Total questions = 5
 `;
 }

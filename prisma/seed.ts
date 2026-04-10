@@ -16,58 +16,86 @@ async function main() {
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
-      topic_name: 'Logic Gates',
-      atomic_logic: `Generate GATE-level questions covering binary, decimal, octal, hexadecimal conversions, 1's and 2's complement representation, overflow detection, and range of signed numbers. Include both conceptual and numerical problems.`
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Basic Computer Organization',
+      atomic_logic: `Generate GATE-level questions covering functional units of a computer, instruction execution cycle, register organization, bus structure, and basic performance metrics. Include conceptual and flow-based questions.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
-      topic_name: 'Boolean Algebra',
-      atomic_logic: `Generate GATE-level questions covering Boolean identities, De Morgan’s laws, simplification of expressions, canonical forms (SOP/POS), and equivalence transformations. Include tricky simplification and expression evaluation problems.`
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Number Representation',
+      atomic_logic: `Generate GATE-level questions covering number systems (binary, octal, hexadecimal), signed representations (1's complement, 2's complement), floating-point representation (IEEE 754), and overflow detection. Include numerical problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
-      topic_name: 'K-Map',
-      atomic_logic: `Generate GATE-level questions covering Karnaugh Map simplification for 2, 3, and 4 variables, grouping rules, don’t-care conditions, and minimal SOP/POS forms. Include cases requiring optimal grouping and elimination of redundancy.`
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Boolean Algebra & Logic Gates',
+      atomic_logic: `Generate GATE-level questions covering logic gates, Boolean algebra, minimization techniques, and implementation of logic circuits. Include expression simplification and circuit design problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
+      subject: 'Computer Organization & Architecture',
       topic_name: 'Combinational Circuits',
-      atomic_logic: `Generate GATE-level questions covering multiplexers, demultiplexers, encoders, decoders, adders, subtractors, and comparators. Include logic design, truth tables, and minimum gate implementation problems.`
+      atomic_logic: `Generate GATE-level questions covering adders, subtractors, multiplexers, decoders, encoders, comparators, and ALU design. Include truth table and logic design problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
-      topic_name: 'Multiplexer & Decoder',
-      atomic_logic: `Generate GATE-level questions focusing on implementation of Boolean functions using multiplexers and decoders, select line calculations, and conversion between different combinational circuits.`
-    },
-    {
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Digital Logic',
+      subject: 'Computer Organization & Architecture',
       topic_name: 'Sequential Circuits',
-      atomic_logic: `Generate GATE-level questions covering state machines, state transition diagrams, memory elements, and differences between combinational and sequential circuits. Include conceptual and design-based questions.`
+      atomic_logic: `Generate GATE-level questions covering flip-flops, registers, counters, timing diagrams, and state machines. Include sequence analysis and design problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
-      topic_name: 'Flip-Flops',
-      atomic_logic: `Generate GATE-level questions covering SR, JK, D, and T flip-flops, characteristic equations, excitation tables, race conditions, and conversions between flip-flop types.`
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Instruction Set Architecture (ISA)',
+      atomic_logic: `Generate GATE-level questions covering instruction formats, addressing modes, instruction types, and instruction execution. Include effective address calculation problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Digital Logic',
-      topic_name: 'Counters & Registers',
-      atomic_logic: `Generate GATE-level questions covering synchronous and asynchronous counters, shift registers, ring counters, Johnson counters, and timing/sequence analysis problems.`
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'CPU Organization',
+      atomic_logic: `Generate GATE-level questions covering data path, control unit (hardwired vs microprogrammed), micro-operations, and instruction pipelining basics. Include conceptual and diagram-based questions.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Pipelining',
+      atomic_logic: `Generate GATE-level questions covering pipeline stages, hazards (data, control, structural), pipeline performance, speedup, and stalling. Include numerical problems on CPI and speedup.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Memory Organization',
+      atomic_logic: `Generate GATE-level questions covering memory hierarchy, cache memory (mapping techniques, replacement policies), main memory, and associative memory. Include cache hit/miss and effective memory access time problems.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Virtual Memory',
+      atomic_logic: `Generate GATE-level questions covering paging, segmentation, page replacement algorithms (FIFO, LRU, Optimal), TLB, and address translation. Include numerical problems on page faults.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Input-Output Organization',
+      atomic_logic: `Generate GATE-level questions covering I/O techniques (programmed, interrupt-driven, DMA), I/O interfaces, and data transfer methods. Include conceptual and flow-based questions.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+      topic_name: 'Performance & Parallelism',
+      atomic_logic: `Generate GATE-level questions covering performance metrics (CPI, MIPS), Amdahl’s Law, instruction-level parallelism, and basic concepts of parallel architectures. Include numerical problems.`
     }
   ];
 

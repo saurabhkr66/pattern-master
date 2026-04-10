@@ -29,6 +29,7 @@ model Pattern {
   branch       String
   questions    GeneratedQuestion[]
   pyqs         PYQ[]
+  short_notes  String?
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
 }
@@ -42,6 +43,7 @@ model PYQ {
   explanation    String
   year           Int
   exam_type      String
+  question_type  String   @default("MCQ")
   created_at     DateTime @default(now())
   attempts       Attempt[]
   pattern        Pattern  @relation(fields: [pattern_id], references: [id])
@@ -57,6 +59,7 @@ model GeneratedQuestion {
   correct_answer   String
   explanation      String
   difficulty_level String
+  question_type    String    @default("MCQ")
   semantic_hash    String    @unique
   created_at       DateTime  @default(now())
   attempts         Attempt[]
