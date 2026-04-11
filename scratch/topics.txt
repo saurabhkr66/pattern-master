@@ -1,0 +1,121 @@
+Linear Equations
+Circle Equations
+ER to Relational Mapping
+Relational Algebra - Tuple Calculus
+SQL - Aggregate Functions & NULLs
+Concurrency - Two-Phase Locking (2PL)
+Timestamp Ordering Protocol
+FSM - State Reduction
+DMA - Cycle Stealing
+8085 Addressing Modes
+Binary Search
+SQL Query - Joins
+Relational Algebra - Division Operator
+SQL - Nested Subqueries
+FD - Lossless Join Decomposition
+FD - Dependency Preserving
+Canonical Cover
+Transactions - View Serializability
+Indexing - Secondary B+ Tree
+Hashing - Extendible Hashing
+Banker's Algorithm - Safety Check
+Recurrence Relations
+Paging & Segmentation
+Divide and Conquer
+Merge Sort
+Quick Sort
+Dijkstra's Algorithm
+ER Model - Cardinality & Participation
+Greedy Algorithms
+Dynamic Programming
+Breadth First Search (BFS)
+Depth First Search (DFS)
+Topological Sorting
+Bellman-Ford Algorithm
+Floyd-Warshall Algorithm
+Minimum Spanning Tree (Kruskal & Prim)
+Union-Find (Disjoint Set)
+String Matching (KMP)
+Hashing
+Backtracking
+Branch and Bound
+Threads
+Process Concept
+CPU Scheduling
+Process Synchronization
+Deadlocks
+Memory Management Basics
+Paging
+Segmentation
+Virtual Memory
+Page Replacement Algorithms
+File Systems
+Disk Scheduling
+I/O Systems
+System Calls
+Interprocess Communication (IPC)
+Protection and Security
+Number System
+Boolean Algebra
+K-Map
+Combinational Circuits
+Multiplexer & Decoder
+Sequential Circuits
+Flip-Flops
+Counters & Registers
+Logic Gates
+Linear Algebra
+Calculus
+Probability & Statistics
+Pumping Lemma for CFL
+Turing Machines (TM)
+Decidability & Undecidability
+Chomsky Hierarchy
+Discrete Mathematics
+Graph Theory
+Numerical Methods
+Differential Equations
+Transform Theory
+Introduction to Compilers
+Lexical Analysis
+Syntax Analysis
+Top-Down Parsing
+Bottom-Up Parsing
+Semantic Analysis
+Intermediate Code Generation
+Code Optimization
+Code Generation
+Runtime Environment
+Error Detection & Recovery
+Introduction to TOC
+Regular Expressions
+Finite Automata (DFA & NFA)
+Pumping Lemma for Regular Languages
+Context-Free Grammars (CFG)
+Normal Forms (CNF & GNF)
+Pushdown Automata (PDA)
+Introduction & OSI/TCP-IP Models
+Physical Layer
+Data Link Layer
+Switching Techniques
+Network Layer & IP Addressing
+Routing Algorithms
+Transport Layer
+Application Layer
+Congestion & Flow Control
+Network Security Basics
+Basic Computer Organization
+Number Representation
+Boolean Algebra & Logic Gates
+Instruction Set Architecture (ISA)
+CPU Organization
+Input-Output Organization
+Performance & Parallelism
+Linked List
+Relational Model
+Determinant
+Multiplexer
+Pipelining
+Memory Organization
+Heap and Heap Sort
+Asymptotic Analysis

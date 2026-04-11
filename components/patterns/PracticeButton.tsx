@@ -127,7 +127,14 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       isCorrect = userAns === correctAns;
       finalAnswer = userAns;
     } else if (type === "NAT") {
-      isCorrect = natValue.trim() === question.correct_answer.trim();
+      const correctAnsStr = question.correct_answer.trim();
+      if (correctAnsStr.includes(":")) {
+        const [minStr, maxStr] = correctAnsStr.split(":");
+        const userVal = parseFloat(natValue.trim());
+        isCorrect = !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
+      } else {
+        isCorrect = natValue.trim() === correctAnsStr;
+      }
       finalAnswer = natValue;
     }
 
@@ -138,8 +145,9 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: question._isPyq ? undefined : question.id,
-          pyqId: question._isPyq ? question.id : undefined,
+          questionId: (question._isPyq || question._isSubjectPyq) ? undefined : question.id,
+          pyqId: (question._isPyq && !question._isSubjectPyq) ? question.id : undefined,
+          subjectPyqId: question._isSubjectPyq ? question.id : undefined,
           isCorrect,
           userAnswer: finalAnswer,
         }),
@@ -155,11 +163,24 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     const type = question.question_type || "MCQ";
     if (type === "MCQ") return selectedAnswer === question.correct_answer;
     if (type === "MSQ") {
-      const userAns = msqSelections.sort().join(", ");
-      const correctAns = question.correct_answer.split(",").map((s: string) => s.trim()).sort().join(", ");
+      const userAns = msqSelections.sort().join("");
+      const correctAns = (question.correct_answer || "")
+        .split(/[;,]/)
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+        .sort()
+        .join("");
       return userAns === correctAns;
     }
-    if (type === "NAT") return natValue.trim() === question.correct_answer.trim();
+    if (type === "NAT") {
+      const correctAnsStr = (question.correct_answer || "").trim();
+      if (correctAnsStr.includes(":")) {
+        const [minStr, maxStr] = correctAnsStr.split(":");
+        const userVal = parseFloat(natValue.trim());
+        return !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
+      }
+      return natValue.trim() === correctAnsStr;
+    }
     return false;
   };
 
@@ -292,6 +313,42 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 content={question.question_text} 
                 className="text-sm md:text-base font-bold text-gray-700 dark:text-gray-300 leading-relaxed" 
               />
+
+              {/* Question Images */}
+              {question.images && Array.isArray(question.images) && question.images.length > 0 && (
+                <div className="flex flex-col gap-4 py-2">
+                  {question.images.map((img: any, idx: number) => {
+                    const getImageUrl = (img: any) => {
+                      if (img.base64) return img.base64;
+                      if (!img.url) return '';
+                      
+                      // Fix common corruption in seed: prefixing data:image with site URL
+                      if (img.url.includes('data:image')) {
+                        const dataUriMatch = img.url.match(/data:image\/[^;]+;base64,[^"']+/);
+                        if (dataUriMatch) return dataUriMatch[0];
+                      }
+
+                      // Use proxy for external gateoverflow.in links to avoid CORS issues
+                      if (img.url.includes('gateoverflow.in')) {
+                        return `/api/proxy-image?url=${encodeURIComponent(img.url)}`;
+                      }
+                      
+                      return img.url;
+                    };
+
+                    return (
+                      <div key={idx} className="flex justify-center bg-white dark:bg-black/20 rounded-xl p-2 border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden">
+                        <img 
+                          src={getImageUrl(img)} 
+                          alt={`Question detail ${img.index || idx}`}
+                          className="max-w-full h-auto rounded-lg object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* MCQ / MSQ options */}

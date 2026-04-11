@@ -35,6 +35,29 @@ model Pattern {
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
 }
 
+model SubjectPattern {
+  id           String       @id @default(uuid())
+  subject_name String       @unique
+  pyqs         SubjectPYQ[]
+}
+
+model SubjectPYQ {
+  id                 String         @id @default(uuid())
+  subject_pattern_id String
+  question_text      String
+  options            Json
+  correct_answer     String
+  explanation        String
+  year               Int
+  question_type      String         @default("MCQ")
+  images             Json?
+  created_at         DateTime       @default(now())
+  subject_pattern    SubjectPattern @relation(fields: [subject_pattern_id], references: [id])
+  attempts           Attempt[]
+
+  @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
+}
+
 model PYQ {
   id             String   @id @default(uuid())
   pattern_id     String
@@ -45,6 +68,7 @@ model PYQ {
   year           Int
   exam_type      String
   question_type  String   @default("MCQ")
+  images         Json?
   created_at     DateTime @default(now())
   attempts       Attempt[]
   pattern        Pattern  @relation(fields: [pattern_id], references: [id])
@@ -61,6 +85,7 @@ model GeneratedQuestion {
   explanation      String
   difficulty_level String
   question_type    String    @default("MCQ")
+  images           Json?
   semantic_hash    String    @unique
   created_at       DateTime  @default(now())
   attempts         Attempt[]
@@ -77,5 +102,9 @@ model Attempt {
   created_at  DateTime           @default(now())
   user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   question    GeneratedQuestion? @relation(fields: [question_id], references: [id])
-  pyq         PYQ?               @relation(fields: [pyq_id], references: [id])
+  pyq                PYQ?               @relation(fields: [pyq_id], references: [id])
+  subject_pyq        SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id])
+  subject_pyq_id     String?
+
+  @@index([user_id, is_correct, created_at(sort: Desc)])
 }

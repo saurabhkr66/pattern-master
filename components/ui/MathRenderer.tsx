@@ -3,6 +3,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
+import remarkBreaks from 'remark-breaks';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
@@ -12,17 +13,32 @@ interface MathRendererProps {
 }
 
 export default function MathRenderer({ content, className }: MathRendererProps) {
+  // Pre-process common LaTeX delimiters so remark-math recognizes them
+  const processedContent = (content || '')
+    .replace(/\\\[/g, '$$$$')
+    .replace(/\\\]/g, '$$$$')
+    .replace(/\\\(/g, '$')
+    .replace(/\\\)/g, '$');
+
   return (
     <div className={className}>
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
+        remarkPlugins={[remarkMath, remarkBreaks]}
         rehypePlugins={[rehypeKatex]}
         components={{
-          // Ensure p tags don't add extra margins if unintended
-          p: ({ children }) => <span className="block mb-2 last:mb-0">{children}</span>,
+          pre: ({ children }) => (
+            <pre className="whitespace-pre-wrap break-words bg-transparent p-0 m-0 font-mono text-[13px]">
+              {children}
+            </pre>
+          ),
+          code: ({ children }) => (
+            <code className="whitespace-pre-wrap break-words bg-transparent p-0 font-mono">
+              {children}
+            </code>
+          ),
         }}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );

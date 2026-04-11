@@ -7,98 +7,104 @@ async function main() {
 
   const notes = [
     {
-      topic: 'Heap and Heap Sort',
-      content: `### 1. Heap Properties
-• **Complete Binary Tree**: Every level is fully filled, except possibly the last, which is filled from left to right.
-• **Heap Order Property**: 
-  - **Max-Heap**: Parent key ≥ Child keys. (Root is Maximum)
-  - **Min-Heap**: Parent key ≤ Child keys. (Root is Minimum)
+      topic: 'Quick Sort',
+      content: `### 1. Definition
+Quick Sort is a **Divide and Conquer** sorting algorithm that selects a **pivot element** and partitions the array such that elements less than pivot go to left and greater go to right.
 
-### 2. Array Representation
-For a node at index \`i\`:
-- Parent: \`floor((i-1)/2)\`
-- Left Child: \`2i + 1\`
-- Right Child: \`2i + 2\`
+- In-place sorting algorithm
+- Not stable
 
-### 3. Key Operations & Time Complexity
-- **Insert**: $O(log n)$ - Add at end and 'Bubble Up'.
-- **Delete Root**: $O(log n)$ - Replace with last element and 'Max-Heapify'.
-- **Build-Heap**: $O(n)$ - Using bottom-up heapify.
-- **Heap Sort**: $O(n log n)$ - In-place, not stable.
+### 2. Core Idea
+- Choose a pivot
+- Partition array around pivot
+- Recursively sort left and right parts
 
-### 4. Priority Queues
-- Heaps are the most efficient structure for implementing Priority Queues.
-- Extract-Max/Min: $O(log n)$.`
-    },
-    {
-      topic: 'Pipelining',
-      content: `### 1. Basic Concept
-• Overlapping the execution of multiple instructions to increase throughput.
-• **Cycle Time ($t_p$)** = $max(\text{stage delays}) + \text{register delay}$.
+### 3. Partitioning (Important)
+Rearrange elements so that:
+- Left side → elements < pivot
+- Right side → elements > pivot
 
-### 2. Performance Metrics
-- **Speedup ($S$)** = $\frac{\text{Time}_{non-pipelined}}{\text{Time}_{pipelined}} = \frac{n \cdot k}{k + n - 1}$ (for $n$ instructions, $k$ stages).
-- **Ideal Speedup** = $k$ (number of stages).
-- **Efficiency ($\eta$)** = $\frac{S}{k}$.
-- **Throughput** = $\frac{n}{\text{Total Time}}$.
+Pivot reaches its correct position
 
-### 3. Hazards (Pipeline Stalls)
-1. **Structural Hazard**: Resource conflict (e.g., two instructions accessing memory).
-2. **Data Hazard**: Depends on result of previous instruction.
-   - RAW (Read After Write) - Most common.
-   - WAR (Write After Read).
-   - WAW (Write After Write).
-3. **Control Hazard**: Branch instructions causing flow changes.`
-    },
-    {
-      topic: 'Memory Organization',
-      content: `### 1. Memory Hierarchy
-- Register > Cache > Main Memory > Secondary Storage.
-- As we go down: Cost decreases, Capacity increases, Access Time increases.
+### 4. Algorithm Steps
+1. Select pivot element
+2. Partition array
+3. Recursively apply on left subarray
+4. Recursively apply on right subarray
 
-### 2. Cache Mapping Techniques
-- **Direct Mapping**: Block $j$ maps to $(j \mod N)$. High conflict miss.
-- **Fully Associative**: Block can go anywhere. Requires complex hardware.
-- **Set-Associative**: Block $j$ maps to set $(j \mod S)$. Balanced approach.
+### 5. Pseudo Code
+\`\`\`pseudo
+quickSort(arr, low, high):
+    if low < high:
+        pi = partition(arr, low, high)
 
-### 3. Write Policies
-- **Write-Through**: Write to both Cache and Main Memory simultaneously.
-- **Write-Back**: Write only to Cache; update Main Memory when block is replaced.`
-    },
-    {
-      topic: 'Process Concept',
-      content: `### 1. Process States
-• **New**: Being created.
-• **Ready**: Waiting for CPU.
-• **Running**: Instructions executing.
-• **Waiting**: Waiting for I/O event.
-• **Terminated**: Finished execution.
+        quickSort(arr, low, pi - 1)
+        quickSort(arr, pi + 1, high)
+\`\`\`
 
-### 2. Process Control Block (PCB)
-- Identifier (PID).
-- Program Counter (PC).
-- CPU Registers.
-- Memory Limits.
-- List of open files.
+### 6. Partition Function
+\`\`\`pseudo
+partition(arr, low, high):
+    pivot = arr[high]
+    i = low - 1
 
-### 3. Context Switching
-- Storing state of old process and loading state for new one.
-- **Overhead**: No useful work done during switch. $O(1)$ usually.`
-    },
-    {
-        topic: 'Binary Search',
-        content: `### 1. Core Logic
-• Divide and conquer approach on sorted arrays.
-• Compare middle element with target.
+    for j = low to high - 1:
+        if arr[j] < pivot:
+            i++
+            swap(arr[i], arr[j])
 
-### 2. Complexity Analysis
-- **Best Case**: $O(1)$ - Middle element is target.
-- **Avg/Worst Case**: $O(log n)$.
-- **Space Complexity**: $O(1)$ iterative, $O(log n)$ recursive.
+    swap(arr[i + 1], arr[high])
+    return i + 1
+\`\`\`
 
-### 3. Loop Invariants
-- Search range: \`[low, high]\`.
-- Termination condition: \`low > high\`.`
+### 7. Recurrence Relation
+T(n) = T(k) + T(n-k-1) + Θ(n)
+### 8. Time Complexity
+- Best Case → O(n log n)
+- Average Case → O(n log n)
+- Worst Case → O(n^2) (when pivot is worst)
+
+### 9. Space Complexity
+- O(log n) (recursion stack)
+
+### 10. Key Properties
+- In-place sorting
+- Cache friendly (fast in practice)
+- Not stable
+
+### 11. Pivot Selection (Important)
+- First element
+- Last element
+- Random element
+- Median of three (best practice)
+
+### 12. Quick Sort vs Merge Sort
+Quick Sort:
+- In-place
+- Faster in practice
+- Worst case O(n^2)
+
+Merge Sort:
+- Stable
+- Uses extra space
+- Guaranteed O(n log n)
+
+### 13. Applications (GATE Important)
+- General-purpose sorting
+- Used in libraries (optimized versions)
+
+### 14. Identification Trick
+If problem involves:
+- In-place sorting
+- Partitioning logic
+- Fast average performance
+
+→ Use Quick Sort
+
+### 15. Final Insight
+Quick Sort = Partition + Recursion
+
+Performance depends heavily on **pivot selection**`
     }
   ];
 

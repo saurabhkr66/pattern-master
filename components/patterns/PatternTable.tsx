@@ -1,62 +1,51 @@
-// components/patterns/PatternTable.tsx
-"use client";
-
-import { useState, useEffect, useRef } from "react";
+"use client"
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useRef } from "react";
 import PatternRow from "./PatternRow";
 
 export default function PatternTable({ 
   patterns, 
-  highlightPatternId 
+  highlightPatternId,
+  subjectStats,
+  activeSubject 
 }: { 
   patterns: any[], 
-  highlightPatternId?: string 
+  highlightPatternId?: string,
+  subjectStats: Record<string, number>,
+  activeSubject: string
 }) {
-  // 1. Get unique subjects with counts for the top tabs
-  const subjectCounts: Record<string, number> = {};
-  patterns.forEach((p) => {
-    const s = p.subject || "Unknown";
-    subjectCounts[s] = (subjectCounts[s] || 0) + 1;
-  });
-  const subjects = ["All", ...Object.keys(subjectCounts)];
-
-  const [activeSubject, setActiveSubject] = useState("All");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [openPatternId, setOpenPatternId] = useState<string | null>(highlightPatternId || null);
   const tableRef = useRef<HTMLDivElement>(null);
 
-  // Load persisted subject on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("activeSubject");
-    if (saved && subjects.includes(saved)) {
-      setActiveSubject(saved);
-    }
-  }, []);
+  // 1. Prepare subjects for tabs
+  const subjects = ["All", ...Object.keys(subjectStats).sort()];
+  const totalTopicCount = Object.values(subjectStats).reduce((a, b) => a + b, 0);
 
-  // Auto-filter if a highlightPatternId is provided (from Dashboard "Solve Again")
-  useEffect(() => {
-    if (highlightPatternId) {
-      const targetPattern = patterns.find(p => p.id === highlightPatternId);
-      if (targetPattern) {
-        setActiveSubject(targetPattern.subject);
-        setOpenPatternId(highlightPatternId);
-        localStorage.setItem("activeSubject", targetPattern.subject);
-      }
-    }
-  }, [highlightPatternId, patterns]);
+  const [isPending, startTransition] = React.useTransition();
 
-  // Smooth scroll to the table when a filter is clicked
+  // Smooth scroll and URL update
   const handleFilterClick = (subject: string) => {
-    setActiveSubject(subject);
-    localStorage.setItem("activeSubject", subject);
-    // Scroll the table into view smoothly
-    setTimeout(() => {
-      tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
+    if (isPending) return;
+    
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("subject", subject);
+      
+      // Reset pattern highlight/open state when switching subjects
+      setOpenPatternId(null);
+      
+      router.push(`?${params.toString()}`, { scroll: false });
+
+      // Scroll the table into view
+      setTimeout(() => {
+        tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    });
   };
 
-  // 2. Filter patterns based on the top tab
-  const filteredPatterns = activeSubject === "All" 
-    ? patterns 
-    : patterns.filter(p => p.subject === activeSubject);
+  const filteredPatterns = patterns; // Server already filtered them
 
   return (
     <div className="w-full space-y-4">
@@ -67,7 +56,7 @@ export default function PatternTable({
       >
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {subjects.map((s) => {
-            const count = s === "All" ? patterns.length : subjectCounts[s];
+            const count = s === "All" ? totalTopicCount : subjectStats[s];
             const isActive = activeSubject === s;
             return (
               <button
@@ -77,7 +66,7 @@ export default function PatternTable({
                   isActive
                     ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
                     : "hover:opacity-80"
-                }`}
+                } ${isPending && !isActive ? "opacity-30 pointer-events-none" : ""}`}
                 style={isActive ? undefined : { background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}
               >
                 {s}
@@ -126,7 +115,7 @@ export default function PatternTable({
       </div>
 
       <div className="flex justify-between px-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-        <span>{filteredPatterns.length} of {patterns.length} topics</span>
+        <span>{filteredPatterns.length} of {totalTopicCount} topics</span>
         <span>Verified for GATE 2027</span>
       </div>
     </div>

@@ -6,595 +6,400 @@ async function main() {
   console.log('📜 Seeding Previous Year Questions (PYQs)...');
   const pyqData = [
     {
-      pattern: {
-        exam_type: "GATE",
-        branch: "CSE",
-        topic_name: "Concurrency - Two-Phase Locking (2PL)"
+      "pattern": {
+        "exam_type": "GATE",
+        "branch": "CSE",
+        "topic_name": "Routing Algorithms"
       },
-      pyqs: [
-
-        // ─────────────────────────────────────────────
-        // MCQ
-        // ─────────────────────────────────────────────
+      "pyqs": [
         {
-          question_text: "Which of the following correctly describes the Two-Phase Locking (2PL) protocol?",
-          options: [
-            "A. A transaction acquires all locks at the beginning and releases them all at the end",
-            "B. A transaction has a growing phase where it acquires locks and a shrinking phase where it releases locks, and it never acquires a new lock after releasing one",
-            "C. A transaction acquires and releases locks alternately throughout its execution",
-            "D. A transaction releases all locks before it starts acquiring new ones"
+          "question_text": "Routing algorithms determine the best path for packets to travel from source to destination across a network. Which of the following correctly classifies routing algorithms?",
+          "options": [
+            "A. Static routing: routes are manually configured and do not change; Dynamic routing: routes are automatically updated based on network topology changes",
+            "B. Static routing uses Dijkstra's algorithm; Dynamic routing uses Bellman-Ford",
+            "C. Static routing adapts to network failures automatically; Dynamic routing requires manual intervention",
+            "D. Both static and dynamic routing use the same algorithm internally"
           ],
-          correct_answer: "B",
-          explanation: "2PL divides a transaction's locking activity into two phases: (1) Growing phase — locks are acquired, none released; (2) Shrinking phase — locks are released, none acquired. The lock point is the moment when the transaction holds its maximum number of locks. Once a lock is released, no new lock can be acquired.",
-          year: 2000,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Routing algorithm classification: Static (non-adaptive) routing: routes are preconfigured by the network administrator and remain fixed regardless of network conditions. Simple but cannot adapt to failures or congestion. Suitable for small, stable networks. Dynamic (adaptive) routing: routes are automatically recalculated based on current network topology and traffic conditions. Routers exchange routing information to build and maintain routing tables. Subtypes: distance vector (RIP — uses Bellman-Ford), link-state (OSPF — uses Dijkstra's), path vector (BGP). Dynamic routing adapts to failures but has higher complexity and overhead.",
+          "year": 2000,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "The Two-Phase Locking protocol guarantees:",
-          options: [
-            "A. Freedom from deadlocks",
-            "B. Serializability of concurrent transactions",
-            "C. Freedom from starvation",
-            "D. Both serializability and freedom from deadlocks"
+          "question_text": "Distance vector routing is based on the Bellman-Ford algorithm. Each router maintains a distance table and periodically shares it with directly connected neighbors. Which of the following correctly describes the Bellman-Ford update rule used in distance vector routing?",
+          "options": [
+            "A. D(x, y) = min over all neighbors v of {cost(x, v) + D(v, y)}",
+            "B. D(x, y) = max over all neighbors v of {cost(x, v) + D(v, y)}",
+            "C. D(x, y) = cost(x, y) only if x and y are directly connected",
+            "D. D(x, y) = cost(x, v) × D(v, y) for the best neighbor v"
           ],
-          correct_answer: "B",
-          explanation: "2PL guarantees conflict serializability — any schedule produced by transactions following 2PL is conflict serializable. However, 2PL does NOT prevent deadlocks (transactions can still hold locks and wait for each other). Deadlock prevention requires additional mechanisms like timestamps or lock ordering.",
-          year: 2001,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "The Bellman-Ford equation (distance vector routing): D(x, y) = min over all neighbors v of {cost(x, v) + D(v, y)}, where D(x, y) is the estimated cost from router x to destination y, cost(x, v) is the link cost from x to neighbor v, and D(v, y) is neighbor v's estimated cost to y. Each router x updates its distance table whenever it receives an updated table from a neighbor or a link cost changes. This is the distributed Bellman-Ford — each router only knows local link costs and its neighbors' distance vectors, yet converges to the global shortest paths (assuming no negative cycles).",
+          "year": 2001,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "In Strict 2PL, all exclusive (write) locks are:",
-          options: [
-            "A. Released immediately after the write operation",
-            "B. Released only after the transaction commits or aborts",
-            "C. Released at the lock point",
-            "D. Converted to shared locks at the end of the growing phase"
+          "question_text": "The count-to-infinity problem is a well-known issue in distance vector routing. Which of the following correctly describes this problem?",
+          "options": [
+            "A. When a link fails, routers may increment the metric indefinitely because they receive incorrect routing information from neighbors who still believe the route exists",
+            "B. When a router receives too many routing updates, it counts them to infinity and crashes",
+            "C. The count-to-infinity problem occurs in link-state routing when LSAs are flooded too frequently",
+            "D. Count-to-infinity happens when the network has too many routers"
           ],
-          correct_answer: "B",
-          explanation: "Strict 2PL requires that all exclusive (X) locks be held until the transaction commits or aborts. This prevents dirty reads and cascading aborts. Rigorous 2PL additionally holds ALL locks (shared and exclusive) until commit/abort.",
-          year: 2002,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Count-to-infinity: suppose router A reaches destination D via router B (cost 1). If the A-D link fails: B still believes it can reach D via A (cost 2 from B's perspective). A updates its table: it can reach D via B at cost 3. B updates: via A at cost 4. This ping-pong continues, incrementing the metric slowly toward infinity (16 in RIP). Mitigation techniques: Split horizon — don't advertise a route back to the neighbor from which you learned it. Split horizon with route poisoning — advertise failed routes with metric = infinity (16 in RIP). Holddown timers — ignore updates about a failed route for a period. Triggered updates — send updates immediately on change rather than waiting for the periodic timer.",
+          "year": 2002,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Which variant of 2PL holds ALL locks (both shared and exclusive) until the transaction commits or aborts?",
-          options: [
-            "A. Basic 2PL",
-            "B. Conservative 2PL",
-            "C. Strict 2PL",
-            "D. Rigorous 2PL"
+          "question_text": "Link-state routing requires each router to have a complete map of the network topology. Which of the following steps are performed by a link-state routing algorithm such as OSPF?",
+          "options": [
+            "A. Each router discovers its neighbors using Hello packets",
+            "B. Each router creates a Link State Advertisement (LSA) describing its links and costs",
+            "C. LSAs are flooded to all routers in the area",
+            "D. Each router runs Dijkstra's algorithm on its Link State Database to compute shortest paths"
           ],
-          correct_answer: "D",
-          explanation: "Rigorous 2PL (also called Strong Strict 2PL) holds all locks — both shared (S) and exclusive (X) — until the transaction commits or aborts. This is the strongest variant. Strict 2PL only holds X locks until commit; Basic 2PL only requires two phases; Conservative 2PL acquires all locks before starting.",
-          year: 2003,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C, D",
+          "explanation": "Link-state routing protocol steps (OSPF): (1) Neighbor discovery — routers send Hello packets on each interface; routers that exchange Hellos become neighbors. (2) LSA creation — each router generates a Link State Advertisement describing its router ID, its neighbors, and the cost to each neighbor. (3) LSA flooding — each router reliably floods its LSA to every other router in the OSPF area; each router forwards each LSA exactly once (using sequence numbers to detect duplicates). (4) Link State Database (LSDB) — each router builds an identical topology graph from the collected LSAs. (5) SPF calculation — each router independently runs Dijkstra's Shortest Path First (SPF) algorithm on the LSDB, computing the shortest-path tree rooted at itself. (6) Routing table — the SPF tree's next-hops populate the routing table.",
+          "year": 2003,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Conservative (Static) 2PL avoids deadlocks by:",
-          options: [
-            "A. Acquiring all required locks before the transaction begins execution",
-            "B. Using timestamps to order transactions",
-            "C. Releasing all locks at the commit point",
-            "D. Converting exclusive locks to shared locks during execution"
+          "question_text": "Consider the following network with routers and link costs:\nRouter A connects to B (cost 1), A to C (cost 4), B to C (cost 2), B to D (cost 5), C to D (cost 1).\nUsing Dijkstra's algorithm starting from router A, what is the shortest path cost from A to D?",
+          "options": [
+            "A. 4",
+            "B. 5",
+            "C. 6",
+            "D. 7"
           ],
-          correct_answer: "A",
-          explanation: "Conservative 2PL (pre-claiming) requires a transaction to acquire ALL locks it will ever need before it starts executing. If any lock is unavailable, the transaction waits without holding any locks. This eliminates deadlocks but requires prior knowledge of all data items to be accessed.",
-          year: 2004,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Dijkstra's from A: Initialize: d[A]=0, d[B]=∞, d[C]=∞, d[D]=∞. Visit A (d=0): update d[B]=1, d[C]=4. Visit B (d=1): update d[C]=min(4, 1+2)=3, d[D]=1+5=6. Visit C (d=3): update d[D]=min(6, 3+1)=4. Visit D (d=4): done. Shortest path A to D = 4, via A→B→C→D (cost 1+2+1=4).",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Consider two transactions $T_1$ and $T_2$. $T_1$ holds an exclusive lock on data item $X$ and requests a lock on $Y$. $T_2$ holds an exclusive lock on $Y$ and requests a lock on $X$. This situation is an example of:",
-          options: [
-            "A. Cascading abort",
-            "B. Deadlock",
-            "C. Starvation",
-            "D. Phantom read"
+          "question_text": "RIP (Routing Information Protocol) is a distance vector protocol with specific characteristics. Which of the following are correct properties of RIP?",
+          "options": [
+            "A. RIP uses hop count as its metric with a maximum of 15 hops",
+            "B. RIP broadcasts full routing table updates every 30 seconds",
+            "C. A hop count of 16 in RIP indicates an unreachable destination",
+            "D. RIP uses Dijkstra's algorithm to compute shortest paths"
           ],
-          correct_answer: "B",
-          explanation: "This is a classic deadlock: $T_1$ waits for $T_2$ to release $Y$, while $T_2$ waits for $T_1$ to release $X$. Neither can proceed. The wait-for graph has a cycle $T_1 \\to T_2 \\to T_1$. Deadlock detection uses cycle detection in the wait-for graph.",
-          year: 2005,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C",
+          "explanation": "RIP (RFC 2453) properties: A: TRUE — metric = hop count (number of routers between source and destination); maximum valid metric = 15. B: TRUE — RIP sends complete routing table updates via UDP (port 520) to all directly connected neighbors every 30 seconds. RIPv1 uses broadcast; RIPv2 uses multicast (224.0.0.9). C: TRUE — metric 16 = infinity, meaning the destination is unreachable. This small infinity limits RIP to small networks (maximum diameter = 15 hops). D: FALSE — RIP uses the distributed Bellman-Ford algorithm (distance vector), not Dijkstra's. OSPF uses Dijkstra's (link-state). RIP convergence is slow, especially prone to count-to-infinity.",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "A schedule is conflict serializable if and only if its precedence graph (conflict graph) is:",
-          options: [
-            "A. Connected",
-            "B. A complete graph",
-            "C. Acyclic (a DAG)",
-            "D. A tree"
+          "question_text": "OSPF uses areas to scale link-state routing to large networks. Which of the following correctly describes OSPF areas?",
+          "options": [
+            "A. All OSPF routers must be in Area 0 (backbone area); all other areas must connect to Area 0",
+            "B. LSA flooding is contained within an area, reducing overhead in large networks",
+            "C. Routers on the boundary between areas are called Area Border Routers (ABRs) and summarize routing information between areas",
+            "D. OSPF areas eliminate the need for running Dijkstra's algorithm"
           ],
-          correct_answer: "C",
-          explanation: "A schedule is conflict serializable iff its precedence (serialization) graph is acyclic. If there is a cycle, the schedule is not conflict serializable. If acyclic, a topological sort of the graph gives an equivalent serial schedule.",
-          year: 2006,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C",
+          "explanation": "OSPF hierarchical routing with areas: A: TRUE — Area 0 is the backbone; all other areas (Area 1, 2, ...) must have at least one connection to Area 0. This star topology of areas ensures all inter-area traffic passes through the backbone. B: TRUE — LSA flooding is contained within a single area, preventing the entire network from being flooded. ABRs summarize inter-area routing information (Type 3 LSAs), drastically reducing LSDB size in large networks. C: TRUE — ABRs (Area Border Routers) have interfaces in multiple areas; they receive detailed LSAs from each area and generate summary LSAs for other areas. D: FALSE — OSPF always runs Dijkstra's algorithm within each area; areas reduce the size of the topology graph on which SPF runs, not eliminate it.",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Which of the following schedules violates the Two-Phase Locking protocol?\n$T_1$: lock-X(A), read(A), write(A), unlock(A), lock-X(B), write(B), unlock(B)\n$T_2$: lock-X(A), read(A), unlock(A)",
-          options: [
-            "A. $T_1$ violates 2PL because it acquires lock on $B$ after releasing lock on $A$",
-            "B. $T_2$ violates 2PL because it does not write",
-            "C. Neither $T_1$ nor $T_2$ violates 2PL",
-            "D. Both $T_1$ and $T_2$ violate 2PL"
+          "question_text": "What is the key difference between interior gateway protocols (IGPs) and exterior gateway protocols (EGPs)?",
+          "options": [
+            "A. IGPs are used for routing within a single autonomous system (AS); EGPs are used for routing between different autonomous systems",
+            "B. IGPs use path vector routing; EGPs use link-state routing",
+            "C. IGPs are more scalable than EGPs for internet-wide routing",
+            "D. IGPs route based on AS path; EGPs route based on hop count"
           ],
-          correct_answer: "A",
-          explanation: "$T_1$ releases the lock on $A$ (unlock(A)) and then acquires a new lock on $B$ (lock-X(B)). This violates 2PL — once the shrinking phase begins (first unlock), no new locks can be acquired. $T_2$ only has one lock which it acquires and releases — that is a valid (trivial) 2PL schedule.",
-          year: 2007,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Autonomous System (AS): a collection of IP networks under a single administrative domain with a consistent routing policy (e.g., an ISP, a university, a company). IGP (Interior Gateway Protocol): routing within a single AS. Examples: OSPF (link-state), RIP (distance vector), EIGRP (hybrid), IS-IS (link-state). IGPs can optimize for performance metrics (hop count, bandwidth, delay). EGP (Exterior Gateway Protocol): routing between different ASes. The only currently used EGP is BGP-4. EGPs must support policy-based routing (business relationships, contracts), AS loop prevention, and scalability to the entire internet (BGP routing tables currently hold ~900,000+ prefixes).",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Cascading rollback (cascading abort) in basic 2PL occurs when:",
-          options: [
-            "A. A deadlock is detected and a victim transaction is aborted",
-            "B. A transaction reads a dirty value written by another transaction that later aborts, causing the reader to also abort",
-            "C. Two transactions try to write the same data item simultaneously",
-            "D. A transaction cannot acquire a lock and is forced to restart"
+          "question_text": "BGP (Border Gateway Protocol) uses path vector routing. Which of the following correctly describes how BGP prevents routing loops?",
+          "options": [
+            "A. BGP includes the full AS path in each route advertisement; if a router's own AS number appears in the path, the route is rejected",
+            "B. BGP uses TTL fields like IP to detect loops",
+            "C. BGP uses split horizon to prevent routing loops between ASes",
+            "D. BGP relies on OSPF within each AS to detect inter-AS loops"
           ],
-          correct_answer: "B",
-          explanation: "Cascading rollback occurs when transaction $T_2$ reads a value written by $T_1$ (dirty read), and $T_1$ subsequently aborts. Since $T_2$'s read was based on $T_1$'s uncommitted write, $T_2$ must also be rolled back. Basic 2PL allows this; Strict 2PL prevents it by holding X locks until commit.",
-          year: 2008,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "BGP loop prevention using AS_PATH attribute: every BGP route advertisement carries the AS_PATH — an ordered sequence of AS numbers that the route has traversed. When a BGP router receives an advertisement: it checks if its own AS number (ASN) appears in the AS_PATH. If yes → the route would create a loop → it is rejected (not used or propagated). If no → the router prepends its own ASN to the AS_PATH and propagates the route. Example: AS1 → AS2 → AS3 route has AS_PATH [AS1, AS2]. When AS3 sends this back toward AS1, AS1 sees its own ASN [AS1] in the path and rejects it. This is analogous to poison reverse but at the AS level.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "The 'lock point' of a transaction in 2PL is defined as:",
-          options: [
-            "A. The point at which the transaction first acquires a lock",
-            "B. The point at which the transaction holds the maximum number of locks",
-            "C. The point at which the transaction commits",
-            "D. The midpoint between the first lock acquisition and the last lock release"
+          "question_text": "Split horizon is a technique to mitigate the count-to-infinity problem in distance vector routing. Which of the following correctly describes the split horizon rule?",
+          "options": [
+            "A. A router does not advertise a route back to the neighbor from which it learned that route",
+            "B. A router splits its routing table in half and sends each half to different neighbors",
+            "C. A router advertises all routes to all neighbors without exception",
+            "D. A router advertises a route back to its source neighbor with metric = infinity (poison reverse)"
           ],
-          correct_answer: "B",
-          explanation: "The lock point is the point in time at which the transaction has acquired all the locks it needs (end of the growing phase / beginning of the shrinking phase) and holds the maximum number of locks. The serial order of transactions equivalent to a 2PL schedule corresponds to the order of their lock points.",
-          year: 2009,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Split horizon rule: if router A learned that destination D is reachable via router B (next hop = B), then A will NOT include destination D in its routing updates sent back to B. Rationale: B already knows the best path to D (it told A about it), so advertising it back is useless and can cause count-to-infinity. Simple split horizon (option A) suppresses the advertisement entirely. Poisoned reverse (option D) is a stronger variant: instead of suppressing the advertisement, the router advertises the route back with metric = infinity (16 in RIP), explicitly telling the neighbor 'I can't reach D via you'. Poisoned reverse uses more bandwidth but converges faster than simple split horizon.",
+          "year": 2009,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "In the context of 2PL, which of the following anomalies is prevented by Strict 2PL but NOT by Basic 2PL?",
-          options: [
-            "A. Non-repeatable read",
-            "B. Phantom read",
-            "C. Dirty read (cascading abort)",
-            "D. Deadlock"
+          "question_text": "Consider a network where router X has the following distance vector table (destinations A, B, C, D with costs through neighbors Y and Z):\nVia Y: A=7, B=2, C=5, D=3\nVia Z: A=2, B=3, C=4, D=6\nLink cost X-Y=1 and X-Z=2. What is X's best cost to destination A?",
+          "options": [
+            "A. 7",
+            "B. 4",
+            "C. 3",
+            "D. 9"
           ],
-          correct_answer: "C",
-          explanation: "Basic 2PL can release X locks before commit, allowing other transactions to read uncommitted (dirty) data. If the writer aborts, the reader must also abort — cascading rollback. Strict 2PL holds X locks until commit, preventing dirty reads and cascading aborts entirely.",
-          year: 2010,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "B",
+          "explanation": "Using the Bellman-Ford equation: D(X, A) = min over neighbors {cost(X, neighbor) + D(neighbor, A)}. Via Y: cost(X, Y) + D(Y, A) = 1 + 7 = 8. Via Z: cost(X, Z) + D(Z, A) = 2 + 2 = 4. D(X, A) = min(8, 4) = 4, via neighbor Z. Note: the table entries given are what Y and Z report as their costs to the destinations. X computes its own cost by adding the link cost to Y or Z respectively. Best path to A = 4 through Z.",
+          "year": 2010,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Consider the schedule $S$: $r_1(X)\\ r_2(X)\\ w_1(X)\\ w_2(X)$. Is this schedule produced by 2PL transactions?",
-          options: [
-            "A. Yes, both transactions follow 2PL",
-            "B. No, $T_1$ cannot write $X$ after $T_2$ has read $X$ without violating serializability",
-            "C. No, this schedule is not conflict serializable — there is a cycle in the precedence graph",
-            "D. Yes, because both transactions only have one lock point each"
+          "question_text": "Hierarchical routing is used to scale routing algorithms to large networks. Which of the following correctly describes the advantages and disadvantages of hierarchical routing?",
+          "options": [
+            "A. Hierarchical routing reduces the routing table size and LSA flooding overhead at the cost of potentially non-optimal routes",
+            "B. Hierarchical routing always produces shorter paths than flat routing",
+            "C. Hierarchical routing eliminates the need for inter-domain routing protocols",
+            "D. Hierarchical routing increases memory usage compared to flat routing"
           ],
-          correct_answer: "C",
-          explanation: "Precedence graph edges: $r_2(X)$ before $w_1(X)$ → $T_2 \\to T_1$. $w_1(X)$ before $w_2(X)$ → $T_1 \\to T_2$. Cycle: $T_1 \\to T_2 \\to T_1$. Schedule is NOT conflict serializable. A 2PL schedule is always conflict serializable, so this schedule CANNOT be produced by 2PL transactions.",
-          year: 2011,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Hierarchical routing: routers are grouped into regions/areas/ASes. Within a region, routers know the full topology. Between regions, only summary information is exchanged. Advantages: (1) Reduced routing table size — routers only store detailed routes for their region and summary routes for other regions. (2) Reduced LSA flooding — link-state updates don't propagate beyond area boundaries (in OSPF). (3) Scalability — the internet cannot run flat link-state routing (billions of prefixes would require exabytes of memory). Disadvantages: (1) Routes may be non-optimal — summarization loses detailed topology information, so the chosen path may not be the globally shortest. (2) Configuration complexity — area design, ABR configuration, summarization policies. D is FALSE — hierarchical routing reduces memory usage.",
+          "year": 2011,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Which of the following is TRUE about the relationship between 2PL variants?",
-          options: [
-            "A. Basic 2PL $\\subset$ Strict 2PL $\\subset$ Rigorous 2PL (in terms of schedules produced)",
-            "B. Rigorous 2PL $\\subset$ Strict 2PL $\\subset$ Basic 2PL",
-            "C. All variants produce exactly the same set of schedules",
-            "D. Conservative 2PL produces more schedules than Basic 2PL"
+          "question_text": "In OSPF, what types of router roles exist and what are their functions?",
+          "options": [
+            "A. Internal Router (IR): all interfaces within one OSPF area",
+            "B. Area Border Router (ABR): interfaces in multiple OSPF areas; summarizes routes between areas",
+            "C. Autonomous System Boundary Router (ASBR): connects OSPF to external routing domains (e.g., BGP); redistributes external routes into OSPF",
+            "D. Designated Router (DR): elected on multi-access networks to reduce LSA flooding overhead"
           ],
-          correct_answer: "B",
-          explanation: "Rigorous 2PL is the most restrictive (holds all locks until commit), producing the fewest schedules. Strict 2PL is less restrictive (holds only X locks until commit). Basic 2PL is the least restrictive (just requires two phases). So: Rigorous 2PL ⊂ Strict 2PL ⊂ Basic 2PL in terms of allowed schedules.",
-          year: 2012,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C, D",
+          "explanation": "OSPF router types: A: Internal Router — all interfaces in the same OSPF area; maintains one LSDB. B: ABR (Area Border Router) — has interfaces in multiple areas (including Area 0); maintains separate LSDBs for each area; generates Type 3 summary LSAs to share inter-area routes. C: ASBR (Autonomous System Boundary Router) — connects the OSPF domain to external routing protocols (BGP, RIP, EIGRP, static routes); generates Type 5 external LSAs for redistributed routes. D: DR (Designated Router) — elected on broadcast multi-access networks (Ethernet) to reduce the number of adjacencies. Without DR, n routers would form n(n-1)/2 adjacencies; with DR, each router forms adjacency only with DR and BDR (Backup DR), reducing to n-1 adjacencies. LSAs are flooded through the DR.",
+          "year": 2012,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Two transactions $T_1$ and $T_2$ follow 2PL. $T_1$ has lock point at time 10 and $T_2$ has lock point at time 15. The equivalent serial schedule is:",
-          options: [
-            "A. $T_2$ followed by $T_1$",
-            "B. $T_1$ followed by $T_2$",
-            "C. Either order is valid",
-            "D. No equivalent serial schedule exists"
+          "question_text": "BGP uses several path attributes to select the best route when multiple paths exist. Which of the following is the correct order of BGP route selection criteria (from highest to lowest priority)?",
+          "options": [
+            "A. Highest LOCAL_PREF → Shortest AS_PATH → Lowest MED → eBGP over iBGP → Lowest IGP cost to next-hop → Lowest Router ID",
+            "B. Shortest AS_PATH → Highest LOCAL_PREF → Lowest MED → Lowest Router ID",
+            "C. Lowest MED → Highest LOCAL_PREF → Shortest AS_PATH → Lowest Router ID",
+            "D. Highest Weight → Highest LOCAL_PREF → Shortest AS_PATH → Lowest MED → eBGP over iBGP → Lowest IGP metric → Lowest Router ID"
           ],
-          correct_answer: "B",
-          explanation: "In 2PL, the transactions are serialized in the order of their lock points. $T_1$'s lock point (10) comes before $T_2$'s lock point (15), so the equivalent serial order is $T_1$ followed by $T_2$. This is a key property of 2PL: lock point order = serialization order.",
-          year: 2013,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "D",
+          "explanation": "BGP best path selection (Cisco implementation, commonly tested): (1) Highest Weight (Cisco-proprietary, local to router). (2) Highest LOCAL_PREF (local to AS, higher = preferred; used for outbound routing policy). (3) Locally originated routes preferred. (4) Shortest AS_PATH length. (5) Lowest Origin type (IGP < EGP < Incomplete). (6) Lowest MED (Multi-Exit Discriminator — hint to neighboring AS about preferred entry point). (7) eBGP routes preferred over iBGP routes. (8) Lowest IGP metric to BGP next-hop. (9) Oldest eBGP route (for stability). (10) Lowest BGP Router ID (tie-breaker). The mnemonic: 'We Love Oranges As Oranges Mean Pure Refreshment' for Weight, LOCAL_PREF, Originated, AS_PATH, Origin, MED, Prefer eBGP, Router ID.",
+          "year": 2013,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "In the wait-for graph used for deadlock detection, a directed edge $T_i \\to T_j$ means:",
-          options: [
-            "A. $T_i$ has completed and $T_j$ can now proceed",
-            "B. $T_i$ is waiting for $T_j$ to release a lock that $T_i$ needs",
-            "C. $T_i$ holds a lock that $T_j$ needs",
-            "D. $T_j$ was aborted and $T_i$ is its replacement"
+          "question_text": "Flooding is the simplest routing algorithm where every incoming packet is sent out on every outgoing link except the one it arrived on. Which of the following are TRUE about flooding?",
+          "options": [
+            "A. Flooding guarantees delivery if any path exists between source and destination",
+            "B. Flooding is extremely robust against router failures",
+            "C. Flooding creates duplicate packets and wastes bandwidth",
+            "D. Flooding uses a routing table to determine the best path"
           ],
-          correct_answer: "B",
-          explanation: "In the wait-for graph, $T_i \\to T_j$ means $T_i$ is waiting for $T_j$ to release a lock. A deadlock exists iff the wait-for graph has a cycle. The DBMS periodically checks for cycles and aborts one transaction (the victim) to break the deadlock.",
-          year: 2014,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C",
+          "explanation": "Flooding characteristics: A: TRUE — flooding sends packets on ALL paths simultaneously; if any path exists to the destination, flooding will find it. B: TRUE — flooding is maximally robust — even if multiple routers fail, as long as one path survives the packet will be delivered. Used in military networks and link-state routing (controlled flooding of LSAs). C: TRUE — flooding generates exponentially many duplicate packets. Without countermeasures (hop limit, sequence numbers, reverse path forwarding), packets loop forever. Solutions: hop count limit in the packet header, sequence number per source so routers discard duplicates. D: FALSE — flooding requires NO routing table; it simply forwards on all links except the input — this is its key advantage (no routing computation) and disadvantage (massive redundancy).",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Which of the following deadlock prevention schemes uses timestamps to decide whether a transaction should wait or be rolled back?",
-          options: [
-            "A. Two-phase locking with lock ordering",
-            "B. Wait-Die and Wound-Wait schemes",
-            "C. Conservative 2PL",
-            "D. Timeout-based detection"
+          "question_text": "Hot potato routing (deflection routing) is a routing strategy used in some networks. Which of the following correctly describes hot potato routing?",
+          "options": [
+            "A. A router forwards a packet on the link with the lowest queue length, getting rid of the packet as quickly as possible regardless of whether it is the optimal path",
+            "B. Hot potato routing always selects the shortest path to the destination",
+            "C. Hot potato routing is used in OSPF to select between equal-cost paths",
+            "D. Hot potato routing increases average path length to improve reliability"
           ],
-          correct_answer: "B",
-          explanation: "Wait-Die and Wound-Wait are timestamp-based deadlock prevention schemes. Wait-Die: older transaction waits; younger dies (rolls back). Wound-Wait: older wounds (forces rollback of) younger; younger waits. Both assign timestamps at transaction start and use them to resolve conflicts without letting deadlocks form.",
-          year: 2015,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "Hot potato routing: a router treats packets like 'hot potatoes' — it wants to get rid of them immediately. The router forwards each packet on the outgoing link with the shortest queue (least congestion), regardless of whether this link is on the optimal path to the destination. The goal is to minimize local queueing delay, not minimize end-to-end path length. This is used in: some ISP intra-AS routing (get traffic off the AS network quickly — 'early exit' or 'closest exit' routing), some optical networks, deflection routing in fault-tolerant systems. Trade-off: reduces local congestion but may increase total path length and end-to-end delay.",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "A transaction $T_1$ (timestamp = 5) requests a lock held by $T_2$ (timestamp = 10). Under the Wait-Die scheme:",
-          options: [
-            "A. $T_1$ waits because it is older",
-            "B. $T_1$ dies (rolls back) because it is older",
-            "C. $T_2$ is wounded (rolled back) because it is younger",
-            "D. $T_2$ waits because it is younger"
+          "question_text": "Equal-Cost Multi-Path (ECMP) routing allows traffic to be distributed across multiple equal-cost paths. Which of the following correctly describes ECMP?",
+          "options": [
+            "A. ECMP load-balances traffic across multiple paths that have the same routing metric to a destination",
+            "B. ECMP selects the path with the highest bandwidth for all traffic",
+            "C. ECMP is only supported in BGP, not in OSPF or RIP",
+            "D. ECMP requires all paths to have the same physical link speed"
           ],
-          correct_answer: "A",
-          explanation: "In Wait-Die: if the requesting transaction is OLDER (smaller timestamp) than the holder, it WAITS. If YOUNGER, it DIES (rolls back). $T_1$ has timestamp 5 (older) and $T_2$ has timestamp 10 (younger). Since $T_1$ is older, $T_1$ WAITS.",
-          year: 2016,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "ECMP (Equal-Cost Multi-Path): when multiple paths to a destination have identical routing metric (equal cost), ECMP distributes traffic across all these paths rather than selecting just one. Load balancing methods: per-flow hashing (same flow always takes same path, preserving packet order), per-packet round-robin (may reorder packets), per-destination. Supported by: OSPF (install multiple equal-cost next-hops for same destination), IS-IS, EIGRP, BGP (with specific configuration). Benefits: increased effective bandwidth (uses multiple links), redundancy (path failure just removes one path). ECMP is not limited by physical link speed — it works with any equal-cost paths. Data centers use ECMP extensively with fat-tree and Clos topologies.",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Under the Wound-Wait scheme, transaction $T_1$ (timestamp = 5) requests a lock held by $T_2$ (timestamp = 10). What happens?",
-          options: [
-            "A. $T_1$ waits because it is older",
-            "B. $T_1$ wounds $T_2$ — $T_2$ is rolled back",
-            "C. $T_2$ wounds $T_1$ — $T_1$ is rolled back",
-            "D. $T_1$ dies because $T_2$ holds the lock"
+          "question_text": "IS-IS (Intermediate System to Intermediate System) is a link-state routing protocol used as an alternative to OSPF. Which of the following correctly describes IS-IS compared to OSPF?",
+          "options": [
+            "A. IS-IS runs directly over Layer 2 (does not use IP); OSPF runs over IP",
+            "B. IS-IS uses a two-level hierarchy (Level 1 and Level 2) analogous to OSPF areas",
+            "C. IS-IS uses the same SPF algorithm (Dijkstra's) as OSPF",
+            "D. IS-IS cannot support IPv6; OSPF has OSPFv3 for IPv6"
           ],
-          correct_answer: "B",
-          explanation: "In Wound-Wait: if requesting transaction is OLDER, it WOUNDS (preempts) the holder — the holder is rolled back. If YOUNGER, it WAITS. $T_1$ (timestamp 5) is older than $T_2$ (timestamp 10), so $T_1$ wounds $T_2$ — $T_2$ is rolled back and $T_1$ gets the lock.",
-          year: 2017,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C",
+          "explanation": "IS-IS vs OSPF: A: TRUE — IS-IS runs directly over the Data Link Layer (it is not encapsulated in IP packets). This makes IS-IS immune to IP routing errors during convergence — an advantage in large ISP networks. OSPF encapsulates its messages in IP packets (protocol number 89). B: TRUE — IS-IS has Level 1 (intra-area routing) and Level 2 (inter-area/backbone routing); Level 1/2 routers handle both. Analogous to OSPF's area structure and ABRs. C: TRUE — both IS-IS and OSPF use Dijkstra's Shortest Path First algorithm on their respective link-state databases. D: FALSE — IS-IS supports IPv6 through extension TLVs (Multi-Topology IS-IS); it is widely used for IPv6 routing in ISP networks. OSPFv3 is the OSPF variant for IPv6.",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Which of the following is a correct statement about 2PL and recoverability?",
-          options: [
-            "A. Basic 2PL ensures recoverable schedules",
-            "B. Strict 2PL ensures recoverable schedules and avoids cascading aborts",
-            "C. Basic 2PL avoids cascading aborts",
-            "D. Rigorous 2PL allows dirty reads"
+          "question_text": "In link-state routing, LSA flooding uses sequence numbers to ensure each LSA is forwarded only once. Which of the following problems does sequence numbering solve?",
+          "options": [
+            "A. Without sequence numbers, a router could forward the same LSA multiple times, causing an infinite LSA flood",
+            "B. Sequence numbers allow routers to determine which copy of an LSA is newer when multiple copies exist",
+            "C. Sequence numbers replace the need for authentication in OSPF",
+            "D. Sequence numbers ensure LSAs arrive in the order they were sent"
           ],
-          correct_answer: "B",
-          explanation: "Strict 2PL holds X locks until commit, ensuring no other transaction can read uncommitted data (preventing dirty reads). This makes schedules recoverable and avoids cascading aborts. Basic 2PL does not prevent dirty reads or cascading aborts. Rigorous 2PL also prevents dirty reads (holds all locks).",
-          year: 2018,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B",
+          "explanation": "LSA sequence numbers in OSPF serve two purposes: A: TRUE — flooding prevention: each router records the sequence number of every LSA it has forwarded. If the same LSA arrives again (with the same sequence number), the router discards it as a duplicate, stopping infinite re-flooding. B: TRUE — freshness determination: when a router receives multiple copies of an LSA for the same originating router, it keeps and forwards only the one with the highest sequence number (most recent). Older LSAs are discarded. OSPF uses a 32-bit sequence number starting from 0x80000001 and incrementing. LSAs also have an age field (seconds since origination) and are refreshed every 30 minutes (MaxAge = 60 min). C: FALSE — OSPF authentication is separate (MD5 or SHA-based). D: FALSE — sequence numbers track LSA version, not delivery order.",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Consider the schedule: $r_1(A),\\ r_2(B),\\ w_1(B),\\ w_2(A)$. The precedence graph has edges:",
-          options: [
-            "A. $T_1 \\to T_2$ and $T_2 \\to T_1$ (cycle — not serializable)",
-            "B. $T_1 \\to T_2$ only",
-            "C. $T_2 \\to T_1$ only",
-            "D. No edges — schedule is trivially serializable"
+          "question_text": "A network administrator notices that routing convergence after a link failure takes very long with RIP but much faster with OSPF. What is the primary reason for this difference in convergence speed?",
+          "options": [
+            "A. RIP uses hop count; OSPF uses bandwidth as metric",
+            "B. RIP converges slowly because it relies on periodic updates every 30 seconds and has the count-to-infinity problem; OSPF converges faster because link-state changes are immediately flooded and Dijkstra's is rerun",
+            "C. OSPF has more routers than RIP networks",
+            "D. RIP uses TCP for reliable delivery; OSPF uses UDP which is faster"
           ],
-          correct_answer: "A",
-          explanation: "Conflicts: $r_2(B)$ before $w_1(B)$ → $T_2 \\to T_1$ (read-write conflict on $B$). $r_1(A)$ before $w_2(A)$ → $T_1 \\to T_2$ (read-write conflict on $A$). Cycle $T_1 \\to T_2 \\to T_1$ exists. Schedule is NOT conflict serializable and cannot be produced by 2PL.",
-          year: 2019,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "B",
+          "explanation": "Convergence speed comparison: RIP: (1) Waits for the next periodic update (up to 30 seconds) to propagate failure information. (2) Count-to-infinity causes incremental, slow propagation of failure information (bad news travels slowly). (3) Holddown timers add further delay. Total convergence: can take several minutes. OSPF: (1) When a link fails, the router immediately sends a new LSA with the failed link's cost set to infinity (triggered update). (2) LSAs are reliably flooded to ALL routers in the area within seconds. (3) Each router immediately reruns Dijkstra's algorithm upon receiving the LSA update. (4) Convergence time: typically seconds to tens of seconds. A is a metric difference, not convergence. D is reversed (OSPF uses its own reliable flooding mechanism, not TCP or UDP in the traditional sense).",
+          "year": 2019,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Predicate locking is used in 2PL to address which problem?",
-          options: [
-            "A. Deadlock among transactions",
-            "B. Phantom reads — tuples inserted by one transaction not visible to another",
-            "C. Dirty reads caused by uncommitted writes",
-            "D. Non-repeatable reads of existing tuples"
+          "question_text": "The Bellman-Ford algorithm is used in distance vector routing. Consider a network with 5 routers (A, B, C, D, E) and the following links: A-B(1), B-C(2), C-D(1), D-E(1), A-E(10). After how many iterations of Bellman-Ford does the shortest path from A to E converge?",
+          "options": [],
+          "correct_answer": "4",
+          "explanation": "Bellman-Ford finds shortest paths in at most V-1 = 4 iterations for V = 5 vertices. Let's trace: the shortest path A→B→C→D→E has cost 1+2+1+1=5 (better than direct A-E=10). Iteration 1: d[B]=1(A-B), d[E]=10(A-E). Iteration 2: d[C]=3(A-B-C), d[E]=10 (no improvement via B-E). Wait, there is no B-E link. Iteration 2: d[C]=1+2=3. Iteration 3: d[D]=3+1=4. Iteration 4: d[E]=min(10, 4+1)=5. The shortest path A-B-C-D-E=5 < A-E=10 is found at iteration 4. Bellman-Ford requires 4 = V-1 iterations because the shortest path A→E has 4 edges.",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "question_text": "Policy-based routing allows network administrators to override shortest-path routing based on business policies. Which of the following are valid policy-based routing decisions made in BGP?",
+          "options": [
+            "A. Prefer routes through a business partner AS over routes through a competitor AS even if the competitor's path is shorter",
+            "B. Use BGP LOCAL_PREF to prefer one exit point from an AS over another for all traffic to a specific prefix",
+            "C. Set MED (Multi-Exit Discriminator) to influence which entry point neighboring ASes use when sending traffic into the AS",
+            "D. BGP cannot implement any routing policies — it always uses shortest AS path"
           ],
-          correct_answer: "B",
-          explanation: "Phantom reads occur when a transaction re-executes a query and finds new tuples (phantoms) inserted by another committed transaction. Predicate (or range) locks lock all tuples satisfying a predicate — including future inserts — preventing phantoms. Index locking is a practical implementation.",
-          year: 2020,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A, B, C",
+          "explanation": "BGP policy-based routing examples: A: TRUE — ISPs establish business relationships (customer, peer, provider). Routing policies enforce: traffic from customers can be forwarded to providers and peers (customer pays); peer traffic only forwarded to/from own customers (settlement-free peering). A router preferring a business partner's path over a competitor's uses LOCAL_PREF or WEIGHT attributes. B: TRUE — LOCAL_PREF is set by the BGP router and propagated to all iBGP peers within the same AS. Higher LOCAL_PREF = preferred exit. Used to implement 'primary/backup' exit policies. C: TRUE — MED (Multi-Exit Discriminator) is sent to neighboring ASes to suggest which entry point to use when they have multiple connections to your AS. Lower MED = preferred entry. D: FALSE — BGP's primary purpose IS policy-based routing; it explicitly allows (and requires) policies for proper operation.",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         },
         {
-          question_text: "Multiple Granularity Locking (MGL) with 2PL uses intention locks. Which of the following is the correct compatibility: can a transaction holding IS on a table grant another transaction an X lock on the same table?",
-          options: [
-            "A. Yes, IS and X are always compatible",
-            "B. No, IS and X are incompatible",
-            "C. Yes, but only if both transactions are reading",
-            "D. Yes, because IS is a weaker mode than X"
+          "question_text": "In distance vector routing, a router receives the following update from its neighbor N: destination D is reachable at cost 5 via N. The router's link cost to N is 3. The router currently has a route to D via a different neighbor M with cost 7. What action does the router take?",
+          "options": [
+            "A. Update the route to D: new cost = 3 + 5 = 8, via N; keep existing route via M (cost 7) as it is better",
+            "B. Update the route to D: new cost = 8 via N, which is worse than 7 via M; keep the route via M",
+            "C. Immediately discard the update from N",
+            "D. Send the updated routing table to all neighbors regardless"
           ],
-          correct_answer: "B",
-          explanation: "In MGL compatibility matrix, IS (Intention Shared) and X (Exclusive) are INCOMPATIBLE. An X lock means exclusive access to the entire table, which conflicts with any concurrent access — including those signaled by IS. Compatible pairs include: IS-IS, IS-S, IS-IX, S-S, S-IS only.",
-          year: 2021,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "B",
+          "explanation": "Bellman-Ford update rule: new cost via N = link cost to N + N's cost to D = 3 + 5 = 8. Compare with existing best: current cost to D = 7 (via M). Since 8 > 7, the route via N is NOT better — the router keeps its existing route via M with cost 7. The router only updates if the new cost is lower than the current best. No update is sent to neighbors (no change in the router's distance table). If the new cost were 6 (< 7), the router would update: route to D via N, cost 6, and then send triggered updates to its neighbors about this improvement.",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Which of the following schedules is produced by transactions following Strict 2PL?\n$T_1$: $lock$-$X(A)$, $w_1(A)$, $lock$-$X(B)$, $w_1(B)$, $commit$, $unlock(A)$, $unlock(B)$\n$T_2$: $lock$-$S(A)$, $r_2(A)$, $commit$, $unlock(A)$",
-          options: [
-            "A. No, $T_1$ violates Strict 2PL by not releasing before commit",
-            "B. Yes, $T_1$ releases X locks only after commit — correct for Strict 2PL",
-            "C. No, $T_2$ should not read $A$ while $T_1$ holds X lock on $A$",
-            "D. No, $T_2$ violates 2PL by releasing lock before other transactions finish"
+          "question_text": "Software Defined Networking (SDN) separates the control plane from the data plane. How does this affect routing compared to traditional routing?",
+          "options": [
+            "A. In SDN, a centralized controller computes routes for all switches; switches only forward packets based on flow tables installed by the controller",
+            "B. In traditional routing, a centralized server computes all routes; in SDN, each router independently computes its own routes",
+            "C. SDN eliminates the need for any routing algorithm",
+            "D. SDN and traditional routing are architecturally identical"
           ],
-          correct_answer: "B",
-          explanation: "Strict 2PL requires X locks to be held until commit or abort. $T_1$ holds X locks on $A$ and $B$, commits, then releases — this is exactly Strict 2PL. $T_2$ follows Basic 2PL (acquires S lock, reads, commits, releases). In an actual concurrent schedule, $T_2$ would be blocked from acquiring S(A) while $T_1$ holds X(A).",
-          year: 2022,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "A",
+          "explanation": "SDN architecture vs traditional routing: Traditional: each router has both a control plane (routing software running protocols like OSPF, BGP) and a data plane (hardware forwarding using routing table). Distributed computation — each router independently runs routing algorithms. SDN: control plane is separated from the data plane. Centralized SDN controller (logically centralized, physically distributed) has a global network view and computes routing/forwarding rules for ALL switches. Switches (data plane) only have flow tables installed by the controller via a southbound API (e.g., OpenFlow) — they perform simple match-action forwarding. Benefits: global optimization, simpler network devices, easier policy enforcement, programmability. Examples: Google B4 (SDN WAN), data center fabrics.",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "In 2PL, the order of transactions in the equivalent serial schedule is determined by:",
-          options: [
-            "A. The order in which transactions were submitted",
-            "B. The order of transaction commit times",
-            "C. The order of transaction lock points",
-            "D. The order in which transactions acquire their first lock"
+          "question_text": "Consider a network where OSPF is running. A router has two equal-cost paths to destination 10.0.0.0/24: one through interface Gi0/0 (cost 10) and one through Gi0/1 (cost 10). What does the router install in its routing table and how is traffic forwarded?",
+          "options": [
+            "A. Only one path is installed (arbitrarily chosen); the other is ignored",
+            "B. Both paths are installed (ECMP); traffic is load-balanced across both interfaces",
+            "C. The router selects the path through the interface with the lower IP address",
+            "D. OSPF does not support equal-cost paths"
           ],
-          correct_answer: "C",
-          explanation: "A key theorem about 2PL: the order of lock points of transactions in a 2PL schedule determines the equivalent serial order. If $T_i$'s lock point precedes $T_j$'s lock point, then $T_i$ precedes $T_j$ in the equivalent serial schedule.",
-          year: 2023,
-          exam_type: "GATE",
-          question_type: "MCQ"
+          "correct_answer": "B",
+          "explanation": "OSPF ECMP (Equal-Cost Multi-Path): when multiple paths to the same destination have identical OSPF cost, OSPF installs ALL equal-cost paths in the routing table as multiple next-hops. Traffic is load-balanced across all equal-cost paths. OSPF supports up to a configurable number of equal-cost paths (default 4-16 depending on implementation). Load balancing methods: per-destination (same destination always uses same next-hop), per-flow (5-tuple hash), or per-packet (round-robin, may reorder). ECMP effectively multiplies available bandwidth to a destination and provides automatic failover — if one path fails, the other remains. This is a key feature used in data center and enterprise networks.",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         },
         {
-          question_text: "Which of the following is the MAIN disadvantage of Conservative 2PL compared to Basic 2PL?",
-          options: [
-            "A. It does not guarantee serializability",
-            "B. It can lead to deadlocks",
-            "C. It requires prior knowledge of all data items to be accessed, reducing concurrency",
-            "D. It does not prevent cascading aborts"
+          "question_text": "Which of the following correctly describe the differences and use cases of RIP, OSPF, and BGP?",
+          "options": [
+            "A. RIP: small networks, distance vector, hop count metric, max 15 hops, slow convergence",
+            "B. OSPF: large enterprise/ISP networks, link-state, cost metric (bandwidth-based), fast convergence, hierarchical with areas",
+            "C. BGP: inter-AS internet routing, path vector, policy-based, AS_PATH loop prevention, runs over TCP port 179",
+            "D. RIP and OSPF are exterior gateway protocols; BGP is an interior gateway protocol"
           ],
-          correct_answer: "C",
-          explanation: "Conservative 2PL pre-declares and acquires all locks before execution, which prevents deadlocks but requires knowing all data items in advance (not always possible). It also reduces concurrency because transactions hold locks longer than necessary, causing others to wait even when they could proceed safely.",
-          year: 2024,
-          exam_type: "GATE",
-          question_type: "MCQ"
-        },
-        {
-          question_text: "A transaction $T$ in Basic 2PL has the following lock sequence: lock-S(A), lock-S(B), unlock(A), lock-X(C), unlock(B), unlock(C). Which statement is TRUE?",
-          options: [
-            "A. $T$ follows 2PL correctly",
-            "B. $T$ violates 2PL because it acquires lock-X(C) after releasing lock on A",
-            "C. $T$ violates 2PL because shared locks cannot be released before exclusive locks",
-            "D. $T$ violates 2PL because it holds both S and X locks simultaneously"
-          ],
-          correct_answer: "B",
-          explanation: "After unlock(A), the shrinking phase has begun. Acquiring lock-X(C) after releasing lock on A violates 2PL — no new locks can be acquired once any lock has been released. The lock-X(C) acquisition must occur before any unlock to comply with 2PL.",
-          year: 2025,
-          exam_type: "GATE",
-          question_type: "MCQ"
-        },
-
-        // ─────────────────────────────────────────────
-        // NAT
-        // ─────────────────────────────────────────────
-        {
-          question_text: "Consider transactions $T_1$, $T_2$, $T_3$ following 2PL with lock points at times 5, 3, and 8 respectively. In the equivalent serial schedule, what is the position (1st, 2nd, 3rd) of $T_1$?",
-          options: [],
-          correct_answer: "2",
-          explanation: "Lock points: $T_2 = 3$, $T_1 = 5$, $T_3 = 8$. Serial order by lock point: $T_2$ (1st), $T_1$ (2nd), $T_3$ (3rd). So $T_1$ is in position 2.",
-          year: 2003,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "In the wait-for graph with transactions $\\{T_1, T_2, T_3, T_4\\}$ and edges $T_1 \\to T_2$, $T_2 \\to T_3$, $T_3 \\to T_1$, $T_4 \\to T_2$, how many transactions are involved in a deadlock cycle?",
-          options: [],
-          correct_answer: "3",
-          explanation: "The cycle in the wait-for graph is $T_1 \\to T_2 \\to T_3 \\to T_1$ — involving $T_1$, $T_2$, and $T_3$. Transaction $T_4$ is waiting for $T_2$ but is not part of the cycle. So 3 transactions are in the deadlock.",
-          year: 2006,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "A schedule has 4 transactions. Its precedence graph has edges: $T_1 \\to T_2$, $T_1 \\to T_3$, $T_2 \\to T_4$, $T_3 \\to T_4$. How many distinct topological orderings (equivalent serial schedules) does this graph have?",
-          options: [],
-          correct_answer: "2",
-          explanation: "The DAG has $T_1$ first, $T_4$ last. $T_2$ and $T_3$ can be ordered either way. Valid orderings: $T_1, T_2, T_3, T_4$ and $T_1, T_3, T_2, T_4$. So there are 2 distinct topological orderings.",
-          year: 2009,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "Consider a schedule with 3 transactions on data items $A$ and $B$: $r_1(A),\\ w_2(A),\\ r_3(B),\\ w_1(B),\\ r_2(B),\\ w_3(A)$. How many edges are in the precedence graph of this schedule?",
-          options: [],
-          correct_answer: "4",
-          explanation: "Conflicts (different transactions, at least one write, same data item): (1) $r_1(A)$ vs $w_2(A)$: $T_1 \\to T_2$. (2) $w_2(A)$ vs $w_3(A)$: $T_2 \\to T_3$. (3) $r_3(B)$ vs $w_1(B)$: $T_3 \\to T_1$... wait: $r_3(B)$ then $w_1(B)$: $T_3 \\to T_1$. (4) $w_1(B)$ vs $r_2(B)$: $T_1 \\to T_2$. (5) $r_3(B)$ vs ... already counted. Distinct edges: $T_1 \\to T_2$, $T_2 \\to T_3$, $T_3 \\to T_1$, $T_1 \\to T_2$ (duplicate). Unique edges: $T_1 \\to T_2$, $T_2 \\to T_3$, $T_3 \\to T_1$. That is 3 edges — and there's a cycle. Let me recount: (1) $r_1(A), w_2(A)$: $T_1 \\to T_2$. (2) $w_2(A), w_3(A)$: $T_2 \\to T_3$. (3) $r_3(B), w_1(B)$: $T_3 \\to T_1$. (4) $w_1(B), r_2(B)$: $T_1 \\to T_2$ (dup). Unique = 3. Answer: 3.",
-          year: 2012,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "In Multiple Granularity Locking, the lock hierarchy is: Database → Table → Row. To lock a specific row with an X lock, how many intention locks must be acquired on ancestor nodes (Database and Table)?",
-          options: [],
-          correct_answer: "2",
-          explanation: "To acquire X lock on a row, the transaction must acquire IX (Intention Exclusive) locks on all ancestor nodes in the hierarchy. Ancestors of a row are: Table (1 IX lock) and Database (1 IX lock). So 2 intention locks must be acquired before locking the row.",
-          year: 2014,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "Consider 5 transactions following 2PL. Their lock points are at times 2, 7, 4, 9, 1. What is the position of the transaction with lock point 7 in the equivalent serial schedule?",
-          options: [],
-          correct_answer: "4",
-          explanation: "Sort by lock point: 1, 2, 4, 7, 9. The transaction with lock point 7 is at position 4 in the equivalent serial order.",
-          year: 2016,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "A system has 3 transactions each needing 2 locks. With deadlock prevention using Conservative 2PL (pre-claiming all locks), what is the minimum number of locks that must be available before any transaction can start executing?",
-          options: [],
-          correct_answer: "2",
-          explanation: "In Conservative 2PL, a transaction must acquire ALL its locks before execution. The minimum to allow at least one transaction to start is 2 locks (the number needed by one transaction). If 2 locks are available, at least one transaction can acquire all its needed locks and proceed. Answer: 2.",
-          year: 2018,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "In a Wait-Die scheme, transactions with timestamps $T_1=5$, $T_2=10$, $T_3=3$ are in the system. $T_2$ requests a lock held by $T_1$, and $T_3$ requests a lock held by $T_2$. How many transactions will be rolled back (die) due to these two requests?",
-          options: [],
-          correct_answer: "1",
-          explanation: "$T_2$ (ts=10, younger) requests lock held by $T_1$ (ts=5, older): younger requests from older → $T_2$ DIES. $T_3$ (ts=3, older) requests lock held by $T_2$ (ts=10, younger): older requests from younger → $T_3$ WAITS. Only $T_2$ is rolled back. Answer: 1.",
-          year: 2020,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "A transaction $T$ follows Strict 2PL and accesses 6 distinct data items, acquiring and releasing locks in the order: acquires lock on items 1,2,3,4,5,6 (all before any release), then releases all after commit. How many phases does this transaction have in terms of 2PL?",
-          options: [],
-          correct_answer: "2",
-          explanation: "Every 2PL transaction has exactly 2 phases regardless of how many locks it holds: (1) Growing phase — all 6 locks acquired, (2) Shrinking phase — all 6 locks released after commit (Strict 2PL). The number of data items accessed does not change the number of phases. Answer: 2.",
-          year: 2022,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-        {
-          question_text: "The precedence graph for a schedule has nodes $T_1, T_2, T_3, T_4$ and edges $T_1 \\to T_3$, $T_2 \\to T_3$, $T_2 \\to T_4$, $T_3 \\to T_4$. How many edges are in this graph?",
-          options: [],
-          correct_answer: "4",
-          explanation: "The edges listed are: $T_1 \\to T_3$, $T_2 \\to T_3$, $T_2 \\to T_4$, $T_3 \\to T_4$ — exactly 4 edges. The graph is acyclic (DAG), so the schedule is conflict serializable. One valid serial order: $T_1, T_2, T_3, T_4$.",
-          year: 2024,
-          exam_type: "GATE",
-          question_type: "NAT"
-        },
-
-        // ─────────────────────────────────────────────
-        // MSQ
-        // ─────────────────────────────────────────────
-        {
-          question_text: "Which of the following are TRUE about Two-Phase Locking (2PL)? (Select all that apply)\n(i) 2PL guarantees conflict serializability\n(ii) 2PL prevents deadlocks\n(iii) Every conflict-serializable schedule can be produced by 2PL\n(iv) The lock point order defines the equivalent serial order",
-          options: [
-            "A. (i) and (ii)",
-            "B. (i) and (iv)",
-            "C. (i), (iii), and (iv)",
-            "D. All of (i), (ii), (iii), (iv)"
-          ],
-          correct_answer: "B",
-          explanation: "(i) TRUE: 2PL guarantees conflict serializability. (ii) FALSE: 2PL does NOT prevent deadlocks — transactions can still block each other in a cycle. (iii) FALSE: NOT every conflict-serializable schedule can be produced by 2PL. 2PL is sufficient but not necessary for serializability. (iv) TRUE: lock point order = equivalent serial order.",
-          year: 2004,
-          exam_type: "GATE",
-          question_type: "MSQ"
-        },
-        {
-          question_text: "Which of the following are differences between Strict 2PL and Rigorous 2PL? (Select all that apply)\n(i) Strict 2PL releases shared locks before commit; Rigorous 2PL holds all locks until commit\n(ii) Rigorous 2PL prevents cascading aborts; Strict 2PL does not\n(iii) Strict 2PL holds only X locks until commit; Rigorous 2PL holds both S and X locks until commit\n(iv) Both prevent dirty reads",
-          options: [
-            "A. (i) and (iii)",
-            "B. (ii) and (iii)",
-            "C. (i), (iii), and (iv)",
-            "D. (iii) and (iv)"
-          ],
-          correct_answer: "C",
-          explanation: "(i) TRUE: Strict 2PL releases S locks before commit; Rigorous holds all. (ii) FALSE: Both Strict and Rigorous 2PL prevent cascading aborts (Strict holds X locks preventing dirty reads; Rigorous holds all). (iii) TRUE: correct distinction. (iv) TRUE: both prevent dirty reads — Strict because X locks prevent others from reading uncommitted writes; Rigorous because all locks held. So (i), (iii), (iv).",
-          year: 2008,
-          exam_type: "GATE",
-          question_type: "MSQ"
-        },
-        {
-          question_text: "Which of the following schedules are conflict serializable? (Select all that apply)\n(i) $r_1(A),\\ r_2(A),\\ w_1(A),\\ w_2(A)$\n(ii) $r_1(A),\\ w_1(A),\\ r_2(A),\\ w_2(A)$\n(iii) $r_1(A),\\ r_2(B),\\ w_1(B),\\ w_2(A)$\n(iv) $r_1(A),\\ w_1(B),\\ r_2(B),\\ w_2(A)$",
-          options: [
-            "A. (ii) only",
-            "B. (ii) and (iv)",
-            "C. (i) and (iii)",
-            "D. (i), (ii), and (iv)"
-          ],
-          correct_answer: "B",
-          explanation: "(i) Edges: $r_2(A) \\to w_1(A)$: $T_2 \\to T_1$; $w_1(A) \\to w_2(A)$: $T_1 \\to T_2$. Cycle — NOT serializable. (ii) Edges: $r_1(A) \\to w_2(A)$: $T_1 \\to T_2$; $w_1(A) \\to w_2(A)$ (dup). Acyclic ($T_1 \\to T_2$). Serializable. (iii) Edges: $r_1(A) \\to w_2(A)$: $T_1 \\to T_2$; $r_2(B) \\to w_1(B)$: $T_2 \\to T_1$. Cycle — NOT serializable. (iv) Edges: $w_1(B) \\to r_2(B)$: $T_1 \\to T_2$; $r_1(A) \\to w_2(A)$: $T_1 \\to T_2$. Acyclic. Serializable. Answer: (ii) and (iv).",
-          year: 2011,
-          exam_type: "GATE",
-          question_type: "MSQ"
-        },
-        {
-          question_text: "Which of the following anomalies can occur in Basic 2PL but are prevented in Strict 2PL? (Select all that apply)\n(i) Dirty read\n(ii) Cascading abort\n(iii) Non-repeatable read\n(iv) Lost update",
-          options: [
-            "A. (i) and (ii)",
-            "B. (i), (ii), and (iii)",
-            "C. (iii) and (iv)",
-            "D. All of (i), (ii), (iii), (iv)"
-          ],
-          correct_answer: "A",
-          explanation: "(i) Dirty read: possible in Basic 2PL (X locks released early); prevented in Strict 2PL. (ii) Cascading abort: caused by dirty reads — same as above. (iii) Non-repeatable read: can occur in both Basic and Strict 2PL if S locks are released early (Strict only holds X locks). (iv) Lost update: prevented by both since X locks prevent concurrent writes. So (i) and (ii) are prevented by Strict but not Basic 2PL.",
-          year: 2015,
-          exam_type: "GATE",
-          question_type: "MSQ"
-        },
-        {
-          question_text: "Which of the following are TRUE about deadlock handling in 2PL systems? (Select all that apply)\n(i) Deadlock detection uses a wait-for graph; a cycle indicates deadlock\n(ii) Deadlock prevention using timestamps includes Wait-Die and Wound-Wait schemes\n(iii) Conservative 2PL prevents deadlocks without using timestamps\n(iv) Strict 2PL inherently prevents deadlocks",
-          options: [
-            "A. (i), (ii), and (iii)",
-            "B. (i) and (ii) only",
-            "C. (ii), (iii), and (iv)",
-            "D. All of (i), (ii), (iii), (iv)"
-          ],
-          correct_answer: "A",
-          explanation: "(i) TRUE: wait-for graph cycle detection is the standard deadlock detection method. (ii) TRUE: Wait-Die and Wound-Wait use timestamps to prevent deadlocks. (iii) TRUE: Conservative 2PL pre-acquires all locks, eliminating deadlocks. (iv) FALSE: Strict 2PL holds locks longer but does NOT prevent deadlocks — it only prevents dirty reads. Transactions can still form wait cycles. So (i), (ii), (iii).",
-          year: 2019,
-          exam_type: "GATE",
-          question_type: "MSQ"
-        },
-        {
-          question_text: "Which of the following are TRUE about Multiple Granularity Locking (MGL) used with 2PL? (Select all that apply)\n(i) Intention locks must be acquired top-down (from root to leaf) before acquiring leaf locks\n(ii) Locks are released bottom-up (from leaf to root) during the shrinking phase\n(iii) IS lock on a table is compatible with X lock on the same table\n(iv) IX and S locks on the same node are compatible",
-          options: [
-            "A. (i) and (ii)",
-            "B. (i), (ii), and (iv)",
-            "C. (i) and (iii)",
-            "D. (ii) and (iv)"
-          ],
-          correct_answer: "A",
-          explanation: "(i) TRUE: In MGL, intention locks are set top-down — acquire IX/IS on ancestors before locking the target node. (ii) TRUE: Locks are released bottom-up — release the leaf lock first, then ancestor intention locks. (iii) FALSE: IS and X on the same node are INCOMPATIBLE. (iv) FALSE: IX and S are INCOMPATIBLE (S means exclusive read of entire subtree; IX means writes below). So (i) and (ii) only.",
-          year: 2023,
-          exam_type: "GATE",
-          question_type: "MSQ"
+          "correct_answer": "A, B, C",
+          "explanation": "Routing protocol comparison: A: RIP — distance vector, metric = hop count (max 15), periodic updates every 30s, slow convergence, count-to-infinity problem, suitable for small networks only. B: OSPF — link-state, metric = cost (inversely proportional to bandwidth: cost = 10^8 / interface bandwidth), triggered updates (fast convergence), hierarchical areas, Dijkstra's SPF, supports VLSM/CIDR, authentication. Widely used in enterprise and ISP networks. C: BGP — path vector, exterior gateway protocol (between ASes), policy-based routing (LOCAL_PREF, MED, AS_PATH), loop prevention via AS_PATH, TCP port 179 (reliable transport), currently BGP-4 (RFC 4271) with MP-BGP extensions for IPv6 and VPNs. D is FALSE — RIP and OSPF are interior gateway protocols (IGPs); BGP is the exterior gateway protocol (EGP).",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
         }
       ]
     }
   ];
-  // Colors for terminal beautification
+
   const colors = {
     reset: "\x1b[0m",
     bright: "\x1b[1m",
     green: "\x1b[32m",
-    cyan: "\x1b[36m",
     yellow: "\x1b[33m",
-    magenta: "\x1b[35m",
-    blue: "\x1b[34m",
     red: "\x1b[31m",
+    cyan: "\x1b[36m",
   };
 
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
-  console.log(`${colors.bright}${colors.cyan} 🎓 PATTERNMASTER PYQ SEEDER v2.0 ${colors.reset}`);
+  console.log(` ${colors.bright}🎓 PATTERNMASTER PYQ SEEDER v2.4 (Local Images & Cleanup) ${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}\n`);
 
-  let totalPatterns = pyqData.length;
+  const totalPatterns = pyqData.length;
   let processedPatterns = 0;
   let totalQuestions = 0;
   let skippedPatterns = 0;
   let errors = 0;
 
-  const summary = [];
-
   for (const item of pyqData) {
     processedPatterns++;
     const progress = `[${processedPatterns}/${totalPatterns}]`;
-    
-    // Find the pattern
-    const pattern = await prisma.pattern.findUnique({
+
+    // Check if pattern exists, create if not (or just find)
+    let pattern = await prisma.pattern.findUnique({
       where: {
         pattern_identifier: {
           exam_type: item.pattern.exam_type,
@@ -605,77 +410,82 @@ async function main() {
     });
 
     if (!pattern) {
-      console.log(`${colors.yellow}⚠️  ${progress} Pattern not found: ${item.pattern.topic_name}${colors.reset}`);
-      skippedPatterns++;
-      summary.push({ Topic: item.pattern.topic_name, Status: "Skipped", Count: 0 });
-      continue;
+      console.log(`${colors.yellow}⚠️  ${progress} Pattern not found, creating: ${item.pattern.topic_name}${colors.reset}`);
+      pattern = await prisma.pattern.create({
+        data: {
+          topic_name: item.pattern.topic_name,
+          subject: (item.pattern as any).subject || "General",
+          exam_type: item.pattern.exam_type,
+          branch: item.pattern.branch,
+          atomic_logic: `Practice problems for ${item.pattern.topic_name}`
+        }
+      });
     }
 
     try {
-      // Clear existing PYQs for this specific pattern to ensure a clean seed
-      // await prisma.pYQ.deleteMany({
-      //   where: { pattern_id: pattern.id }
-      // });
-
       let count = 0;
       for (const pyq of item.pyqs) {
-        const cleanQuestion = pyq.question_text;
-        const cleanOptions = pyq.options;
-        const cleanExplanation = pyq.explanation;
+        // Data Cleaning: Remove scraper noise
+        const cleanQuestionText = pyq.question_text
+          .replace(/0 reply\s*Please log in or register to add a comment\./gi, '')
+          .replace(/0 reply/gi, '')
+          .replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 “[^”]*”/gi, '')
+          .trim();
+
+        // Image Transformation: Convert filename to url
+        const cleanImages = pyq.images?.map((img: any) => ({
+          ...img,
+          url: img.filename ? `/${img.filename}` : img.url
+        }));
 
         await prisma.pYQ.upsert({
           where: {
             pyq_identifier: {
               pattern_id: pattern.id,
-              question_text: cleanQuestion,
+              question_text: cleanQuestionText,
             },
           },
           update: {
-            options: cleanOptions,
+            options: pyq.options,
             correct_answer: pyq.correct_answer,
-            explanation: cleanExplanation,
+            explanation: pyq.explanation,
             year: pyq.year,
-            exam_type: pyq.exam_type,
-            question_type: pyq.question_type || "MCQ",
+            exam_type: item.pattern.exam_type,
+            question_type: pyq.question_type,
+            images: cleanImages,
           },
           create: {
             pattern_id: pattern.id,
-            question_text: cleanQuestion,
-            options: cleanOptions,
+            question_text: cleanQuestionText,
+            options: pyq.options,
             correct_answer: pyq.correct_answer,
-            explanation: cleanExplanation,
+            explanation: pyq.explanation,
             year: pyq.year,
-            exam_type: pyq.exam_type,
-            question_type: pyq.question_type || "MCQ",
+            exam_type: item.pattern.exam_type,
+            question_type: pyq.question_type,
+            images: cleanImages,
           },
         });
         count++;
         totalQuestions++;
       }
       console.log(`${colors.green}✅ ${progress} Seeded ${colors.bright}${count}${colors.reset}${colors.green} PYQs for: ${colors.bright}${pattern.topic_name}${colors.reset}`);
-      summary.push({ Topic: pattern.topic_name, Status: "Success", Count: count });
     } catch (err) {
       console.log(`${colors.red}❌ ${progress} Error seeding ${item.pattern.topic_name}${colors.reset}`);
+      console.error(err.message);
       errors++;
-      summary.push({ Topic: item.pattern.topic_name, Status: "Error", Count: 0 });
     }
   }
 
-  console.log(`\n\n${colors.bright}${colors.cyan}📊 SEEDING SUMMARY${colors.reset}`);
-  console.table(summary);
-
   console.log(`\n${colors.bright}${colors.green}✨ Seeding Complete!${colors.reset}`);
   console.log(`${colors.cyan}Total Questions: ${colors.bright}${totalQuestions}${colors.reset}`);
-  console.log(`${colors.yellow}Skipped Topics: ${colors.bright}${skippedPatterns}${colors.reset}`);
   if (errors > 0) console.log(`${colors.red}Errors Detected: ${colors.bright}${errors}${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}\n`);
 }
 
 main()
   .catch((e) => {
-    const red = "\x1b[31m";
-    const reset = "\x1b[0m";
-    console.error(`\n${red}💥 FATAL ERROR SEEDING PYQs:${reset}`, e);
+    console.error('💥 FATAL ERROR SEEDING PYQs:', e);
     process.exit(1);
   })
   .finally(async () => {

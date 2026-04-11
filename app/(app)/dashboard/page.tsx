@@ -24,7 +24,8 @@ function getCachedDashboardData(userId: string) {
           where: { user_id: userId },
           include: {
             question: { include: { pattern: true } },
-            pyq: { include: { pattern: true } }
+            pyq: { include: { pattern: true } },
+            subject_pyq: { include: { subject_pattern: true } }
           },
           orderBy: { created_at: "desc" },
           take: 5,
@@ -33,7 +34,8 @@ function getCachedDashboardData(userId: string) {
           where: { user_id: userId, is_correct: false },
           include: {
             question: { include: { pattern: true } },
-            pyq: { include: { pattern: true } }
+            pyq: { include: { pattern: true } },
+            subject_pyq: { include: { subject_pattern: true } }
           },
           orderBy: { created_at: "desc" },
           take: 15,
@@ -78,8 +80,13 @@ export default async function DashboardPage() {
   const accuracy = totalAttempted > 0 ? Math.round((correctAttempts / totalAttempted) * 100) : 0;
 
   const reviewItems = recentFailures.map((a: any) => {
-    const q = a.question ?? a.pyq;
-    const pattern = q?.pattern;
+    const q = a.question ?? a.pyq ?? a.subject_pyq;
+    const pattern = q?.pattern ?? (q?.subject_pattern ? { 
+      topic_name: q.subject_pattern.subject_name, // Changed from "FULL SUBJECT PRACTICE"
+      subject: q.subject_pattern.subject_name,
+      id: `subject-${q.subject_pattern.id}`
+    } : null);
+
     return {
       id: a.id,
       question_text: q?.question_text,
@@ -147,8 +154,8 @@ export default async function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {lastFiveAttempts.map((attempt: any) => {
-                const topicName = attempt.question?.pattern?.topic_name ?? attempt.pyq?.pattern?.topic_name ?? "—";
-                const subject = attempt.question?.pattern?.subject ?? attempt.pyq?.pattern?.subject ?? "";
+                const topicName = attempt.question?.pattern?.topic_name ?? attempt.pyq?.pattern?.topic_name ?? attempt.subject_pyq?.subject_pattern?.subject_name ?? "Subject Practice";
+                const subject = attempt.question?.pattern?.subject ?? attempt.pyq?.pattern?.subject ?? attempt.subject_pyq?.subject_pattern?.subject_name ?? "";
                 const dateStr = new Date(attempt.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
                 return (
                   <div

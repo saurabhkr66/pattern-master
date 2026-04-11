@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/Header";
 import ThemeProvider from "@/components/ThemeProvider";
+import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 
@@ -57,8 +58,10 @@ export default function RootLayout({
         </head>
         <body className="min-h-full flex flex-col">
           <ThemeProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
+            <QueryProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+            </QueryProvider>
           </ThemeProvider>
         </body>
       </html>

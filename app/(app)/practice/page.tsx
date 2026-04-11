@@ -11,46 +11,149 @@ export const metadata: Metadata = {
   description: "Practice GATE CSE, ISRO, BARC & ESE topics with AI-generated questions.",
 };
 
-// Cache pattern list based on exam type, branch, and user
-const getCachedPatterns = (userId: string | null, examType: string, branch: string | null) => {
+// Cache user profile for 1 hour to prevent DB hits on every tab switch
+const getCachedUserProfile = (userId: string) => {
   return unstable_cache(
     async () => {
-      return prisma.pattern.findMany({
-        where: {
-          exam_type: examType,
-          ...(branch ? { branch } : {}),
-        },
-        include: {
-          questions: {
-            include: {
-              attempts: {
-                where: userId ? { user_id: userId } : { user_id: "none" },
-                orderBy: { created_at: "desc" },
-                take: 1,
-              },
-            },
-            orderBy: { created_at: "desc" },
-          },
-          pyqs: {
-            include: {
-              attempts: {
-                where: userId ? { user_id: userId } : { user_id: "none" },
-                orderBy: { created_at: "desc" },
-                take: 1,
-              },
-            },
-            orderBy: { year: "desc" },
-          },
-        },
-        orderBy: { topic_name: "asc" },
+      return prisma.user.findUnique({
+        where: { id: userId },
+        select: { exam_type: true, branch: true },
       });
     },
-    [`patterns-list-${examType}-${branch || "all"}-${userId || "guest"}-v2`],
-    { revalidate: 1, tags: ["patterns"] }
+    [`user-profile-${userId}`],
+    { revalidate: 3600, tags: ["user-profile"] }
   )();
 };
 
-// Cache distinct exams and branches from Pattern table
+// Cache pattern list based on exam type, branch, and user
+// Cache unique subjects and their topic counts for the tabs
+const getSubjectStats = (examType: string, branch: string | null) => {
+  return unstable_cache(
+    async () => {
+      const regularPatterns = await prisma.pattern.findMany({
+        where: { exam_type: examType, ...(branch ? { branch } : {}) },
+        select: { subject: true },
+      });
+
+      const stats: Record<string, number> = {};
+      regularPatterns.forEach(p => {
+        stats[p.subject] = (stats[p.subject] || 0) + 1;
+      });
+
+      const subjectPatterns = await prisma.subjectPattern.findMany({
+        select: { subject_name: true },
+      });
+      subjectPatterns.forEach(sp => {
+        stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
+      });
+
+      return stats;
+    },
+    [`subject-stats-${examType}-${branch || "all"}`],
+    { revalidate: 3600, tags: ["patterns"] }
+  )();
+};
+
+const getTopicsForSubject = (userId: string | null, examType: string, branch: string | null, subject: string | null) => {
+  return unstable_cache(
+    async () => {
+      const isAll = !subject || subject === "All";
+
+      const topicPatterns = await prisma.pattern.findMany({
+        where: {
+          exam_type: examType,
+          ...(branch ? { branch } : {}),
+          ...(!isAll ? { subject } : {}),
+        },
+        select: {
+          id: true,
+          topic_name: true,
+          subject: true,
+          atomic_logic: true,
+          _count: {
+            select: { questions: true, pyqs: true }
+          },
+          questions: {
+            select: {
+              id: true,
+              attempts: {
+                where: userId ? { user_id: userId } : { user_id: "none" },
+                select: { is_correct: true },
+                orderBy: { created_at: "desc" },
+                take: 1,
+              }
+            }
+          },
+          pyqs: {
+            select: {
+              id: true,
+              attempts: {
+                where: userId ? { user_id: userId } : { user_id: "none" },
+                select: { is_correct: true },
+                orderBy: { created_at: "desc" },
+                take: 1,
+              }
+            }
+          }
+        },
+        orderBy: { topic_name: "asc" },
+      });
+
+      const subjectPatterns = await prisma.subjectPattern.findMany({
+        where: !isAll ? { subject_name: subject } : {},
+        select: {
+          id: true,
+          subject_name: true,
+          _count: {
+            select: { pyqs: true }
+          },
+          pyqs: {
+            select: {
+              id: true,
+              attempts: {
+                where: userId ? { user_id: userId } : { user_id: "none" },
+                select: { is_correct: true },
+                orderBy: { created_at: "desc" },
+                take: 1,
+              }
+            }
+          }
+        }
+      });
+
+      const mappedTopics = topicPatterns.map(p => ({
+        ...p,
+        totalQuestions: p._count.questions + p._count.pyqs,
+        questionsCount: p._count.questions,
+        pyqsCount: p._count.pyqs,
+        solvedQuestions: 
+          p.questions.filter(q => q.attempts[0]?.is_correct).length + 
+          p.pyqs.filter(pq => pq.attempts[0]?.is_correct).length,
+        questions: [],
+        pyqs: [],
+      }));
+
+      const mappedSubjects = subjectPatterns.map(sp => ({
+        id: `subject-${sp.id}`,
+        subject: sp.subject_name,
+        topic_name: sp.subject_name,
+        atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
+        isSubjectLevel: true,
+        totalQuestions: sp._count.pyqs,
+        questionsCount: 0,
+        pyqsCount: sp._count.pyqs,
+        solvedQuestions: sp.pyqs.filter(pq => pq.attempts[0]?.is_correct).length,
+        questions: [],
+        pyqs: [],
+      }));
+
+      return [...mappedSubjects, ...mappedTopics];
+    },
+    [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v5`],
+    { revalidate: 300, tags: ["patterns"] }
+  )();
+};
+
 const getCachedExamMeta = unstable_cache(
   async () => {
     const rows = await prisma.pattern.findMany({
@@ -75,20 +178,19 @@ const getCachedExamMeta = unstable_cache(
 export default async function PracticePage({
   searchParams,
 }: {
-  searchParams: Promise<{ patternId?: string; exam?: string; branch?: string }>;
+  searchParams: Promise<{ patternId?: string; exam?: string; branch?: string; subject?: string }>;
 }) {
-  const { patternId, exam, branch: branchParam } = await searchParams;
+  const { patternId, exam, branch: branchParam, subject: subjectParam } = await searchParams;
   const { userId } = await auth();
 
-  let patterns: any[] = [];
+  let topics: any[] = [];
+  let subjectStats: Record<string, number> = {};
   let baseExamType = "GATE";
   let baseBranch: string | null = null;
 
   try {
     const [userProfile, examMeta] = await Promise.all([
-      userId
-        ? prisma.user.findUnique({ where: { id: userId }, select: { exam_type: true, branch: true } })
-        : null,
+      userId ? getCachedUserProfile(userId) : null,
       getCachedExamMeta(),
     ]);
 
@@ -98,10 +200,13 @@ export default async function PracticePage({
     const activeExamType = exam || baseExamType;
     const activeBranch = branchParam ?? baseBranch;
 
-    // Branches available for the currently viewed exam
     const availableBranches = examMeta.branchesByExam[activeExamType] ?? [];
 
-    patterns = await getCachedPatterns(userId, activeExamType, activeBranch);
+    [subjectStats, topics] = await Promise.all([
+      getSubjectStats(activeExamType, activeBranch),
+      getTopicsForSubject(userId, activeExamType, activeBranch, subjectParam || "All"),
+    ]);
+
 
     return (
       <div className="max-w-4xl mx-auto py-8 md:py-12 px-4">
@@ -125,16 +230,21 @@ export default async function PracticePage({
           />
         </header>
 
-        {patterns.length === 0 ? (
+        {topics.length === 0 && (subjectParam && subjectParam !== "All") ? (
           <div className="rounded-2xl p-12 text-center" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 text-2xl" style={{ background: "var(--bg-surface-2)" }}>🔍</div>
-            <h3 className="text-lg font-black mb-1" style={{ color: "var(--text-primary)" }}>No patterns found</h3>
+            <h3 className="text-lg font-black mb-1" style={{ color: "var(--text-primary)" }}>No topics found</h3>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              We haven&apos;t added study patterns for {activeExamType}{activeBranch ? ` in ${activeBranch}` : ""} yet.
+              We haven&apos;t added study patterns for {subjectParam} yet.
             </p>
           </div>
         ) : (
-          <PatternTable patterns={patterns} highlightPatternId={patternId} />
+          <PatternTable 
+            patterns={topics} 
+            highlightPatternId={patternId} 
+            subjectStats={subjectStats}
+            activeSubject={subjectParam || "All"}
+          />
         )}
       </div>
     );

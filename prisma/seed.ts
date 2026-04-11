@@ -16,86 +16,58 @@ async function main() {
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Basic Computer Organization',
-      atomic_logic: `Generate GATE-level questions covering functional units of a computer, instruction execution cycle, register organization, bus structure, and basic performance metrics. Include conceptual and flow-based questions.`
+      subject: 'Compiler Design',
+      topic_name: 'Runtime Environment',
+      atomic_logic: `Generate GATE-level questions covering activation records, stack allocation, heap allocation, parameter passing mechanisms, symbol table organization, and runtime storage management. Include conceptual and diagram-based questions.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Number Representation',
-      atomic_logic: `Generate GATE-level questions covering number systems (binary, octal, hexadecimal), signed representations (1's complement, 2's complement), floating-point representation (IEEE 754), and overflow detection. Include numerical problems.`
+      subject: 'Compiler Design',
+      topic_name: 'Lexical Analysis',
+      atomic_logic: `Generate GATE-level questions covering tokens, lexemes, regular expressions, finite automata (DFA/NFA), lexical errors, and token recognition. Include conversion and identification problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Boolean Algebra & Logic Gates',
-      atomic_logic: `Generate GATE-level questions covering logic gates, Boolean algebra, minimization techniques, and implementation of logic circuits. Include expression simplification and circuit design problems.`
+      subject: 'Compiler Design',
+      topic_name: 'Syntax Analysis',
+      atomic_logic: `Generate GATE-level questions covering parsing techniques, context-free grammars, ambiguity, parse trees, derivations, and grammar transformations. Include conceptual and derivation-based questions.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Combinational Circuits',
-      atomic_logic: `Generate GATE-level questions covering adders, subtractors, multiplexers, decoders, encoders, comparators, and ALU design. Include truth table and logic design problems.`
+      subject: 'Compiler Design',
+      topic_name: 'Semantic Analysis',
+      atomic_logic: `Generate GATE-level questions covering syntax-directed translation, attribute grammars (S-attributed, L-attributed), type checking, and semantic rules. Include evaluation and tree-based problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Sequential Circuits',
-      atomic_logic: `Generate GATE-level questions covering flip-flops, registers, counters, timing diagrams, and state machines. Include sequence analysis and design problems.`
+      subject: 'Compiler Design',
+      topic_name: 'Intermediate Code Generation',
+      atomic_logic: `Generate GATE-level questions covering three-address code, syntax trees, DAG, quadruples, triples, indirect triples, and translation schemes. Include representation and conversion problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Instruction Set Architecture (ISA)',
-      atomic_logic: `Generate GATE-level questions covering instruction formats, addressing modes, instruction types, and instruction execution. Include effective address calculation problems.`
+      subject: 'Compiler Design',
+      topic_name: 'Code Optimization',
+      atomic_logic: `Generate GATE-level questions covering local and global optimizations, common subexpression elimination, dead code elimination, loop optimization, and peephole optimization. Include code transformation problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'CPU Organization',
-      atomic_logic: `Generate GATE-level questions covering data path, control unit (hardwired vs microprogrammed), micro-operations, and instruction pipelining basics. Include conceptual and diagram-based questions.`
+      subject: 'Compiler Design',
+      topic_name: 'Top-Down Parsing',
+      atomic_logic: `Generate GATE-level questions covering LL(1) parsing, FIRST and FOLLOW sets, predictive parsing, recursive descent parsing, and elimination of left recursion and left factoring. Include table construction problems.`
     },
     {
       exam_type: 'GATE',
       branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Pipelining',
-      atomic_logic: `Generate GATE-level questions covering pipeline stages, hazards (data, control, structural), pipeline performance, speedup, and stalling. Include numerical problems on CPI and speedup.`
-    },
-    {
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Memory Organization',
-      atomic_logic: `Generate GATE-level questions covering memory hierarchy, cache memory (mapping techniques, replacement policies), main memory, and associative memory. Include cache hit/miss and effective memory access time problems.`
-    },
-    {
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Virtual Memory',
-      atomic_logic: `Generate GATE-level questions covering paging, segmentation, page replacement algorithms (FIFO, LRU, Optimal), TLB, and address translation. Include numerical problems on page faults.`
-    },
-    {
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Input-Output Organization',
-      atomic_logic: `Generate GATE-level questions covering I/O techniques (programmed, interrupt-driven, DMA), I/O interfaces, and data transfer methods. Include conceptual and flow-based questions.`
-    },
-    {
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-      topic_name: 'Performance & Parallelism',
-      atomic_logic: `Generate GATE-level questions covering performance metrics (CPI, MIPS), Amdahl’s Law, instruction-level parallelism, and basic concepts of parallel architectures. Include numerical problems.`
+      subject: 'Compiler Design',
+      topic_name: 'Bottom-Up Parsing',
+      atomic_logic: `Generate GATE-level questions covering shift-reduce parsing, LR parsing (LR(0), SLR, CLR, LALR), parsing tables, handle recognition, and conflicts. Include parsing table and step simulation problems.`
     }
   ];
 

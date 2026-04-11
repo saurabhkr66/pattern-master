@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^7.0.11",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.3",
+    "@tanstack/react-query": "^5.97.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "katex": "^0.16.45",
@@ -22,6 +23,7 @@
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
+    "remark-breaks": "^4.0.0",
     "remark-math": "^6.0.0",
     "tailwind-merge": "^3.5.0"
   },

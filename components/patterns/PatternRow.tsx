@@ -7,6 +7,7 @@ import ConfidenceBadge from "./ConfidenceBadge";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface PatternRowProps {
   pattern: any;
@@ -20,18 +21,29 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
   const rowRef = useRef<HTMLDivElement>(null);
 
   const [selectedHistoryQuestion, setSelectedHistoryQuestion] = useState<any>(null);
-
-  // Debug: Check if short_notes is arriving
-  // console.log(`[PatternRow] ${pattern.topic_name} notes:`, pattern.short_notes ? "Value present" : "NULL");
   const [isGenerating, setIsGenerating] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState("All");
   const [activeTab, setActiveTab] = useState<"bank" | "pyq" | "notes">("bank");
   const [selectedPyq, setSelectedPyq] = useState<any>(null);
 
-  // Subject-based accent color (Tailwind-safe)
+  // TanStack Query for Lazy Loading Questions
+  const { data, isLoading: isLoadingQuestions } = useQuery({
+    queryKey: ["patternQuestions", pattern.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/patterns/${pattern.id}/questions`);
+      if (!res.ok) throw new Error("Failed to fetch questions");
+      return res.json();
+    },
+    enabled: isOpen, // Only fetch when row is expanded
+  });
+
+  const questions = data?.questions || [];
+  const pyqs = data?.pyqs || [];
+
+  // Subject-based accent color
   const getAccent = (subject: string) => {
-    const s = subject.toLowerCase();
-    if (s.includes("organization") || s.includes("architecture")) return { pill: "bg-indigo-100 text-indigo-700", dot: "bg-indigo-500", activeTab: "text-indigo-600 border-indigo-500" };
+    const s = (subject || "").toLowerCase();
+    if (s.includes("organization") || s.includes("architecture")) return { pill: "bg-indigo-100 text-indigo-700", dot: "bg-indigo-50", activeTab: "text-indigo-600 border-indigo-500" };
     if (s.includes("operating")) return { pill: "bg-amber-100 text-amber-700", dot: "bg-amber-500", activeTab: "text-amber-600 border-amber-500" };
     if (s.includes("algorithms") || s.includes("data structure")) return { pill: "bg-purple-100 text-purple-700", dot: "bg-purple-500", activeTab: "text-purple-600 border-purple-500" };
     if (s.includes("math") || s.includes("discrete") || s.includes("calculus") || s.includes("algebra")) return { pill: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500", activeTab: "text-emerald-600 border-emerald-500" };
@@ -40,14 +52,12 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
 
   const accent = getAccent(pattern.subject);
 
-  // Stats
-  const total = pattern.questions.length + (pattern.pyqs?.length || 0);
-  const solved =
-    pattern.questions.filter((q: any) => q.attempts?.[0]?.is_correct).length +
-    (pattern.pyqs?.filter((p: any) => p.attempts?.[0]?.is_correct).length || 0);
+  // Stats (Using pre-calculated server stats)
+  const total = pattern.totalQuestions || 0;
+  const solved = pattern.solvedQuestions || 0;
   const accuracy = total > 0 ? (solved / total) * 100 : 0;
   const isMastered = solved >= 5;
-  const pyqCount = pattern.pyqs?.length || 0;
+  const pyqCount = pattern.pyqsCount || 0;
 
   const difficultyColors: Record<string, string> = {
     Easy: "bg-emerald-100 text-emerald-700",
@@ -55,6 +65,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
     Hard: "bg-red-100 text-red-700",
   };
 
+  // Scroll into view when opened
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -62,6 +73,13 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
       }, 300);
     }
   }, [isOpen]);
+
+  // Auto-switch to PYQ tab for subject-level practices if question bank is empty
+  useEffect(() => {
+    if (data && pattern.isSubjectLevel && questions.length === 0) {
+      setActiveTab("pyq");
+    }
+  }, [data, pattern.isSubjectLevel, questions.length]);
 
   useEffect(() => {
     const saved = localStorage.getItem("preferredDifficulty");
@@ -76,10 +94,10 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
   const getMixedQuestions = () => {
     const regularQs =
       difficultyFilter === "All"
-        ? pattern.questions
-        : pattern.questions.filter((q: any) => q.difficulty_level === difficultyFilter);
-    if (!pattern.pyqs || pattern.pyqs.length === 0) return regularQs;
-    const taggedPyqs = pattern.pyqs.map((p: any) => ({ ...p, _isPyq: true }));
+        ? questions
+        : questions.filter((q: any) => q.difficulty_level === difficultyFilter);
+    if (!pyqs || pyqs.length === 0) return regularQs;
+    const taggedPyqs = pyqs.map((p: any) => ({ ...p, _isPyq: true }));
     return [...regularQs, ...taggedPyqs].sort(() => Math.random() - 0.5);
   };
 
@@ -91,6 +109,8 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
       className={`transition-colors ${
         isHighlighted
           ? "bg-indigo-50 ring-2 ring-inset ring-indigo-400"
+          : pattern.isSubjectLevel
+          ? "bg-indigo-50/40 border-l-4 border-l-indigo-500"
           : isOpen
           ? "bg-blue-50/30"
           : "hover:bg-gray-50/60"
@@ -101,20 +121,19 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
         onClick={onToggle}
         className="grid grid-cols-12 items-center gap-3 px-5 py-4 cursor-pointer group"
       >
-        {/* Icon + Topic info (8 cols) */}
         <div className="col-span-8 flex items-center gap-3">
-          {/* Status icon */}
           <div
             className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base border ${
-              isMastered
+              pattern.isSubjectLevel
+                ? "bg-indigo-600 border-indigo-500 text-white shadow-sm"
+                : isMastered
                 ? "bg-yellow-50 border-yellow-200"
                 : "bg-gray-50 border-gray-200"
             }`}
           >
-            {isMastered ? "👑" : "📄"}
+            {pattern.isSubjectLevel ? "🎓" : isMastered ? "👑" : "📄"}
           </div>
 
-          {/* Topic name + badges */}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <h4
@@ -135,7 +154,6 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                 )}
               </div>
             </div>
-            {/* Mobile stats */}
             <div className="flex md:hidden items-center gap-2 mt-0.5">
               <span className="text-[11px] font-black text-gray-800">{solved}/{total}</span>
               <span
@@ -146,19 +164,16 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                 {accuracy.toFixed(0)}%
               </span>
             </div>
-            {/* Desktop logic hint */}
             <p className="hidden md:block text-[11px] text-gray-400 italic truncate mt-0.5 font-medium">
               {pattern.atomic_logic}
             </p>
           </div>
         </div>
 
-        {/* Confidence badge (desktop, 2 cols) */}
         <div className="hidden md:flex col-span-2 justify-center">
           <ConfidenceBadge accuracy={accuracy} />
         </div>
 
-        {/* Progress + chevron (2 cols on desktop, 4 on mobile) */}
         <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-3">
           <div className="text-right hidden md:block">
             <span className="text-sm font-black text-gray-900">{solved}</span>
@@ -176,7 +191,6 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
       {/* -- Expanded Panel -- */}
       {isOpen && (
         <div className="px-3 md:px-5 pb-5 md:pb-7 animate-in fade-in slide-in-from-top-1 duration-200">
-
           {/* Tab bar */}
           <div className="flex items-center gap-0.5 border-b border-gray-100 mb-5 overflow-x-auto scrollbar-hide">
             {(
@@ -216,301 +230,297 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
           </div>
 
           {/* Tab content card */}
-          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-100 dark:border-white/5 p-4 md:p-6 min-h-[240px]">
-            
-            {/* --- MASTERY NOTES TAB --- */}
-            {activeTab === "notes" && (
-              <div className="animate-in fade-in duration-200">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Mastery Notes</h3>
-                    <p className="text-xs text-gray-400 font-medium">Core logic and formulas for this topic.</p>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab("bank")}
-                    className="self-start sm:self-auto bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-colors"
-                  >
-                    Practice Mode →
-                  </button>
-                </div>
-
-                {pattern.short_notes ? (
-                  <div className="columns-1 md:columns-2 gap-4 space-y-4">
-                    {pattern.short_notes
-                      .split(/###\s+/)
-                      .filter(Boolean)
-                      .map((section: string, idx: number) => {
-                        const lines = section.split("\n");
-                        const title = lines[0].trim();
-                        const content = lines.slice(1).filter((l: string) => l.trim().length > 0);
-                        return (
-                          <div
-                            key={idx}
-                            className="break-inside-avoid bg-white dark:bg-[#111] rounded-xl border border-gray-100 dark:border-white/5 p-4 space-y-2 shadow-sm"
-                          >
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className={`w-1 h-4 rounded-full shrink-0 ${accent.dot}`} />
-                              <h4 className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">{title}</h4>
-                            </div>
-                            {content.map((line: string, lIdx: number) => {
-                              const isFormula =
-                                line.includes("$") ||
-                                line.includes("=") ||
-                                line.includes("/") ||
-                                line.includes("log") ||
-                                line.includes("max") ||
-                                line.includes("min");
-                              const cleanLine = line.trim().replace(/^[•\d+.]\s*/, "");
-                              if (isFormula) {
-                                return (
-                                  <div key={lIdx} className="bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-lg px-3 py-2.5">
-                                    <p className="font-mono text-sm text-gray-800 dark:text-gray-200 font-semibold">{line.trim()}</p>
-                                  </div>
-                                );
-                              }
-                              return (
-                                <p key={lIdx} className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed flex gap-2">
-                                  <span className="text-gray-300 dark:text-gray-600 shrink-0 mt-0.5">›</span>
-                                  <span>{cleanLine}</span>
-                                </p>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                  </div>
-                ) : (
-                  <div className="py-16 text-center rounded-2xl bg-gray-50 dark:bg-[#111] border-2 border-dashed border-gray-100 dark:border-white/5">
-                    <div className="text-4xl mb-3 grayscale opacity-30">✍️</div>
-                    <p className="text-gray-400 font-black text-sm uppercase tracking-widest">Drafting Blueprint</p>
-                    <p className="text-gray-300 text-xs font-medium mt-1">Notes are being prepared for this topic.</p>
-                  </div>
-                )}
+          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-100 dark:border-white/5 p-4 md:p-6 min-h-[240px] flex flex-col">
+            {isLoadingQuestions ? (
+              <div className="flex-grow flex flex-col items-center justify-center py-20 animate-pulse">
+                <div className="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading questions…</p>
               </div>
-            )}
-
-            {/* --- QUESTION BANK TAB --- */}
-            {activeTab === "bank" && (
-              <div className="animate-in fade-in duration-200">
-                {selectedHistoryQuestion ? (
-                  /* Practice mode */
-                  <div className="animate-in zoom-in-95 duration-300">
-                    <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-white/5">
-                      <button
-                        onClick={() => setSelectedHistoryQuestion(null)}
-                        className="text-[11px] font-black text-gray-400 hover:text-blue-600 uppercase tracking-widest transition-colors"
-                      >
-                        ← Back to Bank
-                      </button>
-                      <span className="text-[10px] font-black bg-blue-50 dark:bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full uppercase">
-                        {selectedHistoryQuestion._isPyq ? `PYQ ${selectedHistoryQuestion.year}` : "Reviewing"}
-                      </span>
-                    </div>
-                    <PracticeButton
-                      patternId={pattern.id}
-                      topicName={pattern.topic_name}
-                      initialQuestion={selectedHistoryQuestion}
-                      initialQueue={(() => {
-                        const all = getMixedQuestions();
-                        const idx = all.findIndex((q: any) => q.id === selectedHistoryQuestion.id);
-                        return idx !== -1 ? all.slice(idx + 1) : [];
-                      })()}
-                    />
-                  </div>
-                ) : isGenerating ? (
-                  /* Generate mode */
-                  <div className="animate-in slide-in-from-bottom-3 duration-300 max-w-xl mx-auto py-4">
-                    <div className="text-center mb-6">
-                      <h4 className="text-lg font-black text-gray-900 dark:text-white mb-1">Generate Practice</h4>
-                      <p className="text-sm text-gray-400 font-medium">AI will create 5 unique questions.</p>
-                    </div>
-                    <PracticeButton patternId={pattern.id} topicName={pattern.topic_name} initialQuestion={null} />
-                    <button
-                      onClick={() => setIsGenerating(false)}
-                      className="w-full mt-4 text-[10px] font-black text-gray-400 hover:text-gray-600 uppercase tracking-widest"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  /* Bank list mode */
-                  <>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/5 rounded-lg">
-                          {["All", "Easy", "Medium", "Hard"].map((lvl) => (
-                            <button
-                              key={lvl}
-                              onClick={() => handleDifficultyChange(lvl)}
-                              className={`px-3 py-2 rounded-md text-xs font-black uppercase transition-all ${
-                                difficultyFilter === lvl
-                                  ? "bg-white dark:bg-white/10 text-gray-800 dark:text-white shadow-sm"
-                                  : "text-gray-400 hover:text-gray-600"
-                              }`}
-                            >
-                              {lvl}
-                            </button>
-                          ))}
-                        </div>
+            ) : (
+              <>
+                {activeTab === "notes" && (
+                  <div className="animate-in fade-in duration-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                      <div>
+                        <h3 className="text-lg font-black text-gray-900 dark:text-white">Mastery Notes</h3>
+                        <p className="text-xs text-gray-400 font-medium">Core logic and formulas for this topic.</p>
                       </div>
                       <button
-                        onClick={() => setIsGenerating(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wide px-4 py-2 rounded-lg transition-colors shadow-sm"
+                        onClick={() => setActiveTab("bank")}
+                        className="self-start sm:self-auto bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-colors"
                       >
-                        + Generate
+                        Practice Mode →
                       </button>
                     </div>
 
-                    {(() => {
-                      const mixedQs = getMixedQuestions();
-                      return mixedQs.length === 0 ? (
-                        <div className="py-20 text-center bg-gray-50/50 dark:bg-[#111] rounded-3xl border-2 border-dashed border-gray-100 dark:border-white/5">
-                          <div className="text-4xl mb-4">📭</div>
-                          <h4 className="text-gray-400 font-black text-sm uppercase tracking-widest mb-1">Bank is Empty</h4>
-                          <p className="text-gray-300 text-[10px] font-medium italic mb-6">Start by generating your first set of questions.</p>
-                          <button 
-                            onClick={() => setIsGenerating(true)}
-                            className="text-blue-600 font-black text-[10px] uppercase hover:underline"
+                    {pattern.short_notes ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                        {[0, 1].map((columnTrack) => (
+                          <div key={columnTrack} className="flex flex-col gap-4">
+                            {pattern.short_notes
+                              .split(/###\s+/)
+                              .filter(Boolean)
+                              .map((section: string, index: number) => ({ section, index }))
+                              .filter((item) => item.index % 2 === columnTrack)
+                              .map(({ section, index }) => {
+                                const lines = section.split("\n");
+                                const title = lines[0].trim();
+                                const rest = lines.slice(1).join("\n").trim();
+                                return (
+                                  <div
+                                    key={index}
+                                    className="group/card relative bg-gradient-to-b from-gray-50/50 to-white dark:from-white/[0.03] dark:to-transparent rounded-2xl border border-gray-100 dark:border-white/5 p-5 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-100 dark:hover:border-blue-500/20 overflow-hidden break-words"
+                                  >
+                                    <div className="flex items-center gap-2.5 mb-4">
+                                      <div className={`w-1.5 h-1.5 rounded-full ${accent.dot} shadow-[0_0_8px_rgba(59,130,246,0.5)]`} />
+                                      <h4 className="text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.15em]">{title}</h4>
+                                    </div>
+                                    <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                                      <MathRenderer 
+                                        content={rest} 
+                                        className="text-[13px] text-gray-600 dark:text-gray-300 leading-relaxed font-medium"
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-16 text-center rounded-2xl bg-gray-50 dark:bg-[#111] border-2 border-dashed border-gray-100 dark:border-white/5">
+                        <div className="text-4xl mb-3 grayscale opacity-30">✍️</div>
+                        <p className="text-gray-400 font-black text-sm uppercase tracking-widest">Drafting Blueprint</p>
+                        <p className="text-gray-300 text-xs font-medium mt-1">Notes are being prepared for this topic.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "bank" && (
+                  <div className="animate-in fade-in duration-200">
+                    {selectedHistoryQuestion ? (
+                      <div className="animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-white/5">
+                          <button
+                            onClick={() => setSelectedHistoryQuestion(null)}
+                            className="text-[11px] font-black text-gray-400 hover:text-blue-600 uppercase tracking-widest transition-colors"
                           >
-                            Click here to generate →
+                            ← Back to Bank
+                          </button>
+                          <span className="text-[10px] font-black bg-blue-50 dark:bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full uppercase">
+                            {selectedHistoryQuestion._isPyq ? `PYQ ${selectedHistoryQuestion.year}` : "Reviewing"}
+                          </span>
+                        </div>
+                        <PracticeButton
+                          patternId={pattern.id}
+                          topicName={pattern.topic_name}
+                          initialQuestion={selectedHistoryQuestion}
+                          initialQueue={(() => {
+                            const all = getMixedQuestions();
+                            const idx = all.findIndex((q: any) => q.id === selectedHistoryQuestion.id);
+                            return idx !== -1 ? all.slice(idx + 1) : [];
+                          })()}
+                        />
+                      </div>
+                    ) : isGenerating ? (
+                      <div className="animate-in slide-in-from-bottom-3 duration-300 max-w-xl mx-auto py-4">
+                        <div className="text-center mb-6">
+                          <h4 className="text-lg font-black text-gray-900 dark:text-white mb-1">Generate Practice</h4>
+                          <p className="text-sm text-gray-400 font-medium">AI will create 5 unique questions.</p>
+                        </div>
+                        <PracticeButton patternId={pattern.id} topicName={pattern.topic_name} initialQuestion={null} />
+                        <button
+                          onClick={() => setIsGenerating(false)}
+                          className="w-full mt-4 text-[10px] font-black text-gray-400 hover:text-gray-600 uppercase tracking-widest"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/5 rounded-lg">
+                              {["All", "Easy", "Medium", "Hard"].map((lvl) => (
+                                <button
+                                  key={lvl}
+                                  onClick={() => handleDifficultyChange(lvl)}
+                                  className={`px-3 py-2 rounded-md text-xs font-black uppercase transition-all ${
+                                    difficultyFilter === lvl
+                                      ? "bg-white dark:bg-white/10 text-gray-800 dark:text-white shadow-sm"
+                                      : "text-gray-400 hover:text-gray-600"
+                                  }`}
+                                >
+                                  {lvl}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setIsGenerating(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wide px-4 py-2 rounded-lg transition-colors shadow-sm"
+                          >
+                            + Generate
                           </button>
                         </div>
-                      ) : (
+
+                        {getMixedQuestions().length === 0 ? (
+                          <div className="py-20 text-center bg-gray-50/50 dark:bg-[#111] rounded-3xl border-2 border-dashed border-gray-100 dark:border-white/5">
+                            <div className="text-4xl mb-4">📭</div>
+                            <h4 className="text-gray-400 font-black text-sm uppercase tracking-widest mb-1">Bank is Empty</h4>
+                            <p className="text-gray-300 text-[10px] font-medium italic mb-6">Start by generating your first set of questions.</p>
+                            <button 
+                              onClick={() => setIsGenerating(true)}
+                              className="text-blue-600 font-black text-[10px] uppercase hover:underline"
+                            >
+                              Click here to generate →
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {getMixedQuestions().map((q: any, i: number) => (
+                                <button
+                                  key={q.id}
+                                  onClick={() => setSelectedHistoryQuestion(q)}
+                                  className={`group flex flex-col p-5 rounded-2xl border-2 bg-white dark:bg-[#111] hover:shadow-xl transition-all text-left relative overflow-hidden h-full ${
+                                    q._isPyq 
+                                      ? 'border-orange-100 dark:border-orange-500/20 hover:border-orange-300 hover:shadow-orange-500/5' 
+                                      : 'border-gray-50 dark:border-white/5 hover:border-blue-200 hover:shadow-blue-500/5'
+                                  }`}
+                                >
+                                  <div className="flex justify-between items-start mb-3">
+                                    <span className="text-[10px] font-black text-gray-200 dark:text-gray-400 group-hover:text-blue-200 transition-colors">#{i + 1}</span>
+                                    <div className="flex items-center gap-1.5">
+                                      {q.images && q.images.length > 0 && (
+                                        <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                                          🖼️ Image
+                                        </span>
+                                      )}
+                                      {q._isPyq && (
+                                        <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                                          PYQ {q.year}
+                                        </span>
+                                      )}
+                                      <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${
+                                        q._isPyq 
+                                          ? 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400' 
+                                          : (difficultyColors[q.difficulty_level] || "bg-gray-100 text-gray-500")
+                                      }`}>
+                                        {q._isPyq ? q.exam_type : q.difficulty_level}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <MathRenderer 
+                                    content={q.question_text} 
+                                    className="text-xs font-bold text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 flex-grow" 
+                                  />
+                                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50 dark:border-white/5">
+                                     <span className={`text-[9px] font-black opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider ${
+                                       q._isPyq ? 'text-orange-600' : 'text-blue-600'
+                                     }`}>Solve →</span>
+                                     {q.attempts?.[0] && (
+                                       <span className={`text-[10px] font-bold ${q.attempts[0].is_correct ? "text-green-500" : "text-red-400"}`}>
+                                          {q.attempts[0].is_correct ? "✓ Correct" : "✕ Try Again"}
+                                       </span>
+                                     )}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "pyq" && (
+                  <div className="animate-in fade-in duration-200">
+                    {selectedPyq ? (
+                      <div className="animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+                          <button
+                            onClick={resetPyq}
+                            className="text-[11px] font-black text-gray-400 hover:text-orange-600 uppercase tracking-widest transition-colors"
+                          >
+                            ← Back to PYQs
+                          </button>
+                          <span className="text-[10px] font-black bg-orange-50 text-orange-600 px-3 py-1 rounded-full uppercase">
+                            {selectedPyq.exam_type} {selectedPyq.year}
+                          </span>
+                        </div>
+                        <PracticeButton
+                          patternId={pattern.id}
+                          topicName={pattern.topic_name}
+                          initialQuestion={{ ...selectedPyq, _isPyq: true }}
+                          initialQueue={(() => {
+                            const all = (pyqs || []).map((p: any) => ({ ...p, _isPyq: true }));
+                            const idx = all.findIndex((p: any) => p.id === selectedPyq.id);
+                            return idx !== -1 ? all.slice(idx + 1) : [];
+                          })()}
+                        />
+                      </div>
+                    ) : pyqCount === 0 ? (
+                      <div className="py-14 text-center bg-orange-50/30 rounded-2xl border-2 border-dashed border-orange-100">
+                        <div className="text-3xl mb-3">📜</div>
+                        <p className="text-gray-400 font-black text-sm uppercase tracking-widest mb-1">No PYQs Yet</p>
+                        <p className="text-gray-300 text-xs font-medium">Previous year questions coming soon.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Previous Year Questions</span>
+                          <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-2.5 py-1 rounded-full">
+                            {pyqCount} question{pyqCount !== 1 ? "s" : ""}
+                          </span>
+                        </div>
                         <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {mixedQs.map((q: any, i: number) => (
+                            {pyqs.map((pyq: any, i: number) => (
                               <button
-                                key={q.id}
-                                onClick={() => setSelectedHistoryQuestion(q)}
-                                className={`group flex flex-col p-5 rounded-2xl border-2 bg-white dark:bg-[#111] hover:shadow-xl transition-all text-left relative overflow-hidden h-full ${
-                                  q._isPyq 
-                                    ? 'border-orange-100 dark:border-orange-500/20 hover:border-orange-300 hover:shadow-orange-500/5' 
-                                    : 'border-gray-50 dark:border-white/5 hover:border-blue-200 hover:shadow-blue-500/5'
-                                }`}
+                                key={pyq.id}
+                                onClick={() => setSelectedPyq(pyq)}
+                                className="group flex flex-col p-5 rounded-2xl border-2 border-orange-50 dark:border-white/5 bg-white dark:bg-[#111] hover:border-orange-300 dark:hover:border-orange-500 hover:shadow-xl hover:shadow-orange-500/5 transition-all text-left relative overflow-hidden h-full"
                               >
                                 <div className="flex justify-between items-start mb-3">
-                                  <span className="text-[10px] font-black text-gray-200 dark:text-gray-400 group-hover:text-blue-200 transition-colors">#{i + 1}</span>
+                                  <span className="text-[10px] font-black text-gray-200 dark:text-gray-400 group-hover:text-orange-200 transition-colors">#{i + 1}</span>
                                   <div className="flex items-center gap-1.5">
-                                    {q._isPyq && (
-                                      <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
-                                        PYQ {q.year}
+                                    {pyq.images && pyq.images.length > 0 && (
+                                      <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                                        🖼️ Image
                                       </span>
                                     )}
-                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${
-                                      q._isPyq 
-                                        ? 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400' 
-                                        : (difficultyColors[q.difficulty_level] || "bg-gray-100 text-gray-500")
-                                    }`}>
-                                      {q._isPyq ? q.exam_type : q.difficulty_level}
+                                    <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-orange-500 text-white shadow-sm">
+                                      {pyq.year}
+                                    </span>
+                                    <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
+                                      {pyq.exam_type}
                                     </span>
                                   </div>
                                 </div>
                                 <MathRenderer 
-                                  content={q.question_text} 
+                                  content={pyq.question_text} 
                                   className="text-xs font-bold text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 flex-grow" 
                                 />
-                                <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50 dark:border-white/5">
-                                   <span className={`text-[9px] font-black opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider ${
-                                     q._isPyq ? 'text-orange-600' : 'text-blue-600'
-                                   }`}>Solve →</span>
-                                   {q.attempts?.[0] && (
-                                     <span className={`text-[10px] font-bold ${q.attempts[0].is_correct ? "text-green-500" : "text-red-400"}`}>
-                                        {q.attempts[0].is_correct ? "✓ Correct" : "✕ Try Again"}
-                                     </span>
-                                   )}
+                                <div className="flex items-center justify-between mt-auto pt-3 border-t border-orange-50 dark:border-white/5">
+                                  <span className="text-[9px] font-black text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">Solve →</span>
+                                  {pyq.attempts?.[0] && (
+                                    <span className={`text-[10px] font-bold ${pyq.attempts[0].is_correct ? "text-green-500" : "text-red-400"}`}>
+                                      {pyq.attempts[0].is_correct ? "✓ Correct" : "✕ Try Again"}
+                                    </span>
+                                  )}
                                 </div>
                               </button>
                             ))}
                           </div>
                         </div>
-                      );
-                    })()}
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* --- PYQ TAB --- */}
-            {activeTab === "pyq" && (
-              <div className="animate-in fade-in duration-200">
-                {selectedPyq ? (
-                  <div className="animate-in zoom-in-95 duration-300">
-                    <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
-                      <button
-                        onClick={resetPyq}
-                        className="text-[11px] font-black text-gray-400 hover:text-orange-600 uppercase tracking-widest transition-colors"
-                      >
-                        ← Back to PYQs
-                      </button>
-                      <span className="text-[10px] font-black bg-orange-50 text-orange-600 px-3 py-1 rounded-full uppercase">
-                        {selectedPyq.exam_type} {selectedPyq.year}
-                      </span>
-                    </div>
-                    <PracticeButton
-                      patternId={pattern.id}
-                      topicName={pattern.topic_name}
-                      initialQuestion={{ ...selectedPyq, _isPyq: true }}
-                      initialQueue={(() => {
-                        const all = (pattern.pyqs || []).map((p: any) => ({ ...p, _isPyq: true }));
-                        const idx = all.findIndex((p: any) => p.id === selectedPyq.id);
-                        return idx !== -1 ? all.slice(idx + 1) : [];
-                      })()}
-                    />
+                      </>
+                    )}
                   </div>
-                ) : pyqCount === 0 ? (
-                  <div className="py-14 text-center bg-orange-50/30 rounded-2xl border-2 border-dashed border-orange-100">
-                    <div className="text-3xl mb-3">📜</div>
-                    <p className="text-gray-400 font-black text-sm uppercase tracking-widest mb-1">No PYQs Yet</p>
-                    <p className="text-gray-300 text-xs font-medium">Previous year questions coming soon.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Previous Year Questions</span>
-                      <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-2.5 py-1 rounded-full">
-                        {pyqCount} question{pyqCount !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {pattern.pyqs.map((pyq: any, i: number) => (
-                          <button
-                            key={pyq.id}
-                            onClick={() => { 
-                              setSelectedPyq(pyq); 
-                            }}
-                            className="group flex flex-col p-5 rounded-2xl border-2 border-orange-50 dark:border-white/5 bg-white dark:bg-[#111] hover:border-orange-300 dark:hover:border-orange-500 hover:shadow-xl hover:shadow-orange-500/5 transition-all text-left relative overflow-hidden h-full"
-                          >
-                            <div className="flex justify-between items-start mb-3">
-                              <span className="text-[10px] font-black text-gray-200 dark:text-gray-400 group-hover:text-orange-200 transition-colors">#{i + 1}</span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-orange-500 text-white shadow-sm">
-                                  {pyq.year}
-                                </span>
-                                <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
-                                  {pyq.exam_type}
-                                </span>
-                              </div>
-                            </div>
-                            <MathRenderer 
-                              content={pyq.question_text} 
-                              className="text-xs font-bold text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 flex-grow" 
-                            />
-                            <div className="flex items-center justify-between mt-auto pt-3 border-t border-orange-50 dark:border-white/5">
-                              <span className="text-[9px] font-black text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">Solve →</span>
-                              {pyq.attempts?.[0] && (
-                                <span className={`text-[10px] font-bold ${pyq.attempts[0].is_correct ? "text-green-500" : "text-red-400"}`}>
-                                  {pyq.attempts[0].is_correct ? "✓ Correct" : "✕ Try Again"}
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
                 )}
-              </div>
+              </>
             )}
           </div>
         </div>
