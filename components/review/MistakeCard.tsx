@@ -25,6 +25,15 @@ export default function MistakeCard({ attempt, question, pattern }: MistakeCardP
   const [showExplanation, setShowExplanation] = useState(false);
   const options: string[] = Array.isArray(question.options) ? (question.options as string[]) : [];
 
+  // Resolve a letter like "A" or "C" to the full option text
+  const resolveOption = (letter: string | null) => {
+    if (!letter) return null;
+    return options.find((o) => o.charAt(0).toUpperCase() === letter.trim().toUpperCase()) ?? letter;
+  };
+
+  const userAnswerDisplay = resolveOption(attempt.user_answer);
+  const correctAnswerDisplay = resolveOption(question.correct_answer) ?? question.correct_answer;
+
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-100 dark:border-white/5 bg-white dark:bg-[#111] shadow-sm">
       {/* Topic bar */}
@@ -60,17 +69,21 @@ export default function MistakeCard({ attempt, question, pattern }: MistakeCardP
             <p className="text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest mb-1">
               Your Answer
             </p>
-            <MathRenderer
-              content={attempt.user_answer || "—"}
-              className="text-red-700 dark:text-red-300 font-black text-sm"
-            />
+            {userAnswerDisplay ? (
+              <MathRenderer
+                content={userAnswerDisplay}
+                className="text-red-700 dark:text-red-300 font-black text-sm"
+              />
+            ) : (
+              <span className="text-red-400 dark:text-red-500 font-bold text-sm italic">Not answered</span>
+            )}
           </div>
           <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl px-4 py-3">
             <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">
               Correct Answer
             </p>
             <MathRenderer
-              content={question.correct_answer}
+              content={correctAnswerDisplay}
               className="text-emerald-700 dark:text-emerald-300 font-black text-sm"
             />
           </div>

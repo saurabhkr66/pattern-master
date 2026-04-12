@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import MathRenderer from "@/components/ui/MathRenderer";
 
@@ -19,14 +19,14 @@ type Flashcard = {
 
 export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
   const [index, setIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
+  const [revealed, setRevealed] = useState(false);
 
   if (cards.length === 0) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-12 text-center">
+      <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5 p-12 text-center">
         <div className="text-4xl mb-3">🎉</div>
-        <p className="text-emerald-700 text-lg font-black mb-1">All Clear!</p>
-        <p className="text-emerald-600/70 text-sm mb-6">No wrong answers to review yet.</p>
+        <p className="text-emerald-700 dark:text-emerald-400 text-lg font-black mb-1">All Clear!</p>
+        <p className="text-emerald-600/70 dark:text-emerald-500/60 text-sm mb-6">No wrong answers to review yet.</p>
         <Link
           href="/practice"
           className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors"
@@ -38,163 +38,224 @@ export default function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
   }
 
   const card = cards[index];
-  const correctOption = card.options.find((o) => o.charAt(0) === card.correct_answer) ?? card.correct_answer;
+  const options: string[] = Array.isArray(card.options) ? card.options : [];
 
-  const prev = () => {
-    setFlipped(false);
-    setTimeout(() => setIndex((i) => Math.max(0, i - 1)), 150);
-  };
+  const goTo = useCallback((next: number) => {
+    setIndex(next);
+    setRevealed(false);
+  }, []);
 
-  const next = () => {
-    setFlipped(false);
-    setTimeout(() => setIndex((i) => Math.min(cards.length - 1, i + 1)), 150);
-  };
+  const prev = () => { if (index > 0) goTo(index - 1); };
+  const next = () => { if (index < cards.length - 1) goTo(index + 1); };
 
-  const handleFlip = () => setFlipped((f) => !f);
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        setRevealed((r) => !r);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [index, cards.length]);
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col gap-6">
 
-      {/* Progress bar */}
-      <div className="flex items-center gap-3 w-full max-w-2xl">
-        <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-          <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-            style={{ width: `${((index + 1) / cards.length) * 100}%` }}
-          />
+      {/* Card counter + dots */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-black tabular-nums" style={{ color: "var(--text-muted)" }}>
+          {index + 1} <span className="font-normal opacity-50">/ {cards.length}</span>
+        </span>
+        {/* Dot progress — show up to 15 dots, collapse rest */}
+        <div className="flex items-center gap-1">
+          {cards.slice(0, Math.min(cards.length, 15)).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`rounded-full transition-all duration-200 ${
+                i === index
+                  ? "w-4 h-2 bg-indigo-500"
+                  : "w-2 h-2 bg-gray-200 dark:bg-white/10 hover:bg-indigo-300 dark:hover:bg-indigo-500/40"
+              }`}
+            />
+          ))}
+          {cards.length > 15 && (
+            <span className="text-[10px] font-bold ml-1" style={{ color: "var(--text-muted)" }}>
+              +{cards.length - 15}
+            </span>
+          )}
         </div>
-        <span className="text-sm font-black shrink-0 tabular-nums" style={{ color: "var(--text-secondary)" }}>
-          {index + 1}/{cards.length}
+        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">
+          {revealed ? "Answer" : "Question"}
         </span>
       </div>
 
-      {/* Flip card */}
+      {/* Card */}
       <div
-        className="w-full max-w-2xl cursor-pointer"
-        style={{ perspective: "1200px" }}
-        onClick={handleFlip}
+        className="rounded-2xl border overflow-hidden cursor-pointer select-none transition-shadow duration-200 hover:shadow-lg"
+        style={{
+          background: "var(--bg-surface)",
+          borderColor: revealed ? "rgba(99,102,241,0.3)" : "var(--border)",
+          boxShadow: revealed ? "0 0 0 1px rgba(99,102,241,0.15)" : undefined,
+        }}
+        onClick={() => setRevealed((r) => !r)}
       >
+        {/* Card header */}
         <div
-          className="relative w-full transition-transform duration-500"
+          className="flex items-center justify-between px-5 py-3 border-b"
           style={{
-            transformStyle: "preserve-3d",
-            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-            minHeight: "clamp(280px, 50vh, 360px)",
+            background: revealed ? "rgba(99,102,241,0.06)" : "var(--bg-surface-2)",
+            borderColor: revealed ? "rgba(99,102,241,0.15)" : "var(--border)",
           }}
         >
-          {/* Front — Question */}
-          <div
-            className="absolute inset-0 rounded-2xl p-6 md:p-8 flex flex-col border border-gray-100 dark:border-white/5 bg-white dark:bg-[#111] shadow-xl shadow-blue-500/5"
-            style={{ backfaceVisibility: "hidden" }}
-          >
-            <div className="flex flex-wrap items-center gap-2 mb-5">
-              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{card.subject}</span>
-              <span className="text-gray-300">·</span>
-              <span className="text-[10px] font-bold text-gray-400 truncate">{card.topic_name}</span>
-              {card.ispyq && card.year && (
-                <>
-                  <span className="text-gray-300">·</span>
-                  <span className="text-[10px] font-black text-orange-500">PYQ {card.year}</span>
-                </>
-              )}
-            </div>
-
-            <MathRenderer 
-              content={card.question_text} 
-              className="text-gray-900 dark:text-white font-bold text-lg leading-relaxed whitespace-pre-wrap flex-1 mt-2" 
-            />
-
-            <div className="mt-6 flex items-center justify-between">
-              <div className="space-y-1.5 w-full">
-                {card.options.map((opt) => (
-                    <MathRenderer 
-                      content={opt} 
-                      className="px-4 py-2.5 rounded-xl text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10" 
-                      key={opt}
-                    />
-                ))}
-              </div>
-            </div>
-
-            <p className="text-center text-gray-400 text-xs mt-5 font-medium">Tap to reveal answer</p>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest shrink-0">
+              {card.subject}
+            </span>
+            <span style={{ color: "var(--border)" }}>·</span>
+            <span className="text-[10px] font-bold truncate" style={{ color: "var(--text-muted)" }}>
+              {card.topic_name}
+            </span>
+            {card.ispyq && card.year && (
+              <>
+                <span style={{ color: "var(--border)" }}>·</span>
+                <span className="text-[10px] font-black text-orange-500 shrink-0">PYQ {card.year}</span>
+              </>
+            )}
           </div>
-
-          {/* Back — Answer */}
-          <div
-            className="absolute inset-0 rounded-2xl p-6 md:p-8 flex flex-col border border-indigo-200/50 dark:border-indigo-500/30 bg-white dark:bg-[#111] shadow-xl shadow-indigo-500/5"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-            }}
+          <span
+            className={`shrink-0 ml-3 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
+              revealed
+                ? "bg-indigo-500/10 text-indigo-500"
+                : "bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500"
+            }`}
           >
-            <div className="flex flex-wrap items-center gap-2 mb-5">
-              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{card.subject}</span>
-              <span className="text-gray-300">·</span>
-              <span className="text-[10px] font-bold text-gray-400 truncate">{card.topic_name}</span>
-            </div>
-
-            {/* Correct answer highlight */}
-            <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl px-4 py-3 mb-5">
-              <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">
-                Correct Answer
-              </p>
-              <MathRenderer 
-                content={correctOption} 
-                className="text-emerald-700 dark:text-emerald-300 font-bold text-sm" 
-              />
-            </div>
-
-            {/* Explanation */}
-            <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl p-4 flex-1">
-              <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
-                Logic Breakdown
-              </p>
-              <MathRenderer 
-                content={card.explanation} 
-                className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed" 
-              />
-            </div>
-
-            <Link
-              href={`/practice?patternId=${card.patternId}`}
-              onClick={(e) => e.stopPropagation()}
-              className="mt-5 text-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black px-4 py-3 rounded-xl transition-colors uppercase tracking-wide"
-            >
-              Practice This Topic →
-            </Link>
-
-            <p className="text-center text-gray-400 text-xs mt-4 font-medium">Tap to flip back</p>
-          </div>
+            {revealed ? "Answer" : "Question"}
+          </span>
         </div>
+
+        {/* Question */}
+        <div className="px-5 pt-5 pb-4">
+          <MathRenderer
+            content={card.question_text}
+            className="text-base font-bold leading-relaxed"
+            style={{ color: "var(--text-primary)" } as any}
+          />
+        </div>
+
+        {/* Options */}
+        {options.length > 0 && (
+          <div className="px-5 pb-5 space-y-2">
+            {options.map((opt) => {
+              const letter = opt.charAt(0).toUpperCase();
+              const isCorrect = letter === card.correct_answer.trim().toUpperCase();
+
+              return (
+                <div
+                  key={opt}
+                  className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm transition-all duration-300 ${
+                    revealed && isCorrect
+                      ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10"
+                      : "border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]"
+                  }`}
+                >
+                  <span
+                    className={`shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-[11px] font-black border transition-all duration-300 ${
+                      revealed && isCorrect
+                        ? "bg-emerald-500 border-emerald-500 text-white"
+                        : "bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500"
+                    }`}
+                  >
+                    {letter}
+                  </span>
+                  <MathRenderer
+                    content={opt.includes(".") ? opt.split(".").slice(1).join(".").trim() : opt}
+                    className={`flex-1 leading-snug font-medium transition-colors duration-300 ${
+                      revealed && isCorrect
+                        ? "text-emerald-800 dark:text-emerald-300 font-bold"
+                        : "text-gray-600 dark:text-gray-400"
+                    }`}
+                  />
+                  {revealed && isCorrect && (
+                    <span className="shrink-0 text-emerald-500 font-black text-xs mt-0.5">✓</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Explanation — slides in after reveal */}
+        {revealed && card.explanation && (
+          <div
+            className="mx-5 mb-5 rounded-xl px-4 py-4 border border-blue-100 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10 animate-in slide-in-from-bottom-2 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest mb-2">
+              Logic Breakdown
+            </p>
+            <MathRenderer
+              content={card.explanation}
+              className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
+            />
+          </div>
+        )}
+
+        {/* Tap hint */}
+        {!revealed && (
+          <div className="px-5 pb-5">
+            <p className="text-center text-[11px] font-medium" style={{ color: "var(--text-muted)" }}>
+              Tap card · Space · Enter to reveal answer
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center gap-3 w-full max-w-xs">
+      {/* Navigation + Practice button */}
+      <div className="flex items-center gap-3">
         <button
           onClick={prev}
           disabled={index === 0}
-          className="flex-1 py-3 rounded-xl font-bold text-sm transition-colors border disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ background: "var(--bg-surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+          className="flex-1 py-3 rounded-xl font-bold text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-indigo-400 dark:hover:border-indigo-500"
+          style={{
+            background: "var(--bg-surface-2)",
+            borderColor: "var(--border)",
+            color: "var(--text-primary)",
+          }}
         >
           ← Prev
         </button>
 
-        <button
-          onClick={handleFlip}
-          className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors"
+        <Link
+          href={`/practice?patternId=${card.patternId}`}
+          className="flex-1 py-3 text-center rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+          onClick={(e) => e.stopPropagation()}
         >
-          {flipped ? "Hide" : "Reveal"}
-        </button>
+          Practice Topic
+        </Link>
 
         <button
           onClick={next}
           disabled={index === cards.length - 1}
-          className="flex-1 py-3 rounded-xl font-bold text-sm transition-colors border disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ background: "var(--bg-surface-2)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+          className="flex-1 py-3 rounded-xl font-bold text-sm border transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-indigo-400 dark:hover:border-indigo-500"
+          style={{
+            background: "var(--bg-surface-2)",
+            borderColor: "var(--border)",
+            color: "var(--text-primary)",
+          }}
         >
           Next →
         </button>
       </div>
+
+      {/* Keyboard hint */}
+      <p className="text-center text-[10px] font-medium uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+        ← → arrow keys to navigate
+      </p>
     </div>
   );
 }
