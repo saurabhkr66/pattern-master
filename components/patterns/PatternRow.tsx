@@ -262,8 +262,8 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                               .split(/###\s+/)
                               .filter(Boolean)
                               .map((section: string, index: number) => ({ section, index }))
-                              .filter((item) => item.index % 2 === columnTrack)
-                              .map(({ section, index }) => {
+                              .filter((item: { section: string; index: number }) => item.index % 2 === columnTrack)
+                              .map(({ section, index }: { section: string; index: number }) => {
                                 const lines = section.split("\n");
                                 const title = lines[0].trim();
                                 const rest = lines.slice(1).join("\n").trim();

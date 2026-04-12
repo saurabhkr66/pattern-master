@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { completeOnboarding } from "@/app/api/onboarding/route";
+import { completeOnboarding } from "./actions";
 import { 
   Check, 
   ChevronRight, 

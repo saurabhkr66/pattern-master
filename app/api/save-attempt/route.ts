@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 
 export async function POST(req: NextRequest) {
@@ -32,8 +32,12 @@ export async function POST(req: NextRequest) {
         });
 
         // Revalidate caches so progress shows up instantly on the client
-        revalidateTag("patterns");
-        revalidateTag("dashboard");
+        // Revalidate caches so progress shows up instantly on the client
+        await revalidatePath("/dashboard");
+        await revalidatePath("/(app)/dashboard"); // Added as a safety catch-all
+        // Commenting out tags if they cause build errors with argument counts in this alpha version
+        // await revalidateTag("patterns");
+        // await revalidateTag("dashboard");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {

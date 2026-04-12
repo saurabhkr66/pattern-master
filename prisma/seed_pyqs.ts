@@ -424,7 +424,7 @@ async function main() {
 
     try {
       let count = 0;
-      for (const pyq of item.pyqs) {
+      for (const pyq of item.pyqs as any[]) {
         // Data Cleaning: Remove scraper noise
         const cleanQuestionText = pyq.question_text
           .replace(/0 reply\s*Please log in or register to add a comment\./gi, '')
@@ -470,7 +470,7 @@ async function main() {
         totalQuestions++;
       }
       console.log(`${colors.green}✅ ${progress} Seeded ${colors.bright}${count}${colors.reset}${colors.green} PYQs for: ${colors.bright}${pattern.topic_name}${colors.reset}`);
-    } catch (err) {
+    } catch (err: any) {
       console.log(`${colors.red}❌ ${progress} Error seeding ${item.pattern.topic_name}${colors.reset}`);
       console.error(err.message);
       errors++;

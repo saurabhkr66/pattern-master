@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 interface SubmittedAnswer {
     questionId: string;
@@ -174,7 +174,8 @@ export async function POST(req: NextRequest) {
             })
         );
 
-        revalidateTag("dashboard");
+        await revalidatePath("/dashboard");
+        // await revalidateTag("dashboard");
 
         return NextResponse.json({
             sessionId,
