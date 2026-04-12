@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { format, subMonths, eachDayOfInterval, startOfToday, isSameDay, getDay, startOfWeek, endOfWeek } from "date-fns";
+import { format, subMonths, eachDayOfInterval, startOfToday, isSameDay, /*getDay,*/ startOfWeek /*, endOfWeek*/ } from "date-fns";
 
 interface ActivityHeatmapProps {
   data: Record<string, number>;
@@ -15,9 +15,9 @@ export default function ActivityHeatmap({ data, currentStreak }: ActivityHeatmap
     const today = startOfToday();
     const sixMonthsAgo = subMonths(today, 6);
 
-    // Adjust to start of the week for a consistent grid
+    // Start at beginning of the first week, end at today (no future days)
     const start = startOfWeek(sixMonthsAgo);
-    const end = endOfWeek(today);
+    const end = today;
 
     return eachDayOfInterval({ start, end }).map((date) => {
       const dateStr = format(date, "yyyy-MM-dd");
