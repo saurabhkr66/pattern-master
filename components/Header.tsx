@@ -15,7 +15,6 @@ import {
   BookOpen,
   RotateCcw,
   XCircle,
-  User,
   Menu,
   X,
   Sun,
@@ -23,6 +22,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import GlobalSearch from "./search/GlobalSearch";
 
 const navLinks = [
   { href: "/practice", label: "Practice", icon: BookOpen },
@@ -30,7 +30,6 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/review", label: "Review", icon: RotateCcw },
   { href: "/mistakes", label: "Mistakes", icon: XCircle },
-  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export default function Header() {
@@ -87,6 +86,11 @@ export default function Header() {
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
+
+          {/* Global Search (signed-in only) */}
+          <Show when="signed-in">
+            <GlobalSearch />
+          </Show>
 
           {/* Theme Toggle */}
           <button
