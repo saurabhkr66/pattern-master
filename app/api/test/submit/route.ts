@@ -174,8 +174,9 @@ export async function POST(req: NextRequest) {
             })
         );
 
-        await revalidatePath("/dashboard");
-        // await revalidateTag("dashboard");
+        await revalidatePath("/dashboard", "page");
+        await revalidateTag("dashboard", "page");
+        await revalidateTag("patterns", "page");
 
         return NextResponse.json({
             sessionId,

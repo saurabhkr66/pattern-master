@@ -33,11 +33,10 @@ export async function POST(req: NextRequest) {
 
         // Revalidate caches so progress shows up instantly on the client
         // Revalidate caches so progress shows up instantly on the client
-        await revalidatePath("/dashboard");
-        await revalidatePath("/(app)/dashboard"); // Added as a safety catch-all
-        // Commenting out tags if they cause build errors with argument counts in this alpha version
-        // await revalidateTag("patterns");
-        // await revalidateTag("dashboard");
+        await revalidatePath("/dashboard", "page");
+        await revalidatePath("/(app)/dashboard", "page");
+        await revalidateTag("patterns", "page");
+        await revalidateTag("dashboard", "page");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {

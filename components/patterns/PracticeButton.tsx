@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import MathRenderer from "@/components/ui/MathRenderer";
 
 interface PracticeButtonProps {
@@ -10,21 +11,24 @@ interface PracticeButtonProps {
   topicName: string;
   initialQuestion?: any;
   initialQueue?: any[];
+  isPyqMode?: boolean;
+  onExit?: () => void;
 }
 
-export default function PracticeButton({ patternId, topicName, initialQuestion, initialQueue }: PracticeButtonProps) {
+export default function PracticeButton({ patternId, topicName, initialQuestion, initialQueue, isPyqMode: _propIsPyqMode, onExit }: PracticeButtonProps) {
   const router = useRouter();
-
+  const queryClient = useQueryClient();
+  const isPyqMode = _propIsPyqMode || initialQuestion?._isPyq;
   const [isLoading, setIsLoading] = useState(false);
-  const [question, setQuestion] = useState<any>(null);
-  const [questionQueue, setQuestionQueue] = useState<any[]>([]);
+  const [question, setQuestion] = useState<any>(initialQuestion || null);
+  const [questionQueue, setQuestionQueue] = useState<any[]>(initialQueue || []);
   const [difficulty, setDifficulty] = useState("Medium");
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [msqSelections, setMsqSelections] = useState<string[]>([]);
   const [natValue, setNatValue] = useState("");
   const [isRevealed, setIsRevealed] = useState(false);
   const [aiModel, setAiModel] = useState<"gemini" | "deepseek" | "gemma">("gemini");
-  const lastInitialIdRef = useRef<string | null>(null);
+  const lastInitialIdRef = useRef<string | null>(initialQuestion?.id || null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,7 +105,12 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       setNatValue("");
       setIsRevealed(false);
     } else {
-      handleGenerate();
+      if (isPyqMode) {
+        if (onExit) onExit();
+        else setQuestion(null);
+      } else {
+        handleGenerate();
+      }
     }
   };
 
@@ -140,8 +149,29 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
     setIsRevealed(true);
 
+    // OPTIMISTIC UPDATE: Update the React Query cache INSTANTLY
+    // This allows the QuestionCards in the background to update their "✓ Correct" tags 
+    // with 0ms latency, bypassing the network completely.
+    queryClient.setQueryData(["patternQuestions", patternId], (oldData: any) => {
+      if (!oldData) return oldData;
+      
+      const targetId = question.id;
+      const newAttempt = { is_correct: isCorrect, user_answer: finalAnswer, created_at: new Date().toISOString() };
+      
+      const updateArray = (arr: any[]) => (arr || []).map(q => 
+        q.id === targetId ? { ...q, attempts: [newAttempt, ...(q.attempts || [])] } : q
+      );
+
+      return {
+        ...oldData,
+        questions: updateArray(oldData.questions),
+        pyqs: updateArray(oldData.pyqs),
+      };
+    });
+
     try {
-      await fetch("/api/save-attempt", {
+      // Async network save, but UI has already updated!
+      fetch("/api/save-attempt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +182,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           userAnswer: finalAnswer,
         }),
       });
-      router.refresh();
+      // Removing router.refresh() to prevent massive full-page re-renders freezing the browser.
     } catch (err) {
       console.error("Failed to save attempt:", err);
     }
@@ -265,17 +295,17 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         <div>
           {/* Back bar */}
           <div className="flex items-center justify-between mb-4">
-            <button
+            {/* <button
               onClick={() => { setQuestion(null); setQuestionQueue([]); }}
               className="text-xs font-black text-gray-400 hover:text-blue-600 uppercase tracking-widest transition-colors py-1"
             >
               ← Back
-            </button>
-            {questionQueue.length > 0 && (
+            </button> */}
+            {/* {questionQueue.length > 0 && (
               <span className="text-[10px] font-black bg-blue-50 text-blue-500 px-2.5 py-1 rounded-full">
                 {questionQueue.length} queued
               </span>
-            )}
+            )} */}
           </div>
 
           {/* Question card */}
@@ -370,7 +400,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                         if (question.question_type === "MSQ") toggleMsqSelection(letter);
                         else handleSubmit(letter);
                       }}
-                      className={`w-full text-left flex items-center gap-3 p-3 border-2 rounded-xl transition-all touch-manipulation ${
+                      className={`w-full text-left flex items-center gap-2 md:gap-3 p-2 md:p-3 border-2 rounded-[10px] md:rounded-xl transition-all touch-manipulation ${
                         isRevealed
                           ? isActuallyCorrect
                             ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/10"
@@ -381,7 +411,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                       }`}
                     >
                       <span
-                        className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-lg font-black text-xs border-2 transition-colors ${
+                        className={`shrink-0 w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-md md:rounded-lg font-black text-[10px] md:text-xs border-2 transition-colors ${
                           isRevealed && isActuallyCorrect
                             ? "bg-emerald-500 border-emerald-500 text-white"
                             : isSelected
@@ -393,7 +423,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                       </span>
                       <MathRenderer 
                         content={option.includes('.') ? option.split('.').slice(1).join('.').trim() : option} 
-                        className="font-bold text-xs md:text-base leading-tight text-gray-700 dark:text-gray-300" 
+                        className="font-bold text-[11px] md:text-base leading-tight text-gray-700 dark:text-gray-300" 
                       />
                     </button>
                   );
@@ -438,30 +468,43 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 )}
               </div>
             )}
+            
+            {!isRevealed && (
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={handleNextFromQueue}
+                  className="text-[11px] font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 uppercase tracking-widest transition-colors flex items-center gap-1"
+                >
+                  {questionQueue.length > 0 
+                    ? "Skip Question →" 
+                    : isPyqMode ? "Finish Review →" : "Skip & Generate →"}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Explanation (after reveal) */}
           {isRevealed && (
-            <div className="animate-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-4 pt-2">
+              <button 
+                onClick={handleNextFromQueue}
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs md:text-sm font-black py-4 rounded-xl transition-colors shadow-lg shadow-blue-500/20 uppercase tracking-wide flex justify-center items-center gap-2"
+              >
+                {questionQueue.length > 0 
+                  ? "Next Question →"
+                  : isPyqMode
+                    ? "Finish Review →"
+                    : "Generate 5 More →"
+                }
+              </button>
+
               <div className="bg-gray-900 text-white p-5 md:p-6 rounded-2xl shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl md:text-6xl font-black">?</div>
                 <h4 className="text-blue-400 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2 md:mb-3">Logic Breakdown</h4>
                 <MathRenderer 
                   content={question.explanation} 
-                  className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10" 
+                  className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10 break-words" 
                 />
-                
-                <div className="mt-4 md:mt-6 flex gap-3">
-                  <button 
-                    onClick={handleNextFromQueue}
-                    className="flex-1 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-[10px] md:text-xs font-bold py-3 md:py-3.5 rounded-lg transition-colors border border-white/10 touch-manipulation"
-                  >
-                    {questionQueue.length > 0 
-                      ? "Next Question →"
-                      : "Generate 5 More →"
-                    }
-                  </button>
-                </div>
               </div>
             </div>
           )}

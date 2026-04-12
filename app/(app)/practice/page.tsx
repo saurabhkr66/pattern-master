@@ -113,6 +113,7 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
           topic_name: true,
           subject: true,
           atomic_logic: true,
+          short_notes: true,
           _count: {
             select: { questions: true, pyqs: true }
           },

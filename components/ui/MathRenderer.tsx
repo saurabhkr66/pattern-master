@@ -7,12 +7,14 @@ import remarkBreaks from 'remark-breaks';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
+import { memo } from 'react';
+
 interface MathRendererProps {
   content: string;
   className?: string;
 }
 
-export default function MathRenderer({ content, className }: MathRendererProps) {
+const MathRenderer = memo(function MathRenderer({ content, className }: MathRendererProps) {
   // Normalise typographic/smart characters that KaTeX doesn't understand.
   // These appear in scraped question text (e.g. "1's", "it's", "don't").
   const processedContent = (content || '')
@@ -52,4 +54,6 @@ export default function MathRenderer({ content, className }: MathRendererProps) 
       </ReactMarkdown>
     </div>
   );
-}
+});
+
+export default MathRenderer;
