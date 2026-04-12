@@ -18,6 +18,7 @@ export default async function ReviewPage() {
     include: {
       question: { include: { pattern: true } },
       pyq: { include: { pattern: true } },
+      subject_pyq: { include: { subject_pattern: true } },
     },
     orderBy: { created_at: "desc" },
   });
@@ -25,17 +26,18 @@ export default async function ReviewPage() {
   const seen = new Set<string>();
   const cards = wrongAttempts
     .filter((a) => {
-      const key = a.question_id ?? a.pyq_id ?? a.id;
+      const key = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     })
     .map((a) => {
-      const q = a.question ?? a.pyq;
-      const pattern = a.question?.pattern ?? a.pyq?.pattern;
+      const q = a.question ?? a.pyq ?? a.subject_pyq;
+      const sp = a.subject_pyq?.subject_pattern;
+      const pattern = a.question?.pattern ?? a.pyq?.pattern ?? (sp ? { id: sp.id, topic_name: sp.subject_name, subject: sp.subject_name } : null);
       if (!q || !pattern) return null;
       return {
-        id: a.question_id ?? a.pyq_id ?? a.id,
+        id: a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id,
         question_text: q.question_text,
         options: (q.options as string[]) ?? [],
         correct_answer: q.correct_answer,
@@ -43,7 +45,7 @@ export default async function ReviewPage() {
         topic_name: pattern.topic_name,
         subject: pattern.subject,
         patternId: pattern.id,
-        ispyq: !!a.pyq_id,
+        ispyq: !!a.pyq_id || !!a.subject_pyq_id,
         year: "year" in q ? (q.year as number) : undefined,
       };
     })

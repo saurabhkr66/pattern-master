@@ -55,10 +55,12 @@ async function MistakesContent({ userId, searchParams }: { userId: string, searc
       id: true,
       question_id: true,
       pyq_id: true,
+      subject_pyq_id: true,
       created_at: true,
       // Mini-include for stats calculation
       question: { select: { pattern: { select: { id: true, subject: true, topic_name: true } } } },
       pyq: { select: { pattern: { select: { id: true, subject: true, topic_name: true } } } },
+      subject_pyq: { select: { subject_pattern: { select: { id: true, subject_name: true } } } },
     },
     orderBy: { created_at: "desc" },
   });
@@ -69,7 +71,7 @@ async function MistakesContent({ userId, searchParams }: { userId: string, searc
   const uniqueWrongMetadata: typeof allIncorrectAttempts = [];
 
   for (const a of allIncorrectAttempts) {
-    const key = a.question_id ?? a.pyq_id ?? a.id;
+    const key = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
     if (!seen.has(key)) {
       seen.add(key);
       uniqueAttemptIds.push(a.id);
@@ -89,6 +91,7 @@ async function MistakesContent({ userId, searchParams }: { userId: string, searc
     include: {
       question: { include: { pattern: true } },
       pyq: { include: { pattern: true } },
+      subject_pyq: { include: { subject_pattern: true } },
     },
     orderBy: { created_at: "desc" },
   });
@@ -96,7 +99,8 @@ async function MistakesContent({ userId, searchParams }: { userId: string, searc
   // STEP 5: Calculate Stats from metadata (Fast)
   const patternMap = new Map<string, { pattern: any; count: number }>();
   for (const a of uniqueWrongMetadata) {
-    const pattern = a.question?.pattern ?? a.pyq?.pattern;
+    const sp = a.subject_pyq?.subject_pattern;
+    const pattern = a.question?.pattern ?? a.pyq?.pattern ?? (sp ? { id: sp.id, subject: sp.subject_name, topic_name: sp.subject_name } : null);
     if (!pattern) continue;
     const existing = patternMap.get(pattern.id);
     if (existing) existing.count++;
@@ -186,8 +190,9 @@ async function MistakesContent({ userId, searchParams }: { userId: string, searc
         </div>
         <div className="space-y-6">
           {paginatedMistakes.map((attempt) => {
-            const q = attempt.question ?? attempt.pyq;
-            const pattern = attempt.question?.pattern ?? attempt.pyq?.pattern;
+            const q = attempt.question ?? attempt.pyq ?? attempt.subject_pyq;
+            const sp = attempt.subject_pyq?.subject_pattern;
+            const pattern = attempt.question?.pattern ?? attempt.pyq?.pattern ?? (sp ? { subject: sp.subject_name, topic_name: sp.subject_name } : null);
             if (!q || !pattern) return null;
 
             return (
