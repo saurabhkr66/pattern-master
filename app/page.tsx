@@ -4,7 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HeroCTAs, TopicsSignUpButton, FinalCTAButton } from "@/components/landing/LandingAuthButtons";
+import {
+  HeroCTAs,
+  TopicsSignUpButton,
+  FinalCTAButton,
+} from "@/components/landing/LandingAuthButtons";
+import FAQAccordion from "@/components/landing/FAQAccordion";
 import {
   Brain,
   Zap,
@@ -51,21 +56,18 @@ export const metadata: Metadata = {
     description:
       "Practice GATE CSE, ISRO & BARC with AI-generated questions tailored to each topic's core logic.",
   },
-  alternates: {
-    canonical: "/",
-  },
+  alternates: { canonical: "/" },
 };
 
-// Subject icon map
 const subjectIcons: Record<string, React.ReactNode> = {
-  Algorithms: <Cpu size={16} />,
-  "Data Structures": <Code2 size={16} />,
-  "Operating Systems": <FlaskConical size={16} />,
-  "Computer Networks": <Network size={16} />,
-  DBMS: <Database size={16} />,
-  "Computer Organization": <Cpu size={16} />,
-  "Digital Logic": <Zap size={16} />,
-  Default: <BookOpen size={16} />,
+  Algorithms: <Cpu size={14} />,
+  "Data Structures": <Code2 size={14} />,
+  "Operating Systems": <FlaskConical size={14} />,
+  "Computer Networks": <Network size={14} />,
+  DBMS: <Database size={14} />,
+  "Computer Organization": <Cpu size={14} />,
+  "Digital Logic": <Zap size={14} />,
+  Default: <BookOpen size={14} />,
 };
 
 const SUBJECT_COLORS: Record<string, string> = {
@@ -79,15 +81,12 @@ const SUBJECT_COLORS: Record<string, string> = {
   Default: "bg-white/5 text-white/50 border-white/10",
 };
 
-// Structured data for SEO
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   name: "PatternMaster",
-  description:
-    "AI-powered exam preparation platform for GATE CSE, ISRO, BARC, and ESE competitive engineering exams",
+  description: "AI-powered exam preparation platform for GATE CSE, ISRO, BARC, and ESE",
   url: "https://patternmaster.in",
-  educationalCredentialAwarded: "GATE Exam Preparation",
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "GATE CSE Study Topics",
@@ -110,7 +109,7 @@ const faqStructuredData = {
       name: "How is PatternMaster different from other GATE preparation platforms?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "PatternMaster uses AI to generate questions based on the specific atomic logic (core concept) of each GATE topic. Instead of recycling the same question banks, every question is freshly generated to test deep understanding — not pattern memorization.",
+        text: "PatternMaster uses AI to generate questions based on the specific atomic logic of each GATE topic — not recycled question banks.",
       },
     },
     {
@@ -118,7 +117,7 @@ const faqStructuredData = {
       name: "Which exams does PatternMaster cover?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "PatternMaster covers GATE CSE, ISRO CS, BARC CS, and ESE. The platform is specifically designed for Computer Science and IT branches.",
+        text: "GATE CSE, ISRO CS, BARC CS, and ESE.",
       },
     },
     {
@@ -126,55 +125,47 @@ const faqStructuredData = {
       name: "Is PatternMaster free to use?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes, PatternMaster is free to get started. Create an account, select your target exam, and begin practicing AI-generated questions immediately.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How does the AI question generation work?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "PatternMaster uses Google Gemini to generate 5 unique questions per practice session for each GATE topic. Questions are generated at Easy, Medium, or Hard difficulty and are deduplicated using semantic hashing to ensure you always get fresh content.",
+        text: "Yes. Create an account and start practicing immediately — no credit card required.",
       },
     },
   ],
 };
 
-const HOW_IT_WORKS = [
+const STEPS = [
   {
-    step: "01",
-    title: "Select Your Exam & Branch",
-    description:
-      "Choose from GATE, ISRO, BARC, or ESE. Pick your branch — CSE, IT, ECE, or ME. The platform personalises your syllabus instantly.",
+    n: "1",
+    title: "Pick a topic",
+    body: "Choose any GATE CSE topic. See the one core idea that all exam questions for it test.",
     icon: Target,
-    color: "text-indigo-400",
+    accent: "text-indigo-400",
     bg: "bg-indigo-500/10",
+    border: "border-indigo-500/15",
   },
   {
-    step: "02",
-    title: "Practice Topic by Topic",
-    description:
-      "Every GATE topic has an atomic logic — the one concept that all questions test. Our AI generates fresh questions targeting exactly that logic.",
+    n: "2",
+    title: "Practice with fresh AI questions",
+    body: "Gemini generates 5 unique questions every session. Easy, Medium, or Hard — your call. You never see the same question twice.",
     icon: Zap,
-    color: "text-violet-400",
+    accent: "text-violet-400",
     bg: "bg-violet-500/10",
+    border: "border-violet-500/15",
   },
   {
-    step: "03",
-    title: "Track & Review Weak Areas",
-    description:
-      "Your dashboard shows accuracy per topic, your streak, and which concepts need critical review. Study smarter, not harder.",
+    n: "3",
+    title: "Track what needs work",
+    body: "Your dashboard shows accuracy by topic and surfaces wrong answers for review. Know exactly where you stand.",
     icon: BarChart3,
-    color: "text-emerald-400",
+    accent: "text-emerald-400",
     bg: "bg-emerald-500/10",
+    border: "border-emerald-500/15",
   },
 ];
 
 const STATS = [
-  { value: "50+", label: "GATE Topics Covered" },
+  { value: "50+", label: "GATE Topics" },
   { value: "3", label: "Difficulty Levels" },
-  { value: "4", label: "Exams Supported" },
-  { value: "∞", label: "Unique AI Questions" },
+  { value: "4", label: "Exams" },
+  { value: "∞", label: "AI Questions" },
 ];
 
 const FAQS = [
@@ -192,39 +183,39 @@ const FAQS = [
   },
   {
     q: "How does the AI generate questions without repeating them?",
-    a: "Every generated question gets a semantic fingerprint (SHA-256 hash of the normalized text). If an identical question already exists in the database, it's skipped. This guarantees a growing bank of unique questions.",
+    a: "Every generated question gets a semantic fingerprint. If an identical question already exists in the database, it's skipped — guaranteeing a growing bank of unique questions.",
   },
   {
     q: "What is 'atomic logic' in a topic?",
-    a: "Every GATE question on, say, 'Merge Sort' ultimately tests one thing: understanding how divide-and-conquer recurrences work. That's the atomic logic. Practicing around that core makes you exam-ready faster than reading textbook chapters.",
+    a: "Every GATE question on 'Merge Sort' ultimately tests one thing: how divide-and-conquer recurrences work. That's the atomic logic. Practicing around that core makes you exam-ready faster than reading chapters.",
   },
+];
+
+// The mock options for the hero card
+const MOCK_OPTIONS = [
+  { label: "A", text: "T(n) = T(n/2) + O(1)", correct: false },
+  { label: "B", text: "T(n) = 2T(n/2) + O(n)", correct: true },
+  { label: "C", text: "T(n) = T(n−1) + O(n)", correct: false },
+  { label: "D", text: "T(n) = 4T(n/4) + O(n²)", correct: false },
 ];
 
 export default async function HomePage() {
   const { userId } = await auth();
+  if (userId) redirect("/practice");
 
-  // Authenticated users go straight to practice
-  if (userId) {
-    redirect("/practice");
-  }
-
-  // Fetch real patterns from DB for the topics section (public, no user context)
   const gatePatterns = await prisma.pattern.findMany({
     where: { exam_type: "GATE", branch: "CSE" },
-    select: { 
-      id: true, 
-      topic_name: true, 
-      subject: true, 
+    select: {
+      id: true,
+      topic_name: true,
+      subject: true,
       atomic_logic: true,
-      _count: {
-        select: { pyqs: true }
-      }
+      _count: { select: { pyqs: true } },
     },
     orderBy: { subject: "asc" },
-    take: 24, // Show a representative preview
+    take: 24,
   });
 
-  // Group by subject for display
   const bySubject: Record<string, typeof gatePatterns> = {};
   for (const p of gatePatterns) {
     const s = p.subject ?? "Other";
@@ -234,7 +225,6 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -244,110 +234,258 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
 
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <div className="min-h-screen" style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}>
 
-        {/* ═══════════════════════════════════════
-            HERO
-        ═══════════════════════════════════════ */}
-        <section className="relative overflow-hidden pt-24 pb-20 px-4">
-          {/* Background glow */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="h-[500px] w-[800px] rounded-full bg-indigo-600/10 blur-[120px]" />
-          </div>
+        {/* ── HERO ─────────────────────────────────── */}
+        <section className="relative overflow-hidden px-6 pt-24 pb-20">
+          {/* Ambient glow — sits behind everything */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[420px] w-[700px] rounded-full opacity-30 blur-[100px]"
+            style={{ background: "radial-gradient(ellipse, #6366f1 0%, transparent 70%)" }}
+          />
 
-          <div className="relative max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-bold uppercase tracking-widest mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              AI-Powered GATE Preparation
-            </div>
+          <div className="relative max-w-6xl mx-auto">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
 
-            {/* H1 — primary keyword target */}
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-[1.05] mb-6">
-              Crack{" "}
-              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
-                GATE CSE
-              </span>
-              <br />
-              with Pattern-Based AI Practice
-            </h1>
+              {/* LEFT ── headline + CTAs */}
+              <div className="flex-1 min-w-0">
+                {/* Eyebrow */}
+                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-5">
+                  AI-Powered GATE Preparation
+                </p>
 
-            <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed mb-10">
-              Every GATE question tests one core idea. PatternMaster's AI generates
-              fresh questions around that exact logic — so you practice smarter, not longer.
-              Built for GATE, ISRO, BARC &amp; ESE.
-            </p>
+                <h1
+                  className="text-4xl md:text-[52px] font-black leading-[1.1] tracking-tight mb-4"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Practice GATE CSE
+                  <br />
+                  <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                    the smart way.
+                  </span>
+                </h1>
 
-            {/* CTAs */}
-            <HeroCTAs />
+                <p
+                  className="text-base leading-relaxed mb-8 max-w-md"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Every topic has one core pattern examiners test. PatternMaster's AI
+                  generates fresh questions around exactly that — for GATE, ISRO, BARC &amp; ESE.
+                </p>
 
-            {/* Mini trust bar */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-xs text-white/30 font-medium">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-emerald-500" /> No credit card
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-emerald-500" /> GATE 2027 syllabus
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-emerald-500" /> Adaptive difficulty
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-emerald-500" /> Instant AI explanations
-              </span>
+                <HeroCTAs />
+
+                <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6">
+                  {["Free to start", "GATE 2027 syllabus", "Instant explanations"].map((t) => (
+                    <span
+                      key={t}
+                      className="flex items-center gap-1.5 text-xs"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* RIGHT ── practice card */}
+              <div className="hidden lg:block flex-shrink-0 w-[340px]">
+                {/* Label above card */}
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-widest mb-3 text-center"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Live practice session
+                </p>
+
+                {/* Card with ambient glow behind */}
+                <div className="relative">
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 rounded-2xl blur-2xl opacity-20 scale-95"
+                    style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+                  />
+                  <div
+                    className="relative rounded-2xl overflow-hidden border"
+                    style={{
+                      background: "var(--bg-surface)",
+                      borderColor: "var(--border)",
+                    }}
+                  >
+                    {/* Card top bar */}
+                    <div
+                      className="flex items-center justify-between px-4 py-3 border-b"
+                      style={{ borderColor: "var(--border)" }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                        <span
+                          className="text-[11px] font-bold uppercase tracking-wider"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          Algorithms
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 uppercase tracking-wider">
+                        Hard
+                      </span>
+                    </div>
+
+                    {/* Question */}
+                    <div className="px-4 pt-4 pb-3">
+                      <p
+                        className="text-sm font-semibold leading-snug mb-4"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        What is the recurrence relation for Merge Sort on{" "}
+                        <span className="font-mono text-violet-400">n</span> elements?
+                      </p>
+
+                      <div className="space-y-2">
+                        {MOCK_OPTIONS.map((opt) => (
+                          <div
+                            key={opt.label}
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border text-xs font-mono ${
+                              opt.correct
+                                ? "border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
+                                : "text-[--text-muted]"
+                            }`}
+                            style={
+                              opt.correct
+                                ? undefined
+                                : { borderColor: "var(--border)", background: "var(--bg-surface-2)" }
+                            }
+                          >
+                            <span
+                              className={`w-4 h-4 rounded-full border flex items-center justify-center text-[9px] font-black shrink-0 ${
+                                opt.correct
+                                  ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300"
+                                  : "border-current opacity-40"
+                              }`}
+                            >
+                              {opt.label}
+                            </span>
+                            {opt.text}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Explanation */}
+                    <div className="mx-3 mb-3 px-3 py-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/6">
+                      <p className="text-[10px] font-bold text-emerald-400 mb-0.5">
+                        Correct — here&apos;s why
+                      </p>
+                      <p
+                        className="text-[11px] leading-relaxed"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        Merge Sort splits into 2 sub-problems of size n/2 (→ 2T(n/2)) and merges
+                        in O(n), giving O(n log n) overall.
+                      </p>
+                    </div>
+
+                    {/* Progress bar strip */}
+                    <div
+                      className="px-4 py-2.5 flex items-center justify-between border-t"
+                      style={{ borderColor: "var(--border)" }}
+                    >
+                      <span
+                        className="text-[10px] font-medium"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        Question 3 of 5
+                      </span>
+                      <div
+                        className="flex gap-1"
+                      >
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <span
+                            key={i}
+                            className={`w-5 h-1 rounded-full ${
+                              i === 3
+                                ? "bg-indigo-500"
+                                : i < 3
+                                ? "bg-emerald-500"
+                                : "bg-white/10"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════
-            STATS BAR
-        ═══════════════════════════════════════ */}
-        <section className="border-y border-white/5 bg-white/[0.02] py-10 px-4">
-          <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-4xl font-black bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent mb-1">
-                  {stat.value}
+        {/* ── STATS ────────────────────────────────── */}
+        <div
+          className="border-y py-8 px-6"
+          style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
+        >
+          <div className="max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+            {STATS.map((s) => (
+              <div key={s.label} className="text-center">
+                <p
+                  className="text-3xl font-black mb-0.5"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {s.value}
                 </p>
-                <p className="text-xs text-white/40 font-bold uppercase tracking-widest">
-                  {stat.label}
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-widest"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {s.label}
                 </p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
 
-        {/* ═══════════════════════════════════════
-            HOW IT WORKS
-        ═══════════════════════════════════════ */}
-        <section className="py-24 px-4">
+        {/* ── HOW IT WORKS ─────────────────────────── */}
+        <section className="px-6 py-20">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-black mb-4">
-                How PatternMaster Works
-              </h2>
-              <p className="text-white/40 max-w-xl mx-auto">
-                A focused, three-step loop that builds real exam confidence — not false familiarity with repeated questions.
-              </p>
-            </div>
+            <h2
+              className="text-2xl md:text-3xl font-black mb-12 text-center"
+              style={{ color: "var(--text-primary)" }}
+            >
+              How it works
+            </h2>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {HOW_IT_WORKS.map((item) => (
+            <div className="grid md:grid-cols-3 gap-5">
+              {STEPS.map((step) => (
                 <div
-                  key={item.step}
-                  className="relative p-8 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group"
+                  key={step.n}
+                  className={`relative p-6 rounded-2xl border ${step.border} ${step.bg}`}
                 >
-                  <span className="absolute top-6 right-6 text-[11px] font-black text-white/10 tracking-widest">
-                    {item.step}
+                  {/* Step number — large, faded, top right */}
+                  <span
+                    className={`absolute top-4 right-5 text-5xl font-black leading-none ${step.accent} opacity-10 select-none`}
+                  >
+                    {step.n}
                   </span>
-                  <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center mb-6`}>
-                    <item.icon size={22} className={item.color} />
+                  <div
+                    className={`w-9 h-9 rounded-xl ${step.bg} border ${step.border} flex items-center justify-center mb-4`}
+                  >
+                    <step.icon size={17} className={step.accent} />
                   </div>
-                  <h3 className="font-bold text-white text-lg mb-3 leading-snug">
-                    {item.title}
+                  <h3
+                    className="font-bold text-sm mb-2 leading-snug"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {step.title}
                   </h3>
-                  <p className="text-white/40 text-sm leading-relaxed">
-                    {item.description}
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {step.body}
                   </p>
                 </div>
               ))}
@@ -355,59 +493,62 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════
-            TOPICS / PATTERNS SECTION
-            (Real DB data — great for SEO long-tail keywords)
-        ═══════════════════════════════════════ */}
-        <section className="py-20 px-4 bg-white/[0.015] border-y border-white/5" aria-labelledby="topics-heading">
+        {/* ── TOPICS ───────────────────────────────── */}
+        <section
+          className="px-6 py-20 border-y"
+          style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
+          aria-labelledby="topics-heading"
+        >
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-14">
-              <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-3">
-                GATE CSE Syllabus Coverage
+            <div className="text-center mb-12">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-400 mb-2">
+                GATE CSE Coverage
               </p>
-              <h2 id="topics-heading" className="text-3xl md:text-4xl font-black mb-4">
-                Every Topic. Every Pattern.
+              <h2
+                id="topics-heading"
+                className="text-2xl md:text-3xl font-black"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Every topic. Every pattern.
               </h2>
-              <p className="text-white/40 max-w-2xl mx-auto text-sm leading-relaxed">
-                PatternMaster covers the full GATE CSE syllabus — from sorting algorithms and
-                recurrence relations to database normalisation and network protocols. Each topic
-                maps to its core exam logic so you know exactly what to practice.
-              </p>
             </div>
 
-            {/* Subject groups */}
-            <div className="space-y-10">
+            <div className="space-y-8">
               {Object.entries(bySubject).map(([subject, patterns]) => {
                 const colorClass = SUBJECT_COLORS[subject] ?? SUBJECT_COLORS.Default;
                 const icon = subjectIcons[subject] ?? subjectIcons.Default;
-
                 return (
                   <div key={subject}>
-                    {/* Subject heading */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold ${colorClass}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold ${colorClass}`}
+                      >
                         {icon}
                         {subject}
                       </span>
-                      <div className="flex-1 h-px bg-white/5" />
-                      <span className="text-[10px] text-white/20 font-bold uppercase tracking-widest">
+                      <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                      <span
+                        className="text-[10px] font-semibold uppercase tracking-widest"
+                        style={{ color: "var(--text-faint)" }}
+                      >
                         {patterns.length} topics
                       </span>
                     </div>
-
-                    {/* Topic chips */}
                     <div className="flex flex-wrap gap-2">
                       {patterns.map((p) => (
                         <div
                           key={p.id}
-                          className="group relative px-4 py-2.5 rounded-xl border border-white/5 bg-white/[0.03] hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all cursor-default"
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-default"
+                          style={{
+                            borderColor: "var(--border)",
+                            background: "var(--bg-surface)",
+                            color: "var(--text-secondary)",
+                          }}
                           title={p.atomic_logic ?? undefined}
                         >
-                          <span className="text-xs font-semibold text-white/70 group-hover:text-white/90 transition-colors">
-                            {p.topic_name}
-                          </span>
+                          {p.topic_name}
                           {p._count.pyqs > 0 && (
-                            <span className="ml-2 text-[8px] font-black bg-orange-500/10 text-orange-400 px-1 py-0.5 rounded uppercase tracking-tighter">
+                            <span className="ml-1.5 text-[9px] font-bold bg-orange-500/10 text-orange-400 px-1 py-0.5 rounded">
                               {p._count.pyqs} PYQ
                             </span>
                           )}
@@ -419,157 +560,78 @@ export default async function HomePage() {
               })}
             </div>
 
-            {/* CTA below topics */}
-            <div className="mt-14 text-center">
-              <p className="text-white/30 text-sm mb-5">
-                Sign up to unlock AI practice questions for every topic above.
-              </p>
+            <div className="mt-12 flex justify-center">
               <TopicsSignUpButton />
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════
-            FEATURE HIGHLIGHTS
-        ═══════════════════════════════════════ */}
-        <section className="py-24 px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-black mb-4">
-                Built for Serious GATE Aspirants
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Feature 1 */}
-              <div className="p-8 rounded-3xl border border-white/5 bg-gradient-to-br from-indigo-500/5 to-transparent">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-5">
-                  <Zap size={18} className="text-indigo-400" />
-                </div>
-                <h3 className="font-bold text-lg mb-3">AI-Generated, Never Repeated</h3>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  Google Gemini generates 5 unique questions per session. Semantic hashing
-                  guarantees you never see the same question twice — your question bank grows
-                  with every practice run.
-                </p>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="p-8 rounded-3xl border border-white/5 bg-gradient-to-br from-violet-500/5 to-transparent">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-5">
-                  <Target size={18} className="text-violet-400" />
-                </div>
-                <h3 className="font-bold text-lg mb-3">Atomic Logic Targeting</h3>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  Each GATE topic has one core concept examiners always test. PatternMaster
-                  identifies that atomic logic and generates questions that probe exactly it —
-                  at Easy, Medium, and Hard difficulty.
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="p-8 rounded-3xl border border-white/5 bg-gradient-to-br from-emerald-500/5 to-transparent">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-5">
-                  <BarChart3 size={18} className="text-emerald-400" />
-                </div>
-                <h3 className="font-bold text-lg mb-3">Progress You Can See</h3>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  Your dashboard tracks accuracy per topic, flags critical weak areas, and
-                  shows recent attempt history. Know exactly where you stand before exam day.
-                </p>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="p-8 rounded-3xl border border-white/5 bg-gradient-to-br from-cyan-500/5 to-transparent">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-5">
-                  <BookOpen size={18} className="text-cyan-400" />
-                </div>
-                <h3 className="font-bold text-lg mb-3">Covers GATE, ISRO, BARC & ESE</h3>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  One platform, four exams. Patterns are tagged by exam type so you only
-                  study what's relevant to your target. Switch exams instantly without losing
-                  your progress.
-                </p>
-              </div>
-            </div>
+        {/* ── FAQ ──────────────────────────────────── */}
+        <section className="px-6 py-20" aria-labelledby="faq-heading">
+          <div className="max-w-2xl mx-auto">
+            <h2
+              id="faq-heading"
+              className="text-2xl md:text-3xl font-black mb-10 text-center"
+              style={{ color: "var(--text-primary)" }}
+            >
+              FAQ
+            </h2>
+            <FAQAccordion faqs={FAQS} />
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════
-            FAQ (structured data already injected above)
-        ═══════════════════════════════════════ */}
-        <section className="py-20 px-4 border-t border-white/5" aria-labelledby="faq-heading">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-14">
-              <h2 id="faq-heading" className="text-3xl font-black mb-4">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-white/40 text-sm">
-                Everything you need to know before you start.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {FAQS.map((faq) => (
-                <div
-                  key={faq.q}
-                  className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]"
-                >
-                  <h3 className="font-bold text-white mb-2 text-sm leading-snug">
-                    {faq.q}
-                  </h3>
-                  <p className="text-white/40 text-sm leading-relaxed">{faq.a}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════
-            FINAL CTA
-        ═══════════════════════════════════════ */}
-        <section className="py-24 px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 mb-8 shadow-2xl shadow-indigo-500/30">
-              <Brain size={28} />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black mb-5 leading-tight">
-              Your GATE Rank is Decided
+        {/* ── FINAL CTA ────────────────────────────── */}
+        <section
+          className="px-6 py-20 border-t"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div className="max-w-xl mx-auto text-center">
+            <h2
+              className="text-3xl md:text-4xl font-black mb-3 leading-tight"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Your GATE rank is decided
               <br />
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-                by How You Practice
+                by how you practice.
               </span>
             </h2>
-            <p className="text-white/40 mb-10 max-w-xl mx-auto leading-relaxed">
-              Stop re-reading textbooks. Start practicing the exact patterns GATE examiners use.
-              PatternMaster is free — your first question is one click away.
+            <p
+              className="text-sm mb-8"
+              style={{ color: "var(--text-muted)" }}
+            >
+              PatternMaster is free. Start now.
             </p>
-            <FinalCTAButton />
+            <div className="flex justify-center">
+              <FinalCTAButton />
+            </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════
-            FOOTER
-        ═══════════════════════════════════════ */}
-        <footer className="border-t border-white/5 py-10 px-4">
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-white/60">
-              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
-                <Brain size={14} />
+        {/* ── FOOTER ───────────────────────────────── */}
+        <footer
+          className="border-t px-6 py-8"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
+              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
+                <Brain size={13} />
               </span>
               <span className="font-bold text-sm">
                 Pattern<span className="text-violet-400">Master</span>
               </span>
             </div>
-            <p className="text-xs text-white/20 text-center">
-              AI-powered GATE CSE, ISRO, BARC & ESE preparation. Practice smarter, rank higher.
+            <p className="text-[11px] text-center" style={{ color: "var(--text-faint)" }}>
+              AI-powered GATE CSE, ISRO, BARC &amp; ESE preparation.
             </p>
-            <div className="flex items-center gap-4 text-xs text-white/30">
-              <Link href="/sign-in" className="hover:text-white/60 transition-colors">Sign In</Link>
-              <Link href="/sign-up" className="hover:text-white/60 transition-colors">Sign Up</Link>
+            <div className="flex items-center gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
+              <Link href="/sign-in" className="hover:underline">Sign in</Link>
+              <Link href="/sign-up" className="hover:underline">Sign up</Link>
             </div>
           </div>
         </footer>
+
       </div>
     </>
   );

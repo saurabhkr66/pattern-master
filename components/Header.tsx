@@ -40,7 +40,7 @@ export default function Header() {
 
   return (
     <header
-      className="relative top-0 w-full border-b backdrop-blur-md"
+      className="sticky top-0 z-50 w-full border-b backdrop-blur-md"
       style={{ background: "var(--header-bg)", borderColor: "var(--border)" }}
     >
       <div className="max-w-7xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6 relative">
