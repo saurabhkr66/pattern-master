@@ -108,3 +108,35 @@ model Attempt {
 
   @@index([user_id, is_correct, created_at(sort: Desc)])
 }
+
+model TestSession {
+  id             String   @id @default(uuid())
+  user_id        String
+  score          Float
+  max_score      Float
+  total_questions Int
+  correct_count  Int
+  wrong_count    Int
+  skipped_count  Int
+  time_taken_secs Int?
+  answers        Json     // Array of {questionId, source, questionType, marks, userAnswer, correctAnswer, isCorrect, explanation, questionText}
+  created_at     DateTime @default(now())
+
+  mock_test_id   String?
+  mock_test      MockTestTemplate? @relation(fields: [mock_test_id], references: [id])
+
+  @@index([user_id, created_at(sort: Desc)])
+}
+
+model MockTestTemplate {
+  id              String   @id @default(uuid())
+  title           String   
+  subjects        String[] 
+  total_questions Int
+  max_score       Int
+  questions       Json     
+  created_at      DateTime @default(now())
+
+  sessions        TestSession[]
+}
+

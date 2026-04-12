@@ -20,11 +20,13 @@ import {
   X,
   Sun,
   Moon,
+  ClipboardList,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 const navLinks = [
   { href: "/practice", label: "Practice", icon: BookOpen },
+  { href: "/test", label: "Mock Test", icon: ClipboardList },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/review", label: "Review", icon: RotateCcw },
   { href: "/mistakes", label: "Mistakes", icon: XCircle },

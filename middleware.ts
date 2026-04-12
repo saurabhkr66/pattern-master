@@ -6,7 +6,10 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",         // Clerk sign-in pages
   "/sign-up(.*)",         // Clerk sign-up pages
   "/api/cron/(.*)",       // Cron jobs (secured via CRON_SECRET)
+  "/api/maintenance/(.*)",// One-off maintenance endpoints
+  "/:examType/:subject/:topic/:questionId", // Public SEO question pages
 ]);
+
 // /practice, /dashboard, /onboarding, etc. are protected by default
 
 export default clerkMiddleware(async (auth, request) => {

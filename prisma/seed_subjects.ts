@@ -16,58 +16,2703 @@ async function main() {
   console.log(`${colors.bright}${colors.cyan}📜 Seeding Subject-Level Practice Data...${colors.reset}`);
 
   const subjectData = [
-    // {
-    //   subject_name: "Theory of Computation",
-    //   pyqs: [
-    //     {
-    //       question_text: "Which of the following problems is undecidable?",
-    //       images: [],
-    //       options: [
-    //         "A. Membership problem for CFGs",
-    //         "B. Finiteness problem for FSAs",
-    //         "C. Totality problem for Turing Machines",
-    //         "D. Emptiness problem for PDAs"
-    //       ],
-    //       correct_answer: "C",
-    //       explanation: "The totality problem for Turing Machines (whether a TM accepts all strings) is undecidable (and not even recursively enumerable).",
-    //       year: 2024,
-    //       question_type: "MCQ"
-    //     }
-    //   ]
-    // },
     {
-      subject_name: "Compiler Design",
-      pyqs:[
+      subject_name: "Computer Organization & Architecture",
+      pyqs: [
         {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following grammars is/are ambiguous?",
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following two statements about interrupt handling mechanisms in a CPU. $\\text{S1}$: In non-vectored interrupt mechanism, it usually takes more time to start the Interrupt Service Routine (ISR) when compared to that in a vectored interrupt mechanism. $\\text{S2}$: In daisy-chain interrupt mechanism, the CPU polls all the input devices individually to determine the source of the interrupt. Which one of the following options is correct with respect to $\\text{S1}$ and $\\text{S2}?$ 0 reply Please log in or register to add a comment.",
           "images": [],
           "options": [
-            "A. $S \\rightarrow a S b \\mid \\epsilon$",
-            "B. $E \\rightarrow E+E|E * E| i d$",
-            "C. $S \\rightarrow a S|S a| \\epsilon$",
-            "D. $S \\rightarrow a S \\mid \\epsilon$"
+            "A. Both $\\text{S1}$ and $\\text{S2}$ are true",
+            "B. Both $\\text{S1}$ and $\\text{S2}$ are false",
+            "C. $\\text{S1}$ is true and $\\text{S2}$ is false",
+            "D. $\\text{S1}$ is false and $\\text{S2}$ is true"
           ],
-          "correct_answer": "B;C",
-          "explanation": "If a string has multiple parse trees for a CFG it is ambiguous",
+          "correct_answer": "C",
+          "explanation": "S1: \"Non-vectored takes more time to start ISR than vectored\" Non-vectored: CPU polls to find source first, then jumps to ISR. Vectored: device sends ISR address directly. So non-vectored has extra polling overhead → S1 is TRUE ✅ S2: \"In daisy chain, CPU polls all devices individually\" In daisy-chain, the interrupt request line is shared, and devices are connected in a chain. The CPU acknowledges the interrupt, and the signal passes through devices; the first device that needs service grabs it. No polling by CPU; it's hardware-based. → S2 is FALSE ❌ Answer: (C) S1 true, S2 false",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a processor that has $16$ general purpose registers and it uses $2$-byte instruction format for all its instructions. Variable-sized opcodes are permitted. There are three different types of instructions; M-type, R-type, and C-type. Each M-type instruction has $2$ register operands and a $6$-bit immediate operand. Each Rtype instruction has $3$ register operands. Each C-type instruction has a register operand and a $6$ -bit offset value. If there are $2$ unique M-type opcodes and $7$ unique R-type opcodes, which one of the following options gives the maximum number of unique opcodes possible for C-type instructions? 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $8$",
+            "B. $4$",
+            "C. $64$",
+            "D. $16$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$\\textbf{Answer: (B) 4}$ $\\textbf{Solution:}$ Given: 16 general purpose registers. $ \\text{no of bits required = 4}$ Instruction format = $\\text{2 Byte = 16 bit}$ \\[ \\text{M inst}\\;\\;\\; \\boxed{\\; Opcode-2 \\;|\\; Reg-4 \\;|\\; Reg-4 \\;|\\; Im-6\\;} \\times 2\\] \\[ \\text{R inst}\\;\\;\\; \\boxed{\\; Opcode-4 \\;|\\; Reg-4\\;|\\; Reg-4\\;|\\; Reg-4\\;} \\times 7\\] \\[ \\text{C inst}\\;\\;\\; \\boxed{\\; Opcode-6 \\;|\\; Reg-4\\;|\\; Offset-6\\;} \\times x\\] Here we use $\\text{ Expand Opcode Technique:}$ \\[ \\begin{array}{|c|c|c|c|} \\hline \\textbf{Inst. Type} & \\#\\textbf{Total Opcode} & \\#\\textbf{Used Opcode} & \\#\\textbf{Available Opcode} \\\\ \\hline \\textbf{M} & 2^{2} = 4 & 2 & 4 - 2 = 2 \\\\ \\hline \\textbf{R} & 2 \\times 2^{4-2} = 8 & 7 & 8 - 7 = 1 \\\\ \\hline \\color{green}\\textbf{C} & \\color{green}1 \\times 2^{6-4} = 4 & \\color{green}- & \\color{green}4 \\\\ \\hline \\end{array} \\] \\[\\boxed{\\; \\color{yellow}\\therefore \\text{Maximum number of unique opcodes possible for C-type instructions = 4} \\;}\\]",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system with a processor and a $4$ KB direct mapped cache with block size of $16$ bytes. The system has a $16$ MB physical memory. Four words $\\mathrm{P}, \\mathrm{Q}, \\mathrm{R}$, and S are accessed by the processor in the same order $10$ times. That is, there are a total of $40$ memory references in the sequence $\\mathrm{P}, \\mathrm{Q}, \\mathrm{R}, \\mathrm{S}, \\mathrm{P}, \\mathrm{Q}, \\mathrm{R}, \\mathrm{S}, \\ldots$ Assume that the cache memory is initially empty. The physical addresses of the words are given below ($1$ word $=1$ byte). $\\text{P: 0x845B32, Q: 0x845B26, R: 0x845B36, S: 0x846B32}$ Which of the following statements is/are true? Note: $1 \\mathrm{~K}=2^{10}$ and $1 \\mathrm{M}=2^{20}$",
+          "images": [],
+          "options": [
+            "A. Every access to $\\text{P}$ results in a cache miss",
+            "B. Every access to $\\text{R}$ results in a cache hit",
+            "C. Every access to $\\text{Q}$ results in a cache miss",
+            "D. Except the first access to $\\text{S}$, all subsequent accesses to $\\text{S}$ result in cache hits"
+          ],
+          "correct_answer": "A;B",
+          "explanation": "Parameters & Mapping Block Size: 16 bytes. Cache: 4 KB Direct Mapped (256 lines). Block Address Calculation: $\\text{Address} / 16$ (or removing the last hex digit). Word Address Block Address Index (Block % 256) Tag P 0x845B32 0x845B3 0xB3 0x845 Q 0x845B26 0x845B2 0xB2 0x845 R 0x845B36 0x845B3 0xB3 0x845 S 0x846B32 0x846B3 0xB3 0x846 2. Execution Trace (Sequence: P, Q, R, S repeated 10x) Access P: Miss. Block 0x845B3 (containing P and R) is loaded into Index 0xB3 . Access Q: Miss. Block 0x845B2 is loaded into Index 0xB2 . Access R: HIT. Since P and R are in the same block ( 0x845B3 ), R is already in the cache. Access S: Miss. Block 0x846B3 is loaded into Index 0xB3 , evicting the block containing P and R. In every subsequent loop: P will miss (because S evicted it). Q will hit (it has its own index 0xB2 and is never evicted). R will hit (because P just re-loaded the block they share). S will miss (because the block containing P and R evicted it). 3. Evaluating Statements: A. Every access to P results in a cache miss (TRUE): P is always preceded by S in the previous cycle, which occupies the same cache line with a different tag. B. Every access to R results in a cache hit (TRUE): Because R shares a block with P, and P is accessed immediately before R (with only Q in between at a different index), the block is always present when R is accessed. C. Every access to Q results in a cache miss (FALSE): Only the first access is a miss. D. Except the first access to S, all subsequent accesses to S result in cache hits (FALSE): Every access to S is a miss because P/R always displace it. Final Answer : A and B.",
           "year": 2026,
           "exam_type": "GATE",
           "question_type": "MSQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "A lexical analyzer uses the following token definitions ${letter → [A-Za-z]}$ ${digit → [0-9]}$ ${id → letter (letter | digit)^*}$ ${number → digit}$ ${ }^{+}$ ${ws → (blank | tab| newline)}$ ${ }^{+}$ For the string given below, \\[ x1 \\quad 23 \\mathrm{~mm} \\quad 78 \\quad \\text{ y } \\quad 7 z \\quad \\text { zz5 } \\quad 14 A \\quad 8 H \\quad \\text { AaYcD } \\] the number of tokens (excluding ws) that will be produced by the lexical analyzer is $\\_\\_\\_\\_$. (answer in integer) 0 reply Please log in or register to add a comment.",
+          "topic_name": "co-and-architecture",
+          "question_text": "To keep track of free blocks in a file system, one of the two approaches is generally used - using bitmaps (bit vectors) or using linked lists. Consider that the linked list approach is used to keep track of free blocks in a file system. Assume that the disk size is $16$ GB , block size is $2$ KB , and block numbers used are $32$-bit long. A single pointer of size $4$ bytes is used in each block of the list to point to the next block of the list. The number of blocks required to hold the free disk block numbers is $\\_\\_\\_\\_\\_\\_\\_$. (answer in integer) Note: $1 \\mathrm{K}=2^{10}$ and $1 \\mathrm{G}=2^{30}$ 0 reply Please log in or register to add a comment.",
           "images": [],
           "options": [],
-          "correct_answer": "13:13",
-          "explanation": "x1 -> id (1) 23mm -> digit , id (3) 78 -> number (4) y -> letter (5) 7z -> digit, letter (7) zz5 -> id (8) 14A -> digit, letter (10) 8H -> digit, letter (12) AaYcD -> id (13) Hence, 13 tokens",
+          "correct_answer": "16417",
+          "explanation": "Answer : (16417)",
           "year": 2026,
           "exam_type": "GATE",
           "question_type": "NAT"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the canonical $L R(0)$ parsing of the grammar below using terminals $\\{a, b, c\\}$ and non-terminals $\\{A, B, C, S\\}$ with $S$ as the start symbol. \\[ \\begin{array}{l} S \\rightarrow A C B \\\\ A \\rightarrow a A \\mid \\epsilon \\\\ C \\rightarrow c C \\mid \\epsilon \\\\ B \\rightarrow b B \\mid b \\end{array} \\] Which one of the following options gives the number of shift-reduce conflicts that will occur in the $L R(0)$ ACTION table? 0 reply Please log in or register to add a comment.",
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system with $1$ MB physical memory and a word length of $1$ byte. The system uses a direct mapped cache, with block numbers starting from $0$. The word with physical address $\\text{0xA2C28}$ is mapped to the cache block number $17610$. The maximum possible size of the cache (in KB ) for this configuration is $\\_\\_\\_\\_\\_\\_\\_$. (answer in integer) Note: $1 \\mathrm{~K}=2^{10}$ and $1 \\mathrm{M}=2^{20}$ 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "128",
+          "explanation": "Answer : (128)",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A non-pipelined instruction execution unit that operates at $1.6$ GHz clock takes an average of $5$ clock cycles to complete the execution of an instruction. To improve the performance, the system was pipelined with a goal of achieving an average throughput of one instruction per clock cycle. However, it could operate only at $1.2$ GHz due to pipeline overheads. While executing a program in the pipelined design, $30 \\%$ of instructions encountered a stall of $2$ cycles due to pipeline hazards. The speed-up obtained by the pipelined design over the non-pipelined one for this program is $\\_\\_\\_\\_\\_\\_\\_$ (rounded off to two decimal places) Note: $1 \\mathrm{G}=10^{9}$ 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "2.30:2.40",
+          "explanation": "$For,$ $non-pipelined : IdealCPI = 5 \\Longrightarrow5*(\\frac{1}{1.6}) nsec$ $For,$ $pipelined : CPI = 1 (Ideal)+ 0.3*2 = 1.6 cycles = 1.6*(\\frac{1}{1.2}) nsec $ $Speedup= \\frac{non-pipelined}{pipelined}= \\frac {(\\frac{5}{1.6})}{(\\frac{1.6}{1.2})} = \\frac{5*1.2}{1.6*1.6} = 2.34$",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Match each addressing mode in $\\textbf{List I}$ with a data element or an element of a data structure (in a high-level language) in $\\textbf{List II}$: \\[ \\begin{array}{|l|l|} \\hline {\\textbf{List I}} & {\\textbf{List II}} \\\\ \\hline \\hline P.\\ \\text{Immediate} & 1.\\ \\text{Element of an array} \\\\ \\hline Q.\\ \\text{Indirect} & 2.\\ \\text{Pointer} \\\\ \\hline R.\\ \\text{Base with index} & 3.\\ \\text{Element of a record} \\\\ \\hline S.\\ \\text{Base with offset/displacement} & 4.\\ \\text{Constant} \\\\ \\hline \\end{array} \\] 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $\\mathrm{P}-4, \\mathrm{Q}-3, \\mathrm{R}-1, \\mathrm{~S}-2$",
+            "B. $\\mathrm{P}-4, \\mathrm{Q}-2, \\mathrm{R}-1, \\mathrm{~S}-3$",
+            "C. $\\mathrm{P}-1, \\mathrm{Q}-4, \\mathrm{R}-3, \\mathrm{~S}-2$",
+            "D. $\\mathrm{P}-2, \\mathrm{Q}-3, \\mathrm{R}-1, \\mathrm{~S}-4$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer is option $\\boxed{B).\\text{P-4, Q-2, R-1, S-3}}$ Immediate: Constant $(P\\to 4)$ In Imm. Addressing mode the operand field of the instruction contains the actual data itself. Indirect :Pointer $(Q\\to 2)$ Address field of the instruction points to a memory location which contains the effective address . This is similar to working of pointer. Base with index: Elements of an array $(R \\to1)$ Base will hold the starting address of the array and index will tell us wihch element of the array we need. Both value can change here. Base with offset/displacement: Element of a record $(S\\to 3)$ Here displacement would be a fixed value and Base will change. Like for example this is used to access linked list contents. where base acts as starting address of linked list node and displacement will tell us which content of the Linked List to access. Good question to solve: https://gateoverflow.in/118291/gate-cse-2017-set-1-question-11",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a processor $\\text{P}$ whose instruction set architecture is the load-store architecture. The instruction format is such that the first operand of any instruction is the destination operand. Which one of the following sequences of instructions corresponds to the high-level language statement $\\mathrm{Z}=\\mathrm{X}+\\mathrm{Y}$ ? Note: X, Y, and Z are memory operands. R$0$, R$1$, and R$2$ are registers. 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. ADD Z, X, Y",
+            "B. LOAD R$0$, X ADD Z, R$0$, Y",
+            "C. ADD R$0$, X, Y STORE Z, R$0$",
+            "D. LOAD R$0$, X LOAD R$1$, Y ADD R$2$, R$0$, R$1$ STORE Z, R$2$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Answer is D Given that $X, Y, and\\; Z$ are memory operands. $R_0, R_1, and \\;R_2$ are registers. A processor P whose instruction set architecture is the load-store architecture. $\\Rightarrow$ We need to load the values from Memory to Register and store the values from Registers to Memory. $Z=X+Y$ $\\Rightarrow$ that means X and Y values needs to load from memory to registers, then perform addition; thereafter save the result into Z. We know that Load and store instruction format has one register and one operand. Based on load/store we can identify which is destination and which is source. But for addition instruction, we must know which is destination operand. In the question it is given that $\\text{first operand of any instruction is the destination operand.}$ $\\therefore$ if addition instruction format is $\\text{ADD p,q,r}$ then storing back the result must be $\\text{STORE Z, p}$ With that we can identify the correct option.",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which one of the following dependencies among the register operands of different instructions can cause a data hazard in a pipelined processor? 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Read-after-read",
+            "B. Read-after-write",
+            "C. Write-after-read",
+            "D. Write-after-write"
+          ],
+          "correct_answer": "B",
+          "explanation": "Data hazards in pipelining occur when instructions that depend on previous, in-flight instructions attempt to read or write data before it is ready, leading to potential pipeline stalls and data inconsistencies. Read after Read doesn't creates any issues in any pipeline model. In our pipeline models, instructions executes in the sequence. So, neither Write-after-Write nor Write-after-Read create issues for us as writing doesn't depend upon any previous instruction. Read-after-Write $\\Rightarrow$ read is depends upon write, so that may introduce potential stalls.",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The size of the physical address space of a processor is $2^{32}$ bytes. The capacity of a cache memory unit is $2^{23}$ bytes. The cache block size is $128$ bytes. The cache memory unit can be built as a direct mapped cache or as a $K$-way set-associative cache, where $K=2^{L}$ and $L \\in\\{1,2,3\\}$. Let the length of the TAG field be $M$ bits for the direct mapped cache, and $N$ bits for the set-associative cache. Which one of the following options is true? 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $N=M+L$",
+            "B. $N=M-L$",
+            "C. $N=M+K$",
+            "D. $N=M-K$"
+          ],
+          "correct_answer": "A",
+          "explanation": "",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system that has a cache memory unit and a memory management unit (MMU). The address input to the cache memory is a physical address. The MMU has a translation lookaside buffer (TLB). Assume that when a page is evicted from the main memory, the corresponding blocks in the cache are marked as invalid. For a given memory reference, which of the following sequences of events can NEVER happen?",
+          "images": [],
+          "options": [
+            "A. TLB miss, Page table hit, Cache hit",
+            "B. TLB hit, Page table miss, Cache hit",
+            "C. TLB miss, Page table miss, Cache hit",
+            "D. TLB miss, Page table miss, Cache miss"
+          ],
+          "correct_answer": "B;C",
+          "explanation": "A. TLB miss, Page table hit, Cache hit ✔ Possible (TLB miss → PT se frame mila → cache me ho sakta hai) B. TLB hit, Page table miss, Cache hit ❌ Impossible Bhai simple baat: TLB hit ho gaya ⇒ translation mil gaya To page table ko access hi nahi karenge ➡️ “Page table miss” ka event aayega hi nahi C. TLB miss, Page table miss, Cache hit ❌ Impossible PT miss ⇒ page fault ⇒ page memory me nahi Given: memory se page gaya ⇒ cache invalidate ➡️ Cache hit ho hi nahi sakta D. TLB miss, Page table miss, Cache miss ✔ Possible (Page fault hai ⇒ cache miss obvious) ✅ Final Answer: 👉 B and C both can NEVER happen",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a hard disk with a rotational speed of $15000$ rpm. The time to move the read/write head from a track to its adjacent track is $1$ millisecond. Initially, the head is on track $0$. The number of sectors per track is $400$. The sector size is $1024$ bytes. It is necessary to transfer data from $10$ randomly located sectors in each of the following tracks in the order: $5, 12$ and $7$. The total time for the data transfer (in milliseconds) from the hard disk is $\\_\\_\\_\\_\\_\\_\\_$. (rounded off to one decimal place) 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "77.3 : 77.3",
+          "explanation": "Given that, Rotation speed $= 15000$ rpm Track-to-track movement time $= 1~ms$ No. of sectors$/$track $= 400$ We need to access $10$ randomly located sectors in each of the tracks $5, 12, 7$. Time for one complete rotation: $R_t = \\dfrac{60}{15000}~sec = 0.004~sec = 4~ms$ Average rotational delay: $\\dfrac{4}{2} = 2~ms$ $($half of time taken for one rotation$)$ Transfer time for one sector: Since $1$ rotation ($4~ms$) reads $400$ sectors (as there are $400$ sectors in a track), $T_t = \\dfrac{4}{400} = 0.01~ms$ Important Point : Since the 10 sectors in each track are randomly located, they can be anywhere on that track. Therefore, after reading one sector, the disk must rotate again to bring the next required sector under the head. Hence, we need to consider average rotational latency for each sector separately, not just once per track. Time per sector $=$ Avg. Rot. Delay $+$ Transfer time $= 2 + 0.01 = 2.01~ms$ Time to read $10$ sectors in one track: $10 \\times 2.01 = 20.1~ms$ Initially head is on track $0.$ So, Head movement order: $0 \\rightarrow 5 \\rightarrow 12 \\rightarrow 7$ Seek time: $0 \\rightarrow 5 = 5~ms$ $5 \\rightarrow 12 = 7~ms$ $12 \\rightarrow 7 = 5~ms$ Total seek time $= 5 + 7 + 5 = 17~ms$ Total time $=$ Total seek time $+$ Time for $3$ tracks $= 17 + 3 \\times 20.1$ $= 17 + 60.3$ $= 77.3~ms$ $\\mathbf{\\therefore}$ Total time for data transfer $\\mathbf{= 77.3~ms}$",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The EX stage of a pipelined processor performs the memory read operations for LOAD instructions, and the operations for the arithmetic and logic instructions. Let $t_{E X}$ denote the time taken by the EX stage to perform the operation for an instruction. For each instruction type, the values of $t_{E X}$ and $M$ (the number of instructions of that type in a sequence of $100$ instructions for a program P ), are given in the table below. The duration of the pipeline clock cycle is $1$ nanosecond. Assume that the latch time for the interstage buffers in the pipeline is negligible. \\[ \\renewcommand{\\arraystretch}{1.3} \\begin{array}{|l|c|c|} \\hline \\text{Instruction} & \\begin{array}{c} t_{EX}\\ \\text{in} \\\\ \\text{nanoseconds} \\end{array} & M \\\\ \\hline \\text{LOAD} & 1.8 & 15 \\\\ \\hline \\text{IMUL} & 1.5 & 10 \\\\ \\hline \\text{IDIV} & 2.5 & 5 \\\\ \\hline \\text{FADD} & 1.7 & 10 \\\\ \\hline \\text{FSUB} & 1.7 & 5 \\\\ \\hline \\text{FMUL} & 2.8 & 15 \\\\ \\hline \\text{FDIV} & 3.2 & 5 \\\\ \\hline \\begin{array}{l} \\text{All other} \\\\ \\text{instructions} \\end{array} & \\begin{array}{c} \\text{Less than} \\\\ 1.0 \\end{array} & 35 \\\\ \\hline \\end{array} \\] When program $\\text{P}$ is executed, the number of clock cycles for which the pipeline is stalled due to structural hazards in the EX stage is $\\_\\_\\_\\_$. (answer in integer) 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "95 : 95",
+          "explanation": "Total no. of stalls is 95",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a processor with instruction size of $2\\,\\text{bytes}$ and $16$ registers. The instruction set consists of three instruction formats $L$, $M$, and $N$. $L$: has $2$ register operands and a $6$-bit offset. $M$: has $3$ register operands. $N$: has $1$ register operand and a $6$-bit offset. If $L$ has $2$ unique opcodes and $M$ has $7$ unique opcodes, then the number of opcodes possible for $N$ is",
+          "images": [],
+          "options": [
+            "A. $4$",
+            "B. $8$",
+            "C. $16$",
+            "D. $64$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Instruction size = 2B = 16bits total possible encoding = 2^16 we have 16 register so we need 4 bits for them L : 2 * 2^4 * 2^4 * 2^6 = 32768 possible encoding for L M: 7 * 2^4 * 2^4 * 2^4 = 28672 possible encoding for M N: K * 2^4 * 2^6 possible encoding for N (suppose K is the number of unique opcode for N) all this encoding should be less than of equal to the total possible encoding which is 2^16 therefore we can form a equation as 32768 + 28672 + (K * 2^4 * 2^4) <= 2^16 solving this we will get K = 4",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following statements about interrupts. $\\text{S1}:$ A non vectored interrupt generally requires more time to identify the interrupting device compared to a vectored interrupt. $\\text{S2}:$ In daisy chaining, the CPU polls every I/O device to determine which device requested the interrupt. Which of the following options is correct?",
+          "images": [],
+          "options": [
+            "A. $\\text{S1}$ is TRUE and $\\text{S2}$ is TRUE",
+            "B. $\\text{S1}$ is TRUE and $\\text{S2}$ is FALSE",
+            "C. $\\text{S1}$ is FALSE and $\\text{S2}$ is TRUE",
+            "D. $\\text{S1}$ is FALSE and $\\text{S2}$ is FALSE"
+          ],
+          "correct_answer": "A",
+          "explanation": "statement1: Because the CPU must manually check multiple devices in non-vectored systems, it takes significantly more time than the direct \"vectored\" approach.(True) statement 2: When the CPU receives an interrupt request, it sends out an Interrupt Acknowledge (INTA) signal. This signal passes through the first device, then the second, and so on. The first device in the chain that actually requested the interrupt \"intercepts\" the signal and stops it from moving further down the chain. Polling is a software method where the CPU initiates the check. In Daisy Chaining, the CPU does not poll; the hardware signal automatically identifies the highest-priority device. so (False) so option B",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system with a $4\\,\\text{KB}$ direct-mapped data cache with a block size of $16\\,\\text{bytes}$. The system is byte addressable and has a physical address space of $16\\,\\text{MB}$. During the execution of a program, four data words $P, Q, R,$ and $S$ are accessed in that order $16$ times (i.e., $PQRS\\,PQRS\\,\\ldots$). Hence, there are $64$ accesses to the data cache altogether. Assume that the data cache is initially empty and no other data words are accessed by the program. The byte addresses of the first bytes of $P, Q, R,$ and $S$ are $\\text{0x845B32}$, $\\text{0x845B26}$, $\\text{0x845B36}$, and $\\text{0x846B32}$, respectively. For the execution of the above program, which of the following statements is/are TRUE with respect to the data cache?",
+          "images": [],
+          "options": [
+            "A. Every access to $P$ is a miss.",
+            "B. Every access to $R$ is a hit.",
+            "C. Except for the first time, all subsequent accesses to $S$ are hits.",
+            "D. Every access to $Q$ is a miss."
+          ],
+          "correct_answer": "A;B",
+          "explanation": "",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a processor $P$ whose instruction set architecture is a load-store architecture. The instruction format is such that the first operand of any instruction is the destination operand. Which one of the following sequences of instructions corresponds to the high-level language statement $$ Z = X + Y $$ Note: $X$, $Y$, and $Z$ are memory operands. $R0$, $R1$, and $R2$ are registers.",
+          "images": [],
+          "options": [
+            "A. $\\verb|ADD Z, X, Y|$",
+            "B. $ \\begin{aligned} \\verb|LOAD R0, X|\\\\ \\verb|ADD Z, R0, Y| \\end{aligned} $",
+            "C. $ \\begin{aligned} \\verb|ADD R0, X, Y|\\\\ \\verb|STORE Z, R0| \\end{aligned} $",
+            "D. $ \\begin{aligned} \\verb|LOAD R0, X|\\\\ \\verb|LOAD R1, Y|\\\\ \\verb|ADD R2, R0, R1|\\\\ \\verb|STORE Z, R2| \\end{aligned} $"
+          ],
+          "correct_answer": "D",
+          "explanation": "As it is a load store architecture which is register - register architecture we perform all arithmetic operations between the reg only so we first have to load the content of x and y into the register and then do the addition, store its result in the reg and then store back to the location z Hence answer is option A",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a hard disk with a rotational speed of $\\mathbf{15000 ~ rpm}$. The time to move the read/write head from a track to its adjacent track is $1$ millisecond. Initially the head is on track $\\mathbf{0}$. The number of sectors per track is $\\mathbf{400}$. The sector size is $1024$ bytes. It is necessary to transfer data from 10 randomly located sectors in each of the following tracks in the order $5$, $12$ and $7$. The total time for the data transfer (in milliseconds) from the hard disk is $\\_\\_\\_\\_\\_\\_$?",
+          "images": [],
+          "options": [],
+          "correct_answer": "77.3",
+          "explanation": "Given that, Rotation speed $= 15000$ rpm Track-to-track movement time $= 1~ms$ No. of sectors$/$track $= 400$ We need to access $10$ randomly located sectors in each of the tracks $5, 12, 7$. Time for one complete rotation: $R_t = \\dfrac{60}{15000}~sec = 0.004~sec = 4~ms$ Average rotational delay: $\\dfrac{4}{2} = 2~ms$ $($half of time taken for one rotation$)$ Transfer time for one sector: Since $1$ rotation ($4~ms$) reads $400$ sectors (as there are $400$ sectors in a track), $T_t = \\dfrac{4}{400} = 0.01~ms$ Important Point : Since the 10 sectors in each track are randomly located, they can be anywhere on that track. Therefore, after reading one sector, the disk must rotate again to bring the next required sector under the head. Hence, we need to consider average rotational latency for each sector separately, not just once per track. Time per sector $=$ Avg. Rot. Delay $+$ Transfer time $= 2 + 0.01 = 2.01~ms$ Time to read $10$ sectors in one track: $10 \\times 2.01 = 20.1~ms$ Initially head is on track $0.$ So, Head movement order: $0 \\rightarrow 5 \\rightarrow 12 \\rightarrow 7$ Seek time: $0 \\rightarrow 5 = 5~ms$ $5 \\rightarrow 12 = 7~ms$ $12 \\rightarrow 7 = 5~ms$ Total seek time $= 5 + 7 + 5 = 17~ms$ Total time $=$ Total seek time $+$ Time for $3$ tracks $= 17 + 3 \\times 20.1$ $= 17 + 60.3$ $= 77.3~ms$ $\\mathbf{\\therefore}$ Total time for data transfer $\\mathbf{= 77.3~ms}$",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Real-valued variables $X$ and $Y$ are represented in IEEE-754 single precision floating point format. Binary representations of $X$ and $Y$ are: $$ \\begin{aligned} X &= (35C00000)_H\\\\ Y &= (34A00000)_H \\end{aligned} $$ Let $Z = X + Y$. Which of the following is the binary representation of $Z$ (in hexadecimal)?",
+          "images": [],
+          "options": [
+            "A. $(35C80000)_H$",
+            "B. $(35E80000)_H$",
+            "C. $(35EC0000)_H$",
+            "D. $(35CC0000)_H$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$X~\\&~Y$ are represented in IEEE-754 format. IEEE-754 Format : Floating point no. $= (-1)^S\\times1.Mantissa \\times 2^{(E-127)}$ $X : (35C00000)_H$ Exponent : $(01101011)_b = (107)_d$ $X = (-1)^0 \\times 1.1 \\times 2^{(107-127)} = \\mathbf{1.1 \\times2^{-20}}$ $Y : (34A00000)_H$ Exponent $= (01101001)_b = (105)_d$ $Y= (-1)^0 \\times 1.01 \\times 2^{(105-127)} = 001.01 \\times 2^{-22} = \\mathbf{0.0101 \\times 2^{-20}}$ Adding $X$ and $Y$, we get $\\therefore Z = X+Y = (1.1 \\times 2^{-20}) + (0.0101 \\times 2^{-20})$ $\\therefore Z = 1.1101 \\times 2^{-20}$ Converting $Z$ into IEEE-754 format : Sign bit $= 0$ Biased Exponent $= -20 + 127 = 107 = (01101011)_b$ Mantissa $= 11010000000000000000000$ Combining it into $32$-bit IEEE-754 format : $(0011 ~0101 ~1110 ~1000 ~0000 ~0000 ~0000 ~0000)_b = \\mathbf{(35E80000)_h}$",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Match the following: \\[ \\renewcommand{\\arraystretch}{1.3} \\begin{array}{|c|l|c|l|} \\hline \\textbf{List-I} & \\textbf{Addressing Mode} & \\textbf{List-II} & \\textbf{Description} \\\\ \\hline P & \\text{Immediate} & 1 & \\text{Element of an array} \\\\ Q & \\text{Indirect} & 2 & \\text{Pointer} \\\\ R & \\text{Base with index} & 3 & \\text{Element of a record} \\\\ S & \\text{Base with offset} & 4 & \\text{Constant} \\\\ \\hline \\end{array} \\] A.$\\,\\mathrm{P\\!-\\!3,\\ Q\\!-\\!1,\\ R\\!-\\!3,\\ S\\!-\\!1}\\,$ B.$\\,\\mathrm{P\\!-\\!4,\\ Q\\!-\\!2,\\ R\\!-\\!1,\\ S\\!-\\!3}\\,$ C.$\\,\\mathrm{P\\!-\\!1,\\ Q\\!-\\!2,\\ R\\!-\\!4,\\ S\\!-\\!3}\\,$ D.$\\,\\mathrm{P\\!-\\!2,\\ Q\\!-\\!1,\\ R\\!-\\!3,\\ S\\!-\\!4}\\,$",
+          "images": [],
+          "options": [],
+          "correct_answer": "B",
+          "explanation": "Option B is correct Immediate AM = constant value Indirect AM = pointer Base with index = Element of a Array Base wtih offset = Element of a Record",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system with the following cache configuration: Block size $=128$ bytes Physical memory size $=2^{23}$ bytes Cache size $=2^{13}$ bytes Two cache organizations are used: 1. A direct-mapped cache with tag size $=m$ bits. 2. A $k$-way set associative cache with tag size $=n$ bits where \\[ k=2^L,\\quad L\\in\\{1,2,3,\\ldots\\} \\] Which of the following relations between $n$ and $m$ is/are correct?",
+          "images": [],
+          "options": [
+            "A. $n=m-L$",
+            "B. $n=m+L$",
+            "C. $n=mL$",
+            "D. $n=m+k$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Physical memory = 2^23 B block size is 128 B so its 7 bits for block offset cache size = 2^13 B 1) For the direct mapped cache The number of lines will be 2^13 / 2^7 = 2^6 so 6 bits for line index remaining 10 bits so the tag so m = 10 2) For K - way set associative cache lines will be 2^6 now for number of set we do 2^6 / 2^L = 2^6-L so 6-L bits for set index remaining bits will be for tag which is n = 23 - (6 - L) - 7 = 23 - 6 + L -7 = 10 + L = m + L hence option B is correct n = m + L all other options are wrong",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following dependencies among the register operands of different instructions can cause data hazards in a pipeline processor?",
+          "images": [],
+          "options": [
+            "A. WAW (Write After Write)",
+            "B. RAR (Read After Read)",
+            "C. RAW (Read After Write)",
+            "D. WAR (Write After Read)"
+          ],
+          "correct_answer": "C",
+          "explanation": "In a pipelined processor, data hazards occur when the pipeline must be stalled because instructions that are overlapping in execution need to access the same data (registers or memory) in an order that differs from the original sequential program order. option c",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider there are $8$ holes of size $20 \\mathrm{~KB}, 4 \\mathrm{~KB}, 25 \\mathrm{~KB}, 18 \\mathrm{~KB}, 7 \\mathrm{~KB}, 9 \\mathrm{~KB}, 15 \\mathrm{~KB}$, and $12 \\mathrm{~KB}$, and there arrive two processes, process $P_1$ of size $16 \\mathrm{~KB}$ and process $P_2$ of size $9 \\mathrm{~KB}$. The holes are not necessarily adjacent to each other. We apply best fit algorithm to these processes to allocate memory. The number of holes less than $8 \\mathrm{~KB}$ size are $\\_\\_\\_\\_$. 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "3",
+          "explanation": "By applying Best fit Algorithm : we will fil in those Hole(block ) which take less internal fragmentaion so process P1 goes to 18KB block so internal fragentaion =2 KB Process P2 fit exactly in Block 9KB so holes with size < 8KB is 4KB 7KB 18KB (2KB internal fragementation) so total 3 Block (hole)",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a computer with a word size of $1 ~\\mathrm{byte}$, $1 ~\\mathrm{MB}$ main memory designed with Direct mapped cache. If the main memory addressed data $\\mathrm{(A2C28)_{16}}$ is mapped to cache block $(176)_{10}$ then maximum size of cache is $\\_\\_\\_\\_$ ?",
+          "images": [],
+          "options": [],
+          "correct_answer": "16",
+          "explanation": "A2C28 in binary is 101000 10110000 101000 176 in binary is 10110000 as we can see the yellow part is matching here so definitely this is the part of the line bits..now we are",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The $32\\text{-bit}$ $\\mathrm{IEEE ~754}$ single-precision representation of a number is $\\mathrm{0xC2710000}$. Find the decimal representation of the number (correct to two decimal places).",
+          "images": [],
+          "options": [],
+          "correct_answer": "-60.25",
+          "explanation": "0xC2710000 in binary will be 1 10000100 11100010000000000000000 green is the sign bit as its 1 which means the number is negative so we have to add a minus sign in the last yellow one are the exponent which is equal to 132 and we subtract by the bias of the 32 bit ieee which is 127 so it becomes 5 normal form will be -1.1110001 * 2^5 = -60.25",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider non-pipeline processor with a $\\text{CPI}$ of $5$ and $\\text{clock frequency}$ of $1.6 ~\\mathrm{GHz}$. Pipeline $\\text{clock frequency}$ is $1.2 ~\\mathrm{GHz}$ with Ideal $\\text{CPI}$ of $1$ . If $30 \\%$ instructions cause $2$ stalls then pipelined speedup is $\\_\\_\\_\\_$.",
+          "images": [],
+          "options": [],
+          "correct_answer": "2.343",
+          "explanation": "clock cycle time = 1 / clock frequency = 1/ 1.6 nsec = 0.625nsec Execution Time of NonPipeline = CPI * clock cycle time = 5 * 0.625 = 3.125 nsec Clock frequency of Pipeline system = 1.2 GHz clock cycle time = 1/clock frequency = 1/1.2nsec = 0.833nsec Execution Time of Pipeline = (1 + no. of stall per instruction ) * clock cycle time No. of stal per instruction = 0.30 * 2 = 0.60 Execution Time of Pipeline = (1 + 0.6 ) * 0.833 = 1.33nsec speed up factor = Ex time of Non pipeline / Ex time of pipelie = 3.125/ 1.33 = 2.34",
+          "year": 2026,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Given a computing system with two levels of cache (L1 and L2) and a main memory. The first level (L1) cache access time is $1$ nanosecond (ns) and the \"hit rate\" for L1 cache is $90 \\%$ while the processor is accessing the data from L1 cache. Whereas, for the second level (L2) cache, the \"hit rate\" is $80 \\%$ and the \"miss penalty\" for transferring data from L2 cache to L1 cache is $10$ ns . The \"miss penalty\" for the data to be transferred from main memory to L2 cache is $100$ ns . Then the average memory access time in this system in nanoseconds is __________ . (rounded off to one decimal place)",
+          "images": [],
+          "options": [],
+          "correct_answer": "4:4",
+          "explanation": ".",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A $5$-stage instruction pipeline has stage delays of $180,250,150,170$, and $250$, respectively, in nanoseconds. The delay of an inter-stage latch is $10$ nanoseconds. Assume that there are no pipeline stalls due to branches and other hazards. The time taken to process $1000$ instructions in microseconds is __________. (rounded off to two decimal places)",
+          "images": [],
+          "options": [],
+          "correct_answer": "260.20:261.20",
+          "explanation": "\\[K = 5\\]\\[n = 1000\\]\\[t_p = \\max(\\text{Stage Delay} + \\text{Buffer Delay}) = 260 \\text{ ns}\\]\\[\\text{Execution Time} = (K + n - 1) t_p\\]\\[= (5 + 1000 - 1) \\times 260 \\text{ ns} = 261040 \\text{ ns}\\]\\[= 261.04 \\text{ } \\mu\\text{s}\\]",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "An application executes $6.4 \\times 10^{8}$ number of instructions in $6.3$ seconds. There are four types of instructions, the details of which are given in the table. The duration of a clock cycle in nanoseconds is __________. (rounded off to one decimal place) $$\\begin{array}{|c|c|c|} \\hline \\text{Instruction type} & \\text{Clock cycles required per} \\\\& \\text{instruction (CPI)} & \\text{Number of instructions executed} \\\\ \\hline \\text{Branch} & \\text{2} & \\text{$2.25 \\times 10^{8}$} \\\\ \\hline \\text{Load} & \\text{5} & \\text{$1.20 \\times 10^{8}$} \\\\ \\hline \\text{Store} & \\text{4} & \\text{$1.65 \\times 10^{8}$} \\\\ \\hline \\text{Arithmetic} & \\text{3} & \\text{$1.30 \\times 10^{8}$} \\\\ \\hline \\end{array}$$ 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "3.0:3.0",
+          "explanation": "Total Execution time $= 6.3 \\;sec$ For, finding number of clock cycles for a particular Instruction type, Number of clock cycles $=$ Number of instructions executed $\\times$ CPI We would first calculate total number of clock cycles required for each type of instructions: For Branch Instruction : $2 \\times (2.25 \\times 10^{8}) = 4.5 \\times 10^{8}$ For Load Instruction : $5 \\times (1.20 \\times 10^{8}) = 6 \\times 10^{8}$ For Store Instruction : $4 \\times (1.65 \\times 10^{8}) = 6.6 \\times 10^{8}$ For Arithmetic Instruction : $3 \\times (1.30 \\times 10^{8}) = 3.9 \\times 10^{8}$ Total Number of Clock Cycles : $(4.5 \\times 10^{8}) + (6 \\times 10^{8}) + (6.6 \\times 10^{8}) + (3.9 \\times 10^{8})$ $= 21 \\times 10^{8}$ Total Execution time $=$ Total Number of Clock Cycles $\\times$ Clock Cycle time $\\therefore$ Clock Cycle time $= \\dfrac{6.3}{21 \\times 10^{8}}\\;sec$ $= 0.3 \\times 10^{-8}\\; sec $ $= 3 \\times 10^{-9} sec$ $= 3 ns$ Answer : Duration of Clock Cycle $= \\mathbf{3 \\;ns}$",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​​Which of the following is/are part of an Instruction Set Architecture of a processor? ed Nov 13, 2025 reply Follow flag For Better Understanding : 1) https://acg.cis.upenn.edu/milom/cis501-Fall05/lectures/02_isa.pdf 2) https://gateoverflow.in/460817/gate-cse-2025-set-2-question-18?show=497512#a497512 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. The size of the cache memory",
+            "B. The clock frequency of the processor",
+            "C. The number of cache memory levels",
+            "D. The total number of registers"
+          ],
+          "correct_answer": "D",
+          "explanation": "Computer Architecture: A Quantitative Approach By: John L. Hennessy and David A. Patterson “Instruction set architecture is defined by the programmer-visible machine interface such as the instruction set, the number of registers, and addressing modes. Performance characteristics such as clock rate, cache size, and the number of cache levels are not part of ISA .” A) False, Cache size is a microarchitectural detail, not part of ISA. B) False, clock speed is a hardware implementation detail. C) false, Like cache size, the number of cache levels is not part of ISA . D) True , register count is defined by the ISA (e.g., x86 has 8 GPRs, RISC-V has 32). So, Option D) is the Source: 1) https://en.wikipedia.org/wiki/Instruction_set_architecture 2) https://www.cs.umd.edu/~meesh/411/CA-online/chapter/instruction-set-architecture/index.html",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​​For a direct-mapped cache, $4$ bits are used for the tag field and $12$ bits are used to index into a cache block. The size of each cache block is one byte. Assume that there is no other information stored for each cache block. Which ONE of the following is the CORRECT option for the sizes of the main memory and the cache memory in this system (byte addressable), respectively?",
+          "images": [],
+          "options": [
+            "A. $64$ KB and $4$ KB",
+            "B. $128$ KB and $16$ KB",
+            "C. $64$ KB and $8$ KB",
+            "D. $128$ KB and $6$ KB"
+          ],
+          "correct_answer": "A",
+          "explanation": "For a direct-mapped cache, Tag field $= 4$ bits Index field $= 12$ bits Size of cache block $= 1$ Byte $=2^{0}$ Bytes So, Block Offset bits $= 0$ bit Now, for main memory size, Physical $($main memory$)$ address bits $=4+12+0 = 16$ bits So, main memory size $=2^{16}$ Bytes $=64\\;KB$ For cache memory size, Index $+$ block offset would give cache memory address. So, cache memory address bits $ = 12+0=12$ bits So, cache memory size $=2^{12}$ Bytes $=4 \\;KB$ We could also verify this using following: $Tag\\; field\\; bits = \\log(\\frac{MM \\;SIZE}{CM \\;SIZE})$ Main Memory Size $= 64\\;KB$ Cache Memory Size $=4\\;KB$ Answer : $\\mathbf{(A)}$",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Suppose a program is running on a non-pipelined single processor computer system. The computer is connected to an external device that can interrupt the processor asynchronously. The processor needs to execute the interrupt service routine (ISR) to serve this interrupt. The following steps (not necessarily in order) are taken by the processor when the interrupt arrives: Which ONE of the following is the CORRECT sequence of steps? $\\text{(iii), (i), (ii)}$ $\\text{(i), (iii), (ii)}$ $\\text{(i), (ii), (iii)}$ $\\text{(iii), (ii), (i)}$",
+          "images": [],
+          "options": [
+            "A. The processor saves the content of the program counter.",
+            "B. The program counter is loaded with the start address of the ISR.",
+            "C. The processor finishes the present instruction."
+          ],
+          "correct_answer": "A",
+          "explanation": "(A) 3, 1, 2 whatever interrupt comes, processor will complete execution of current instruction first. then, it'll save current PC value so that it can return to the program after serving the interrupt. then, it'll load start address of ISR in PC and serve the interrupt. Basic question on what processor does after receiving an interrupt.",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A partial data path of a processor is given in the figure, where $\\text{RA, RB,}$ and $\\text{RZ}$ are $32$-bit registers. Which option(s) is/are CORRECT related to arithmetic operations using the data path as shown?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "460063_img1.jpg"
+            }
+          ],
+          "options": [
+            "A. The data path can implement arithmetic operations involving two registers.",
+            "B. The data path can implement arithmetic operations involving one register and one immediate value.",
+            "C. The data path can implement arithmetic operations involving two immediate values.",
+            "D. The data path can only implement arithmetic operations involving one register and one immediate value."
+          ],
+          "correct_answer": "A;B;C",
+          "explanation": "(A), (B) & (C) we can choose any input from 1 MUX. and we have different select lines for MUX A & MUX B. hence we can have both registers as input, 1 register 1 immediate value as input, or both immediate value as input. hence, there is no compulsion of 1 input as immediate value and other from register hence option D is false",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a memory system with $1 \\mathrm{M}$ bytes of main memory and $16 \\mathrm{~K}$ bytes of cache memory. Assume that the processor generates $20$-bit memory address, and the cache block size is $16$ bytes. If the cache uses direct mapping, how many bits will be required to store all the $\\operatorname{tag}$ values? [Assume memory is byte addressable, $1 \\mathrm{~K}=2^{10}$, $1 \\mathrm{M}=2^{20}$.] 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $6 \\times 2^{10}$",
+            "B. $8 \\times 2^{10}$",
+            "C. $2^{12}$",
+            "D. $2^{14}$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Answer - (A)",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor has $64$ general-purpose registers and $50$ distinct instruction types. An instruction is encoded in $32$-bits. What is the maximum number of bits that can be used to store the immediate operand for the given instruction? $\\text{ADD R1}$, $\\#25$ / / $\\text{R 1=R 1+25}$ See all 3 Comments 3 3 Comments reply Krishnendu_Sengupta commented Feb 28, 2025 reply Follow flag While allocating 6 bits for opcodes, 6 for registers, will give 20 bits for the immediate operand, can we not use expanding opcodes scheme ( https://gateoverflow.in/2479/gate-cse-1994-question-3-2?show=14870#a14870 ) for maximizing the space for immediate operand for the ADD instruction specifically? I am thinking of a scheme like this: if leftmost_bit == 1: reg = bits[1:7] imm = bits[7:32] # execute add operator else: # handling other opcodes ... Is this a correct solution? This is giving 25 as maximum. 0 0 reply Share jacknroll commented Sep 13, 2025 reply Follow flag Not deserving for 2 marks. 2 2 reply Share pooja_singh 2 commented Nov 11, 2025 reply Follow flag Answer 20 bits,,, https://correctbrain.com/buy/ 5 5 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $16$",
+            "B. $20$",
+            "C. $22$",
+            "D. $24$"
+          ],
+          "correct_answer": "B",
+          "explanation": "(B) 20 we need 6 bits to represent registers we need 6 bits to represent opcode (we have 50 distinct types of instructions) we have 32 bits instruction [ OPCODE | REGISTER | VALUE] [ 6 | 6 | 32-(6+6) ] = 32 - 12 = 20 Maximum 20 bits can be used to store immediate operand.",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer has a memory hierarchy consisting of two-level cache $\\text{(L1}$ and $\\text{L2)}$ and a main memory. If the processor needs to access data from memory, it first looks into $\\text{L1}$ cache. If the data is not found in $\\text{L1}$ cache, it goes to $\\text{L2}$ cache. If it fails to get the data from $\\text{L2}$ cache, it goes to main memory, where the data is definitely available. Hit rates and access times of various memory units are shown in the figure. The average memory access time in nanoseconds $(n s)$ is ________. (rounded off to two decimal places)",
+          "images": [
+            {
+              "index": 1,
+              "filename": "460037_img1.jpg"
+            }
+          ],
+          "options": [],
+          "correct_answer": "11.83:11.87",
+          "explanation": "Access time def: miss penalty def: Reference: From David A.Patterson, John L.Hennessy- Computer Organization and Design: The Hardware/Software Interface https://theswissbay.ch/pdf/Books/Computer%20science/Computer%20Organization%20and%20Design-%20The%20HW_SW%20Inteface%205th%20edition%20-%20David%20A.%20Patterson%20%26%20John%20L.%20Hennessy.pdf 5th edition,455 page -> Access time including cache miss penalty: From the above definitions we can understand that access time including cache miss penalty is the time to access a word/data by the processor after a request is made to that particular cache and the time to update the data in the higher level caches where data requested is a miss. Note: It is no where mentioned in the definition that the access time of a Li level cache also includes the access time of all the higher level caches Lj, where j = 1 to i-1. It clearly states the access time only includes the time from the request is made to that particular cache to the data is received by the processor. In the question it is mentioned hierarchical access -> Average memory access time: The generic formula for AMAT is Reference : From David A.Patterson, John L.Hennessy- Computer Architecture: A Quantitative Approach https://acs.pub.ro/~cpop/SMPA/Computer%20Architecture,%20Sixth%20Edition_%20A%20Quantitative%20Approach%20(%20PDFDrive%20).pdf 6th edition, page no 114 When we have two levels of memory in our system, the formula is Reference:From David A.Patterson, John L.Hennessy- Computer Architecture: A Quantitative Approach https://acs.pub.ro/~cpop/SMPA/Computer%20Architecture,%20Sixth%20Edition_%20A%20Quantitative%20Approach%20(%20PDFDrive%20).pdf 6th edition, page no 115 Correct solution: From the above references we can write the AMAT for 3 Level memory hierarchy. AMAT = H1*T1 + (1-H1)*H2*(T1 + T2) + (1-H1) *(1-H2)*(T1+T2+T3) = T1 + (1-H1)*T2 + (1-H1)*(1-H2)*T3 H1 = L1 cache Hit rate = 95% H2 = L2 cache Hit rate = 85% T1 = L1 cache access time = 10ns T2 = L2 cache access time including L1 cache miss penalty = 20ns T3 = Main memory access time including L1 and L2 cache miss penalty = 200ns So, If we apply this formula, then the following is the answer. AMAT = H1*T1 + (1-H1)*H2*(T1 + T2) + (1-H1) *(1-H2)*(T1+T2+T3) = T1 + (1-H1)*T2 + (1-H1)*(1-H2)*T3 So finally ⇒ .95*10 + 0.05*0.85*(10+20) + 0.05*0.15*(10+20+200) = 12.5 ns Which can also be written as ⇒ 10 + 0.05*20 + 0.05*0.15*200 = 12.5 ns How is the answer given in the key 11.83-11.87 coming? AMAT = H1*T1 + (1-H1)*H2* T2 + (1-H1) *(1-H2)*(T3) = 0.95*10 + 0.05*0.85*20+0.05*0.15*200 = 11.85 ns The answer may have been derived using the cases below, which do not align with the given question. Case1: Simultaneous access Here, if we clearly observe, T1 is not considered when we are reading data from L2 cache and T1 and T2 time is not considered when we are accessing Main memory. This might be true when we are considering a memory system with simultaneous access. But in this question, the memory system is hierarchical in nature, so when we are accessing L2 cache, we have already accessed L1 cache also. So, we definitely need to consider both T1 and T2 at L2 cache and T1, T2 and T3 when we are accessing main memory. The correct formula is provided on the previous page. Case 2: Access time includes lower level cache access times. It is possible that the assumption is that the L2 access time already includes the L1 access time, and that the main memory access time already includes both L1 and L2 access times. If this is the assumption that is made, then it is not specified in the question. From the standard definitions of access time, we cannot implicitly assume the access time of a Li level cache also includes the access time of all the higher level caches Lj, where j = 1 to i-1. So, this case will not be applicable. Previous similar GATE questions where the approach we provided is used to solve the question: https://gateoverflow.in/118371/gate-cse-2017-set-2-question-29 https://gateoverflow.in/2308/gate-cse-1993-question-11 If we see, the above two questions are also, mostly similar to this year's gate question. The following formula is only applied in both of the above two previous gate questions. AMAT = H1*T1 + (1-H1)*H2*(T1 + T2) + (1-H1) *(1-H2)*(T1+T2+T3) = T1 + (1-H1)*T2 + (1-H1)*(1-H2)*T3 in these way answer is 12.5",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​Consider a computer with a $4 \\mathrm{MHz}$ processor. Its $\\text{DMA}$ controller can transfer $8$ bytes in $1$ cycle from a device to main memory through cycle stealing at regular intervals. Which one of the following is the data transfer rate (in bits per second) of the $\\text{DMA}$ controller if $1 \\%$ of the processor cycles are used for $\\text{DMA}$?",
+          "images": [],
+          "options": [
+            "A. $2,56,000$",
+            "B. $3,200$",
+            "C. $25,60,000$",
+            "D. $32,000$"
+          ],
+          "correct_answer": "C",
+          "explanation": "C",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​​​An instruction format has the following structure: Instruction Number: Opcode destination reg, source reg-$1$, source reg-$2$ Consider the following sequence of instructions to be executed in a pipelined processor: $\\text{I 1: DIV R3, R1, R2}$ $\\text{I 2: SUB R5, R3, R4}$ $\\text{I 3: ADD R3, R5, R6}$ $\\text{I 4: MUL R7, R3, R8}$ Which of the following statements is/are TRUE?",
+          "images": [],
+          "options": [
+            "A. There is a RAW dependency on $\\text{R 3}$ between $\\text{I 1}$ and $\\text{I 2}$",
+            "B. There is a WAR dependency on $\\text{R 3}$ between $\\text{I 1}$ and $\\text{I 3}$",
+            "C. There is a RAW dependency on $\\text{R 3}$ between $\\text{I 2}$ and $\\text{I 3}$",
+            "D. There is a WAW dependency on $\\text{R 3}$ between $\\text{I 3}$ and $\\text{I 4}$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Video Explanation: GATE CSE 2024 - RAW Dependency, WAW Dependency, WAR Dependency There is a RAW dependency on $R_3$ between $I_1$ and $I_2$. There is a RAW dependency on $R_5$ between $I_2$ and $I_3$. There is NO RAW dependency on $R_3$ between $I_2$ and $I_3$. There is a WAW dependency on $R_3$ between $I_1$ and $I_3$. So, answer will be: Only Option $A$ is correct. See HERE. Data Dependency Vs Data Hazards: https://youtu.be/uJkGMjP6hzE?feature=shared",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor with $16$ general purpose registers uses a $32$-bit instruction format. The instruction format consists of an opcode field, an addressing mode field, two register operand fields, and a $16$-bit scalar field. If $8$ addressing modes are to be supported, the maximum number of unique opcodes possible for every addressing mode is ___________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "32",
+          "explanation": "Instruction size = 32 bits Given that no. of Registers = 16 So no. of bits needed to specify a register in instruction = 4 Given that no. of Addressing modes = 8 So no. of bits needed to specify an addressing mode in instruction = 3 No. of bits available for opcode = Instruction size - (Addressing mode field size + 2 * Register field size + Scalar field size) = 32 - (3 + 2*4 + 16) = 32 - 27 = 5 So maximum no. of unique opcodes possible = 2^5 = 32",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A non-pipelined instruction execution unit operating at $2 \\mathrm{GHz}$ takes an average of $6$ cycles to execute an instruction of a program $\\text{P}$. The unit is then redesigned to operate on a $5$ -stage pipeline at $2 \\mathrm{GHz}$. Assume that the ideal throughput of the pipelined unit is $1$ instruction per cycle. In the execution of program $\\text{P}$, $20 \\%$ instructions incur an average of $2$ cycles stall due to data hazards and $20 \\%$ instructions incur an average of $3$ cycles stall due to control hazards. The speedup (rounded off to one decimal place) obtained by the pipelined design over the non-pipelined design is ____________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "3",
+          "explanation": "Non-pipelined Design: A non-pipelined instruction takes $6$ cycles to execute an instruction. Average CPI = $6$ Pipelined Design: It is given that, $20\\%$ of instructions incur $2$ cycles stall and $20\\%$ of instructions incur $3$ cycles stall. Average CPI $= 1 + (0.2*2) + (0.2*3) = 1+0.4+0.6 = 2$ Speedup = $\\frac{\\text{Avg CPI in NPL } * \\cancel{CycleTime_{NPL}}}{\\text{Avg CPI in PL } * \\cancel{CycleTime_{PL}}} = \\frac{\\text{6}}{\\text{2}} = 3$ Since, frequency of both design is same, cycle time will also be same. So, I cut off cycle time from numerator and denominator. Note: In pipelined design, 1 cycle is taken by ALL instructions but 20% of them are taking 2 Stall cycles, which means they are taking \"extra\" 2 cycles & similarly other 20% of them are taking Extra 3 cycles. 2.9 to 3.1 is a (Acc to Official Answer key)",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor uses a $32$-bit instruction format and supports byte-addressable memory access. The $\\text{ISA}$ of the processor has $150$ distinct instructions. The instructions are equally divided into two types, namely $\\text{R}$-type and $\\text{I}$-type, whose formats are shown below. R - type Instruction Format: \\begin{array}{|l|l|l|l|l|} \\hline OPCODE & UNUSED & DST Register & SRC Register1 & SRC Register 2 \\\\ \\hline \\end{array} I - type Instruction Format: \\begin{array}{|l|l|l|l|} \\hline OPCODE & DST Register & SRC Register & \\# Immediate value/address \\\\ \\hline \\end{array} In the $\\text{OPCODE}$, $1$ bit is used to distinguish between $\\text{I}$-type and $\\text{R}$-type instructions and the remaining bits indicate the operation. The processor has $50$ architectural registers, and all register fields in the instructions are of equal size. Let $\\text{X}$ be the number of bits used to encode the $\\text{UNUSED}$ field, $\\text{Y}$ be the number of bits used to encode the $\\text{OPCODE}$ field, and $\\text{Z}$ be the number of bits used to encode the immediate value/address field. The value of $\\text{X+2Y+Z}$ is __________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "34",
+          "explanation": "Opcode field(Y): There are 150 instructions, and they are equally divided into two types. Therefore, there are 75 I-type instructions and 75 R-type instructions. Since one bit is used to distinguish between instruction types, the number of bits used to encode opcode field is Y = (1+7) = 8 Register field: There are 50 architectural registers and all register fields in the instructions are of equal size. Therefore, the number of bits used to encode register field is 6 Unused field(X): T he number of bits used to encode unused field in R-type instructions is X = 32 - (8 + 6 + 6 + 6) = 6 Immediate value/address field(Z): T he number of bits used to encode i mmediate value/address field in I -type instructions is Z = 32 - (8 + 6 + 6) = 12 Therefore, the values of X, Y, and Z are: X = 6 bits (UNUSED field) Y = 8 bits (OPCODE field) Z = 12 bits (immediate value/address field) So the answer is 6 + 2 * 8 + 12 = 34",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​​Which one of the following statements is FALSE?",
+          "images": [],
+          "options": [
+            "A. In the cycle stealing mode of DMA, one word of data is transferred between an I/O device and main memory in a stolen cycle",
+            "B. For bulk data transfer, the burst mode of DMA has a higher throughput than the cycle stealing mode",
+            "C. Programmed I/O mechanism has a better CPU utilization than the interrupt driven I/O mechanism",
+            "D. The CPU can start executing an interrupt service routine faster with vectored interrupts than with non-vectored interrupts"
+          ],
+          "correct_answer": "C",
+          "explanation": "A.In the cycle stealing mode of DMA, one word of data is transferred between an I/O device and main memory in a stolen cycle ans.True (as defination) B.For bulk data transfer, the burst mode of DMA has a higher throughput than the cycle stealing mode ans.True(as define, through as compared to bulk data, for burst mode through put will be equal to 1 as bulk of data will be transferd at once but with cycle stealing mode transfer will take more time and throughput will be less) C.Programmed I/O mechanism has a better CPU utilization than the interrupt driven I/O mechanism ans.False (Programmed i/o is like polling(can remeber to recall the concept) so to check wether there is i/o who need's cpu ,cpu has to do alot of work, but in interrupt driven i/o ,i/o has given preveleged to tell cpu that i need you by sending the interrupt so cpu in is more utilized in interrupt driven i/o) D.The CPU can start executing an interrupt service routine faster with vectored interrupts than with non-vectored interrupts ans.true (vectored interrupt mean's address of program which handles that interrupt is send with the interrupt itself where in non vectored interrupt it is not send so cpu has to run defualt service rountine to identify the address of that routine and then run that routing)",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $5$-stage pipelined processor with Instruction Fetch (IF), Instruction Decode (ID), Execute (EX), Memory Access (MEM), and Register Writeback (WB) stages. Which of the following statements about forwarding is/are CORRECT?",
+          "images": [],
+          "options": [
+            "A. In a pipelined execution, forwarding means the result from a source stage of an earlier instruction is passed on to the destination stage of a later instruction",
+            "B. In forwarding, data from the output of the MEM stage can be passed on to the input of the EX stage of the next instruction",
+            "C. Forwarding cannot prevent all pipeline stalls",
+            "D. Forwarding does not require any extra hardware to retrieve the data from the pipeline stages"
+          ],
+          "correct_answer": "A;B;C",
+          "explanation": "Let's analyze each statement about forwarding in the context of a pipelined processor with stages Instruction Fetch (IF), Instruction Decode (ID), Execute (EX), Memory Access (MEM), and Register Writeback (WB): 1. In a pipelined execution, forwarding means the result from a source stage of an earlier instruction is passed on to the destination stage of a later instruction: This statement is CORRECT. Forwarding (also known as bypassing) is a technique used to reduce data hazards by passing the result of an instruction directly to a subsequent instruction that needs it, without waiting for the result to be written back to the register file. 2. In forwarding, data from the output of the MEM stage can be passed on to the input of the EX stage of the next instruction: This statement is CORRECT. One common form of forwarding involves passing the output of the MEM stage (where the result of a load instruction might be available) directly to the EX stage of the next instruction that needs it. 3. Forwarding cannot prevent all pipeline stalls: This statement is CORRECT. Forwarding helps mitigate certain types of data hazards, particularly read-after-write (RAW) hazards, but it cannot eliminate all types of pipeline stalls. For example, hazards arising from control dependencies (branch instructions) or certain structural hazards might still cause stalls. 4. Forwarding does not require any extra hardware to retrieve the data from the pipeline stages: This statement is INCORRECT. Forwarding requires additional hardware, such as multiplexers and control logic, to select the appropriate data to be forwarded and to ensure that the data is correctly routed to the required pipeline stages. Therefore, the statements that are CORRECT are: A) In a pipelined execution, forwarding means the result from a source stage of an earlier instruction is passed on to the destination stage of a later instruction. B) In forwarding, data from the output of the MEM stage can be passed on to the input of the EX stage of the next instruction. C)Forwarding cannot prevent all pipeline stalls.",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​​Consider two set-associative cache memory architectures: $\\text{WBC}$, which uses the write back policy, and $\\text{WTC}$, which uses the write through policy. Both of them use the $\\text{LRU}$ (Least Recently Used) block replacement policy. The cache memory is connected to the main memory. Which of the following statements is/are TRUE?",
+          "images": [],
+          "options": [
+            "A. A read miss in $\\text{WBC}$ never evicts a dirty block",
+            "B. A read miss in $\\text{WTC}$ never triggers a write back operation of a cache block to main memory",
+            "C. A write hit in $\\text{WBC}$ can modify the value of the dirty bit of a cache block",
+            "D. A write miss in $\\text{WTC}$ always writes the victim cache block to main memory before loading the missed block to the cache"
+          ],
+          "correct_answer": "B;C",
+          "explanation": "The answer should be B,C A. False When we miss accessing data in the cache (either by reading or writing), we can choose whether or not to add that missed data into the cache. Sometimes, we might decide not to add it because the data already in the cache from another memory location is more useful or accessed more often. Source of above info: https://cs.stackexchange.com/questions/133352/what-is-a-cache-write-miss So, the statement is false because it says that a read miss in WBC \"never\" removes a dirty block, which is not always the case. Option D in GATE 2022 Question B. True In the write-through policy, data is always kept synchronized. Therefore, we never need to perform a \"write back\" operation to remove any entry from the cache. This makes the option correct because it states that \"never\" triggers a write-back. C. True A write hit in WBC can modify the value of the dirty bit of a cache block. If there's a write hit in WBC, it means we're writing directly into the cache. So, of course, we'll also change the dirty bit. D. False A write miss in WTC always writes the victim cache block to main memory before loading the missed block to the cache. There are two blocks mentioned: a missed block and a victim block. The missed block is the one we want to access, while the victim block is the one replaced by LRU. When there's a write miss in WTC, it means the data we're trying to write isn't in the cache. Now, we may want to load it into the cache, or we may not want to. Suppose we don't want to bring it into the cache; in that case, we can directly modify the main memory. However, if we decide to bring it into the cache, then we may or may not need to replace the victim block depending on cache is already full or not",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The baseline execution time of a program on a $2 \\mathrm{GHz}$ single core machine is $100$ nanoseconds ( $n s)$. The code corresponding to $90 \\%$ of the execution time can be fully parallelized. The overhead for using an additional core is $10 ~ns$ when running on a multicore system. Assume that all cores in the multicore system run their share of the parallelized code for an equal amount of time. The number of cores that minimize the execution time of the program is __________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "3",
+          "explanation": "The code that cannot be parallelized runs for 10ns. For every additional core, additional 10ns overhead is added to total execution time, overhead for n cores is $(n-1)10$ns. The code that can be parallelized runs for 90ns on one core, it runs for $\\frac{90}{n}$ns on n cores. Let t(n) be the execution time, it is given by - $t(n) = 10 + (n-1)10 + \\frac{90}{n} = 10n + \\frac{90}{n}$ $t(1) = 100, t(2) = 65, t(3) = 60, t(4) = 62.5, t(5) = 68, ...$ Answer - 3",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A given program has $25 \\%$ load/store instructions. Suppose the ideal $\\text{CPI}$ (cycles per instruction) without any memory stalls is $2$. The program exhibits $2 \\%$ miss rate on instruction cache and $8 \\%$ miss rate on data cache. The miss penalty is $100$ cycles. The speedup (rounded off to two decimal places) achieved with a perfect cache (i.e., with NO data or instruction cache misses) is __________. See all 8 Comments 8 8 Comments reply Show 5 previous comments Victor Abhinav' commented Jan 21 i | +--------------------------------------+ | | 1. Useful Work 2. Wasted Work (Ideal CPI) (Memory Stalls) | | [ 2 Cycles ] +----------+------------+ | | A. Instruction Cache B. Data Cache (Happens 100% (Happens only for of the time) Load/Store: 25%) | | Miss Rate: 2% Miss Rate: 8% Penalty: 100 Penalty: 100 2 2 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "3",
+          "explanation": "CPI with a Perfect Cache: $2$ CPI with the Actual Cache: 2 (ideally) + $0.02 \\times 100$ (stall cycles for instruction cache miss) + $0.25 \\times 0.08 \\times 100$ (stall cycles for data cache miss) = $6$ Speedup with a perfect cache = $6/2 = 3.$",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $3$-stage pipelined processor having a delay of $10 \\mathrm{~ns}$ (nanoseconds), $20 \\mathrm{~ns}$, and $14 \\mathrm{~ns},$ for the first, second, and the third stages, respectively. Assume that there is no other delay and the processor does not suffer from any pipeline hazards. Also assume that one instruction is fetched every cycle. The total execution time for executing $100$ instructions on this processor is _____________ $\\mathrm{ns}.$",
+          "images": [],
+          "options": [],
+          "correct_answer": "2040",
+          "explanation": "Given, delays = $10 ns, 20ns, 14ns$ total instruction (n) = $100$ We take pipeline delay as $t_p = max(10, 20, 14) = 20$ number of stages ($k$) $ = 3$ So, Total execution time $ = (k + (n – 1)) \\times t_p$ $\\implies (3 + 100- 1) \\times 20 ns$ $\\implies 2040ns$",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A keyboard connected to a computer is used at a rate of $1$ keystroke per second. The computer system polls the keyboard every $10 \\mathrm{~ms}$ (milli seconds) to check for a keystroke and consumes $100\\; \\mu \\mathrm{s}$ (micro seconds) for each poll. If it is determined after polling that a key has been pressed, the system consumes an additional $200\\; \\mu \\mathrm{s}$ to process the keystroke. Let $T_{1}$ denote the fraction of a second spent in polling and processing a keystroke. In an alternative implementation, the system uses interrupts instead of polling. An interrupt is raised for every keystroke. It takes a total of $1 \\mathrm{~ms}$ for servicing an interrupt and processing a keystroke. Let $T_{2}$ denote the fraction of a second spent in servicing the interrupt and processing a keystroke. The ratio $\\dfrac{T_{1}}{T_{2}}$ is _____________. (Rounded off to one decimal place)",
+          "images": [],
+          "options": [],
+          "correct_answer": "10.2",
+          "explanation": "The answer Should be 10.2 1 Keystroke per second. Polling System (T1) CPU Polls (ask) keyboard every 10 ms and asks did you get any keystrokes.? Keyboard Answers “Yes” only once per second. In One second, the CPU Polls the Keyboard 100 times (1 Sec = 1000 ms, and the CPU polls every 10 ms). Time Spent in Polling = 100 * 100microsec = 10000 microseconds or 10 milesec. Time Spent in Processing the Keystroke (Only once per second) = 200microsec or 0.2 milisec. CPU’s Time wasted in Polling System = Time Spend in Polling + Time Spent in Processing = 10.2 ms Interrupt System (T2) CPU doesn’t ask Keyboard periodically about the keystroke, but Keyboard tells CPU via interrupt about a Keystroke. Whenever, there is a keystroke, Keyboard interrupts CPU. CPU Executes corresponding Interrupt Service Routine (ISR) which takes 1ms. Thats all. Speed Up of Interrupt over polling system (S) = T1/T2 = 10.2 ms / 1 ms = 10.2 Example: Let's consider Rubina is personal assistant of Pathaan; Pathaan assigns some tasks to Rubina. Now Pathaan is a very busy man and his every minute is very important. Pathaan needs the status of the work that he assigned to Rubina. Pathaan can take the status of the work in two ways: Using Polling System Using Interrupt System If Pathaan uses Polling System, Pathaan will keep asking Rubina about the status of the work every 10 ms. 100 microsec of Pathaan are wasted in talking to Rubina, but Rubina answers Yes only once a second, If Rubina answer Yes then Pathaan spends another 200 microsec to review the work done by Rubina. So in this case Pathaan waste 100*100 microsec in talking to Rubina (Because he calls her every 10 ms and spends 100 microsec in talking so in one sec he waste 100*100 Microsec). Rubina completes work only once per second (Means she answers Yes only once out of 100 times that Pathaan asks in 1 sec). If Rubina answer Yes, Pathaan spends another 200 microsec to review the work done by Rubina. So Total time wasted by Pathaan is 10 ms + 0.2 ms. Better approach will be : Pathaan Assign work to Rubina and sits back and wait for Rubina to tell him work is done. (Rubina Interrupts Pathaan). Rubina interrupts Pathaan once per second and Pathaan spends 1 ms in reviewing the work . (So Lots of time saved of Pathaan) So, We can say second approach is 10.2 times faster than first approach. Pathaan == CPU Rubina == Input/Output.",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the given $\\text{C}$-code and its corresponding assembly code, with a few operands $\\text{U1-U4}$ being unknown. Some useful information as well as the semantics of each unique assembly instruction is annotated as inline comments in the code. The memory is byte-addressable. //C-code int a[10], b[10], i; // int is 32 bit for(i=0; i<10; i++) a[i] = b[i] * 8; ;assembly code (; indicates comments) ;r1-r5 are 32-bit integer registers ;initialize r1=0, r2=10 ;initialize r3, r4 with base address of a, b L01: jeq r1, r2, end ;if(r1==r2) goto end L02: lw, r5, 0(r4) ;r5 <- Memory[r4+0] L03: shl, r5, r5, U1 ;r5 <- r5 << U1 L04: sw, r5, 0(r3) ;Memory[r3+0] <- r5 L05: add, r3, r3, U2 ;r3 <- r3+U2 L06: add, r4, r4, U3 L07: add, r1, r1, 1 L08: jmp U4 ;goto U4 L09: end Which one of the following options is a $\\text{CORRECT}$ replacement for operands in the position $\\text{(U1, U2, U3, U4)}$ in the above assembly code?",
+          "images": [],
+          "options": [
+            "A. $(8,4,1, \\text{L02)}$",
+            "B. $(3,4,4, \\text{L01)}$",
+            "C. $(8,1,1, \\text{L02)}$",
+            "D. $(3,1,1, \\text{L01)}$"
+          ],
+          "correct_answer": "B",
+          "explanation": "To understand $u_1$, we must first find out what the register $r_5$ is storing. If you check closely the line $L_{02}$, it’s fetching an element from array $b$ and storing it in $r_5$. Line $L_{04}$ is storing the value present in $r_5$ to array $a$, so we’re definitely performing the multiplication by $8$ in $L_{03}$. $L_{03}$ is a shift-left operator. To multiply by $8$, how many bits (in binary) do we need to shift to left? If you can find out that number, that would be the answer to $u_1$. $L_{05}$ and $L_{06}$ are incrementing the values of registers $r_3$ and $r_5$ respectively to point to next element of $a$ and $b$ respectively. But by how much shall we increase it to make it point to next element? Suppose at some point in time, $r_3$ is storing $1000$ in decimal and pointing to 2 nd element of array $a$. Recall that each element is 4Bytes in size (given in question). Now, what is the address of 3 rd element of array $a$, can you guess? Yes, it would be $1004$. Hence, $4$ must be added. Note: Given memory is byte addressable. Each int takes $32 bit = 4B$, so we need to shift by 4 addresses. $u_4$ should be the line to make the loop repeat. Note that if we make it $L_{02}$, the loop termination condition is skipped and would lead to infinite loop (or unless we got trapped due to accessing illegal memory). The value of $u_1, u_2, u_3, u_4$ will be $3, 4, 4, L01$. Option B is the right answer.",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A $4$ kilobyte $\\text{(KB)}$ byte-addressable memory is realized using four $1 \\mathrm{~KB}$ memory blocks. Two input address lines $\\text{(IA4 and IA3)}$ are connected to the chip select $\\text{(CS)}$ port of these memory blocks through a decoder as shown in the figure. The remaining ten input address lines from $\\text{IA11-IA0}$ are connected to the address port of these blocks. The chip select $\\text{(CS)}$ is active high. The input memory addresses $\\text{(IA11-IA0)},$ in decimal, for the starting locations $\\text{(Addr = 0)}$ of each block (indicated as $\\text{X1, X2, X3, X4}$ in the figure) are among the options given below. Which one of the following options is $\\text{CORRECT}?$",
+          "images": [
+            {
+              "index": 1,
+              "filename": "399279_img1.png"
+            }
+          ],
+          "options": [
+            "A. $(0,1,2,3)$",
+            "B. $(0,1024,2048,3072)$",
+            "C. $(0,8,16,24)$",
+            "D. $(0,0,0,0)$"
+          ],
+          "correct_answer": "C",
+          "explanation": "A 4 KB memory is given. 4 KB = $2^{12}$, means we require 12 bits for its representation. But, 4 KB memory is implemented as four 1 KB memory blocks. Out of these 12 bits, 2 bits(I4 & I3) are connected to 2:4 Decoder. 4 output pins of decoder Q0, Q1, Q2, Q3 is connected to 4 chip select ports of X1, X2, X3 & X4 respectively. With 2-bits we can generate 4 different configurations, which are sufficient to uniquely identify the memory block. Q0, Q1, Q2, Q3 can be recognized by these corresponding values of I4 & I3 : I4 I3 O/p 0 0 Q0 0 1 Q1 1 0 Q2 1 1 Q3 Remaining 10 bits are connected to address port of these blocks. For starting location (Addr =0) we have to put all the bits from I0 – I11 as 0. I11 I10 I9 I8 I7 I6 I5 I4 I3 I2 I1 I0 Addr=0 Decimal Val. 0 0 0 0 0 0 0 0 0 0 0 0 X1 0 0 0 0 0 0 0 0 0 1 0 0 0 X2 8 0 0 0 0 0 0 0 1 0 0 0 0 X3 16 0 0 0 0 0 0 0 1 1 0 0 0 X4 24 As the input memory address is in decimal. So, Starting location (Addr = 0) for (X1, X2, X3, X4) are (0,8,16,24) . So, C.",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "An $8$-way set associative cache of size $64 \\mathrm{~KB} \\;(1 \\mathrm{~KB}=1024\\; \\text{bytes})$ is used in a system with $32$-bit address. The address is sub-divided into $\\text{TAG, INDEX},$ and $\\text{BLOCK OFFSET.}$ The number of bits in the $\\text{TAG}$ is ___________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "19",
+          "explanation": "Given that for set associative mapping technique: Cache memory size $(CM’s)=64 KB=2^{16} $ bytes Main memory size $(MM’s)=32$ bits $P=8$way SAM Tag bit size (y) =? since block size is not given we assume it is $2^x$ byte. Number of cache block $(N)= \\frac{CM’s}{B’s}\\implies \\frac{2^16}{2^x}=2^{16-x}$ Number of sets $(S) = \\frac{N}{P}= \\frac{2^{16-x}}{2^3}=2^{13-x}$ as we know that for set associative mapping technique: $\\text{TAG+SLO+B’S=MM’s}$ $\\implies y+13-x+x=32$bits $\\implies y=32-13$ bits $\\implies y=19$ bits so the correct value of the tag size is $19$ bits.",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which one of the following facilitates transfer of bulk data from hard disk to main memory with the highest throughput?",
+          "images": [],
+          "options": [
+            "A. $\\text{DMA}$ based $\\text{I/O}$ transfer",
+            "B. Interrupt driven $\\text{I/O}$ transfer",
+            "C. Polling based $\\text{I/O}$ transfer",
+            "D. Programmed $\\text{I/O}$ transfer"
+          ],
+          "correct_answer": "A",
+          "explanation": "ANSWER: A) DMA based I/O transfer In DMA (Direct Memory Access) mode, bulk amount of data is transferred from IO Device to Main Memory without the involvement of CPU. Whenever Prg Size > MM size, Virtual Memory is used with the help of Secondary Memory. Secondary memory is interfaced to system via DMA Module. So why highest throughput? This way, the CPU can keep working on other tasks while all the data is being moved. Think as if DMA is a super-fast moving truck that can transfer huge amounts of data from the hard drive to the computer's memory without needing the CPU to help it out. And because it can move more data in a shorter amount of time, it's like getting a lot more done in a shorter amount of time, that's why we call the “highest throughput” among other methods.",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Let $\\text{WB}$ and $\\text{WT}$ be two set associative cache organizations that use $\\text{LRU}$ algorithm for cache block replacement. $\\text{WB}$ is a write back cache and $\\text{WT}$ is a write through cache. Which of the following statements is/are $\\text{FALSE}?$",
+          "images": [],
+          "options": [
+            "A. Each cache block in $\\text{WB}$ and $\\text{WT}$ has a dirty bit.",
+            "B. Every write hit in $\\text{WB}$ leads to a data transfer from cache to main memory.",
+            "C. Eviction of a block from $\\text{WT}$ will not lead to data transfer from cache to main memory.",
+            "D. A read miss in $\\text{WB}$ will never lead to eviction of a dirty block from $\\text{WB}.$"
+          ],
+          "correct_answer": "A;B;D",
+          "explanation": "Option: A, B, D WB Cache: Updates to the cache block don’t result in Updates to the Main Memory immediately. Burst Writes are preferred for higher throughput and those needing higher write performance. WT Cache: Updates to the Cache block are reflected on Main Memory before carrying out other processes. Consistency is preferred. A WB must necessarily have a dirty bit to avoid redundant writes to Main Memory. Whereas a WT cache needn’t as the change is reflected after a write. False A WB cache’s primary use is to increase throughput or useful work. Multiple writes to the same cache block will not be reflected immediately, avoiding unnecessary data transfer time. False WT cache’s main goal is to prefer consistency overwrite performance, and a cache block is made to reflect the current main memory. True LRU doesn’t have specific replacement strategies for dirty and regular blocks. Hence a read miss might evict a dirty block. False",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A cache memory that has a hit rate of $0.8$ has an access latency $10 \\; \\text{ns}$ and miss penalty $100 \\; \\text{ns}.$ An optimization is done on the cache to reduce the miss rate. However, the optimization results in an increase of cache access latency to $15 \\; \\text{ns},$ whereas the miss penalty is not affected. The minimum hit rate (rounded off to two decimal places) needed after the optimization such that it should not increase the average memory access time is _______________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "0.85",
+          "explanation": "$\\text{For a given cache, Average memory access time can be computed as:}$ $\\text{AMAT} = \\text{HitTime} + \\text{Miss rate}*\\text{Miss Penalty}$ $\\text{Initially,}$ $\\text{Hit rate of cache} = 0.8$ $\\therefore \\text{Miss rate} = 0.2$ $\\text{Access Latency = HitTime} = 10\\,ns$ $\\text{Miss Penalty} = 100\\,ns$ $\\therefore \\text{AMAT}_{unoptimized} = 10 + 0.2(100) = 30\\,ns$ $\\text{For the optimized cache,}$ $\\text{Access Latency = HitTime} = 15\\,ns$ $\\therefore \\text{AMAT}_{optimized} = 15 + x(100)$ $\\text{Now,}$ $ \\text{AMAT}_{unoptimized} \\geqslant \\text{AMAT}_{optimized} $ $30 \\geqslant 15 + 100x$ $\\implies 15 \\geqslant 100x$ $\\implies 0.15 \\geqslant x$ $\\implies 0.85 \\leqslant 1-x$ $\\therefore \\text{The required hit rate} = (1-x) = 0.85$",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system with $2 \\;\\text{KB}$ direct mapped data cache with a block size of $64 \\; \\text{bytes}.$ The system has a physical address space of $64 \\; \\text{KB}$ and a word length of $16 \\; \\text{bits.}$ During the execution of a program, four data words $\\text{P, Q, R,}$ and $\\text{S}$ are accessed in that order $10$ times $\\text{(i.e., PQRSPQRS}\\dots).$ Hence, there are $40$ accesses to data cache altogether. Assume that the data cache is initially empty and no other data words are accessed by the program. The addresses of the first bytes of $\\text{P, Q, R,}$ and $\\text{S}$ are $\\text{0xA248, 0xC28A, 0xCA8A,}$ and $\\text{0xA262},$ respectively. For the execution of the above program, which of the following statements is/are $\\text{TRUE}$ with respect to the data cache?",
+          "images": [],
+          "options": [
+            "A. Every access to $\\text{S}$ is a hit.",
+            "B. Once $\\text{P}$ is brought to the cache it is never evicted.",
+            "C. At the end of the execution only $\\text{R}$ and $\\text{S}$ reside in the cache.",
+            "D. Every access to $\\text{R}$ evicts $\\text{Q}$ from the cache."
+          ],
+          "correct_answer": "A;B;D",
+          "explanation": "Physical memory = 64KB ===> 16 bits required to represent Physical memory Cache memory = 2KB ===> 11 bits for cache memory Block size = 64 B = 32 words ===> 6 bits because of system is Byte addressable. Tag = 16-11 = 5 bits Cache index = 11-6 = 5 bits Block offset = 6 bits P = 0XA248 = 1010 0010 0100 1000 = $10100\\; \\color{red}{01001}\\; 001000$ ( Tag – cache index – Block offset ) Q = 0XC28A = 1100 0010 1000 1010 = $11000\\; \\color{red}{01010}\\; 001010$ R = 0XCA8A = 1100 1010 1000 1010 = $11001\\; \\color{red}{01010} \\;001010$ S=0XA262 = 1010 0010 0110 0010 = $10100\\; \\color{red}{01001} \\;100010$ Given that, Direct mapped cache, If we observe, P and S are belongs to same Block ( Tag and cache bits are same ). Therefore every access of S should result in a hit due to neither Q nor R competing for the same cache block and once P brought to the cache, it is never evicted. If we observe Q and R, those are competing for same cache block. So at the end R only present in the cache due to R is accessed at last. ( compaing to Q ) and every access to R evicts Q from the Cache. Therefore at the end, P,R and S in the Cache. Options A,B and D are true.",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor $\\text{X}_{1}$ operating at $2 \\; \\text{GHz}$ has a standard $5-$stage $\\text{RISC}$ instruction pipeline having a base $\\text{CPI (cycles per instruction)}$ of one without any pipeline hazards. For a given program $\\text{P}$ that has $30 \\%$ branch instructions, control hazards incur $2$ cycles stall for every branch. A new version of the processor $\\text{X}_{2}$ operating at same clock frequency has an additional branch predictor unit $\\text{(BPU)}$ that completely eliminates stalls for correctly predicted branches. There is neither any savings nor any additional stalls for wrong predictions. There are no structural hazards and data hazards for $\\text{X}_{1}$ and $\\text{X}_{2}.$ If the $\\text{BPU}$ has a prediction accuracy of $80 \\%,$ the speed up $\\textit{(rounded off to two decimal places)}$ obtained by $\\text{X}_{2}$ over $\\text{X}_{1}$ in executing $\\text{P}$ is _______________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1.42:1.45",
+          "explanation": "Execution Time = No.of Instructions x Clocks per Instructions x Clock cylce time $Speedup = \\frac{\\text{Old system execution time}}{\\text{New system execution time}}$ When no.of Instructions and clock cycle time are same, then $Speedup = \\frac{\\text{Old system CPI}}{\\text{New system CPI}}$ Normal processor CPI = 1, without any pipeline hazards. Given that, Program P has 30% branch instructions where each instruction will lead to 2 stall cycles. Processor X1 has NO BPU, therefore CPI = $1+\\overset{\\text{branch instructions penalty}}{\\overbrace{(0.30*2)}}$ = 1.60 Processor X2 has BPU, therefore CPI = $1 + \\overset{\\text{branch instructions penalty}}{\\overbrace{(0.30* ({ \\underset{\\text{BPU correctly predicted}}{\\underbrace{0.80* 0}} \\;\\;\\;+ \\underset{\\text{BPU wrongly predicted}}{\\underbrace{0.2*2}} }) )}} $ = 1.12 $Speedup = \\frac{\\text{1.60}}{\\text{1.12}}=1.4285$",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a set-associative cache of size $\\text{2KB (1KB} =2^{10}$ bytes$\\text{)}$ with cache block size of $64$ bytes. Assume that the cache is byte-addressable and a $32$ -bit address is used for accessing the cache. If the width of the tag field is $22$ bits, the associativity of the cache is _________",
+          "images": [],
+          "options": [],
+          "correct_answer": "2 : 2",
+          "explanation": "$32$ bit address is used for accessing the cache. It is given that cache is Set-Associative. The address bits get split as follows: Block Size $= 64 B \\implies$ Block offset $= 6\\; bits.$ Given that Tag field width $= 22\\; bits.$ Therefore, width of Set Index field $= 32-22-6 = 4 \\implies 2^4\\text{ = 16 sets in the cache.}$ Cache size is $2 KB$ and Block size $= 64 B$ $\\implies 2^5 \\text{ = 32 blocks present in the cache. }$ $16$ sets contain $32$ blocks $\\implies 2$ blocks per set or associativity $=2.$ $2$",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a computer system with $\\text{DMA}$ support. The $\\text{DMA}$ module is transferring one $8$-bit character in one $\\text{CPU}$ cycle from a device to memory through cycle stealing at regular intervals. Consider a $\\text{2 MHz}$ processor. If $0.5 \\%$ processor cycles are used for $\\text{DMA}$, the data transfer rate of the device is __________ bits per second.",
+          "images": [],
+          "options": [],
+          "correct_answer": "80000 : 80000",
+          "explanation": "Answer is $80,000$. To complete one cycle at $2$ MHz it will take $\\frac{1}{2\\times 10^6}$ seconds. So the total number of CPU cycles in one second will be $2 \\times 10^6$. Now $0.5 \\%$ of these cycles are taken by DMA to transfer the data. So total number of cycles taken to transfer the data will be $\\frac{0.5}{100} \\times 2 \\times 10^6 = 10,000$ and in each cycle $8$ bits are transferred. So, data transfer rate in bits per second $=8\\times 10000 = 80,000$.",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "​​​​​​Assume a two-level inclusive cache hierarchy, $L1$ and $L2$, where $L2$ is the larger of the two. Consider the following statements. $S_1$: Read misses in a write through $L1$ cache do not result in writebacks of dirty lines to the $L2$ $S_2$: Write allocate policy must be used in conjunction with write through caches and no-write allocate policy is used with writeback caches. Which of the following statements is correct?",
+          "images": [],
+          "options": [
+            "A. $S_1$ is true and $S_2$ is false",
+            "B. $S_1$ is false and $S_2$ is true",
+            "C. $S_1$ is true and $S_2$ is true",
+            "D. $S_1$ is false and $S_2$ is false"
+          ],
+          "correct_answer": "A",
+          "explanation": "$S_1:$ Read Miss in a write through $L1$ cache results in read allocate. N o write back is done here, as in a write through $L1$ cache, both $L1$ and $L2$ caches are updated during a write operation (no dirty blocks and hence no dirty bits as in a write back cache). So during a Read miss it will simply bring in the missed block from $L2$ to $L1$ which may replace one block in $L1$ (this replaced block in $L1$ is already updated in $L2$ and so needs no write back). So, $S_1$ is TRUE. $S_2:$ This statement is FALSE. Both write-through and write-back policies can use either of these write-miss policies, but usually they are paired in this way. No write allocation during write through as $L1$ and $L2$ are accessed for each write operation (subsequent writes to same location gives no advantage even if the location is in $L1$ cache). In write back we can to do write allocate in $L1$ after a write operation hoping for subsequent writes to the same location which will then hit in $L1$ and thus avoiding a more expensive $L2$ access. Cache Writing Policies",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a pipelined processor with $5$ stages, $\\text{Instruction Fetch} (\\textsf{IF})$, $\\text{Instruction Decode} \\textsf{(ID)}$, $\\text{Execute } \\textsf{(EX)}$, $\\text{Memory Access } \\textsf{(MEM)}$, and $\\text{Write Back } \\textsf{(WB)}$. Each stage of the pipeline, except the $\\textsf{EX}$ stage, takes one cycle. Assume that the $\\textsf{ID}$ stage merely decodes the instruction and the register read is performed in the $\\textsf{EX}$ stage. The $\\textsf{EX}$ stage takes one cycle for $\\textsf{ADD}$ instruction and two cycles for $\\textsf{MUL}$ instruction. Ignore pipeline register latencies. Consider the following sequence of $8$ instructions: $$\\textsf{ADD, MUL, ADD, MUL, ADD, MUL, ADD, MUL}$$ Assume that every $\\textsf{MUL}$ instruction is data-dependent on the $\\textsf{ADD}$ instruction just before it and every $\\textsf{ADD}$ instruction (except the first $\\textsf{ADD}$) is data-dependent on the $\\textsf{MUL}$ instruction just before it. The $\\textit{speedup}$ defined as follows. $$\\textit{Speedup} = \\dfrac{\\text{Execution time without operand forwarding}}{\\text{Execution time with operand forearding}}$$ The $\\textit{Speedup} $ achieved in executing the given instruction sequence on the pipelined processor (rounded to $2$ decimal places) is _____________ ed Feb 1 reply Follow flag it seems as if split phase write back is assumed in some questions and not assumed in some questions. 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1.87 : 1.88",
+          "explanation": "$\\text{Speedup(def in question)}=\\cfrac{\\text{Time without Operand Forwarding}}{\\text{Time with Operand Forwarding}}$ Without Operand Forwarding: $\\tiny \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\\hline &1&2&3&4&5&6&7&8&9&10&11&12&13&14&15&16&17&18&19&20&21&22&23&24&25&26&27&28&29&30\\\\\\hline \\text{ADD}&\\text{IF}&\\text{ID}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&\\text{IF}&\\text{ID}&&&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{ADD}&&&\\text{IF}&&&\\text{ID}&&&&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&&&&&\\text{IF}&&&&\\text{ID}&&&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{ADD}&&&&&&&&&&\\text{IF}&&&\\text{ID}&&&&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&&&&&&&&&&&&\\text{IF}&&&&\\text{ID}&&&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{ADD}&&&&&&&&&&&&&&&&&\\text{IF}&&&\\text{ID}&&&&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&&&&&&&&&&&&&&&&&&&\\text{IF}&&&&\\text{ID}&&&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\end{array}$ $\\text{Time taken without Operand Forwarding}=30$ With Operand Forwarding: $\\tiny \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\\hline &1&2&3&4&5&6&7&8&9&10&11&12&13&14&15&16\\\\\\hline \\text{ADD}&\\text{IF}&\\text{ID}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&\\text{IF}&\\text{ID}&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{ADD}&&&\\text{IF}&\\text{ID}&&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&&&\\text{IF}&&\\text{ID}&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{ADD}&&&&&&\\text{IF}&\\text{ID}&&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&&&&&&\\text{IF}&&\\text{ID}&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{ADD}&&&&&&&&&\\text{IF}&\\text{ID}&&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\text{MUL}&&&&&&&&&&\\text{IF}&&\\text{ID}&\\text{EX}&\\text{EX}&\\text{MEM}&\\text{WB}\\\\\\hline \\end{array}$ $\\text{Time taken with Operand Forwarding }= 16$ $\\text{Speedup}=\\cfrac{\\text{Time without Operand Forwarding}}{\\text{Time with Operand Forwarding}}=\\cfrac{30}{16}=1.875$",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a computer system with a byte-addressable primary memory of size $2^{32}$ bytes. Assume the computer system has a direct-mapped cache of size $\\text{32 KB}$ ($\\text{1 KB}$ = $2^{10}$ bytes), and each cache block is of size $64$ bytes. The size of the tag field is __________ bits.",
+          "images": [],
+          "options": [],
+          "correct_answer": "17 : 17",
+          "explanation": "$\\text{Tag bits} = \\text{PAS}_{bits} – \\log_2 (\\text{Cache Size}) + \\log_2 (K)$ (where $K$ is associativity) $\\qquad = 32 - 15 + 0 = 17\\; \\text{bits}$",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A five-stage pipeline has stage delays of $150, 120, 150, 160$ and $140$ nanoseconds. The registers that are used between the pipeline stages have a delay of $5$ nanoseconds each. The total time to execute $100$ independent instructions on this pipeline, assuming there are no pipeline stalls, is _______ nanoseconds.",
+          "images": [],
+          "options": [],
+          "correct_answer": "17160 : 17160",
+          "explanation": "For the given pipelined system: Total number of stages $(k)=5$ Total number of instructions, $(n)=100$ Total delay ($t_p) = \\max(\\text{stage delay})+\\text{buffer delay}$ $\\implies t_p = \\max (150,120,150,160,140)+5\\;ns$ $\\implies t_p=160+5\\;ns$ $\\implies t_p =165\\;ns$ $ET_{p} = [(k+(n-1))*t_p]$ $\\implies ET_p= [(5+(100-1))*165]\\;ns$ $\\implies ET_p= (5+99)*165\\;ns$ $\\implies ET_{pipeline}=17160\\;ns$ $\\therefore$ To execute $100$ instructions in the given pipeline, $17160\\;ns$ time is required.",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following instruction sequence where registers $\\text{R1}, \\text{R2}$ and $\\text{R3}$ are general purpose and $\\text{MEMORY[X]}$ denotes the content at the memory location $\\text{X}.$ $\\begin{array}{llc} \\textbf{Instruction} & \\textbf{Semantics} & \\textbf{Instruction Size} \\text{ (bytes)} \\\\ \\hline \\text{MOV } \\text{R1}, (5000) & \\text{R1} \\leftarrow \\text{MEMORY}[5000] & 4 \\\\ \\hline \\text{MOV } \\text{R2}, (\\text{R3}) & \\text{R2} \\leftarrow \\text{MEMORY[R3]} & 4 \\\\ \\hline \\text{ADD} \\text{R2}, \\text{R1} & \\text{R2} \\leftarrow \\text{R1} + \\text{R2} & 2 \\\\ \\hline \\text{MOV } (\\text{R3}), \\text{R2} & \\text{MEMORY[R3]} \\leftarrow \\text{R2} & 4 \\\\ \\hline \\text{INC } \\text{R3} & \\text{R3} \\leftarrow \\text{R3}+1 & 2 \\\\ \\hline \\text{DEC } \\text{R1} & \\text{R1} \\leftarrow \\text{R1}-1 & 2 \\\\ \\hline \\text{BNZ } 1004 & \\text{Branch if not zero to the} & 2 \\\\ & \\text{given absolute address}& \\\\ \\hline \\text{HALT} & \\text{Stop} & 1 \\\\ \\hline \\end{array}$ Assume that the content of the memory location $5000$ is $10$, and the content of the register $\\text{R3}$ is $3000$. The content of each of the memory locations from $3000$ to $3020$ is $50$. The instruction sequence starts from the memory location $1000$. All the numbers are in decimal format. Assume that the memory is byte addressable. After the execution of the program, the content of memory location $3010$ is ____________",
+          "images": [],
+          "options": [],
+          "correct_answer": "50 : 50",
+          "explanation": "The given code is iterating 10 times and incrementing the contents of locations $3000$ to $3000+i$ by $10-i,$ for $i < 10.$ Location $3010$ is left untouched. So, $50.$",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following statements. Which of the above statements is/are TRUE? Ⅰ and Ⅱ only Ⅰ and Ⅳ only Ⅰ and Ⅲ only Ⅲ only",
+          "images": [],
+          "options": [
+            "A. Daisy chaining is used to assign priorities in attending interrupts.",
+            "B. When a device raises a vectored interrupt, the CPU does polling to identify the source of interrupt.",
+            "C. In polling, the CPU periodically checks the status bits to know if any device needs its attention.",
+            "D. During DMA, both the CPU and DMA controller can be bus masters at the same time."
+          ],
+          "correct_answer": "C",
+          "explanation": "Answer : C I is true The daisy - chaining method of establishing priority consists of a serial connection of all devices that request an interrupt. The device with the highest priority is placed in the first position, followed by lower- priority devices up to the device with the lowest priority , which is placed last in the chain . II. is false Vectored interrupts are achieved by assigning each interrupting device a unique code, typically four to eight bits in length. When a device interrupts, it sends its unique code over the data bus to the processor, telling the processor which interrupt service routine to execute. III. is true The process of periodically checking status bits to see if it is time for the next I/O operation, is called polling . Polling is the simplest way for an I/O device to communicate with the processor the processor. IV. is false Since CPU release bus only after getting request from DMA and get after DMA release the BUS.",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following data path diagram. Consider an instruction: $R0 \\leftarrow R1 +R2$. The following steps are used to execute it over the given data path. Assume that PC is incremented appropriately. The subscripts $r$ and $w$ indicate read and write operations, respectively. Which one of the following is the correct order of execution of the above steps? $2,1,4,5,3$ $1,2,4,3,5$ $3,5,2,1,4$ $3,5,1,2,4$",
+          "images": [
+            {
+              "index": 1,
+              "filename": "333227_img1.jpg"
+            }
+          ],
+          "options": [
+            "A. $R2_{r},\\text{ TEMP1}_{r},ALU_{\\text{add}}, \\text{ TEMP2}_{w}$",
+            "B. $R1_{r},\\text{ TEMP1}_{w}$",
+            "C. $PC_{r}, \\text{ MAR}_{w}, \\text{ MEM}_{r}$",
+            "D. $\\text{ TEMP2}_{r}, \\text{ R0}_{w}$",
+            "E. $\\text{ MDR}_{r}, \\text{ IR}_{w}$"
+          ],
+          "correct_answer": "C",
+          "explanation": "$3^{rd}$ followed by $5^{th}$ are Instruction fetch cycle micro operations and can be elaborated as follows: $t_{1}:\\text{MAR}_{w}\\leftarrow \\text{PC}_{r}$ $t_{2}:\\text{MDR}_{w}\\leftarrow \\text{Memory}_{r}\\mid \\text{PC}\\leftarrow \\text{PC}+1$ $t_{3}:\\text{IR}_{w}\\leftarrow \\text{MDR}_{r}$ Now we need to perform Execute cycle micro operations. Just observe the figure and it will be very easy to identify the sequence between $1^{st},2^{nd},4^{th}$ $2^{nd}$ is clearly stating that we need to move $\\text{R1}$ content to some temporary register named as $\\text{TEMP1}$ and it is very clear that before performing $\\text{ALU}$ operation we need the content in $\\text{TEMP1}.$ Hence $2^{nd}$ will be performed next after $5^{th}.$ $\\text{TEMP1}_{w}\\leftarrow \\text{R1}_{r}$ Now we can perform ALU operation and can take second operand directly from $R2$ and the figure clearly shows us that we need to put the result of ALU back into $\\text{TEMP2}.$ All these steps are performed in $1^{st}.$ So $1^{st}$ will be next. $\\text{TEMP2}_{w}\\leftarrow \\text{TEMP1}_{r}\\ +_{\\text{ALU}_{add}}\\ \\text{R2}_{r}$ Lastly we need to put the result present in $\\text{TEMP2}$ into $\\text{R0}.$ This step is performed by $4^{th}.$ $\\text{R0}_{w}\\leftarrow \\text{TEMP2}_{r}$ Correct Answer $(C): 3,5,2,1,4$",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A direct mapped cache memory of $1$ MB has a block size of $256$ bytes. The cache has an access time of $3$ ns and a hit rate of $94 \\%$. During a cache miss, it takes $2$0 ns to bring the first word of a block from the main memory, while each subsequent word takes $5$ ns. The word size is $64$ bits. The average memory access time in ns (round off to $1$ decimal place) is______.",
+          "images": [],
+          "options": [
+            "A. Multiply Access Time(L1) with Hit Rate(L1)",
+            "B. Do not compensate by adding Access Time(L1) in Miss Penalty as defined by Hamacher."
+          ],
+          "correct_answer": "13.3:13.3;13.5:13.5",
+          "explanation": "Block size is 256 Bytes,word size is 64 bits or 8 bytes. So Block size in words is 8 words. Number of words per block=32 Time to fetch a word from main-memory to cache is: $20+31 \\times 5=175$ns because first word takes 20ns and rest each subsequent words take 5ns each. So average Memory acces time is $0.94(3)+0.06(3+175)=13.5$ ns",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer system with a word length of $32$ bits has a $16$ MB byte- addressable main memory and a $64$ KB, $4$-way set associative cache memory with a block size of $256$ bytes. Consider the following four physical addresses represented in hexadecimal notation. $A1= \\textsf{0x42C8A4}$, $A2= \\textsf{0x546888}$, $A3= \\textsf{0x6A289C}$, $A4=\\textsf{0x5E4880}$ Which one of the following is TRUE?",
+          "images": [],
+          "options": [
+            "A. $A1$ and $A4$ are mapped to different cache sets.",
+            "B. $A2$ and $A3$ are mapped to the same cache set.",
+            "C. $A3$ and $A4$ are mapped to the same cache set.",
+            "D. $A1$ and $A3$ are mapped to the same cache set."
+          ],
+          "correct_answer": "B",
+          "explanation": "Block size is 256 Bytes. Number of sets in cache = $2^6$ so Set offset bits=6 and word offset bits=8. So check for set, check for the rightmost 4 digits of each physical address.(Last two byte denote the word address) A1= C8 A4 = C8 = 11 001000 A2= 68 88 = 68 = 01 101000 A3= 28 9C = 28 = 00 101000 A4= 48 80 = 48 = 010 01000 Now look for lowest order 6 bits in the highlighted part of Each physical address(corresponds to set number). 8 and 8 match and 6=01 10 and 2=00 10 two low order bits of 6 and 2 match,So A2 and A3 go to same set. So answer-B",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a non-pipelined processor operating at $2.5$ GHz. It takes $5$ clock cycles to complete an instruction. You are going to make a $5$- stage pipeline out of this processor. Overheads associated with pipelining force you to operate the pipelined processor at $2$ GHz. In a given program, assume that $30\\%$ are memory instructions, $60 \\%$ are ALU instructions and the rest are branch instructions. $5 \\%$ of the memory instructions cause stalls of $50$ clock cycles each due to cache misses and $50 \\%$ of the branch instructions cause stalls of $2$ cycles each. Assume that there are no stalls associated with the execution of ALU instructions. For this program, the speedup achieved by the pipelined processor over the non-pipelined processor (round off to $2$ decimal places) is_____________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "2.15:2.18",
+          "explanation": "Time taken by non-pipelined processor to finish executing the $n$ instructions $: \\frac{5n}{2.5}=2n\\;\\text{ns}$ Now, for pipelined processor, $\\small \\begin{array}{|c|c |c| c|} \\hline \\text{Instruction type} & \\text{Number of such instructions} & \\% \\text{Causing stalls} & \\text{Number of stall cycles} \\\\\\hline \\text{Memory} & 0.3n & 5\\% \\;\\text{of}\\; 0.3n & 50 \\\\\\hline \\text{ALU} & 0.6n & \\text{None} & 0 \\\\\\hline \\text{Branch} & 0.1n & 50\\% \\;\\text{of}\\;0.1n & 2 \\\\\\hline \\end{array}$ Therefore, time taken by pipelined processor: $0.6n(1) + 0.3n[0.05(1+50) + 0.95(1)] + 0.1n[0.5(1+2) + 0.5(1)]$ cycles $= 1.85n$ cycles $= \\frac{1.85n}{2}\\;\\text{ns}$ $= 0.925n\\;\\text{ns}$ Speedup $= \\frac{2n}{0.925n} = 2.162 \\approx 2.16.$",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor has $64$ registers and uses $16$-bit instruction format. It has two types of instructions: I-type and R-type. Each I-type instruction contains an opcode, a register name, and a $4$-bit immediate value. Each R-type instruction contains an opcode and two register names. If there are $8$ distinct I-type opcodes, then the maximum number of distinct R-type opcodes is _______.",
+          "images": [],
+          "options": [],
+          "correct_answer": "14",
+          "explanation": "Instruction Length: $16$ bits To distinguish among $64$ registers, we need $\\log_2(64) = 6$ bits I-type instruction format: $\\begin{array} {|c|c|c|} \\hline \\text{Opcode} & \\text{Register} & \\text{Immediate Value} \\\\\\hline \\end{array}$ R-type instruction format: $\\begin{array} {|c|c|c|} \\hline \\text{Opcode} & \\text{Register} & \\text{Register} \\\\\\hline \\end{array}$ Maximum possible encodings $= 2^{16}$ It is given that there are $8$ I-type instructions. Let's assume the maximum R-type instructions to be $x$. Therefore, $(8\\times 2^{6} \\times 2^{4}) + (x \\times 2^6 \\times 2^6) = 2^{16}$ $\\implies x = 16-2 = 14$",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A certain processor uses a fully associative cache of size $16$ kB, The cache block size is $16$ bytes. Assume that the main memory is byte addressable and uses a $32$-bit address. How many bits are required for the Tag and the Index fields respectively in the addresses generated by the processor?",
+          "images": [],
+          "options": [
+            "A. $24$ bits and $0$ bits",
+            "B. $28$ bits and $4$ bits",
+            "C. $24$ bits and $4$ bits",
+            "D. $28$ bits and $0$ bits"
+          ],
+          "correct_answer": "D",
+          "explanation": "Given that cache is Fully Associative. $$\\begin{array}{|c|c|} \\hline \\textbf{Tag Bits}&\\textbf{Block Offset}\\\\ \\hline 28 & 4\\\\ \\hline \\end{array}$$ There are no index bits in fully associative cache because every main memory block can go to any location in the cache $\\implies$ Index bits $= 0.$ Given that memory is byte addressable and uses $32$-bit address. Cache Block size is $16$ Bytes $\\implies$ Number of bits required for Block Offset $=⌈\\log_216⌉ = 4 \\text{ bits}$ $\\therefore $ Number of Tag bits $= 32 - 4 = 28.$ Answer is (D).",
+          "year": 2019,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The chip select logic for a certain DRAM chip in a memory system design is shown below. Assume that the memory system has $16$ address lines denoted by $A_{15}$ to $A_0$. What is the range of address (in hexadecimal) of the memory system that can get enabled by the chip select (CS) signal?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "302846_img1.png"
+            }
+          ],
+          "options": [
+            "A. C800 to CFFF",
+            "B. CA00 to CAFF",
+            "C. C800 to C8FF",
+            "D. DA00 to DFFF"
+          ],
+          "correct_answer": "A",
+          "explanation": "$(A_{15} \\: A_{14} \\: A_{13} \\: A_{12} \\: A_{11} \\: A_{10} \\: A_9 \\: A_ 8 \\: A_7 \\: A_6 \\: A_5 \\: A_4 \\: A_3 \\: A_2 \\: A_1 \\: A_0)$ According to question: $A_{15} = 1, \\: A_{14} = 1, \\: A_{13} = 0, \\: A_{12} = 0, \\: A_{11} = 1$ So the possible range in binary: $(\\bf{1 1 0 0 1}$$ 0 0 0 0 0 0 0 0 0 0 0) \\text{ to } (\\bf{1 1 0 0 1}$$ 1 1 1 1 1 1 1 1 1 1 1)$ Converting to Hexadecimal: $(C800) \\text{ to } (CFFF)$ Option A.",
+          "year": 2019,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A certain processor deploys a single-level cache. The cache block size is $8$ words and the word size is $4$ bytes. The memory system uses a $60$-MHz clock. To service a cache miss, the memory controller first takes $1$ cycle to accept the starting address of the block, it then takes $3$ cycles to fetch all the eight words of the block, and finally transmits the words of the requested block at the rate of $1$ word per cycle. The maximum bandwidth for the memory system when the program running on the processor issues a series of read operations is ______$\\times 10^6$ bytes/sec.",
+          "images": [],
+          "options": [],
+          "correct_answer": "160",
+          "explanation": "Time to transfer a cache block $ = 1+3+8 = 12$ cycles. i.e., $4$ bytes $\\times 8 = 32$ bytes in $12$ cycles. So, memory bandwidth $ = \\frac{32}{12 \\text{ cycle time}} =\\frac{32}{12/(60 \\times 10^6)}= 160 \\times 10^6 $ bytes/s",
+          "year": 2019,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor has $16$ integer registers $\\text{(R0, R1}, \\ldots ,\\text{ R15)}$ and $64$ floating point registers $\\text{(F0, F1}, \\ldots , \\text{F63)}.$ It uses a $2\\text{- byte}$ instruction format. There are four categories of instructions: $\\text{Type-1, Type-2, Type-3},$ and $\\text{Type-4. Type-1}$ category consists of four instructions, each with $3$ integer register operands $\\text{(3Rs). Type-2}$ category consists of eight instructions, each with $2$ floating point register operands $\\text{(2Fs). Type-3}$ category consists of fourteen instructions, each with one integer register operand and one floating point register operand $\\text{(1R+1F). Type-4}$ category consists of $\\text{N}$ instructions, each with a floating point register operand $\\text{(1F)}.$ The maximum value of $\\text{N}$ is _________. ed Jan 9 reply Follow flag https://www.youtube.com/watch?v=CRhOeYkFGFw 2 2 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "32",
+          "explanation": "We have $\\text{2-byte}$ instruction format. So, total number of instruction encodings $=2^{16}$ PS: This is not the number of different instructions but different encodings; a single instruction can have different encodings when the address part differs. No. of bits taken by an integer operand $(16$ possible integer registers$) =\\log_2 16 = 4.$ No. of bits taken by a floating point operand $(64$ possible floating point registers$) =\\log_2 64 = 6.$ No. of encodings consumed by Type $1$ instructions $=4 \\times 2^{3 \\times 4} = 2^{14}.$ No. of encodings consumed by Type $2$ instructions $=8 \\times 2^{2 \\times 6} = 2^{15}.$ No. of encodings consumed by Type $3$ instructions $=14 \\times 2^{(4+6)} = 14336.$ No. of encodings left for Type $4 =2^{16} - (2^{14}+2^{15}+14336) = 2048.$ No. of different instructions of Type $4 = \\frac{2048}{64} = 32.$",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The instruction pipeline of a RISC processor has the following stages: Instruction Fetch $(IF)$, Instruction Decode $(ID)$, Operand Fetch $(OF)$, Perform Operation $(PO)$ and Writeback $(WB)$, The $IF$, $ID$, $OF$ and $WB$ stages take $1$ clock cycle each for every instruction. Consider a sequence of $100$ instructions. In the $PO$ stage, $40$ instructions take $3$ clock cycles each, $35$ instructions take $2$ clock cycles each, and the remaining $25$ instructions take $1$ clock cycle each. Assume that there are no data hazards and no control hazards. The number of clock cycles required for completion of execution of the sequence of instruction is _____.",
+          "images": [],
+          "options": [],
+          "correct_answer": "219",
+          "explanation": "Total Instruction $= 100$ Number of stages $= 5$ In normal case total cycles $= 100 +5 -1 = 104$ cycles Now, For PO stage $40$ instructions take $3$ cycles, $35$ take $2$ cycles and rest of the $25$ take $1$ cycle. That means all other stages are perfectly fine and working with $CPI$ (Clock Cycle Per Instruction)$ = 1$ PO stage: $40$ instructions take $3$ cycles i.e. these instructions are suffering from $2$ stall cycle, $35$ instructions take $2$ cycles i.e. these instructions are suffering from $1$ stall cycle, $25$ instructions take $1$ cycles i.e. these instructions are suffering from $0$ stall cycle, So, extra cycle would be $40*2 + 35*1 + 25*0 = 80+35 = 115$ cycle. Total cycles = $104 + 115 = 219$",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The size of the physical address space of a processor is $2^P$ bytes. The word length is $2^W$ bytes. The capacity of cache memory is $2^N$ bytes. The size of each cache block is $2^M$ words. For a $K$-way set-associative cache memory, the length (in number of bits) of the tag field is",
+          "images": [],
+          "options": [
+            "A. $P-N- \\log_2K$",
+            "B. $P-N+ \\log_2 K$",
+            "C. $P-N-M-W- \\log_2 K$",
+            "D. $P-N-M-W+ \\log_2 K$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$\\text{Physical Address Space} =2^P$ Bytes i.e. $P$ bits to represent size of total memory. $\\text{Cache Size} = 2^N$ Byte i.e., $N$ bits to represent Cache memory. $\\text{Tag size} = 2^X$ Bytes i.e., $X$ bits to represent Tag. Cache is $K-$ way associative. $\\text{(Size of Tag)} \\times \\frac{\\text{Cache Size}}{K} = \\text{Total Memory Size}$ $\\implies 2^X \\times \\frac{2^N}{K} = 2^P $ $\\implies 2^{X+N-\\log(K)} = 2^P $ $\\implies 2^{X} = 2^{P-N+\\log(K)} $ $\\implies X (\\text{Size of Tag in bits}) = P - N + \\log(K)$ $B$",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A $32\\text{-bit}$ wide main memory unit with a capacity of $1\\;\\textsf{GB}$ is built using $256\\textsf{M} \\times 4\\text{-bit}$ DRAM chips. The number of rows of memory cells in the DRAM chip is $2^{14}$. The time taken to perform one refresh operation is $50\\;\\text{nanoseconds}$. The refresh period is $2\\;\\text{milliseconds.}$ The percentage (rounded to the closest integer) of the time available for performing the memory read/write operations in the main memory unit is _________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "59 : 60",
+          "explanation": "One refresh operation takes $50\\;\\text{ns}$. Total number of rows $= 2^{14}$ Total time to refresh all Rows $= 2^{14}\\times 50\\; \\text{ns} = 819200 \\;\\text{ns} = 0.819200\\;\\text{ms}$ The Refresh Period is $2\\;\\text{ms}.$ $\\%$ Time spent in refresh $= \\frac{\\text{Total time to Refresh all Rows}}{\\text{Refresh period}}\\ast 100 $ $= \\frac{0.8192\\;\\text{ms}}{2.0\\;\\text{ms}}\\ast 100 = 40.96\\%$ $\\%$ Time spent in Read/Write $= 100 - 40.96 = 59.04\\%$ $= 59\\%$ (Rounded to the closest Integer) Reference: https://en.wikipedia.org/wiki/Memory_refresh",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following processor design characteristics: Which of the characteristics above are used in the design of a RISC processor? I and II only II and III only I and III only I, II and III ed Aug 17, 2025 reply Follow flag Why RISC → Hardwired CU RISC instructions are few, simple, and fixed-length. Decoding them requires less hardware complexity. So a hardwired CU is sufficient and gives speed advantage. By contrast: CISC instructions are many, variable-length, complex. A microprogrammed CU is better for handling that complexity. RISC → Hardwired control (fast, simple, less flexible). CISC → Microprogrammed control (slower, flexible, supports complex instructions). 2 2 reply Share jayanttarane834 commented Dec 23, 2025 reply Follow flag cisc in not register to register its register to memory and memory to register..... 1 1 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Register-to-register arithmetic operations only",
+            "B. Fixed-length instruction format",
+            "C. Hardwired control unit"
+          ],
+          "correct_answer": "D",
+          "explanation": "(D) All of these Hardwired control units are implemented through use of combinational logic units, featuring a finite number of gates that can generate specific results based on the instructions that were used to invoke those responses. Their design uses a fixed architecture —it requires changes in the wiring if the instruction set is modified or changed. This architecture is preferred in reduced instruction set computers (RISC) as they use a simpler instruction set. Instructions length cannot vary in RISC usually it's $32$ bit. For CISC it can be between $16$ to $64$ bits. The hardwired control unit is used when instructions are fixed. Register to register operations is always possible in RISC. CISC can have memory to memory instructions also. References: https://www-cs-faculty.stanford.edu/~eroberts/courses/soco/projects/2000-01/risc/risccisc/ https://en.wikipedia.org/wiki/Control_unit#Hardwired_control_unit",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A cache memory unit with capacity of $N$ words and block size of $B$ words is to be designed. If it is designed as a direct mapped cache, the length of the $\\textsf{TAG}$ field is $10$ bits. If the cache unit is now designed as a $16$-way set-associative cache, the length of the $\\textsf{TAG}$ field is ____________ bits.",
+          "images": [],
+          "options": [],
+          "correct_answer": "14",
+          "explanation": "In set-associative 1 set = 16 lines . So the number of index bits will be $4$ less than the direct mapped case. So, Tag bits increased to $14$ bits.",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $2$-way set associative cache with $256$ blocks and uses $\\text{LRU}$ replacement. Initially the cache is empty. Conflict misses are those misses which occur due to the contention of multiple blocks for the same cache set. Compulsory misses occur due to first time access to the block. The following sequence of access to memory blocks : $\\big \\{0,128,256,128,0,128,256,128,1,129,257,129,1,129,257,129 \\big \\}$ is repeated $10$ times. The number of conflict misses experienced by the cache is _________ .",
+          "images": [],
+          "options": [],
+          "correct_answer": "76",
+          "explanation": "$\\{0,128,256,128,0,128,256,128,1,129,257,129,1,129,257,129\\}$ 1$^{\\text{st}}$ Iteration: For $\\left \\{ 0,128,256,128,0,128,256,128 \\right \\}$ \\begin{array}{|l|c|l|} \\hline \\textbf {Block ID} \\ & \\textbf{Type} & \\textbf{Set 0 content } \\\\\\hline \\text{0} & \\text{Compulsory Miss} & \\text{0} \\\\\\hline\\text{128} & \\text{Compulsory Miss} & \\text{0 128} \\\\\\hline \\text{256} & \\text{Compulsory Miss} & \\text{128 256}\\\\\\hline \\text{128} & \\text{Hit} & \\text{256 128} \\\\\\hline \\text{0} & \\text{Conflict miss} & \\text{128 0} \\\\\\hline \\text{128} & \\text{Hit} & \\text{0 128} \\\\\\hline \\text{256} & \\text{Conflict miss} & \\text{128 256} \\\\\\hline \\text{128} & \\text{Hit} & \\text{256 128} \\\\\\hline \\end{array} Total number of conflict misses $=2$; Similarly for $\\left \\{ 1,129,257,129,1,129,257,129 \\right \\}$, total number of conflict misses in $\\text{set1} = 2$ Total number of conflict misses in $1^{\\text{st}}$ iteration $= 2+2=4$ $2^{\\text{nd}}$ iteration: for $\\left \\{ 0,128,256,128,0,128,256,128 \\right \\}$ \\begin{array}{|l|c|l|} \\hline \\textbf {Block ID} \\ & \\textbf{Type} & \\textbf{Set 0 content } \\\\\\hline \\text{0} & \\text{Conflict Miss} & \\text{128 0} \\\\\\hline\\text{128} & \\text{Hit} & \\text{0 128} \\\\\\hline \\text{256} & \\text{Conflict miss} & \\text{128 256}\\\\\\hline \\text{128} & \\text{Hit} & \\text{256 128} \\\\\\hline \\text{0} & \\text{Conflict miss} & \\text{128 0} \\\\\\hline \\text{128} & \\text{Hit} & \\text{0 128} \\\\\\hline \\text{256} & \\text{Conflict miss} & \\text{128 256} \\\\\\hline \\text{128} & \\text{Hit} & \\text{256 128} \\\\\\hline \\end{array} Total number of conflict misses $= 4$. Similarly for $\\{1,129,257,129,1,129,257,129\\}$, total number of conflict misses in $\\text{set1} = 4$ Total Number of conflict misses in $2^{\\text{nd}}$ iteration $= 4+4=8$ Note that content of each set is same, before and after $2^{\\text{nd}}$ iteration. Therefore each of the remaining iterations will also have $8$ conflict misses. Therefore, overall conflict misses $= 4+8\\ast 9 = 76$",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Instruction execution in a processor is divided into $5$ stages, Instruction Fetch (IF), Instruction Decode (ID), Operand fetch (OF), Execute (EX), and Write Back (WB). These stages take 5, 4, 20, 10 and 3 nanoseconds (ns) respectively. A pipelined implementation of the processor requires buffering between each pair of consecutive stages with a delay of 2 ns . Two pipelined implementation of the processor are contemplated: The speedup (correct to two decimal places) achieved by EP over NP in executing $20$ independent instructions with no hazards is _________ .",
+          "images": [],
+          "options": [
+            "A. a naive pipeline implementation (NP) with $5$ stages and",
+            "B. an efficient pipeline (EP) where the OF stage is divided into stages $\\text{OF1}$ and $\\text{OF2}$ with execution times of 12 ns and 8 ns respectively."
+          ],
+          "correct_answer": "1.50 : 1.51",
+          "explanation": "Case 1: Stages $5,$ max delay $= 22\\text{ (after adding buffer delay), number of instructions}= 20$ Case 2: Stages $6,$ (since OF is split), max delay $= 14,\\text{ number of instructions}=20$ So, execution time is $(K+N-1)\\times \\text{ Max delay}$ Speed Up $=\\dfrac{528}{350}=1.508 ($Execution time case $1/$Execution time case $2)$ So, the answer is 1.508",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a byte addressable main memory of $2^{32}$ bytes divided into blocks of size $32$ bytes. Assume that a direct mapped cache having $512$ cache lines is used with this machine. The size of the tag field in bits is _______",
+          "images": [],
+          "options": [],
+          "correct_answer": "18",
+          "explanation": "No. of blocks of main Memory $= \\dfrac{2^{32}}{2^5} = 2^{27}$ And there are $512 = 2^9$ lines in Cache Memory. Tag bits tell us to how many blocks does $1$ line in Cache memory points to $1$ cache line points to $ \\large \\dfrac{2^{27}}{2^9} = 2^{18}$ lines So, $18$ bits are required as TAG bits.",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The read access times and the hit ratios for different caches in a memory hierarchy are as given below: $$\\begin{array}{|l|c|c|} \\hline \\text {Cache} & \\text{Read access time (in nanoseconds)}& \\text{Hit ratio} \\\\\\hline \\text{I-cache} & \\text{2} & \\text{0.8} \\\\\\hline \\text{D-cache} & \\text{2} & \\text{0.9}\\\\\\hline \\text{L2-cache} & \\text{8} & \\text{0.9} \\\\\\hline \\end{array}$$ The read access time of main memory in $90\\;\\text{nanoseconds}$. Assume that the caches use the referred-word-first read policy and the write-back policy. Assume that all the caches are direct mapped caches. Assume that the dirty bit is always $0$ for all the blocks in the caches. In execution of a program, $60\\%$ of memory reads are for instruction fetch and $40\\%$ are for memory operand fetch. The average read access time in nanoseconds (up to $2$ decimal places) is _________",
+          "images": [],
+          "options": [],
+          "correct_answer": "4.7 : 4.8",
+          "explanation": "$L2$ cache is shared between Instruction and Data (is it always? see below) So, average read time $=$ Fraction of Instruction Fetch $\\ast $ Average Instruction fetch time $+$ Fraction of Data Fetch $\\ast$ Average Data Fetch Time Average Instruction fetch Time $= L1$ access time $+ L1$ miss rate $\\ast \\;L2$ access time $+ L1$ miss rate $\\ast\\; L2$ miss rate $\\ast $ Memory access time $\\quad= 2 + 0.2 \\times 8 + 0.2 \\times 0.1 \\times 90$ $\\quad= 5.4 \\;\\text{ns}$ Average Data fetch Time $= L1$ access time $+ L1$ miss rate $\\ast \\;L2$ access time $+ L1$ miss rate $\\ast \\;L2$ miss rate $\\ast $ Memory access time $\\quad = 2 + 0.1 \\times 8 + 0.1 \\times 0.1 \\times 90$ $\\quad= 3.7\\;\\text{ns}$ So, average memory access time $$= 0.6 \\times 5.4 + 0.4 \\times 3.7 = 4.72\\; \\text{ns}$$ Now, why $L2$ must be shared? Because we can otherwise use it for either Instruction or Data and it is not logical to use it for only $1.$ Ideally this should have been mentioned in question, but this can be safely assumed also (not enough merit for Marks to All). Some more points in the question: Assume that the caches use the referred-word-first read policy and the writeback policy Writeback policy is irrelevant for solving the given question as we do not care for writes. Referred-word-first read policy means there is no extra time required to get the requested word from the fetched cache line. Assume that all the caches are direct mapped caches. Not really relevant as average access times are given Assume that the dirty bit is always 0 for all the blocks in the caches Dirty bits are for cache replacement- which is not",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In a two-level cache system, the access times of $L_1$ and $L_2$ caches are $1$ and $8$ clock cycles, respectively. The miss penalty from the $L_2$ cache to main memory is $18$ clock cycles. The miss rate of $L_1$ cache is twice that of $L_2$. The average memory access time (AMAT) of this cache system is $2$ cycles. The miss rates of $L_1$ and $L_2$ respectively are",
+          "images": [],
+          "options": [
+            "A. $0.111$ and $0.056$",
+            "B. $0.056$ and $0.111$",
+            "C. $0.0892$ and $0.1784$",
+            "D. $0.1784$ and $0.0892$"
+          ],
+          "correct_answer": "A",
+          "explanation": "In two-level memory system (hierarchical), it is clear that the second level is accessed only when first level access is a miss. So, we must include the first level access time in all the memory access calculations. Continuing this way for any level, we must include that level access time (without worrying about the hit rate in that level), to all memory accesses coming to that level (i.e., by just considering the miss rate in the previous level). So, for the given question, we can get the following equation: $\\text{AMAT} = \\text{L1 access time}$ $+ \\text{L1 miss rate} \\times \\text{L2 access time}$ $+ \\text{L1 miss rate} \\times \\text{L2 miss rate} \\times \\text{Main memory access time}$ $2 = 1 + x \\times 8 + 0.5 x^2 \\times 18$ $\\implies 9x^2 + 8x -1 = 0$ $\\implies x = \\dfrac{-8 \\pm \\sqrt{64 + 36}}{18} = \\dfrac{2}{18} = 0.111$. So, Answer is option (A).",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a RISC machine where each instruction is exactly $4$ bytes long. Conditional and unconditional branch instructions use PC-relative addressing mode with Offset specified in bytes to the target location of the branch instruction. Further the Offset is always with respect to the address of the next instruction in the program sequence. Consider the following instruction sequence$$\\begin{array}{ll} \\text{Instr. No.} & \\text{Instruction} \\\\\\hline \\text{i:} & \\text{add R2, R3, R4} \\\\ \\text{i+1:} & \\text{sub R5, R6, R7} \\\\ \\text{i+2:} & \\text{cmp R1, R9, R10} \\\\ \\text{i+3:} & \\text{beq R1, Offset} \\\\ \\end{array}$$If the target of the branch instruction is $i,$ then the decimal value of the Offset is ____________ .",
+          "images": [],
+          "options": [],
+          "correct_answer": "-16.0",
+          "explanation": "Answer is $-\\bf{16.}$ Program Counter is updated with the address of next instruction even before the current instruction is executed. That is why the question says that the address of the next instruction is updated with next instruction in sequence. Before executing instruction $\\bf{i + 3}$, the current state looks as under: Please note: BEQ instruction is for Branch Equal Question says that the target of branch instruction is 'i' which is at $2000$ in our example. So, we need to go to address $\\bf{2000}$ from address $2016$ (which is currently pointed by PC) $\\bf{2016 - 2000 = 16}$ So, we have to specify Offset as $-16$ which would mean that $16$ should be subtracted from next address instruction ($2016$).",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a two-level cache hierarchy with $L1$ and $L2$ caches. An application incurs $1.4$ memory accesses per instruction on average. For this application, the miss rate of $L1$ cache is $0.1$; the $L2$ cache experiences, on average, $7$ misses per $1000$ instructions. The miss rate of $L2$ expressed correct to two decimal places is ________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "0.05",
+          "explanation": "Answer = $0.05$. Assuming there are 1000 instructions for the ease of calculation, which means there are 7 memory reference misses from the L2 cache. A cache experiences misses with memory references. Thus, it is essential to determine the counts of incoming memory references and the counts of memory references hitting or missing in order to calculate the cache hit rate or miss rate. Upon reading the question, it becomes apparent that the incoming memory references to the L2 cache are unknown, and we must derive this information using the provided L1 cache information.",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the $C$ struct defined below: struct data { int marks [100]; char grade; int cnumber; }; struct data student; The base address of student is available in register $R1$. The field student.grade can be accessed efficiently using:",
+          "images": [],
+          "options": [
+            "A. Post-increment addressing mode, $(R1)+$",
+            "B. Pre-decrement addressing mode, $-(R1)$",
+            "C. Register direct addressing mode, $R1$",
+            "D. Index addressing mode, $X(R1)$, where $X$ is an offset represented in $2's$ complement $16\\text{-bit}$ representation"
+          ],
+          "correct_answer": "D",
+          "explanation": "Answer is option (D) . Displacement Mode :- Similar to index mode, except instead of a index register a base register will be used. Base register contains a pointer to a memory location. An integer (constant) is also referred to as a displacement. The address of the operand is obtained by adding the contents of the base register plus the constant. The difference between index mode and displacement mode is in the number of bits used to represent the constant. When the constant is represented a number of bits to access the memory, then we have index mode. Index mode is more appropriate for array accessing; displacement mode is more appropriate for structure (records) accessing. Reference: http://www.cs.iit.edu/~cs561/cs350/addressing/addsclm.html",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A block-set associative cache memory consists of $128$ blocks divided into four block sets. The main memory consists of $16, 384$ blocks and each block contains $256$ eight bit words.",
+          "images": [],
+          "options": [
+            "A. How many bits are required for addressing the main memory?",
+            "B. How many bits are needed to represent the TAG, SET and WORD fields?"
+          ],
+          "correct_answer": "22",
+          "explanation": "For main memory, there are $2^{14}$ blocks and each block size is $2^8$ bytes (A byte is an eight-bit word) Size of main memory $=2^{14}\\times 2^8=4MB$ ( $22-\\text{bits}$ required for addressing the main memory). For WORD field, we require $8-\\text{bits}$, as each block contains $2^8 $ words. As there are $4$ blocks in $1$ set, $32$ sets will be needed for $128$ blocks. Thus SET field requires $5- \\text{bits}$. Then, TAG field requires $22-(5+8)= 9- \\text{bits}$ $$\\begin{array}{|c|c|c|} \\hline \\text {9-bits (for tag)} & \\text{5- bits (for set)}& \\text{8-bits (for word)} \\\\\\hline \\end{array}$$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "State whether the following statements are TRUE or FALSE with reason: The flags are affected when conditional CALL or JUMP instructions are executed.",
+          "images": [],
+          "options": [],
+          "correct_answer": "0",
+          "explanation": "False. Flags are tested during conditional call and jump not affected or changed",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "State whether the following statements are TRUE or FALSE with reason: The data transfer between memory and I/O devices using programmed I/O is faster than interrupt-driven I/O. 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "0",
+          "explanation": "$\\text{False}$ because in programmed I/O, CPU will check the I/O devices' status according to written program. Suppose CPU requested $5$ I/O devices and the program is written to check sequentially and 5$^{th}$ device is ready before 2$^{nd}$ device, then also CPU will come to check at its turn. So, programmed I/O doesn't care about availability status of devices. it blindly works according to written program. That's why it is slow. Interrupt driven I/O : Here, if any device is ready then it won't wait for CPU, it will say to CPU that \"I am ready\" by sending interrupt request and the delay here will be only \"time taken in servicing the interrupt\" which is less than programmed I/O. So, the answer is FALSE.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "State whether the following statements are TRUE or FALSE: Data transfer between a microprocessor and an I/O device is usually faster in memory-mapped-I/O scheme than in I/O-mapped -I/O scheme.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1",
+          "explanation": "Memory operations (like MOV, LOAD, STORE, etc.) are faster than special I/O instructions (such as IN and OUT used in I/O-mapped I/O). Since in memory-mapped I/O, the CPU uses the same instructions for both memory and I/O operations, this means faster data transfers because it doesn't need special I/O instructions which are slower. Merits of memory-mapped I/O over I/O mapped I/O: Cheaper, faster, easier to build, consumes less power and can be physically smaller, supported by all systems.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "State whether the following statements are TRUE or FALSE In a microprocessor-based system, if a bus (DMA) request and an interrupt request arrive sumultaneously, the microprocessor attends first to the bus request.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1",
+          "explanation": "i think it should be true ....consider a system in which we have modules like FETCH,DECODE,EXECUTE,WRITE-BACK.. now say both DMA request and interrupt arrive during DECODE cycle..... CPU always look for DMA after every phase(like fetch,decode)but CPU see interrupt only after end of instruction.... reason is that if we allow interrupt in between the phases...interrupt may change current registers and program status word....so its always done that DMA can be allowed in phases(as it dont changes the register content)...but interrupt not....",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "On receiving an interrupt from a I/O device the CPU: 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Halts for a predetermined time.",
+            "B. Hands over control of address bus and data bus to the interrupting device.",
+            "C. Branches off to the interrupt service routine immediately.",
+            "D. Branches off to the interrupt service routine after completion of the current instruction."
+          ],
+          "correct_answer": "D",
+          "explanation": "Answer should be (D) i.e branches off to ISR after completing current instruction. CPU checks the status bit of interrupt at the completion of each current instruction running when there is a interrupt it service the interrupt using ISR. https://gateoverflow.in/18581/isro2009-78",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A microprogrammed control unit",
+          "images": [],
+          "options": [
+            "A. Is faster than a hard-wired control unit.",
+            "B. Facilitates easy implementation of new instruction.",
+            "C. Is useful when very small programs are to be run.",
+            "D. Usually refers to the control unit of a microprocessor."
+          ],
+          "correct_answer": "B",
+          "explanation": "is wrong. Microprogrammed Control Unit (CU) can never be faster than hardwired CU. Microprogrammed CU it has an extra layer on top of hardwired CU and hence can only be slower than hardwired CU. is a suitable answer as we can add new instruction by changing the content of control memory. is not correct as when only small programs are there, hardwired control makes more sense. control unit can also be hardwired, so this is also not correct. Reference: Slides $B$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The most relevant addressing mode to write position-independent codes is: Related Questions : GATE CSE 2004 | Question: 20 GATE CSE 1998 | Question: 1.19 GATE CSE 1996 | Question: 1.16, ISRO2016-42 ed Jan 10, 2023 reply Follow flag @nvs16 Why C variables stored in specific memory locations? - Stack Overflow 1 1 reply Share KODANDA SIVA SANDEEP commented Nov 19, 2025 reply Follow flag Position independent codes can be written in relative mode 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Direct mode",
+            "B. Indirect mode",
+            "C. Relative mode",
+            "D. Indexed mode"
+          ],
+          "correct_answer": "C",
+          "explanation": "(C) Relative Mode since we can just change the content of base register if we wish to relocate. REFERENCE: https://gateoverflow.in/155280/self-doubt-computer-organization?show=155312",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Transferring data in blocks from the main memory to the cache memory enables an interleaved main memory unit to operate unit at its maximum speed.True/False. Explain.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1",
+          "explanation": "With interleaved memory, memory addresses are allocated to each memory bank in turn. For example, in an interleaved system with two memory banks (assuming word-addressable memory), if logical address 32 belongs to bank 0, then logical address 33 would belong to bank 1, logical address 34 would belong to bank 0, and so on. An interleaved memory is said to be n-way interleaved when there are n banks and memory location i resides in bank i mod n. Memory interleaving example with 4 banks. Red banks are refreshing and can't be used. Interleaved memory results in contiguous reads (which are common both in multimedia and execution of programs) and contiguous writes (which are used frequently when filling storage or communication buffers) actually using each memory bank in turn, instead of using the same one repeatedly. This results in significantly higher memory throughput as each bank has a minimum waiting time between reads and writes. Main memory ( random-access memory , RAM) is usually composed of a collection of DRAM memory chips, where a number of chips can be grouped together to form a memory bank. It is then possible, with a memory controller that supports interleaving, to lay out these memory banks so that the memory banks will be interleaved. In traditional (flat) layouts, memory banks can be allocated a continuous block of memory addresses, which is very simple for the memory controller and gives the equal performance in completely random access scenarios, when compared to performance levels achieved through interleaving. However, in reality, memory reads are rarely random due to the locality of reference , and optimizing for close together access gives the far better performance in interleaved layouts. Note that the way memory is addressed has no effect on the access time for memory locations which are already cached , having an impact only on memory locations which need to be retrieved from DRAM.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following assembly language program for a hypothetical processor $A, B,$ and $C$ are $8$ bit registers. The meanings of various instructions are shown as comments. MOV B, #0 ; $B \\leftarrow 0$ MOV C, #8 ; $C \\leftarrow 8$ Z: CMP C, #0 ; compare C with 0 JZ X ; jump to X if zero flag is set SUB C, #1 ; $C \\gets C-1$ RRC A, #1 ; right rotate A through carry by one bit. Thus: ; If the initial values of A and the carry flag are $a_7..a_0$ and ; $c_0$ respectively, their values after the execution of this ; instruction will be $c_0a_7..a_1$ and $a_0$ respectively. JC Y ; jump to Y if carry flag is set JMP Z ; jump to Z Y: ADD B, #1 ; $B \\gets B+1$ JMP Z ; jump to Z X: Which of the following instructions when inserted at location $X$ will ensure that the value of the register $A$ after program execution is as same as its initial value? 🚩 Edit necessary | 👮 Arjun",
+          "images": [],
+          "options": [
+            "A. $\\text{RRC A}, \\#1$",
+            "B. $\\text{NOP} ;$ no operation",
+            "C. $\\text{LRC A,} \\#1; $ left rotate $A$ through carry flag by one bit",
+            "D. $\\text{ADD A,} \\#1$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Option $(A) \\text{RRC}\\; a, \\#1.$ As the 8 bit register is rotated via carry $8$ times. $a_7a_6a_5a_4a_3a_2a_1a_0$ $c_0a_7a_6a_5a_4a_3a_2a_1$, now $a_0$ is the new carry. So, after next rotation, $a_0c_0a_7a_6a_5a_4a_3a_2$ So, after $8$ rotations, $a_6a_5a_4a_3a_2a_1a_0c_0$ and carry is $a_7$. Now, one more rotation will restore the original value of $A_0$. PS: In question, “ADD B, #1” should be replaced with “INC B” to prevent modification of carry flag.",
+          "year": 2003,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following program segment for a hypothetical CPU having three user registers $R_1, R_2$ and $R_3.$ \\begin{array}{|l|l|c|} \\hline \\text {Instruction} & \\text{Operation }& \\text{Instruction size (in Words)} \\\\\\hline \\text{MOV $R_1,5000$} & \\text{$R1$} \\leftarrow \\text{Memory$[5000]$}& \\text{$2$} \\\\\\hline\\text{MOV $R_2(R_1)$} & \\text{$R2$} \\leftarrow \\text{Memory$[(R_1)]$}& \\text{$1$} \\\\\\hline \\text{ADD $R_2,R_3$} & \\text{$R_2$} \\leftarrow \\text{$R_2 + R_3$} & \\text{$1$} \\\\\\hline \\text{MOV $6000,R_2$} & \\text{Memory$[6000]$} \\leftarrow \\text{$R_2$} & \\text{$2$} \\\\\\hline \\text{Halt} & \\text{Machine Halts} & \\text{$1$} \\\\\\hline \\end{array} Let the clock cycles required for various operations be as follows: \\begin{array}{|l|l|} \\hline \\text {Register to/from memory transfer} & \\text{3 clock cycles } \\\\\\hline \\text {ADD with both operands in register} & \\text{1 clock cycles } \\\\\\hline \\text {Instruction fetch and decode} & \\text{2 clock cycles }\\\\\\hline \\end{array} The total number of clock cycles required to execute the program is",
+          "images": [],
+          "options": [
+            "A. $29$",
+            "B. $24$",
+            "C. $23$",
+            "D. $20$"
+          ],
+          "correct_answer": "B",
+          "explanation": "B. $24 \\text{ cycles}$ $$\\begin{array}{|l|c|c|} \\hline \\text {Instruction} & \\text{Size }& \\text{Fetch and Decode + Execute} \\\\\\hline \\text{MOV} & \\text{$2$} & \\text{$2$} \\times \\text{$2 + 3 = 7$} \\\\\\hline \\text{MOV} & \\text{$1$} & \\text{$2$} \\times \\text{$1 + 3 = 5$} \\\\\\hline \\text{ADD} & \\text{$1$} & \\text{$2$} \\times \\text{$1 + 1 = 3$} \\\\\\hline \\text{MOV} & \\text{$2$} & \\text{$2$} \\times \\text{$2 + 3 = 7$} \\\\\\hline \\text{HALT} & \\text{$1$} & \\text{$2$} \\times \\text{$1 + 0 = 2$} \\\\\\hline & \\text{Total} & \\text{$24 $ Cycles} \\\\\\hline \\end{array}$$",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following data path of a $\\text{CPU}.$ The $\\text{ALU},$ the bus and all the registers in the data path are of identical size. All operations including incrementation of the $\\text{PC}$ and the $\\text{GPRs}$ are to be carried out in the $\\text{ALU}.$ Two clock cycles are needed for memory read operation – the first one for loading address in the $\\text{MAR}$ and the next one for loading data from the memory bus into the $\\text{MDR}.$ The instruction \"call Rn, sub” is a two word instruction. Assuming that $\\text{PC}$ is incremented during the fetch cycle of the first word of the instruction, its register transfer interpretation is $\\text{Rn} \\leftarrow \\text{PC} + 1$; $\\text{PC} \\leftarrow \\text{M[PC]}$; The minimum number of CPU clock cycles needed during the execution cycle of this instruction is:",
+          "images": [
+            {
+              "index": 1,
+              "filename": "43568_img1.png"
+            }
+          ],
+          "options": [
+            "A. $2$",
+            "B. $3$",
+            "C. $4$",
+            "D. $5$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$\\text{MAR} \\leftarrow \\text{PC}\\qquad \\to1$ cycle $S \\leftarrow \\text{PC}$ (Since these two actions are independent they can be done in same cycle) $\\text{MDR} \\leftarrow \\text{M[MAR]}\\qquad \\to 2^{nd}$ cycle (System BUS) $\\text{Rn} \\leftarrow S +1$ $(\\text{ALU}$ Is free and the two actions are independent.) ( Internal BUS) $\\text{PC} \\leftarrow \\text{MDR}\\qquad \\to 3$rd cycle Therefore $3$ cycles needed. A rough sketch:",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider two cache organizations. First one is $32$ $kB$ $2$-way set associative with $32$ $byte$ block size, the second is of same size but direct mapped. The size of an address is $32$ $bits$ in both cases . A $2$-to-$1$ multiplexer has latency of $0.6 ns$ while a $k-$bit comparator has latency of $\\frac{k}{10} ns$. The hit latency of the set associative organization is $h_1$ while that of direct mapped is $h_2$. The value of $h_2$ is:",
+          "images": [],
+          "options": [
+            "A. $2.4$ $ns$",
+            "B. $2.3$ $ns$",
+            "C. $1.8$ $ns$",
+            "D. $1.7$ $ns$"
+          ],
+          "correct_answer": "D",
+          "explanation": "$\\text{number of sets} = \\dfrac{\\text{cache size}}{\\text{no. of blocks in a set } \\times \\text{ block size}}$ $=\\dfrac{32KB}{1 \\times 32B} = 1024$ So, number of index bits $= 10,$ and number of tag bits $=32-10-5=17.$ So, $h2 =\\dfrac{17}{10}= 1.7\\text{ ns}$ $D$",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A CPU has a $32$ $KB$ direct mapped cache with $128$ byte-block size. Suppose $A$ is two dimensional array of size $512 \\times512$ with elements that occupy $8-bytes$ each. Consider the following two $C$ code segments, $P1$ and $P2$. $P1$: for (i=0; i<512; i++) { for (j=0; j<512; j++) { x +=A[i] [j]; } } P2: for (i=0; i<512; i++) { for (j=0; j<512; j++) { x +=A[j] [i]; } } $P1$ and $P2$ are executed independently with the same initial state, namely, the array $A$ is not in the cache and $i$, $j$, $x$ are in registers. Let the number of cache misses experienced by $P1$ be $M1$ and that for $P2$ be $M2$. The value of the ratio $\\frac{M_{1}}{M_{2}}$:",
+          "images": [],
+          "options": [
+            "A. $0$",
+            "B. $\\frac{1}{16}$",
+            "C. $\\frac{1}{8}$",
+            "D. $16$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$\\text{Number of Cache Lines}= \\dfrac{2^{15}B}{128B}= 256$ $\\text{In 1 Cache Line} =\\dfrac{128B}{8B} = 16\\ elements$ $P_1=\\dfrac{\\text{total elements in array}}{\\text{elements in a cache line}}$ $\\quad=\\dfrac{512 \\times 512}{16}= 2^{14}= 16384.$ $P_2= 512 \\times 512=2^{18}$ $\\dfrac{P_1}{P_2}=\\dfrac{16384}{512 \\times 512}$ $\\quad = 2^{14-18}= 2^{-4}=\\dfrac{1}{16}$ It is so, because for $P_1$ for every line there is a miss, and once a miss is processed we get $16$ elements in memory. So, another miss happens after $16$ elements. For $P_2$ for every element there is a miss because storage is row major order(by default) and we are accessing column wise. Hence, answer is option B.",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following program segment. Here $\\text{R1, R2}$ and $\\text{R3}$ are the general purpose registers. $$\\begin{array}{|l|l|l|c|} \\hline & \\text {Instruction} & \\text{Operation }& \\text{Instruction Size} \\\\ & & & \\text{(no. of words)}\\\\\\hline & \\text{MOV R1,(3000)} & \\text{R1} \\leftarrow \\text{M[3000]} & \\text{$2$} \\\\\\hline \\text{LOOP:}& \\text{MOV R2,(R3)} & \\text{R2} \\leftarrow \\text{M[R3]} & \\text{$1$} \\\\\\hline & \\text{ADD R2,R1} & \\text{R2} \\leftarrow \\text{R1 + R2} & \\text{$1$} \\\\\\hline & \\text{MOV (R3),R2} & \\text{M[R3]} \\leftarrow \\text{R2} & \\text{$1$} \\\\\\hline& \\text{INC R3} &\\text{R3} \\leftarrow \\text{R3 + 1} & \\text{$1$} \\\\\\hline & \\text{DEC R1} &\\text{R1} \\leftarrow \\text{R1 – 1} & \\text{$1$} \\\\\\hline& \\text{BNZ LOOP} & \\text{Branch on not zero} & \\text{$2$} \\\\\\hline & \\text{HALT} & \\text{Stop} & \\text{$1$} \\\\\\hline\\end{array}$$ Assume that the content of memory location $3000$ is $10$ and the content of the register $\\text{R3}$ is $2000.$ The content of each of the memory locations from $2000$ to $2010$ is $100.$ The program is loaded from the memory location $1000.$ All the numbers are in decimal. Assume that the memory is byte addressable and the word size is $32$ bits. If an interrupt occurs during the execution of the instruction “INC R3”, what return address will be pushed on to the stack?",
+          "images": [],
+          "options": [
+            "A. $1005$",
+            "B. $1020$",
+            "C. $1024$",
+            "D. $1040$"
+          ],
+          "correct_answer": "C",
+          "explanation": "An interrupt is checked for after the execution of the current instruction and the contents of PC (address of next instruction to be executed) is pushed on to stack. Here, address of INC, R3 $= 1000 +\\dfrac{ (2 + 1 + 1 + 1) \\times 32}{8} = 1020$ and next instruction address $= 1020 + 4 = 1024$ which is pushed on to stack. Reference: http://www.ece.utep.edu/courses/web3376/Notes_files/ee3376-interrupts_stack.pdf $C$",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following program segment. Here $\\text{R1, R2}$ and $\\text{R3}$ are the general purpose registers. $$\\small \\begin{array}{|c|l|l||c|} \\hline & \\text {Instruction} & \\text{Operation }& \\text{Instruction Size} \\\\ & & & \\text{(no. of words)} \\\\\\hline & \\text{MOV R1,(3000)} & \\text{R1} \\leftarrow \\text{M[3000]} & 2 \\\\\\hline \\text{LOOP:}& \\text{MOV R2,(R3)} & \\text{R2} \\leftarrow \\text{M[R3]} & 1 \\\\\\hline & \\text{ADD R2,R1} & \\text{R2} \\leftarrow \\text{R1 + R2} & 1 \\\\\\hline & \\text{MOV (R3),R2} & \\text{M[R3]} \\leftarrow \\text{R2} & 1 \\\\\\hline& \\text{INC R3} & \\text{R3} \\leftarrow \\text{R3 + 1} & 1 \\\\\\hline & \\text{DEC R1} & \\text{R1} \\leftarrow \\text{R1 – 1} & 1 \\\\\\hline& \\text{BNZ LOOP} & \\text{Branch on not zero} & 2 \\\\\\hline & \\text{HALT} & \\text{Stop} & 1 \\\\\\hline\\end{array}$$ Assume that the content of memory location $3000$ is $10$ and the content of the register $\\text{R3}$ is $2000$. The content of each of the memory locations from $2000$ to $2010$ is $100$. The program is loaded from the memory location $1000$. All the numbers are in decimal. Assume that the memory is word addressable. After the execution of this program, the content of memory location $2010$ is:",
+          "images": [],
+          "options": [
+            "A. $100$",
+            "B. $101$",
+            "C. $102$",
+            "D. $110$"
+          ],
+          "correct_answer": "A",
+          "explanation": "The loop runs $10$ times. When $R1=10 , \\text{Memory}[2000] = 110,$ When $R1=9 , \\text{Memory}[2001] = 109,$ When $R1=8 , \\text{Memory}[2002] = 108,$ When $R1=7 , \\text{Memory}[2003] = 107,$ When $R1=6 , \\text{Memory}[2004] = 106,$ When $R1=5 , \\text{Memory}[2005] = 105,$ When $R1=4 , \\text{Memory}[2006] = 104,$ When $R1=3 , \\text{Memory}[2007] = 103,$ When $R1=2 , \\text{Memory}[2008] = 102,$ When $R1=1 , \\text{Memory}[2009] = 101,$ When $R1=0$ the loop breaks., $\\text{Memory}[2010]= 100$ $A$",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a byte addressable main memory of $2^{16}$ bytes. Assume that a direct mapped data cache consisting of $32$ lines of $64$ bytes each is used in the system. A $50$ x $50$ two-dimensional array of bytes is stored in the main memory starting from memory location $1100H$. Assume that the data cache is initially empty. The complete array is accessed twice. Assume that the contents of the data cache do not change in between the two accesses. Which of the following lines of the data cache will be replaced by new blocks in accessing the array for the second time?",
+          "images": [],
+          "options": [
+            "A. line $4$ to line $11$",
+            "B. line $4$ to line $12$",
+            "C. line $0$ to line $7$",
+            "D. line $0$ to line $8$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Cache Organization: Staring Address $=1100H = 16^3+16^2+0+0 =4352B$ is the starting address. We need to find Starting block $=\\dfrac{4352\\ B}{64\\ B}= 68^{th}$ block in main memory from where array start storing elements. $50\\times 50\\ B =\\text{array size}=50\\times \\dfrac{50\\ B}{64\\ B} =39.0625$ blocks needed $\\approxeq 40\\ blocks$ $\\text{68,69,70....107 block}$ we need $=40\\text{ blocks}$ Starting block is $68\\pmod {32}= 4^{th}$ cache block and after that in sequence they will be accessed. As shown in below table, line number $4$ to $11$ has been replaced by array in second time \\begin{array}{|c|c|c|} \\hline \\textbf {Cache Block Number} & \\textbf{First Cycle }& \\textbf{Second cycle} \\\\\\hline \\text{0} & \\text{96} & \\text{} \\\\\\hline \\text{1} & \\text{97} & \\text{} \\\\\\hline \\text{2} & \\text{98} & \\text{}\\\\\\hline\\text{3} & \\text{99} & \\text{}\\\\\\hline\\text{4} & \\text{68 // 100} & \\text{68}\\\\\\hline\\text{5} & \\text{69 // 101} & \\text{}69\\\\\\hline\\text{6} & \\text{70//102} & \\text{70}\\\\\\hline\\text{7} & \\text{71//103} & \\text{71}\\\\\\hline\\text{8} & \\text{72//104} & \\text{72}\\\\\\hline\\text{9} & \\text{73//105} & \\text{73}\\\\\\hline\\text{10} & \\text{74/106} & \\text{74}\\\\\\hline\\text{11} & \\text{75//107} & \\text{75}\\\\\\hline\\text{12} & \\text{76} & \\text{}\\\\\\hline\\text{13} & \\text{77} & \\text{}\\\\\\hline\\text{14} & \\text{78} & \\text{}\\\\\\hline\\text{15} & \\text{79} & \\text{}\\\\\\hline\\text{16} & \\text{80} & \\text{}\\\\\\hline\\text{17} & \\text{81} & \\text{}\\\\\\hline\\text{18} & \\text{82} & \\text{}\\\\\\hline\\text{19} & \\text{83} & \\text{}\\\\\\hline\\text{20} & \\text{84} & \\text{}\\\\\\hline\\text{21} & \\text{85} & \\text{}\\\\\\hline\\text{22} & \\text{86} & \\text{}\\\\\\hline\\text{23} & \\text{87} & \\text{}\\\\\\hline\\text{24} & \\text{88} & \\text{}\\\\\\hline\\text{25} & \\text{89} & \\text{}\\\\\\hline\\text{26} & \\text{90} & \\text{}\\\\\\hline\\text{27} & \\text{91} & \\text{}\\\\\\hline\\text{28} & \\text{92} & \\text{}\\\\\\hline\\text{29} & \\text{93} & \\text{}\\\\\\hline\\text{30} & \\text{94} & \\text{}\\\\\\hline\\text{31} & \\text{95} & \\text{}\\\\\\hline \\end{array} $A$",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a $2$-way set associative data cache of size $64$ Kbytes and block size $16$ bytes. The cache is managed using $32$ bit virtual addresses and the page size is $4$ Kbytes. A program to be run on this machine begins as follows: double ARR[1024][1024]; int i, j; /*Initialize array ARR to 0.0 */ for(i = 0; i < 1024; i++) for(j = 0; j < 1024; j++) ARR[i][j] = 0.0; The size of double is $8$ bytes. Array $\\text{ARR}$ is located in memory starting at the beginning of virtual page $\\textsf{0xFF000}$ and stored in row major order. The cache is initially empty and no pre-fetching is done. The only data memory references made by the program are those to array $\\text{ARR}$. The cache hit ratio for this initialization loop is:",
+          "images": [],
+          "options": [
+            "A. $0\\%$",
+            "B. $25\\%$",
+            "C. $50\\%$",
+            "D. $75\\%$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Block size $=16\\textsf{B}$ and one element $=8\\textsf{B}.$ So, in one block $2$ element will be stored. For $1024\\times 1024$ element num of block required $=\\dfrac{1024\\times 1024}{2} =2^{19}$ blocks required. In one block the first element will be a miss and second one is hit(since we are transferring two unit at a time) $\\Rightarrow \\text{hit ratio}=\\dfrac{\\text{Total hit}}{\\text{Total reference}}$ $=\\dfrac{2^{19}}{2^{20}}$ $=\\dfrac{1}{2}=0.5$ $=0.5\\times 100=50\\%$ $C$",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a $2$-way set associative data cache of size $64$ Kbytes and block size $16$ bytes. The cache is managed using $32$ bit virtual addresses and the page size is $4$ Kbytes. A program to be run on this machine begins as follows: double ARR[1024][1024]; int i, j; /*Initialize array ARR to 0.0 */ for(i = 0; i < 1024; i++) for(j = 0; j < 1024; j++) ARR[i][j] = 0.0; The size of double is $8$ bytes. Array $\\text{ARR}$ is located in memory starting at the beginning of virtual page $\\textsf{0xFF000}$ and stored in row major order. The cache is initially empty and no pre-fetching is done. The only data memory references made by the program are those to array $\\text{ARR}$. Which of the following array elements have the same cache index as $\\text{ARR[0][0]}$?",
+          "images": [],
+          "options": [
+            "A. $\\text{ARR[0][4]}$",
+            "B. $\\text{ARR[4][0]}$",
+            "C. $\\text{ARR[0][5]}$",
+            "D. $\\text{ARR[5][0]}$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Number of sets $=$ cache size/ size of a set $= 64 \\ \\textsf{KB} / (16 \\ \\textsf{B} \\times 2)$ (two blocks per set) $= 2 \\ \\textsf{K} = 2^{11}$ So, we need $11$ bits for set indexing. Number of WORD bits required $= 4$ as a cache block consists of $16$ bytes and we need $4$ bits to address each of them. So, number of tag bits $= 32 - 11 - 4 = 17$ Total size of the tag $= 17 \\times$ Number of cache blocks $=17 \\times 2^{11} \\times 2$ (since each set has $2$ blocks) $= 68 \\ \\textsf{KB}$ We use the top $17$ bits for tag and the next $11$ bits for indexing and next $4$ for offset. So, for two addresses to have the same cache index, their $11$ address bits after the $4$ offset bits from right must be same. $\\text{ARR[0][0]}$ is located at virtual address $\\textsf{0x FF000 000. (FF000}$ is page address and $000$ is page offset). So, index bits are $00000000000$ Address of $\\text{ARR[0][4]} = \\textsf{0xFF000} + 4 \\times$ sizeof (double) $= \\textsf{0xFF000 000} + 4\\times 8 = \\textsf{0xFF000 020} (32 = 20$ in hex) (index bits differ) Address of $\\text{ARR[4][0] } = \\textsf{0xFF000 } + 4 \\times 1024 \\times$ sizeof (double) [since we use row major storage] $= \\textsf{0xFF000 000} + 4096\\times 8 = \\textsf{0xFF000 000 + 0x8000 = 0xFF008 000}$ ( index bits matches that of $\\text{ARR [0][0]}$ as both read $000 \\ 0000 \\ 0000$) Address of $\\text{ARR[0][5]} = \\textsf{0xFF000} + 5 \\times$ sizeof (double) $= \\textsf{0xFF000 000}+ 5\\times 8 = \\textsf{0xFF000 028} (40 = 28$ in hex) (index bits differ) Address of $\\text{ARR[5][0]} = \\textsf{0xFF000} + 5 \\times 1024 \\times$ sizeof (double) [since we use row major storage] $ = \\textsf{0xFF000 000} + 5120\\times 8 = \\textsf{0xFF000 000 + 0xA000 = 0xFF00A 000}$ (index bits differ) So, only $\\text{ARR[4][0]}$ and $\\text{ARR[0][0]}$ have the same cache index. The inner loop is iterating from $0$ to $1023$, so consecutive memory locations are accessed in sequence. Since cache block size is only $16$ bytes and our element being double is of size $8$ bytes, during a memory access only the next element gets filled in the cache. i.e.; every alternative memory access is a cache miss giving a hit ratio of $50\\%. ($If loops i and j are reversed, all accesses will be misses and hit ratio will become $0).$ $B$",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Delayed branching can help in the handling of control hazards The following code is to run on a pipelined processor with one branch delay slot: I1: ADD $R2 \\leftarrow R7 + R8$ I2: Sub $R4 \\leftarrow R5 – R6$ I3: ADD $R1 \\leftarrow R2 + R3$ I4: STORE Memory $[R4] \\leftarrow R1$ BRANCH to Label if $R1 == 0$ Which of the instructions I1, I2, I3 or I4 can legitimately occupy the delay slot without any program modification?",
+          "images": [],
+          "options": [
+            "A. I1",
+            "B. I2",
+            "C. I3",
+            "D. I4"
+          ],
+          "correct_answer": "D",
+          "explanation": "What is Delayed Branching ? One way to maximize the use of the pipeline, is to find an instruction that can be safely executed whether the branch is taken or not, and execute that instruction. So, when a branch instruction is encountered, the hardware puts the instruction following the branch into the pipe and begins executing it, just as in predict-not-taken. However, unlike in predict-not-taken, we do not need to worry about whether the branch is taken or not, we do not need to clear the pipe because no matter whether the branch is taken or not, we know the instruction is safe to execute. Moving $I_1$ after branch $I1$ is updating the value of $R2$ $R2$ which is used to determine branch condition $R1$ Value of $R2$ is available after branch $\\Rightarrow$ Cannot be moved Moving $I_3$ after branch value of $R1$ is computed in this instruction $R1$ is the branch condition $\\Rightarrow$ Cannot be moved Moving $I_4$ after branch $I4$ is simple store instruction used to store R1 in memory program execution will have no effect if this is placed after conditional branch $\\Rightarrow$ Can be moved Moving $I_2$ after branch It update the memory location to place the storing of conditional branch instruction $R1$ If moved after branch , when compiler reaches $I4$ program execution will stop $\\Rightarrow $ Cannot be moved Hence, option D is answer.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer system has an $L1$ cache, an $L2$ cache, and a main memory unit connected as shown below. The block size in $L1$ cache is $4$ words. The block size in $L2$ cache is $16$ words. The memory access times are $2$ nanoseconds, $20$ nanoseconds and $200$ nanoseconds for $L1$ cache, $L2$ cache and the main memory unit respectively. When there is a miss in both $L1$ cache and $L2$ cache, first a block is transferred from main memory to $L2$ cache, and then a block is transferred from $L2$ cache to $L1$ cache. What is the total time taken for these transfers?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "43329_img1.png"
+            }
+          ],
+          "options": [
+            "A. $222$ nanoseconds",
+            "B. $888$ nanoseconds",
+            "C. $902$ nanoseconds",
+            "D. $968$ nanoseconds"
+          ],
+          "correct_answer": "C",
+          "explanation": "The transfer time should be $4*200 + 20 = 820$ ns. But this is not in option. So, I assume the following is what is meant by the question. $L2$ block size being $16$ words and data width between memory and $L2$ being $4$ words, we require $4$ memory accesses(for read) and $4$ $L2$ accesses (for store). Now, we need to send the requested block to $L1$ which would require one more $L2$ access (for read) and one $L1$ access (for store). So, total time $= 4 * (200 + 20) + (20 + 2)$ $= 880 + 22$ $= 902 \\ ns$ $C$",
+          "year": 2010,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer has a $256$-$\\text{KByte}$, 4-way set associative, write back data cache with block size of $32$ $\\text{Bytes}$. The processor sends $32$ $\\text{bit}$ addresses to the cache controller. Each cache tag directory entry contains, in addition to address tag, $2$ valid bits, $1$ modified bit and $1$ replacement bit. The size of the cache tag directory is:",
+          "images": [],
+          "options": [
+            "A. $160$ $\\text{Kbits}$",
+            "B. $136$ $\\text{Kbits}$",
+            "C. $40$ $\\text{Kbits}$",
+            "D. $32$ $\\text{Kbits}$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Total cache size $=256\\ KB$ Cache block size $= 32\\text{ Bytes}$ So, number of cache entries $=\\dfrac{256\\ K}{32}=8\\ K$ Number of sets in cache $=\\dfrac{8\\ K}{4}=2\\ K$ as cache is $4\\text{-way}$ associative. So, $\\log(2048) =11\\text{ bits}$ are needed for accessing a set. Inside a set we need to identify the cache entry. Total number of distinct cache entries $=\\dfrac{2^{32}}{\\text{cache entry size}}=\\dfrac{2^{32}}{32}=2^{27}$ Out of this $2^{27},$ each set will be getting only $\\dfrac{2^{27}}{2^{11}}=2^{16}$ possible distinct cache entries as we use the first $11 \\text{ bits}$ to identify a set. So, we need $16$ bits to identify a cache entry in a set, which is the number of bits in the tag field. Size of cache tag directory$=\\text{Size of tag entry}\\times \\text{Number of tag entries}$ $=16 +(2+1+1) \\text{ bits (2 valid, 1 modified, 1 replacement as given in question)}\\times 8\\ K$ $= 20 * \\text 8 \\text{K bits} = 160\\text{ K bits}$ Not needed for this question, still: Valid bit: Tells if the memory referenced by the cache entry is valid. Initially, when a process is loaded all entries are invalid. Only when a page is loaded, its entry becomes valid. Modified bit: When processor writes to a cache location its modified bit is made $1.$ This information is used when a cache entry is replaced- entry $0$ means no update to main memory needed. Entry $1$ means an update is needed. Replacement bit: This is needed for the cache replacement policy. Explained in the below link: https://www.seas.upenn.edu/~cit595/cit595s10/handouts/LRUreplacementpolicy.pdf $A$",
+          "year": 2012,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The size of the data count register of a $\\text{DMA}$ controller is $16\\;\\text{bits}$. The processor needs to transfer a file of $29,154$ kilobytes from disk to main memory. The memory is byte addressable. The minimum number of times the $\\text{DMA}$ controller needs to get the control of the system bus from the processor to transfer the file from the disk to main memory is _________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "456",
+          "explanation": "Data count register gives the number of words the DMA can transfer in a single cycle.. Here it is $16$ bits.. so max $2^{16}$ words can be transferred in one cycle.. Since memory is byte addressable.. $1 \\text{ word}=1\\;\\text{byte}$ so $2^{16}$ bytes in $1$ cycle.. Now for the given file.. File size $=29154\\ \\textsf{KB} = 29154\\times 2^{10}\\ \\textsf{B}$ $1$ cylce $\\rightarrow$ DMA transfers $2^{16}\\ \\textsf{B}$ i.e $1\\ B$ transfered by DMA $\\rightarrow \\dfrac{1}{2^{16}}$ cycles. Now, for full file of size $29154\\ \\textsf{KB},$ Minimum number of cylces $=\\dfrac{(29154\\times 2^{10}\\ B)}{2^{16}}= 455.53$ But number of cylces is",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The stage delays in a $4$-stage pipeline are $800, 500, 400$ and $300$ picoseconds. The first stage (with delay $800$ picoseconds) is replaced with a functionality equivalent design involving two stages with respective delays $600$ and $350$ picoseconds. The throughput increase of the pipeline is ___________ percent.",
+          "images": [],
+          "options": [],
+          "correct_answer": "33.0 : 34.0",
+          "explanation": "In pipeline ideally $CPI=1$ So in $1$ cycle $1$ instruction gets completed Throughput is instructions in unit time In pipeline $1,$ cycle time$=$ max stage delay $=800\\ \\text{psec}$ In $800\\ \\text{psec},$ we expect to finish $1$ instruction So, in $1\\;\\text{ps},$ $\\dfrac{1}{800}$ instructions are expected to be completed, which is also the throughput for pipeline $1.$ Similarly pipeline $2,$ throughput$=\\dfrac{1}{600}$ Throughput increase in percentage $=\\dfrac{\\text{new-old} }{\\text{old}}\\times100$ $= \\dfrac{\\dfrac{1}{600}-\\dfrac{1}{800}}{\\dfrac{1}{800} }\\times 100$ $=\\dfrac{200}{600}\\times 100$ $=33.33 \\%$",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor can support a maximum memory of $4\\;\\textsf{GB}$, where the memory is word-addressable (a word consists of two bytes). The size of address bus of the processor is at least _________bits. 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "31",
+          "explanation": "Size of Memory = No of words (Addresses) $\\times$ No of bits per word $2^{32}\\;\\textsf{B} =$ No of words (Addresses) $\\times \\;2\\;\\textsf{B}$ No of words (Addresses) $= 2^{31}$ Number of Address lines $= 31$",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Suppose the functions $F$ and $G$ can be computed in $5$ and $3$ nanoseconds by functional units $U_{F}$ and $U_{G}$, respectively. Given two instances of $U_{F}$ and two instances of $U_{G}$, it is required to implement the computation $F(G(X_{i}))$ for $1 \\leq i \\leq 10$. Ignoring all other delays, the minimum time required to complete this computation is ____________ nanoseconds.",
+          "images": [],
+          "options": [],
+          "correct_answer": "28",
+          "explanation": "The same concept is used in pipelining. Bottleneck here is $U_F$ as it takes $5\\;\\text{ns}$ while $U_G$ takes $3\\;\\text{ns}$ only. We have to do $10$ such calculations and we have $2$ instances of $U_F$ and $U_G$ respectively. So, $U_F$ can be done in $50/2 = 25$ nano seconds. For the start $U_F$ needs to wait for $U_G$ output for $3\\;\\text{ns}$ and rest all are pipelined and hence no more waiting is needed. So, answer is $$3 + 25 = 28\\;\\text{ns}.$$",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The width of the physical address on a machine is $40$ bits. The width of the tag field in a $512$ KB $8$-way set associative cache is ________ bits.",
+          "images": [],
+          "options": [],
+          "correct_answer": "24",
+          "explanation": "Physical Address $=40$ Tag + Set + Block Offset $=40$ $T + S + B = 40\\qquad \\to (1)$ We have: Cache Size = number of sets $\\times$ blocks per set $\\times$ Block size $512\\ KB$ = number of sets $\\times\\ 8\\ \\times$ Block size Number of sets $\\times$ Block size $=\\dfrac{512}{8}\\ KB = 64\\ KB$ $S + B =16 \\qquad \\to (2)$ From $(1), (2)$ T = 24 bits (Ans) Second way : Cache Size $= 2^{19}$ MM size $=2^{40}$ This means, We need to map $\\dfrac{2^{40}}{2^{19}}=2^{21}$ Blocks to one line. And a set contain $2^3$ lines. Therefore, $2^{24}$ blocks are mapped to one set. Using Tag field, I need to identify which one block out of $2^{24}$ blocks are present in this set. Hence, $24$ bits are needed in Tag field.",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a processor with $64$ registers and an instruction set of size twelve. Each instruction has five distinct fields, namely, opcode, two source register identifiers, one destination register identifier, and twelve-bit immediate value. Each instruction must be stored in memory in a byte-aligned fashion. If a program has $100$ instructions, the amount of memory (in bytes) consumed by the program text is _________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "500",
+          "explanation": "Answer: 500 bytes Number of registers $= 64$ Number of bits to address register $=\\left \\lceil \\log_{2}64 \\right \\rceil= 6-\\text{bits}$ Number of Instructions $= 12$ Opcode size $=\\left \\lceil \\log_{2}12 \\right \\rceil = 4$ \\begin{array}{|c|c|c|c|} \\hline \\text {Opcode$(4)$} & \\text{ reg1$(6)$}& \\text{reg2$(6)$} & \\text{reg3$(6)$} & \\text{Immediate$(12)$} \\\\\\hline \\end{array} Total bits per instruction $= 34$ Total bytes per instruction $= 4.25$ Due to byte alignment we cannot store $4.25 \\text{ bytes},$ without wasting $0.75\\;\\text{ bytes.}$ So, total bytes per instruction $= 5$ Total number of instructions $= 100$ Total size $=$ Number of instructions $\\times$ Size of an instruction $\\qquad =100\\times 5= 500 \\text{ bytes}$",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A file system uses an in-memory cache to cache disk blocks. The miss rate of the cache is shown in the figure. The latency to read a block from the cache is $1$ ms and to read a block from the disk is $10$ ms. Assume that the cost of checking whether a block exists in the cache is negligible. Available cache sizes are in multiples of $10$ MB. The smallest cache size required to ensure an average read latency of less than $6$ ms is _________ MB.",
+          "images": [
+            {
+              "index": 1,
+              "filename": "39592_img1.jpg"
+            }
+          ],
+          "options": [],
+          "correct_answer": "30",
+          "explanation": "Look aside Cache Latency $= 1$ ms Main Memory Latency $= 10$ ms Lets try with $20$ MB Miss rate $= 60\\%$ , Hit rate $= 40\\%$ Avg $=0.4 (1) +0.6 (10)$ $= 0.4 +6 = 6.4 \\ \\text{ms} > 6\\ \\text{ms}$ Next Take $30$ MB Miss rate $= 40\\%$ , Hit rate $= 60\\%$ Avg $= 0.6 (1) + 0.4 (10)$ $= 0.6 + 4 = 4.6 \\ \\text{ms} < 6 \\ \\text{ms}$ So answer is $30$ MB",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $3 \\ \\text{GHz}$ (gigahertz) processor with a three stage pipeline and stage latencies $\\large\\tau_1,\\tau_2$ and $\\large\\tau_3$ such that $\\large\\tau_1 =\\dfrac{3 \\tau_2}{4}=2\\tau_3$. If the longest pipeline stage is split into two pipeline stages of equal latency , the new frequency is __________ $\\text{GHz}$, ignoring delays in the pipeline registers.",
+          "images": [],
+          "options": [],
+          "correct_answer": "4",
+          "explanation": "Answer is 4 GHz. Given $3$ stage pipeline , with $3\\text{ GHz}$ processor. Given , $e_1 =\\dfrac{3e_2}{4}=2e_3$ Put $e_1 = 6x$ we get, $e_2 = 8x\\ , e_3 = 3x$ Now largest stage time is $8x$. So, frequency is $\\dfrac{1}{8x}$ $\\Rightarrow\\dfrac{1}{8x}=3 \\text{GHz}$ $\\Rightarrow\\dfrac{1}{x}=24\\text{ GHz}\\quad \\rightarrow (1)$ Now, we divide $e_2$ into two stages of $4x\\ \\&\\ 4x.$ New processor has $4$ stages - $6x,\\ 4x,\\ 4x,\\ 3x.$ Now largest stage time is $6x$. So, new frequency is $\\dfrac{1}{6x}$ = $\\dfrac{24}{6}$ = 4 GHz (Ans) $[\\because \\text{from}\\; (1)]$",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A processor has $40$ distinct instruction and $24$ general purpose registers. A $32$-bit instruction word has an opcode, two registers operands and an immediate operand. The number of bits available for the immediate operand field is_______.",
+          "images": [],
+          "options": [],
+          "correct_answer": "16",
+          "explanation": "Instruction Opcode Size $= \\log_2 40 = 6$ Register operand size $= \\log_224 =5$ Total bits available $= 32$ Bits required for opcode $+$ two register operands $= 6 + 2 \\times 5 = 16$ Bits available for immediate operand $= 32 - 16 = 16.$",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following reservation table for a pipeline having three stages $S_1, S_2 \\text{ and } S_3$. $$\\begin{array}{|l|l|} \\hline \\textbf{Time} \\rightarrow \\\\\\hline & \\text{1}& \\text{2} & \\text{$3$} & \\text{$4$} & \\text{$5$} \\\\\\hline \\textbf{$S _1$} & \\text{$X$} & & & & \\text{$X$}\\\\\\hline \\textbf{$S _2$} & & \\text{$X$} & & \\text{$X$}\\\\\\hline \\textbf{$S _3$} & & & \\text{$X$} & \\\\\\hline \\end{array}$$ The minimum average latency (MAL) is ______",
+          "images": [],
+          "options": [],
+          "correct_answer": "3",
+          "explanation": "Reference: Page 24 http://www2.cs.siu.edu/~cs401/Textbook/ch3.pdf $S_1$ is needed at time $1$ and $5,$ so its forbidden latency is $5-1=4.$ $S_2$ is needed at time $2$ and $4,$ so its forbidden latency is $4-2=2.$ So, forbidden latency $= (2,4,0)$ ( $0$ by default is forbidden) Allowed latency $= (1,3,5)$ (any value more than $5$ also). Collision vector $(4,3,2,1,0) = 10101$ which is the initial state as well. From initial state we can have a transition after $\\text{“1\"}$ or $\\text{“3\"}$ cycles and we reach new states with collision vectors $(10101 >> 1 + 10101 = 11111)$ and $(10101 >> 3 + 10101 = 10111)$ respectively. These $2$ becomes states $2$ and $3$ respectively. For $\\text{“5\"}$ cycles we come back to state $1$ itself. From state $2\\ (11111),$ the new collision vector is $11111.$ We can have a transition only when we see the first $0$ from the right. So, here it happens on $5^{th}$ cycle only which goes to the initial state. (Any transition after $5$ or more cycles goes to initial state as we have $5$ time slices). From state $3\\ (10111),$ the new collision vector is $10111.$ So, we can have a transition on $3,$ which will give $(10111 >> 3 + 10101 = 10111)$ third state itself. For $5,$ we get the initial state. Thus all the transitions are complete. $$\\begin{array}{|c|c|c|} \\hline \\textbf {State\\Time} & \\textbf {1} & \\textbf {3} & \\textbf{5 } \\\\\\hline \\textbf{1(10101)} & \\text{2}& \\text{3} & \\text{1} \\\\\\hline \\textbf{2(11111)} & \\text{-} & \\text{-}& \\text{1}\\\\\\hline \\textbf{3(10111)}& \\text{-}&\\text{3} & \\text{1}\\\\\\hline \\end{array}$$ So, minimum length cycle is of length 3 either from $\\text{3-3}$ or from $\\text{1-3,3-1}$. Not",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following code sequence having five instructions from $I_1 \\text{ to } I_5$. Each of these instructions has the following format. OP Ri, Rj, Rk Where operation OP is performed on contents of registers Rj and Rk and the result is stored in register Ri. $I_1$: ADD R1, R2, R3 $I_2$: MUL R7, R1, R3 $I_3$: SUB R4, R1, R5 $I_4$: ADD R3, R2, R4 $I_5$: MUL R7, R8, R9 Consider the following three statements. S1: There is an anti-dependence between instructions $I_2 \\text{ and } I_5$ S2: There is an anti-dependence between instructions $I_2 \\text{ and } I_4$ S3: Within an instruction pipeline an anti-dependence always creates one or more stalls Which one of the above statements is/are correct? ed Jan 28, 2025 reply Follow flag how we decide to take 5 stage .in this question no mention about stage .also it doesnt say to take risc or not ? 0 0 reply Share Silver_Reaper commented Jan 29, 2025 reply Follow flag Question is not even asking for finding no of clock cycles for all instructions to complete,so why do you even need to know how many stages does this pipeline have? 2 2 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Only S1 is true",
+            "B. Only S2 is true",
+            "C. Only S1 and S3 are true",
+            "D. Only S2 and S3 are true"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer should be (B). Anti-dependence can be overcome in pipeline using register renaming. So, \"always\" in S3 makes it false. Also, if $I2$ is completed before $I4$ (execution stage of MUL), then also there won't be any stall.",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a byte addressable main memory of $2^{20}$ bytes, block size of $16$ bytes and a direct mapped cache having $2^{12}$ cache lines. Let the addresses of two consecutive bytes in main memory be $\\textsf{(E201F)}_{16}$ and $\\textsf{(E2020)}_{16}$. What are the tag and cache line addresses ( in hex) for main memory address $\\textsf{(E201F)}_{16}$?",
+          "images": [],
+          "options": [
+            "A. $\\textsf{E, 201}$",
+            "B. $\\textsf{F, 201}$",
+            "C. $\\textsf{E, E20}$",
+            "D. $\\textsf{2, 01F}$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Block size of $16$ bytes means we need $4$ offset bits. (The lowest $4$ digits of memory address are offset bits) Number of sets in cache (cache lines) $= 2^{12}$ so the next lower $12$ bits are used for set indexing. The top $4\\;\\text{bits}\\; ($out of $20)$ are tag bits. So, the answer is A.",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a non-pipelined processor with a clock rate of $2.5$ gigahertz and average cycles per instruction of four. The same processor is upgraded to a pipelined processor with five stages; but due to the internal pipeline delay, the clock speed is reduced to $2$ gigahertz. Assume that there are no stalls in the pipeline. The speedup achieved in this pipelined processor is_______________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "3.2",
+          "explanation": "Answer = 3.2. To compute cycle time, we know that a $2.5\\;\\textsf{GHz}$ processor means it completes $2.5\\;\\text{billion}$ cycles in a second. So, for an instruction which on an average takes $4$ cycles to get completed, it will take $\\dfrac{4}{2.5}\\ $ nanoseconds. On a perfect pipleline (i.e., one which has no stalls) $\\text{CPI} = 1$ as during it an instruction takes just one cycle time to get completed. So, Speed Up $=\\dfrac{\\text{Old Execution Time of an Instruction}}{\\text{New Execution Time of an Instruction}}$ $=\\dfrac{\\text{CPI}_{\\text{old}}/\\text{CF}_{\\text{old}}}{\\text{CPI}_{\\text{new}}/\\text{CF}_{\\text{new}}}$ $=\\dfrac{4/2.5\\;\\textsf{GHz}}{1/2\\;\\textsf{GHz}}$ $=3.2$",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the sequence of machine instruction given below: $$\\begin{array}{ll} \\text{MUL} & \\text{R5, R0, R1} \\\\ \\text{DIV} & \\text{R6, R2, R3} \\\\ \\text{ADD} & \\text{R7, R5, R6} \\\\ \\text{SUB} & \\text{R8, R7, R4} \\\\ \\end{array}$$ In the above sequence, $R0$ to $R8$ are general purpose registers. In the instructions shown, the first register shows the result of the operation performed on the second and the third registers. This sequence of instructions is to be executed in a pipelined instruction processor with the following $4$ stages: $(1)$ Instruction Fetch and Decode $(IF)$, $(2)$ Operand Fetch $(OF)$, $(3)$ Perform Operation $(PO)$ and $(4)$ Write back the result $(WB)$. The $IF$, $OF$ and $WB$ stages take $1$ clock cycle each for any instruction. The $PO$ stage takes $1$ clock cycle for ADD and SUB instruction, $3$ clock cycles for MUL instruction and $5$ clock cycles for DIV instruction. The pipelined processor uses operand forwarding from the PO stage to the OF stage. The number of clock cycles taken for the execution of the above sequence of instruction is _________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "13",
+          "explanation": "$$\\small \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|} \\hline &\\bf{t_1}&\\bf{t_2}&\\bf{t_3}&\\bf{t_4}&\\bf{t_5}&\\bf{t_6}&\\bf{t_7}&\\bf{t_8}&\\bf{t_9}&\\bf{t_{10}}&\\bf{t_{11}}&\\bf{t_{12}}&\\bf{t_{13}}&\\bf{t_{14}}&\\bf{t_{15}}\\\\ \\hline \\textbf{I1}&\\text{IF}&\\text{OF}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{WB}\\\\ \\textbf{I2}&&\\text{IF}&\\text{OF}&\\color{red}{-}&\\color{red}{-}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{PO}&\\color{green}{\\boxed{\\text{PO}}}&\\text{WB}\\\\ \\textbf{I3}&&&\\text{IF}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{green} {\\boxed{\\text{OF}}}&\\color{blue}{\\boxed{\\text{PO}}}&\\text{WB}\\\\ \\textbf{I4}&&&&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\text{IF}&\\color{red}{-} &\\color{blue}{\\boxed{\\text{OF}}} &\\text{PO}&\\text{WB}\\\\ \\hline\\end{array}$$ It is mentioned in the question that operand forwarding takes place from PO stage to OF stage and not to PO stage. So, $15$ clock cycles. But since operand forwarding is from PO-OF, we can do like make the PO stage produce the output during the rising edge of the clock and OF stage fetch the output during the falling edge. This would mean the final PO stage and OF stage can be done in one clock cycle making the total number of cycles $=$ $13$. And $13$ is the answer given in GATE key. $$\\small \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|} \\hline &\\bf{t_1}&\\bf{t_2}&\\bf{t_3}&\\bf{t_4}&\\bf{t_5}&\\bf{t_6}&\\bf{t_7}&\\bf{t_8}&\\bf{t_9}&\\bf{t_{10}}&\\bf{t_{11}}&\\bf{t_{12}}&\\bf{t_{13}}\\\\ \\hline \\textbf{I1}&\\text{IF}&\\text{OF}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{WB}\\\\ \\textbf{I2}&&\\text{IF}&\\text{OF}&\\color{red}{-}&\\color{red}{-}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{PO}&\\color{green}{\\boxed{\\text{PO}}}&\\text{WB}\\\\ \\textbf{I3}&&&\\text{IF}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{green} {\\boxed{\\text{OF}}}&\\color{blue}{\\boxed{\\text{PO}}}&\\text{WB}\\\\ \\textbf{I4}&&&&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\text{IF} &\\color{blue}{\\boxed{\\text{OF}}} &\\text{PO}&\\text{WB}\\\\ \\hline\\end{array}$$ Reference: https://web.archive.org/web/20120105062937/http://www.cs.iastate.edu/%7Eprabhu/Tutorial/PIPELINE/forward.html",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a processor with byte-addressable memory. Assume that all registers, including program counter (PC) and Program Status Word (PSW), are size of two bytes. A stack in the main memory is implemented from memory location $(0100)_{16}$ and it grows upward. The stack pointer (SP) points to the top element of the stack. The current value of SP is $(016E)_{16}$. The CALL instruction is of two words, the first word is the op-code and the second word is the starting address of the subroutine (one word = 2 bytes). The CALL instruction is implemented as follows: Store the current value of PC in the stack Store the value of PSW register in the stack Load the statring address of the subroutine in PC The content of PC just before the fetch of a CALL instruction is $(5FA0)_{16}$. After execution of the CALL instruction, the value of the stack pointer is:",
+          "images": [],
+          "options": [
+            "A. $(016A)_{16}$",
+            "B. $(016C)_{16}$",
+            "C. $(0170)_{16}$",
+            "D. $(0172)_{16}$"
+          ],
+          "correct_answer": "D",
+          "explanation": "First we have to consider here memory is byte-addressable The CALL instruction is implemented as follows: Store the current value of PC in the stack PC is $2$ bytes it means when we store pc in stack it will increase by $2$ So current value of SP is $(016E)_{16} +2$ Store the value of PSW register in the stack PSW is $2$ byte it means when we store psw in stack it will increase by $2$ So current value of SP is $(016E)_{16}+2+2 =(0172)_{16}$ $D$",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Assume that for a certain processor, a read request takes $50\\:\\text{nanoseconds}$ on a cache miss and $5\\:\\text{nanoseconds}$ on a cache hit. Suppose while running a program, it was observed that $80\\%$ of the processor's read requests result in a cache hit. The average read access time in nanoseconds is ______.",
+          "images": [],
+          "options": [],
+          "correct_answer": "14",
+          "explanation": "Answer is: $14 \\ ns$ $= 0.8(5) + 0.2(50)$ PS: Here instead of cache and main memory access times, time taken on a cache hit and miss are directly given in question. So, $$\\text{Average Access Time} = \\text{Hit Rate} \\times \\text{Hit Time} + \\text{Miss Rate} \\times \\text{Miss Time}$$",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer system has a three-level memory hierarchy, with access time and hit ratios as shown below: $$\\overset{ \\text {Level $1$ (Cache memory)} \\\\ \\text{Access time = $50 nsec/byte$}}{\\begin{array}{|l|l|} \\hline \\textbf{Size} & \\textbf{Hit ratio} \\\\\\hline \\text{$8 M $ bytes} & \\text{$0.80$} \\\\\\hline \\text{$16 M $ bytes} & \\text{$0.90$} \\\\\\hline \\text{$64 M $ bytes} & \\text{$0.95$} \\\\\\hline \\end{array}} \\quad \\overset{\\text {Level $2$ (Main memory)} \\\\ \\text{Access time = $200 nsec/byte$}}{\\begin{array}{|l|l|l|} \\hline \\textbf{Size} & \\textbf{Hit ratio} \\\\\\hline \\text{$4 M$ bytes} & \\text{$0.98$} \\\\\\hline \\text{$16 M$ bytes} & \\text{$0.99$} \\\\\\hline \\text{$64 M$ bytes} & \\text{$0.995$} \\\\\\hline \\end{array}} \\quad \\overset{ \\text {Level $3$} \\\\ \\text{Access time = $5$} \\mu \\text{sec/byte}}{\\begin{array}{|l|l|l|} \\hline \\textbf{Size} & \\textbf{Hit ratio} \\\\\\hline \\text{$260M$ bytes} & \\text{$1.0$} \\\\\\hline\\end{array}}$$",
+          "images": [],
+          "options": [
+            "A. What should be the minimum sizes of level $1$ and $2$ memories to achieve an average access time of less than $100 nsec$?",
+            "B. What is the average access time achieved using the chosen sizes of level $1$ and level $2$ memories?"
+          ],
+          "correct_answer": "61.25",
+          "explanation": "The equation for access time can be written as follows (assuming $a,b$ are the hit ratios of level 1 and level 2 respectively). $T=T_1 + (1-a)T_2+(1-a)\\times(1-b)T_3$ Here $T\\leq 100, T_1 = 50ns ,T_2 = 200ns$ and $T_3 = 5000 ns.$ On substituting the $a, b$ for the first case we get $T = 95ns$ for $a = 0.8$ and $b = 0.995.$ i.e., $L1 = 8M$ and $L2 = 64M.$ $T = 75ns$ for $a = 0.9$ and $b = 0.99.$ i.e., $L1 = 16M$ and $L2 = 4M$ B. $L_1 = 8M, a = 0.8, L_2 = 4M, b = 0.98$. So, $T = 50 + 0.2 \\times 200 + 0.2 \\times 0.02 \\times 5000 \\\\= 50 + 40 + 20 = 110ns$ $L_1 = 16M, a = 0.9, L_2 = 16M, b = 0.99$. So, $T = 50 + 0.1 \\times 200 + 0.1 \\times 0.01 \\times 5000 \\\\=50 + 20 + 5 = 75ns$ $L_1 = 64M, a = 0.95, L_2= 64M, b = 0.995$. So, $T = 50 + 0.05 \\times 200 + 0.05 \\times 0.005 \\times 5000 \\\\= 50 + 10 + 1.25 = 61.25ns$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A hard disk is connected to a $50$ MHz processor through a DMA controller. Assume that the initial set-up of a DMA transfer takes $1000$ clock cycles for the processor, and assume that the handling of the interrupt at DMA completion requires $500$ clock cycles for the processor. The hard disk has a transfer rate of $2000$ Kbytes/sec and average block transferred is $4$ K bytes. What fraction of the processor time is consumed by the disk, if the disk is actively transferring $100\\%$ of the time?",
+          "images": [],
+          "options": [],
+          "correct_answer": "1.4 : 1.5",
+          "explanation": "$2000$ $KB$ is transferred in $1$ second $4$ $KB$ transfer is $(4/2000 ) * 1000 \\text{ ms} = 2 \\text{ ms}$ Total cycle required for locking and handling of interrupts after DMA transfer control $=(1000+500) \\text{ clock cycle } = 1500 \\text{ clock cycle }$ Now, $50$ $Mhz = 50 * 10^6 = 0.02 \\text{ microsecond}$ So, $(1500 * 0.02 ) = 30 \\text{ microsecond}$ $30 \\mu s$ for initialization and termination and $\\ 2 ms$ for data transfer. The CPU time is consumed only for initialization and termination. Fraction of CPU time consumed $=\\dfrac{30\\mu s}{(30\\mu s+2\\,ms)}=0.015$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A micro program control unit is required to generate a total of $25$ control signals. Assume that during any micro instruction, at most two control signals are active. Minimum number of bits required in the control word to generate the required control signals will be:",
+          "images": [],
+          "options": [
+            "A. $2$",
+            "B. $2.5$",
+            "C. $10$",
+            "D. $12$"
+          ],
+          "correct_answer": "C",
+          "explanation": "The best sense I can make of this question is that you want to transmit up to $2$ simultaneous signals out of a choice of $25$, and ask how many bits you need for that. One solution would be to have $2$ groups of $5-bits$, each can send one of $31$ signals (or the absence of signal). But it is not optimal. The number of different states is $1 \\text{(no signal)} + 25 \\text{(one signal)} + (25\\times 24/2) \\text{(two signals)} = 326\\text{ states}.$ You can transmit any of these states over $9 -bits$. But it is more complex to encode/ decode, adding an extra bit would probably cost less. Hence C is correct option. Reference: https://www.ocf.berkeley.edu/~wwu/cgi-bin/yabb/YaBB.cgi?board=riddles_cs;action=display;num=1354778770",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "For the daisy chain scheme of connecting I/O devices, which of the following statements is true?",
+          "images": [],
+          "options": [
+            "A. It gives non-uniform priority to various devices",
+            "B. It gives uniform priority to all devices",
+            "C. It is only useful for connecting slow devices to a processor device",
+            "D. It requires a separate interrupt pin on the processor for each device"
+          ],
+          "correct_answer": "A",
+          "explanation": "Daisy chaining approach tells the processor in which order the interrupt should be handled by providing priority to the devices. In daisy-chaining method, all the devices are connected in serial. The device with the highest priority is placed in the first position, followed by lower priority devices. The interrupt pin is common to all. So answer is option (A).",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Relative mode of addressing is most relevant to writing: Related Questions : GATE CSE 2004 | Question: 20 GATE CSE 1998 | Question: 1.19 GATE CSE 1987 | Question: 1-V 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Co – routines",
+            "B. Position – independent code",
+            "C. Shareable code",
+            "D. Interrupt Handlers"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer is ( B ) . Relative mode addressing is most relevant to writing a position-independent code. Reference: http://en.wikipedia.org/wiki/Addressing_mode#PC-relative",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer system has a $4 \\ K$ word cache organized in block-set-associative manner with $4$ blocks per set, $64$ words per block. The number of bits in the SET and WORD fields of the main memory address format is:",
+          "images": [],
+          "options": [
+            "A. $15, 40$",
+            "B. $6, 4$",
+            "C. $7, 2$",
+            "D. $4, 6$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Number of sets $=\\dfrac{4K}{(64\\times 4)}=16$ So, we need $4$-bits to identify a set $\\Rightarrow$ SET $= 4$ bits. $64$ words per block mean WORD is $6$-bits. So, the answer is an option (D).",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A sequence of two instructions that multiplies the contents of the DE register pair by 2 and stores the result in the HL register pair (in 8085 assembly language) is: 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. XCHG and DAD B",
+            "B. XTHL and DAD H",
+            "C. PCHL and DAD D",
+            "D. XCHG and DAD H"
+          ],
+          "correct_answer": "would",
+          "explanation": "ans b)",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The principle of locality justifies the use of:",
+          "images": [],
+          "options": [
+            "A. Interrupts",
+            "B. DMA",
+            "C. Polling",
+            "D. Cache Memory"
+          ],
+          "correct_answer": "D",
+          "explanation": "Answer is (D) . Locality of reference is actually the frequent accessing of any storage location or some value. We can say in simple language that whatever things are used more frequently, they are stored in the locality of reference. So we have cache memory for the purpose.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In a vectored interrupt: 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. The branch address is assigned to a fixed location in memory",
+            "B. The interrupting source supplies the branch information to the processor through an interrupt vector",
+            "C. The branch address is obtained from a register in the processor",
+            "D. None of the above"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer: B A vectored interrupt is a processing technique in which the interrupting device directs the processor to the appropriate interrupt service routine. This is in contrast to a polled interrupt system, in which a single interrupt service routine must determine the source of the interrupt by checking all potential interrupt sources, a slow and relatively laborious process.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following statements is true? 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. ROM is a Read/Write memory",
+            "B. PC points to the last instruction that was executed",
+            "C. Stack works on the principle of LIFO",
+            "D. All instructions affect the flags"
+          ],
+          "correct_answer": "C",
+          "explanation": "It is (C) . Only the top of the stack can be accessed at any time. You can imagine a stack to be opened from only one side data structure. So that if we put one thing over the other, we are able to access the last thing we inserted first. That is Last in First Out (LIFO). ROM is Read-Only Memory. PC points to the next instruction to be executed. Not all instructions affect the flags.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "State True or False with one line explanation Expanding opcode instruction formats are commonly employed in RISC. (Reduced Instruction Set Computers) machines. 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1",
+          "explanation": "I think the answer is TRUE . RISC systems use fixed length instruction to simplify pipeline. eg: MIPS, PowerPC: Instructions are $4$ bytes long. CISC systems use Variable-length instructions. eg: Intel $80X86$: Instructions vary from $1$ to $17$ bytes long. Now the challenge is: How to fit multiple sets of instruction types into same (limited) number of bits (Fixed size instruction)? Here comes Expanding opcode into the picture. RISC systems commonly uses Expanding opcode technique to have fixed size instructions.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer system has an $L1$ cache, an $L2$ cache, and a main memory unit connected as shown below. The block size in $L1$ cache is $4$ words. The block size in $L2$ cache is $16$ words. The memory access times are $2$ nanoseconds, $20$ nanoseconds and $200$ nanoseconds for $L1$ cache, $L2$ cache and the main memory unit respectively. When there is a miss in $L1$ cache and a hit in $L2$ cache, a block is transferred from $L2$ cache to $L1$ cache. What is the time taken for this transfer?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "2352_img1.png"
+            }
+          ],
+          "options": [
+            "A. $2$ nanoseconds",
+            "B. $20$ nanoseconds",
+            "C. $22$ nanoseconds",
+            "D. $88$ nanoseconds"
+          ],
+          "correct_answer": "C",
+          "explanation": "Ideally the answer should be $20$ ns as it is the time to transfer a block from $L2$ to $L1$ and this time only is",
+          "year": 2010,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A micro instruction is to be designed to specify: The minimum number of bits in the micro-instruction is: $9$ $5$ $8$ None of the above",
+          "images": [],
+          "options": [
+            "A. none or one of the three micro operations of one kind and",
+            "B. none or upto six micro operations of another kind"
+          ],
+          "correct_answer": "C",
+          "explanation": "Actually the given question incorporates the concept of horizontal μprogramming (also known as decoded form of control signals) and vertical μprogramming (also known as encoded form of control signals) The $(a)$ part says : none or one of the three micro operations of one kind This is referred to encoding form of vertical one since at most one signal can be active in vertical microprogramming since it involves use of external decoder to select one control signal out of the given control signals.. No of bits required for vertical microprogramming given n number of control signals $=\\lceil ( \\log_{2} n )\\rceil$ Here, $n = 3$ So, no of bits required for part $(a)$ $=\\lceil( \\log_{2} 3)\\rceil= 2$ Now coming to $(b)$ part , it says : none or upto six micro operations of another kind at maximum we can have at most $6$ microoperations of another kind at a time. To accommodate that we need decoded form of control signals which is horizontal signals. So, no of bits required for $(b)$ part $=$ No of control signals of $(b)$ kind $= 6$ Therefore overall bits required to accommodate both $(a)$ and $(b),$ $ = 2 + 6=8-bits$ Besides this, address field, flags etc are also there in a control word. That is why it is",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The correct matching for the following pairs is: $$\\begin{array}{ll} \\text{(A) DMA I/O} & \\text{(1) High speed RAM} \\\\ \\text{(B) Cache} & \\text{(2) Disk} \\\\ \\text{(C) Interrupt I/O} & \\text{(3) Printer} \\\\ \\text{(D) Condition Code Register} & \\text{(4) ALU} \\\\ \\end{array}$$",
+          "images": [],
+          "options": [
+            "A. $A-4\\quad B-3\\quad C-1\\quad D-2$",
+            "B. $A-2\\quad B-1\\quad C-3\\quad D-4$",
+            "C. $A-4\\quad B-3\\quad C-2\\quad D-1$",
+            "D. $A-2\\quad B-3\\quad C-4\\quad D-1$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Correct Option: B. $A-2,B-1,C-3,D-4$ $$\\begin{array}{c l| c l} \\hline \\text{A.} & \\text{DMA I/O} & 2. & \\text{Disk}\\\\\\hline \\text{B.} & \\text{Cache} & 1. & \\text{High-speed RAM} \\\\\\hline \\text{C.} & \\text{Interrupt I/O} & 3. & \\text{Printer}\\\\\\hline \\text{D.} & \\text{Condition Code Register} & 4. & \\text{ALU} \\\\\\hline \\end{array}$$ Reason: DMA I/O - For high speed, high volume data transfer from disk without affecting the processor(in most cases). Cache-A high speed & low memory version of a RAM. Interrupt I/O - The printer sends an interrupt signal when it is ready for use. Condition Code Register - Part of the ALU, as a special purpose register, to store flag bits. [Source - Google/Wikipedia]",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A $5-$stage pipelined processor has Instruction Fetch (IF), Instruction Decode (ID), Operand Fetch (OF), Perform Operation (PO) and Write Operand (WO) stages. The IF, ID, OF and WO stages take $1$ clock cycle each for any instruction. The PO stage takes $1$ clock cycle for ADD and SUB instructions, $3$ clock cycles for MUL instruction and $6$ clock cycles for DIV instruction respectively. Operand forwarding is used in the pipeline. What is the number of clock cycles needed to execute the following sequence of instructions? $$\\begin{array}{|c|l||} \\hline \\textbf {Instruction} & \\textbf{Meaning of instruction} \\\\\\hline \\text{$t _0$: MUL $R _2$,$R _0$,$R _1$} & \\text{R}_2 \\gets \\text{R}_0*\\text{R}_1\\\\\\hline \\text{$t _1$: DIV $R _5,R _3,R _4$} & \\text{R}_5 \\gets \\text{R}_3 ∕ \\text{R}_4\\\\\\hline \\text{$t _2$: ADD $R _2,R _5,R _2$} & \\text{R}_2 \\gets \\text{R}_5 + \\text{R}_2 \\\\\\hline t_3: \\text{SUB} \\:\\text{R}_5,\\text{R}_2,\\text{R}_6 & \\text{R}_5 \\gets \\text{R}_2 - \\text{R}_6 \\\\\\hline\\end{array}$$",
+          "images": [],
+          "options": [
+            "A. $13$",
+            "B. $15$",
+            "C. $17$",
+            "D. $19$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$\\small \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|} \\hline &\\bf{t_1}&\\bf{t_2}&\\bf{t_3}&\\bf{t_4}&\\bf{t_5}&\\bf{t_6}&\\bf{t_7}&\\bf{t_8}&\\bf{t_9}&\\bf{t_{10}}&\\bf{t_{11}}&\\bf{t_{12}}&\\bf{t_{13}}&\\bf{t_{14}}&\\bf{t_{15}}\\\\ \\hline \\textbf{MUL}&\\text{IF}&\\text{ID}&\\text{OF}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{WO}\\\\ \\textbf{DIV}&&\\text{IF}&\\text{ID}&\\text{OF}&\\color{red}{-}&\\color{red}{-}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{PO}&\\text{PO}&\\color{green}{\\boxed{\\text{PO}}}&\\text{WO}\\\\ \\textbf{ADD}&&&\\text{IF}&\\text{ID}&\\color{red}{-}&\\color{red}{-}&\\text{OF}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-} &\\color{blue}{\\boxed{\\color{green}{\\boxed{\\text{PO}}}}}&\\text{WO}\\\\ \\textbf{SUB}&&&&\\text{IF}&\\color{red}{-}&\\color{red}{-}&\\text{ID}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&\\color{red}{-} &\\text{OF} &\\color{blue}{\\boxed{\\text{PO}}}&\\text{WO}\\\\ \\hline\\end{array}$ Operand forwarding allows an output to be passed for the next instruction. Here from the output of PO stage of DIV instruction operand is forwarded to the PO stage of ADD instruction and similarly between ADD and SUB instructions. Hence, $15$cycles required. http://www.cs.iastate.edu/~prabhu/Tutorial/PIPELINE/forward.html $B$",
+          "year": 2010,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A computer has a $256\\text{-KByte}$, 4-way set associative, write back data cache with block size of $32\\text{-Bytes}$. The processor sends $32\\text{-bit}$ addresses to the cache controller. Each cache tag directory entry contains, in addition to address tag, $2$ valid bits, $1$ modified bit and $1$ replacement bit. The number of bits in the tag field of an address is",
+          "images": [],
+          "options": [
+            "A. $11$",
+            "B. $14$",
+            "C. $16$",
+            "D. $27$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Total cache size $= 256\\ KB$ Cache block size $=32\\text{ Bytes}$ So, number of cache entries $=\\dfrac{ 256\\ K}{32}=8\\ K$ Number of sets in cache $=\\dfrac{ 8\\ K}{4}=2\\ K$ as cache is $4\\text{-way}$ associative. So, $\\log(2048) = 11\\ \\text{bits}$ are needed for accessing a set. Inside a set we need to identify the cache entry. No. of memory block possible $=\\dfrac{\\text{Memory size}}{\\text{Cache block size}}$ $=\\dfrac{2^{32}}{32} = 2^{27}$. So, no. of memory block that can go to a single cache set $=\\dfrac{2^{27}}{2^{11}}$ $=2^{16}.$ So, we need $16\\text{ tag bits}$ along with each cache entry to identify which of the possible $2^{16}$ blocks is being mapped there. $C$",
+          "year": 2012,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "An $8\\text{KB}$ direct-mapped write-back cache is organized as multiple blocks, each size of $32\\text{-bytes}$. The processor generates $32\\text{-bit}$ addresses. The cache controller contains the tag information for each cache block comprising of the following. $1$ valid bit $1$ modified bit As many bits as the minimum needed to identify the memory block mapped in the cache. What is the total size of memory needed at the cache controller to store meta-data (tags) for the cache?",
+          "images": [],
+          "options": [
+            "A. $4864$ bits",
+            "B. $6144$ bits",
+            "C. $6656$ bits",
+            "D. $5376$ bits"
+          ],
+          "correct_answer": "D",
+          "explanation": "Number of cache blocks $=\\dfrac{\\text{cache size}}{\\text{size of a block}}$ $=\\dfrac{8\\ KB}{32\\ B}$ $=256$ So, we need $8\\text{-bits}$ for indexing the $256$ blocks of the cache. And since a block is $32\\text{ bytes}$ we need $5$ WORD bits to address each byte. So, out of the remaining $19\\text{-bits}$ (32 - 8 - 5) should be tag bits. So, a tag entry size $=19 + 1\\text{(valid bit)}+1\\text{(modified bit)}=21\\text{ bits}.$ Total size of metadata $= 21\\times \\text{Number of cache blocks}$ $= 21\\times 256$ $=5376\\text{ bits}$ $D$",
+          "year": 2011,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider an instruction pipeline with four stages $\\text{(S1, S2, S3 and S4)}$ each with combinational circuit only. The pipeline registers are required between each stage and at the end of the last stage. Delays for the stages and for the pipeline registers are as given in the figure. What is the approximate speed up of the pipeline in steady state under ideal conditions when compared to the corresponding non-pipeline implementation? ed Nov 9, 2025 reply Follow flag Pipeline = max (5, 6, 11, 8) + 1 = 12 ns Non-pipe = 5+6+11+8 = 30 ns speed up = 30 / 12 = 2.5 1 1 reply Share Please log in or register to add a comment.",
+          "images": [
+            {
+              "index": 1,
+              "filename": "2143_img1.jpg"
+            }
+          ],
+          "options": [
+            "A. $4.0$",
+            "B. $2.5$",
+            "C. $1.1$",
+            "D. $3.0$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer is ( B) 2.5 In pipeline system, Time taken is determined by the max delay at any stage i.e., $11$ $\\text{ns}$ plus the delay incurred by pipeline stages i.e., $1$ $\\text{ns}$ = $12$ $\\text{ns}$. In non-pipeline system, Delay = $5$ $\\text{ns}$ $+$ $6$ $\\text{ns}$ $+$ $11$ $\\text{ns}$ $+$ $8$ $\\text{ns}$ $=$ $30$ $\\text{ns}$. $\\therefore$ $\\text{The speedup is}$ $\\frac{30}{12} = 2.5$ $\\text{ns}$.",
+          "year": 2011,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "On a non-pipelined sequential processor, a program segment, which is the part of the interrupt service routine, is given to transfer $500$ bytes from an I/O device to memory. Initialize the address register Initialize the count to 500 LOOP: Load a byte from device Store in memory at address given by address register Increment the address register Decrement the count If count !=0 go to LOOP Assume that each statement in this program is equivalent to a machine instruction which takes one clock cycle to execute if it is a non-load/store instruction. The load-store instructions take two clock cycles to execute. The designer of the system also has an alternate approach of using the DMA controller to implement the same transfer. The DMA controller requires $20$ clock cycles for initialization and other overheads. Each DMA transfer cycle takes two clock cycles to transfer one byte of data from the device to the memory. What is the approximate speed up when the DMA controller based design is used in a place of the interrupt driven program based input-output? ed Dec 30, 2025 reply Follow flag @goku4199 Please hide the comment, I have upvoted the answer, writing at two places may get you flagged for spam! 0 0 reply Share js__ commented Jan 21 reply Follow flag speed-up = (2 + 7*500) / (20 + 2*500) = 3502 / 1020 = 3.43 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $3.4$",
+            "B. $4.4$",
+            "C. $5.1$",
+            "D. $6.7$"
+          ],
+          "correct_answer": "A",
+          "explanation": "$$\\begin{array}{llc} & \\textbf{Statement} & \\textbf{Clock Cycles(s) Needed} \\\\\\hline & \\text{Initialize the address register} & \\text{1} \\\\ & \\text{Initialize the count to 500} & \\text{1} \\\\ \\text{LOOP:} &\\textbf{Load}\\text{ a byte from device} & \\text{2} \\\\ & \\textbf{Store}\\text{ in memory at address given by address register} & \\text{2} \\\\ & \\text{Increment the address register} & \\text{1} \\\\ & \\text{Decrement the count} & \\text{1} \\\\ & \\text{If count != 0 go to LOOP} & \\text{1} \\end{array}$$ Interrupt driven transfer time $= 1+1+500\\times(2+2+1+1+1) = 3502$ DMA based transfer time $= 20+500\\times 2 = 1020$ Speedup $= 3502/1020 = 3.4$ $A$",
+          "year": 2011,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a hypothetical processor with an instruction of type $\\text{LW R1, 20(R2)}$, which during execution reads a $32\\text{-bit}$ word from memory and stores it in a $32\\text{-bit}$ register $\\text{R1}$. The effective address of the memory location is obtained by the addition of a constant $20$ and the contents of register $\\text{R2}$. Which of the following best reflects the addressing mode implemented by this instruction for the operand in memory? Related Questions : ISRO-DEC2017-43 ed Sep 11, 2024 reply Follow flag In register indirect scaled addressing mode , index and scaling factor should be provide with the base register which is not provided in the instruction and in base indexed addressing base register should be provided with the index which is given in the instruction hence ''d' will be the most appropriate option. 1 1 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Immediate addressing",
+            "B. Register addressing",
+            "C. Register Indirect Scaled Addressing",
+            "D. Base Indexed Addressing"
+          ],
+          "correct_answer": "D",
+          "explanation": "The answer is (D). Base Index Addressing, as the content of register $\\text{R2}$ will serve as the index, and $20$ will be the Base address.",
+          "year": 2011,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The memory access time is $1$ nanosecond for a read operation with a hit in cache, $5$ nanoseconds for a read operation with a miss in cache, $2$ nanoseconds for a write operation with a hit in cache and $10$ nanoseconds for a write operation with a miss in cache. Execution of a sequence of instructions involves $100$ instruction fetch operations, $60$ memory operand read operations and $40$ memory operand write operations. The cache hit-ratio is $0.9$. The average memory access time (in nanoseconds) in executing the sequence of instructions is ______.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1.68",
+          "explanation": "The question is to find the time taken for, $\\frac{\\Large100 \\space \\text{fetch operations and $60$ operand read operations and $40$ memory operand write operations}}{\\Large\\text{total number of instructions}}$. Total number of instructions $=100+60+40 =200$ Time taken for $100$ fetch operations(fetch = read) $= 100*((0.9*1)+(0.1*5))$ $1$ corresponds to time taken for read when there is cache hit $= 140 \\,\\text{ns}$ $0.9$ is cache hit rate Time taken for $60$ read operations, $= 60*((0.9*1)+(0.1*5))$ $= 84\\,\\text{ns}$ Time taken for $40$ write operations $= 40*((0.9*2)+(0.1*10))$ $= 112\\,\\text{ns}$ Here, $2$ and $10$ are the times taken for write when there is cache hit and no cache hit respectively. So,the total time taken for $200$ operations is, $= 140+84+112$ $= 336\\,\\text{ns}$ Average time taken $=$ time taken per operation $=\\dfrac{336}{200}$ $= 1.68\\,\\text{ns}$",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "An instruction pipeline has five stages, namely, instruction fetch (IF), instruction decode and register fetch (ID/RF), instruction execution (EX), memory access (MEM), and register writeback (WB) with stage latencies $1$ ns, $2.2 $ ns, $2$ ns, $1$ ns, and $0.75$ ns, respectively (ns stands for nanoseconds). To gain in terms of frequency, the designers have decided to split the ID/RF stage into three stages (ID, RF1, RF2) each of latency $2.2/3$ ns. Also, the EX stage is split into two stages (EX1, EX2) each of latency $1$ ns. The new design has a total of eight pipeline stages. A program has $20\\%$ branch instructions which execute in the EX stage and produce the next instruction pointer at the end of the EX stage in the old design and at the end of the EX2 stage in the new design. The IF stage stalls after fetching a branch instruction until the next instruction pointer is computed. All instructions other than the branch instruction have an average CPI of one in both the designs. The execution times of this program on the old and the new design are $P$ and $Q$ nanoseconds, respectively. The value of $P/Q$ is __________.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1.50 : 1.60",
+          "explanation": "Five stages: (IF), instruction decode and register fetch (ID/RF), instruction execution (EX), memory access (MEM), and register writeback (WB) P old design: with stage latencies $\\text{1 ns, 2.2 ns, 2 ns, 1 ns, and 0.75 ns}$ $\\text{MAX( 1 ns, 2.2 ns, 2 ns, 1 ns, and 0.75 ns) = 2.2nsec}$ AVG instruction execution time is $\\text{Tavg=(1+no of stalls$\\times $branch penality)$\\times $cycle time}$ $=(1+0.20\\times 2)2.2$ { branch peanlity is $2$ because the next instruction pointer at the end of the EX stage in the old design.} $=3.08 \\text{ nsec}$ Q :new DESIGN: the designers decided to split the ID/RF stage into three stages $\\text{(ID, RF1, RF2)}$ each of latency $\\dfrac{2.2}{3}\\text{ ns}$. Also, the $EX$ stage is split into two stages $\\text{(EX1, EX2)}$ each of latency $1\\text{ ns}$. The new design has a total of eight pipeline stages. Time of stages in new design $=\\text{{1 ns, 0.73ns, 0.73ns, 0.73ns , 1ns,1ns, 1 ns, and 0.75 ns}}$ (IF), instruction decode register fetch (ID/RF) $\\rightarrow$ further divided into $3$ ie with latency $0.73$ of each instruction execution (EX) $\\rightarrow$ further divided int $1\\text{ nsec}$ of each) memory access (MEM) register writeback (WB) $\\text{MAX( 1 ns, 0.73ns, 0.73ns, 0.73ns , 1ns,1ns, 1 ns, and 0.75 ns) =1 nsec}$ AVG instruction execution time is $\\text{Tavg=(1+no of stalls$\\times $branch penality)$\\times $cycle time}$ $=(1+0.20\\times 5)1$ { branch penalty is $5$ because the next instruction pointer at the end of the $EX2$ stage in the new design.} $=2 \\text{nsec}$ final result $\\dfrac{P}{Q}=\\dfrac{3.08}{2}=1.54$",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following processors (ns stands for nanoseconds). Assume that the pipeline registers have zero latency. $\\text{P1:}$ Four-stage pipeline with stage latencies $\\text{1 ns, 2 ns, 2 ns, 1 ns}$. $\\text{P2:}$ Four-stage pipeline with stage latencies $\\text{1 ns, 1.5 ns, 1.5 ns, 1.5 ns}$. $\\text{P3:}$ Five-stage pipeline with stage latencies $\\text{0.5 ns, 1 ns, 1 ns, 0.6 ns, 1 ns}$. $\\text{P4:}$ Five-stage pipeline with stage latencies $\\text{0.5 ns, 0.5 ns, 1 ns, 1 ns, 1.1 ns}$. Which processor has the highest peak clock frequency?",
+          "images": [],
+          "options": [
+            "A. $\\text{P1}$",
+            "B. $\\text{P2}$",
+            "C. $\\text{P3}$",
+            "D. $\\text{P4}$"
+          ],
+          "correct_answer": "C",
+          "explanation": "frequency $=\\dfrac{1}{ \\text{max(time in stages)}}$ for $P_3$, it is $\\dfrac{1}{1} = 1 \\; \\textsf{GHz}$ for $P_1$, it is $\\dfrac{1}{2} = 0.5\\; \\textsf{GHz}$ for $P_2$, it is $\\dfrac{1}{1.5} = 0.67\\;\\textsf{GHz}$ for $P_4$, it is $\\dfrac{1}{1.1} = 0.90 \\;\\textsf{GHz}$ $C$",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "If the associativity of a processor cache is doubled while keeping the capacity and block size unchanged, which one of the following is guaranteed to be NOT affected?",
+          "images": [],
+          "options": [
+            "A. Width of tag comparator",
+            "B. Width of set index decoder",
+            "C. Width of way selection multiplexer",
+            "D. Width of processor to main memory data bus"
+          ],
+          "correct_answer": "D",
+          "explanation": "If associativity is doubled, keeping the capacity and block size constant, then the number of sets gets halved. So, width of set index decoder can surely decrease - (B) is false. Width of way-selection multiplexer must be increased as we have to double the ways to choose from- (C) is false As the number of sets gets decreased, the number of possible cache block entries that a set maps to gets increased. So, we need more tag bits to identify the correct entry. So, (A) is also false. (D) is the main memory data bus has nothing to do with cache associativity- this can be answered without even looking at other options.",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In designing a computer's cache system, the cache block (or cache line) size is an important parameter. Which one of the following statements is correct in this context?",
+          "images": [],
+          "options": [
+            "A. A smaller block size implies better spatial locality",
+            "B. A smaller block size implies a smaller cache tag and hence lower cache tag overhead",
+            "C. A smaller block size implies a larger cache tag and hence lower cache hit time",
+            "D. A smaller block size incurs a lower cache miss penalty"
+          ],
+          "correct_answer": "D",
+          "explanation": "A smaller block size means during a memory access only a smaller part of near by addresses are brought to cache- meaning spatial locality is reduced. A smaller block size means more number of blocks (assuming cache size constant) and hence index bits go up and offset bits go down. But the tag bits remain the same. A smaller block size implying larger cache tag is true, but this can't lower cache hit time in any way. A smaller block size incurs a lower cache miss penalty. This is because during a cache miss, an entire cache block is fetched from next lower level of memory. So, a smaller block size means only a smaller amount of data needs to be fetched and hence reduces the miss penalty (Cache block size can go till the size of data bus to the next level of memory, and beyond this only increasing the cache block size increases the cache miss penalty). $D$",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A $4$-way set-associative cache memory unit with a capacity of $16$ KB is built using a block size of $8$ words. The word length is $32$ bits. The size of the physical address space is $4$ GB. The number of bits for the TAG field is ____",
+          "images": [],
+          "options": [],
+          "correct_answer": "20",
+          "explanation": "Number of sets$=\\dfrac{\\text{cache size}}{\\text{sizeof a set}}$ Size of a set $=\\text{blocksize}\\times \\text{no. of blocks in a set}$ $= 8 \\text{ words}\\times 4\\text{ (4-way set-associative)}$ $= 8\\times 4\\times 4\\text{ (since a word is 32 bits = 4 bytes)}$ $= 128\\text{ bytes}.$ So, number of sets $=\\dfrac{16\\ KB}{(128\\ B)}=128$ Now, we can divide the physical address space equally between these $128$ sets. So, the number of bytes each set can access $=\\dfrac{4\\ GB}{128}$ $={32\\ MB}$ $=\\dfrac{32}{4}=8\\text{ M words}=1 \\text{ M blocks. ($2^{20}$ blocks)}$ So, we need $20$ tag bits to identify these $2^{20}$ blocks.",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider two processors $P_1$ and $P_2$ executing the same instruction set. Assume that under identical conditions, for the same input, a program running on $P_2$ takes $\\text{25%}$ less time but incurs $\\text{20%}$ more CPI (clock cycles per instruction) as compared to the program running on $P_1$. If the clock frequency of $P_1$ is $\\text{1GHZ}$, then the clock frequency of $P_2$ (in GHz) is ______.",
+          "images": [],
+          "options": [],
+          "correct_answer": "1.6",
+          "explanation": "CPU TIME $(T) =$ No. of Instructions $( I ) \\times$ No. of Cycles Per Instruction $(c) \\times$ Cycle Time $(t)$ OR CPU TIME $(T) = \\dfrac{\\text{No. of Instructions(I) $\\times$ No. of Cycles Per Instruction (c)}}{\\text{Clock frequency (f)}}$ $\\rightarrow T = I_{c} \\times CPI \\times F^{-1}$ $\\rightarrow \\dfrac{T \\times F}{CPI} = I_{c}$ $P_1$ & $P_2$ executing same instruction set So, No. of Instructions same for both $= I_1 = I_2 = I$ If $P_1$ takes $T_1$ time, $\\rightarrow T_2 = 0.75\\times T_1 \\rightarrow\\dfrac{T_{2}}{ T_{1}}=0.75$ If $P_1$ incurs $C_1$ clock cycles per instruction, $\\rightarrow C_2 =1.2 \\times C_1\\rightarrow \\dfrac{C_{2}}{C_{1}}=1.2$ Since $I$ is same for both, $\\rightarrow \\dfrac{ ( f_{1} \\times T_{1} )}{c1} = \\dfrac{ ( f_{2} \\times T_{2} )}{c2}$ and $f_1 =1\\ GHz$ $\\rightarrow F_2 =(\\dfrac{C_{2}}{C_{1}}) \\times (\\dfrac{T_{1}}{T_{2}}) \\times F_{1}$ $= \\dfrac{1.2 \\times 1 GHz}{0.75}=1.6\\ GHz$ Hence, the clock frequency of $P_2$ is $=1.6\\ GHz$.",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "An access sequence of cache block addresses is of length $N$ and contains n unique block addresses. The number of unique block addresses between two consecutive accesses to the same block address is bounded above by $k$. What is the miss ratio if the access sequence is passed through a cache of associativity $ A\\geq k $ exercising least-recently-used replacement policy?",
+          "images": [],
+          "options": [
+            "A. $\\left(\\dfrac{n}{N}\\right)$",
+            "B. $\\left(\\dfrac{1}{N}\\right)$",
+            "C. $\\left(\\dfrac{1}{A}\\right)$",
+            "D. $\\left(\\dfrac{k}{n}\\right)$"
+          ],
+          "correct_answer": "A",
+          "explanation": "There are $N$ accesses to cache. Out of these $n$ are unique block addresses. Now, we need to find the number of misses. (min. $n$ misses are guaranteed whatever be the access sequence due to $n$ unique block addresses). We are given that between two consecutive accesses to the same block, there can be only $k$ unique block addresses. So, for a block to get replaced we can assume that all the next $k$ block addresses goes to the same set (given cache is set-associative) which will be the worst case scenario (they may also go to a different set but then there is lesser chance of a replacement). Now, if associativity size is $\\geq k$, and if we use LRU (Least Recently Used) replacement policy, we can guarantee that these $k$ accesses won't throw out our previously accessed cache entry (for that we need at least k accesses). So, this means we are at the best-cache scenario for cache replacement -- out of $N$ accesses we miss only $n$ (which are unique and can not be helped from getting missed and there is no block replacement in cache). So, miss ratio is $n/N$. PS: In question it is given \"bounded above by $k$\", which should mean $k$ unique block accesses as $k$ is an integer, but to ensure no replacement this must be '$k-1$'. Guess, a mistake in question. $A$",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $6$-stage instruction pipeline, where all stages are perfectly balanced. Assume that there is no cycle-time overhead of pipelining. When an application is executing on this $6$-stage pipeline, the speedup achieved with respect to non-pipelined execution if $25$% of the instructions incur $2$ pipeline stall cycles is ____________",
+          "images": [],
+          "options": [],
+          "correct_answer": "4",
+          "explanation": "Time without pipeline $=6 \\text{ stages}=6 \\text{ cycles}$ Time with pipeline $=1+\\text{stall freqency}\\times \\text{stall cycle}$ $=1+.25\\times 2$ $=1.5$ Speed up $=\\dfrac{6}{1.5}=4$",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A CPU has a $32 KB$ direct mapped cache with $128$ byte-block size. Suppose A is two dimensional array of size $512 \\times512$ with elements that occupy $8$-bytes each. Consider the following two C code segments, $P1$ and $P2$. P1: for (i=0; i<512; i++) { for (j=0; j<512; j++) { x +=A[i] [j]; } } P2: for (i=0; i<512; i++) { for (j=0; j<512; j++) { x +=A[j] [i]; } } $P1$ and $P2$ are executed independently with the same initial state, namely, the array $A$ is not in the cache and $i$, $j$, $x$ are in registers. Let the number of cache misses experienced by $P1$ be $M_{1}$and that for $P2$ be $M_{2}$. The value of $M_{1}$ is:",
+          "images": [],
+          "options": [
+            "A. $0$",
+            "B. $2048$",
+            "C. $16384$",
+            "D. $262144$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Code being C implies array layout is row-major. http://en.wikipedia.org/wiki/Row-major_order When $A[0][0]$ is fetched, $128$ consecutive bytes are moved to cache. So, for the next $\\dfrac{128}{8} -1=15$ memory references there won't be a cache miss. For the next iteration of $i$ loop also the same thing happens as there is no temporal locality in the code. So, number of cache misses for $P1$ is $= \\dfrac{512}{16} \\times 512$ $ = 32 \\times 512 $ $=2^{14} = 16384$ $C$",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider two cache organizations. First one is $32 \\; \\textsf{KB}\\;2\\text{-way}$ set associative with $32 \\; \\text{byte}$ block size, the second is of same size but direct mapped. The size of an address is $32\\; \\text{bits}$ in both cases . A $2\\text{-to-}1$ multiplexer has latency of $0.6 \\; \\text{ns}$ while a $k\\text{-bit}$ comparator has latency of $\\frac{k}{10} \\text{ns}$. The hit latency of the set associative organization is $h_1$ while that of direct mapped is $h_2$. The value of $h_1$ is:",
+          "images": [],
+          "options": [
+            "A. $2.4 \\text{ ns} $",
+            "B. $2.3 \\text{ ns}$",
+            "C. $1.8 \\text{ ns}$",
+            "D. $1.7 \\text{ ns}$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Cache size is $32 \\hspace{0.2cm} KB$ and cache block size is $32 \\hspace{0.2cm} B$. So, $\\text{Number of sets} = \\dfrac{\\text{cache size}}{\\text{no. of blocks in a set } \\times \\text{ block size}}$ $ = \\dfrac{32 \\hspace{0.2cm}KB}{2 \\times 32 \\hspace{0.2cm}B} = 512$ So, number of index bits needed $= 9$ ( since $2^9 = 512$). Number of offset bits $= 5$ (since $2^5 = 32 \\hspace{0.2cm} B$ is the block size and assuming byte addressing). So, number of tag bits $= 32 - 9 - 5 = 18$ (as memory address is of $32 \\hspace{0.2cm} bits$). So, $\\text{ time for comparing the data}$ $ \\text{= Time to compare the data + Time to select the block in set} \\\\= 0.6 + 18/10 \\text{ ns} \\\\= 2.4 \\text{ ns}.$ (Two comparisons of tag bits need to be done for each block in a set, but they can be carried out in parallel and the succeeding one multiplexed as the output). Reference: https://courses.cs.washington.edu/courses/cse378/09au/lectures/cse378au09-19.pdf $A$",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a new instruction named branch-on-bit-set (mnemonic bbs). The instruction “bbs reg, pos, label” jumps to label if bit in position pos of register operand reg is one. A register is $32$ -bits wide and the bits are numbered $0$ to $31,$ bit in position $0$ being the least significant. Consider the following emulation of this instruction on a processor that does not have bbs implemented. $temp\\leftarrow reg \\& mask$ Branch to label if temp is non-zero. The variable temp is a temporary register. For correct emulation, the variable mask must be generated by ed Aug 21, 2024 reply Follow flag this will help https://www.youtube.com/live/2greQ1zLPxs?feature=shared&t=710 7 7 reply Share mohdamaan commented Nov 6, 2024 reply Follow flag Watch this u will have no problem in this question. 1 1 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $ mask\\leftarrow \\text{0x1} << pos$",
+            "B. $ mask\\leftarrow \\text{0xffffffff} << pos$",
+            "C. $ mask\\leftarrow pos $",
+            "D. $ mask\\leftarrow \\text{0xf}$"
+          ],
+          "correct_answer": "A",
+          "explanation": "$mask\\leftarrow \\text{0x1} << pos$ We want to check for a particular bit position say $2$ (third from right). Let the number be $0xA2A7$ (last $4$ bits being $0111$). Here, the bit at position $2$ from right is $1$. So, we have to AND this with $0x0004$ as any other flag would give wrong value (may count other bits or discard the bit at position \"$pos$\"). And $0x0004$ is obtained by $0x1 << 2$ (by shifting $1$ \"$pos$\" times to the left we get a flag with $1$ being set only for the \"$pos$\" bit position).",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A CPU has a five-stage pipeline and runs at $1$ GHz frequency. Instruction fetch happens in the first stage of the pipeline. A conditional branch instruction computes the target address and evaluates the condition in the third stage of the pipeline. The processor stops fetching new instructions following a conditional branch until the branch outcome is known. A program executes $10^9$ instructions out of which $20\\%$ are conditional branches. If each instruction takes one cycle to complete on average, the total execution time of the program is:",
+          "images": [],
+          "options": [
+            "A. $\\text{1.0 second}$",
+            "B. $\\text{1.2 seconds}$",
+            "C. $\\text{1.4 seconds}$",
+            "D. $\\text{1.6 seconds}$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Delay slots in the pipeline caused due to a branch instruction is $2$ as after the $3^{rd}$ stage of current instruction (during $4^{th}$ stage) IF of next begins. Ideally, this should be during $2\\text{nd}$ stage. So, for total no. of instructions = $10^9$ and $20\\%$ branch, we have $0.2 \\times 2 \\times 10^9 = 4 \\times 10^8$ cycle penalty. Since clock speed is $1\\text{ GHz}$ and each instruction on average takes $1$ cycle, total execution time in seconds will be $=\\dfrac{10^9}{10^9}+4 \\times \\dfrac{10^8}{10^9}$ $= 1.4$ $C$",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A CPU has a cache with block size $64$ bytes. The main memory has $k$ banks, each bank being $c$ bytes wide. Consecutive $c$ − byte chunks are mapped on consecutive banks with wrap-around. All the $k$ banks can be accessed in parallel, but two accesses to the same bank must be serialized. A cache block access may involve multiple iterations of parallel bank accesses depending on the amount of data obtained by accessing all the $k$ banks in parallel. Each iteration requires decoding the bank numbers to be accessed in parallel and this takes $\\frac{k}{2} ns$.The latency of one bank access is $80$ ns. If $c = 2$ and $k = 24$, the latency of retrieving a cache block starting at address zero from main memory is:",
+          "images": [],
+          "options": [
+            "A. $92$ ns",
+            "B. $104$ ns",
+            "C. $172$ ns",
+            "D. $184$ ns"
+          ],
+          "correct_answer": "D",
+          "explanation": "This question is based on the concept of MEMORY INTERLEAVING... which says that instead of accessing data from memory every time, it is better to divide memory in modules or banks and distribute consecutive data on each module to access the data in parallel..to improve data transfer rate. For this purpose the additional decoder is used to access each module in parallel, so we have to count the latency of decoder also along with each module latency. now i am going to explain the solution:----> according to the original question there are k banks and k=24 and each bank has c bytes where c=2 . So total we got 2*24=48 bytes in one iteration. now we have to calculate one iteration latency: decoding time for one iteration is k/2 ns: 24/2=12 ns and each bank latency is 80 ns normally when decoder latency is given then total iteration time is calculated as; K*(decoder latency) + bank latency but here we have given the total decoding latency of iteration=12 ns therefore for one iteration we require : 12+80= 92 ns Now as we discussed above in one iteration we can get 48 bytes of data but question ask for cache block(64 bytes) transfer therefore we require 2 iterations....... that is 2*92=184 ns",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A machine has a $32\\text{-bit}$ architecture, with $1\\text{-word}$ long instructions. It has $64$ registers, each of which is $32$ bits long. It needs to support $45$ instructions, which have an immediate operand in addition to two register operands. Assuming that the immediate operand is an unsigned integer, the maximum value of the immediate operand is ____________",
+          "images": [],
+          "options": [],
+          "correct_answer": "16383",
+          "explanation": "$64$ registers means $6$ bits $(\\lceil \\log_2 64 \\rceil = 6)$ for a register operand. So, $2$ register operands require $12$ bits. Now, $45$ instructions require another $6$ bits for opcode $(\\lceil \\log_2 45 \\rceil = 6)$. So, totally $18$ bits. Now we have $32 - 18 = 14$ bits left for the immediate operand. So, the max value will be $2^{14} - 1 = 16383$ (as the operand is unsigned we do not need a sign bit and with $14$ bits we can represent from $0$ to $2^{14} -1$)",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The address space of $8086$ CPU is",
+          "images": [],
+          "options": [
+            "A. one Megabyte",
+            "B. $256$ Kilobytes",
+            "C. $1 \\;\\text{K}$ Megabytes",
+            "D. $64$ Kilobytes"
+          ],
+          "correct_answer": "A",
+          "explanation": "in 8086 architecture there are 16 bit data lines and 20 address lines. 20 lines means 2^20 byte = 1 mega byte",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following is true?",
+          "images": [],
+          "options": [
+            "A. Unless enabled, a CPU will not be able to process interrupts.",
+            "B. Loop instructions cannot be interrupted till they complete.",
+            "C. A processor checks for interrupts before executing a new instruction.",
+            "D. Only level triggered interrupts are possible on microprocessors."
+          ],
+          "correct_answer": "A",
+          "explanation": "Answer is (A). Options (B) and (D) are obviously false. A processor checks for the interrupt before FETCHING an instruction, so option (C) is also false.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following addressing modes permits relocation without any change whatsoever in the code? Related Questions : GATE CSE 2004 | Question: 20 GATE CSE 1996 | Question: 1.16, ISRO2016-42 GATE CSE 1987 | Question: 1-V 🚩 Edit necessary | 👮 Arjun ed Nov 16, 2024 reply Follow flag The question makes more sense if they remove the \"in the code\" part. If a swap happens, the base register needs to updated to reflect the new memory location at which the process is loaded. However, no such management is required in PC relative addressing. Hence, PC relative addressing requires no change whatsoever during both - the intial load and also while swapping the process into new memory location. 1 1 reply Share divy.sisodia commented Jan 16 reply Follow flag Answer: $Option (D)$ Think of it like this - If the code has already been written by using PC relative indexing addressing mode. In this case, if this code is reloacted to any position, nothing has to be changed. It will simply work as it is. But if the code was written using base register addressing mode, then if the code is relocated to some other location, then the contents of the base register will have to be changed. 1 1 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Indirect addressing",
+            "B. Indexed addressing",
+            "C. Base register addressing",
+            "D. PC relative addressing"
+          ],
+          "correct_answer": "D",
+          "explanation": "( D ) PC relative addressing is the best option. For Base register addressing, we have to change the address in the base register while in PC relative there is absolutely no change in code needed.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following sequence of micro-operations. MBR ← PC MAR ← X PC ← Y Memory ← MBR Which one of the following is a possible operation performed by this sequence?",
+          "images": [],
+          "options": [
+            "A. Instruction fetch",
+            "B. Operand fetch",
+            "C. Conditional branch",
+            "D. Initiation of interrupt service"
+          ],
+          "correct_answer": "D",
+          "explanation": "Here PC value is being stored in memory which is done when either CALL RETURN involved or there is Interrupt. As, we will have to come back to execute current instruction. So, options (A), (B) are clearly incorrect. Option (C) is incorrect because conditional branch does not require to save PC contents. Option (D) is correct as it matches the generic Interrupt Cycle : $$\\text{Interrupt Cycle:}$$ $$\\begin{array}{lcl} t_1:&\\text{MBR}&\\leftarrow(\\text{PC})\\\\ t_2:&\\text{MAR}&\\leftarrow(\\text{save-address})\\\\ &\\text{PC}&\\leftarrow(\\text{routine-address})\\\\ t_3:&\\text{Memory}&\\leftarrow(\\text{MBR})\\\\ \\end{array}$$",
+          "year": 2013,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "An instruction pipeline consists of $4$ stages – Fetch $(F)$, Decode field $(D)$, Execute $(E)$ and Result Write $(W)$. The $5$ instructions in a certain instruction sequence need these stages for the different number of clock cycles as shown by the table below $$\\begin{array}{|c|c|c|c|c|} \\hline \\textbf{Instruction} & \\textbf {F} &\\textbf {D} & \\textbf {E} & \\textbf{W } \\\\\\hline \\textbf{1}& 1 & 2 & 1 & 1 \\\\\\hline \\textbf{2} & 1 & 2 & 2 & 1\\\\\\hline \\textbf{3}& 2 & 1 & 3 & 2 \\\\\\hline \\textbf{4} & 1 & 3 & 2 & 1 \\\\\\hline \\textbf{5} & 1 & 2 & 1 & 2 \\\\\\hline \\end{array}$$ Find the number of clock cycles needed to perform the $5$ instructions.",
+          "images": [],
+          "options": [],
+          "correct_answer": "15",
+          "explanation": "Answer: 15 cycles are required. $$\\begin{array}{c|ccccccccccccc} &t_1&t_2&t_3&t_4&t_5&t_6&t_7&t_8&t_9&t_{10}&t_{11}&t_{12}&t_{13}&t_{14}&t_{15}\\\\\\hline I_1&\\text{F}&\\text{D}&\\text{D}&\\text{E}&\\text{W} \\\\ I_2&&\\text{F}&-&\\text{D}&\\text{D}&\\text{E}&\\text{E}&\\text{W}\\\\ I_3&&&&\\text{F}&\\text{F}&\\text{D}&-&\\text{E}&\\text{E}&\\text{E}&\\text{W}&\\text{W}\\\\ I_4&&&&&&\\text{F}&-&\\text{D}&\\text{D}&\\text{D}&\\text{E}&\\text{E}&\\text{W}\\\\ I_5&&&&&&&&\\text{F}&-&-&\\text{D}&\\text{D}&\\text{E}&\\text{W}&\\text{W}\\\\ \\end{array}$$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A certain processor supports only the immediate and the direct addressing modes. Which of the following programming language features cannot be implemented on this processor?",
+          "images": [],
+          "options": [
+            "A. Pointers",
+            "B. Arrays",
+            "C. Records",
+            "D. Recursive procedures with local variable"
+          ],
+          "correct_answer": "A;B;C;D",
+          "explanation": "Pointer access requires indirect addressing which can be simulated with indexed addressing or register indirect addressing but not with direct and immediate addressing. An array and record access needs a pointer access. So, options (A), (B) and (C) cannot be implemented on such a processor. Now, to handle recursive procedures we need to use stack. A local variable inside the stack will be accessed as *$(SP+\\text{offset})$ which is nothing but a pointer access and requires indirect addressing. Usually this is done by moving the SP value to Base register and then using Base Relative addressing to avoid unnecessary memory accesses for indirect addressing- but not possible with just direct and immediate addressing. So, options (A), (B), (C) and (D) are correct.",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The main difference(s) between a CISC and a RISC processor is/are that a RISC processor typically",
+          "images": [],
+          "options": [
+            "A. has fewer instructions",
+            "B. has fewer addressing modes",
+            "C. has more registers",
+            "D. is easier to implement using hard-wired logic"
+          ],
+          "correct_answer": "A;B;C;D",
+          "explanation": "All are properties of the RISC processor. http://cs.stanford.edu/people/eroberts/courses/soco/projects/risc/whatis/index.html http://cs.stanford.edu/people/eroberts/courses/soco/projects/risc/risccisc/index.html https://web.archive.org/web/20161106095605/http://alpha-1.movie.coocan.jp/computer/Control_E.html",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MSQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Arrange the following configuration for CPU in decreasing order of operating speeds: Hard wired control, Vertical microprogramming, Horizontal microprogramming. 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Hard wired control, Vertical microprogramming, Horizontal microprogramming.",
+            "B. Hard wired control, Horizontal microprogramming, Vertical microprogramming.",
+            "C. Horizontal microprogramming, Vertical microprogramming, Hard wired control.",
+            "D. Vertical microprogramming, Horizontal microprogramming, Hard wired control."
+          ],
+          "correct_answer": "B",
+          "explanation": "Hard wired control involves only hardware, whereas microprogramming is software approach. So, hardwire control should be faster than both microprogramming approaches. Between vertical and horizontal microprogramming. Horizontal is faster because in this control signals are not encoded whereas in vertical microprogramming to save memory signals are encoded. So, it takes less time in horizontal microprogramming because decoding of signals is not required. Therefore, final order is : hard wired control > horizontal microprogramming > vertical microprogramming $B$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The main memory of a computer has $2\\;\\text{cm}$ blocks while the cache has $2\\;\\text{c}$ blocks. If the cache uses the set associative mapping scheme with $2$ blocks per set, then block $k$ of the main memory maps to the set:",
+          "images": [],
+          "options": [
+            "A. $(k \\mod m)$ of the cache",
+            "B. $(k \\mod c)$ of the cache",
+            "C. $(k \\mod 2c)$ of the cache",
+            "D. $(k \\mod 2\\; cm)$ of the cache"
+          ],
+          "correct_answer": "B",
+          "explanation": "Number of cache blocks $= 2c$ Number of sets in cache $=\\dfrac{2c}{2}=c$ since each set has $2$ blocks. Now, a block of main memory gets mapped to a set (associativity of $2$ just means there are space for $2$ memory blocks in a cache set), and we have $2\\,cm$ blocks being mapped to $c$ sets. So, in each set $2m$ different main memory blocks can come and block $k$ of main memory will be mapped to $k \\mod c.$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In a $k$-way set associative cache, the cache is divided into $v$ sets, each of which consists of $k$ lines. The lines of a set are placed in sequence one after another. The lines in set $s$ are sequenced before the lines in set $(s+1)$. The main memory blocks are numbered 0 onwards. The main memory block numbered $j$ must be mapped to any one of the cache lines from",
+          "images": [],
+          "options": [
+            "A. $(j\\text{ mod }v) * k \\text{ to } (j \\text{ mod } v) * k + (k-1) $",
+            "B. $(j \\text{ mod } v) \\text{ to } (j \\text{ mod } v) + (k-1) $",
+            "C. $(j \\text{ mod } k) \\text{ to } (j \\text{ mod } k) + (v-1) $",
+            "D. $(j \\text{ mod } k) * v \\text{ to } (j \\text{ mod } k) * v + (v-1) $"
+          ],
+          "correct_answer": "A",
+          "explanation": "Number of sets in cache $= v$. The question gives a sequencing for the cache lines. For set $0$, the cache lines are numbered $0, 1, .., k-1$. Now for set $1$, the cache lines are numbered $k, k+1,... k+k-1$ and so on. So, main memory block $j$ will be mapped to set $(j \\ \\text{mod} \\ v)$, which will be any one of the cache lines from $(j \\ \\text{mod } v) * k \\ \\text{ to } (j \\ \\text{mod } v) * k + (k-1)$. (Associativity plays no role in mapping- $k$-way associativity means there are $k$ spaces for a block and hence reduces the chances of replacement.) $A$",
+          "year": 2013,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following data path of a $\\text{CPU}.$ The $\\text{ALU},$ the bus and all the registers in the data path are of identical size. All operations including incrementation of the $\\text{PC}$ and the $\\text{GPRs}$ are to be carried out in the $\\text{ALU}.$ Two clock cycles are needed for memory read operation – the first one for loading address in the $\\text{MAR}$ and the next one for loading data from the memory bus into the $\\text{MDR}.$ The instruction $``\\text{add R0, R1}”$ has the register transfer interpretation $\\text{R0} \\Leftarrow \\text{R0 + R1}.$ The minimum number of clock cycles needed for execution cycle of this instruction is: ed Nov 11, 2025 reply Follow flag Load R0 → S (temp reg) → 1 cycle Load R1 → T (temp reg) → 1 cycle ALU: S + T → R0 → 1 cycle Total Cycles 1+1+1=3 0 0 reply Share Please log in or register to add a comment.",
+          "images": [
+            {
+              "index": 1,
+              "filename": "1402_img1.png"
+            }
+          ],
+          "options": [
+            "A. $2$",
+            "B. $3$",
+            "C. $4$",
+            "D. $5$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Instruction fetch requires two cycles but the question asks for the execution part only! Now for execution: $R1_{out}, S_{in}\\qquad S \\leftarrow R0 \\quad -1^{st}$ cycle $R2_{out}, T_{in}\\qquad T \\leftarrow R1 \\quad - 2^{nd}$ cycle $S_{out}, T_{out}, \\text{Add } R0_{in} \\quad R0 \\leftarrow R0 + R1 \\quad - 3^{rd}$ cycle So, $3$ cycles for execution. As it is",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a disk drive with the following specifications: $16$ surfaces, $512$ tracks/surface, $512$ sectors/track, $1$ KB/sector, rotation speed $3000$ rpm. The disk is operated in cycle stealing mode whereby whenever one $4$ byte word is ready it is sent to memory; similarly, for writing, the disk interface reads a $4$ byte word from the memory in each DMA cycle. Memory cycle time is $40$ nsec. The maximum percentage of time that the CPU gets blocked during DMA operation is:",
+          "images": [],
+          "options": [
+            "A. $10$",
+            "B. $25$",
+            "C. $40$",
+            "D. $50$"
+          ],
+          "correct_answer": "B",
+          "explanation": "First lets calculate the disk transfer rate. Only one surface is read/written at a time. In one rotation, one track is read One track has $512$ sectors and $1\\;KB$ per sector means $512\\;KB$ per track Rotations Per Minute is $3000\\implies 3000 \\times 512\\;KB$ per minute (or) $50 \\times 512\\;KB$ per second = $25600\\;KBps$ Time to read $4$ bytes $ = \\dfrac{4}{25600 \\times 1024} s = 152.6 ns$ Since memory cycle time is $40\\; ns$ this will be $\\left \\lceil \\dfrac{152.6}{40} \\right\\rceil =4$ cycles. Now, coming to DMA, it does not block the CPU directly but it steals the memory cycles and if the CPU is needing memory it gets blocked. So, in worst case (see the usage “ maximum percentage of time” in question) lets assume CPU is needing memory all the time (fully memory bound process execution). In this case the percentage of time CPU gets blocked will be the amount of time DMA is using the memory cycles. Whenever $4$ bytes is ready from disk, memory cycles are taken – this needs $40\\;$ ns When memory cycles are used, disk will continue to fetch further data – it is not getting blocked here or the disk wont be waiting for this $40\\;ns$ if it has any pending read That is, if DMA is continuously transferring data, one in every $4$ memory cycles can get blocked. So, the maximum percentage of time CPU gets blocked $ = \\dfrac{1}{4} \\times 100 = 25 \\%$ Correct Option: B Reference",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A device with data transfer rate $10$ KB/sec is connected to a CPU. Data is transferred byte-wise. Let the interrupt overhead be $4\\mu$sec. The byte transfer time between the device interface register and CPU or memory is negligible. What is the minimum performance gain of operating the device under interrupt mode over operating it under program-controlled mode? ed Nov 18, 2022 reply Follow flag They should have",
+          "images": [],
+          "options": [
+            "A. $15$",
+            "B. $25$",
+            "C. $35$",
+            "D. $45$"
+          ],
+          "correct_answer": "B",
+          "explanation": "In Programmed I/O, the CPU issues a command and waits for I/O operations to complete. So here, CPU will wait for $1\\text{ sec}$ to transfer $10\\ KB$ of data. The minimum performance gain for interrupt mode happens for the smallest unit of data transfer – which here is $1$ byte. Time to transfer $1$ byte of data in programmed I/O mode $=\\dfrac{1}{10\\; KBps} = 100 \\mu s$ In Interrupt mode, to transfer $1$ byte of data, overhead is $4 \\times 10^{-6}s = 4\\mu s$ Performance gain $=\\dfrac{100}{4}= 25$ Thus, (b) is",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A $5$ stage pipelined CPU has the following sequence of stages: IF – instruction fetch from instruction memory RD – Instruction decode and register read EX – Execute: ALU operation for data and address computation MA – Data memory access – for write access, the register read at RD state is used. WB – Register write back Consider the following sequence of instructions: $I_1$: $L$ $R0, loc$ $1$; $R0 \\Leftarrow M[loc1]$ $I_2$: $A$ $R0$, $R0$; $R0 \\Leftarrow R0 +R0$ $I_3$: $S$ $R2$, $R0$; $R2 \\Leftarrow R2-R0$ Let each stage take one clock cycle. What is the number of clock cycles taken to complete the above sequence of instructions starting from the fetch of $I_1$?",
+          "images": [],
+          "options": [
+            "A. $8$",
+            "B. $10$",
+            "C. $12$",
+            "D. $15$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Answer is option A. Without data forwarding: 13 clock - WB and RD state non overlapping. $$\\begin{array}{|c|c|c|c|c|} \\hline \\textbf {T1} & \\textbf {T2} & \\textbf {T3} & \\textbf {T4} & \\textbf {T5} & \\textbf {T6} & \\textbf {T7} & \\textbf {T8} & \\textbf {T9} & \\textbf {T10} & \\textbf {T11} & \\textbf {T12} & \\textbf {T13} \\\\\\hline \\text{IF}& \\text{RD} & \\text{EX} & \\text{MA} & \\text{WB} & & \\\\\\hline \\text{} & \\text{IF} & &&&\\text{RD} & \\text{EX} & \\text{MA} & \\text{WB} & \\text{} & \\text{}\\\\\\hline &&&&& \\text{IF}& & & &\\text{RD} & \\text{EX} & \\text{MA}&\\text{WB} \\\\\\hline \\end{array}$$ Here, WB and RD stage operate in Non-Overlapping mode. 11 clock - WB and RD states overlapping. $$\\begin{array}{|c|c|c|c|c|} \\hline \\textbf {T1} & \\textbf {T2} & \\textbf {T3} & \\textbf {T4} & \\textbf {T5} & \\textbf {T6} & \\textbf {T7} & \\textbf {T8} & \\textbf {T9} & \\textbf {T10} & \\textbf {T11} \\\\\\hline \\text{IF}& \\text{RD} & \\text{EX} & \\text{MA} & \\text{WB} & & \\\\\\hline \\text{} & \\text{IF} & &&\\text{RD} & \\text{EX} & \\text{MA} & \\text{WB} & \\text{} & \\text{}\\\\\\hline &&&& \\text{IF}& & &\\text{RD} & \\text{EX} & \\text{MA}&\\text{WB} \\\\\\hline \\end{array}$$ Split Phase access between WB and RD means: WB stage produce the output during the rising edge of the clock and RD stage fetch the output during the falling edge. In Question it is mentioned for write access, the register read at RD state is used. This means that for writing operands back to memory, register read at RD state is used (no operand forward for STORE instructions). Note As in any question in any subject unless otherwise stated we always consider the best case. So, do overlap - unless otherwise stated. But this is for only WB/RD Why there is stall for I2 in T3 and T4 ? RD is instruction decode and register read. IF we execute RD of I2 in T3, data from memory will not get stored to R0 hence proper operands are not available at T3. Perhaps I2 has to wait until I1 write values to memory. WB of I1 and RD of I2 are operating in same clock why it is so ? If nothing has mentioned in question. This scenario is taken into consideration by default. It is because after MA operands will be available in register so RD and WB could overlap . With data forwarding (Should be the case here as question says no operand forwarding for memory register for STORE instructions) 8 clock cycles Why there is a stall I2 in T4 ? Data is being forwarded from MA of I1 EX of I2 .MA operation of I1 must complete so that correct data will be available in register . Why RD of I2 in T3 ? Will it not fetch incorrect information if executed before Operand are forwarded from MA of I1 ? Yes. RD of I2 will definitely fetch INCORRECT data at T3 . But don't worry about it Operand Forwarding technique will take care of it . Why can't RD of I2 be placed in T4 ? Yes . We can place RD of I2 in T4 as well. But what is the fun in that ? pipeline is a technique used to reduce the execution time of instructions . Why do we need to make an extra stall ? Moreover there is one more problem which is discussed just below .After reading the below point Just think if we had created a stall at T3 ! Why can't RD of I3 be placed at T4 ? This cannot be done . I3 cannot use RD because Previous instruction I2 should start next stage (EX) before current (I3) could utilize that(RD) stage . It is because data will be residing in buffers. Can an operand being forwarded from one clock cycle to same clock cycle ? No, the previous clock cycle must complete before data being forwarded . Unless split phase technique is used Cant there be a forwarding from EX stage(T3) of I1 to EX stage(T4) of I2 ? This is not possible . See what is happening in I1 . It is Memory Read .So data will be available in register after memory read only .So data cannot be forwarded from EX of I1 . In some case data is forwarded from MA and some case data is forwarded from EX Why it is so ? Data is forwarded when it is ready . It solely depends on the type of instruction . When to use Split-Phase ? We can use split phase if data is readily available like between WB/RD and also when operand forwarding happens from EX-ID stage, but not from EX-EX stage. We cannot do split phase access between EX-EX because here the instruction execution may not be possible in the first phase. (This is not mentioned in any standard resource but said by Arjun Suresh by considering practical implementation and how previous year GATE questions have been formed) [Mostly it is given in question that there is operand forwarding from A stage to B stage eg: https://gateoverflow.in/8218/gate2015-2_44 ] Split-Phase can be used even when no Operand Forwarding because they aren't related. References http://web.cs.iastate.edu/~prabhu/Tutorial/PIPELINE/forward.html Similar Questions https://gateoverflow.in/8218/gate2015-2_44 https://gateoverflow.in/2207/gate2010-33 https://gateoverflow.in/34735/pipelining-without-operand-forwarding Discussions https://gateoverflow.in/102565/operand-forwarding-in-pipeline https://gateoverflow.in/113244/doubts-in-pipelining",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a direct mapped cache of size $32$ $KB$ with block size $32$ $bytes$. The $CPU$ generates $32$ $bit$ addresses. The number of bits needed for cache indexing and the number of tag bits are respectively,",
+          "images": [],
+          "options": [
+            "A. $10, 17$",
+            "B. $10, 22$",
+            "C. $15, 17$",
+            "D. $5, 17$"
+          ],
+          "correct_answer": "A",
+          "explanation": "Number of blocks $= \\dfrac{\\text{cache size}}{\\text{block size}}= \\dfrac{32\\text{ KB}}{32 \\text{ B} }=\\text{1024}$ So, indexing requires $\\text{10-bits}.$ Number of OFFSET bits required to access $\\text{32-bit block} = 5.$ So, number of TAG bits $= 32 - 10 - 5 = 17.$ So, answer is (A).",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Match each of the high level language statements given on the left hand side with the most natural addressing mode from those listed on the right hand side.$$\\begin{array}{clcl} \\text{(1)} &\\text{$A[I] = B[J]$} & \\qquad\\text{(a)} &\\text{Indirect addressing} \\\\ \\text{(2)} &\\text{while $(^*A\\text{++});$} & \\qquad\\text{(b)} & \\text{Indexed addressing} \\\\ \\text{(3)} & \\text{int temp $= ^*x$} & \\qquad\\text{(c)} &\\text{Auto increment} \\\\ \\end{array}$$ See all 3 Comments 3 3 Comments reply jatinmittal199510 commented Apr 17, 2021 i int main() { int b[] = {3,2,0,1}; int *A = b; //*A++ will be treated as *(A++) but increment of A will happen after using *A for condition check while(*A++){ printf(\"%d\\n\",*A); } return 0; } Output: 2 0 #include <stdio.h> int main() { int b[] = {3,2,0,1}; int *A = b; //value of A[0] is checked for condition and then A[0] is incremented by 1, always checking A[0] while((*A)++){ printf(\"%d\\n\",*A); } return 0; } Output: 4 5 6 7 . . . 8 8 reply Share Pranavpurkar commented Nov 28, 2022 reply Follow flag @jatinmittal199510 Sir, output of the first code will be :2,0,1. why will it not print 1? 0 0 reply Share Abhrajyoti00 commented Jan 23, 2023 reply Follow flag @Pranavpurkar This is because after *A = 0 is in while loop, it breaks out. Thus although later A++ makes it point to the 4 th element (i.e. 1) it can’t print it. 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $(1, c), (2, b), (3, a)$",
+            "B. $(1, c), (2, c), (3, b)$",
+            "C. $(1, b), (2, c), (3, a)$",
+            "D. $(1, a), (2, b), (3, c)$"
+          ],
+          "correct_answer": "C",
+          "explanation": "$C$ is the answer. $A[i] = B[j]$; Indexed addressing while $(^*A++)$; Auto increment temp $=^*x$; Indirect addressing",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a three word machine instruction $\\text{ADD} A[R_0], @B$ The first operand (destination) $“A[R_0]”$ uses indexed addressing mode with $R_0$ as the index register. The second operand (source) $“@B”$ uses indirect addressing mode. $A$ and $B$ are memory addresses residing at the second and third words, respectively. The first word of the instruction specifies the opcode, the index register designation and the source and destination addressing modes. During execution of $\\text{ADD}$ instruction, the two operands are added and stored in the destination (first operand). The number of memory cycles needed during the execution cycle of the instruction is:",
+          "images": [],
+          "options": [
+            "A. $3$",
+            "B. $4$",
+            "C. $5$",
+            "D. $6$"
+          ],
+          "correct_answer": "B",
+          "explanation": "$1\\;\\text{memory read}$ to get the first operand from memory address $A+R_0\\; (A$ is given as part of instruction) $1\\;\\text{memory read}$ to get the address of the second operand (since second uses indirect addressing) $1\\;\\text{memory read}$ to get the second operand from the address given by the previous memory read $1\\;\\text{memory write}$ to store to first operand (which is the destination) So, total of $4$ memory cycles once the instruction is fetched. The second and third words of the instruction are loaded as part of the Instruction fetch and not during the execute stage. Reference: http://www.cs.iit.edu/~cs561/cs350/fetch/fetch.html",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $4$-way set associative cache (initially empty) with total $16$ cache blocks. The main memory consists of $256$ blocks and the request for memory blocks are in the following order: $0, 255, 1, 4, 3, 8, 133, 159, 216, 129, 63, 8, 48, 32, 73, 92, 155.$ Which one of the following memory block will NOT be in cache if LRU replacement policy is used?",
+          "images": [],
+          "options": [
+            "A. $3$",
+            "B. $8$",
+            "C. $129$",
+            "D. $216$"
+          ],
+          "correct_answer": "D",
+          "explanation": "$16$ blocks and sets with $4$ blocks each means there are $4$ sets.So, the lower $2$ bits are used for getting a set and $4$-way associative means in a set only the last $4$ cache accesses can be stored. $\\text{0, 255, 1, 4, 3, 8, 133, 159, 216, 129, 63, 8, 48, 32, 73, 92, 155}$ mod $4$ gives, $\\text{0, 3, 1, 0, 3, 0, 1, 3, 0, 1, 3, 0, 0, 0, 1, 0, 3}$ Now for each of $0..3,$ the last $4$ accesses will be in cache. So, $\\text{{92, 32, 48, 8}, {155, 63, 159, 3}, {73, 129, 133, 1} and {}}$ will be in cache. So, the missing element from choice is $216.$ $D$",
+          "year": 2009,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $4$ stage pipeline processor. The number of cycles needed by the four instructions $I1, I2, I3, I4$ in stages $S1, S2, S3, S4$ is shown below: $$\\begin{array}{|c|c|c|c|c|} \\hline \\textbf{} & \\textbf {S1} &\\textbf {S2} & \\textbf {S3} & \\textbf{S4 } \\\\\\hline \\textbf{I1}& 2 & 1 & 1 & 1 \\\\\\hline \\textbf{I2} & 1 & 3 & 2 & 2\\\\\\hline \\textbf{I3}& 2 & 1 & 1 & 3 \\\\\\hline \\textbf{I4} & 1 & 2 & 2 & 2 \\\\\\hline \\end{array}$$ What is the number of cycles needed to execute the following loop? For (i=1 to 2) {I1; I2; I3; I4;}",
+          "images": [],
+          "options": [
+            "A. $16$",
+            "B. $23$",
+            "C. $28$",
+            "D. $30$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Here bound of the loop are constants, therefore compiler will do the loop unrolling(If compiler won't then prefetcher will do) to increase the instruction level parallelism. And after loop unrolling $23$ cycles are required for execution. Therefore, be (B). PS: We assume the buffers between the pipeline stages can store multiple results in the form of a queue. $$\\tiny \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|} \\hline &C_1&C_2&C_3&C_4&C_5&C_6&C_7&C_8&C_9&C_{10}&C_{11}&C_{12}&C_{13}&C_{14}&C_{15}&C_{16}&C_{17}&C_{18}&C_{19}&C_{20} &C_{21}&C_{22}&C_{23}\\\\\\hline \\bf{I_1}&S_1&S_1&S_2&S_3&S_4\\\\\\hline \\bf{I_2}&&&S_1&S_2&S_2&S_2&S_3& S_3&S_4&S_4\\\\\\hline \\bf{I_3}&&&&S_1&S_1&\\color{red}{-}&S_2&\\color{red}{-}&S_3&\\color{red}{-}&S_4& S_4&S_4\\\\\\hline \\bf{I_4}&&&&&&S_1&\\color{red}{-}&S_2&S_2&S_3&S_3&\\color{red}{-}&\\color{red}{-}&S_4&S_4\\\\\\hline \\bf{I_1}&&&&&&&S_1&S_1&\\color{red}{-}&S_2&\\color{red}{-}&S_3&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&S_4\\\\\\hline \\bf{I_2}&&&&&&&&&S_1&\\color{red}{-}&S_2&S_2&S_2&S_3& S_3&\\color{red}{-}&S_4&S_4\\\\\\hline \\bf{I_3}&&&&&&&&&&S_1&S_1&\\color{red}{-}&\\color{red}{-}&S_2&\\color{red}{-}&S_3&\\color{red}{-}&\\color{red}{-}&S_4& S_4&S_4\\\\\\hline \\bf{I_4} &&&&&&&&&&&&S_1&\\color{red}{-}&\\color{red}{-}&S_2&S_2&S_3&S_3&\\color{red}{-}&\\color{red}{-}&\\color{red}{-}&S_4&S_4\\\\\\hline \\end{array} $$",
+          "year": 2009,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A CPU generally handles an interrupt by executing an interrupt service routine: 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. As soon as an interrupt is raised.",
+            "B. By checking the interrupt register at the end of fetch cycle.",
+            "C. By checking the interrupt register after finishing the execution of the current instruction.",
+            "D. By checking the interrupt register at fixed time intervals."
+          ],
+          "correct_answer": "C",
+          "explanation": "It will be (C) . After finishing the execution of each instruction the CPU reads the interrupt pins to recognize the interrupts. INTR $= 1 =$ Interrupt is present.(Service the Interrupt) $= 0 =$ Interrupt is not present.(Goto next Instruction fetch from user program)",
+          "year": 2009,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a byte addressable main memory of $2^{16}$ bytes. Assume that a direct mapped data cache consisting of $32$ lines of $64$ bytes each is used in the system. A $50 \\times 50$ two-dimensional array of bytes is stored in the main memory starting from memory location $1100H$. Assume that the data cache is initially empty. The complete array is accessed twice. Assume that the contents of the data cache do not change in between the two accesses. How many data misses will occur in total?",
+          "images": [],
+          "options": [
+            "A. $48$",
+            "B. $50$",
+            "C. $56$",
+            "D. $59$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Bits used to represent the address = $\\log_2{2^{16}} = 16$ Each cache line size $=64$ bytes; means offset requires $6\\text{-bits}$ Total number of lines in cache $= 32;$ means line # requires $5\\text{-bits}$ So, tag bits $= 16- 6-5=5$ We have a $2\\text{D-array}$ each of its element is of size $=1\\text{ Byte};$ Total size of this array $= 50 \\times 50 \\times 1\\text{ Byte}=2500\\text{ Bytes}$ So, total number of lines it will require to get contain in cache $=\\dfrac{2500B}{64B} = 39.0625 \\approx 40$ Starting address of array $= 1100H = 00010 \\ 00100 \\ 000000$ The group of bits in middle represents Cache Line number $\\implies$ array starts from cache line number $4$, We require $40$ cache lines to hold all array elements, but we have only $32$ cache lines Lets group/partition our $2500$ array elements in those $40$ array lines, we call this first array line as $A_0$ which will have $64$ of its elements. This line(group of $64$ elements) of array will be mapped to cache line number $4$ as found by analysis of starting address of array above. This all means that among those $40$ array lines some array lines will be mapped to same cache line, coz there are just $32$ cache lines but $40$ of array lines. This is how mapping is: $\\begin{matrix} 0& A_{28} & \\\\ 1& A_{29} & \\\\ 2& A_{30} & \\\\ 3& A_{31} & \\\\ 4& A_{0} & A_{32} \\\\ 5& A_{1} & A_{33} \\\\ 6& A_{2} & A_{34} \\\\ 7& A_{3} & A_{35} \\\\ 8& A_{4} & A_{36} \\\\ 9& A_{5} & A_{37} \\\\ 10& A_{6} & A_{38} \\\\ 11& A_{7} & A_{39} \\\\ 12& A_{8} & \\\\ \\vdots\\\\ 30& A_{26} & \\\\ 31& A_{27} & \\end{matrix}$ So, if we access complete array twice we get $=32+8+8+8 = 56$ miss because only $8$ lines from cache line number $4$ to $11$ are miss operation, rest are Hits(not counted) or Compulsory misses(first 32). Hence, answer is option (C).",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following program segment. Here $\\text{R1, R2}$ and $\\text{R3}$ are the general purpose registers. $$\\begin{array}{|l|l|l|c|} \\hline & \\text {Instruction} & \\text{Operation }& \\text{Instruction Size} \\\\ & & & \\text{(no. of words)} \\\\\\hline & \\text{MOV R1,(3000)} & \\text{R1} \\leftarrow \\text{M[3000]} & \\text{$2$} \\\\\\hline \\text{LOOP:}& \\text{MOV R2,(R3)} & \\text{R2} \\leftarrow \\text{M[R3]} & \\text{$1$} \\\\\\hline & \\text{ADD R2,R1} & \\text{R2} \\leftarrow \\text{R1 + R2} & \\text{$1$} \\\\\\hline & \\text{MOV (R3),R2} & \\text{M[R3]} \\leftarrow \\text{R2} & \\text{$1$} \\\\\\hline& \\text{INC R3} & \\text{R3} \\leftarrow \\text{R3 + 1} & \\text{$1$} \\\\\\hline & \\text{DEC R1} & \\text{R1} \\leftarrow \\text{R1 – 1} & \\text{$1$} \\\\\\hline& \\text{BNZ LOOP} & \\text{Branch on not zero} & \\text{$2$} \\\\\\hline & \\text{HALT} & \\text{Stop} & \\text{$1$} \\\\\\hline\\end{array}$$ Assume that the content of memory location $3000$ is $10$ and the content of the register $\\text{R3}$ is $2000$. The content of each of the memory locations from $2000$ to $2010$ is $100$. The program is loaded from the memory location $1000$. All the numbers are in decimal. Assume that the memory is word addressable. The number of memory references for accessing the data in executing the program completely is",
+          "images": [],
+          "options": [
+            "A. $10$",
+            "B. $11$",
+            "C. $20$",
+            "D. $21$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Loop is executed $10$ times and there are two memory reference in the loop (each MOV is loading $1$ word, so $1$ memory reference for each MOV inside the loop). So number of memory reference inside loop is $2 \\text{(MOV)}\\times 10\\text{ (times iteration)}\\times 1\\text{(1 word access/ MOV)} =20\\text{ memory accesses.}$ One memory access is outside the loop for the first instruction MOV R1, (3000) So, totally $20+1 = 21$ $D$",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In a simplified computer the instructions are: $$\\begin{array}{|l|l|} \\hline \\text {OP }R _j , R _i & \\text{Perform }R _j \\text{ OP } R _i \\text{ and store the result in register }R _j \\\\\\hline \\text{OP }m,R _i & \\text{Perform } val\\text{ OP }R _i \\text{ and store the result in register }R _i \\\\ & val \\text{ denotes the content of the memory location }m \\\\\\hline \\text{MOV }m,R _i & \\text{Moves the content of memory location }m \\text{ to register }R _i \\\\\\hline \\text{MOV }R _i,m & \\text{Moves the content of register }R _i\\text{ to memory location }m\\\\\\hline \\end{array}$$ The computer has only two registers, and OP is either ADD or SUB. Consider the following basic block: $t_1\\: = \\: a+b$ $t_2\\: = \\: c+d$ $t_3\\: = \\: e-t_2$ $t_4\\: = \\: t_1 – t_3$ Assume that all operands are initially in memory. The final value of the computation should be in memory. What is the minimum number of MOV instructions in the code generated for this basic block?",
+          "images": [],
+          "options": [
+            "A. $2$",
+            "B. $3$",
+            "C. $5$",
+            "D. $6$"
+          ],
+          "correct_answer": "B",
+          "explanation": "MOV $a, R_1$ ADD $b, R_1$ MOV $c, R_2$ ADD $d, R_2$ SUB $e, R_2$ SUB $R_1, R_2$ MOV $R_2, m$ Total number of MOV instructions $= 3$ $B$",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a pipelined processor with the following four stages: IF: Instruction Fetch ID: Instruction Decode and Operand Fetch EX: Execute WB: Write Back The IF, ID and WB stages take one clock cycle each to complete the operation. The number of clock cycles for the EX stage depends on the instruction. The ADD and SUB instructions need $1$ clock cycle and the MUL instruction needs $3$ clock cycles in the EX stage. Operand forwarding is used in the pipelined processor. What is the number of clock cycles taken to complete the following sequence of instructions? $$\\begin{array}{ll} \\textbf{ADD} & \\text{R2, R1, R0} &&& \\text{R2 $\\leftarrow$ R1$+$R0} \\\\ \\textbf{MUL} & \\text{R4, R3, R2} &&& \\text{R4 $\\leftarrow$ R3$*$R2} \\\\ \\textbf{SUB} & \\text{R6, R5, R4} &&& \\text{R6 $\\leftarrow$ R5$-$R4} \\\\ \\end{array}$$",
+          "images": [],
+          "options": [
+            "A. $7$",
+            "B. $8$",
+            "C. $10$",
+            "D. $14$"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer: option B. Considering EX to EX data forwarding. $$\\small \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|} \\hline &\\bf{t_1}&\\bf{t_2}&\\bf{t_3}&\\bf{t_4}&\\bf{t_5}&\\bf{t_6}&\\bf{t_7}&\\bf{t_8}\\\\ \\hline \\textbf{ADD}&\\text{IF}&\\text{ID}&\\color{green}{\\boxed{\\text{EX}}}&\\text{WB}&&&\\\\ \\textbf{MUL}&&\\text{IF}&\\text{ID}&\\color{green}{\\boxed{\\text{EX}}}&\\text{EX}&\\color{blue}{\\boxed{\\text{EX}}}&\\text{WB}\\\\ \\textbf{SUB}&&&\\text{IF}&\\text{ID}&\\color{red}{-}&\\color{red}{-}&\\color{blue}{\\boxed{\\text{EX}}}&\\text{WB}\\\\ \\hline\\end{array}$$ EX to EX data Forwarding:",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a $4$-way set associative cache consisting of $128$ lines with a line size of $64$ words. The CPU generates a $20-bit$ address of a word in main memory. The number of bits in the TAG, LINE and WORD fields are respectively:",
+          "images": [],
+          "options": [
+            "A. $9, 6, 5$",
+            "B. $7, 7, 6$",
+            "C. $7, 5, 8$",
+            "D. $9, 5, 6$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Number of sets $=\\dfrac{\\text{cache size}}{\\text{(size of a block * No. of blocks in a set)}}$ $=\\dfrac{128 * 64}{(64 * 4)}\\text{ (4 way set associative means 4 blocks in a set)}$ $= 32.$ So, number of index (LINE) bits $= 5$ and number of WORD bits $= 6$ since cache block (line) size is $64.$ So, number of TAG bits $= 20 - 6 - 5 = 9.$ Answer is (D) choice",
+          "year": 2007,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A 4-stage pipeline has the stage delays as $150$, $120$, $160$ and $140$ $nanoseconds$, respectively. Registers that are used between the stages have a delay of $5$ $nanoseconds$ each. Assuming constant clocking rate, the total time taken to process $1000$ data items on this pipeline will be:",
+          "images": [],
+          "options": [
+            "A. $\\text{120.4 microseconds}$",
+            "B. $\\text{160.5 microseconds}$",
+            "C. $\\text{165.5 microseconds}$",
+            "D. $\\text{590.0 microseconds}$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Pipelining requires all stages to be synchronized meaning, we have to make the delay of all stages equal to the maximum pipeline stage delay which here is $160$. We also have to add the intermediate register delay which here is $5ns$ which makes the clock period as $165ns.$ Time for execution of the first instruction $= 165* 4 = 660$ ns. Now, in every $165$ ns, an instruction can be completed. So, Total time for $1000$ instructions $= 660 + 999*165 = 165.495$ microseconds $C$",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A hard disk with a transfer rate of $10$ Mbytes/second is constantly transferring data to memory using DMA. The processor runs at $600$ MHz, and takes $300$ and $900$ clock cycles to initiate and complete DMA transfer respectively. If the size of the transfer is $20$ Kbytes, what is the percentage of processor time consumed for the transfer operation? ; it helped me to revisit the topic. 2 2 reply Share goku4199 commented Oct 14, 2025 reply Follow flag Ans 0 0 reply Share divy.sisodia commented Jan 16 reply Follow flag The first 300 cycles spent by the $CPU is for the DMA register initialization(source address, destination address, count register, and mode register). The 900 cycles needed by the CPU at the end/completion of the data transfer are spent in servicing the ISR for the interrupt raised by the DMA after completion. 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $5.0 \\%$",
+            "B. $1.0\\%$",
+            "C. $0.5\\%$",
+            "D. $0.1\\%$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Clock cycle time = $\\frac{1}{600 \\times 10^6}$ [ Frequency = 1/Time] For DMA initiation and completion = $\\frac{(900+300)}{600\\times10^6} = 2$ microsec . Disk Transfer rate $= 10$ Mbytes/sec $1$ byte $= \\frac{1}{10^7}$ sec $20$ Kbytes $= 2$ milisec $= 2000$ micro sec Percentage $= \\left (\\frac{2}{2+2000} \\right )\\times100 =0.0999 ≃ 0.1\\%$ option (D) $\\%$ of CPU time consumed $=\\frac{x}{x+y}$ If $x$ is the Data preparation time or Total cycle time used by CPU and $y$ is the Data transfer time, to calculate the fraction of CPU time to the data transfer time - we use $\\frac{x}{x+y}$ in burst mode.",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The microinstructions stored in the control memory of a processor have a width of $26$ bits. Each microinstruction is divided into three fields: a micro-operation field of $13$ bits, a next address field $(X),$ and a MUX select field $(Y).$ There are $8$ status bits in the input of the MUX. How many bits are there in the $X$ and $Y$ fields, and what is the size of the control memory in number of words?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "1061_img1.png"
+            }
+          ],
+          "options": [
+            "A. $10, 3, 1024$",
+            "B. $8, 5, 256$",
+            "C. $5, 8, 2048$",
+            "D. $10, 3, 512$"
+          ],
+          "correct_answer": "A",
+          "explanation": "$x + y + 13 = 26 \\rightarrow (1)$ $y = 3$ $(y)$ is no of bits used to represent 8 different states of multiplexer $ \\rightarrow (2)$ $x$ is no of bits required represent size of control memory $x = 10$ from $(1)$ and $(2)$ $\\therefore$ Size of control memory $= 2^x = 2^{10}= 1024$ $A$",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a small two-way set-associative cache memory, consisting of four blocks. For choosing the block to be replaced, use the least recently used (LRU) scheme. The number of cache misses for the following sequence of block addresses is: $8, 12, 0, 12, 8$.",
           "images": [],
           "options": [
             "A. $2$",
@@ -75,3147 +2720,554 @@ async function main() {
             "C. $4$",
             "D. $5$"
           ],
-          "correct_answer": "D",
-          "explanation": "....",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the control flow graph given below. Which one of the following options is the set of live variables at the exit point of each basic block?",
-          "images": [
-            {
-              "index": 1,
-              "filename": "523111_img1.jpg"
-            }
-          ],
-          "options": [
-            "A. $\\mathrm{B} 1:\\{\\mathrm{a}, \\mathrm{b}, \\mathrm{c}, \\mathrm{e}, \\mathrm{f}\\}, \\mathrm{B} 2:\\{\\mathrm{d}, \\mathrm{e}\\}, \\mathrm{B} 3:\\{\\mathrm{b}, \\mathrm{c}, \\mathrm{e}, \\mathrm{f}\\}, \\mathrm{B} 4: \\varnothing$",
-            "B. $\\mathrm{B} 1$: $\\varnothing$, $\\mathrm{B} 2$: $\\{$ d, e $\\}$, $\\mathrm{B} 3$: $\\{$ a, c, f $\\}$, $\\mathrm{B} 4$: $\\varnothing$",
-            "C. $\\mathrm{B} 1:\\{\\mathrm{a}, \\mathrm{b}, \\mathrm{c}, \\mathrm{e}, \\mathrm{f}\\}, \\mathrm{B} 2:\\{\\mathrm{d}, \\mathrm{e}\\}, \\mathrm{B} 3:\\{\\mathrm{c}, \\mathrm{e}, \\mathrm{f}\\}, \\mathrm{B} 4: \\varnothing$",
-            "D. $\\mathrm{B} 1: \\varnothing, \\mathrm{B} 2:\\{\\mathrm{d}, \\mathrm{e}, \\mathrm{f}\\}, \\mathrm{B} 3:\\{\\mathrm{a}, \\mathrm{b}, \\mathrm{c}, \\mathrm{e}, \\mathrm{f}\\}, \\mathrm{B} 4: \\varnothing$"
-          ],
-          "correct_answer": "A",
-          "explanation": "Compiler considers a variable as live if its value is accessed before its being rewritten with an another value. Therefore at end of B1; except d all are live. Now comparing the options we need to choose between option A and C, therefore need to check at end of B3: Clearly a is not live as it is getting overwritten in next block B1, and we can also observe that b and c are live. In case of block B2 and B3 we can note that variable d is also being over written in B2, but e and f is getting accessed in B2 and B3 respectively, hence variable e and f are also live. In case of block B4, variable g is getting overwritten hence not live. Therefore the set of all live variables at the end of block B3 $= \\{b, c, e, f\\} $. Hence, Option A is the PS: For liveness analysis at then end of Block B2 and B4; as after block B4 the program will exit no variable needs to be live after B4 and in case of B2 as only d and e variable are accessed to overwrite variable g, the set of live variables after B2 will be $\\{d,e\\}$",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following C statements: char *str1 = \"Hello; /* Statement S1 */ char *str2 = \"Hello;\"; /* Statement S2 */ int *str3 = \"Hello\"; /* Statement S3 */ Which of the following options is/are correct?",
-          "images": [],
-          "options": [
-            "A. $\\text{S1}$ and $\\text{S2}$ have syntactic errors",
-            "B. $\\text{S2}$ has a lexical error and $\\text{S3}$ has a syntactic error",
-            "C. $\\text{S1}$ has a lexical error and $\\text{S3}$ has a semantic error",
-            "D. $\\text{S1}$ has a syntactic error and $\\text{S3}$ has a semantic error"
-          ],
           "correct_answer": "C",
-          "explanation": "$\\boxed{\\text{Answer: C) S1 has a lexical error and S3 has a semantic error}}$ Watch detailed discussion on this question char *str1 = \"Hello; /* Statement S1 */ $S1$ has a lexical error: Unterminated String. String literal must be surrounded by double quotes. From Ullman (Dragon Book): Source: https://pages.cs.wisc.edu/~kzhao32/projects/cs536p2scanner.pdf Source: https://www.d.umn.edu/~rmaclin/cs5641/Notes/Lecture12.pdf char *str2 = \"Hello;\"; /* Statement S2 */ This is no error in this statement $S2$. int *str3 = \"Hello\"; /* Statement S3 */ $S3$ has semantic error: type mismatch. Type of $\\text{str3}$ should be char pointer instead of int pointer.",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements is/are true? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $\\text{LL(1)}$ parser uses backtracking",
-            "B. For a grammar to be $\\text{LL(1)}$, it must be left-recursive",
-            "C. For a grammar to be $\\text{LL(1)}$, it must be left-factored",
-            "D. The $\\text{LL(1)}$ parsers are more powerful than the SLR parsers"
-          ],
-          "correct_answer": "C",
-          "explanation": "$\\boxed{\\text{Answer: C}}$ Watch detailed discussion on this question $\\text{LL(1)}$ parser uses backtracking. $\\ \\textcolor{red}{\\boxed{\\text{False}}}$ No, $\\text{LL(1)}$ parser is a predictive parser. When expanding a nonterminal, $\\text{LL(1)}$ parser predict the production to use by looking at the next token of the input. The decision is forced. So, $\\text{LL(1)}$ parser is not using backtracking. For a grammar to be $\\text{LL(1)}$, it must be left-recursive. $\\ \\textcolor{red}{\\boxed{\\text{False}}}$ No. In fact for a grammar to be $\\text{LL(1)}$, it must not be left-recursive. Since left-recursive grammar can never be $\\text{LL(1)}$. Proof1 Proof2 For a grammar to be $\\text{LL(1)}$, it must be left-factored. $\\ \\textcolor{blue}{\\boxed{\\text{True}}}$ Yes, because non-left-factored grammar can never be $\\text{LL(1)}$. Proof The $\\text{LL(1)}$ parsers are more powerful than the SLR parsers. $\\ \\textcolor{red}{\\boxed{\\text{False}}}$ No, there are some grammars which $\\text{SLR}$ parser can parse but can't be parsed by $\\text{LL(1)}$ parser. That is, some $\\text{SLR}$ grammar is not $\\text{LL(1)}$. Consider the following grammar which is $\\text{SLR}$ but not $\\text{LL(1)}:$ $$S \\rightarrow S A \\text { | } A$$ $$S \\rightarrow a$$ Actually, there is no relationship between $\\text{LL(1)}$ parsers and $\\text{SLR}$ parsers. That is, neither $\\text{LL(1)}$ parsers are more powerful than the $\\text{SLR}$ parsers nor $\\text{SLR}$ parsers are more powerful than the $\\text{LL(1)}$ parsers. Goodread: Source: https://people.cs.vt.edu/prsardar/classes/cs3304-Spr19/lectures/CS3304-10-LanguageSyntax-3.pdf Source: https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/handouts/090%20Top-Down%20Parsing.pdf Source: https://web.stanford.edu/class/cs143/lectures/lecture07.pdf Source: Modern Compiler Implementation in C by Andrew Appel Source: Ullman (Dragon Book)",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the control flow graph shown in the figure. Which one of the following options correctly lists the set of redundant expressions (common subexpressions) in the basic blocks B$4$ and B$5$? Note: All the variables are integers. 0 reply Please log in or register to add a comment.",
-          "images": [
-            {
-              "index": 1,
-              "filename": "523048_img1.jpg"
-            }
-          ],
-          "options": [
-            "A. B4: $\\{b+i\\}$ B5: $\\{c+m\\}$",
-            "B. B4: $\\{g * k\\}$ B5: $\\{c+m\\}$",
-            "C. B4: $\\{g * k, b+i\\}$ B5:$\\{$ $\\}$",
-            "D. B4: $\\{g * k\\}$ B5:$\\{$ $\\}$"
-          ],
-          "correct_answer": "D",
-          "explanation": "https://www.youtube.com/watch?v=IUAIytbb2mw&t=16236s https://www.youtube.com/watch?v=oBAqib3LDi4&t=6756s",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following two syntax-directed definitions $\\text{SDD1}$ and $\\text{SDD2}$ for type declarations. \\[ \\renewcommand{\\arraystretch}{1.3} \\begin{array}{|l|l|} \\hline {\\textbf{SDD1}} \\\\ \\hline { \\begin{array}{c} \\textbf{Grammar} \\\\ (G_1) \\end{array}} & {\\textbf{Semantic Rules}} \\\\ \\hline \\hline D \\rightarrow TV & \\begin{array}{l} D.type = T.type \\\\ V.type = T.type \\end{array} \\\\ \\hline T \\rightarrow \\text{int} & T.type = \\text{int} \\\\ \\hline T \\rightarrow \\text{float} & T.type = \\text{float} \\\\ \\hline V \\rightarrow V_1\\ \\text{id} & \\begin{array}{l} V_1.type = V.type \\\\ \\text{put(id.entry, V.type)} \\end{array} \\\\ \\hline V \\rightarrow \\text{id} & \\text{put(id.entry, V.type)} \\\\ \\hline \\end{array} \\] \\[ \\renewcommand{\\arraystretch}{1.3} \\begin{array}{|l|l|} \\hline {\\textbf{SDD2}} \\\\ \\hline { \\begin{array}{c} \\textbf{Grammar} \\\\ (G_2) \\end{array}} & {\\textbf{Semantic Rules}} \\\\ \\hline \\hline D \\rightarrow D_1\\ \\text{id} & \\begin{array}{l} D.type = D_1.type \\\\ \\text{put(id.entry, D_1.type)} \\end{array} \\\\ \\hline D \\rightarrow T\\ \\text{id} & \\begin{array}{l} D.type = T.type \\\\ \\text{put(id.entry, T.type)} \\end{array} \\\\ \\hline T \\rightarrow \\text{int} & T.type = \\text{int} \\\\ \\hline T \\rightarrow \\text{float} & T.type = \\text{float} \\\\ \\hline \\end{array} \\] $D$ is the start symbol, and int, float and id are the three terminals. The non-terminal $V_{1}$ is the same as $V$ and the non-terminal $D_{1}$ is the same as $D$. Here, the subscript is used to differentiate the grammar symbols on the two sides of a production. The function put updates the symbol table with the type information for an identifier. Let $\\text{P}$ and $\\text{Q}$ be the languages specified by grammars $\\text{G1}$ and $\\text{G2}$, respectively. Which of the following statements is/are true? The languages $\\text{P}$ and $\\text{Q}$ are the same $\\text{SDD2}$ is $\\text{S}$-attributed and contains only synthesized attributes $\\text{SDD1}$ is $\\text{L}$-attributed and contains only inherited attributes The specifications of $\\text{SDD1}$ and $\\text{SDD2}$ are such that the same entries get added to the symbol table 0 reply Please log in or register to add a comment.",
-          "images": [
-            {
-              "index": 1,
-              "filename": "523037_img1.png"
-            },
-            {
-              "index": 2,
-              "filename": "523037_img2.png"
-            },
-            {
-              "index": 3,
-              "filename": "523037_img3.png"
-            },
-            {
-              "index": 4,
-              "filename": "523037_img4.png"
-            },
-            {
-              "index": 5,
-              "filename": "523037_img5.png"
-            }
-          ],
-          "options": [],
-          "correct_answer": "A;B;D",
-          "explanation": "",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider a pipelined processor in which the execution (EX) stage is shared by all instructions. The execution stage takes different different time for different instructions as mentioned in the original question. A program consists of $100$ instructions, including load, integer add (IADD), floating-point add (FADD) etc. instructions. Assuming that the EX stage can execute only one instruction at a time, how many pipeline stalls occur due to structural hazards in the EX stage?",
-          "images": [],
-          "options": [],
-          "correct_answer": "95",
-          "explanation": "",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Q. Consider the following two SDDs. SDD1 $$ \\begin{array}{|c|c|} \\hline \\textbf{Grammar} & \\textbf{Semantic\\ Rule} \\\\ \\hline D \\rightarrow TV & D.type = T.type \\\\ & V.type = T.type \\\\ \\hline T \\rightarrow int & T.type = int \\\\ \\hline T \\rightarrow float & T.type = float \\\\ \\hline V \\rightarrow V_1\\, id & V.type = V_1.type \\\\ & Put(id.entry,\\;V_1.type) \\\\ \\hline V \\rightarrow id & Put(id.entry,\\;V.type) \\\\ \\hline \\end{array} $$ SDD2 $$ \\begin{array}{|c|c|} \\hline \\textbf{Grammar} & \\textbf{Semantic\\ Rule} \\\\ \\hline D \\rightarrow D_1\\, id & D.type = D_1.type \\\\ & Put(id.entry,\\;D_1.type) \\\\ \\hline D \\rightarrow T\\, id & D.type = T.type \\\\ & Put(id.entry,\\;T.type) \\\\ \\hline T \\rightarrow int & T.type = int \\\\ \\hline T \\rightarrow float & T.type = float \\\\ \\hline \\end{array} $$ Which of the following is/are correct?",
-          "images": [],
-          "options": [
-            "A. SDD2 is S-attributed and contains only synthesized attributes.",
-            "B. Both SDDs generate the same language.",
-            "C. SDD1 is L-attributed and contains only inherited attributes.",
-            "D. The specifications of SDD1 and SDD2 are such that the same entries get added to the symbol table."
-          ],
-          "correct_answer": "A;B;D",
-          "explanation": "❌ Statement D Even though language same, The semantic rule structure differs. In SDD1: Type assigned once via T Then propagated to V chain. In SDD2: Each id is added during recursive D reduction. Declaration structure different.",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider a lexical analyzer with the following token specifications: \\[ \\begin{aligned} \\texttt{letter} &\\rightarrow \\texttt{[A-Z a-z]} \\\\ \\texttt{digit} &\\rightarrow \\texttt{[0-9]} \\\\ \\texttt{id} &\\rightarrow \\texttt{letter}\\texttt{[letter}\\mid \\texttt{digit]}^{*} \\\\ \\texttt{no} &\\rightarrow \\texttt{[digit]}^{+} \\\\ \\texttt{ws} &\\rightarrow \\texttt{[blank}\\mid \\texttt{tab}\\mid \\texttt{newline]}^{+} \\end{aligned} \\] Whitespace $(\\texttt{ws})$ is ignored. For the input string \\[ \\texttt{x1 23mm 78 y 7z z25 14A 8H AaycD} \\] how many tokens are generated by the lexical analyzer excluding whitespace ?",
-          "images": [],
-          "options": [],
-          "correct_answer": "13",
-          "explanation": "x1 ->id 23 -> no mm ->id 78 ->no (mm and 78 aren't considered as one token due to existence of ws ) y ->letter (not id simply because the rule given first is supposed to be given higher priority ) 7 ->digit z -> letter z25 ->id 14 ->no A -> letter 8 ->digit H -> letter AaycD ->id Ans: 13 tokens",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the control flow graph shown. Which one of the following choices correctly lists the set of live variables at the exit point of each basic block?",
-          "images": [
-            {
-              "index": 1,
-              "filename": "521485_img1.png"
-            }
-          ],
-          "options": [
-            "A. $\\text{B1: {a, b, c, e, f}, B2: {d, e}, B3: { }, B4: {b, c, e, f}}$",
-            "B. $\\text{B1: {a, b, c}, B2: {d, e}, B3: { }, B4: {b, c, e, f}}$",
-            "C. $\\text{B1: {a, b, c, e, f}, B2: {d, e}, B3: { }, B4: {e, f}}$",
-            "D. $\\text{B1: {a, b, c}, B2: {d, e}, B3: { }, B4: {b, e, f}}$"
-          ],
-          "correct_answer": "A",
-          "explanation": "In this question we have to check a path from exit point where read of that variable happen without any write before it . Block B1 Live variable = { a , b , c, e,f} Block B2 Live variable = {d,e} Block B3 Live variable = {} Bolck B4 Live variable = {b,c,e,f} So option A",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the given grammer $: $ $$ \\begin{aligned} & \\mathrm{S} \\rightarrow \\mathrm{ACB} \\\\ & \\mathrm{A} \\rightarrow \\mathrm{aA} \\mid \\epsilon \\\\ & \\mathrm{C} \\rightarrow \\mathrm{cC} \\mid \\epsilon \\\\ & \\mathrm{B} \\rightarrow \\mathrm{bB} \\mid \\mathrm{b} \\end{aligned} $$ $\\{\\mathrm{S}, \\mathrm{A}, \\mathrm{B}, \\mathrm{C}\\}$ set of non-terminals where $\\mathrm{S}$ is start symbol and $\\{\\mathrm{a}, \\mathrm{b}, \\mathrm{c}\\}$ are the terminals. The number of $\\mathrm{SR}$ conflicts in $\\mathrm{LR(0)}$ is?",
-          "images": [],
-          "options": [
-            "A. $2$",
-            "B. $3$",
-            "C. $5$",
-            "D. $4$"
-          ],
-          "correct_answer": "C",
-          "explanation": "I think the answer for this question should be B i.e 3 conflicts as in the exam it was",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following is ambiguous grammar?",
-          "images": [],
-          "options": [
-            "A. $\\mathrm{S} \\rightarrow \\mathrm{aSb} \\mid \\in$",
-            "B. $\\mathrm{S} \\rightarrow \\mathrm{aS} \\mid \\in$",
-            "C. $\\mathrm{S} \\rightarrow \\mathrm{aS}\\mid\\mathrm{Sa}\\mid \\in$",
-            "D. $\\mathrm{E} \\rightarrow \\mathrm{E}+\\mathrm{E}\\mid\\mathrm{E}* \\mathrm{E}\\mid$ id"
-          ],
-          "correct_answer": "C;D",
-          "explanation": "Where a Both Left and Right Recurssion apperal on same variable then that is ambigious grammer or By defination if a production has more than one parse tree then this imply Ambigious grammer so option C, D is correct",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the given control flow graph. Which of the following options correctly lists the set of redundant expressions (common sub-expressions) in the basic blocks B4 and B5? Note: All the variables are integers.",
-          "images": [
-            {
-              "index": 1,
-              "filename": "521259_img1.png"
-            }
-          ],
-          "options": [
-            "A. B4: $\\{b+i\\}$ $\\qquad$ B5: $\\{c+m\\}$",
-            "B. B4: $\\{g*k\\}$ $\\qquad$ B5: $\\{\\}$",
-            "C. B4: $\\{g*k,\\; b+i\\}$ $\\qquad$ B5: $\\{\\}$",
-            "D. B4: $\\{g*k\\}$ $\\qquad$ B5: $\\{c+m\\}$"
-          ],
-          "correct_answer": "B",
-          "explanation": "",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following C statements: $\\texttt{char *str1 = \"Hello;}$ $\\quad // \\text{stmt } S_1$ $\\texttt{char *str2 = \"Hello;\";}$ $\\quad // \\text{stmt } S_2$ $\\texttt{int *str3 = \"Hello\";}$ $\\quad // \\text{stmt } S_3$ Which of the following is/are correct? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $S_1$ has lexical error and $S_2$ has a syntax error.",
-            "B. $S_2$ has syntax error and $S_3$ has semantic error.",
-            "C. $S_1$ has lexical error, and $S_3$ has semantic error",
-            "D. $S_1$ has syntax error and $S_3$ has semantic error"
-          ],
-          "correct_answer": "C",
-          "explanation": ": tag msq",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Grammar to be $\\mathrm{LL}(1)$ 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. To be $\\mathrm{LL}(1)$, Grammar must be left recursive",
-            "B. To be $\\mathrm{LL}(1)$, Grammar must be left factored",
-            "C. $\\mathrm{LL}(1)$ parser uses Backtracking",
-            "D. $\\mathrm{LL}(1)$ parser is more powerful than $\\mathrm{SLR}(1)$"
-          ],
-          "correct_answer": "B",
-          "explanation": "The this question is option B. We can only check for LL(1) parser iff the grammer is not left recurssive. we use Backtracking is used in Bottom up parsers and they are more powerfull than Top-Down parsers",
-          "year": 2026,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider two grammars $G_{1}$ and $G_{2}$ with the production rules given below: $G_{1} : S \\rightarrow$ $if$ $E$ $then$ $S$ $|$ $if$ $E$ $then$ $S$ $else$ $S$ $|$ $a$ $E \\rightarrow b$ $G_{2} :S \\rightarrow$ $if$ $E$ $then$ $S$ $|$ $M$ $M \\rightarrow$ $if$ $E$ $then$ $M$ $else$ $S$ $|$ $c$ $E \\rightarrow b$ where $if, then, else, a, b, c$ are the terminals. Which of the following option(s) is/are CORRECT?",
-          "images": [],
-          "options": [
-            "A. $G_{1}$ is not $LL(1)$ and $G_{2}$ is $LL(1)$",
-            "B. $G_{1}$ is $LL(1)$ and $G_{2}$ is not $LL(1)$",
-            "C. $G_{1}$ and $G_{2}$ are not $LL(1)$",
-            "D. $G_{1}$ and $G_{2}$ are ambiguous."
-          ],
-          "correct_answer": "C;D",
-          "explanation": "a gammar is not LL(1) iff: It is ambiguous grammar it has left recursive grammar It has common prefixes both the grammar $G_1, G_2$ having common prefixes like \"if E then S\" and \"if E then\" as well as its ambiguous grammar (Dangling else problem) so given grammar $G_1,G_2$ is not LL(1) and ambigious also. Option $(C,D)$ is corret. For details: GATE 1990",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​​​Consider the following statements about the use of backpatching in a compiler for intermediate code generation: Which ONE of the folloeing options is CORRECT? Only I is correct Only II is correct Both I and II are correct Neither I nor II is correct",
-          "images": [],
-          "options": [
-            "A. Backpatching can be used to generate code for Boolean expression in one pass.",
-            "B. Backpatching can be used to generate code for flow-of-control statements in one pass."
-          ],
-          "correct_answer": "C",
-          "explanation": "$\\text{Both of the options are taken from Ullman Book}$ $\\text{I.}$ $\\text{II.}$ $\\color{red}{\\text{Sourse:}}$ Compiler ullman (Dragon Book) 2nd edition Page. 410",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​Given the following syntax directed translation rules: Rule 1: $R \\rightarrow A B\\{B . i=R . i-1 ; A . i=B . i ; R . i=A . i+1 ;\\}$ Rule 2: $P \\rightarrow C D\\{P . i=C . i+D . i ; D . i=C . i+2 ;\\}$ Rule 3: $Q \\rightarrow E F\\{Q . i=E . i+F . i ;\\}$ Which ONE is the CORRECT option among the following?",
-          "images": [],
-          "options": [
-            "A. Rule $1$ is $S$-attributed and $L$-attributed; Rule $2$ is $S$-attributed and not $L$-attributed; Rule $3$ is neither $S$-attributed nor $L$-attributed.",
-            "B. Rule $1$ is neither $S$-attributed not $L$-attributed; Rule $2$ is $S$-attributed and $L$-attributed; Rule $3$ is $S$-attributed and $L$-attributed.",
-            "C. Rule $1$ is neither $S$-attributed nor $L$-attributed; Rule $2$ is not $S$-attributed and is $L$-attributed; Rule $3$ is $S$-attributed and $L$-attributed.",
-            "D. Rule $1$ is $S$-attributed and not $L$-attributed; Rule $2$ is not $S$-attributed and is $L$-attributed; Rule $3$ is $S$-attributed and $L$-attributed."
-          ],
-          "correct_answer": "C",
-          "explanation": "ANS : OPTION C for every non-terminal(CAPITAL LETTER) , there is attribue associated with it. now , that attribute can be either synthesized or inherited. CATCH in this problem : first decide for every non-terminal attribute associated,whether its synthesized/inherited attribute and then apply def. of L/S attributed SDT. Trap: People wrongly think that : .i means inherited attribute and apply half knowledge def. of L/S attributed SDT directly and get WRONG answer. Look at that def., the meaning of \"ONLY SYNTHESIZED ATTRIBUTES\" means,in semantic rule, we consider only LHS (the one which is getting computed), the one which gets used in the rule we dont bother / dont care about it, so JUST FOCUS ON LHS attribute type. observe the below pic, point 1) , attributes here ,it means, it can be either synthesized or inherited attributes. -------------------------------------------------------------------------------------------- Thoughts : Compiler Design: GATE CSE 2020 | Question: 33 here ,they clearly mentioned what kind of attribute .i & .s are, so solving this problem is easy, directly apply def. of L/S attributed and get it done, But this GATE 2025 SET-2 , we need to decide what kind of attribute for every non-terminal and proceed .",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​Given a Context-Free Grammar $\\text{G}$ as follows: \\[ \\begin{array}{l} S \\rightarrow A a|b A c| d c \\mid b d a \\\\ A \\rightarrow d \\end{array} \\] Which ONE of the following statements is TRUE?",
-          "images": [],
-          "options": [
-            "A. $\\text{G}$ is neither $\\operatorname{LALR}(1)$ nor $\\operatorname{SLR}(1)$",
-            "B. $\\text{G}$ is $\\text{CLR(1)}$, not $\\text{LALR(1)}$",
-            "C. $\\text{G}$ is $\\operatorname{LALR}(1), \\operatorname{not} \\operatorname{SLR}(1)$",
-            "D. $\\text{G}$ is $\\operatorname{LALR}(1)$, also $\\operatorname{SLR}(1)$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Parsing table for SLR(1) Parser $$ \\begin{array}{|c|c|c|c|c|c|c|c|} \\hline \\text{State} & a & b & c & d & \\$ & S & A \\\\ \\hline I_0 & & s3 & & s4 & & 1 & 2 \\\\ \\hline I_1 & & & & & \\text{acc} & & \\\\ \\hline I_2 & r3 & & & & & & \\\\ \\hline I_3 & & & & s7 & & & 6 \\\\ \\hline I_4 & r4 & & \\color{red}{\\text{s8 / r4}} & & & & \\\\ \\hline I_5 & & & & & r3 & & \\\\ \\hline I_6 & & & s9 & & & & \\\\ \\hline I_7 & \\color{red}{\\text{s10 / r5}} & & r4 & & & & \\\\ \\hline I_8 & & & & & r1 & & \\\\ \\hline I_9 & & & & & r2 & & \\\\ \\hline I_{10} & & & & & r5 & & \\\\ \\hline \\end{array} $$ Has a shift-reduce conflict at I4 Parsing Table for CLR(1), LALR(1) $$ \\begin{array}{|c|c|c|c|c|c|c|c|} \\hline \\text{State} & a & b & c & d & \\$ & S & A \\\\ \\hline I_0 & & s3 & & s4 & & 1 & 2 \\\\ \\hline I_1 & & & & & \\text{acc} & & \\\\ \\hline I_2 & r3 & & & & & & \\\\ \\hline I_3 & & & & s7 & & & 6 \\\\ \\hline I_4 & r4 & & s8 & & & & \\\\ \\hline I_5 & & & & & r3 & & \\\\ \\hline I_6 & & & s9 & & & & \\\\ \\hline I_7 & s10 & & r4 & & & & \\\\ \\hline I_8 & & & & & r1 & & \\\\ \\hline I_9 & & & & & r2 & & \\\\ \\hline I_{10} & & & & & r5 & & \\\\ \\hline \\end{array} $$ No conflicts . $\\therefore$ grammar is LR(1) and LALR(1) $$\\color{lime} \\boxed{\\text{Answer: C}}$$",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which ONE of the following statements is FALSE regarding the symbol table?",
-          "images": [],
-          "options": [
-            "A. Symbol table is responsible for keeping track of the scope of variables.",
-            "B. Symbol table can be implemented using a binary search tree.",
-            "C. Symbol table is not required after the parsing phase.",
-            "D. Symbol table is created during the lexical analysis phase."
-          ],
-          "correct_answer": "C",
-          "explanation": "SO, option C is false.",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which ONE of the following techniques used in compiler code optimization uses live variable analysis? ed Oct 21, 2025 reply Follow flag Live variable analysis is \"Static code optimization technique\" 1 1 reply Share pooja_singh 2 commented Nov 10, 2025 reply Follow flag Answer = B,,, https://correctbrain.com/buy/ 11 11 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Run-time function call management",
-            "B. Register assignment to variables",
-            "C. Strength reduction",
-            "D. Constant folding"
-          ],
-          "correct_answer": "B",
-          "explanation": "Uses of live variable analysis: 1. Used for register allocation: If variable x is live in a basic block b, it is a potential candidate for register allocation. 2. Used for dead code elimination: If variable x is not live after an assignment x = . . ., then the assignment is redundant and can be deleted as dead code. So, option B is the",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statement(s) is/are TRUE while computing $\\operatorname{First}$ and $\\operatorname{Follow}$ during top down parsing by a compiler?",
-          "images": [],
-          "options": [
-            "A. For a production $A \\rightarrow \\epsilon, \\epsilon$ will be added to $\\operatorname{First}(A)$.",
-            "B. If there is any input right end marker, it will be added to $\\text{First(S)}$, where $S$ is the start symbol.",
-            "C. For a production $A \\rightarrow \\epsilon, \\epsilon$ will be added to Follow $\\text{(A)}$.",
-            "D. If there is any input right end marker, it will be added to $\\operatorname{Follow}(S)$, where $\\text{S}$ is the start symbol."
-          ],
-          "correct_answer": "A;D",
-          "explanation": "$A,D$ Reference link : https://www.cs.uaf.edu/~cs331/notes/FirstFollow.pdf",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Refer to the given $3$-address code sequence. This code sequence is split into basic blocks. The number of basic blocks is ________. (Answer in integer) 1001: i = 1 1002: j = 1 1003: t1 = 10*i 1004: t2 = t1+j 1005: t3 = 8*t2 1006: t4 = t3-88 1007: a[t4] = 0.0 1008: j = j+1 1009: if j <= 10 goto 1003 1010: i = i+1 1011: if i <= 10 goto 1002 1012: i = 1 1013: t5 = i-1 1014: t6 = 88*t5 1015: a[t6] = 1.0 1016: i = i+1 1017: if i <= 10 goto 1013",
-          "images": [],
-          "options": [],
-          "correct_answer": "6:6",
-          "explanation": "Basic block is a sequence of consecutive statements in which the control enters at the beginning and leaves only at the end without any branching (or) halting except at the end.. 1. Identify leader (1st statement of a basic block) First statement of a program is a leader. Target of goto is a leader. Next statement after goto is a leader. 2. Group a leader statement with all the consecutive statements upto but not includeing the next leader of a basic block.",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​​Consider the following two sets: $$\\begin{array}{|ll|ll|}\\hline & \\textbf{Set X} & & \\textbf{Set Y} \\\\\\hline \\text{ P.} & \\text{Lexical Analyzer } & \\text{1.}& \\text{Abstract Syntax Tree} \\\\\\hline \\text{ Q.}& \\text{Syntax Analyzer} & \\text{2.} & \\text{Token} \\\\\\hline \\text{ R.} & \\text{Intermediate Code Generator} &\\text{3.} & \\text{Parse Tree} \\\\\\hline \\text{ S.} & \\text{Code Optimizer} &\\text{4.} & \\text{Constant Folding} \\\\\\hline \\end{array}$$ Which one of the following options is the CORRECT match from Set $\\boldsymbol{X}$ to Set $\\boldsymbol{Y}$ ? Related Questions : GATE CSE 2009 | Question: 17 GATE CSE 2015 Set 2 | Question: 19 GATE CSE 2016 Set 2 | Question: 19 GATE CSE 1990 | Question: 2-ix GATE CSE 2017 Set 2 | Question: 05",
-          "images": [],
-          "options": [
-            "A. $\\mathrm{P}-4 ; \\mathrm{Q}-1 ; \\mathrm{R}-3 ; \\mathrm{S}-2$",
-            "B. $\\mathrm{P}-2 ; \\mathrm{Q}-3 ; \\mathrm{R}-1 ; \\mathrm{S}-4$",
-            "C. $\\mathrm{P}-2 ; \\mathrm{Q}-1 ; \\mathrm{R}-3 ; \\mathrm{S}-4$",
-            "D. $\\mathrm{P}-4 ; \\mathrm{Q}-3 ; \\mathrm{R}-2 ; \\mathrm{S}-1$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Lexical analysis produces tokens. Syntax analysis generates a parse tree. Intermediate Code Generation (ICG) results in an abstract syntax tree. Code optimization includes techniques such as constant folding, which replaces the value of expressions at compile time. Therefore, Option (B) is correct.",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​​​​Which of the following statements is/are FALSE?",
-          "images": [],
-          "options": [
-            "A. An attribute grammar is a syntax-directed definition $\\text{(SDD)}$ in which the functions in the semantic rules have no side effects",
-            "B. The attributes in a $\\text{L}$-attributed definition cannot always be evaluated in a depth-first order",
-            "C. Synthesized attributes can be evaluated by a bottom-up parser as the input is parsed",
-            "D. All $\\text{L}$-attributed definitions based on $\\text{LR(1)}$ grammar can be evaluated using a bottom-up parsing strategy"
-          ],
-          "correct_answer": "B;D",
-          "explanation": "Answer: B, D A : True Source: Page 13 https://www.cse.iitk.ac.in/users/swarnendu/courses/spring2023-cs335/semantic-analysis.pdf B: False Source: https://archive.nptel.ac.in/content/storage2/courses/106104072/chapter_5/5_38.html C: True Source: Page 25 https://cse.iitkgp.ac.in/~bivasm/notes/SDD.pdf D: False Find Screenshot from Ullman",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following context-free grammar where the start symbol is $\\text{S}$ and the set of terminals is $\\{a, b, c, d\\}$. $$ \\begin{array}{l} S \\rightarrow A a A b \\mid B b B a \\\\ A \\rightarrow c S \\mid \\epsilon \\\\ B \\rightarrow d S \\mid \\epsilon \\end{array} $$ The following is a partially-filled $\\text{LL}(1)$ parsing table. $\\begin{array}{|c|c|c|c|c|c|c|}\\hline &a&b&c&d&\\$ \\\\ \\hline S &S\\rightarrow AaAb &S\\rightarrow BbBa &\\text{(1)} & \\text{(2)} & \\\\ \\hline A & A \\rightarrow \\varepsilon &\\text{(3)} & A\\rightarrow cS& & \\\\ \\hline B & \\text{(4)} &{B \\rightarrow \\varepsilon} & &B\\rightarrow dS& \\\\ \\hline \\end{array}$ Which one of the following options represents the CORRECT combination for the numbered cells in the parsing table? Note: In the options, \"blank\" denotes that the corresponding cell is empty.",
-          "images": [],
-          "options": [
-            "A. $(1)$ $S \\rightarrow A a A b$ $(2)$ $S \\rightarrow B b B a$ $(3)$ $A \\rightarrow \\epsilon$ $(4)$ $B \\rightarrow \\epsilon$",
-            "B. $(1)$ $S \\rightarrow B b B a$ $(2)$ $S \\rightarrow A a A b$ $(3)$ $A \\rightarrow \\epsilon$ $(4)$ $B \\rightarrow \\epsilon$",
-            "C. $(1)$ $S \\rightarrow A a A b$ $(2)$ $S \\rightarrow B b B a$ $(3)$ blank $(4)$ blank",
-            "D. $(1)$ $S \\rightarrow B b B a$ $(2)$ $S \\rightarrow A a A b$ $(3)$ blank $(4)$ blank"
-          ],
-          "correct_answer": "A",
-          "explanation": "To complete the given LL(1) table first we have to find the FIRST and FOLLOW of the given grammar, that is: $\\begin{array}{|c|c|c|}\\hline &\\textsf{FIRST}&\\textsf{FOLLOW}\\\\\\hline S \\rightarrow AaAb \\mid BbBa & \\left \\{ a,b,c,d \\right \\} & \\left \\{ \\$,a,b \\right \\} \\\\\\hline A \\rightarrow cS \\mid \\varepsilon & \\left \\{ c,\\varepsilon \\right \\} & \\left \\{ a,b \\right \\} \\\\ \\hline B \\rightarrow dS\\mid \\varepsilon & \\left \\{ d,\\varepsilon \\right \\} & \\left \\{ a,b \\right \\} \\\\\\hline \\end{array}$ Now we can fill the entries in LL(1) table: $\\begin{array}{|c|c|c|c|c|c|c|}\\hline &a&b&c&d&\\$ \\\\ \\hline S &S\\rightarrow AaAb &S\\rightarrow BbBa &\\underset{\\boxed{1}} {S \\rightarrow AaAb}& \\underset{\\boxed{2}} {S \\rightarrow BbBa}& \\\\ \\hline A & A \\rightarrow \\varepsilon &\\underset{\\boxed{3}}{A \\rightarrow \\varepsilon} & A\\rightarrow cS& & \\\\ \\hline B &\\underset{\\boxed{4}}{B \\rightarrow \\varepsilon} &{B \\rightarrow \\varepsilon} & &B\\rightarrow dS& \\\\ \\hline \\end{array}$ The correct Option is (A).",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​Consider the following expression: $x[i]=(p+r) *-s[i]+u / w$. The following sequence shows the list of triples representing the given expression, with entries missing for triples $(1), (3)$, and $(6)$. $$\\begin{array}{|c|c|c|c|} \\hline(0) & + & p & r \\\\ \\hline(1) & & & \\\\ \\hline(2) & \\text{uminus} & (1) & \\\\ \\hline(3) & & & \\\\ \\hline(4) & / & u & w \\\\ \\hline(5) & + & (3) & (4) \\\\ \\hline(6) & & & \\\\ \\hline(7) & = & (6) & (5) \\\\ \\hline \\end{array}$$ Which one of the following options fills in the missing entries CORRECTLY?",
-          "images": [],
-          "options": [
-            "A. $(1)$ $\\text{=}$$\\text{[ ] s } i \\quad(3)$ $\\text{*}$ $(0)(2) $ $\\quad(6) $$\\text{[ ]=}$ $\\textit{x }i$",
-            "B. $(1)$ $\\text{[ ]}$$=\\text{s } i \\quad(3)-(0)(2) \\quad(6) =$$\\text{[ ]}$ $\\textit{x }(5)$",
-            "C. $(1)$ $\\text{=}$$\\text{[ ] s } i \\quad(3)$ $\\text{*}$ $(0)(2) $ $\\quad(6) $$\\text{[ ]=}$ $\\textit{x }(5)$",
-            "D. $(1)$ $\\text{[ ]}$$=\\text{s } i \\quad(3)-(0)(2) \\quad(6) =$$\\text{[ ]}$ $\\textit{x }i$"
-          ],
-          "correct_answer": "A",
-          "explanation": "We can do this question as option elimination also as @Cxdr suggested on comments. But, let's actually try to build this table. Given expression is: x[i] = (p+r)*-s[i]+u/w. converting x[i] and s[i] is little overwhelming, so try to think like this since, we are using value of s[i] , let's write it in this way, t1 = s[i] ( we have two operands apart from temporary variable and two operator) in triple symbol table it could be written as, =[] s i also, we are putting computed value in x[i], let's write it in this way x[i] = t1 In symbol table it could be written as, []= x i ( we have two operands apart from temporary variable and two operator) Now, everything is easy anyways, let's build the table (0) + p r (1) =[] s i (2) uminus (1) (3) * (0) (2) (4) / u w (5) + (3) (4) (6) []= x i (7) = (6) (5)",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​​​Consider a context-free grammar $\\text{G}$ with the following $3$ rules. $$S \\rightarrow a S, S \\rightarrow a S b S , S \\rightarrow c$$ Let $w \\in L(G)$. Let $ n_{a}(w), n_{b}(w), n_{c}(w) $ denote the number of times $a, b, c$ occur in $w$, respectively. Which of the following statements is/are TRUE?",
-          "images": [],
-          "options": [
-            "A. $n_{a}(w)>n_{b}(w)$",
-            "B. $n_{a}(w)>n_{c}(w)-2$",
-            "C. $n_{c}(w)=n_{b}(w)+1$",
-            "D. $n_{c}(w)=n_{b}(w) * 2$"
-          ],
-          "correct_answer": "B;C",
-          "explanation": "The correct options are B and C, we can solve this by taking valid strings and verifying and eliminating options as shown :",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following augmented grammar, which is to be parsed with a $\\text{SLR}$ parser. The set of terminals is $\\{a, b, c, d, \\#, @\\}$ \\[ \\begin{array}{l} S^{\\prime} \\rightarrow S \\\\ S \\rightarrow S S|A a| b A c|B c| b B a \\\\ A \\rightarrow d \\# \\\\ B \\rightarrow @ \\end{array} \\] Let $I_{0}=\\operatorname{CLOSURE}\\left(\\left\\{S^{\\prime} \\rightarrow \\bullet S\\right\\}\\right)$. The number of items in the set $\\operatorname{GOTO}\\left(I_{0}, S\\right)$ is __________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "9",
-          "explanation": "From above DFA we can see that Goto$\\text{(closure}(I_{0}),S)$ contains $9$ items. Similar types of questions are",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following is/are Bottom-Up Parser(s)?",
-          "images": [],
-          "options": [
-            "A. Shift-reduce Parser",
-            "B. Predictive Parser",
-            "C. LL$(1)$ Parser",
-            "D. LR Parser"
-          ],
-          "correct_answer": "A;D",
-          "explanation": "From the above classifications of parsers, it is clear that LR(k) and shift-reduce parse are types of bottom-up parsers while LL(1) and recursive descent parsers belong to top-down parsers. Option $(A,D)$ is correct.",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the operator precedence and associativity rules for the integer arithmetic operators given in the table below. $$\\begin{array}{|c|l|}\\hline \\textbf{Operator} & \\textbf{Precedence} & \\textbf{Associativity} \\\\\\hline \\text{$+$} & \\text{Highest} & \\text{Left} \\\\\\hline \\text{$-$} & \\text{High} & \\text{Right} \\\\\\hline \\text{$*$} & \\text{Medium} & \\text{Right} \\\\\\hline \\text{$/$} & \\text{Low} & \\text{Right} \\\\\\hline \\end{array}$$ The value of the expression $3+1+5 * 2 / 7+2-4-7-6 / 2$ as per the above rules is ________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "6",
-          "explanation": "The given expression is evaluated as follows: $\\implies \\underbrace{\\underbrace{3+1}+5}*2/\\underbrace{7+2}-4-7-6/2\\; [ \\text{As '+' has higher predence with left associative in the operators present in the expression.}]$ $\\implies(3+1)+5*2/7+2-4-7-6/2$ $\\implies(4+5)*2/7+2-4-7-6/2$ $\\implies9*2/(7+2)-4-7-6/2$ $\\implies9*2/\\underbrace{9-\\underbrace{4-\\underbrace{7-6}}}/2\\; [ \\text{As '-' has higher predence with right associative in the operators present in the expression.}]$ $\\implies9*2/9-4-(7-6)/2$ $\\implies9*2/9-(4-1)/2$ $\\implies9*2/(9-3)/2$ $\\implies \\underbrace{9*2}/6/2 \\; [ \\text{As '*' has higher predence with right associative in the operators present in the expression.}]$ $\\implies(9*2)/6/2$ $\\implies \\underbrace{18/\\underbrace{6/2}} \\; [ \\text{As '/' has higher predence with right associative in the operators present in the expression.}]$ $\\implies18/(6/2)$ $\\implies18/3=6$ Similar kind of questions",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​Consider the following syntax-directed definition $\\text{(SDD)}$. $$\\begin{array}{|l|l|} \\hline \\text{$S \\rightarrow D H T U$} & \\text{$ \\left\\{S.v a l = D.val + H.val + T.val + U.val;\\right\\}$} \\\\ \\hline D \\rightarrow ^{\"} \\mathrm{M}^{\"} D_1 & \\left\\{D.val =5+D_{1}.val; \\right\\} \\\\ \\hline D \\rightarrow \\epsilon & \\left\\{D.val = -5; \\right\\} \\\\ \\hline H \\rightarrow ^{\"}\\mathrm{L}^{\"} H_1 & \\left\\{H.val = 5^{*} 10+H_{1}.v a l;\\right\\} \\\\ \\hline H \\rightarrow \\epsilon & \\left\\{H.val = -10; \\right\\} \\\\ \\hline T \\rightarrow \\text {\"C\" } T_1 & \\left\\{T.v a l=5^{*} 100+T_{1}. val;\\right\\} \\\\ \\hline T \\rightarrow \\epsilon & \\left\\{T . v a l= - 5;\\right\\} \\\\ \\hline U \\rightarrow \\text{\"K\"} & \\left\\{U . v a l= 5;\\right\\} \\\\ \\hline \\end{array}$$ Given $\\text{\"MMLK\"}$ as the input, which one of the following options is the $\\text{CORRECT}$ value computed by the $\\text{SDD}$ (in the attribute $S.val$ )?",
-          "images": [],
-          "options": [
-            "A. $45$",
-            "B. $50$",
-            "C. $55$",
-            "D. $65$"
-          ],
-          "correct_answer": "A",
-          "explanation": "Answer : 45",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar $G$, with $S$ as the start symbol. The grammar $G$ has three incomplete productions denoted by $(1), (2)$, and $(3)$. $$\\begin{aligned} & S \\rightarrow d a T \\mid \\quad(1) \\\\ & T \\rightarrow a S|b T| \\quad(2) \\\\ & R \\rightarrow(3) \\mid \\epsilon\\end{aligned}$$ The set of terminals is $\\{a, b, c, d, f\\}$. The FIRST and FOLLOW sets of the different non-terminals are as follows. $\\begin{aligned} & \\operatorname{FIRST}(S)=\\{c, d, f\\}, \\operatorname{FIRST}(T)=\\{a, b, \\epsilon\\}, \\operatorname{FIRST}(R)=\\{c, \\epsilon\\} \\\\ & \\operatorname{FOLLOW}(S)=\\operatorname{FOLLOW}(T)=\\{c, f, \\$\\}, \\operatorname{FOLLOW}(R)=\\{f\\}\\end{aligned}$ Which one of the following options CORRECTLY fills in the incomplete productions?",
-          "images": [],
-          "options": [
-            "A. (1) $S \\rightarrow R f$ (2) $T \\rightarrow \\epsilon$ (3) $R \\rightarrow c T R$",
-            "B. (1) $S \\rightarrow f R$ (2) $T \\rightarrow \\epsilon$ (3) $R \\rightarrow c T R$",
-            "C. (1) $S \\rightarrow f R$ (2) $T \\rightarrow c T$ (3) $R \\rightarrow c R$",
-            "D. (1) $S \\rightarrow R f$ (2) $T \\rightarrow c T$ (3) $R \\rightarrow c R$"
-          ],
-          "correct_answer": "A",
-          "explanation": "Option $(C,D)$ is incorrect as if we substitute $T\\rightarrow cT$ in $(2)$ it gives $FIRST(T)=a,b,c$ which is wrong because in question it is given that $FIRST(T)=a,b,\\epsilon$ Option $(B)$ is incorrect as if we substitute $S\\rightarrow fR$ in $(1)$ it gives $FIRST(S)=f,d$ which is wrong because terminal $c$ is missing. So correct Option is $(A)$. $\\begin{array}{|c|c|c|}\\hline &\\textsf{FIRST}&\\textsf{FOLLOW}\\\\\\hline S \\rightarrow daT \\mid Rf & \\left \\{ c,d,f \\right \\} & \\left \\{ \\$,c,f \\right \\} \\\\\\hline T \\rightarrow aS \\mid bS\\mid \\varepsilon & \\left \\{ a,b,\\varepsilon \\right \\} & \\left \\{ \\$,c,f \\right \\} \\\\ \\hline R \\rightarrow cTR\\mid \\varepsilon & \\left \\{ c,\\varepsilon \\right \\} & \\left \\{ f \\right \\} \\\\\\hline \\end{array}$",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following pseudo-code. L 1: t1 = -1 L 2: t2 = 0 L 3: t3 = 0 L 4: t4 = 4 * t3 L 5: t5 = 4 * t2 L 6: t6 = t5 * M L 7: t7 = t4 + t6 L 8: t8 = a[t7] L 9: if t8 <= max goto L11 L 10: t1 = t8 L 11: t3 = t3 + 1 L 12: if t3 < M goto L4 L 13: t2 = t2 + 1 L 14: if t2 < N goto L3 L 15: max = t1 Which one of the following options CORRECTLY specifies the number of basic blocks and the number of instructions in the largest basic block, respectively?",
-          "images": [],
-          "options": [
-            "A. $6$ and $6$",
-            "B. $6$ and $7$",
-            "C. $7$ and $7$",
-            "D. $7$ and $6$"
-          ],
-          "correct_answer": "D",
-          "explanation": "Basic block : The collection of 3AC statements from the leader to the next leader without including the next leader is known as the basic block. Steps to find the basic blocks: Identify the leader first. (The first statement of 3AC is the leader.) The address of conditional, unconditional goto is the leader. (target location of goto) immediate next line of goto is the leader. Now construct the basic block from leader to line before the next leader. In the given 3AC $7$ leaders are there: $1,3,4,10,11,13,15$ There are $7$ basic block are there: Block $B_1$: statement $1-2$ Block $B_2$: statement $3$ Block $B_3$: statement $4-9$ Block $B_4$: statement $10$ Block $B_5$: statement $11-12$ Block $B_6$: statement $13-14$ Block $B_7$: statement $15$ So the total number of basic blocks is $7$ and the largest basic block is $B_3$ which contains a total of $6$ instruction. Correct option is $(D)$ Ref: Basic Block",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Let $G=(V, \\Sigma, S, P)$ be a context-free grammar in Chomsky Normal Form with $\\Sigma=\\{a, b, c\\}$ and $V$ containing $10$ variable symbols including the start symbol $S$. The string $w=a^{30} b^{30} c^{30}$ is derivable from $S$. The number of steps (application of rules) in the derivation $S \\rightarrow^* w$ is __________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "179",
-          "explanation": "Video Solution: https://youtu.be/ugeRQ0LHcHo Chomsky Normal Form: A Context-Free Grammar $G$ is in Chomsky Normal Form(CNF) if all productions are of the form $X \\rightarrow YZ$ or $X \\rightarrow a.$ Some Important Results about CNF ( Explained with Proof HERE ): Let $G$ be a CFG in Chomsky Normal Form, & $w \\in L(G)$ with $|w| = n \\geq 1.$ 1. EVERY derivation of string $w$ contains Exactly $2n-1$ steps. (NOTE: Every leftmost derivation, every rightmost derivation, every other derivation, EACH derivation of string $w$ contains Exactly $2n-1$ steps. ) 2. The Parse Trees (Derivation Tress) of strings generated by a CNF grammar are Always Binary Trees. 3. EVERY Parse Tree of string $w$ has Exactly $2n-1$ Internal Nodes, Exactly $3n-1$ total nodes. (If CNF grammar is Ambiguous, $w$ may have more than $1$ parse trees, & EACH parse tree will have exactly $2n-1$ internal nodes, exactly $3n-1$ total nodes.) Greibach Normal Form: A Context-Free Grammar $G$ is in Greibach Normal Form(GNF) if all productions are of the form $V_1 \\rightarrow aV^*.$ Some Important Results about GNF ( Explained with Proof HERE ): Let $G$ be a CFG in Greibach Normal Form, & $w \\in L(G)$ with $|w| = n \\geq 1.$ 1. EVERY derivation of string $w$ contains Exactly $n$ steps. (NOTE: Every leftmost derivation, every rightmost derivation, every other derivation, EACH derivation of string $w$ contains Exactly $n$ steps. ) 2. The Parse Trees (Derivation Tress) of strings generated by a GNF grammar may not be binary trees. 3. EVERY Parse Tree of string $w$ has Exactly $n$ Internal Nodes, Exactly $2n$ total nodes. (If GNF grammar is Ambiguous, $w$ may have more than $1$ parse trees, & EACH parse tree will have exactly $n$ internal nodes, exactly $2n$ total nodes.) ALL About Chomsky, Greibach Normal Form , with PROOF & Complete Analysis , explained here: https://youtu.be/p8zObnBahVc",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following statements regarding the front-end and back-end of a compiler. S1: The front-end includes phases that are independent of the target hardware. S2: The back-end includes phases that are specific to the target hardware. S3: The back-end includes phases that are specific to the programming language used in the source code. Identify the CORRECT option. 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Only $\\mathbf{S 1}$ is TRUE.",
-            "B. Only $\\mathbf{S 1}$ and $\\mathbf{S 2}$ are TRUE.",
-            "C. $\\mathbf{S 1}, \\mathbf{S 2}$, and $\\mathbf{S 3}$ are all TRUE.",
-            "D. Only $\\mathbf{S 1}$ and $\\mathbf{S 3}$ are TRUE."
-          ],
-          "correct_answer": "B",
-          "explanation": "Answer: Option B. A compiler is a program that takes as input a program written in one language (the source language) and translates it into a functionally equivalent program in another language (the target language) without changing the meaning of the code. Compiler process goes through lexical, syntax, and semantic analysis at the front end, and code generation and optimization at a back-end. Front end and Back end of compiler: The front end of a compiler is the part that takes the source language and produces an intermediate representation. This stage of compilation aims to detect any programmatic errors with the source code. It does this by performing lexical analysis, parsing (or syntax analysis) and semantic analysis. The output of the front end is an intermediate representation of the code, which can be passed to the middle end. The front end is also called analysis. The back end is designed to produce a program for a target computer from the intermediate representation. It includes the code optimization phase and final code generation phase, along with the necessary error handling and symbol table operations. Back end phase of the compiler consists of those phases which depend on the target machine and are independent of the source program . So, answer is Option B.",
-          "year": 2023,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following program: int main() { f1 (); f2(2); f3(); return (0); } int f1 () { return(1); } int f2 (int X) { f3(); if (X==1); return f1 (); else return (X * f2 (X - 1)); } int f3 () { return (5); } Which one of the following options represents the activation tree corresponding to the main function? 🚩 Edit necessary | 👮 Rhino | 💬 “Remove semicolon after if statement in routine f2. I have checked in original question paper.”",
-          "images": [
-            {
-              "index": 1,
-              "filename": "399285_img1.png"
-            },
-            {
-              "index": 2,
-              "filename": "399285_img2.png"
-            },
-            {
-              "index": 3,
-              "filename": "399285_img3.png"
-            },
-            {
-              "index": 4,
-              "filename": "399285_img4.png"
-            }
-          ],
-          "options": [],
-          "correct_answer": "A",
-          "explanation": "The correct execution sequence is given in the above figure. inside main() we have $3$ function call as $f_1(),f_2(),f_3()$. $f_1(),f_3()$ will return but $f_2()$ will take $x=2$ and evaluate it. when $X=2$ it will call $f_3()$ and else part. in next time when $x$ value became $1$ again it will call $f_3()$ and if part of given code. after that, it will return. Option (A) is correct.",
-          "year": 2023,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the control flow graph shown. Which one of the following choices correctly lists the set of live variables at the exit point of each basic block?",
-          "images": [
-            {
-              "index": 1,
-              "filename": "399284_img1.png"
-            }
-          ],
-          "options": [
-            "A. $\\text{B1: { }, B2: {a}, B3: {a}, B4: {a}}$",
-            "B. $\\text{B1: {i, j}, B2: {a}, B3: {a}, B4: {i}}$",
-            "C. $\\text{B1: {a, i, j}, B2: {a, i, j}, B3: {a, i}, B4: {a}}$",
-            "D. $\\text{B1: {a, i, j}, B2: {a, j}, B3: {a, j}, B4: {a, i, j}}$"
-          ],
-          "correct_answer": "D",
-          "explanation": "Eventhough this is answered well, I post this to emphasize the initialization of Basic Block B2 which I have shown below. \\(\\begin{array}{|l|c|c|c|} \\hline \\textbf{Initialization}&\\textbf{Pass 1} & \\textbf{Pass 2} & \\textbf{Pass 3} \\\\ \\hline \\begin{array}{l} \\textbf{B}_\\textbf{1} \\\\\\\\ \\begin{array}{ll} \\text{Successor}[B_1]&=\\left \\{ B_2 \\right \\} \\\\ \\text{USE}[B_1]&=\\left \\{ m, n \\right \\} \\\\ \\text{DEF}[B_1]&=\\left \\{ a, i, j\\right \\} \\\\ \\text{IN}[B_1] &=\\phi \\\\ \\text{OUT}[B_1]&=\\text{IN}[B_2]\\\\ &=\\phi\\\\ \\end{array} \\end{array} & \\begin{array}{lll} \\text{IN}[B_1] &=\\left \\{ m, n\\right \\}\\\\ \\text{OUT}[B_1]&=\\left \\{ i, j\\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_1] &=\\left \\{ m, n\\right \\} \\\\ \\text{OUT}[B_1]&=\\left \\{a, i, j \\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_1] &=\\left \\{m, n \\right \\} \\\\ \\text{OUT}[B_1]&=\\left \\{a, i, j \\right \\} \\\\ \\end{array} \\\\ \\hline \\begin{array}{l} \\textbf{B}_\\textbf{2} \\\\\\\\ \\begin{array}{ll} \\text{Successor}[B_2]&=\\left \\{ B_3, B_4 \\right \\} \\\\ \\text{USE}[B_2]&=\\left \\{ i, j \\right \\} \\\\ \\text{DEF}[B_2]&=\\phi \\\\ \\text{IN}[B_2] &=\\phi \\\\ \\text{OUT}[B_2]&=\\text{IN}[B_3]\\cup \\text{IN}[B_4]\\\\ &=\\phi\\\\ \\end{array} \\end{array} & \\begin{array}{lll} \\text{IN}[B_2] &=\\left \\{ i, j\\right \\} \\\\ \\text{OUT}[B_2]&=\\left \\{ a\\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_2] &=\\left \\{a, i, j \\right \\} \\\\ \\text{OUT}[B_2]&=\\left \\{a, j \\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_2] &=\\left \\{a, i, j \\right \\} \\\\ \\text{OUT}[B_2]&=\\left \\{a, j \\right \\} \\\\ \\end{array} \\\\ \\hline \\begin{array}{l} \\textbf{B}_\\textbf{3} \\\\\\\\ \\begin{array}{ll} \\text{Successor}[B_3]&=\\left \\{B_4 \\right \\} \\\\ \\text{USE}[B_3]&=\\phi \\\\ \\text{DEF}[B_3]&=\\left \\{a \\right \\} \\\\ \\text{IN}[B_3] &=\\phi \\\\ \\text{OUT}[B_3]&=\\text{IN}[B_4]\\\\ &=\\phi\\\\ \\end{array} \\end{array} & \\begin{array}{lll} \\text{IN}[B_3] &=\\phi \\\\ \\text{OUT}[B_3]&=\\left \\{ a\\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_3] &=\\phi \\\\ \\text{OUT}[B_3]&=\\left \\{a, j \\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_3] &=\\left \\{j \\right \\} \\\\ \\text{OUT}[B_3]&=\\left \\{a, j \\right \\} \\\\ \\end{array} \\\\ \\hline \\begin{array}{l} \\textbf{B}_\\textbf{4} \\\\\\\\ \\begin{array}{ll} \\text{Successor}[B_4]&=\\left \\{B_2, \\text{EXIT} \\right \\} \\\\ \\text{USE}[B_4]&=\\left \\{a \\right \\} \\\\ \\text{DEF}[B_4]&=\\left \\{i \\right \\} \\\\ \\text{IN}[B_4] &=\\phi \\\\ \\text{OUT}[B_4]&=\\text{IN}[B_2]\\cup \\text{IN[EXIT]}\\\\ &=\\phi\\\\ \\end{array} \\end{array} & \\begin{array}{lll} \\text{IN}[B_4] &=\\left \\{a \\right \\} \\\\ \\text{OUT}[B_4]&=\\left \\{i, j \\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_4] &=\\left \\{ a, j \\right \\} \\\\ \\text{OUT}[B_4]&=\\left \\{a, i, j \\right \\} \\\\ \\end{array} & \\begin{array}{lll} \\text{IN}[B_4] &=\\left \\{a, j \\right \\} \\\\ \\text{OUT}[B_4]&=\\left \\{a, i, j \\right \\} \\\\ \\end{array} \\\\ \\hline \\end{array}\\) Note that initialization of \\(\\text{DEF}[B_2]=\\phi\\) and not \\(\\cancel{\\text{DEF}[B_2]=\\left \\{i, j\\right\\}}\\) See \\(\\text{Example 9.13 : B2 does not define i or j, since they are used before definition}\\). More importantly this is corrected statement in errata of the Compilers by Aho, 2nd edition Pass 4 is same as Pass 3 and so the answer is OPTION (D)",
-          "year": 2023,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the syntax directed translation given by the following grammar and semantic rules. Here $N, I, F$ and $B$ are non-terminals. $N$ is the starting non-terminal, and $\\#, \\mathbf{0}$ and $\\mathbf{1}$ are lexical tokens corresponding to input letters $\\text{“#\", “0\" and “1\"},$ respectively. $X.val$ denotes the synthesized attribute (a numeric value) associated with a non-terminal $X. \\;I_{1}$ and $F_{1}$ denote occurrences of $I$ and $F$ on the right hand side of a production, respectively. For the tokens $\\mathbf{0}$ and $\\mathbf{1}, \\mathbf{0} . v a l=0$ and $\\mathbf{1}.val =1$. \\[ \\begin{array}{ll} N \\rightarrow I \\# F & N.val =I . v a l+F . v a l \\\\ I\\rightarrow I_{1} B & I.val =\\left(2 I_{1} . v a l\\right)+B.val \\\\ I \\rightarrow B & I.val =\\text { B.val } \\\\ F \\rightarrow B F_{1} & F.val =\\frac{1}{2}\\left(B . v a l+F_{1} . v a l\\right) \\\\ F \\rightarrow B & \\text { F.val }=\\frac{1}{2} B.val \\\\ B \\rightarrow \\mathbf{0} & B . v a l=\\mathbf{0} . v a l \\\\ B \\rightarrow \\mathbf{1} & B . v a l=\\mathbf{1} . v a l \\\\ \\end{array} \\] The value computed by the translation scheme for the input string $$10\\#011$$ is ____________. (Rounded off to three decimal places)",
-          "images": [],
-          "options": [],
-          "correct_answer": "2.375",
-          "explanation": "The $2.375$",
-          "year": 2023,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following statements is $\\text{TRUE}?$",
-          "images": [],
-          "options": [
-            "A. The $\\textit{LALR}(1)$ parser for a grammar $\\textit{G}$ cannot have reduce-reduce conflict if the $\\textit{LR}(1)$ parser for $\\textit{G}$ does not have reduce-reduce conflict.",
-            "B. Symbol table is accessed only during the lexical analysis phase.",
-            "C. Data flow analysis is necessary for run-time memory management.",
-            "D. $\\textit{LR}(1)$ parsing is sufficient for deterministic context-free languages."
-          ],
-          "correct_answer": "D",
-          "explanation": "Answer D $\\text{Option A}$ Connsider a LR(1) DFA with no RR Conflicts. Take two states, say, I3 and I5 in such LR(1) DFA. I3 : $[A \\rightarrow \\alpha.\\color{red}{, a}, B \\rightarrow \\beta.\\color{blue}{, b}]$ and I5: $[A \\rightarrow \\alpha.\\color{blue}{, b}, B \\rightarrow \\beta.\\color{red}{, a}]$ Since the core items are same, we will merge $I_3$ and $I_5$ in LALR, say merged state is $I_{35}$ $I_{35}$ : $[A \\rightarrow \\alpha.\\color{red}{, a}\\color{blue}{, b} \\text{ } B \\rightarrow \\beta.\\color{red}{, a}\\color{blue}{, b}]$ A common confusion: $I_{35}$ has RR conflict on $a \\text{ and } b$.​ $\\text{Do } I_{35} \\text{ really has any conflict? }$ – Yes. See one example – here $\\text{Option B}$ Symbol table is accessed among all phases. For example – “int x”, here lexical analyzer will assign 2 tokens, but lexical analyzer won’t know whether x is of type int since it reads int and x as two different tokens. Syntax analyzer will feed type of x to symbol table. C. It is optional D. LR(1) = DCFL Ref: https://cs.stackexchange.com/questions/43/language-theoretic-comparison-of-ll-and-lr-grammars",
-          "year": 2022,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the augmented grammar with $\\{ +, {\\ast}, (,),\\text{id} \\}$ as the set of terminals. $S’ \\rightarrow S$ $S \\rightarrow S + R\\; |\\; R$ $R \\rightarrow R {\\ast} P \\;| \\;P$ $P \\rightarrow (S)\\; |\\; \\text{id} $ If $I_{0}$ is the set of two $\\textit{LR}(0)$ items $\\{ [S’ \\rightarrow S.], [S \\rightarrow S. + R] \\}$, then $\\textit{goto(closure}(I_{0}), +)$ contains exactly ______________ items.",
-          "images": [],
-          "options": [],
-          "correct_answer": "5",
-          "explanation": "So Goto$\\text{(closure}(I_{0}),+)$ contains exactly $5$ items.",
-          "year": 2022,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar along with translation rules. $$\\begin{aligned} & S \\rightarrow S_{1} \\# T \\qquad \\{S._{\\text{val}} =S_{1}. _{\\text{val}} \\; ^{\\ast} T._{\\text{val}}\\}\\\\ & S \\rightarrow T \\qquad \\qquad \\{S._{\\text{val}} = T._{\\text{val}}\\}\\\\ & T \\rightarrow T_{1} \\% R \\qquad \\{T._{\\text{val}} =T_{1}._{\\text{val}} ÷ R._{\\text{val}}\\}\\\\ & T \\rightarrow R \\qquad \\qquad \\{T._{\\text{val}} = R._{\\text{val}}\\} \\\\ & R \\rightarrow \\text{id} \\qquad \\qquad \\{R._{\\text{val}} = \\text{id}._{\\text{val}}\\} \\end{aligned}$$ Here $\\#$ and $\\%$ are operators and $\\text{id}$ is a token that represents an integer and $\\text{id}._{\\text{val}}$ represents the corresponding integer value. The set of non-terminals is $\\{\\text{S, T, R, P}\\}$ and a subscripted non-terminal indicates an instance of the non-terminal. Using this translation scheme, the computed value of $S._{\\text{val}}$ for root of the parse tree for the expression $20 \\# 10 \\% 5 \\# 8 \\% 2 \\% 2$ is ________________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "80",
-          "explanation": "Final Answer: $80$ General Rules Operators which are deeper in the parse tree have higher precedence , since they are tried by the parser first. Left-recursive rules indicate left associativity . Right-recursive rules indicate right associativity . Mapping of Operators $\\#$ corresponds to operation $*$ $\\%$ corresponds to operation $\\div$ Both $*$ and $\\div$ are left associative , and $\\div$ has higher precedence . Given Expression $20\\#10\\%5\\#8\\%2\\%2$ Replacing operators with their actual meanings: $\\equiv 20 * (10 \\div 5) * ((8 \\div 2) \\div 2)$ Evaluation using Precedence and Associativity $\\equiv 20 * \\underbrace{(10 \\div 5)}_{\\text{= 2}} * \\underbrace{((8 \\div 2) \\div 2)}_{\\text{= (4 ÷ 2) = 2}}$ $\\Rightarrow 20 * 2 * 2$ $\\Rightarrow \\underbrace{(20 * 2)}_{\\text{= 40}} * 2$ $\\Rightarrow 80$ Final Computed Value $\\boxed{S.val = 80}$ Hence, the value of the given expression is $80$. Concept Summary Operator precedence is governed by depth in the parse tree . Left recursion ⟶ Left associativity Right recursion ⟶ Right associativity $\\div$ binds tighter than $*$, hence evaluated first.",
-          "year": 2022,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "State whether the following statements are True or False with reasons for your answer A symbol declared as ‘external’ in an assembly language program is assigned an address outside the program by the assembler itself.",
-          "images": [],
-          "options": [],
-          "correct_answer": "0",
-          "explanation": "$\\textsf{extern}$ symbol in an assembler $($or $C)$ compilation unit (a file and all its included ones) is used to refer to $\\textsf{global}$ symbols (either variables or functions) in other parts of the program including any shared libraries. Now, an assembler at the time of assembling has no information about the address of these extern symbols. It is the job of the linker to resolve them once assembling is over. So, $\\textsf{FALSE}.$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following $\\text{ANSI C}$ program: int main () { Integer x; return 0; } Which one of the following phases in a seven-phase $C$ compiler will throw an error?",
-          "images": [],
-          "options": [
-            "A. Lexical analyzer",
-            "B. Syntax analyzer",
-            "C. Semantic analyzer",
-            "D. Machine dependent optimizer"
-          ],
-          "correct_answer": "C",
-          "explanation": "This question is difficult to answer from a practical point of view because most of the C compilers (even other language compilers) do not follow the classical ordering of compilation phases. Since this is a one-mark question ignoring the practical implementations and going by just theory answer will be syntax error. Because there are no lexical errors and “Integer” and “x” get read as identifiers as shown in the following output. arjun@Armi:~$ cat p1.c int main() { Integer x; return 0; } arjun@Armi:~$ clang p1.c -c -Xclang -dump-tokens int 'int' [StartOfLine] Loc=<p1.c:1:1> identifier 'main' [LeadingSpace] Loc=<p1.c:1:5> l_paren '(' Loc=<p1.c:1:9> r_paren ')' Loc=<p1.c:1:10> l_brace '{' [StartOfLine] Loc=<p1.c:2:1> identifier 'Integer' [StartOfLine] [LeadingSpace] Loc=<p1.c:3:2> identifier 'x' [LeadingSpace] Loc=<p1.c:3:10> semi ';' Loc=<p1.c:3:11> return 'return' [StartOfLine] [LeadingSpace] Loc=<p1.c:4:2> numeric_constant '0' [LeadingSpace] Loc=<p1.c:4:9> semi ';' Loc=<p1.c:4:10> r_brace '}' [StartOfLine] Loc=<p1.c:5:1> eof '' Loc=<p1.c:5:2> Now, when this stream of tokens get passed to the syntax analyser – we have an identifier followed by another identifier which is not valid in C syntax – so syntax error . And this must be the answer here though we can argue for semantic error as well as follows. Now consider a typedef usage like “typedef int Integer”. Now, this can be implemented by the compiler in multiple ways. One option is to immediately change the token type of “Integer” from identifier to the given “type”. Otherwise the syntax check can go with the AST generation. But if we go by the classical meaning of the compilation phases here we are matching a string which means it is a semantic phase. Analysis/Semantic analysis More read: https://stackoverflow.com/questions/66290247/integer-x-is-syntactic-error-or-semantic-error Official answer given in GATE key is “Semantic analysis” – but even the best compiler professors won’t conclude on that. Though this was a bad question and even worse answer key, lets use it to learn something useful. The following three flags will force cc (C compiler) to check that your code complies to the relevant international standard, often referred to as the ANSI standard, though strictly speaking it is an ISO standard. -Wall Enable all the warnings which the authors of cc believe are worthwhile. Despite the name, it will not enable all the warnings cc is capable of. -ansi Turn off most, but not all, of the non-ANSI C features provided by cc . Despite the name, it does not guarantee strictly that your code will comply to the standard. -pedantic Turn off all cc 's non-ANSI C features. Without these flags, cc will allow you to use some of its non-standard extensions to the standard. Some of these are very useful, but will not work with other compilers—in fact, one of the main aims of the standard is to allow people to write code that will work with any compiler on any system. This is known as portable code . https://docs.freebsd.org/en_US.ISO8859-1/books/developers-handbook/tools-compiling.html",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In the context of compilers, which of the following is/are $\\text{NOT}$ an intermediate representation of the source program?",
-          "images": [],
-          "options": [
-            "A. Three address code",
-            "B. Abstract Syntax Tree $\\text{(AST)}$",
-            "C. Control Flow Graph $\\text{(CFG)}$",
-            "D. Symbol table"
-          ],
-          "correct_answer": "D",
-          "explanation": "Symbol table is a data structure created and maintained by compilers in order to store info about occurrences of various entities like variable names, function names, objects, classes and interface. Various forms of intermediate representation of code include Postfix Notation , Three address code ( x = y op z ), Syntax Tree , DAG. Abstract Syntax Tree is a condensed version of syntax tree / parse tree more to with program than the compiler. Parse Tree and Syntax Tree: Control Flow Graph is used in optimization phase of compiler,each basic block consists of linear code , the next block to access is determined by the last instruction of the current block. An Example, goto L2 L1: t0 := 3 >> x t1 := y / t0 x := t1 if y == 0 goto L3 t2 := x - 3 print t2 L3: L2: t4 := 4 * y x := t4 < t5 if t5 != 0 goto L1 See: https://cs.lmu.edu/~ray/notes/ir/ https://www2.cs.arizona.edu/~collberg/Teaching/453/2009/Handouts/Handout-15.pdf http://pages.cs.wisc.edu/~fischer/cs536.s06/course.hold/html/NOTES/4.SYNTAX-DIRECTED-TRANSLATION.html",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​​​​​Consider the following $\\text{ANSI C}$ code segment: z=x + 3 + y->f1 + y->f2; for (i = 0; i < 200; i = i + 2) { if (z > i) { p = p + x + 3; q = q + y->f1; } else { p = p + y->f2; q = q + x + 3; } } Assume that the variable $y$ points to a $\\textsf{struct}$ (allocated on the heap) containing two fields $\\textsf{f1}$ and $\\textsf{f2}$, and the local variables $\\textsf{x, y, z, p, q,}$ and $\\textsf{i}$ are allotted registers. Common sub-expression elimination $\\text{(CSE)}$ optimization is applied on the code. The number of addition and the dereference operations (of the form $\\textsf{ y ->f1}$ or $\\textsf{y ->f2}$) in the optimized code, respectively, are:",
-          "images": [],
-          "options": [
-            "A. $403$ and $102$",
-            "B. $203$ and $2$",
-            "C. $303$ and $102$",
-            "D. $303$ and $2$"
-          ],
-          "correct_answer": "D",
-          "explanation": "t1 = x + 3; // 1 addition t2 = y -> f1; // 1 dereference t3 = y -> f2; // 1 dereference z = t1 + t2 + t3; // 2 additions for (i = 0; i < 200; i += 2) { // 100 additions if (z > i) { p = p + t1; // 1 addition q = q + t2; // 1 addition } else { p = p + t3; // 1 addition q = q + t1; // 1 addition } } So, in total we get $1 + 2 + 100 + 100 * 2 = 303$ additions and $ 2$ defrerences. Since all the variables are mentioned to be in registers and any way p and q are not struct objects there is no pointer aliasing issue (say if y was pointing to object p or q, we cannot move the sub expression out of the loop – they are no longer loop invariant. Option D Not t2 = y -> f1; t3 = y -> f2; z = t1 + t2 + t3; for (i = z+1 + (z%2); i < 200; i += 2) { p = p + t1; q = q + t2; } for (i = 0; i <= z; i += 2) { p = p + t3; q = q + t1; } } The above optimization is loop splitting. The advantage here is now we have one less branch inside the loop – less chance of branch miss prediction and more expected instruction level parallelism – remember pipeline stalls due to branch instructions in COA. Also, now we can optimize the code even further as follows: t1 = x + 3; t2 = y -> f1; t3 = y -> f2; z = t1 + t2 + t3; p = p + ((200-z-1-(z%2))/2) * t1; q = q + ((200-z-1-(z%2))/2) * t2; p = p + ((z+1)/2) * t3; q = q + ((z+1)/2)* t1; Again doing sub-expression elimination: t1 = x + 3; t2 = y -> f1; t3 = y -> f2; z = t1 + t2 + t3; t4 = ((200-z-1-(z%2))/2); p = p + t4 * t1; q = q + t4 * t2; //previous t4 usage is dead here t4 = ((z+1)/2); p = p + t4 * t3; q = q + t4 * t1; So, finally, $4$ multiplications, $3$ divisions/mod, $11$ additions/subtractions. That's what compiler does freely for you :)",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For a statement $S$ in a program, in the context of liveness analysis, the following sets are defined: $\\text{USE}(S)$ : the set of variables used in $S$ $\\text{IN}(S)$ : the set of variables that are live at the entry of $S$ $\\text{OUT}(S)$ : the set of variables that are live at the exit of $S$ Consider a basic block that consists of two statements, $S_1$ followed by $S_2$. Which one of the following statements is correct?",
-          "images": [],
-          "options": [
-            "A. $\\text{OUT($S_1$)} = \\text{IN ($S_2$)}$",
-            "B. $\\text{OUT ($S_1$)} = \\text{IN ($S_1$)} \\cup \\text{ USE ($S_1$)}$",
-            "C. $\\text{OUT ($S_1$)} = \\text{IN ($S_2$) }\\cup \\text{ OUT ($S_2$)}$",
-            "D. $\\text{OUT ($S_1$)} = \\text{USE ($S_1$)} \\cup \\text{IN ($S_2$)}$"
-          ],
-          "correct_answer": "A",
-          "explanation": "Given: Let’s assume the following two statements: S1: a = b + c + d S2: z = b + c + m Note: Since S1 is followed directly by S2 with nothing in between, OUT(S1) = IN(S2) by definition of basic blocks in liveness analysis. Also, OUT(S1) and OUT(S2) can be any subset of variables used in S1 or S2 , respectively , depending on what variables are live after those statements. That’s why we are free to assume reasonable values for them during elimination. Now, we evaluate each option: Option B : OUT(S1) = IN(S1) ∪ USE(S1) LHS = OUT(S1) Assume OUT(S1) = {b} (as explained above) RHS = IN(S1) ∪ USE(S1) IN(S1) = {b} (assumed) USE(S1) = {b, c, d} RHS = {b} ∪ {b, c, d} = {b, c, d} LHS = {b} RHS = {b, c, d} LHS ≠ RHS → Incorrect Option C : OUT(S1) = IN(S2) ∪ OUT(S2) LHS = OUT(S1) Assume OUT(S1) = {b, d} RHS = IN(S2) ∪ OUT(S2) IN(S2) = {b, d} (from previous logic) OUT(S2) = {b, c, m} (assumed live variables) RHS = {b, d} ∪ {b, c, m} = {b, c, d, m} LHS = {b, d} RHS = {b, c, d, m} LHS ≠ RHS → Incorrect Option D : OUT(S1) = USE(S1) ∪ IN(S2) LHS = OUT(S1) Assume OUT(S1) = {d} RHS = USE(S1) ∪ IN(S2) USE(S1) = {b, c, d} IN(S2) = {d} RHS = {b, c, d} ∪ {d} = {b, c, d} LHS = {d} RHS = {b, c, d} LHS ≠ RHS → Incorrect Option A : OUT(S1) = IN(S2) LHS = OUT(S1) RHS = IN(S2) Since S1 is immediately followed by S2 , we know OUT(S1) = IN(S2) directly LHS = RHS → Correct Answer",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following augmented grammar with $\\{ \\#, @, <, >, a, b, c \\}$ as the set of terminals. $$\\begin{array}{l} S’ \\rightarrow S \\\\ S \\rightarrow S \\# cS \\\\ S \\rightarrow SS \\\\ S \\rightarrow S @ \\\\ S \\rightarrow < S > \\\\ S \\rightarrow a \\\\ S \\rightarrow b \\\\ S \\rightarrow c \\end{array}$$Let $I_0 = \\text{CLOSURE}(\\{S’ \\rightarrow \\bullet S\\})$. The number of items in the set $\\text{GOTO(GOTO}(I_0<), <)$ is ___________",
-          "images": [],
-          "options": [],
-          "correct_answer": "8 : 8",
-          "explanation": "We can count the items in the third collection. Answer : 8",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following statements. $S_1:$ The sequence of procedure calls corresponds to a preorder traversal of the activation tree. $S_2:$ The sequence of procedure returns corresponds to a postorder traversal of the activation tree. Which one of the following options is correct?",
-          "images": [],
-          "options": [
-            "A. $S_1$ is true and $S_2$ is false",
-            "B. $S_1$ is false and $S_2$ is true",
-            "C. $S_1$ is true and $S_2$ is true",
-            "D. $S_1$ is false and $S_2$ is false"
-          ],
-          "correct_answer": "C",
-          "explanation": "$S_1$: Is true because to perform procedure calls, first parent function will call child functions and hence it resembles preorder . $S_2$: Is true because to return parent function , we must return child functions first. Hence it resembles post order.",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following statements. $S_1:$ Every $\\text{SLR(1)}$ grammar is unambiguous but there are certain unambiguous grammars that are not $\\text{SLR(1)}$. $S_2:$ For any context-free grammar, there is a parser that takes at most $O(n^3)$ time to parse a string of length $n$. Which one of the following options is correct?",
-          "images": [],
-          "options": [
-            "A. $S_1$ is true and $S_2$ is false",
-            "B. $S_1$ is false and $S_2$ is true",
-            "C. $S_1$ is true and $S_2$ is true",
-            "D. $S_1$ is false and $S_2$ is false"
-          ],
-          "correct_answer": "C",
-          "explanation": "Correct option is C. Both statements are correct. An unambiguous grammar is not necessarily $\\text{SLR}(1).$ But every $\\text{SLR}(1)$ grammar is unambiguous. We do have $\\text{CYK}$ algorithm which takes $O(n^3)$ time (assuming size of the context-free grammar $|G|$ to be a constant) to parse any string of length $n$ using a context-free grammar $G.$",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "​​​Consider the following grammar (that admits a series of declarations, followed by expressions) and the associated syntax directed translation $\\text{(SDT)}$ actions, given as pseudo-code $\\begin{array}{lll} P & \\rightarrow & D^* E^* \\\\ D & \\rightarrow & \\textsf{int ID} \\{ \\text{record that } \\textsf{ID.} \\text{lexeme is of type} \\textsf{ int\\}} \\\\ D & \\rightarrow & \\textsf{bool ID} \\{ \\text{record that } \\textsf{ID.} \\text{lexeme is of type} \\textsf{ bool\\}} \\\\ E& \\rightarrow & E_1 +E_2 \\{ \\text{check that } E_1. \\text{type}=E_2. \\text{type} = \\textsf{int}; \\text{set } E.\\text{type }:= \\textsf{int} \\} \\\\ E & \\rightarrow & !E_1 \\{ \\text{check that } E_1. \\text{type} = \\textsf{bool}; \\text{ set } E.\\text{type} := \\textsf{bool} \\} \\\\ E & \\rightarrow & \\textsf{ID} \\{ \\text{set } E. \\text{type } := \\textsf{int} \\} \\end{array}$ With respect to the above grammar, which one of the following choices is correct?",
-          "images": [],
-          "options": [
-            "A. The actions can be used to correctly type-check any syntactically correct program",
-            "B. The actions can be used to type-check syntactically correct integer variable declarations and integer expressions",
-            "C. The actions can be used to type-check syntactically correct boolean variable declarations and boolean expressions.",
-            "D. The actions will lead to an infinite loop"
-          ],
-          "correct_answer": "B",
-          "explanation": "A) False bcz it only checks Boolean and integer for ex : if we've any other arithmatic operation on Integer like multiplication or subtraction or division then it can't be valid . B) True bcz this rule check integer expressions E → E1 + E2 {check if( E1.type = E2.type == int) set E.type = int; } and this rule checks integer variable declaration E → ID {set E.type:= int} C) False bcz this rule only check boolean expressions E → !E1 {check if( E1.type == bool) set E.type = bool;} and what if in the expression we'll have multiplication of booleans or addition of booleans means any expression is given then we these rule will be invalid. Option C wrong because it says that this grammar is used for type check synthetically correct Boolean variable declaration and Boolean expression But in given grammar we have only rule to check Boolean expressions (E = !E1 it only check Boolean expression) If this rule also given in grammar E = ID ( set E . type := Boolean ) then option C also correct D) False bcz its simply declaration and expression rules so not any infinite looping here.",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following context-free grammar where the set of terminals is $\\{a,b,c,d,f\\}$. $$\\begin{array}{lll} \\text{S} & \\rightarrow & d \\: a \\: \\text{T} \\mid \\text{R} \\: f \\\\ \\text{T} & \\rightarrow & a \\: \\text{S} \\: \\mid \\: b \\: a \\: \\text{T} \\: \\mid \\epsilon \\\\ \\text{R} & \\rightarrow & c \\: a \\: \\text{T} \\: \\text{R} \\: \\mid \\epsilon \\end{array}$$ The following is a partially-filled $\\textsf{LL(1)}$ parsing table.$$\\begin{array} {c c c } & a & b & c & d & f & \\$ \\\\\\hline \\text{S} & & & \\boxed{1} & \\text{S} \\rightarrow da \\text{T} & \\boxed{2} & \\\\\\hline \\text{T} & \\text{T} \\rightarrow a\\text{S} & \\text{T} \\rightarrow ba\\text{T} & \\boxed{3} & & \\text{T} \\rightarrow \\varepsilon & \\boxed{4}\\\\\\hline \\text{R} & & & \\text{R} \\rightarrow ca\\text{T}\\text{R} & & \\text{R} \\rightarrow \\varepsilon & \\end{array}$$ Which one of the following choices represents the correct combination for the numbered cells in the parsing table (“blank” denotes that the corresponding cell is empty)?",
-          "images": [],
-          "options": [
-            "A. $\\boxed{1}\\;\\text{S} \\rightarrow \\text{R}f \\qquad \\boxed{2}\\;\\text{S} \\rightarrow \\text{R}f \\qquad \\boxed{3}\\; \\text{T} \\rightarrow \\varepsilon \\qquad \\boxed{4}\\;\\text{T} \\rightarrow \\varepsilon$",
-            "B. $\\boxed{1}\\;\\text{blank} \\qquad \\boxed{2}\\;\\text{S} \\rightarrow \\text{R}f \\qquad \\boxed{3}\\; \\text{T} \\rightarrow \\varepsilon \\qquad \\boxed{4}\\;\\text{T} \\rightarrow \\varepsilon$",
-            "C. $\\boxed{1}\\;\\text{S} \\rightarrow \\text{R}f \\qquad \\boxed{2}\\;\\text{blank} \\qquad \\boxed{3}\\; \\text{blank} \\qquad \\boxed{4}\\;\\text{T} \\rightarrow \\varepsilon$",
-            "D. $\\boxed{1}\\;\\text{blank} \\qquad \\boxed{2}\\;\\text{S} \\rightarrow \\text{R}f \\qquad \\boxed{3}\\; \\text{blank} \\qquad \\boxed{4}\\;\\text{blank} $"
-          ],
-          "correct_answer": "A",
-          "explanation": "$\\begin{array}{|c|c|c|}\\hline &\\textsf{FIRST}&\\textsf{FOLLOW}\\\\\\hline S \\rightarrow daT \\mid Rf & \\left \\{ d,c,f \\right \\} & \\left \\{ c,f,\\$ \\right \\} \\\\\\hline T \\rightarrow aS \\mid baT \\mid \\varepsilon & \\left \\{ a,b,\\varepsilon \\right \\} & \\left \\{ c,f,\\$ \\right \\} \\\\ \\hline R \\rightarrow caTR\\mid \\varepsilon & \\left \\{ c,\\varepsilon \\right \\} & \\left \\{ f \\right \\} \\\\\\hline \\end{array}$ $\\begin{array}{|c|c|c|c|c|c|c|}\\hline &a&b&c&d&f&\\$ \\\\ \\hline S & & &\\underset{\\boxed{1}} {S \\rightarrow Rf}& S \\rightarrow daT &\\underset{\\boxed{2}}{S \\rightarrow Rf}& \\\\ \\hline T & T \\rightarrow aS & T \\rightarrow baT & \\underset{\\boxed{3}}{T \\rightarrow \\varepsilon} &&T \\rightarrow \\varepsilon & \\underset{\\boxed{4}}{T \\rightarrow \\varepsilon} \\\\ \\hline R & && R \\rightarrow caTR && R \\rightarrow \\varepsilon \\\\ \\hline \\end{array}$ Ans: A (1) $S \\rightarrow Rf\\quad$ (2) $S \\rightarrow Rf\\quad$ (3) $T \\rightarrow \\varepsilon \\quad$ (4) $T \\rightarrow \\varepsilon $",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following $C$ code segment: a = b + c; e = a + 1; d = b + c; f = d + 1; g = e + f; In a compiler, this code segment is represented internally as a directed acyclic graph $\\text{(DAG)}$. The number of nodes in the $\\text{DAG}$ is _____________",
-          "images": [],
-          "options": [],
-          "correct_answer": "6 : 6",
-          "explanation": "Here $a$ and $d$ are same as both add same values $(bc)$ (common sub-expression elimination) Since $a$ and $d$ are same $f$ and $e$ are also same as they compute $a+1$ and $d+1$ respectively. $a = d =b+c$ $e = f = a+1$ $g = e + e$ ($f$ and $e$ being same) So total no of nodes is $6$ $( a, b, c, e, 1,g)$ Ans $:6$ nodes",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following statements. Which of the above statements is/are TRUE? I only I and III only Ⅱ only None of Ⅰ, Ⅱ and Ⅲ",
-          "images": [],
-          "options": [
-            "A. Symbol table is accessed only during lexical analysis and syntax analysis.",
-            "B. Compilers for programming languages that support recursion necessarily need heap storage for memory allocation in the run-time environment.",
-            "C. Errors violating the condition ‘ any variable must be declared before its use ’ are detected during syntax analysis."
-          ],
-          "correct_answer": "D",
-          "explanation": "1. False. The symbol table is accessed by most phases of a compiler, beginning with lexical analysis , and continuing through optimization. Symbol table is accessed during other stages also. Ref: https://en.m.wikipedia.org/wiki/Symbol_table 2. Not essential, any one of heap and stack is enough to support recursion. Dynamic allocation of activation records is essential to implement recursion. Remember the stack size can also grow dynamical (see C memory layout). 3. Syntax analyser uses CFL which cannot check for this, we need power of Context sensitive language which is available in semantic analysis phase. So this error is detected only during semantic analysis phase. So D is correct.",
-          "year": 2020,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar. $S \\rightarrow aSB \\mid d$ $B \\rightarrow b$ The number of reduction steps taken by a bottom-up parser while accepting the string $aaadbbb$ is ___________. See all 4 Comments 4 4 Comments reply palashbehra5 commented Oct 27, 2021 reply Follow flag | Stack | Input | Action | | ------- | ----- | ---------------- | | $aaad | bbb$ | | | $aaaS | bbb$ | reduction S->d | | $aaaSb | bb$ | reduction B->b | | $aaaSB | bb$ | reduction S->aSB | | $aaSb | b$ | reduction B->b | | $aaSB | b$ | reduction S->aSB | | $aSb | $ | reduction B->b | | $S | $ | reduction S->aSB | Note : Skipped shift steps. 4 4 reply Share Gajanan Purud commented Sep 17, 2023 reply Follow flag Nice question 0 0 reply Share js__ commented Nov 3, 2025 reply Follow flag can we say like this total length of the string will be total no. of reductions ? 0 0 reply Share js__ commented Nov 30, 2025 reply Follow flag No. Because RHS lengths vary. S → A B C A → a a a a B → b b C → c c c string :- aaaabbccc Total reductions = 4 Even though string length = 9 . 1 1 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [],
-          "correct_answer": "7",
-          "explanation": "In parse tree, all the non terminals are reductions. So total 7 reductions.",
-          "year": 2020,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the productions $A \\rightarrow PQ$ and $A \\rightarrow XY$. Each of the five non-terminals $A, P, Q, X,$ and $Y$ has two attributes: $s$ is a synthesized attribute, and $i$ is an inherited attribute. Consider the following rules. Rule $1: P . i = A.i + 2, \\: Q.i = P. i + A.i,$ and $A.s = P.s +Q. s$ Rule $2: X.i = A.i + Y.s$ and $Y. i = X. s +A .i$ Which one of the following is TRUE?",
-          "images": [],
-          "options": [
-            "A. Both Rule $1$ and Rule $2$ are $L$-attributed.",
-            "B. Only Rule $1$ is $L$-attributed.",
-            "C. Only Rule $2$ is $L$-attributed.",
-            "D. Neither Rule $1$ nor Rule $2$ is $L$-attributed."
-          ],
-          "correct_answer": "B",
-          "explanation": "Answer : B. In L-attributed definitions, A parent can take its attribute values from any child (which is $S-$attributed and Every $S-$attributed is also $L-$Attributed). A child can take its attribute values from the parent as well as from any left sibling but not from any right sibling. Based on these properties, only Rule-1 is $L-$attributed. Rule-2 is failed for the production $A \\to XY,$ and defintion $X.i =A.i +Y.s$ since $X$ take value from its sibling $Y,$ which is present in its right in the production.",
-          "year": 2020,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following kinds of derivation is used by LR parsers?",
-          "images": [],
-          "options": [
-            "A. Leftmost",
-            "B. Leftmost in reverse",
-            "C. Rightmost",
-            "D. Rightmost in reverse"
-          ],
-          "correct_answer": "D",
-          "explanation": "A bottom-up parser traces a rightmost derivation in reverse. Answer (D) .",
-          "year": 2019,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar given below: $S \\rightarrow Aa$ $A \\rightarrow BD$ $B \\rightarrow b \\mid \\epsilon $ $D \\rightarrow d \\mid \\epsilon $ Let $a,b,d$ and $\\$$ be indexed as follows:$$\\begin{array}{|l|l|l|l|} \\hline a & b & d & \\$ \\\\ \\hline 3 & 2 & 1 & 0 \\\\ \\hline \\end{array}$$Compute the FOLLOW set of the non-terminal B and write the index values for the symbols in the FOLLOW set in the descending order.(For example, if the FOLLOW set is $(a,b,d, \\$)$ , then the answer should be $3210$)",
-          "images": [],
-          "options": [],
-          "correct_answer": "31",
-          "explanation": "For $\\text{Follow(B)} \\implies \\text{First(D)} = \\{ d, \\epsilon \\}$ Put $\\epsilon$ in $II$ production $\\text{Follow (B)} = \\text{ Follow (A)} = \\{ a\\}$ $\\text{Follow (B)} = \\{ d,a \\}$ According to the question writing Follow set in decreasing order:$$\\begin{array}{|l|l|} \\hline a & d \\\\ \\hline 3 & 1 \\\\ \\hline \\end{array}$$Hence $31$ is correct answer",
-          "year": 2019,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar and the semantic actions to support the inherited type declaration attributes. Let $X_1, X_2, X_3, X_4, X_5$, and $X_6$ be the placeholders for the non-terminals $D, T, L$ or $L_1$ in the following table: $$\\begin{array}{|l|l|} \\hline \\text{Production rule} & \\text{Semantic action} \\\\ \\hline D \\rightarrow T L & X_1.\\text{type} = X_2.\\text{type} \\\\ \\hline T \\rightarrow \\text{int} & T.\\text{type} = \\text{int} \\\\ \\hline T \\rightarrow \\text{float} & T.\\text{type} = \\text{float} \\\\ \\hline L \\rightarrow L_1, id & X_3.\\text{type}= X_4.\\text{type} \\\\ &\\text{addType}(id. \\text{entry}, X_5.\\text{type})\\\\ \\hline L \\rightarrow id & \\text{addType}(id. \\text{entry}, X_6.\\text{type}) \\\\ \\hline \\end{array}$$ Which one of the following are appropriate choices for $X_1, X_2, X_3$ and $X_4$?",
-          "images": [],
-          "options": [
-            "A. $X_1=L, \\: X_2=T, \\: X_3=L_1, \\: X_4 = L$",
-            "B. $X_1=T, \\: X_2=L, \\: X_3=L_1, \\: X_4 = T$",
-            "C. $X_1=L, \\: X_2=L, \\: X_3=L_1, \\: X_4 = T$",
-            "D. $X_1=T, \\: X_2=L, \\: X_3=T, \\: X_4 = L_1$"
-          ],
-          "correct_answer": "A",
-          "explanation": "A node in a parse tree can $\\text{INHERIT}$ an attribute either from its parent or its siblings. This means for a production $$S \\to AB,$$ $A$ can inherit values from either $S$ or $B$ and similarly $B$ can inherit values from either $S$ or $A.$ In the given productions, for $L \\to L_1, id,$ $L_1$ can inherit from $L$ or $,$ or $id$ with only $L$ being a non-terminal. So, this means $X_3$ must be $L_1$ and $X_4$ must be $L$ as $X_i$ is a placeholder for non-terminals. Only option A matches this.",
-          "year": 2019,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the augmented grammar given below: $S’ \\rightarrow S$ $S \\rightarrow \\langle L \\rangle \\mid id$ $L \\rightarrow L, S \\mid S$ Let $I_0 = \\text{CLOSURE} (\\{[S’ \\rightarrow \\cdot S ]\\}).$ The number of items in the set $\\text{GOTO} (I_0, \\langle \\: )$ is______",
-          "images": [],
-          "options": [],
-          "correct_answer": "5",
-          "explanation": "Total $5$ items",
-          "year": 2019,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following parse tree for the expression a#b$\\$$c$\\$$d#e#f, involving two binary operators $\\$$ and #. Which one of the following is correct for the given parse tree?",
-          "images": [
-            {
-              "index": 1,
-              "filename": "204112_img1.jpg"
-            }
-          ],
-          "options": [
-            "A. $ has higher precedence and is left associative; # is right associative",
-            "B. # has higher precedence and is left associative; $ is right associative",
-            "C. $ has higher precedence and is left associative; # is left associative",
-            "D. $ has higher precedence and is right associative; # is left associative"
-          ],
-          "correct_answer": "A",
-          "explanation": "Inorder $:\\{a\\#[((b\\$c)\\$d)\\#(e\\#f)]\\}$ (given in question) If we observe, first evaluation is $ b\\$c$ So, (\\$) has higher priority. Therefore, either option (A) or (C) is correct $\\underline{\\text{Option A}}$ $\\$$ has higher precedence and $\\#$ is right associative. From tree, it is clear that $(e\\#f)$ is evaluating first which is to the right side of the root. Therefore, $\\#$ is Right Associative. So, Option A is correct $\\underline{\\text{Option C}}$ $\\$$ has higher precedence and $\\#$ is left associative. This is wrong.",
-          "year": 2018,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A lexical analyzer uses the following patterns to recognize three tokens $T_1, T_2$, and $T_3$ over the alphabet $\\{a, b, c\\}$. $T_1: a?(b \\mid c)^\\ast a$ $T_2: b?(a \\mid c)^\\ast b$ $T_3: c?(b \\mid a)^\\ast c$ Note that ‘$x?$’ means $0$ or $1$ occurrence of the symbol $x.$ Note also that the analyzer outputs the token that matches the longest possible prefix. If the string $bbaacabc$ is processed by the analyzer, which one of the following is the sequence of tokens it outputs?",
-          "images": [],
-          "options": [
-            "A. $T_1T_2T_3$",
-            "B. $T_1T_1T_3$",
-            "C. $T_2T_1T_3$",
-            "D. $T_3T_3$"
-          ],
-          "correct_answer": "D",
-          "explanation": "Option D is the You can think $T_3$ as $\\left ( \\varepsilon + c \\right )\\left ( b+a \\right )^{*}c$ Given string is $bbaacabc$ The longest matching prefix $\\text{bbaac}$ { from regex $T3$ you can easily derive $\\text{bbaac}$ } Now the remaining $\\text{abc}$ { This can also be derived from $T3$ } Hence $T3T3$ is the answer.",
-          "year": 2018,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following statements is FALSE?",
-          "images": [],
-          "options": [
-            "A. Context-free grammar can be used to specify both lexical and syntax rules",
-            "B. Type checking is done before parsing",
-            "C. High-level language programs can be translated to different Intermediate Representations",
-            "D. Arguments to a function can be passed using the program stack"
-          ],
-          "correct_answer": "B",
-          "explanation": "A. Since Lexical rules are nothing but regular expressions, we can use CFGs to represent such rules.(Every Type-$3$ grammar is Type-$2$ grammar) Additionally, syntax rules can be represented by CFGs. (True) B. Type checking is done during Semantic Analysis phase which comes after Parsing. (False) C. We have various types of Intermediate Code Representations, ex $3$-address code, Postfix notation, Syntax trees. (True) D. Program stack holds the activation record of the function called, which stores function parameters, return value, return address etc.(True) $B$",
-          "year": 2018,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the expression $(a-1) * (((b+c)/3)+d)$. Let $X$ be the minimum number of registers required by an optimal code generation (without any register spill) algorithm for a load/store architecture, in which ​​​​​​​The value of $X$ is _____________ . ed Nov 29, 2022 reply Follow flag @svas7246 If intermediate result is stored in memory then we don’t need an additional register to store it and it minimizes the registers used. 2 2 reply Share aashish1406 commented Jan 15, 2024 i",
-          "images": [],
-          "options": [
-            "A. only load and store instructions can have memory operands and",
-            "B. arithmetic instructions can have only register or immediate operands."
-          ],
-          "correct_answer": "2",
-          "explanation": "Load $R1,b$ Load $R2,c$ ADD $R1,R2$ Div $R1,3$ Load $R2,d$ Add $R1,R2$ Load $R2,a$ Sub $R2,1$ Mul $R2,R1$ hence minimum $2$ registers required",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Match the following according to input (from the left column) to the compiler phase (in the right column) that processes it: $$\\begin{array}{|l|l|}\\hline \\text{P. Syntax tree} & \\text{i. Code generator} \\\\\\hline \\text{Q. Character stream} & \\text{ii. Syntax analyser} \\\\\\hline \\text{R. Intermediate representation} & \\text{iii. Semantic analyser} \\\\\\hline \\text{S. Token stream} & \\text{iv. Lexical analyser} \\\\\\hline \\end{array}$$ Related Questions : GATE CSE 2009 | Question: 17 GATE CSE 2015 Set 2 | Question: 19 GATE CSE 2016 Set 2 | Question: 19 GATE CSE 1990 | Question: 2-ix GATE CSE 2024 | Set 2 | Question: 11",
-          "images": [],
-          "options": [
-            "A. $\\text{P-ii; Q-iii; R-iv; S-i}$",
-            "B. $\\text{P-ii; Q-i; R-iii; S-iv}$",
-            "C. $\\text{P-iii; Q-iv; R-i; S-ii}$",
-            "D. $\\text{P-i; Q-iv; R-ii; S-iii}$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Correct Option: $C$ $\\text{Q - iv}$ because Character stream is given as input to lexical analyser $\\text{P - iii}$ Syntax tree is given as input to semantic analyser $\\text{R - i }$Intermediate code given as input to code generator $\\text{S - ii }$ Token stream given as input to syntax analyser",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following expression grammar $G$: $E \\rightarrow E-T \\mid T$ $T \\rightarrow T + F \\mid F$ $F \\rightarrow (E) \\mid id$ Which of the following grammars is not left recursive, but is equivalent to $G$?",
-          "images": [],
-          "options": [
-            "A. $E \\rightarrow E-T \\mid T$ $T \\rightarrow T +F \\mid F$ $F \\rightarrow (E) \\mid id$",
-            "B. $E \\rightarrow TE’$ $E’ \\rightarrow -TE’ \\mid \\epsilon$ $T \\rightarrow T + F \\mid F$ $F \\rightarrow (E) \\mid id$",
-            "C. $E \\rightarrow TX $ $X \\rightarrow -TX \\mid \\epsilon$ $T \\rightarrow FY$ $Y \\rightarrow +FY \\mid \\epsilon$ $F \\rightarrow (E) \\mid id$",
-            "D. $E \\rightarrow TX \\mid (TX)$ $X \\rightarrow -TX \\mid +TX \\mid \\epsilon$ $T \\rightarrow id$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Since, the grammar given in the question is left recursive, we need to remove left recursion , If Grammar is of form $A \\rightarrow Aα \\mid β$ then after removal of left recursion it should be written as $A \\rightarrow βA'$ $A' \\rightarrow αA' \\mid \\epsilon$ Since the grammar is : $E \\rightarrow E - T \\mid T$ $($Here $α$ is '$-T$' and $β$ is $T$$)$ $T \\rightarrow T + F \\mid F$ $($Here $α$ is '$+F$' and $β$ is $F$$)$ $F \\rightarrow (E) \\mid id$ $($It is not having left recursion$)$ Rewriting after removing left recursion : $E \\rightarrow TE'$ $E' \\rightarrow -TE' \\mid \\epsilon$ $T \\rightarrow FT'$ $T' \\rightarrow +FT' \\mid \\epsilon $ $F \\rightarrow (E) \\mid id$ Now replace $E'$ with $X$ and $T'$ with $Y$ to match with Option C. $E \\rightarrow TX $ $X \\rightarrow -TX \\mid \\epsilon$ $T \\rightarrow FY$ $Y \\rightarrow +FY \\mid \\epsilon$ $F \\rightarrow (E) \\mid id$ Hence C is correct.",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements about parser is/are CORRECT? I only II only III only II and III only",
-          "images": [],
-          "options": [
-            "A. $\\text{Canonical LR}$ is more powerful than $\\text{SLR}$",
-            "B. $\\text{SLR}$ is more powerful than $\\text{LALR}$",
-            "C. $\\text{SLR}$ is more powerful than $\\text{Canonical LR}$"
-          ],
-          "correct_answer": "A",
-          "explanation": "For a parser more power means it can parse more strings. So, here only the first statement is correct. $A$",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar: stmt $\\rightarrow$ if expr then expr else expr; stmt | $Ò$ expr $\\rightarrow$ term relop term | term term $\\rightarrow$ id | number id $\\rightarrow$ a | b | c number $\\rightarrow [0-9]$ where relop is a relational operator $($e.g., $< , >,\\ldots),$ $Ò$ refers to the empty statement, and if , then , else are terminals. Consider a program $P$ following the above grammar containing ten if terminals. The number of control flow paths in $P$ is________ . For example. the program if $e_1$ then $e_2$ else $e_3$ has $2$ control flow paths. $e_1 \\rightarrow e_2$ and $e_1 \\rightarrow e_3$. See all 7 Comments 7 7 Comments reply Show 4 previous comments usher commented Nov 22, 2024 reply Follow flag for 2 if statements there are 4 control flow graph thus, for 10 if statement there are 2^10 control flow graphs. 11 11 reply Share Rish@bh_shukl@ commented Sep 9, 2025 reply Follow flag Possible silly mistake = doing 2*10 instead of 2^10. 6 6 reply Share coderatul commented Jan 16 i | | Let's look at the first IF: v < Decision 1: Mood okay? > / \\ (Yes/True) (No/False) / \\ v v [ Action: Study ] [ Action: Chillax ] | | | | The first IF is done. The first IF is done. Now everyone moves to Now everyone moves to the second IF: | v v < Decision 2: Is it Jan? > < Decision 2: Is it Jan? > / \\ / \\ (Yes/True) (No/False) (Yes/True) (No/False) / \\ / \\ v v v v [LEAF 1] [LEAF 2] [LEAF 3] [LEAF 4] (Study anyway) (Regret) (Study anyway) (Regret) 2 2 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [],
-          "correct_answer": "1024",
-          "explanation": "This question is picked from area of Counting in Combinatorics . Given: if $e_1$ then $e_2$ else $e_3$ has $2$ control flow paths $e_1 \\rightarrow e_2$ and $e_1 \\rightarrow e_3$. (Meaning of \"how many control flow\" for if structure is clearly mentioned) What is asked: Number of control flow paths for $10$ if terminals? Solution: To get $10$ if's we need to use grammar to get, if <expr> then <expr> else <expr> ; stmt if <expr> then <expr> else <expr> ; if <expr> then <expr> else <expr> ; stmt .............. .............. .............. (keep doing it $10$ times to get $10$ if's) Observe that there is a semi-colon after every if structure . We know that every if structure has $2$ control flows as given in question. Hence, We have $2$ control flow choices for $1$st if terminal. We have $2$ control flow choices for $2$nd if terminal. ............ ............ ............ We have $2$ control flow choices for $10$th if terminal. By using multiplicative law of counting we get, Total choices as $2*2*2*2*2$......$10$ times $= 2^{10} = 1024$ Once again, one need not know \"what control flow\" is, but needs to know \"how many control flows\" are in if structure which is given in question.",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar: $P\\rightarrow xQRS$ $Q\\rightarrow yz\\mid z$ $R\\rightarrow w\\mid \\varepsilon$ $S\\rightarrow y$ What is FOLLOW($Q$)?",
-          "images": [],
-          "options": [
-            "A. $\\left \\{ R \\right \\}$",
-            "B. $\\left \\{ w \\right \\}$",
-            "C. $\\left \\{ w,y \\right \\}$",
-            "D. $\\left \\{ w,\\$ \\right \\}$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Follow of $Q$ is first of $R$ so we get $\\{w\\}$ but since $R$ can be Null so we have to check first of $S$ which is $\\{y\\}$ so FOLLOW $Q=\\{w,y\\}$ Correct option ( C )",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following intermediate program in three address code p = a - b q = p * c p = u * v q = p + q Which one of the following corresponds to a static single assignment form of the above code?",
-          "images": [],
-          "options": [
-            "A. p1 = a - b q1 = p1 * c p1 = u * v q1 = p1 + q1",
-            "B. p3 = a - b q4 = p3 * c p4 = u * v q5 = p4 + q4",
-            "C. p1 = a - b q1 = p2 * c p3 = u * v q2 = p4 + q3",
-            "D. p1 = a - b q1 = p * c p2 = u * v q2 = p + q"
-          ],
-          "correct_answer": "B",
-          "explanation": "References: https://en.wikipedia.org/wiki/Static_single_assignment_form http://www.cse.iitd.ernet.in/~nvkrishna/courses/winter07/ssa.pdf https://www.cs.cmu.edu/~fp/courses/15411-f08/lectures/09-ssa.pdf http://www.seas.harvard.edu/courses/cs252/2011sp/slides/Lec04-SSA.pdf So, B is ans.",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "What is printed by following program, assuming call-by reference method of passing parameters for all variables in the parameter list of procedure P? program Main(inout, output); var a, b:integer; procedure P(x, y, z:integer); begin y:=y+1 z:=x+x end P; begin a:=2; b:=3; p(a+b, a, a); Write(a) end. 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [],
-          "correct_answer": "10",
-          "explanation": "let variable \"$a$\" has address $100$ and \"$b$\" has $200$ . and a variable in which \"$a+b$\" is stored has address $300$. now $p(300,100,100)$ which represent $x,y,z$ $y:=y+1$ // it makes $a=3$; $z:=x+x$ // x means the value contained at address $300$ i.e. $5$ $5+5 =10$ hence value at address $100$ i.e. variable \"$a$\" will get the value $10$ . Hence the value of $a$ i.e. $10$ will be printed.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following expression grammar. The semantic rules for expression evaluation are stated next to each grammar production.$$\\begin{array}{l|l} E\\rightarrow number & E.val = {number.val} \\\\\\qquad \\mid \\ E \\ \\ ‘+\\text{'} \\ E & E^{(1)}.val = E^{(2)}.val + E^{(3)}.val \\\\\\qquad \\mid \\ E \\ \\ ‘\\times\\text{'} \\ E & E^{(1)}.val = E^{(2)}.val \\times E^{(3)}.val \\end{array}$$ Assume the conflicts of this question are resolved using yacc tool and an LALR(1) parser is generated for parsing arithmetic expressions as per the given grammar. Consider an expression $3 \\times 2 + 1$. What precedence and associativity properties does the generated parser realize?",
-          "images": [],
-          "options": [
-            "A. Equal precedence and left associativity; expression is evaluated to $7$",
-            "B. Equal precedence and right associativity; expression is evaluated to $9$",
-            "C. Precedence of ‘$\\times$’ is higher than that of ‘$+$’, and both operators are left associative; expression is evaluated to $7$",
-            "D. Precedence of ‘$+$’ is higher than that of ‘$\\times$’, and both operators are left associative; expression is evaluated to $9$"
-          ],
-          "correct_answer": "B",
-          "explanation": "LALR Parser is type of Bottom up Parser which uses Right most Derivation For $3×2+1$ $E \\rightarrow E * E$ (Both shift and reduce possible but yacc prefers shift) $ \\rightarrow E * E + E$ $ \\rightarrow E * E + 1$ $ \\rightarrow E * 2 + 1$ $ \\rightarrow E * 3$ $ \\rightarrow 3 * 3$ $ \\rightarrow 9$ All the productions are in same level therefore all have same precedence Therefore Ans is B. Equal precedence and right associativity; expression is evaluated to 9.",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "State whether the following statements are TRUE or FALSE with reason: The Link-load-and-go loading scheme required less storage space than the link-and-go loading scheme. 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [],
-          "correct_answer": "1",
-          "explanation": "TRUE. In link and go scheme the linkage editor coexists with program in main memory while performing linking task whereas link,load and go scheme the linkage editor does not coexists with program in main memory while performing linking task source : http://www.answers.com/Q/What_are_link_and_go_and_link_load_and_go_loader_schemes",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For the program given below what will be printed by the write statements marked $(1)$ and $(2)$ in the program if the variables are dynamically scoped? Var x, y:interger; procedure P(n:interger); begin x := (n+2)/(n-3); end; procedure Q Var x, y:interger; begin x:=3; y:=4; P(y); Write(x); __(1) end; begin x:=7; y:=8; Q; Write(x); __(2) end.",
-          "images": [],
-          "options": [
-            "A. $3, 6$",
-            "B. $6, 7$",
-            "C. $3, 7$",
-            "D. None of the above"
-          ],
-          "correct_answer": "B",
-          "explanation": "Using Static Scoping: First, procedure Q is called from the main procedure. Q has local variables x and y with values 3 and 4 respectively. This local variable y (value 4 ) is being passed to procedure P during call, and received in local variable n inside procedure P . Now, as P does not have any local definition for variable x , it will assign the evaluated value of (n+2)/(n-3) i.e. (4+2)/(4-3)=6 to the global variable x , which was previously 7 . After the call of procedure P , procedure Q writes the value of local variable x which is still 3 . Lastly, the main procedure writes the value of global variable x which has been changed to 6 inside procedure P . So, the output will be 3, 6 . Using Dynamic Scoping: The same sequence of statements will be executed using dynamic scoping. However, as there is no local definition of variable x in procedure P , it will consider the recent definition in the calling sequence; as P is being called from procedure Q , definition of x from Q will be used, and value of x will be changed to 6 from 3 . Now, when Q writes local variable x , 6 will be printed. The write global variable x from main procedure will print 7 (as value of the global variable x has not been changed). So, the output will be 6, 7 . $B$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Study the following program written in a block-structured language: Var x, y:interger; procedure P(n:interger); begin x:=(n+2)/(n-3); end; procedure Q Var x, y:interger; begin x:=3; y:=4; P(y); Write(x) __(1) end; begin x:=7; y:=8; Q; Write(x); __(2) end. What will be printed by the write statements marked $(1)$ and $(2)$ in the program if the variables are statically scoped? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $3, 6$",
-            "B. $6, 7$",
-            "C. $3, 7$",
-            "D. None of the above."
-          ],
-          "correct_answer": "A",
-          "explanation": "Using Static Scoping: First, procedure Q is called from the main procedure. Q has local variables x and y with values 3 and 4 respectively. This local variable y (value 4 ) is being passed to procedure P during call, and received in local variable n inside procedure P . Now, as P does not have any local definition for variable x , it will assign the evaluated value of (n+2)/(n-3) i.e. (4+2)/(4-3)=6 to the global variable x , which was previously 7 . After the call of procedure P , procedure Q writes the value of local variable x which is still 3 . Lastly, the main procedure writes the value of global variable x which has been changed to 6 inside procedure P . So, the output will be 3, 6 . Using Dynamic Scoping: The same sequence of statements will be executed using dynamic scoping. However, as there is no local definition of variable x in procedure P , it will consider the recent definition in the calling sequence; as P is being called from procedure Q , definition of x from Q will be used, and value of x will be changed to 6 from 3 . Now, when Q writes local variable x , 6 will be printed. The write global variable x from main procedure will print 7 (as value of the global variable x has not been changed). So, the output will be 6, 7 . $A$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Using longer identifiers in a program will necessarily lead to:",
-          "images": [],
-          "options": [
-            "A. Somewhat slower compilation",
-            "B. A program that is easier to understand",
-            "C. An incorrect program",
-            "D. None of the above"
-          ],
-          "correct_answer": "A",
-          "explanation": "Answer : Option A ) is Correct because lex will take more time to recognize the longer identifiers.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "An operator precedence parser is a 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Bottom-up parser.",
-            "B. Top-down parser.",
-            "C. Back tracking parser.",
-            "D. None of the above."
-          ],
-          "correct_answer": "A",
-          "explanation": "A. Bottom-up parser. An operator-precedence parser is a simple shift-reduce parser that is capable of parsing a subset of $\\text{LR(1)}$ grammars. More precisely, the operator-precedence parser can parse all $\\text{LR(1)}$ grammars where two consecutive non-terminals and epsilon never appear in the right-hand side of any rule.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A context-free grammar is ambiguous if:",
-          "images": [],
-          "options": [
-            "A. The grammar contains useless non-terminals.",
-            "B. It produces more than one parse tree for some sentence.",
-            "C. Some production has two non terminals side by side on the right-hand side.",
-            "D. None of the above."
-          ],
-          "correct_answer": "B",
-          "explanation": "An ambiguous grammar produces more than one parse tree for any string.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In a compiler the module that checks every character of the source text is called: Related Questions : GATE CSE 2011 | Question: 1",
-          "images": [],
-          "options": [
-            "A. The code generator.",
-            "B. The code optimiser.",
-            "C. The lexical analyser.",
-            "D. The syntax analyser."
-          ],
-          "correct_answer": "C",
-          "explanation": "lexical analyser phase checks every character of text to identify tokens.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The grammar $S\\rightarrow AC\\mid CB$ $C\\rightarrow aCb\\mid \\epsilon$ $A\\rightarrow aA\\mid a$ $B\\rightarrow Bb\\mid b$ generates the language $ L=\\left \\{ a^{i}b^{j}\\mid i\\neq j \\right \\}$. In this grammar what is the length of the derivation (number of steps starting from $S$) to generate the string $a^{l}b^{m}$ with $l\\neq m$",
-          "images": [],
-          "options": [
-            "A. $\\max (l,m) + 2$",
-            "B. $l + m + 2$",
-            "C. $l + m + 3$",
-            "D. $\\max (l,m) + 3$"
-          ],
-          "correct_answer": "A",
-          "explanation": "$L =a^lb^m; l \\neq m$ means either $l > m$ or $l < m$ Case I [l > m]: if $l >m ,a^lb^m$ can be written as $\\mathbf{a^{l-m}a^{m}b^{m}} [l-m$ cannot be $0$ as $l$ should be $> m]$ $S \\rightarrow AC $, one step $a^{l-m}$ use $l-m$ steps using productions of $A$ [as $l-m = 1$ , one step $A \\rightarrow a$ $l-m =2$ , two steps $A \\rightarrow aA \\rightarrow aa$ $l-m = 3$ , three steps , $A\\rightarrow aA \\rightarrow aaA \\rightarrow aaa \\ldots$ so on] $a^mb^m$ will be generate in $m + 1$ steps using production $C$ [ as $m = 0$ one step C $\\rightarrow$ $\\epsilon$ $m= 1$ , two steps $C \\rightarrow aCb \\rightarrow ab$ $m= 2$, three steps $C \\rightarrow aCb \\rightarrow aaCbb \\rightarrow aabb \\ldots $ so on ] So if $l>m,$ total steps $= 1+l-m +m+1 = l +2$ Case II [l<m]: Simillarly if $l< m , a^lb^m$ can be written as $\\mathbf{a^{l}b^{l}b^{m-l}}$ [$m-l$ cannot be $0$ as $m$ should be $> l ]$ $S \\rightarrow CB$ one step $a^lb^l$ will be derived using $l+1$ steps $b^{m-l}$ will be derived using $m- l$ steps Total steps $= 1 +l+1+m-l = m +2$ So $L =a^lb^m ;l \\neq m$ will take $\\text{max}(l,m)+2$ steps",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The following program fragment is written in a programming language that allows global variables and does not allow nested declarations of functions. global int i=100, j=5; void P(x) { int i=10; print(x+10); i=200; j=20; print (x); } main() {P(i+j);} If the programming language uses dynamic scoping and call by name parameter passing mechanism, the values printed by the above program are",
-          "images": [],
-          "options": [
-            "A. $115, 220$",
-            "B. $25, 220$",
-            "C. $25, 15$",
-            "D. $115, 105$"
-          ],
-          "correct_answer": "X",
-          "explanation": "Answer: No Option is correct. The answer to this question can be found in Example $6$ below. The \"Call by name\" parameter passing technique is used by imperative languages like Algol $W,$ and is used by several functional languages like Haskell. We'll see how the \"Call by name\" parameter passing technique works (theoretical idea for understanding its working), Not how it is actually implemented(practical implementation). How \"Call by name\" works (Idea of this technique): In general, the effect of pass-by-name is to textually substitute the argument expressions(actual parameters) in a procedure call for the corresponding parameters(formal parameters) in the body of the called procedure.* i.e. Direct Substitution of actual parameters in the place of the formal parameter in the called procedure.* (* means that it is not a complete definition/statement and some technical details are missing and as we go on, we'll fill in these details.) Example 1: What will be the output if the \"Call by name\" parameter passing technique is used. Given Program : void P(x) { print(x+10); print (x); } main() { int j = 10; P(j); } Answer: Since the \"Call by name\" parameter passing technique is used, we can re-write the program as follows: void P(x) { print(j+10); print (j); } main() { int j = 10; P(j); } Hence, output $: 20,10$ NOTE 1 (Technical Detail 1) : It does Not matter which Scoping is used(static or dynamic), once we substitute actual arguments in the place of formal parameters in the called function, for those variables in the actual arguments, environment of caller function will be applicable. Hence, in the above example $1,$ in function $P, j$ refers to the $j$ of the caller function i.e. main function. Example $2$ will illustrate Note $1.$ Example 2: What will be the output if the \"Call by name\" parameter passing technique is used in the case of static and dynamic scoping? global int j=100; void P(x) { print(x+10); print (x); } main() { int j = 10; P(j); } Answer: Since the \"Call by name\" parameter passing technique is used, we can re-write the program as follows: global int j=100; void P(x) { print(j+10); print (j); } main() { int j = 10; P(j); } In case of Dynamic scoping $: 20,10 $ In case of Static scoping $: 20,10 $ Note that in the case of Static scoping, $j$ in function $P$ does not refer to the global variable But $j$ refers to the caller function, more precisely, Once we substitute Actual arguments in the place of formal parameters in the called function, for those variables in the actual arguments, Environment of caller function will be applicable. Hence, $j$ in $P$ will be accessed/updated according to caller function's environment, and since, caller function i.e. main function here, has a local variable $j$, so, this $j$ will be accessed/updated by the function $P.$ Example 3: What will be the output if the \"Call by name\" parameter passing technique is used in the case of static and dynamic scoping? global int j=100; void P(x) { print(x+10); print (x); } main() { P(j); } Answer: Since the \"Call by name\" parameter passing technique is used, we can re-write the program as follows: global int j=100; void P(x) { print(j+10); print (j); } main() { P(j); } In case of Dynamic scoping $: 110,100 $ In case of Static scoping $: 110,100$ Again, once we substitute actual arguments in the place of formal parameters in the called function, for those variables in the actual arguments, environment of caller function will be applicable. Hence, $j$ in $P$ will be accessed/updated according to the caller function's environment and since, caller function i.e., main function here, does not have a local variable $j$, environment of function main for variable $j$ would depend on the scoping used, But this scoping will be seen from the perspective of caller function i.e. function main, not from the perspective of called function i.e. function P. So, it is like accessing variable $j$ in the main function, not in $P$ function. Hence, for this example $3,$ in both scoping, the main function will be using Global variable $j.$ Example 4: What will be the output if \"Call by name\" parameter passing technique is used in the case of static and dynamic scopings? global int j = 100, i = 300; void Q(x) { print(x+10); print (x); } void P(x) { print(x+10); Q(i); print (x); } main() { int i = 500; int j = 10; P(j); } Answer: Since \"Call by name\" parameter passing technique is used, we can re-write the program as follows: global int j = 100, i = 300; void Q(x) { print(i+10); // this i refers to i in the caller function i.e. P function's environment print (i); } // this i refers to i in the caller function i.e. P function's environment void P(x) { print(j+10); // this j refers to j in the caller function i.e. main function's environment Q(i); print (j); // this j refers to j in the caller function i.e. main function's environment } main() { int i = 500; int j = 10; P(j); } In case of Dynamic scoping $: 20,510,500,10$ In case of Static scoping $: 20,310,300,10$ In Static scoping, variable $i$ in $P$ function's environment refers to the global variable $i$. In Dynamic scoping, variable $i$ in $P$ function's environment refers to the main function's $i.$ NOTE 2 (Technical Detail 2) : if any of the local variables in the called procedure clash with the caller's variables, they (called function's clashing variables) must be renamed uniquely before substitution. Example 5: What will be the output if the \"Call by name\" parameter passing technique is used? Given Program : void P(x) { int j=100; print(x+10); print(j); print (x); } main() { int j = 10; P(j); } Answer: Since \"Call by name\" parameter passing technique is used, we can re-write the program as follows: Caller function's actual argument contains variable $j$ which clashes with called function $P$'s local variable $j,$ hence, we rename called function $P$'s local variable $j$ and change it to $j'.$ void P(x) { int j'=100; print(j+10); // this j refers to j in the caller function i.e. main function's environment print(j'); // this j' refers to the local variable j' in P. print (j); // this j refers to j in the caller function i.e. main function's environment } main() { int j = 10; P(j); } Hence, output $: 20,100, 10.$ Coming to the actual GATE question, we'll call it to example $6.$ Example 6: What will be the output if the \"Call by name\" parameter passing technique is used, in the case of static and dynamic scopings? global int i=100, j=5; void P(x) { int i=10; print(x+10); i=200; j=20; print (x); } main() {P(i+j);} Answer: Since the \"Call by name\" parameter passing technique is used, we can re-write the program as follows: Caller function's Actual argument contains variable $i$ which clashes with called function $P$'s local variable $i,$ hence, we rename called function $P$'s local variable $i$ and change it to $i'.$ global int i=100, j=5; void P(x) { int i'=10; // this i' refers to the local variable i' in function P. print(i+j+10); // this i,j refers to i,j in the caller function i.e. main function's environment i'=200; // this i' refers to the local variable i' in function P. j=20; // this j refers to j in the caller function i.e. main function's environment print (i+j); // this i,j refers to i,j in the caller function i.e. main function's environment } main() {P(i+j);} In case of Static scoping $: 115, 120$ In case of Dynamic scoping$: 115, 120$ Note that there are no local variable $i,j$ in the main function, so, when we say that $i,j$ refer to the $i,j$ in the main's environment, we mean that If $i,j$ were accessed/updated in the main function then depending on the scoping, which $i,j$ would they refer. Here, in this question, in both static and dynamic scoping cases, $i,j$ will refer to the Global variables. And in function $P$, in the $4$th statement $(\\text{i.e.}\\; j = 20)$, the Global variable $j$ will be updated. Hence, No Option is correct for the actual above GATE question. Example 7: What will be the output if the \"Call by name\" parameter passing technique is used in the case of static and dynamic scopings? global int j = 100, i = 300; void Q(x) { print(x+10); print (x); } void P(x) { int i = 400; int j = 600; print(x+10); Q(i); Q(j); print (x); } main() { int i =500; Q(i); int j =10; P(j); } Answer : in both scoping, for this question, output $: 510,500,20,410,400,610,600,10.$ Note that When main calls $P(j)$, then Caller function main's Actual argument contains variable $j$ which clashes with called function $P$'s local variable $j,$ hence, we rename called function $P$'s local variable $j$ and change it to $j'.$ So, in function P, the 5th statement becomes $Q(j').$ Also note that when main calls $Q(i)$, then $x$ in $Q$ is replaced with $i.$ When $P$ calls $Q(i),$ then $x$ in $Q$ is replaced with $i.$ When $P$ calls $Q(j')$, then $x$ in $Q$ is replaced with $j'.$ Note that \"Direct Substitution of actual parameters in the place of the formal parameter in the called procedure\" is only the Idea of Call-by-name, Not the actual practical implementation. The compiler does Not do Direct Substitution blindly. Pass-by-name is difficult to implement. Argument expressions must be compiled to special parameter-less procedures called thunks . These thunks are passed into the called procedure and used whenever necessary to evaluate or re-evaluate the argument. But we do not need to go into practical implementation details because the Idea remains the same. Hence, we can solve all the questions using the above idea of call-by-name. NOTE 3 (Technical Detail 3) : if any of the variables in the called procedure clash with the caller's variables, they(called function's clashing variables) must be renamed uniquely before substitution. Clashing variables need not be local variables of the called function. But remember that when we rename a variable, we don't really rename it. We rename it just to eliminate the possibility of confusion. So, when we rename $j $ to $j'$, we must not forget that $j'$ is actually $j$ only in the first place. The following example will illustrate this point : Example 8: What will be the output if the \"Call by name\" parameter passing technique is used in the case of static and dynamic scoping? global int j=100, i = 300; void Q(x) { print(i); print(j); print(x+10); print (x); } void P(x) { int i = 400; int j = 600; print(x+10); Q(i); Q(j); print (x); } main() { int i =500; int j =10; Q(i); P(j); } Answer : In case of Static scoping $: 300, 100, 510, 500, 20, 300, 100, 410, 400, 300, 100, 610, 600, 10$ In case of Dynamic scoping $: 500, 10, 510, 500, 20, 400, 600, 410, 400, 400, 600, 610, 600, 10$ global int j = 100, i = 300; void Q(x) { print(i); // this i refers to the Global i in case of static scoping and in case of dynamic scoping, according to the calling function in the stack. print(j); // this j refers to the Global j in case of static scoping and in case of dynamic scoping, according to the calling function in the stack. print(x+10); // variables that are substituted here, refer to the corresponding variables in the caller function's environment print (x); } // variables that are substituted here, refer to the corresponding variables in the caller function's environment void P(x) { int i = 400; int j = 600; print(x+10); // variables that are substituted here, refer to the corresponding variables in the caller function's environment Q(i); Q(j); print (x); // variables that are substituted here, refer to the corresponding variables in the caller function's environment } main() { int i =500; int j =10; Q(i); P(j); } When main calls $Q(i) ,$ we substitute $i$ in place of $x$ and it(Q) becomes: void Q(x) { print(i′); // This is renamed as i′ and it refers to //global variable i in case of static scoping and //in case of dynamic scoping it refers to //variable i in main function. print(j); print(i+10); print (i); } Hence, the two different $i's$ should be distinguished properly. https://www2.cs.sfu.ca/~cameron/Teaching/383/PassByName.html https://www2.cs.arizona.edu/classes/cs520/spring06/06parameters.pdf",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the CFG with $\\left\\{S, A, B\\right\\}$ as the non-terminal alphabet, $\\{a, b\\}$ as the terminal alphabet, $S$ as the start symbol and the following set of production rules: $S \\rightarrow aB$ $S \\rightarrow bA$ $B \\rightarrow b$ $A \\rightarrow a$ $B \\rightarrow bS$ $A \\rightarrow aS$ $B \\rightarrow aBB$ $A \\rightarrow bAA$ For the string $aabbab$, how many derivation trees are there?",
-          "images": [],
-          "options": [
-            "A. $1$",
-            "B. $2$",
-            "C. $3$",
-            "D. $4$"
-          ],
-          "correct_answer": "B",
-          "explanation": "$S \\rightarrow aB$ $ \\rightarrow aaBB$ $ \\rightarrow aabB$ $ \\rightarrow aabbS$ $ \\rightarrow aabbaB$ $ \\rightarrow aabbab$ $S \\rightarrow aB$ $ \\rightarrow aaBB$ (till now, only $1$ choice possible) $ \\rightarrow aabSB$ $($last time we took $B \\rightarrow b$, now taking $B \\rightarrow bS)$ $ \\rightarrow aabbAB$ $ \\rightarrow aabbaB$ $ \\rightarrow aabbab$ So, totally $2$ possible derivation trees. $B$",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For the grammar below, a partial $LL(1)$ parsing table is also presented along with the grammar. Entries that need to be filled are indicated as $E1, E2,$ and $E3$. $\\varepsilon$ is the empty string, \\$ indicates end of input, and, $ \\mid $ separates alternate right hand sides of productions. $ S \\rightarrow a A b B \\mid b A a B \\mid \\varepsilon $ $ A \\rightarrow S $ $ B \\rightarrow S $ $$\\begin{array}{|l|l|}\\hline \\text{} & \\textbf{a} & \\textbf{b} & \\textbf{\\$} \\\\\\hline \\text{$S$} & \\text{E1} & \\text{E2} & \\text{$S\\rightarrow \\varepsilon $} \\\\\\hline \\text{$A$} & \\text{$A\\rightarrow S$} & \\text{$A\\rightarrow S$} & \\text{error} \\\\\\hline \\text{$B$} & \\text{$B\\rightarrow S$} & \\text{$B\\rightarrow S$} & \\text{$E3$} \\\\\\hline \\end{array}$$The appropriate entries for $E1, E2,$ and $E3$ are",
-          "images": [],
-          "options": [
-            "A. $ E1 : S \\rightarrow aAbB, A\\rightarrow S$ $ E2 : S \\rightarrow bAaB, B\\rightarrow S $ $ E3 : B \\rightarrow S$",
-            "B. $ E1 : S \\rightarrow aAbB, S \\rightarrow \\varepsilon$ $ E2 : S \\rightarrow bAaB, S \\rightarrow \\varepsilon$ $ E3 : S \\rightarrow \\varepsilon$",
-            "C. $ E1 : S \\rightarrow aAbB, S \\rightarrow \\varepsilon$ $ E2 : S \\rightarrow bAaB, S \\rightarrow \\varepsilon$ $ E3 : B \\rightarrow S$",
-            "D. $ E1 : A \\rightarrow S, S \\rightarrow \\varepsilon$ $ E2 : B \\rightarrow S, S \\rightarrow \\varepsilon$ $ E3 : B \\rightarrow S$"
-          ],
-          "correct_answer": "C",
-          "explanation": "To make $LL(1)$ parsing table first we have to find $\\text{FIRST}$ and $\\text{FOLLOW}$ sets from the given grammar. $\\text{FIRST}(S)=\\{a,b,\\epsilon\\}$ $\\text{FIRST}(A)=\\{a,b,\\epsilon\\}$ $\\text{FIRST}(B)=\\{a,b,\\epsilon\\}$ $\\text{FOLLOW}(S)= \\{a,b,\\$\\}$ $\\text{FOLLOW}(A)= \\{a,b\\}$ $\\text{FOLLOW}(B)= \\{a,b,\\$\\}$ Now lets make $LL(1)$ parse table $$\\begin{array}{|c|l|l|l|}\\hline \\textbf{Non Terminal} & \\textbf{a} & \\textbf{b} & \\textbf{\\$} \\\\\\hline \\text{$S$} & \\text{$S \\rightarrow aAbB$},&\\text{$S \\rightarrow bAbB$},& \\text{$S\\rightarrow \\varepsilon $}\\\\ & \\text{$S \\rightarrow \\epsilon$} & \\text{$S \\rightarrow \\epsilon$} & \\\\\\hline \\text{$A$} & \\text{$A\\rightarrow S$} & \\text{$A\\rightarrow S$} & \\text{} \\\\\\hline \\text{$B$} & \\text{$B\\rightarrow S$} & \\text{$B\\rightarrow S$} & \\text{$B \\rightarrow S$} \\\\\\hline \\end{array}$$ Here is the explanation of entries",
-          "year": 2012,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The following code segment is executed on a processor which allows only register operands in its instructions. Each instruction can have atmost two source operands and one destination operand. Assume that all variables are dead after this code segment. c = a + b; d = c * a; e = c + a; x = c * c; if (x > a) { y = a * a; } else { d = d * d; e = e * e; } What is the minimum number of registers needed in the instruction set architecture of the processor to compile this code segment without any spill to memory? Do not apply any optimization other than optimizing register allocation. ed Dec 6, 2024 reply Follow flag 1 1 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. 3",
-            "B. 4",
-            "C. 5",
-            "D. 6"
-          ],
-          "correct_answer": "B",
-          "explanation": "Here, we are told not to do code motion. So, we start with 3 registers c = a + b; //a, c in register d = c * a; //a, c, d in register e = c + a; //a, c, e in register, d spilled. So, now we try with 4 registers c = a + b; //a, c in register d = c * a; //a, c, d in register e = c + a; //a, c, d, e in register x = c * c; //a, x, d, e in register if (x > a) { y = a * a; } else { d = d * d; e = e * e; } No spilling. So, 4 is the minimum number of registers needed for avoiding spilling. (If code motion was allowed, we need only 3 registers for avoiding spilling).",
-          "year": 2013,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "What will be the output of the following pseudo-code when parameters are passed by reference and dynamic scoping is assumed? a = 3; void n(x) { x = x * a; print (x); } void m(y) { a = 1 ; a = y - a; n(a); print (a); } void main () { m(a); }",
-          "images": [],
-          "options": [
-            "A. $6,2$",
-            "B. $6,6$",
-            "C. $4,2$",
-            "D. $4,4$"
-          ],
-          "correct_answer": "D",
-          "explanation": "It is a bit confusing as variable declaration is not explicit. But we can see that \"$a=3$\" and \"$a=1$\" are declaring new variables, one in global and other in local space. Main is calling $m(a)$. Since there is no local '$a$', '$a$' here is the global one. In m, we have \"$a = 1$\" which declares a local \"$a$\" and gives $1$ to it. \"$a = y-a$\" assigns $3-1 = 2$ to '$a$'. Now, in $n(x)$, '$a$' is used and as per dynamic scoping this '$a$' comes from '$m()$' and not the global one. So, \"$x=x*a$\" assigns \"$2*2 = 4$\" to \"$x$\" and $4$ is printed. Being passed by reference, \"$a$\" in $m()$ also get updated to $4$. So, D is the answer here.",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following Syntax Directed Translation Scheme $( SDTS )$, with non-terminals $\\{S,A \\}$ and terminals $\\{a,b \\}$. $S \\to aA \\quad \\{\\text{print }1\\}$ $S \\to a \\quad \\{\\text{print }2\\}$ $A \\to Sb \\quad \\{\\text{print }3\\}$ Using the above $SDTS$ , the output printed by a bottom-up parser, for the input $aab$ is:",
-          "images": [],
-          "options": [
-            "A. $1 \\ 3 \\ 2 $",
-            "B. $2 \\ 2 \\ 3 $",
-            "C. $2 \\ 3 \\ 1 $",
-            "D. syntax error"
-          ],
-          "correct_answer": "C",
-          "explanation": "$\\bf{aab}$ could be derived as follows by the bottom up parser: $S \\rightarrow a$$\\color{blue}{\\mathbf A}$ prints $\\color{blue}{1}$ $\\quad \\rightarrow a$$\\color{blue}{\\mathbf S}$$b$ prints $\\color{blue}{3}$ $\\quad \\rightarrow aab$ prints $\\color{blue}{2}$ Now since the bottom-up parser will work in reverse of rightmost derivation, so it will print in bottom-up fashion i.e., $231$ which is option C . Note that this can be easily visualized by drawing the derivation tree.",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The attribute of three arithmetic operators in some programming language are given below. $$\\begin{array}{|c|l|}\\hline \\textbf{OPERATOR} & \\textbf{PRECEDENCE} & \\textbf{ASSOCIATIVITY} & \\textbf{ARITY} \\\\\\hline \\text{$+$} & \\text{High} & \\text{Left} & \\text{Binary} \\\\\\hline \\text{$-$} & \\text{Medium} & \\text{Right} & \\text{Binary} \\\\\\hline \\text{$*$} & \\text{Low} & \\text{Left} & \\text{Binary} \\\\\\hline \\end{array}$$ The value of the expression $2-5+1-7*3$ in this language is ________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "9",
-          "explanation": "$2 - 5 + 1 - 7 * 3$ will be evaluated according to the precedence and associativity as given in the question as follows: $((2 - ((5 + 1) - 7)) * 3) \\Rightarrow ((2 - (-1))*3) \\Rightarrow 9$",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following code segment. x = u - t; y = x * v; x = y + w; y = t - z; y = x * y; The minimum number of total variables required to convert the above code segment to static single assignment form is __________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "10",
-          "explanation": "In Static Single Assignment when we assign the values, the variables to which the value is being assigned should be unique. $T1 = u - t$ $T2 = T1 \\ast v$ $T3 = T2 +w$ $T4 = t-z$ $T5 = t3 \\ast t4$ So $T1 \\ldots T5 =5 + (u,t,v,w,z)=5$ Total 10 variables. Note: RHS of the operation can use the previously used variables, but LHS in SSA must always be unique.",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A student wrote two context-free grammars G1 and G2 for generating a single C-like array declaration. The dimension of the array is at least one. For example, int a[10] [3]; The grammars use D as the start symbol, and use six terminal symbols int ; id [ ] num. $$\\begin{array}{l|l} \\text{Grammar } \\textbf{G1} & \\text{Grammar } \\textbf{G2} \\\\\\hline \\text{D} \\rightarrow \\textbf{int L;} & \\text{D} \\rightarrow \\textbf{int L;}\\\\ \\text{L} \\rightarrow \\textbf{id [E} & \\text{L} \\rightarrow \\textbf{id E}\\\\ \\text{E} \\rightarrow \\textbf{num ]} & \\text{E} \\rightarrow \\textbf{E [num]}\\\\ \\text{E} \\rightarrow \\textbf{num ] [E} & \\text{E} \\rightarrow \\textbf{[num]}\\\\ \\end{array}$$Which of the grammars correctly generate the declaration mentioned above?",
-          "images": [],
-          "options": [
-            "A. Both G1 and G2",
-            "B. Only G1",
-            "C. Only G2",
-            "D. Neither G1 nor G2"
-          ],
-          "correct_answer": "A",
-          "explanation": "Correct Option: A (Both $G1$ and $G2$)",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following grammars is free from left recursion?",
-          "images": [],
-          "options": [
-            "A. $S \\rightarrow AB$ $A \\rightarrow Aa \\mid b$ $B \\rightarrow c$",
-            "B. $S \\rightarrow Ab \\mid Bb \\mid c$ $A \\rightarrow Bd \\mid \\epsilon$ $B \\rightarrow e$",
-            "C. $S \\rightarrow Aa \\mid B$ $A \\rightarrow Bb \\mid Sc \\mid \\epsilon$ $ B \\rightarrow d$",
-            "D. $S \\rightarrow Aa \\mid Bb \\mid c$ $A \\rightarrow Bd \\mid \\epsilon$ $B \\rightarrow Ae \\mid \\epsilon$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Option (A) has immediate left recursion.\"$A \\rightarrow Aa$\" Option (C) has indirect left recursion \"$S\\rightarrow Aa \\stackrel{A\\rightarrow Sc}{\\Longrightarrow} Sca$\" Option (D) has indirect left recursion \"$A\\rightarrow Bd \\stackrel{B\\rightarrow Ae}{\\Longrightarrow} Aed$\" Option (B) is free from left recursion. No direct left recursion. No indirect left recursion. Correct Option: B",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Match the following:$$\\begin{array}{|ll|ll|}\\hline \\text{(P)} & \\text{Lexical analysis} & \\text{(i)} & \\text{Leftmost derivation} \\\\\\hline \\text{(Q)} & \\text{Top down parsing} & \\text{(ii)}& \\text{Type checking} \\\\\\hline \\text{(R)}& \\text{Semantic analysis} & \\text{(iii)} & \\text{Regular expressions} \\\\\\hline \\text{(S)} & \\text{Runtime environment} &\\text{(iv)} & \\text{Activation records} \\\\\\hline \\end{array}$$ Related Questions : GATE CSE 2009 | Question: 17 GATE CSE 2015 Set 2 | Question: 19 GATE CSE 1990 | Question: 2-ix GATE CSE 2017 Set 2 | Question: 05 GATE CSE 2024 | Set 2 | Question: 11 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $\\text{P $\\leftrightarrow$ i, Q $\\leftrightarrow$ ii, R $\\leftrightarrow$ iv, S $\\leftrightarrow$ iii}$",
-            "B. $\\text{P $\\leftrightarrow$ iii, Q $\\leftrightarrow$ i, R $\\leftrightarrow$ ii, S $\\leftrightarrow$ iv}$",
-            "C. $\\text{P $\\leftrightarrow$ ii, Q $\\leftrightarrow$ iii, R $\\leftrightarrow$ i, S $\\leftrightarrow$ iv}$",
-            "D. $\\text{P $\\leftrightarrow$ iv, Q $\\leftrightarrow$ i, R $\\leftrightarrow$ ii, S $\\leftrightarrow$ iii}$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Correct Option: B Lexical Analysis phase uses regular expressions. LMD is involved in top down parsing. Type checking is done in semantic analysis phase. Activation records are related to Run Time Environments.",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In which of the following case(s) is it possible to obtain different results for call-by-reference and call-by-name parameter passing?",
-          "images": [],
-          "options": [
-            "A. Passing an expression as a parameter",
-            "B. Passing an array as a parameter",
-            "C. Passing a pointer as a parameter",
-            "D. Passing as array element as a parameter"
-          ],
-          "correct_answer": "A;D",
-          "explanation": "Answer A, D. A is correct as call-by-name works like a macro and substitution happens only during use time. For example if we pass $2+3$ to the below function int foo(int x) { return x * x; } we get $2+3*2+3$ which will be $11$ due to the higher precedence for $*.$ But, call by reference will return $5*5 = 25.$ (For call by reference, when an expression is passed, a temporary variable is created and passed to the function) D is also correct: Passing an array element as a parameter See the below example: void m(int x,int y){ for(int k = 0;k < 10;k++){ y = 0; x++; } } int main(){ int j; int A[10]; j = 0; m(j,A[j]); return 0; } For the above example if we use 'Call by name' its initialize all the array elements with $0.$ But if we apply ' Call by Reference ' it will only initialize $A[0]$ with $0.$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar G $S \\rightarrow F \\mid H$ $F \\rightarrow p \\mid c$ $H \\rightarrow d \\mid c$ Where $S$, $F$, and $H$ are non-terminal symbols, $p, d$, and $c$ are terminal symbols. Which of the following statement(s) is/are correct? S1: LL(1) can parse all strings that are generated using grammar G S2: LR(1) can parse all strings that are generated using grammar G",
-          "images": [],
-          "options": [
-            "A. Only S1",
-            "B. Only S2",
-            "C. Both S1 and S2",
-            "D. Neither S1 and S2"
-          ],
-          "correct_answer": "D",
-          "explanation": "A parser works on the basis of given grammar. It takes the grammar as it is. Parser does not work on the basis of the yield of the grammar. Also, while constructing the LL(1) parser table, that entry for terminal 'c' will contain multiple entries. So, LL(1) parser cannot be constructed for the given grammar. $S \\rightarrow F | H$ $F \\rightarrow p | c$ $H \\rightarrow d | c$ That $\\{p, d, c\\}$ are the strings generated by the grammar is absolutely correct. But LL(1) and LR(1) can parse these strings successfully only if the grammar is unambiguous and like given below... $S \\rightarrow P | D | C$ $P \\rightarrow p$ $D \\rightarrow d$ $C \\rightarrow c$ Please note the difference between these two grammars. Both derive the same strings, but in different manner. With the grammar given in the question, both top-down and bottom-up parsers will get confused while deriving \"$c$\". Top-down parser will get confused between $F \\rightarrow c$ and $H \\rightarrow c$. Similarly, bottom-up parser will get confused while reducing \"$c$\". This confusion in case of bottom-up parsing is technically termed as \"reduce-reduce\" conflict. While top-down parsing, first(F) and first(H) are not disjoint, so the grammar cannot be LL(1). Therefore, LL(1) parser cannot parse it. Hence, the answer should be option ( D ). Neither S1 nor S2.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Among simple LR (SLR), canonical LR, and look-ahead LR (LALR), which of the following pairs identify the method that is very easy to implement and the method that is the most powerful, in that order? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. SLR, LALR",
-            "B. Canonical LR, LALR",
-            "C. SLR, canonical LR",
-            "D. LALR, canonical LR"
-          ],
-          "correct_answer": "C",
-          "explanation": "Answer is C . SLR is the simplest to implement and Canonical LR is the most powerful. http://en.wikipedia.org/wiki/LALR_parser_generator",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The least number of temporary variables required to create a three-address code in static single assignment form for the expression $q + r / 3 + s - t * 5 + u * v/w$ is__________________.",
-          "images": [],
-          "options": [],
-          "correct_answer": "8",
-          "explanation": "Answer is $8$. In compiler design, static single assignment form (often abbreviated as SSA form or simply SSA ) is a property of an intermediate representation (IR), which requires that each variable is assigned exactly once, and every variable is defined before it is used. Existing variables in the original IR are split into versions , new variables. We will need a temporary variable for storing the result of each binary operation as SSA (Static Single Assignment) implies the variable cannot be repeated on LHS of assignment. $q + r / 3 + s - t * 5 + u * v/w $ $t1 = r/3;$ $t2 = t*5;$ $t3 = u*v;$ $t4 = t3/w;$ $t5 = q + t1;$ $t6 = t5 + s;$ $t7 = t6 - t2;$ $t8 = t7 + t4$ http://web.stanford.edu/class/archive/cs/cs143/cs143.1128/handouts/240%20TAC%20Examples.pdf",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A variable $x$ is said to be live at a statement $s_{i}$ in a program if the following three conditions hold simultaneously: The variables which are live both at the statement in basic block $2$ and at the statement in basic block $3$ of the above control flow graph are $\\text{p, s, u}$ $\\text{r, s, u}$ $\\text{r, u}$ $\\text{q, v}$",
-          "images": [
-            {
-              "index": 1,
-              "filename": "8356_img1.jpg"
-            }
-          ],
-          "options": [
-            "A. There exists a statement $S_{j}$ that uses $x$",
-            "B. There is a path from $S_{i}$ to $S_{j}$ in the flow graph corresponding to the program",
-            "C. The path has no intervening assignment to $x$ including at $S_{i}$ and $S_{j}$"
-          ],
-          "correct_answer": "C",
-          "explanation": "r, u. p, and s are assigned to in $1$ and there is no intermediate use of them before that. Hence p, and s are not live in both $2$ and $3$. q is assigned to in 4 and hence is not live in both $2$ and $3$. v is live at $3$ but not at $2$. u is live at $3$ and also at $2$ if we consider a path of length $0$ from $2 - 2$. So, r, u is the answer.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following is TRUE at any valid state in shift-reduce parsing?",
-          "images": [],
-          "options": [
-            "A. Viable prefixes appear only at the bottom of the stack and not inside",
-            "B. Viable prefixes appear only at the top of the stack and not inside",
-            "C. The stack contains only a set of viable prefixes",
-            "D. The stack never contains viable prefixes"
-          ],
-          "correct_answer": "C",
-          "explanation": "Answer - C Explanation: A handle is actually the one which is always on the top of the stack. A viable prefix(prefix of the Right-hand side of a production or productions), is actually a prefix of the handle and so can never extend past the right end of the handle(i.e. the top of the stack). The structure of the stack can be considered as a set of viable prefixes - $Stack = \\{Prefix_1 Prefix_2 Prefix_3 \\ldots Prefix_{n-1} Prefix_{n} \\}$ and so it is not wrong to say that the stack contains a set of viable prefixes.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the intermediate code given below. (1) i=1 (2) j=1 (3) t1 = 5 * i (4) t2 = t1 + j (5) t3 = 4 * t2 (6) t4 = t3 (7) a[t4] = -1 (8) j = j + 1 (9) if j <= 5 goto (3) (10) i = i +1 (11) if i < 5 goto (2) The number of nodes and edges in control-flow-graph constructed for the above code, respectively, are",
-          "images": [],
-          "options": [
-            "A. $5$ and $7$",
-            "B. $6$ and $7$",
-            "C. $5$ and $5$",
-            "D. $7$ and $8$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Answer is $6,7$ if we add an explicit start and end nodes. This follows from the definition of CFG in the below IITM link http://www.cse.iitm.ac.in/~krishna/cs3300/pm-lecture1.pdf But many of the standard books/universities don't follow this definition.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Match the following:$$\\begin{array}{|ll|ll|}\\hline \\text{P.} & \\text{Lexical analysis} & \\text{1.} & \\text{Graph coloring} \\\\\\hline \\text{Q.} & \\text{Parsing} & \\text{2.}& \\text{DFA minimization} \\\\\\hline \\text{R.}& \\text{Register allocation} & \\text{3.} & \\text{Post-order traversal} \\\\\\hline \\text{S.} & \\text{Expression evaluation} &\\text{4.} & \\text{Production tree} \\\\\\hline \\end{array}$$ Related Questions : GATE CSE 2009 | Question: 17 GATE CSE 2016 Set 2 | Question: 19 GATE CSE 1990 | Question: 2-ix GATE CSE 2017 Set 2 | Question: 05 GATE CSE 2024 | Set 2 | Question: 11 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $\\text{P-2, Q-3, R-1, S-4}$",
-            "B. $\\text{P-2, Q-1, R-4, S-3}$",
-            "C. $\\text{P-2, Q-4, R-1, S-3}$",
-            "D. $\\text{P-2, Q-3, R-4, S-1}$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Regular expression uses FA & Regular Sets. Expression can be evaluated with postfix Traversals. Register allocation can be modeled by graph coloring. The parser constructs a production tree. So, answer is C.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For computer based on three-address instruction formats, each address field can be used to specify which of the following: (S1) A memory operand (S2) A processor register (S3) An implied accumulator register ed Dec 14, 2025 reply Follow flag change the tag to addressing mode or atleast add it too along with cd intermediate code 0 0 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Either $S1$ or $S2$",
-            "B. Either $S2$ or $S3$",
-            "C. Only $S2$ and $S3$",
-            "D. All of $S1$, $S2$ and $S3$"
-          ],
-          "correct_answer": "A",
-          "explanation": "Three address Instruction Computer with three addresses instruction format can use each address field to specify either processor register or memory operand. e.g., $X = (A + B) * (C + A)$ Equivalent Three address Instructions $$\\begin{array}{ll} \\text{ADD } R1, A, B & ;\\qquad R1 \\leftarrow M [A] + M [B]\\\\ \\text{ADD }R2, C, D & ;\\qquad R2 \\leftarrow M [C] + M [D]\\\\ \\text{MUL } X, R1, R2 & ;\\qquad M [X] \\leftarrow R1 * R2 \\end{array}$$The advantage of the three address formats is that it results in short program when evaluating arithmetic expression. The disadvantage is that the binary-coded instructions require too many bits to specify three addresses. $A$",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In the context of abstract-syntax-tree (AST) and control-flow-graph (CFG), which one of the following is TRUE?",
-          "images": [],
-          "options": [
-            "A. In both AST and CFG, let node $N_2$ be the successor of node $N_1$. In the input program, the code corresponding to $N_2$ is present after the code corresponding to $N_1$",
-            "B. For any input program, neither AST nor CFG will contain a cycle",
-            "C. The maximum number of successors of a node in an AST and a CFG depends on the input program",
-            "D. Each node in AST and CFG corresponds to at most one statement in the input program"
-          ],
-          "correct_answer": "C",
-          "explanation": "Option ( C ) is Correct is false, In CFG, code of $N_2$ may be present before $N_1$ when there is a loop or Goto. is false, CFG contains a cycle when the input program has a loop. is true, successors in AST and CFG depend on the Input program. is false, In CFG a single node may belong to a block of statements.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar rule $E \\rightarrow E1 – E2$ for arith­metic expressions. The code generated is targeted to a CPU having a single user register. The sub­traction operation requires the first operand to be in the register. If $E1$ and $E2$ do not have any com­mon sub expression, in order to get the shortest possible code ed Dec 7, 2025 reply Follow flag https://youtu.be/o2CLMvdC4Lo?si=7PZ1_aIZZIoDzWvk . Best answer I found... 0 0 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $E1$ should be evaluated first",
-            "B. $E2$ should be evaluated first",
-            "C. Evaluation of $E1$ and $E2$ should necessarily be interleaved",
-            "D. Order of evaluation of $E1$ and $E2$ is of no consequence"
-          ],
-          "correct_answer": "B",
-          "explanation": "$E2$ should be evaluated first After evaluating $E2$ first and then $E1$, we will have $E1$ in the register and thus we can simply do SUB operation with $E2$ which will be in memory (as we have only a single register). If we do $E1$ first and then $E2$, we must move $E2$ to memory and $E1$ back to register before doing SUB, which will increase the code size. for more expalianation see this discussion https://gateoverflow.in/4069/gate-cse-2004-question-10?show=100621#c100621",
+          "explanation": "We have $4$ blocks and $2$ blocks in a set $\\implies$ there are $2$ sets. So blocks will go to sets as follows: $$\\begin{array}{|c|c|} \\hline \\textbf {Set Number} & \\textbf{Block Number} \\\\\\hline \\text{0} & \\text{0,8,12} \\\\\\hline\\text{1} & \\\\\\hline \\end{array}$$ Since the lowest bit of block address is used for indexing into the set, so $8, 12$ and $0$ first miss in cache with $0$ replacing $8$ (there are two slots in each set due to $2-\\text{way}$ set) and then $12$ hits in cache and $8$ again misses. So, totally $4$ misses. $C$",
           "year": 2004,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "Consider line number $3$ of the following C-program. int main() { /*Line 1 */ int I, N; /*Line 2 */ fro (I=0, I<N, I++); /*Line 3 */ } Identify the compiler’s response about this line while creating the object-module:",
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following program segment for a hypothetical CPU having three user registers $R_1, R_2$ and $R_3.$ $$\\begin{array}{|l|l|c|} \\hline \\text {Instruction} & \\text{Operation }& \\text{Instruction size} \\\\&& \\text{(in words)} \\\\\\hline \\text{MOV $R_1,5000$} & \\text{$R_1$} \\leftarrow \\text{Memory$[5000]$}& \\text{$2$} \\\\\\hline\\text{MOV $R2,(R1)$} & \\text{$R2$} \\leftarrow \\text{Memory$[(R_1)]$}& \\text{$1$} \\\\\\hline \\text{ADD $R_2,R_3$} & \\text{$R2$} \\leftarrow \\text{$R_2 + R_3$} & \\text{$1$} \\\\\\hline \\text{MOV $6000,R_2$} & \\text{Memory$[6000]$} \\leftarrow \\text{$R_2$} & \\text{$2$} \\\\\\hline \\text{HALT} & \\text{Machine Halts} & \\text{$1$} \\\\\\hline \\end{array}$$Consider that the memory is byte addressable with size $32$ bits, and the program has been loaded starting from memory location $1000$ (decimal). If an interrupt occurs while the CPU has been halted after executing the HALT instruction, the return address (in decimal) saved in the stack will be",
           "images": [],
           "options": [
-            "A. No compilation error",
-            "B. Only a lexical error",
-            "C. Only syntactic errors",
-            "D. Both lexical and syntactic errors"
-          ],
-          "correct_answer": "A",
-          "explanation": "C language allows only certain words in it- these are called tokens. If we input any invalid tokens it causes lexical error. eg: $44a44$ causes lexical error as in C as an alphabet cannot come in between digits. Syntactic error is caused by bad combination of tokens. For example, we cannot have a constant on the left hand side of an assignment statement, a for loop must have two expressions inside $()$ separated by semi colon etc. In the given question, line $3$ won't cause a lexical error or syntactic error. The statement will be treated as a function call with three arguments. Function definition being absent will cause link time error, but the question asks only for compile-time errors. So, $(a)$ must be the answer. PS: Implicit function declaration was removed from $C99$ standard onwards. As per current standard, we should not use a function without declaration. Still, we cannot guarantee \"compilation error\"- just expect compiler warnings in C. In C++ this should produce a compilation (semantic) error. The output of compiling the above code using different standards are given below: arjun@linux:~$ gcc -c chk.c chk.c: In function ‘main’: chk.c:3:2: warning: implicit declaration of function ‘fro’ [-Wimplicit-function-declaration] fro (I=0, I<N, I++); /*Line 3 */ ^ arjun@linux:~$ gcc -c -ansi chk.c arjun@linux:~$ gcc -c -std=c99 chk.c chk.c: In function ‘main’: chk.c:3:2: warning: implicit declaration of function ‘fro’ [-Wimplicit-function-declaration] fro (I=0, I<N, I++); /*Line 3 */ ^ arjun@linux:~$ gcc -c -std=c11 chk.c chk.c: In function ‘main’: chk.c:3:2: warning: implicit declaration of function ‘fro’ [-Wimplicit-function-declaration] fro (I=0, I<N, I++); /*Line 3 */ http://stackoverflow.com/questions/15570553/lexical-and-semantic-errors-in-c",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The correct matching for the following pairs is $$\\begin{array}{|ll|ll|} \\hline \\text{(A)}&\\text{Activation record} & \\text{(1)} &\\text{Linking loader} \\\\\\hline \\text{(B)} &\\text{Location counter} & \\text{(2)} &\\text{Garbage collection} \\\\\\hline \\text{(C)}& \\text{Reference counts} & \\text{(3)} &\\text{Subroutine call} \\\\\\hline \\text{(D)}& \\text{Address relocation} & \\text{(4)}& \\text{Assembler} \\\\\\hline \\end{array}$$ 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $\\text{A-3 B-4 C-1 D-2}$",
-            "B. $\\text{A-4 B-3 C-1 D-2}$",
-            "C. $\\text{A-4 B-3 C-2 D-1}$",
-            "D. $\\text{A-3 B-4 C-2 D-1}$"
+            "A. $1007$",
+            "B. $1020$",
+            "C. $1024$",
+            "D. $1028$"
           ],
           "correct_answer": "D",
-          "explanation": "(D) Option Each time a sub routine is called, its activation record is created. An assembler uses location counter value to give address to each instruction which is needed for relative addressing as well as for jump labels. Reference count is used by garbage collector to clear the memory whose reference count becomes $0$. Linker Loader is a loader which can load several compiled codes and link them together into a single executable. Thus it needs to do relocation of the object codes.",
-          "year": 0,
+          "explanation": "Option is D. Word size is $32$ $bits$ ($4$ $bytes$). Interrupt occurs after execution of HALT instruction NOT during , So address of next instruction will be saved on to the stack which is $1028$. (We have $5$ instructions starting from address $1000$, each of size $2, 1, 1, 2, 1$ totaling $7$ words $= 7 *4 =28$ $bytes$). $1000+ 28 = 1028$, $1028$ is the starting address of NEXT Instruction . After HALT instruction CPU enters a HALT state and if an interrupt happens the return address will be that of the instruction after the HALT. References : https://x86.puri.sm/html/file_module_x86_id_134.html [ X86 Instructors Manual ] http://electronics.stackexchange.com/questions/277735/what-happens-if-the-interrupt-occurs-during-the-execution-of-halt-instruction https://en.wikipedia.org/wiki/HLT_(x86_instruction)",
+          "year": 2004,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following macros can put a macro assembler into an infinite loop? (ii) only (i) only both (i) and (ii) None of the above",
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following addressing modes are suitable for program relocation at run time? I and IV I and II II and III I, II and IV Related Questions : GATE CSE 1998 | Question: 1.19 GATE CSE 1996 | Question: 1.16, ISRO2016-42 GATE CSE 1987 | Question: 1-V ed Jan 20, 2025 reply Follow flag Relative addressing mode, Indexed addressing mode, Base register addressing mode all these 3 are relocatable codes. 0 0 reply Share Please log in or register to add a comment.",
           "images": [],
           "options": [
-            "A. .MACRO M1, X .IF EQ, X ;if X=0 then M1 X + 1 .ENDC .IF NE, X ;if X ≠ O then .WORD X ;address (X) is stored here .ENDC .ENDM",
-            "B. .MACRO M2, X .IF EQ, X M2 X .ENDC .IF NE, X .WORD X + 1 .ENDC .ENDM"
+            "A. Absolute addressing",
+            "B. Based addressing",
+            "C. Relative addressing",
+            "D. Indirect addressing"
           ],
-          "correct_answer": "A",
-          "explanation": "If $M2$ macro is called with $X=0$, then the macro assembler will go into an infinite loop. For $M1$ the argument is incremented for the recursive call and so the macro expansion will happen maximum $2$ times. Hence, correct option: A .",
-          "year": 0,
+          "correct_answer": "C",
+          "explanation": "Answer: (C) A displacement type addressing should be preferred. So, (I) is not the answer. Indirect Addressing leads to extra memory reference which is not preferable at run time. So, (IV) is not the answer.",
+          "year": 2004,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "The grammar whose productions are $\\langle\\text{stmt}\\rangle \\to\\text{ if id then } \\langle\\text{stmt}\\rangle$ $\\langle\\text{stmt}\\rangle\\to\\text{ if id then } \\langle\\text{stmt}\\rangle\\text{ else } \\langle\\text{stmt}\\rangle$ $\\langle\\text{stmt}\\rangle \\to\\text{ id }:=\\text{ id}$ is ambiguous because (a) the sentence if a then if b then c:= d has more than two parse trees (b) the left most and right most derivations of the sentence if a then if b then c:= d give rise to different parse trees (c) the sentence if a then if b then c:= d else c:= f has more than two parse trees (d) the sentence if a then if b then c:= d else c:= f has two parse trees See all 3 Comments 3 3 Comments reply Satbir commented Aug 24, 2019 reply Follow flag https://gateoverflow.in/86869/gate1990-16a 1 1 reply Share svas7246 commented Nov 15, 2021 reply Follow flag The key word more than two parse trees plays a major rule 1 1 reply Share Pm1508 commented Dec 3, 2024 reply Follow flag Dangling-else ambiguity The dangling else problem in syntactic ambiguity. It occurs when we use nested if . When there are multiple “if” statements, the “else” part doesn’t get a clear view with which “ if ” it should combine. For example: if (condition) { } if (condition 1) { } if (condition 2) { } else { } In the above example, there are multiple “ ifs” with multiple conditions and here we want to pair the outermost if with the else part. But the else part doesn’t get a clear view with which “ if” condition it should pair. This leads to inappropriate results in programming. The Problem of Dangling-else: Dangling else can lead to serious problems. It can lead to wrong interpretations by the compiler and ultimately lead to wrong results. For example: Initialize k=0 and o=0 if(ch>=3) if(ch<=10) k++; else o++; In this case, we don’t know when the variable “ o ” will get incremented. Either the first “ if ” condition might not get satisfied or the second “ if ” condition might not get satisfied. Even the first “ if ” condition gets satisfied, the second “ if” condition might fail which can lead to the execution of the “ else” part. Thus it leads to wrong results. To solve the issue the programming languages like C, C++, Java combine the “ else” part with the innermost “ if” statement. But sometimes we want the outermost “ if” statement to get combined with the “ else” part. Resolving Dangling-else Problem The first way is to design non-ambiguous programming languages. Secondly , we can resolve the dangling-else problems in programming languages by using braces and indentation. For example: if (condition) { if (condition 1) { if (condition 2) {} } } else { } In the above example, we are using braces and indentation so as to avoid confusion. Third , we can also use the “if – else if – else” format so as to specifically indicate which “ else” belongs to which “ if” . For example : if(condition) { } else if(condition-1) { } else if(condition-2){ } else{ } 1 1 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [],
-          "correct_answer": "D",
-          "explanation": "(d) the sentence if a then if b then c: = d else c:= f has two parse trees as follows: if a then (if b then c:= d) else c:= f if a then (if b then c:=d else c:= f) $$\\begin{align*} \\pmb{\\text{Ambiguity - “dangling else\"}} \\end{align*}$$ stmt -> if expr then stmt | if expr then stmt else stmt | other stmts $$\\mathtt{\\text{if $E_1$ then if $E_2$ then $S_1$ else $S_2$ }}$$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The pass numbers for each of the following activities respectively are $1, 2, 1, 2$ $2, 1, 2, 1$ $2, 1, 1, 2$ $1, 2, 2, 2$ Related Questions : GATE CSE 1992 | Question: 03,ii",
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following assembly language program for a hypothetical processor $A, B,$ and $C$ are $8-$bit registers. The meanings of various instructions are shown as comments. $$\\small \\begin{array}{lll} & \\text{MOV B, #0}&& \\text{;} & \\text{$B \\leftarrow 0$} \\\\& \\text{MOV C, #8} && \\text{;}& \\text{$C \\leftarrow 8$} \\\\ \\text{Z:} & \\text{CMP C, #0} &&\\text{;}& \\text{compare C with 0} \\\\ & \\text{JZ X} && \\text{;}& \\text{jump to X if zero flag is set} \\\\ & \\text{SUB C, #1} && \\text{;}& \\text{$C \\gets C-1$} \\\\ & \\text{RRC A, #1} && \\text{;}& \\text{right rotate A through carry by one bit. Thus:} \\\\ & \\text{} && \\text{;}& \\text{If the initial values of A and the carry flag are $a_7\\ldots a_0$ and} \\\\ & \\text{} && \\text{;}& \\text{$c_0$ respectively, their values after the execution of this} \\\\ & \\text{} && \\text{;}& \\text{instruction will be $c_0a_7\\ldots a_1$ and $a_0$ respectively.} \\\\ & \\text{JC Y} && \\text{;}& \\text{jump to Y if carry flag is set} \\\\ & \\text{JMP Z} && \\text{;}& \\text{jump to Z} \\\\ \\text{Y:} & \\text{ADD B, #1} && \\text{;}& \\text{$B \\gets B+1$} \\\\ & \\text{JMP Z} && \\text{;}& \\text{jump to Z} \\\\ \\text{X:}& \\text{} && \\text{;}& \\text{} \\\\ \\end{array}$$ If the initial value of register A is A0 the value of register B after the program execution will be",
           "images": [],
           "options": [
-            "A. object code generation",
-            "B. literals added to literal table",
-            "C. listing printed",
-            "D. address resolution of local symbols that occur in a two pass assembler"
+            "A. the number of $0$ bits in $A_0$",
+            "B. the number of $1$ bits in $A_0$",
+            "C. $A_0$",
+            "D. $8$"
           ],
           "correct_answer": "B",
-          "explanation": "Correct Option: B T he functions performed in pass $1$ and pass $2$ in $2$ pass assembler are Pass $1$ Assign addresses to all statements in the program. Save the values assigned to all labels for use in pass $2$ Perform some processing of assembler directives. Pass $2$ Assemble instructions. Generate data values defined by BYTE, WORD etc. Perform processing of assembler directives not done during pass $1$. Write the program and the assembling listing",
-          "year": 0,
+          "explanation": "All other instructions except CMP are self explanatory. CMP A, #K The above instruction does A – #K, where A is a register and #K is a constant value, and if the result is positive, negative or zero, sets the flag accordingly which in turn activates the following “JZ” (Jump on Zero), “JP” (Jump on Positive), “JN” (Jump on Negative) etc. The mnemonic I used here might be different on different architecture but the working remains the same. So, the code here is counting the number of 1 bits in $A_0$. When a 1 is moved to carry, B is incremented. Correct Option: B.",
+          "year": 2003,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "A shift reduce parser carries out the actions specified within braces immediately after reducing with the corresponding rule of grammar $S \\rightarrow xxW \\;\\text{{print“1\"}}$ $S \\rightarrow y \\;\\text{{print“2\"}}$ $W \\rightarrow Sz\\; \\text{{print“3\"}}$ What is the translation of $xxxxyzz$ using the syntax directed translation scheme described by the above rules?",
+          "topic_name": "co-and-architecture",
+          "question_text": "For a pipelined CPU with a single ALU, consider the following situations Which of the above can cause a hazard I and II only II and III only III only All the three 0 reply Please log in or register to add a comment.",
           "images": [],
           "options": [
-            "A. $23131$",
-            "B. $11233$",
-            "C. $11231$",
-            "D. $33211$"
+            "A. The ${j+1}^{st}$ instruction uses the result of the $j^{th}$ instruction as an operand",
+            "B. The execution of a conditional jump instruction",
+            "C. The $j^{th}$ and ${j+1}^{st}$ instructions require the ALU at the same time."
           ],
-          "correct_answer": "A",
-          "explanation": "Making a tree and performing post-order traversal will yield an answer as A. $S \\rightarrow xx W\\; (\\text{print }“1”)$ $W \\rightarrow S z\\; (\\text{print }“3”)$ $S \\rightarrow x x W\\; (\\text{print }“1”)$ $W \\rightarrow S z\\; (\\text{print }“3”)$ $S \\rightarrow y\\; (\\text{print }“2”)$",
-          "year": 0,
+          "correct_answer": "D",
+          "explanation": "1. Data hazard 2. Control hazard 3. Structural hazard as only one ALU is there So, $(D)$. https://web.archive.org/web/20120106063906/http://www.cs.iastate.edu/~prabhu/Tutorial/PIPELINE/hazards.html",
+          "year": 2003,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "What is the value of $X$ printed by the following program? program COMPUTE (input, output); var X:integer; procedure FIND (X:real); begin X:=sqrt(X); end; begin X:=2 FIND(X); writeln(X); end. 0 reply Please log in or register to add a comment.",
+          "topic_name": "co-and-architecture",
+          "question_text": "A CPU has $24$-$bit$ instructions. A program starts at address $300$ (in decimal). Which one of the following is a legal program counter (all values in decimal)? 0 reply Please log in or register to add a comment.",
           "images": [],
           "options": [
-            "A. $2$",
-            "B. $\\sqrt{2}$",
-            "C. Run time error",
+            "A. $400$",
+            "B. $500$",
+            "C. $600$",
+            "D. $700$"
+          ],
+          "correct_answer": "C",
+          "explanation": "Option $(C)$. $24$ bits = $3$ bytes instructions. So, PC will have multiples of $3$ in it.",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Horizontal microprogramming:",
+          "images": [],
+          "options": [
+            "A. does not require use of signal decoders",
+            "B. results in larger sized microinstructions than vertical microprogramming",
+            "C. uses one bit for each control signal",
+            "D. all of the above"
+          ],
+          "correct_answer": "D",
+          "explanation": "Option (D ). All statements are true. Reference: https://web.archive.org/web/20180219000846/http://www.cs.virginia.edu/~cs333/notes/microprogramming.pdf",
+          "year": 2002,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The performance of a pipelined processor suffers if:",
+          "images": [],
+          "options": [
+            "A. the pipeline stages have different delays",
+            "B. consecutive instructions are dependent on each other",
+            "C. the pipeline stages share hardware resources",
+            "D. All of the above"
+          ],
+          "correct_answer": "D",
+          "explanation": "Answer is D. A: Yes. Total delay = Max (All delays) + Register Delay. B: Yes, if data forwarding is not there. C: Yes, like ID and EX shares ID/EX register.",
+          "year": 2002,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In the absolute addressing mode:",
+          "images": [],
+          "options": [
+            "A. the operand is inside the instruction",
+            "B. the address of the operand in inside the instruction",
+            "C. the register containing the address of the operand is specified inside the instruction",
+            "D. the location of the operand is implicit"
+          ],
+          "correct_answer": "B",
+          "explanation": "(B) is the answer. Absolute addressing mode means address of operand is given in the instruction. option (A), operand is inside the instruction $\\rightarrow $ immediate addressing option (C), register containing the address in specified in operand $\\rightarrow $ register Indirect addressing option (D), the location of operand is implicit $\\rightarrow $ implicit addressing",
+          "year": 2002,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following is not a form of memory 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. instruction cache",
+            "B. instruction register",
+            "C. instruction opcode",
+            "D. translation look-a-side buffer"
+          ],
+          "correct_answer": "C",
+          "explanation": "The instruction opcode is a part of the instruction which tells the processor what operation is to be performed so it is not a form of memory while the others are",
+          "year": 2002,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "closed with the note: Out of syllabus now In 8085 which of the following modifies the program counter",
+          "images": [],
+          "options": [
+            "A. Only PCHL instruction",
+            "B. Only ADD instructions",
+            "C. Only JMP and CALL instructions",
+            "D. All instructions"
+          ],
+          "correct_answer": "D",
+          "explanation": "All the instruction modifies the pc Pchl transfers content of hl to pc Call and jump modifies the pc address where it wl jump When add is to be performed the pc is incremented to fetch the next instruction",
+          "year": 2002,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A device employing INTR line for device interrupt puts the CALL instruction on the data bus while:",
+          "images": [],
+          "options": [
+            "A. $\\overline{\\text{INTA}}$ is active",
+            "B. HOLD is active",
+            "C. READY is inactive",
             "D. None of the above"
           ],
           "correct_answer": "A",
-          "explanation": "Answer should be A . As per call by value concept. $X$ in the procedure FIND is a local variable and so no change will be reflected in the global var $X$.",
-          "year": 0,
+          "explanation": "INTR is a signal which if enabled then microprocessor has interrupt enabled it receives high INR signal & activates INTA signal, so another request can’t be accepted till CPU is busy in servicing interrupt. Hence ( A ) is correct option.",
+          "year": 2002,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "A linker is given object modules for a set of programs that were compiled separately. What information need not be included in an object module? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Object code",
-            "B. Relocation bits",
-            "C. Names and locations of all external symbols defined in the object module",
-            "D. Absolute addresses of internal symbols"
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider the following data path of a simple non-pipelined CPU. The registers $A, B$, $A_{1},A_{2}, \\textsf{MDR},$ the $\\textsf{bus}$ and the $\\textsf{ALU}$ are $8$-$bit$ wide. $\\textsf{SP}$ and $\\textsf{MAR}$ are $16$-$bit$ registers. The $\\textsf{MUX}$ is of size $8 \\times (2:1)$ and the $\\textsf{DEMUX}$ is of size $8 \\times (1:2)$. Each memory operation takes $2$ $\\textsf{CPU}$ clock cycles and uses $\\textsf{MAR}$ (Memory Address Register) and $\\textsf{MDR}$ (Memory Date Register). $\\textsf{SP}$ can be decremented locally. The $\\textsf{CPU}$ instruction \" push r \" where, $r =$ $A$ or $B$ has the specification $M[SP] ← r $ $SP ← SP - 1$ How many $\\textsf{CPU}$ clock cycles are required to execute the \" push r \" instruction?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "731_img1.png"
+            }
           ],
-          "correct_answer": "C",
-          "explanation": "is trivially there is an object module. must be there if we need to have relocation capability. For linker to link external symbols (for example in C, to link an extern variable in one module to a global variable in another module), it must know the location of all external symbols. In C external symbols includes all global variables and function names. is no way needed.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "What are $x$ and $y$ in the following macro definition? macro Add x, y Load y Mul x Store y end macro See all 3 Comments 3 3 Comments reply rishi71662data4 commented Nov 26, 2017 reply Follow flag formal parameter — the identifier used in a method to stand for the value that is passed into the method by a caller. For example, amount is a formal parameter of processDeposit actual parameter — the actual value that is passed into the method by a caller. For example, the 200 used when processDeposit is called is an actual parameter. actual parameters are often called arguments An identifier is a name used for a class, a variable, a method, or a parameter Source of informtion 7 7 reply Share smsubham commented Dec 24, 2019 reply Follow flag If you are wondring what amount and processDeposit mentioned above is. Here is the code class CheckingAccount { . . . . private int balance; . . . . public void processDeposit( int amount ) { balance = balance + amount ; } } class CheckingAccountTester { public static void main( String[] args ) { CheckingAccount bobsAccount = new CheckingAccount( \"999\", \"Bob\", 100 ); bobsAccount. processDeposit( 200 ) ; . . . . . . } } Source: https://chortle.ccsu.edu/Java5/Notes/chap34A/ch34A_2.html 0 0 reply Share theredeepakb commented Dec 4, 2021 reply Follow flag This type of question is in syllabus 2022? 1 1 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Variables",
-            "B. Identifiers",
-            "C. Actual parameters",
-            "D. Formal parameters"
-          ],
-          "correct_answer": "D",
-          "explanation": "ans is D formal parameter — the identifier used in a method to stand for the value that is passed into the method by a caller. For example, amount is a formal parameter of calculate actual parameter — the actual value that is passed into the method by a caller. For example, the 800 used when calculate is called is an actual parameter. actual parameters are often called arguments float calculate (float amount) { return amount * 1.2; } int main() { ... float final = calculate(800); ... }",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider a grammar with the following productions $S \\rightarrow a \\alpha b \\mid b \\alpha c \\mid aB$ $S \\rightarrow \\alpha S\\mid b$ $S \\rightarrow \\alpha b b\\mid ab$ $S \\alpha \\rightarrow bd b\\mid b$ The above grammar is:",
-          "images": [],
-          "options": [
-            "A. Context free",
-            "B. Regular",
-            "C. Context sensitive",
-            "D. $LR(k)$"
-          ],
-          "correct_answer": "X",
-          "explanation": "$S\\alpha \\to$ This violates the condition of context-free grammar that the $\\text{LHS}$ must be a single non-terminal symbol. $S\\alpha \\to b$ This violates even the weaker requirement for CSG that the length of $\\text{RHS}$ of a production must be at least same as that of $\\text{LHS}$. So, the grammar is not even context-sensitive. Ref: https://stackoverflow.com/questions/8236422/context-free-grammars-versus-context-sensitive-grammars",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "State whether the following statements are True or False with reasons for your answer A subroutine cannot always be used to replace a macro in an assembly language program.",
-          "images": [],
-          "options": [],
-          "correct_answer": "1",
-          "explanation": "$\\textsf{TRUE}.$ A macro is evaluated at compile time whereas a function call happens at runtime. So, we can write a macro to rename any symbol which is not possible to be replaced by a simple subroutine call. For example consider the following $C$ code. #define type int type foo (type arg1) { ... } #undef type In the above code a macro is used to define a type which is used as the return and argument types for the function $\\textsf{foo}.$ This is not possible to be implemented as a simple subroutine call (but can be done using $\\textsf{typedef}$ is the language supports it).",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "State whether the following statements are True or False with reasons for your answer: Coroutine is just another name for a subroutine. See all 2 Comments 2 2 Comments reply vishalshrm539 commented Sep 18, 2018 i yield 1; yield 2; yield 3; } print foo(); print foo(); print foo(); Prints: 1 2 3 Note: Coroutines may use a return, and behave just like a subroutine coroutine foo { return 1; return 2; //Dead code return 3; } print foo(); print foo(); print foo(); Prints: 1 1 1 Source - Stack Overflow 8 8 reply Share pavansan commented Nov 16, 2024 reply Follow flag now i am getting confusion so both are nsot same? 0 0 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [],
-          "correct_answer": "1",
-          "explanation": "True. The subroutine is a special case of a co-routine. A co-routine is a generalized form of a subroutine which is non-preemptive multitasking. https://en.wikipedia.org/wiki/Coroutine",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following features cannot be captured by context-free grammars? Related Questions : GATE CSE 2008 | Question: 51 GATE CSE 2002 | Question: 2.18",
-          "images": [],
-          "options": [
-            "A. Syntax of if-then-else statements",
-            "B. Syntax of recursive procedures",
-            "C. Whether a variable has been declared before its use",
-            "D. Variable names of arbitrary length"
-          ],
-          "correct_answer": "C",
-          "explanation": "Correct Option: C Since CFG's are used to show syntactic rules while designing compiler, and syntactic rules don't check for meaningful things such as if a variable has been declared before its use or not. Such things are meant to be handled by Semantic Analysis phase (requires power of a context sensitive grammar). For D, a regular expression does not restrict the string length. Languages have restriction for variable name length for storing purpose like in symbol table. For A, Syntax of if-then-else statements can be represented in CFG in unambigous manner .",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Generation of intermediate code based on an abstract machine model is useful in compilers because",
-          "images": [],
-          "options": [
-            "A. it makes implementation of lexical analysis and syntax analysis easier",
-            "B. syntax-directed translations can be written for intermediate code generation",
-            "C. it enhances the portability of the front end of the compiler",
-            "D. it is not possible to generate code for real machines directly from high level language programs"
-          ],
-          "correct_answer": "C",
-          "explanation": "C. stating the actual use of the Intermediate Code. Also optimizations can be done on intermediate code enhancing the portability of the optimizer.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The grammar $ S \\to aSa \\mid bS \\mid c$ is",
-          "images": [],
-          "options": [
-            "A. LL(1) but not LR(1)",
-            "B. LR(1) but not LL(1)",
-            "C. Both LL(1) and LR(1)",
-            "D. Neither LL(1) nor LR(1)"
-          ],
-          "correct_answer": "C",
-          "explanation": "The $\\textsf{LL(1)}$ parsing table for the given grammar is: $\\begin{array}{|c|c|c|} \\hline & a&b&c \\\\ \\hline S& S\\to aSa & S\\to b & S \\to c \\\\ \\hline \\end{array}$ For any given input symbol $a,b$ or $c,$ the parser has a unique move from the start and the only state – so no conflicts. As there is no conflict in $\\text{LL(1)}$ parsing table, the given grammar is $\\textsf{LL(1)}$ and since every $\\textsf{LL(1)}$ is also $\\textsf{LR(1)},$ the given grammar is $\\textsf{LL(1)}$ as well as $\\textsf{LR(1)}.$",
-          "year": 2010,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The program below uses six temporary variables $a, b, c, d, e, f$. a = 1 b = 10 c = 20 d = a + b e = c + d f = c + e b = c + e e = b + f d = 5 + e return d + f Assuming that all operations take their operands from registers, what is the minimum number of registers needed to execute this program without spilling? ed Oct 29, 2025 i",
-          "images": [],
           "options": [
             "A. $2$",
             "B. $3$",
             "C. $4$",
-            "D. $6$"
+            "D. $5$"
           ],
-          "correct_answer": "B",
-          "explanation": "Here in these types of compiler questions, idea is \"map/assign multiple temporaries to one registers.\" here $a, b,$ and $c$ all are having $3$ different values so i need atleast $3$ registers $r1$, $r2$ and $r3$. $a$ is mapped to $r1$, $b$ to $r2$ and $c$ to $r3$. $d = a + b$, after this line if u notice '$a$' is never present on right hand side, so I can map (register of $a$ which is $r1$ ) $d$ to $r1$. $e = c + d$, after this line '$d$' is never present on rhs, so I can map (register of $d$ which is $r1$ ) $e$ to $r1$. at this time mapping is $r1 --- e$ $r2 --- b$ $r3 --- c$ (at this moment I have registers for $e, b$ and $c$. if I introduce new variable then I may need different register) now at this point if u see $f = c + e$ $b = c + e$ these two are essentially doing same thing, after these two line '$b$' and '$f$' are same so I can skip computing '$f$'. and whereever $f$ is present I will replace it with '$b$'. (because neither of '$f$' and '$b$' are changing after these two lines, so value of these will be '$c+e$' forever) (seems like I introduced one more variable $f$, and register is needed for that, but actually I did not really introduce '$f$'. I am skipping computation of '$f$') now at second last line \"$d = 5 + e$\" here I introduced '$d$', I can map it to any of the register $r1$ or $r3$, because after this line neither of '$e$' or '$c$' is required. (value of '$b$' is required because I need to return '$d+f$', and '$f$' is essentially equal to '$b$') finally code becomes $r1 = 1$ $r2 = 10$ $r3 = 20$ $r1 = r1 + r2$ $r1 = r3 + r1$ (skipping '$f$' computation) $r2 = r3 + r1$ $r2 = r3 + r1$ $r1 = r2 + r2$ $r3 = 5 + r1$ return $r3 + r2$ Therefore minimum $3$ registers needed. $B$",
-          "year": 2010,
+          "correct_answer": "D",
+          "explanation": "A microinstruction cannot be further broken down into two or more. It can take more than a cycle if it involves a memory access. The first instruction given here is not a microinstruction. It is an assembly language instruction. It can be broken down as: $T1 , T2: MAR \\leftarrow SP$ $T3. : MDR\\leftarrow r , SP\\leftarrow SP-1$ $($It is not mandatory to decrement it in this cycle. Anyway, it can be decremented locally$)$ $T4, T5 : M [MAR] \\leftarrow MDR$ The problem says, 8-bit MDR, 8-bit data bus, 8 bit registers.Can't you see that the given CPU is 8-bit? 8 multiplexers transfer 8 bits when selection input is 0 and 1 respectively. During cycle 1, bits in even positions are moved to MAR. During cycle 2, bits in odd positions are transferred to MAR. We certainly need to move 16-bit SP to 16-bit MAR via a 8-bit bus. So, 2 cycles to get SP to MAR. The given data path has a single bus, which requires r to be carried in a separate cycle. For the contents of r to be moved to MDR during the cycles T1 or T2, address and data bus should be separate. Here, it ain't the case. Memory read takes 2 more cycles. In total, we need 5 of them clock cycles to execute a push. https://www.cise.ufl.edu/~mssz/CompOrg/CDA-proc.html Computer organization pal chaudari page 334-335 Computer architecture by behrooz parahmi exercise 7.6 $D$",
+          "year": 2001,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "A part of the system software which under all circumstances must reside in the main memory is:",
+          "topic_name": "co-and-architecture",
+          "question_text": "Which is the most appropriate match for the items in the first column with the items in the second column:$$\\begin{array}{|cl|cl|} \\hline \\text{X.} &\\text{Indirect Addressing} & \\text{I.} &\\text{Array implementation} \\\\\\hline \\text{Y.} &\\text{Indexed Addressing} & \\text{II.} &\\text{Writing relocatable code} \\\\\\hline \\text {Z.} &\\text{Base Register Addressing} & \\text{III.} &\\text{Passing array as parameter}\\\\\\hline \\end{array}$$ Related Questions : GATE CSE 2000 | Question: 1.10 ISRO CSE 2017 | Question: 19 ed Oct 8, 2019 reply Follow flag Register add mode : access the local variables Immediate add mode : access the constant Direct/Absolute add mode : access the static variables Indirect add mode : implement pointer indexed/ Base index : access the random array Auto index: access the linear array relative add mode and base register add mode : relocation at run time base register add mode : best suit to write positions independent code 2 2 reply Share ritiksri8 commented Sep 7, 2024 reply Follow flag Indirect Addressing : Matches Passing array as parameter (uses pointers). Indexed Addressing : Matches Array implementation (accesses array elements). Base Register Addressing : Matches Writing relocatable code (adjusts addresses with a base register). 0 0 reply Share Tushar Rana commented Jan 20, 2025 reply Follow flag Relative, Indexed, Base Register all these three are relocatable code. 0 0 reply Share Please log in or register to add a comment.",
           "images": [],
           "options": [
-            "A. text editor",
-            "B. assembler",
-            "C. linker",
-            "D. loader",
+            "A. (X, III), (Y, I), (Z, II)",
+            "B. (X, II), (Y, III), (Z, I)",
+            "C. (X, III), (Y, II), (Z, I)",
+            "D. (X, I), (Y, III), (Z, II)"
+          ],
+          "correct_answer": "A",
+          "explanation": "(A) is the answer. Array implementation can use Indexed addressing. While passing array as parameter we can make use of a pointer (as in (C) ) and hence can use Indirect addressing. Base Register addressing can be used to write relocatable code by changing the content of Base Register.",
+          "year": 2001,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Suppose a processor does not have any stack pointer registers, which of the following statements is true? ed Jan 22 reply Follow flag @ayush18288 Best answer! 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. It cannot have subroutine call instruction",
+            "B. It cannot have nested subroutines call",
+            "C. Interrupts are not possible",
+            "D. All subroutine calls and interrupts are possible"
+          ],
+          "correct_answer": "X",
+          "explanation": "A stack pointer is a small register that stores the address of the last program request in a stack . And a nested function (or nested procedure or subroutine) is a function which is defined within another function , the enclosing function. So if there is no stack pointer register then No nested subroutine call possible, hence option B is correct.",
+          "year": 2001,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "A low memory can be connected to 8085 by using",
+          "images": [],
+          "options": [
+            "A. $INTER$",
+            "B. $\\overline{RESET\\text{ }IN}$",
+            "C. $HOLD$",
+            "D. $READY$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Memory can be connected to 8085 by using READY signal. If READY is set then communication is possible.Hence (D) is correct option.",
+          "year": 2001,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "More than one word are put in one cache block to:",
+          "images": [],
+          "options": [
+            "A. exploit the temporal locality of reference in a program",
+            "B. exploit the spatial locality of reference in a program",
+            "C. reduce the miss penalty",
+            "D. none of the above"
+          ],
+          "correct_answer": "B",
+          "explanation": "Exploit the spatial locality of reference in a program as, if the next locality is addressed immediately, it will already be in the cache. Consider the scenario similar to cooking, where when an ingredient is taken from cupboard, you also take the near by ingredients along with it- hoping that they will be needed in near future. $B$",
+          "year": 2001,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The most appropriate matching for the following pairs$$\\begin{array}{ll} \\text{X: Indirect addressing} & \\text{1: Loops } \\\\ \\text{Y: Immediate addressing } & \\text{2: Pointers} \\\\ \\text{Z: Auto decrement addressing } & \\text{3: Constants } \\\\ \\end{array}$$ is Related Questions : GATE CSE 2001 | Question: 2.9 ISRO CSE 2017 | Question: 19 ed Oct 17, 2019 reply Follow flag base register add mode : best suit to write positions independent code @mohan123 Why not PC relative add mode is best suit ? 0 0 reply Share mohan123 commented Oct 17, 2019 reply Follow flag @Satbir positions independent code means we can transfer control of statement multiple segment using diff diff base address but pc relative control will be transfer within the segment 2 2 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. $X - 3, Y - 2, Z - 1$",
+            "B. $X - 1, Y - 3, Z - 2$",
+            "C. $X - 2, Y - 3, Z - 1$",
+            "D. $X - 3, Y - 1, Z - 2$"
+          ],
+          "correct_answer": "C",
+          "explanation": "(C) is the most appropriate one. General instruction format: |opcode|Mode|Address Field| Pointer dereference $\\rightarrow $ Indirect addressing, $E.A = M$ [Value stored in address field] Operating with a constant $\\rightarrow $ Immediate addressing, $E.A =$ Address field of the instruction. Loop iteration counter check $\\rightarrow $ Auto decrement addressing $R1=R1-1$; $E.A = R1$ E.A = Effective address, where the required operand will be found.",
+          "year": 2000,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Comparing the time T1 taken for a single instruction on a pipelined CPU with time T2 taken on a non-pipelined but identical CPU, we can say that",
+          "images": [],
+          "options": [
+            "A. T1 ≤ T2",
+            "B. T1 ≥ T2",
+            "C. T1 < T2",
+            "D. T1 and T2 plus the time taken for one instruction fetch cycle"
+          ],
+          "correct_answer": "B",
+          "explanation": "Here we are comparing the execution time of only a single instruction. Pipelining in no way improves the execution time of a single instruction (the time from its start to end). It increases the overall performance by splitting the execution to multiple pipeline stages so that the following instructions can use the finished stages of the previous instructions. But in doing so pipelining causes some problems also as given in the below link, which might slow some instructions. So, (B) is the answer. http://www.cs.wvu.edu/~jdm/classes/cs455/notes/tech/instrpipe.html",
+          "year": 2000,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "To put the 8085 microprocessor in the wait state",
+          "images": [],
+          "options": [
+            "A. lower the HOLD input",
+            "B. lower the READY input",
+            "C. raise the HOLD input",
+            "D. raise the READY input"
+          ],
+          "correct_answer": "B",
+          "explanation": "Lower the READY input,option B",
+          "year": 2000,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The access times of the main memory and the Cache memory, in a computer system, are $500$ n sec and $50$ nsec, respectively. It is estimated that $80\\%$ of the main memory request are for read the rest for write. The hit ratio for the read access only is $0.9$ and a write-through policy (where both main and cache memories are updated simultaneously) is used. Determine the average time of the main memory (in ns).",
+          "images": [],
+          "options": [
+            "A. Read the word from main memory which is missed in cache memory",
+            "B. Send the entire block of data from main memory to cache from where the required WORD is present.",
+            "C. CPU reads the required word from cache memory"
+          ],
+          "correct_answer": "180",
+          "explanation": "Average memory access time $=$ Time spend for read $+$ Time spend for write $=$ Read time when cache hit $+$ Read time when cache miss $+$ Write time when cache hit $+$ Write time when cache miss $= 0.8 \\times 0.9 \\times 50 + 0.8 \\times 0.1 \\times (500+50) $ (assuming hierarchical read from memory and cache as only simultaneous write is mentioned in question) $+ 0.2 \\times 0.9 \\times 500 + 0.2 \\times 0.1 \\times 500 $ (simultaneous write mentioned in question) $= 36 + 44 + 90 + 10 = 180$ ns. Reference: http://www.howardhuang.us/teaching/cs232/24-Cache-writes-and-examples.pdf",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In an $11$-bit computer instruction format, the size of address field is $4$-bits. The computer uses expanding OP code technique and has $5$ two-address instructions and $32$ one-address instructions. The number of zero-address instructions it can support is ________",
+          "images": [],
+          "options": [],
+          "correct_answer": "256",
+          "explanation": "No. of possible instruction encoding $=2^{11} = 2048$ No. of encoding taken by two-address instructions $=5 \\times 2^4 \\times 2^4 = 1280$ No. of encoding taken by one-address instructions $=32 \\times 2^4 = 512$ So, no. of possible zero-address instructions $=2048 - (1280 + 512) = 256$",
+          "year": 0,
+          "exam_type": "GATE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The total size of address space in a virtual memory system is limited by: 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. the length of MAR",
+            "B. the available secondary storage",
+            "C. the available main memory",
+            "D. all of the above",
             "E. none of the above"
           ],
-          "correct_answer": "D",
-          "explanation": "Answer: D The loader is a program that loads the object program from the secondary memory into the main memory for execution of the program. The loader resides in the main memory.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A simple two-pass assembler does the following in the first pass:",
-          "images": [],
-          "options": [
-            "A. It allocates space for the literals.",
-            "B. It computes the total length of the program.",
-            "C. It builds the symbol table for the symbols and their values.",
-            "D. It generates code for all the load and store register instructions.",
-            "E. None of the above."
-          ],
-          "correct_answer": "A;B;C",
-          "explanation": "A, B, C are TRUE. https://gateoverflow.in/?qa=blob&qa_blobid=2337905098612945492",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The expression $( a * b) * c \\; op \\dots$ where ‘op’ is one of ‘$+$’, ‘$*$’ and ‘$\\uparrow$’ (exponentiation) can be evaluated on a CPU with single register without storing the value of ($a * b$) if ed Nov 1, 2019 reply Follow flag +11votes answered Nov 3, 2017 by Shatadru RC (257 points) Let say, the expression is one of the below: (a*b)*c+d (a*b)*c*d (a*b)*c^d In any case, brackets has the highest priority always. So I have to compute brackets first. Now, for + and *, I can do the rest of the operation and save results in the same register. But for exponentiation, I have to store the result of a*b, then do the computation of c^d, then multiply these two results. So option A is correct 5 5 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $\\text{‘op’}$ is ‘$+$’ or ‘$*$’",
-            "B. $\\text{‘op’}$ is ‘$\\uparrow$’ or ‘$*$’",
-            "C. $\\text{‘op’}$ is ‘$\\uparrow$’ or ‘$+$’",
-            "D. not possible to evaluate without storing"
-          ],
-          "correct_answer": "A",
-          "explanation": "Correct Option: A $\\uparrow$ has higer precedence than $\\{*,+,-,/ \\}$ So, if op $ = \\uparrow$ implies, we need to evaluate the right hand side of $\\uparrow$ first and then do the lhs part, which would definitely require us to store the value of lhs but if its a '$+$' or '$*$' , we don't need to store the values evaluated, and on the go can do the operation directly on one register.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Heap allocation is required for languages. ed Oct 13, 2018 reply Follow flag same question",
-          "images": [],
-          "options": [
-            "A. that support recursion",
-            "B. that support dynamic data structure",
-            "C. that use dynamic scope rules",
-            "D. None of the above"
-          ],
-          "correct_answer": "B",
-          "explanation": "Memory is taken from heap for dynamic allocation. So, option ( B ) is correct.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The conditional expansion facility of macro processor is provided to",
-          "images": [],
-          "options": [
-            "A. test a condition during the execution of the expanded program",
-            "B. to expand certain model statements depending upon the value of a condition during the execution of the expanded program",
-            "C. to implement recursion",
-            "D. to expand certain model statements depending upon the value of a condition during the process of macro expansion"
-          ],
-          "correct_answer": "D",
-          "explanation": "Macro is expanded during the process of macro expansion. Hence, be (d).",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A language $L$ allows declaration of arrays whose sizes are not known during compilation. It is required to make efficient use of memory. Which one of the following is true? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. A compiler using static memory allocation can be written for $L$",
-            "B. A compiler cannot be written for $L$; an interpreter must be used",
-            "C. A compiler using dynamic memory allocation can be written for $L$",
-            "D. None of the above"
-          ],
-          "correct_answer": "C",
-          "explanation": "C . Using dynamic memory allocation, memory will be allocated to array at runtime.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In the following grammar $X ::= X \\oplus Y \\mid Y$ $Y::= Z * Y \\mid Z$ $Z::= id $ Which of the following is true?",
-          "images": [],
-          "options": [
-            "A. $\\text{‘}\\oplus\\text{’}$ is left associative while $\\text{‘}*\\text{’}$ is right associative",
-            "B. Both $\\text{‘}\\oplus\\text{’}$ and $\\text{‘}*\\text{’}$ are left associative",
-            "C. $\\text{‘}\\oplus\\text{’}$ is right associative while $\\text{‘}*\\text{’}$ is left associative",
-            "D. None of the above"
-          ],
-          "correct_answer": "A",
-          "explanation": "It will be A. For multiple '$\\oplus$', the derivation is possible only via '$X$' which is on left side of '$\\oplus$' in the production. Hence it is left associative. For multiple '$*$', the derivation is possible only via '$Y$' which is on the right side of '$*$' in the production. Hence it is right associative. If both left and right derivations were possible, the grammar would have been ambiguous and we couldn't have given associativity.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which languages necessarily need heap allocation in the runtime environment?",
-          "images": [],
-          "options": [
-            "A. Those that support recursion.",
-            "B. Those that use dynamic scoping.",
-            "C. Those that allow dynamic data structure.",
-            "D. Those that use global variables."
-          ],
-          "correct_answer": "C",
-          "explanation": "Those that allow dynamic data structure. malloc etc uses memory from heap area.",
-          "year": 2010,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which data structure in a compiler is used for managing information about variables and their attributes?",
-          "images": [],
-          "options": [
-            "A. Abstract syntax tree",
-            "B. Symbol table",
-            "C. Semantic stack",
-            "D. Parse table"
-          ],
-          "correct_answer": "B",
-          "explanation": "$(B)$ Symbol table is the answer. It can be implemented by using an array, hash table, tree and even some time with the help of the Iinked list!",
-          "year": 2010,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For the grammar below, a partial $LL(1)$ parsing table is also presented along with the grammar. Entries that need to be filled are indicated as $E1, E2,$ and $E3$. $\\varepsilon$ is the empty string, \\$ indicates end of input, and, $\\mid$ separates alternate right hand sides of productions. $ S\\rightarrow a A b B \\mid b A a B \\mid \\varepsilon $ $ A\\rightarrow S $ $ B\\rightarrow S $ $$\\begin{array}{|l|l|}\\hline \\text{} & \\textbf{a} & \\textbf{b} & \\textbf{\\$} \\\\\\hline \\text{$S$} & \\text{E1} & \\text{E2} & \\text{$S\\rightarrow \\varepsilon $} \\\\\\hline \\text{$A$} & \\text{$A\\rightarrow S$} & \\text{$A\\rightarrow S$} & \\text{error} \\\\\\hline \\text{$B$} & \\text{$B\\rightarrow S$} & \\text{$B\\rightarrow S$} & \\text{$E3$} \\\\\\hline \\end{array}$$ The FIRST and FOLLOW sets for the non-terminals $A$ and $B$ are",
-          "images": [],
-          "options": [
-            "A. $ \\text{FIRST}(A) = \\{a, b, \\varepsilon\\} =\\text{FIRST}(B) $ $ \\text{FOLLOW}(A) = \\{a, b\\} $ $ \\text{FOLLOW}(B) = \\{a, b, \\$\\} $",
-            "B. $ \\text{FIRST}(A) = \\{a, b, \\$\\} $ $ \\text{FIRST}(B) = \\{a, b, \\varepsilon\\} $ $ \\text{FOLLOW}(A) = \\{a, b\\} $ $ \\text{FOLLOW}(B) = \\{\\$\\} $",
-            "C. $ \\text{FIRST}(A) = \\{a, b, \\varepsilon\\} =\\text{FIRST}(B) $ $ \\text{FOLLOW}(A) =\\{a, b\\} $ $ \\text{FOLLOW}(B) = \\varnothing $",
-            "D. $ \\text{FIRST}(A) = \\{a, b\\} = \\text{FIRST}(B) $ $ \\text{FOLLOW}(A) = \\{a, b\\} $ $ \\text{FOLLOW}(B) =\\{a, b\\} $"
-          ],
-          "correct_answer": "A",
-          "explanation": "$\\text{First}(S) = \\text{First}(A) = \\text{First}(B) = \\{a,b,\\epsilon\\}$ $\\text{Follow}(A) = \\{a,b\\}$ $\\text{Follow}(B) = \\text{Follow}(S) = \\{a,b,\\$\\}$ So, the answer to question 52 is option A.",
-          "year": 2012,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider evaluating the following expression tree on a machine with load-store architecture in which memory can be accessed only through load and store instructions. The variables $a, b, c, d,$ and $e$ are initially stored in memory. The binary operators used in this expression tree can be evaluated by the machine only when operands are in registers. The instructions produce result only in a register. If no intermediate results can be stored in memory, what is the minimum number of registers needed to evaluate this expression? ed Jan 16 reply Follow flag @Sherlock_Holmes put leaf nodes = 1 do recursively till you reach root of the tree if $m==n$: then $root$ = ($m+1) or (n+1)$ if $m \\ne n$: then $root$ = $max(m,n$ value of root of the tree is the min no. of registers required w/o spilling 1 1 reply Share Please log in or register to add a comment.",
-          "images": [
-            {
-              "index": 1,
-              "filename": "2138_img1.jpg"
-            }
-          ],
-          "options": [
-            "A. $2$",
-            "B. $9$",
-            "C. $5$",
-            "D. $3$"
-          ],
-          "correct_answer": "D",
-          "explanation": "Given is Load Store Architecture, that means we can access memory using Load and Store Instructions. Key Idea:- Pick new register only when it is required. We want to add c and d , and initially both are in memory, therefore copy these into registers. load $R1, c$ $(R1 \\leftarrow c)$ load $R2, d$ $(R2 \\leftarrow d)$ (here no compensation can be done, we need two registers) add $R1, R1, R2 \\ ( R1 \\leftarrow R1 + R2)$ (at this point $R1$ is holding $\\mathbf{c+d}$ and $R2$ is holding $\\mathbf{d}$, i.e. $R1 \\leftarrow \\mathbf{c+d}$ and $R2 \\leftarrow \\mathbf{d})$ Now, $\\mathbf{e}$ comes into picture and my question is, Can i make use of $R1$ or $R2$ to store $\\mathbf{e}$? I can not use R1 to store e as its value will be needed later but I can use R2. load $R2, e$ (currently $R1 \\leftarrow \\mathbf{c+d}$ and $R2 \\leftarrow \\mathbf{e})$ Sub $R1, R2, R1$ $(R1 \\leftarrow R2 - R1)$ Doing this all gives, final value of right sub-tree is stored in $R1$, and $R2$ stores $\\mathbf{e}$. Now, coming to left subtree, to perform \"$a-b$\" we need to copy both variables in registers. We can copy one of the variable in $R2$, but we can not obviously copy in $R1$ as value of $R1$ will be required later. Load $R2, a$ Load $R3, b$ ( here comes extra register, and we can not avoid using it .) Current mapping is $R2 \\leftarrow a$, $R3 \\leftarrow b$ and $R1$ contains final value of Right subtree. SUB $R2, R2, R3 (R2 \\leftarrow R2 - R3)$ ADD $R1, R1 , R2$ Hence answer is $3$ i.e. D",
-          "year": 2011,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider two binary operators $\\text{‘} \\uparrow \\text{’}$ and $\\text{‘} \\downarrow \\text{’}$ with the precedence of operator $\\downarrow$ being lower than that of the operator $\\uparrow$. Operator $\\uparrow$ is right associative while operator $\\downarrow$ is left associative. Which one of the following represents the parse tree for expression $(7 \\downarrow 3 \\uparrow 4 \\uparrow 3 \\downarrow 2)$",
-          "images": [
-            {
-              "index": 1,
-              "filename": "2129_img1.png"
-            },
-            {
-              "index": 2,
-              "filename": "2129_img2.png"
-            },
-            {
-              "index": 3,
-              "filename": "2129_img3.png"
-            },
-            {
-              "index": 4,
-              "filename": "2129_img4.png"
-            }
-          ],
-          "options": [],
-          "correct_answer": "B",
-          "explanation": "Answer is B. To make the parse tree start compiling the identifiers into blocks based on associativity and precedence. Grouping : $(7 \\downarrow (3 \\uparrow(4 \\uparrow 3))) \\downarrow2 $ Tree can be made by opening inner braces and move towards braces.",
-          "year": 2011,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The lexical analysis for a modern computer language such as Java needs the power of which one of the following machine models in a necessary and sufficient sense?",
-          "images": [],
-          "options": [
-            "A. Finite state automata",
-            "B. Deterministic pushdown automata",
-            "C. Non-deterministic pushdown automata",
-            "D. Turing machine"
-          ],
-          "correct_answer": "A",
-          "explanation": "Answer - A In compiler lexical analyzer categorizes character sequence into lexemes and produces tokens as output for parser. And tokens are expressed in regular expressions so a simple Finite Automata is sufficient for it.",
-          "year": 2011,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In a compiler, keywords of a language are recognized during Related Questions : GATE CSE 1987 | Question: 1-xi",
-          "images": [],
-          "options": [
-            "A. parsing of the program",
-            "B. the code generation",
-            "C. the lexical analysis of the program",
-            "D. dataflow analysis"
-          ],
-          "correct_answer": "C",
-          "explanation": "Typically, the lexical analysis phase of compilation breaks the input text up into sequences of lexemes that each belongs to some particular token type that's useful in later analysis. Consequently, keywords are usually first recognized during lexical analysis in order to make parsing easier. Since parsers tend to be implemented by writing context-free grammars of tokens rather than of lexemes (that is, the category of the lexeme rather than the contents of the lexeme), it is significantly easier to build a parser when keywords are marked during lexing. Any identifier is also a token so it is recognized in lexical Analysis . Hence, option C is True. ref@ http://stackoverflow.com/questions/5202709/phases-of-a-compiler",
-          "year": 2011,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the basic block given below. a = b + c c = a + d d = b + c e = d - b a = e + b The minimum number of nodes and edges present in the DAG representation of the above basic block respectively are",
-          "images": [],
-          "options": [
-            "A. $6$ and $6$",
-            "B. $8$ and $10$",
-            "C. $9$ and $12$",
-            "D. $4$ and $4$"
-          ],
-          "correct_answer": "A",
-          "explanation": "A normal DAG construction will give $8$ nodes and $10$ edges as shown below. Since, this question asks for minimum possible, we can assume algebraic simplification is allowed. So, $d = b + c, e = d - b$; can be simplified to $d = b + c$; $e = c$; Similarly, $e = d - b$; $a = e + b$; can be simplified to $a = d$. This gives the following DAG with $6$ nodes and $6$ edges. Reference: https://cs.nyu.edu/~gottlieb/courses/2000s/2006-07-fall/compilers/lectures/lecture-14.html $A$",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements are CORRECT? $1$ and $2$ only $2$ and $3$ only $3$ and $4$ only $1$ and $3$ only",
-          "images": [],
-          "options": [
-            "A. Static allocation of all data areas by a compiler makes it impossible to implement recursion.",
-            "B. Automatic garbage collection is essential to implement recursion.",
-            "C. Dynamic allocation of activation records is essential to implement recursion.",
-            "D. Both heap and stack are essential to implement recursion."
-          ],
-          "correct_answer": "D",
-          "explanation": "It will be D . option $2$ is wrong because it is not necessary to have automatic garbage collection to implement recursion. option $4$ is wrong because it says that both are required to implement recursion, which is wrong. Either of them will suffice.",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "One of the purposes of using intermediate code in compilers is to ed Dec 17, 2019 reply Follow flag @Rhythm Nope. Register Allocation is part of Code Generation. 2 2 reply Share gopal_gate commented Jun 8, 2025 reply Follow flag Register allocation is machine-dependent since registers reside in the CPU, while intermediate code remains independent of both machine and source programs. Therefore, option D is incorrect. 0 0 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. make parsing and semantic analysis simpler.",
-            "B. improve error recovery and error reporting.",
-            "C. increase the chances of reusing the machine-independent code optimizer in other compilers.",
-            "D. improve the register allocation."
-          ],
-          "correct_answer": "C",
-          "explanation": "C. that is the actual use of intermediate code generator in a compiler.",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The minimum number of arithmetic operations required to evaluate the polynomial $P(X) = X^5+4X^3+6X+5$ for a given value of $X$, using only one temporary variable is ______.",
-          "images": [],
-          "options": [],
-          "correct_answer": "7",
-          "explanation": "$P(X) = x^5 + 4x^3 + 6x + 5$ $=x(x^4 + 4x^2 + 6) +5$ $=x( x ( x^3 + 4x) + 6) + 5$ $=x( x ( x (x^2 + 4)) + 6) + 5$ $=x( x ( x (x(x) + 4)) + 6) + 5$ mul = pair of brackets $4$ add = num of signs $3$ total $7$",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the expression tree shown. Each leaf represents a numerical value, which can either be $0$ or $1$. Over all possible choices of the values at the leaves, the maximum possible value of the expression represented by the tree is ___.",
-          "images": [
-            {
-              "index": 1,
-              "filename": "1999_img1.jpg"
-            }
-          ],
-          "options": [],
-          "correct_answer": "6",
-          "explanation": "$A = B + C$ For $A$ to be maximum, both $B$ and $C$ should be maximum $B = D - E$ For $B$ to be maximum, $D$ should be maximum and $E$ should be minimum $C = F + G$ For $C$ to be maximum, both $F$ and $G$ should be maximum The maximum value of $D$ is $2\\;( 1 + 1 = 2 )$ The minimum value of $E$ is $-1 \\;( 0 - 1 = -1 )$ The maximum value of $F$ is $1 \\;( 1 - 0 = 1 )$ The maximum value of $G$ is $2 \\;( 1 + 1 = 2 )$ $B = 2 - ( -1 ) = 2 + 1 = 3$ $C = 1 + 2 = 3$ $A = B + C = 3 + 3 = 6$ $6$ is the answer",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For a C program accessing $\\mathbf{X[i] [j] [k]}$, the following intermediate code is generated by a compiler. Assume that the size of an integer is $32$ bits and the size of a character is $8$ bits. t0 = i ∗ 1024 t1 = j ∗ 32 t2 = k ∗ 4 t3 = t1 + t0 t4 = t3 + t2 t5 = X[t4] Which one of the following statements about the source code for the C program is CORRECT?",
-          "images": [],
-          "options": [
-            "A. $\\mathbf{X}$ is declared as \"int $\\mathbf{X[32] [32] [8]}$ ” .",
-            "B. $\\mathbf{X}$ is declared as \"int $\\mathbf{X[4] [1024] [32]}$ ” .",
-            "C. $\\mathbf{X}$ is declared as \"char $\\mathbf{X[4] [32] [8]}$ ” .",
-            "D. $\\mathbf{X}$ is declared as \"char $\\mathbf{X[32] [16] [2]}$ ” ."
-          ],
-          "correct_answer": "A",
-          "explanation": "$k$ is multiplied by $4$, means sizeof(dataype) is int. $j$ is multiplied by $32$, means the inner most dimension of array is $32/4 = 8$ (we have to divide by the size of the inner dimension- which here is a simple integer) $i$ is multiplied by $1024$, means the second dimension of array is $1024/32 = 32$ ($32 = 8*4$ is the size of the inner dimension here) So, ( A ) is correct. The first dimension is not needed for code generation and that is why in C language while passing an array to a function, we can omit the value of the first dimension but not any others. We can also do as follows: $X[i][j][k] = *(*(*(X + i) + j) + k)$ In Integer arithmetic, this equals $*(*(*(X + i * sizeof(*X) ) + j * sizeof(**X) + k * sizeof(***X) )$ as for every add to a pointer we have to multiply the size of the pointed value (to get a valid address) So, from the given code we get $sizeof(***X) = 4, -$ int $sizeof(**X) = 32 -$ int array of size $8$ $sizeof(*X) = 1024 - 2$ $D$ int array of size $[32]$ havinf size of inner $1D$ array $32$. So, the inner dimensions must be $32$ and $8$ and type must be integer. So, only option A matches.",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following is NOT performed during compilation? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. Dynamic memory allocation",
-            "B. Type checking",
-            "C. Symbol table management",
-            "D. Inline expansion"
-          ],
-          "correct_answer": "A",
-          "explanation": "Dynamic means- at runtime. Dynamic memory allocation happens during the execution time and hence ( A ) is the answer.",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar defined by the following production rules, with two operators $∗$ and $+$ $S\\:\\to\\:T∗P$ $T\\:\\to\\:U\\mid T∗U$ $P\\:\\to\\:Q+P\\mid Q$ $Q\\:\\to Id$ $U\\:\\to Id$ Which one of the following is TRUE?",
-          "images": [],
-          "options": [
-            "A. $ +$ is left associative, while $∗$ is right associative",
-            "B. $ +$ is right associative, while $∗$ is left associative",
-            "C. Both $+$ and $∗$ are right associative",
-            "D. Both $+$ and $∗$ are left associative"
-          ],
-          "correct_answer": "B",
-          "explanation": "$P \\rightarrow Q+P$ here $P$ is to right of $+$ So, $+$ is right associative Similarly, for $T \\rightarrow T *U$ $*$ is left associative as $T$ is to left of $*$ So, answer is B",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following grammars generates the language $ L=\\left \\{ a^{i}b^{j}\\mid i\\neq j \\right \\}$?",
-          "images": [],
-          "options": [
-            "A. $S\\rightarrow AC\\mid CB$ $C\\rightarrow aCb\\mid a\\mid b$ $A\\rightarrow aA\\mid \\varepsilon$ $B\\rightarrow Bb\\mid \\varepsilon$",
-            "B. $S\\rightarrow aS\\mid Sb \\mid a\\mid b$",
-            "C. $S\\rightarrow AC\\mid CB$ $C\\rightarrow aCb\\mid \\varepsilon$ $A\\rightarrow aA\\mid \\varepsilon$ $B\\rightarrow Bb\\mid \\varepsilon$",
-            "D. $S\\rightarrow AC\\mid CB$ $C\\rightarrow aCb\\mid \\varepsilon$ $A\\rightarrow aA\\mid a$ $B\\rightarrow Bb\\mid b$"
-          ],
-          "correct_answer": "D",
-          "explanation": "Lets consider options one by one. Option A $C\\Rightarrow a$ or, $C \\Rightarrow b $ or, $C \\Rightarrow aCb \\Rightarrow aaCbb \\Rightarrow aaaCbbb \\ldots $ so on and at last we have to put either $C\\rightarrow a$ or $C\\rightarrow b$ So production starting with $C$ is used to derive $a^{n+1}b^{n}$ or $a^{n}b^{n+1} ; n \\geq 0$ $S\\rightarrow AC [Aa^nb^{n+1}]$ can make $a^{n+1}b^{n+1}$ as a single $a$ can be derived from $A [A \\Rightarrow aA \\Rightarrow a$ as $A\\rightarrow \\varepsilon$], similarly $S\\rightarrow CB$ In a simple way, $ab$ can be derived from grammar as $S\\Rightarrow AC \\Rightarrow aAC \\Rightarrow aC\\Rightarrow ab$ option A is wrong Option B Corresponding language is $a^{+}b^{\\ast}$ or $a^{\\ast}b^{+},$ and $ab$ can be derived as $S\\Rightarrow aS \\Rightarrow ab$ option B is wrong Option C $C \\Rightarrow \\varepsilon$ or $C \\Rightarrow aCb \\Rightarrow aaCbb \\Rightarrow aaaCbbb \\ldots$ so on and at last need to put $C \\rightarrow \\varepsilon$ Production $C$ will generate $a^{n}b^{n} ; n \\geq 0$ $S\\rightarrow AC$ can generate $a^{n}b^{n}$ as $A$ can be $\\epsilon,$ similarly $S \\rightarrow CB$ option C is wrong Option D . Production $C$ is used to generate $a^{n}b^{n}$ as in option $C$ $S\\rightarrow AC$ will increase no of $a$'s before $a^{n}b^{n}$ as $A$ will generate $a$ or $aa$ or $aaa \\ldots i,e., a^+,$ so $S\\rightarrow AC$ will generate $a^{+}a^{n}b^{n} , i.e., a^{i}b^{j} ; i>j$ $S \\rightarrow CB$ will generate $a^{n}b^{n}b^{+}\\; i.e., a^{i}b^{j} ; i<j$ option D is right .",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following C code segment. for (i = 0, i < n; i++) { for (j = 0; j < n; j++) { if (i%2) { x += (4*j + 5*i); y += (7 + 4*j); } } } Which one of the following is false? Related Questions : ISRO-DEC2017-67",
-          "images": [],
-          "options": [
-            "A. The code contains loop invariant computation",
-            "B. There is scope of common sub-expression elimination in this code",
-            "C. There is scope of strength reduction in this code",
-            "D. There is scope of dead code elimination in this code"
-          ],
-          "correct_answer": "D",
-          "explanation": "4 * j is used at two places- so common subexpression elimination is possible $\\text{i%2}$ is loop invariant for the inner loop $5*i$ is also loop invariant for inner loop $\\text{x += 5 * i}$ can be replaced by $\\text{x += p;}$ $\\text{p += 5;}$ ($p$ must be initialized to $0$ before the loop). Thus replacing $*$ with $+$ gives strength reduction. The code does not contain unreachable or dead code. because all statements inside the loops are reachable during the execution of the loops. So, only $(D)$ is false here.",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following translation scheme. $ S\\rightarrow ER$ $ R\\rightarrow *E\\left \\{ \\text{print}(\\text{‘}*\\text{’}); \\right \\} R\\mid \\varepsilon $ $ E\\rightarrow F+E\\left \\{ \\text{print}(\\text{‘}+\\text{’}); \\right \\}\\mid F $ $ F\\rightarrow (S)\\mid id \\left \\{ \\text{print}(id.value); \\right \\} $ Here $id$ is a token that represents an integer and $id.value$ represents the corresponding integer value. For an input $\\text{‘}2 * 3 + 4\\text{’},$ this translation scheme prints",
-          "images": [],
-          "options": [
-            "A. $2 * 3 + 4$",
-            "B. $2 * +3 \\ 4$",
-            "C. $2 \\ 3 * 4 +$",
-            "D. $2 \\ 3 \\ 4+*$"
-          ],
-          "correct_answer": "D",
-          "explanation": "Correct Option: D Make a tree and perform post order evaluation.",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar: $S\\rightarrow FR$ $ R\\rightarrow * S\\mid \\varepsilon $ $ F\\rightarrow id $ In the predictive parser table $M$ of the grammar the entries $M[S,id]$ and $M[R,\\$]$ respectively are 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $ \\left \\{ S\\rightarrow FR \\right \\} $ and $ \\left \\{ R\\rightarrow \\varepsilon \\right \\} $",
-            "B. $ \\left \\{ S\\rightarrow FR \\right \\} $ and $ \\left \\{ \\right \\} $",
-            "C. $ \\left \\{ S\\rightarrow FR \\right \\} $ and $ \\left \\{ R\\rightarrow {*}S\\right \\} $",
-            "D. $ \\left \\{ F\\rightarrow id \\right \\} $ and $ \\left \\{ R\\rightarrow \\varepsilon \\right \\} $"
-          ],
-          "correct_answer": "A",
-          "explanation": "First $S = \\{ id \\}$ Follow $R = \\{ \\$ \\}$ so $M[S,id] = S \\rightarrow FR$ $M[R,\\$] = R \\rightarrow \\epsilon$ So ans is A",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider these two functions and two statements S1 and S2 about them. int work1(int *a, int i, int j) { int x = a[i+2]; a[j] = x+1; return a[i+2] - 3; } int work2(int *a, int i, int j) { int t1 = i+2; int t2 = a[t1]; a[j] = t2+1; return t2 - 3; } S1: The transformation form work1 to work2 is valid, i.e., for any program state and input arguments, work2 will compute the same output and have the same effect on program state as work1 S2: All the transformations applied to work1 to get work2 will always improve the performance (i.e reduce CPU time) of work2 compared to work1",
-          "images": [],
-          "options": [
-            "A. S1 is false and S2 is false",
-            "B. S1 is false and S2 is true",
-            "C. S1 is true and S2 is false",
-            "D. S1 is true and S2 is true"
-          ],
-          "correct_answer": "A",
-          "explanation": "Consider an array a = 1 2 3 4 5 and condition i + 2 =j. Lets take i =0 and j =2 for this example. Work 1, x = a[0+2] = 3 a[2] = 3 + 1 = 4; which means a = 1 2 4 4 5 return a[0+2] - 3 = 4 -3 = 1 Work 2 t1 = 0 + 2 = 2 t2 = a[2] = 3 a[2] = 3 + 1 = 4, which means a = 1 2 4 4 5 again return t2 - 3 = 3 -3 =0 Hence S1 is false when i + 2 =j. S2 will also be false, since we cant explicitly say the performance of work2 will always be better than work1. Hence answer is A",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A canonical set of items is given below $S \\to L .> R $ $Q \\to R.$ On input symbol $<$ the set has",
-          "images": [],
-          "options": [
-            "A. a shift-reduce conflict and a reduce-reduce conflict.",
-            "B. a shift-reduce conflict but not a reduce-reduce conflict.",
-            "C. a reduce-reduce conflict but not a shift-reduce conflict.",
-            "D. neither a shift-reduce nor a reduce-reduce conflict."
-          ],
-          "correct_answer": "D",
-          "explanation": "The question is",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following is FALSE ?",
-          "images": [],
-          "options": [
-            "A. A basic block is a sequence of instructions where control enters the sequence at the beginning and exits at the end.",
-            "B. Available expression analysis can be used for common subexpression elimination.",
-            "C. Live variable analysis can be used for dead code elimination.",
-            "D. $x=4*5 \\Rightarrow x=20$ is an example of common subexpression elimination."
-          ],
-          "correct_answer": "D",
-          "explanation": "A basic block is a sequence of instructions where control enters the sequence at the beginning and exits at the end, which is TRUE. Available expression analysis can be used for common subexpression elimination is TRUE. Available expressions is an analysis algorithm that determines for each point in the program the set of expressions that need not be recomputed. Available expression analysis is used to do global common subexpression elimination (CSE). If an expression is available at a point, there is no need to re-evaluate it. Live variable analysis can be used for dead code elimination is TRUE. $x = 4 ∗ 5 \\Rightarrow x = 20$ is an example of common subexpression elimination is FALSE. Common subexpression elimination (CSE) refers to compiler optimization replaces identical expressions (i.e., they all evaluate to the same value) with a single variable holding the computed value when it is worthwhile to do so Source: Geeksforgeeks $D$",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the program given below, in a block-structured pseudo-language with lexical scoping and nesting of procedures permitted. Program main; Var ... Procedure A1; Var ... Call A2; End A1 Procedure A2; Var ... Procedure A21; Var ... Call A1; End A21 Call A21; End A2 Call A1; End main. Consider the calling chain$: \\text{Main} \\rightarrow \\text{A1} \\rightarrow \\text{A2} \\rightarrow \\text{A21}\\rightarrow \\text{A1}$ The correct set of activation records along with their access links is given by:",
-          "images": [
-            {
-              "index": 1,
-              "filename": "1758_img1.jpg"
-            }
-          ],
-          "options": [],
-          "correct_answer": "D",
-          "explanation": "Activation record: Access link: to access non-local data The calling chain$: \\text{Main} \\rightarrow \\text{A1} \\rightarrow \\text{A2} \\rightarrow \\text{A21}\\rightarrow \\text{A1}$ PROCEDURE non-local data present A1 outside procedure A1 body i.e. in main procedure So, A1---> main A2 outside procedure A2 body i.e. in main procedure So, A2---> main A21 outside procedure A21 body i.e. in A2 procedure So, A21---> A2 $$\\begin{array}{c|c}\\hline \\textbf{PROCEDURE} & \\textbf{non-local data present} \\\\\\hline \\text{A1} & \\text{outside procedure A1 body i.e. in main procedure} \\\\ & \\text{So, A1} \\rightarrow \\text{main} \\\\\\hline \\text{A2} & \\text{outside procedure A2 body i.e. in main procedure} \\\\ & \\text{So, A2} \\rightarrow \\text{main} \\\\\\hline \\text{A21} & \\text{outside procedure A21 body i.e. in A2 procedure} \\\\ & \\text{So, A21} \\rightarrow \\text{A2} \\\\\\hline \\end{array}$$ https://www.youtube.com/watch?v=mMK-TlvH5c4&t=1093s @18:00",
-          "year": 2012,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Faster access to non-local variables is achieved using an array of pointers to activation records called a",
-          "images": [],
-          "options": [
-            "A. stack",
-            "B. heap",
-            "C. display",
-            "D. activation tree"
-          ],
-          "correct_answer": "C",
-          "explanation": "Correct Option: C Properties of displays Use a pointer array to store the activation records along the static chain. Fast access for non-local but may be complicated to maintain. Calling a subprogram in the same level – simply replace and restore. Calling a subprogram in the higher level – add an entry and may need to save the old pointers. Calling a subprogram in the lower level – shrink the pointer and restore it when the subprogram returns. http://users.dickinson.edu/~wahlst/356/ch10.pdf",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A linker reads four modules whose lengths are $200, 800, 600$ and $500$ words, respectively. If they are loaded in that order, what are the relocation constants? 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $0, 200, 500, 600$",
-            "B. $0, 200, 1000, 1600$",
-            "C. $200, 500, 600, 800$",
-            "D. $200, 700, 1300, 2100$"
-          ],
-          "correct_answer": "B",
-          "explanation": "answer - B first module loaded starting at address $0$. Size is $200$. hence it will occupy first $200$ address (last address being $199$). Second module will be present from $200$ and so on.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Type checking is normally done during 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. lexical analysis",
-            "B. syntax analysis",
-            "C. syntax directed translation",
-            "D. code optimization"
-          ],
-          "correct_answer": "C",
-          "explanation": "The answer is c . The use of syntax analyser is used to create parse Tree. But along with Grammar as input to Syntax Analyser we add even semantic rules which form the basis of Syntax Directed Translation That help us in Evaluation of Expression .Remember that Syntax Directed Translation is used in following cases Conversion of infix to Postfix Calculation of infix expression For creating a Acyclic graph Type Checking Conversion of Binary number to Decimal Counting the numbers of bits (0 or 1 ) in a binary number Creation of syntax tree To generate Intermediate code Storing the data into Symbol table",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements is true? 🚩 Edit necessary | 👮 Umesh Shelke | 💬 “Option D required edit \"Canonical CR\" Should be => \"Canonical LR\"”",
-          "images": [],
-          "options": [
-            "A. SLR parser is more powerful than LALR",
-            "B. LALR parser is more powerful than Canonical LR parser",
-            "C. Canonical LR parser is more powerful than LALR parser",
-            "D. The parsers SLR, Canonical CR, and LALR have the same power"
-          ],
-          "correct_answer": "C",
-          "explanation": "$\\text{SLR}$ parser is more powerful than $\\text{LALR}$ . False . $\\text{LALR}$ parser is more powerful than $\\text{Canonical LR}$ parser . False . $\\text{Canonical LR}$ parser is more powerful than $\\text{LALR}$ parser. True. The parsers $\\text{SLR, Canonical CR,}$ and $\\text{LALR}$ have the same power. False. $C$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In a resident – OS computer, which of the following systems must reside in the main memory under all situations?",
-          "images": [],
-          "options": [
-            "A. Assembler",
-            "B. Linker",
-            "C. Loader",
-            "D. Compiler"
-          ],
-          "correct_answer": "C",
-          "explanation": "(C ) is answer. In many operating systems the loader is permanently resident in memory, although some operating systems that support virtual memory may allow the loader to be located in a region of memory that is pageable . Reference: Loader",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The following code segment is executed on a processor which allows only register operands in its instructions. Each instruction can have atmost two source operands and one destination operand. Assume that all variables are dead after this code segment. c = a + b; d = c * a; e = c + a; x = c * c; if (x > a) { y = a * a; } else { d = d * d; e = e * e; } Q.48 Suppose the instruction set architecture of the processor has only two registers. The only allowed compiler optimization is code motion, which moves statements from one place to another while preserving correctness. What is the minimum number of spills to memory in the compiled code?",
-          "images": [],
-          "options": [
-            "A. 0",
-            "B. 1",
-            "C. 2",
-            "D. 3"
-          ],
-          "correct_answer": "B",
-          "explanation": "We can do code motion as follows: c = a + b; //a and b in register and b replaced by the result c after the instruction x = c * c; //x replaces c in register and c is spilled (moved to memory) if (x > a) { //x and a in registers y = a * a; d = c * a; //spilled c taken from memory and replaces x in register. e = c + a; } else { d = c * a; //spilled c taken from memory and replaces x in register. d replaces a in register d = d * d; //c and d in register e = c + a; //a taken from memory and e replaces c in register (a taken from memory is not a spill, it is a fill. The reason is a is not modified till this point.) e = e * e; } So, we need minimum 1 spill in the compiled code. https://en.wikipedia.org/wiki/Register_allocation",
-          "year": 2013,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following two sets of $\\textsf{LR(1)}$ items of an $\\textsf{LR(1)}$ grammar.$$\\begin{array}{l|l} X \\rightarrow c.X, c∕d &X → c.X, \\$\\\\ X \\rightarrow .cX, c∕ d& X → .cX, \\$\\\\ X \\rightarrow .d, c∕ d & X → .d, \\$ \\end{array}$$Which of the following statements related to merging of the two sets in the corresponding $\\textsf{LALR}$ parser is/are FALSE ? $1$ only $2$ only $1$ and $4$ only $\\text{1, 2, 3}$ and $4$",
-          "images": [],
-          "options": [
-            "A. Cannot be merged since look aheads are different.",
-            "B. Can be merged but will result in $\\textsf{S-R}$ conflict.",
-            "C. Can be merged but will result in $\\textsf{R-R}$ conflict.",
-            "D. Cannot be merged since $\\textsf{goto}$ on $c$ will lead to two different sets."
-          ],
-          "correct_answer": "D",
-          "explanation": "The TRUE statements are about merging of two states for $\\textsf{LALR(1)}$ parser from $\\textsf{LR(1)}$ parser. The given two states can be merged because kernel of these are same, look aheads don't matter in merging. The two states do not contain shift reduce conflict, so after merging the merged states cannot contain any $\\textsf{S-R}$ conflict. There is no final item in both states, so no $\\textsf{R-R}$ conflict. Merging of states does not depend on further $\\textsf{GOTO}$ part on any terminal. Therefore, all the given statements in question are FALSE. Option ( D ) is correct.",
-          "year": 2013,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A grammar that is both left and right recursive for a non-terminal, is",
-          "images": [],
-          "options": [
-            "A. Ambiguous",
-            "B. Unambiguous",
-            "C. Information is not sufficient to decide whether it is ambiguous or unambiguous",
-            "D. None of the above"
-          ],
-          "correct_answer": "C",
-          "explanation": "Let grammar be like this : $S \\rightarrow a$ $A \\rightarrow AbA$ This grammar is left as well as right recursive but still unambiguous. A is a useless production but still part of grammar.. A grammar having both left as well as right recursion may or may not be ambiguous. Let's take a grammar say $S\\rightarrow SS$ Now, according to the link https://en.wikipedia.org/wiki/Formal_grammar For a grammar G, if we have L(G) then all the strings/sentences in this language can be produced after some finite number of steps . But, for the grammar $$S\\rightarrow SS$$ Can we produce any string after a finite number of steps? NO, and hence the language of this grammar is empty set {} . Hence, If a grammar is having both left and right recursion, then grammar may or may not be ambiguous. $C$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following is the most powerful parsing method?",
-          "images": [],
-          "options": [
-            "A. LL (1)",
-            "B. Canonical LR",
-            "C. SLR",
-            "D. LALR"
-          ],
-          "correct_answer": "B",
-          "explanation": "$\\text{Canonical LR}$ is most powerful parsing method. $LR > LALR > SLR$ So, ans is $B$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "What is the maximum number of reduce moves that can be taken by a bottom-up parser for a grammar with no epsilon and unit-production (i.e., of type $A \\rightarrow \\epsilon$ and $A \\rightarrow a$) to parse a string with $n$ tokens?",
-          "images": [],
-          "options": [
-            "A. $n/2$",
-            "B. $n-1$",
-            "C. $2n-1$",
-            "D. $2^{n}$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Ans will be B $A \\rightarrow BC$ $B \\rightarrow aa$ $C \\rightarrow bb$ Now suppose string is $aabb.$ Then $A \\rightarrow BC$ (reduction $3$) $\\quad \\rightarrow aaC$ (reduction $2$) $\\quad \\rightarrow aabb$ (reduction $1$) $n = 4$ and number of reductions is $3.$ So, $n-1$",
-          "year": 2013,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Statement for Linked Answer Questions 83a & 83b: Consider the following expression grammar. The semantic rules for expression evaluation are stated next to each grammar production. $$\\begin{array}{l|l} E\\rightarrow number & E.val = {number.val} \\\\\\qquad \\mid \\ E \\ \\ ‘+\\text{'} \\ E & E^{(1)}.val = E^{(2)}.val + E^{(3)}.val \\\\\\qquad \\mid \\ E \\ \\ ‘\\times\\text{'} \\ E & E^{(1)}.val = E^{(2)}.val \\times E^{(3)}.val \\end{array}$$ The above grammar and the semantic rules are fed to a yaac tool (which is an LALR(1) parser generator) for parsing and evaluating arithmetic expressions. Which one of the following is true about the action of yaac for the given grammar?",
-          "images": [],
-          "options": [
-            "A. It detects recursion and eliminates recursion",
-            "B. It detects reduce-reduce conflict, and resolves",
-            "C. It detects shift-reduce conflict, and resolves the conflict in favor of a shift over a reduce action",
-            "D. It detects shift-reduce conflict, and resolves the conflict in favor of a reduce over a shift action"
-          ],
-          "correct_answer": "C",
-          "explanation": "Given grammar: $\\begin{align*} &E \\rightarrow \\text{num} \\\\ &E \\rightarrow E + E\\mid E*E \\\\ \\end{align*}$ First $LR(1) \\text{ item}:E^{\\prime} \\rightarrow \\bullet E \\ \\text{,} \\$ $ $\\textbf{YACC default action on SR: Choose SHIFT action}$ While parsing $3*2+1,$ at some point of time stack content $ :\\begin{array}{|c|} \\hline 1\\\\+\\\\ 2\\\\ *\\\\3\\\\ \\hline\\end{array}$ Then reduce handles one by one to generate output $=9.$ num does not create any conflict. Additionally here no states differ by lookahead symbols only. $\\Rightarrow$ $\\text{LALR(1) and LR(1)}$ tables are same. $LR(1)$ table only for state0 and state1: So total $2+2 = 4$ SR conflict originated in two states of the DFA. Shift-reduce conflict: Yacc’s default action in the case of a shift-reduce conflict is to choose the shift action. Reduce-reduce conflict : Yacc’s default action in the case of a reduce-reduce conflict is to reduce using the production that comes first, textually, in the input grammar specification. and LEX-YACC-gcc output after implementing the given grammar : As we can see from the output reduction on $E \\rightarrow \\text{num}$ is carried out as soon as top of stack contains a num. So, no conflict related to $E \\rightarrow num$. one example : Because of YACC shift preference, even if $3*2$ ($E*E$) handle found on top of the stack at some point of time, it will shift on reading $+$ instead of reducing with $E\\rightarrow E * E$. In this way, the complete input will be pushed into the stack. After that only reduce work starts as shown below. Equal precedence because of the given grammar $E\\rightarrow E+E \\ | \\ E*E$ , (single level) and Right associativity : How YACC handles conflicts Here are the required files ( calc.l and calc.y ) to regenerate the above interpreter. $C$",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar: $$S \\rightarrow (S) \\mid a$$ Let the number of states in SLR (1), LR(1) and LALR(1) parsers for the grammar be $n_1, n_2$ and $n_3$ respectively. The following relationship holds good:",
-          "images": [],
-          "options": [
-            "A. $n_1 < n_2 < n_3$",
-            "B. $n_1 = n_3 < n_2$",
-            "C. $n_1 = n_2 = n_3$",
-            "D. $n_1 \\geq n_3 \\geq n_2$"
-          ],
-          "correct_answer": "B",
-          "explanation": "ans B Both in SLR(1) and LALR(1), states are the LR(0) items (LALR uses LR(1) items to form the states but then merges the ones having same items and different lookaheads) while in LR(1) the states are LR(1) set of items. Number of LR(0) items can never be greater than number of LR(1) items. So, $n_1 = n_3 \\leq n_2$, B choice. If we construct the states for the grammar we can replace $\\leq$ with $<$. Reference: https://gatecse.in/lr-parsing-part-4-slr-clr-lalr-and-summary/",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar: $$E \\rightarrow E + n \\mid E \\times n \\mid n$$ For a sentence $n + n \\times n$, the handles in the right-sentential form of the reduction are:",
-          "images": [],
-          "options": [
-            "A. $n, E + n$ and $E + n \\times n$",
-            "B. $n, E + n$ and $E + E \\times n$",
-            "C. $n, n + n$ and $n + n \\times n$",
-            "D. $n, E + n$ and $E \\times n$"
-          ],
-          "correct_answer": "D",
-          "explanation": "$\\color{red}{n}$$+n*n$ $\\color{red}{E+n}$$*n$ $\\color{red}{E*n}$ $E$ String in $\\color{red}{\\text{RED}}$ indicates handle here So, answer is D",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The grammar $A \\rightarrow AA \\mid (A) \\mid \\epsilon$ is not suitable for predictive-parsing because the grammar is:",
-          "images": [],
-          "options": [
-            "A. ambiguous",
-            "B. left-recursive",
-            "C. right-recursive",
-            "D. an operator-grammar"
-          ],
-          "correct_answer": "A",
-          "explanation": "both A and B can be answers but A is a better answer. Because we have standard procedure for removing left-recursion but ambiguity is not easy to remove. - checking if a given CFG is ambiguous is a undecidable problem.",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements are TRUE? I and II I and IV III and IV I, III and IV",
-          "images": [],
-          "options": [
-            "A. There exist parsing algorithms for some programming languages whose complexities are less than $\\Theta(n^3)$",
-            "B. A programming language which allows recursion can be implemented with static storage allocation.",
-            "C. No L-attributed definition can be evaluated in the framework of bottom-up parsing.",
-            "D. Code improving transformations can be performed at both source language and intermediate code level."
-          ],
-          "correct_answer": "B",
-          "explanation": "Answer is B . Yes there does exist parsing algorithms (e.g. CYK algorithm) which run in $\\Theta(n^3)$. It cannot be implemented with static storage allocation. It needs dynamic memory allocation. Every S-attributed definition is also an L-attributed definition and can be evaluated in the framework of bottom up parsing. True.",
-          "year": 2009,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Match all items in Group 1 with the correct options from those given in Group 2.$$\\begin{array}{|ll|ll|}\\hline \\rlap{\\textbf{Group 1}} & & \\rlap{\\textbf{Group 2}} \\\\\\hline \\text{P.} & \\text{Regular Expression} & \\text{1.} & \\text{Syntax analysis} \\\\\\hline \\text{Q.} & \\text{Pushdown automata} & \\text{2.}& \\text{Code generation} \\\\\\hline \\text{R.}& \\text{Dataflow analysis} & \\text{3.} & \\text{Lexical analysis} \\\\\\hline \\text{S.} & \\text{Register allocation} &\\text{4.} & \\text{Code optimization} \\\\\\hline \\end{array}$$ Related Questions : GATE CSE 2015 Set 2 | Question: 19 GATE CSE 2016 Set 2 | Question: 19 GATE CSE 1990 | Question: 2-ix GATE CSE 2017 Set 2 | Question: 05 GATE CSE 2024 | Set 2 | Question: 11 ed Jan 21, 2025 reply Follow flag Generally they need to specify in the question itself. For this question, by matching other options, we would left with only one choice. 0 0 reply Share Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. $\\text{P-4, Q-1, R-2, S-3}$",
-            "B. $\\text{P-3, Q-1, R-4, S-2}$",
-            "C. $\\text{P-3, Q-4, R-1, S-2}$",
-            "D. $\\text{P-2, Q-1, R-4, S-3}$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Correct Option: B Regular expressions are used in lexical analysis. Pushdown automata is related to context free grammar which is related to syntax analysis. Dataflow analysis is done in code optimization. Register allocation is done in code generation.",
-          "year": 2009,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the CFG with $\\left\\{S, A, B\\right\\}$ as the non-terminal alphabet, $\\{a, b\\}$ as the terminal alphabet, $S$ as the start symbol and the following set of production rules: $S \\rightarrow aB$ $S \\rightarrow bA$ $B \\rightarrow b$ $A \\rightarrow a$ $B \\rightarrow bS$ $A \\rightarrow aS$ $B \\rightarrow aBB$ $A \\rightarrow bAA$ Which of the following strings is generated by the grammar?",
-          "images": [],
-          "options": [
-            "A. $aaaabb$",
-            "B. $aabbbb$",
-            "C. $aabbab$",
-            "D. $abbbba$"
-          ],
-          "correct_answer": "C",
-          "explanation": "$S \\rightarrow aB$ $ \\rightarrow aaBB$ $ \\rightarrow aabB$ $ \\rightarrow aabbS$ $ \\rightarrow aabbaB$ $ \\rightarrow aabbab$ $C$",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following two statements: P: Every regular grammar is LL(1) Q: Every regular set has a LR(1) grammar Which of the following is TRUE ?",
-          "images": [],
-          "options": [
-            "A. Both P and Q are true",
-            "B. P is true and Q is false",
-            "C. P is false and Q is true",
-            "D. Both P and Q are false"
-          ],
-          "correct_answer": "C",
-          "explanation": "Answer: option C LL Grammar: Grammars which can be parsed by an LL parser. LL parser: Parses the input from L eft to right, and constructs a L eftmost derivation of the sentence(i.e. it is always the leftmost non-terminal which is rewritten). LL parser is a top-down parser for a subset of context-free languages . An LL parser is called an LL(k) parser if it uses k tokens of lookahead when parsing a sentence and can do it without backtracking. Consider a Grammar $G$: $S \\rightarrow a\\mid aa$ This grammar is Regular but cannot be parsed by a LL(1) parser w/o backtracking, because here, lookahead is of 1 symbol only and in the grammar for both productions, parser while looking at just one(first) symbol, which is $a$, fails to select the correct rule for parsing. Hence, not every Regular grammar is LL(1); Statement P is False. LR Grammar: Grammars which can be parsed by LR parsers. LR Parser: They are a type of bottom-up parsers that efficiently handle deterministic context-free languages(DCFL) in guaranteed linear time. All Regular Languages are also DCFL. Hence, they all can be parsed by a LR(1) grammar. Hence, Statement Q is True.",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar with non-terminals $N=\\left\\{S,C,S_1\\right\\}$, terminals $T=\\left\\{a, b, i, t, e\\right\\}$, with $S$ as the start symbol, and the following set of rules: $S \\rightarrow iCtSS_1 \\mid a$ $S_1 \\rightarrow eS \\mid \\epsilon$ $C \\rightarrow b$ The grammar is NOT LL(1) because:",
-          "images": [],
-          "options": [
-            "A. it is left recursive",
-            "B. it is right recursive",
-            "C. it is ambiguous",
-            "D. it is not context-free"
-          ],
-          "correct_answer": "C",
-          "explanation": "Here, we can expand any one of $S_1$ to $\\in$ and other to $ea$, but which one will it be need not matter, because in the end we will still get the same string. This means that the Grammar is Ambiguous. $\\text{LL(1)}$ cannot be ambiguous. Here's a Proof for that $${\\color{Magenta}{\\underline{\\textbf{LL(1) Derivations}}}} $$ ${\\color{Blue}{\\textbf{L}} }$eft to Right Scan of input ${\\color{Blue}{\\textbf{L}} }$eftmost Derivation ${\\color{Blue}{\\textbf{(1)}} }$ look ahead $1$ token at each step $\\text{Alternative characterization of LL(1) Grammars:}$ Whenever $A \\rightarrow \\alpha \\mid \\beta \\in G$ $\\text{FIRST}(\\alpha) \\cap \\text{FIRST}(\\beta) = \\{\\},$ and If $\\alpha \\overset{\\ast}{\\implies} \\varepsilon$ then $\\text{FIRST}(\\beta) \\cap \\text{FOLLOW}(A) = \\{\\}.$ $\\textbf{Corollary:}$ No Ambiguous Grammar is $\\text{LL(1)}.$",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which one of the following is a top-down parser?",
-          "images": [],
-          "options": [
-            "A. Recursive descent parser.",
-            "B. Operator precedence parser.",
-            "C. An LR(k) parser.",
-            "D. An LALR(k) parser."
-          ],
-          "correct_answer": "A",
-          "explanation": "Recursive descent parser-TOP DOWN PARSER Operator precedence parser-BOTTOM UP PARSER An LR(k) parser.-BOTTOM UP PARSER An LALR(k) parser-BOTTOM UP PARSER",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar G: $S \\rightarrow bS \\mid aA \\mid b$ $A \\rightarrow bA \\mid aB$ $B \\rightarrow bB \\mid aS \\mid a$ Let $N_a(w)$ and $N_b(w)$ denote the number of a’s and b’s in a string $\\omega$ respectively. The language $L(G)$ over $\\left\\{a, b\\right\\}^+$ generated by $G$ is",
-          "images": [],
-          "options": [
-            "A. $\\left\\{w \\mid N_a(w) > 3N_b(w)\\right\\}$",
-            "B. $\\left\\{w \\mid N_b(w) > 3N_a(w)\\right\\}$",
-            "C. $\\left\\{w \\mid N_a(w) = 3k, k \\in \\left\\{0, 1, 2, …\\right\\}\\right\\}$",
-            "D. $\\left\\{w \\mid N_b(w) = 3k, k \\in \\left\\{0, 1, 2, …\\right\\}\\right\\}$"
-          ],
-          "correct_answer": "C",
-          "explanation": "above CFG generate string $b$, $aaa$.. $b$ will eliminate options A and D $aaa$ eliminate options B. C is answer i.e. number of $a = 3k, k =0,1,2$....",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar with the following translation rules and $E$ as the start symbol$$\\begin{array}{lll} E \\rightarrow E_ 1\\# \\: T & \\qquad\\left\\{E.value = E_1.value * T.value\\right\\}\\\\ \\qquad\\mid T & \\qquad \\{E.value = T.value\\}\\\\ T \\rightarrow T_1 \\& \\: F &\\qquad \\{T.value = T_1.value + F.value\\}\\\\ \\qquad\\mid F&\\qquad \\{T.value = F.value\\}\\\\ F \\rightarrow \\text{num}&\\qquad \\{F.value=num.value\\} \\end{array}$$Compute E.value for the root of the parse tree for the expression:$2$ # $3$ & $5$ # $6$ & $4$",
-          "images": [],
-          "options": [
-            "A. $200$",
-            "B. $180$",
-            "C. $160$",
-            "D. $40$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Here # is multiplication and & is addition by semantics rules given in the question. By observation of productions, here &(+) is higher precedence than #(*), because & is far from starting symbol both &,# are left associative So, we can solve the expression as $((2*(3+5))*(6+4)) =160$ Answer is ( C ).",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider a program $P$ that consists of two source modules $M_1$ and $M_2$ contained in two different files. If $M_1$ contains a reference to a function defined in $M_2$ the reference will be resolved at",
-          "images": [],
-          "options": [
-            "A. Edit time",
-            "B. Compile time",
-            "C. Link time",
-            "D. Load time"
-          ],
-          "correct_answer": "C",
-          "explanation": "answer - C . Each module is compiled separately and then linked together to make the executable. The below commands shows how to do this for two modules $c1.c$ and $c2.c$ using $gcc$. gcc -c c1.c -o c1.o gcc -c c2.c -o c2.o gcc c1.o c2.o -o C.exe",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following grammar rules violate the requirements of an operator grammar? $P, Q, R$ are nonterminals, and $r, s, t$ are terminals. (I) only (I) and (III) only (II) and (III) only (III) and (IV) only",
-          "images": [],
-          "options": [
-            "A. $P \\rightarrow Q R$",
-            "B. $P \\rightarrow Q s R$",
-            "C. $P \\rightarrow \\: \\varepsilon$",
-            "D. $P \\rightarrow Q t R r $"
-          ],
-          "correct_answer": "B",
-          "explanation": "answer is B . Operator grammar cannot contain Nullable variable Two adjacent non-terminal on $\\text{RHS}$ of production",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following function void swap(int a, int b) { int temp; temp = a; a = b; b = temp; } In order to exchange the values of two variables $x$ and $y$.",
-          "images": [],
-          "options": [
-            "A. call $swap(x, y)$",
-            "B. call $swap(\\&x, \\&y)$",
-            "C. $swap (x, y)$ cannot be used as it does not return any value",
-            "D. $swap (x, y)$ cannot be used as the parameters are passed by value"
-          ],
-          "correct_answer": "D",
-          "explanation": "ans ( D ). Option A will not exchange the values of $x$ and $y$ because parameters are passed by value in C. i.e., the code is exchanging $x'$ and $y'$ which are having the values of $x$ and $y$ respectively. Option B will not swap the value void swap(int a, int b) Here, it is wrong to pass in address (int*) as the parameters are of int type, even sizeof int and int* varies depending on the compiler. Now, even if ignoring this error, the given code would not exchange the values of $x$ and $y$ as it is merely exchanging $p_1'$ and $p_2'$ where $p_1'$ and $p_2'$ are containing the copies of the addresses of $x$ and $y$ respectively. (Even addresses are passed by value in C language). Option C is false, return value is not required for exchanging the variables. Option D is correct. We cannot use $swap(x,y)$ because parameters are passed by value. Only way now to exchange the variables are by passing their addresses and then modifying the contents using the de-referencing operator $(*).$",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following statements about the context free grammar $$G = \\left \\{ S \\rightarrow SS, S \\rightarrow ab, S \\rightarrow ba, S \\rightarrow \\epsilon \\right \\} $$ Which combination below expresses all the true statements about $G$? I only I and III only II and III only I, II and III",
-          "images": [],
-          "options": [
-            "A. $G$ is ambiguous",
-            "B. $G$ produces all strings with equal number of $a$’s and $b$’s",
-            "C. $G$ can be accepted by a deterministic PDA."
-          ],
-          "correct_answer": "B",
-          "explanation": "True. $G$ is ambiguous. E.g. the string $ab$ has multiple derivation trees like $S \\rightarrow SS \\rightarrow abS \\rightarrow ab$, and $S \\rightarrow ab$. False. $G$ does not produce all strings with equal no. of $a$`s and $b$`s. ($aabb$ cannot be generated). True. The given grammar $G$ generates the language $(ab+ba)^*$, which is Regular and therefore also DCFL. So, a D-PDA can be designed for $G$. Hence, the answer is option B .",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following is NOT an advantage of using shared, dynamically linked libraries as opposed to using statistically linked libraries?",
-          "images": [],
-          "options": [
-            "A. Smaller sizes of executable files",
-            "B. Lesser overall page fault rate in the system",
-            "C. Faster program startup",
-            "D. Existing programs need not be re-linked to take advantage of newer versions of libraries"
-          ],
-          "correct_answer": "C",
-          "explanation": "option C: DLL takes more time in program setup (in loading and linking phase to set up the global offset table and load and link the required libraries) Since DLLs are separated from executable, the size of executable becomes smaller. Since DLLs are shared among multiple executables, the total memory usage of the system goes down and hence overall page fault rate decreases. Dynamic linking takes place during program runtime. So, if a DLL is replaced to a new version, it will automatically get linked during runtime. There is no explicit relinking required as in the case of static linking. (This works by linking the DLL calls to Global Offset Table and the contents of this table is filled during program run. A simple jump in static linking becomes an indirect jump in dynamic linking). Refer: Galvin section 8.1.5, Dynamic Linking and Shared Libraries",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the syntax directed definition shown below.$$\\begin{array}{ll} S \\rightarrow \\mathbf{ id :=} E&\\qquad \\{gen(\\mathbf{ id}.place = E.place;);\\}\\\\ E \\rightarrow E_1 + E_2 &\\qquad \\{t = newtemp();\\\\ &\\qquad gen(t = E_1.place + E_2.place;);\\\\ &\\qquad E.place = t;\\}\\\\ E \\rightarrow id&\\qquad \\{E.place = \\mathbf{id}.place;\\} \\end{array}$$Here, $gen$ is a function that generates the output code, and $newtemp$ is a function that returns the name of a new temporary variable on every call. Assume that $t_i'$s are the temporary variable names generated by $newtemp$. For the statement $\\text{‘}X : = Y + Z\\text{'},$ the $3$-address code sequence generated by this definition is",
-          "images": [],
-          "options": [
-            "A. $X = Y + Z$",
-            "B. $t_1 = Y+Z; X=t_1$",
-            "C. $t_1 =Y; t_2=t_1 +Z; X=t_2$",
-            "D. $t_1 =Y; t_2=Z; t_3=t_1+t_2; X=t_3$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Answer (B)",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the translation scheme shown below. $S \\rightarrow T\\;R$ $R \\rightarrow + T \\{\\text{print}(‘+’);\\} R\\mid \\varepsilon$ $T \\rightarrow$ num $\\{\\text{print}$( num. val)$;\\}$ Here num is a token that represents an integer and num .val represents the corresponding integer value. For an input string ‘$9 + 5 + 2$’, this translation scheme will print",
-          "images": [],
-          "options": [
-            "A. $9 + 5 + 2$",
-            "B. $9 \\ 5 + 2 +$",
-            "C. $9 \\ 5 \\ 2 + +$",
-            "D. $+ + 9 \\ 5 \\ 2$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Correct Option: B $9\\ 5+2+$",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar shown below. $S \\rightarrow C \\ C$ $C \\rightarrow c \\ C \\mid d$ This grammar is",
-          "images": [],
-          "options": [
-            "A. LL(1)",
-            "B. SLR(1) but not LL(1)",
-            "C. LALR(1) but not SLR(1)",
-            "D. LR(I) but not LALR(1)"
-          ],
-          "correct_answer": "A",
-          "explanation": "ans is A $First(S)=First(C)=\\{c,d\\}$ There are no multiple entries in single row of parsing table hence grammar is LL1 Note : If we have $A \\rightarrow B\\mid C,$ for grammar to be LL(1) first(B) intersection First(C) should be null otherwise grammar is not LL1. If First(B) contains $\\epsilon$ then Follow(A) intersection First(C) should be null. Using this we can say grammar is LL(1) or not without constructing parsing table. An $\\epsilon$ free LL(1) grammar is also SLR(1) and hence LALR(1) and LR(1) too.",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the grammar shown below $S \\rightarrow i E t S S’ \\mid a$ $S’ \\rightarrow e S \\mid \\epsilon$ $E \\rightarrow b$ In the predictive parse table, $M,$ of this grammar, the entries $M[S’ , e]$ and $M[S’ , \\$]$ respectively are",
-          "images": [],
-          "options": [
-            "A. $\\{S’ \\rightarrow e S\\}$ and $\\{S’ \\rightarrow \\epsilon\\}$",
-            "B. $\\{S’ \\rightarrow e S\\}$ and $\\{ \\}$",
-            "C. $\\{S’ \\rightarrow \\epsilon\\}$ and $\\{S’ \\rightarrow \\epsilon\\}$",
-            "D. $\\{S’ \\rightarrow e S, S’ \\rightarrow \\varepsilon$} and $\\{S’ \\rightarrow \\epsilon\\}$"
-          ],
-          "correct_answer": "D",
-          "explanation": "$\\text{FIRST} (S)=\\{i,a\\}$ $\\text{FIRST}(S')=\\{e, \\epsilon\\}$ $\\text{FIRST}(E)=\\{b\\}$ $\\text{FOLLOW}(S')=\\{e,\\$\\}$ Only when $\\text{FIRST}$ contains $\\epsilon,$ we need to consider $\\text{FOLLOW}$ for getting the parsing table entry. $M[S',e]=\\{S' \\rightarrow eS(\\text{FIRST}),S' \\rightarrow \\epsilon \\;(\\text{considering }\\text{FOLLOW})\\}$ $M[S',\\$]=\\{S \\rightarrow \\epsilon\\}$ $$\\begin{array}{|l|c|c|c|l|c|c|} \\hline \\text{} & \\text{$a$} & \\text{$i$} & \\text{$b$} & \\text{$e$} & \\text{$t$} & \\text{\\$} \\\\\\hline \\text{$S$} & \\text{$S \\rightarrow a$} &\\text{$S \\rightarrow ietSS'$} &\\text{} &\\text{} &\\text{} \\\\\\hline \\text{$S'$} & \\text{} & \\text{} & \\text{} & \\text{$S' \\rightarrow eS$} ,&\\\\ &&&& \\text{$S' \\rightarrow \\epsilon$} & \\text{} & \\text{$S' \\rightarrow \\epsilon$} \\\\\\hline E & \\text{} & \\text{} & \\text{$E \\rightarrow b$} & \\text{} & \\text{} & \\text{} \\\\\\hline \\end{array}$$ Answer is D",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "In a bottom-up evaluation of a syntax directed definition, inherited attributes can",
-          "images": [],
-          "options": [
-            "A. always be evaluated",
-            "B. be evaluated only if the definition is L-attributed",
-            "C. be evaluated only if the definition has synthesized attributes",
-            "D. never be evaluated"
-          ],
-          "correct_answer": "B",
-          "explanation": "is false. If the grammar is not L-attributed; we cannot evaluate the inherited attributes in a bottom-up parse. In fact even for some L-attributed grammar, bottom-up parse is not possible for inherited attributes. http://infolab.stanford.edu/~ullman/dragon/slides2.pdf https://gateoverflow.in/?qa=blob&qa_blobid=14587629398289520039 is true. Is there any non L-attributed grammar which can be parsed by a bottom-up parser? No, as shown in the above link. In fact only for the L-attributed grammar made from a LL(1) grammar, we can always guarantee a bottom-up parsing. Even for LR(1) grammar, bottom-up parsing is not a guarantee for all inherited attributes. is false. Some L-attributed grammars (including those with no synthesized attributes) can be evaluated by a bottom-up parser. is false for above-told reasons. A nice PDF for the same :- https://acm.sjtu.edu.cn/w/images/a/a1/Compiler2013-lec07.pdf",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Assume that the SLR parser for a grammar G has $n_1$ states and the LALR parser for G has $n_2$ states. The relationship between $n_1$ and $n_2$ is",
-          "images": [],
-          "options": [
-            "A. $n_1$ is necessarily less than $n_2$",
-            "B. $n_1$ is necessarily equal to $n_2$",
-            "C. $n_1$ is necessarily greater than $n_2$",
-            "D. None of the above"
-          ],
-          "correct_answer": "B",
-          "explanation": "no. of states in $\\text{SLR}$ and $\\text{LALR}$ are equal. and no. of states in $\\text{SLR}$ and $\\text{LALR}$ are less than or equal to $\\text{LR(1).}$ $B$",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following suffices to convert an arbitrary CFG to an LL(1) grammar?",
-          "images": [],
-          "options": [
-            "A. Removing left recursion alone",
-            "B. Factoring the grammar alone",
-            "C. Removing left recursion and factoring the grammar",
-            "D. None of the above"
-          ],
-          "correct_answer": "D",
-          "explanation": "$LL(1)$ parser is top down parser. For top down parsers, the grammar should be unambiguous, deterministic and should not be left recursive. All the $3$ conditions must be satisfied for $LL(1)$ parsers. Now, even if all $3$ conditions are satisfied we cannot get an $LL(1)$ or even $LL(k)$ (for any $k$) grammar for even a $DCFG. $This is because there are $DCFLs $ which does not have an $LL(k)$ grammar (see ref below). On the other hand for any $DCFL,$ we can always have an $LR(1)$ grammar. http://mathoverflow.net/questions/31733/can-i-have-an-ll-grammar-for-every-deterministic-context-free-language So, Option $D$ is correct.",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the following grammar $S \\rightarrow S * E$ $S \\rightarrow E$ $E \\rightarrow F + E$ $E \\rightarrow F$ $F \\rightarrow id$ Consider the following LR(0) items corresponding to the grammar above Given the items above, which two of them will appear in the same set in the canonical sets-of-items for the grammar? i and ii ii and iii i and iii None of the above",
-          "images": [],
-          "options": [
-            "A. $S \\rightarrow S *.E$",
-            "B. $E \\rightarrow F. + E$",
-            "C. $E \\rightarrow F + .E$"
-          ],
-          "correct_answer": "D",
-          "explanation": "$\\Rightarrow$ NOT possible for these three items to be in same state $D$",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Dynamic linking can cause security concerns because",
-          "images": [],
-          "options": [
-            "A. Security is dynamic",
-            "B. The path for searching dynamic libraries is not known till runtime",
-            "C. Linking is insecure",
-            "D. Cryptographic procedures are not available for dynamic linking"
-          ],
-          "correct_answer": "B",
-          "explanation": "Nonsense option, No idea why it is here. The path for searching dynamic libraries is not known till runtime -> This seems most This is not true. Linking in itself not insecure. There is no relation between Cryptographic procedures & Dynamic linking.",
-          "year": 2002,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "To evaluate an expression without any embedded function calls",
-          "images": [],
-          "options": [
-            "A. One stack is enough",
-            "B. Two stacks are needed",
-            "C. As many stacks as the height of the expression tree are needed",
-            "D. A Turing machine is needed in the general case"
-          ],
-          "correct_answer": "A",
-          "explanation": "Expression without any calls in it $\\implies 1+2\\ast3-4$ Expression with embedded calls $\\implies 1 + \\text{fun}1(a,b,c) \\ast \\text{fun}2(3.4,58) - \\text{fun}3(x,yz)$; First we can convert Infix to Postfix using single stack (Using it as operator stack) Then we can evaluate that expression using Single stack.",
-          "year": 2002,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements is false?",
-          "images": [],
-          "options": [
-            "A. An unambiguous grammar has same leftmost and rightmost derivation",
-            "B. An LL(1) parser is a top-down parser",
-            "C. LALR is more powerful than SLR",
-            "D. An ambiguous grammar can never be LR(k) for any k"
-          ],
-          "correct_answer": "A",
-          "explanation": "Correct Option: A (A) We can not have different Left Most Derivation and Right Most Derivation parse trees BUT we can certainly have different LMD and RMD for a given string. (LMD and RMD here refer to the order of various productions used for derivation which could be different.) (D) is wrong w.r.t. question because IT IS TRUE that any LR(k) IS NEVER AMBIGUOUS, so an ambiguous can never be an LR(K) for any k, no matter how large k becomes. (B) and (C) can not be the answer because LL(1) is a top-down parser, and LALR is more powerful than SLR. So both are TRUE.",
-          "year": 2001,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The process of assigning load addresses to the various parts of the program and adjusting the code and the data in the program to reflect the assigned addresses is called",
-          "images": [],
-          "options": [
-            "A. Assembly",
-            "B. parsing",
-            "C. Relocation",
-            "D. Symbol resolution"
-          ],
-          "correct_answer": "C",
-          "explanation": "Relocation is the process of assigning load addresses to position-dependent code of a program and adjusting the code and data in the program to reflect the assigned addresses. Hence Option C is Ans Symbol resolution is the process of searching files and libraries to replace symbolic references or names of libraries with actual usable addresses in memory before running a program.",
-          "year": 2001,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Given the following expression grammar: $$\\begin{align} E &\\to E * F \\mid F + E \\mid F \\\\[1em] F &\\to F - F \\mid id \\end{align}$$ Which of the following is true?",
-          "images": [],
-          "options": [
-            "A. $*$ has higher precedence than $+$",
-            "B. $-$ has higher precedence than $*$",
-            "C. $+$ and $-$ have same precedence",
-            "D. $+$ has higher precedence than $*$"
-          ],
-          "correct_answer": "B",
-          "explanation": "Correct Option: B operator which is at a lower level in the grammar is termed to have higher precedence.",
-          "year": 2000,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following derivations does a top-down parser use while parsing an input string? The input is scanned from left to right.",
-          "images": [],
-          "options": [
-            "A. Leftmost derivation",
-            "B. Leftmost derivation traced out in reverse",
-            "C. Rightmost derivation",
-            "D. Rightmost derivation traced out in reverse"
-          ],
-          "correct_answer": "A",
-          "explanation": "Top-down parser - Leftmost derivation Bottom-Up parser - Reverse of rightmost derivation $A$",
-          "year": 2000,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "The number of tokens in the following C statement is printf(\"i=%d, &i=%x\", i, &i); Related Questions : ISRO CSE 2020 | Question: 13",
-          "images": [],
-          "options": [
-            "A. $3$",
-            "B. $26$",
-            "C. $10$",
-            "D. $21$"
-          ],
-          "correct_answer": "C",
-          "explanation": "answer - C Tokens are: printf ( \"i=%d, &i=%x\" , i , & i ) ;",
-          "year": 2000,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "If $G$ is a context free grammar and $w$ is a string of length $l$ in $L(G)$, how long is a derivation of $w$ in $G$, if $G$ is in Chomsky normal form?",
-          "images": [],
-          "options": [
-            "A. $2l$",
-            "B. $2l +1$",
-            "C. $2l -1$",
-            "D. $l$"
-          ],
-          "correct_answer": "C",
-          "explanation": "Chomsky Normal Form (If all of its production rules are of the form): $A \\rightarrow BC$ or $A \\rightarrow a$ or $S \\rightarrow \\varepsilon$ where $A, B$ and $C$ are nonterminal symbols, $a$ is a terminal symbol ($a$ symbol that represents a constant value), $S$ is the start symbol, and $\\varepsilon$ is the empty string. Also, neither $B$ nor $C$ may be the start symbol, and the third production rule can only appear if $\\varepsilon$ is in $L(G)$, namely, the language produced by the context-free grammar $G$. Applying productions of the first form will increase the number of nonterminals from $k$ to $k + 1$, since you replace one nonterminal $(-1)$ with two nonterminals $(+2)$ for a net gain of $+1$ nonterminal. Since you start with one nonterminal, this means you need to do $l - 1$ productions of the first form. You then need $l$ more of the second form to convert the nonterminals to terminals, giving a total of $l + (l - 1) = 2l - 1$ productions. $C$",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Consider the $\\text{SLR(1)}$ and $\\text{LALR (1)}$ parsing tables for a context free grammar. Which of the following statement is/are true?",
-          "images": [],
-          "options": [
-            "A. The goto part of both tables may be different.",
-            "B. The shift entries are identical in both the tables.",
-            "C. The reduce entries in the tables may be different.",
-            "D. The error entries in tables may be different"
-          ],
-          "correct_answer": "B;C;D",
-          "explanation": "Goto part & shift entries must be the same. Reduce entries & error entries may be different due to conflicts. , C, D.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "For a context free grammar, FOLLOW(A) is the set of terminals that can appear immediately to the right of non-terminal $A$ in some \"sentential\" form. We define two sets LFOLLOW(A) and RFOLLOW(A) by replacing the word \"sentential\" by \"left sentential\" and \"right most sentential\" respectively in the definition of FOLLOW (A). 0 reply Please log in or register to add a comment.",
-          "images": [],
-          "options": [
-            "A. FOLLOW(A) and LFOLLOW(A) may be different.",
-            "B. FOLLOW(A) and RFOLLOW(A) are always the same.",
-            "C. All the three sets are identical.",
-            "D. All the three sets are different."
-          ],
           "correct_answer": "A;B",
-          "explanation": "Ans - A,B, $\\textsf{LFOLLOW}$ may be different from $\\textsf{FOLLOW}$ but $\\textsf{RFOLLOW}$ and $\\textsf{FOLLOW}$ will be the same Consider the following grammar $S \\rightarrow AB$ $A \\rightarrow a$ $B \\rightarrow b$ Now the only string derivable is $\\{ ab \\}$. Let's find $\\textsf{FOLLOW}$(A) in all cases : $\\textsf{FOLLOW}(A):$ set of terminals that can appear immediately to the right of non-terminal $A$ in some \"sentential \" form $S \\rightarrow AB \\rightarrow Ab \\rightarrow ab$ Here, we notice only '$b$' can appear to the right of $A$. $\\textsf{FOLLOW}$$(A) = \\{ b \\}$ $\\textsf{LFOLLOW}(A):$ set of terminals that can appear immediately to the right of non-terminal $A$ in some \"left sentential\" form $S \\rightarrow AB \\rightarrow aB \\rightarrow ab$ Here, we notice no terminal can appear to the right of $A$. $\\textsf{LFOLLOW}(A) = \\{\\}$ $\\textsf{RFOLLOW}(A):$ set of terminals that can appear immediately to the right of non-terminal $A$ in some \"right most sentential\" form $S \\rightarrow AB \\rightarrow Ab \\rightarrow ab$ Here, we notice only '$b$' can appear to the right of $A$. $\\textsf{RFOLLOW}(A) = \\{ b \\}$ The above example proves that $\\textsf{LFOLLOW}$ may not always be the same as $\\textsf{FOLLOW}$ but does not prove that $\\textsf{RFOLLOW}$ and $\\textsf{FOLLOW}$ will always be the same. In $\\textsf{FOLLOW}(A),$ we add all terminals which appear on the immediate right of A in some sentential form. In $\\textsf{RFOLLOW}(A),$ we add all terminals which appear on the immediate right of A in some right sentential form. Since a right sentential form is also a sentential form, it is clear that $\\textsf{FOLLOW}(A) \\supseteq \\textsf{RFOLLOW}(A) \\to (1)$ Now, we have to prove $\\textsf{RFOLLOW}(A) \\supseteq \\textsf{FOLLOW}(A) $ for which we need to show that any terminal which gets added to $\\textsf{FOLLOW}(A)$ must also be added to $\\textsf{RFOLLOW}(A).$ Or in other words, any terminal which can appear on the immediate right of a non-terminal in some sentential form (a sentential form can be either left sentential or right sentential or neither) must also appear to the immediate-right of the same non-terminal in some $\\textbf{right-sentential}$ form. A terminal $t$ can appear on the immediate right of a non-terminal $A$ in a sentential form if $t$ is already like that in the grammar production (say $S \\to \\dots At\\dots$ it $t$ produced by some reduction (say $S\\to \\dots AB \\dots, B \\to t)$ Now, since we are looking at $\\textsf{immediate right}$ terminal in the sentential form, it means leftmost derivations cannot produce the terminal we need, since here $A$ will be reduced before we do reduction for the non-terminal to its immediate right. In fact the only way we can get this terminal $t$ in a sentential form is if we reduce the immediate right non-terminal of $A.$ If we do the rightmost derivation we are guaranteed to do this and rightmost derivation also ensures that all non-terminals to the right of $A$ are already derived and so we get all possible terminals to the right even in cases where the immediate right non-terminal derives empty string. Thus, $\\textsf{RFOLLOW}(A) \\supseteq \\textsf{FOLLOW}(A) \\to (2)$ From (1) and (2), we get $\\textsf{FOLLOW}(A) = \\textsf{RFOLLOW}(A).$",
+          "explanation": "The answer is (A) and (B). Virtual memory concept is independent of size of main memory and depends only on the availability of the secondary storage. MAR holds the address generated by CPU and this obviously limits the total virtual memory address space.",
           "year": 0,
           "exam_type": "GATE",
           "question_type": "MSQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "Indicate all the true statements from the following:",
+          "topic_name": "co-and-architecture",
+          "question_text": "Delayed branching can help in the handling of control hazards For all delayed conditional branch instructions, irrespective of whether the condition evaluates to true or false,",
           "images": [],
           "options": [
-            "A. Recursive descent parsing cannot be used for grammar with left recursion.",
-            "B. The intermediate form for representing expressions which is best suited for code optimization is the postfix form.",
-            "C. A programming language not supporting either recursion or pointer type does not need the support of dynamic memory allocation.",
-            "D. Although C does not support call-by-name parameter passing, the effect can be correctly simulated in C",
-            "E. No feature of Pascal typing violates strong typing in Pascal."
-          ],
-          "correct_answer": "A;D",
-          "explanation": "is TRUE. Left recursive grammars if used directly in recursive descent parsing causes an infinite loop. So, left recursion must be removed before giving to a recursive descent parser. is a strong statement- but I do not have any proof or reference for this- so for now I consider this FALSE. is false. The language can have dynamic data types which requires dynamically growing memory when data type size increases. is true and using macro we can do this. out of syllabus now.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "A “link editor” is a program that:",
-          "images": [],
-          "options": [
-            "A. matches the parameters of the macro-definition with locations of the parameters of the macro call",
-            "B. matches external names of one program with their location in other programs",
-            "C. matches the parameters of subroutine definition with the location of parameters of subroutine call.",
-            "D. acts as a link between text editor and the user",
-            "E. acts as a link between compiler and the user program"
-          ],
-          "correct_answer": "B",
-          "explanation": "Link editor or (linker ) performs external symbol resolution relocation. ANS: B Matches external names of one program with their location in other programs.",
-          "year": 0,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "An LALR(1) parser for a grammar G can have shift-reduce (S-R) conflicts if and only if",
-          "images": [],
-          "options": [
-            "A. The SLR(1) parser for G has S-R conflicts",
-            "B. The LR(1) parser for G has S-R conflicts",
-            "C. The LR(0) parser for G has S-R conflicts",
-            "D. The LALR(1) parser for G has reduce-reduce conflicts"
-          ],
-          "correct_answer": "B",
-          "explanation": "Both LALR(1) and LR(1) parser uses LR(1) set of items to form their parsing tables. And LALR(1) states can be found by merging LR(1) states of LR(1) parser that have the same set of first components of their items. i.e. if LR(1) parser has $2$ states I and J with items $A \\rightarrow a.bP$,$x$ and $A \\rightarrow a.bP$,$y$ respectively, where $x$ and $y$ are look ahead symbols, then as these items are same with respect to their first component, they can be merged together and form one single state, let’s say $K$. Here we have to take union of look ahead symbols. After merging, State $K$ will have one single item as $A \\rightarrow a.bP$,$x$,$y$ . This way LALR(1) states are formed ( i.e. after merging the states of LR(1) ). Now, $S-R$ conflict in LR(1) items can be there whenever a state has items of the form : A-> a.bB , p C-> d. , b i.e. it is getting both shift and reduce at symbol b, hence a conflict. Now, as LALR(1) have items similar to LR(1) in terms of their first component, shift-reduce form will only take place if it is already there in LR(1) states. If there is no S-R conflict in LR(1) state it will never be reflected in the LALR(1) state obtained by combining LR(1) states. $B$",
-          "year": 2008,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following are true? II and V only I, III and IV only I, II and V only II, III and V only",
-          "images": [],
-          "options": [
-            "A. A programming language which does not permit global variables of any kind and has no nesting of procedures/functions, but permits recursion can be implemented with static storage allocation",
-            "B. Multi-level access link (or display) arrangement is needed to arrange activation records only if the programming language being implemented has nesting of procedures/functions",
-            "C. Recursion in programming languages cannot be implemented with dynamic storage allocation",
-            "D. Nesting procedures/functions and recursion require a dynamic heap allocation scheme and cannot be implemented with a stack-based allocation scheme for activation records",
-            "E. Programming languages which permit a function to return a function as its result cannot be implemented with a stack-based storage allocation scheme for activation records"
+            "A. The instruction following the conditional branch instruction in memory is executed",
+            "B. The first instruction in the fall through path is executed",
+            "C. The first instruction in the taken path is executed",
+            "D. The branch takes longer to execute than any other instruction"
           ],
           "correct_answer": "A",
-          "explanation": "False. Recursion cannot be implemented using static allocation. True. Yes, we do need multi level access link in case of nested functions. Each level to traverse ARB of same level of nesting. False. Recursion can only be implemented using dynamic memory allocation. False. Recursion is done using memory in stack (ARBs in stack), not in heap. True. Yes, they cannot, once a function returns its activation record is no longer valid, so we cannot return a function as a result. So, option ( A ) is correct.",
+          "explanation": "Answer is A. In order to avoid the pipeline delay due to conditional branch instruction, a suitable instruction is placed below the conditional branch instruction such that the instruction will be executed irrespective of whether branch is taken or not and won't affect the program behaviour.",
           "year": 2008,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "Some code optimizations are carried out on the intermediate code because",
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a machine with a $2$-way set associative data cache of size $64\\text{Kbytes}$ and block size $16\\text{bytes}$. The cache is managed using $32\\;\\text{bit}$ virtual addresses and the page size is $4\\text{Kbytes}$. A program to be run on this machine begins as follows: double ARR[1024][1024]; int i, j; /*Initialize array ARR to 0.0 */ for(i = 0; i < 1024; i++) for(j = 0; j < 1024; j++) ARR[i][j] = 0.0; The size of double is $8\\text{Bytes}$. Array $\\text{ARR}$ is located in memory starting at the beginning of virtual page $\\textsf{0xFF000}$ and stored in row major order. The cache is initially empty and no pre-fetching is done. The only data memory references made by the program are those to array $\\text{ARR}$. The total size of the tags in the cache directory is:",
           "images": [],
           "options": [
-            "A. They enhance the portability of the compiler to the target processor",
-            "B. Program analysis is more accurate on intermediate code than on machine code",
-            "C. The information from dataflow analysis cannot otherwise be used for optimization",
-            "D. The information from the front end cannot otherwise be used for optimization"
-          ],
-          "correct_answer": "A",
-          "explanation": "Answer: A Option (B) is also true. But the main purpose of doing some code-optimization on intermediate code generation is to enhance the portability of the compiler to target processors. So Option A) is more suitable here. Intermediate code is machine/architecture independent code. So a compiler can optimize it without worrying about the architecture on which the code is going to execute (it may be the same or the other). So that kind of compiler can be used by multiple different architectures. In contrast to that, suppose code optimization is done on target code, which is machine/architecture dependent, then the compiler has be specific about the optimizations on that kind of code. In this case the compiler can't be used by multiple different architectures, because the target code produced on different architectures would be different. Hence portability reduces here. ref- http://quiz.geeksforgeeks.org/code-generation-and-optimization/",
-          "year": 2008,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following describes a handle (as applicable to LR-parsing) appropriately?",
-          "images": [],
-          "options": [
-            "A. It is the position in a sentential form where the next shift or reduce operation will occur",
-            "B. It is non-terminal whose production will be used for reduction in the next step",
-            "C. It is a production that may be used for reduction in a future step along with a position in the sentential form where the next shift or reduce operation will occur",
-            "D. It is the production $p$ that will be used for reduction in the next step along with a position in the sentential form where the right hand side of the production may be found"
+            "A. $32\\text{Kbits}$",
+            "B. $34\\text{Kbits}$",
+            "C. $64\\text{Kbits}$",
+            "D. $68\\text{Kbits}$"
           ],
           "correct_answer": "D",
-          "explanation": "A sentential form is the start symbol $S$ of a grammar or any string in $(V \\cup T)^*$ that can be derived from $S$. Consider the linear grammar $(\\{S, B\\}, \\{a, b\\}, S, \\{S \\rightarrow aS, S \\rightarrow B, B \\rightarrow bB, B \\rightarrow \\lambda \\})$. A derivation using this grammar might look like this: $S \\Rightarrow aS \\Rightarrow aB \\Rightarrow abB \\Rightarrow abbB \\Rightarrow abb$ Each of $\\{S, aS, aB, abB, abbB, abb\\}$ is a sentential form. Because this grammar is linear, each sentential form has at most one variable. Hence there is never any choice about which variable to expand next. Here, in option D the sentential forms are same but generated differently coz we are using here Bottom Up production. Handle: for example the grammar is: $$\\begin{align*} E &\\rightarrow E+n\\\\ E &\\rightarrow E*n\\\\ E &\\rightarrow n \\end{align*}$$ Then say to derive string $n+n*n$: these are three different handles shown in $3$ different colors = $\\left\\{ n, E+n, E*n \\right \\}$ that's what option D says",
+          "explanation": "Number of sets $=\\dfrac{\\text{cache size}}{\\text{size of a set}}$ $=\\dfrac{64\\ KB}{(16\\ B\\times 2)}$ (two blocks per set) $=2\\ K=2^{11}$ So, we need $11\\text{-bits}$ for set indexing. Number of WORD bits required $=4$ as a cache block consists of $16\\text{ bytes}$ and we need $4\\text{-bits}$ to address each of them. So, number of tag bits $=32-11-4=17$ Total size of the tag$= 17\\times \\text{Number of cache blocks}$ $= 17\\times 2^{11}\\times 2$ (since each set has $2$ blocks) $=68\\text{ Kbits}$ Answer is option D) 68 Kbits We use the top $17\\text{-bits}$ for tag and the next $11\\text{-bits}$ for indexing and next $4$ for offset. So, for two addresses to have the same cache index, their $11$ address bits after the $4$ offset bits from right must be same. $ARR[0][0]$ is located at virtual address $\\text{0x FF000 000. (FF000 is page address and 000 is page offset).}$ So, index bits are $00000000000$ Address of $ARR[0][4]=\\text{0xFF000}+4\\times \\text{sizeof (double)}$ $=\\text{0xFF000 000}+4\\times 8=\\text{0xFF000 020 (32 = 20 in hex)}$ (index bits differ) Address of $ARR[4][0] =\\text{0xFF000}+4\\times 1024\\times \\text{sizeof (double)}$ [since we use row major storage] $=\\text{0xFF000 000}+4096\\times 8=\\text{0xFF000 000 + 0x8000 = 0xFF008 000}$ ( index bits matches that of $ARR [0][0]$ as both read $\\text{000 0000 0000}$ ) Address of $ARR[0][5] =\\text{0xFF000} + 5\\times \\text{sizeof (double) = 0xFF000 000}$$+ 5\\times 8 =\\text{0xFF000 028 (40 = 28 in hex)}$ (index bits differ) Address of $ARR[5][0] =\\text{0xFF000} + 5\\times 1024\\times \\text{ sizeof (double)}$ [since we use row major storage] $=\\text{0xFF000 000}+5120\\times 8=\\text{0xFF000 000 + 0xA000 = 0xFF00A 000}$ (index bits differ) So, only $ARR[4][0]$ and $ARR[0][0]$ have the same cache index. The inner loop is iterating from $0$ to $1023,$ so consecutive memory locations are accessed in sequence. Since cache block size is only $16\\text{ bytes}$ and our element being double is of size $8\\text{ bytes},$ during a memory access only the next element gets filled in the cache. i.e.; every alternative memory access is a cache miss giving a hit ratio of $50%.$ (If loops $i$ and $j$ are reversed, all accesses will be misses and hit ratio will become $0$ ).",
           "year": 2008,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "topic_name": "compiler-design",
-          "question_text": "Which of the following statements are true? I, II, III and IV II, III and IV only I, III and IV only I, II and IV only",
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following statements about synchronous and asynchronous I/O is NOT true?",
           "images": [],
           "options": [
-            "A. Every left-recursive grammar can be converted to a right-recursive grammar and vice-versa",
-            "B. All $\\epsilon$-productions can be removed from any context-free grammar by suitable transformations",
-            "C. The language generated by a context-free grammar all of whose productions are of the form $X \\rightarrow w$ or $X \\rightarrow wY$ (where, $w$ is a string of terminals and $Y$ is a non-terminal), is always regular",
-            "D. The derivation trees of strings generated by a context-free grammar in Chomsky Normal Form are always binary trees"
+            "A. An ISR is invoked on completion of I/O in synchronous I/O but not in asynchronous I/O",
+            "B. In both synchronous and asynchronous I/O, an ISR (Interrupt Service Routine) is invoked after completion of the I/O",
+            "C. A process making a synchronous I/O call waits until I/O is complete, but a process making an asynchronous I/O call does not wait for completion of the I/O",
+            "D. In the case of synchronous I/O, the process waiting for the completion of I/O is woken up by the ISR that is invoked after the completion of I/O"
+          ],
+          "correct_answer": "B",
+          "explanation": "Answer is (B). In synchronous I/O process performing I/O operation will be placed in blocked state till the I/O operation is completed. An ISR will be invoked after the completion of I/O operation and it will place process from block state to ready state. In asynchronous I/O, Handler function will be registered while performing the I/O operation. The process will not be placed in the block state and process continues to execute the remaining instructions. when the I/O operation completed signal mechanism is used to notify the process that data is available.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "In an instruction execution pipeline, the earliest that the data TLB (Translation Lookaside Buffer) can be accessed is:",
+          "images": [],
+          "options": [
+            "A. before effective address calculation has started",
+            "B. during effective address calculation",
+            "C. after effective address calculation has completed",
+            "D. after data cache lookup has completed"
           ],
           "correct_answer": "C",
-          "explanation": "Answer is C: Statement $1$ is true : Using GNF we can convert Left recursive grammar to right recursive and by using reversal of CFG and GNF we can convert right recursive to left recursive. Statement $2$ is false : because if $\\epsilon$ is in the language then we can't remove $\\epsilon$ production from Start symbol. (For example $L = a^*$) Statement $3$ is true because right linear grammar generates regular set Statement $4$ is true , only two non-terminals are there in each production in CNF. So it always form a binary tree.",
+          "explanation": "C is the answer here. Effective address is the address after applying the addressing mode like indexed, immediate etc. But this resulting address is still the virtual address, the physical address is invisible to the CPU and will be given only by the MMU when given the corresponding virtual address. Virtual address is given for TLB look up. TLB -Translation Lookaside Buffer, here Lookaside means during Address translation (from Virtual to Physical). But virtual address must be there before we look into TLB. https://gateoverflow.in/?qa=blob&qa_blobid=15279338060050073946",
           "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "The use of multiple register windows with overlap causes a reduction in the number of memory accesses for: $\\text{I}$ only $\\text{II}$ only $\\text{III}$ only $\\text{I}, \\text{II}$ and $\\text{III}$ ed Aug 17, 2019 reply Follow flag Thank you @Tuhin Dutta , the explanation was very helpful. 0 0 reply Share Sherrinford commented Sep 11, 2019 reply Follow flag Thanks for sharing the link, it is really helpful 0 0 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Function locals and parameters",
+            "B. Register saves and restores",
+            "C. Instruction fetches"
+          ],
+          "correct_answer": "A",
+          "explanation": "Functions locals and parameters this is true because overlapped registers eliminates the need for memory accesses. we here got to use registers instead. Register saves and restores this is false bc we need to see where memory accesses are reduced here before also we were using register as it says Register saves... later also (i.e. after using multiple register windows) registers will are referred. So NO memory accesses are reduced here. Instruction fetches it has nothing to do with reduction in memory accesses. Hence, option (A) is correct.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following are NOT true in a pipelined processor? I and II only I and III only II and III only I, II and III ed Dec 15, 2025 reply Follow flag Bypassing is the same as forwarding. 1 1 reply Share Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. Bypassing can handle all RAW hazards",
+            "B. Register renaming can eliminate all register carried WAR hazards",
+            "C. Control hazard penalties can be eliminated by dynamic branch prediction"
+          ],
+          "correct_answer": "B",
+          "explanation": "(B) I and III I - False Bypassing can't handle all RAW hazard, consider when any instruction depends on the result of LOAD instruction, now LOAD updates register value at Memory Access Stage (MA), so data will not be available directly on Execute stage. II - True, register renaming can eliminate all WAR Hazard. III- False, It cannot completely eliminate, though it can reduce Control Hazard Penalties",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "For inclusion to hold between two cache levels $L_1$ and $L_2$ in a multi-level cache hierarchy, which of the following are necessary? IV only I and IV only I, II and IV only I, II, III and IV",
+          "images": [],
+          "options": [
+            "A. $L_1$ must be write-through cache",
+            "B. $L_2$ must be a write-through cache",
+            "C. The associativity of $L_2$ must be greater than that of $L_1$",
+            "D. The $L_2$ cache must be at least as large as the $L_1$ cache"
+          ],
+          "correct_answer": "A",
+          "explanation": "1$^{\\text{st}}$ is not correct as data need not to be exactly same at the same point of time and so write back policy can be used in this. 2$^{\\text{nd}}$ is not needed when talking only about $L1$ and $L2$. For 3$^{\\text{rd}}$, associativity can be equal. So, only 4$^{\\text{th}}$ statement is Necessarily true - (A) choice.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following must be true for the RFE (Return From Exception) instruction on a general purpose processor? I only II only I and II only I, II and III only See all 6 Comments 6 6 Comments reply Show 3 previous comments Divy Kala commented Apr 7, 2019 reply Follow flag Here are my thoughts.. please give your rebuttals 1. why must it be a trap instruction? I find no reason that it has to be a trap. No referenced link in this post says it has to be a trap. 2. It has to be a privileged instruction because it accesses kernel stack in the newer OS. Although in older OS, there was no concept of kernel space and user space, it was one huge address space. 3. An exception cannot be allowed to occur? Aborts and faults (they are exceptions too) can occur during the execution of any instruction. It's like saying power failure is not allowed to happen when RFE is executing. I think the answer should be II only 5 5 reply Share shashankrustagi commented Jan 18, 2021 reply Follow flag Transitions from kernel to user mode are performed explicitly by the operating system, generally at the end of an interrupt handler or kernel call, using a privileged RFE (return from exception) instruction. I found this from the link 1 1 reply Share madhes23 commented Aug 1, 2021 i",
+          "images": [],
+          "options": [
+            "A. It must be a trap instruction",
+            "B. It must be a privileged instruction",
+            "C. An exception cannot be allowed to occur during execution of an RFE instruction"
+          ],
+          "correct_answer": "D",
+          "explanation": "RFE (Return From Exception) is a privileged trap instruction that is executed when exception occurs, so an exception is not allowed to execute. (D) is the correct option. Reference: http://www.cs.rochester.edu/courses/252/spring2014/notes/08_exceptions",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Which of the following is/are true of the auto-increment addressing mode? I only II only III only II and III only",
+          "images": [],
+          "options": [
+            "A. It is useful in creating self-relocating code",
+            "B. If it is included in an Instruction Set Architecture, then an additional ALU is required for effective address calculation",
+            "C. The amount of increment depends on the size of the data item accessed"
+          ],
+          "correct_answer": "C",
+          "explanation": "In auto increment addressing mode, the base address is incremented after operand fetch. This is useful in fetching elements from an array. But this has no effect in self-relocating code (where code can be loaded to any address) as this works on the basis of an initial base address. An additional ALU is desirable for better execution especially with pipelining, but never a necessity. Amount of increment depends on the size of the data item accessed as there is no need to fetch a part of a data. So, answer must be C only.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider an instruction pipeline with five stages without any branch prediction: Fetch Instruction (FI), Decode Instruction (DI), Fetch Operand (FO), Execute Instruction (EI) and Write Operand (WO). The stage delays for FI, DI, FO, EI and WO are $\\text{5 ns, 7 ns, 10 ns, 8 ns and 6 ns},$ respectively. There are intermediate storage buffers after each stage and the delay of each buffer is $1\\ \\text{ns}.$ A program consisting of $12$ instructions $\\text{I1, I2, I3,}\\ldots,\\text{ I12}$ is executed in this pipelined processor. Instruction $\\text{I4}$ is the only branch instruction and its branch target is $\\text{I9}.$ If the branch is taken during the execution of this program, the time (in ns) needed to complete the program is",
+          "images": [],
+          "options": [
+            "A. $132$",
+            "B. $165$",
+            "C. $176$",
+            "D. $328$"
+          ],
+          "correct_answer": "B",
+          "explanation": "After pipelining we have to adjust the stage delays such that no stage will be waiting for another to ensure smooth pipelining (continuous flow). Since we can not easily decrease the stage delay, we can increase all the stage delays to the maximum delay possible. So, here maximum delay is $10$ ns. Buffer delay given is $1$ ns. So, each stage takes $11$ ns in total. FI of $\\text{I9}$ can start only after the EI of $\\text{I4}.$ So, the total execution time will be $$15 \\times 11 = 165$$ $$\\small \\begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|} \\hline &\\bf{t_1}&\\bf{t_2}&\\bf{t_3}&\\bf{t_4}&\\bf{t_5}&\\bf{t_6}&\\bf{t_7}&\\bf{t_8}&\\bf{t_9}&\\bf{t_{10}}&\\bf{t_{11}}&\\bf{t_{12}}&\\bf{t_{13}}&\\bf{t_{14}}&\\bf{t_{15}}\\\\ \\hline \\textbf{I1}&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ \\textbf{I2}&&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ \\textbf{I3}&&&\\text{FI}&\\text{DI}&\\text{FO} &\\text{EI}&\\text{WO}\\\\ \\textbf{I4}&&&&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ &&&&&\\color{red}{\\text{stall}}\\\\ &&&&&&\\color{red}{\\text{stall}}\\\\ &&&&&&&\\color{red}{\\text{stall}}\\\\ \\textbf{I9}&&&&&&&&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ \\textbf{I10}&&&&&&&&&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ \\textbf{I11}&&&&&&&&&&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ \\textbf{I12}&&&&&&&&&&&\\text{FI}&\\text{DI}&\\text{FO}&\\text{EI}&\\text{WO}\\\\ \\hline\\end{array}$$ $B$",
+          "year": 2013,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Consider a system with a two-level paging scheme in which a regular memory access takes $150$ $nanoseconds$, and servicing a page fault takes $8$ $milliseconds$. An average instruction takes $100$ nanoseconds of CPU time, and two memory accesses. The TLB hit ratio is $90$%, and the page fault rate is one in every $10,000$ instructions. What is the effective average instruction execution time?",
+          "images": [],
+          "options": [
+            "A. $\\text{645 nanoseconds}$",
+            "B. $\\text{1050 nanoseconds}$",
+            "C. $\\text{1215 nanoseconds}$",
+            "D. $\\text{1230 nanoseconds}$"
+          ],
+          "correct_answer": "D",
+          "explanation": "Average Instruction execution time = Average CPU execution time + Average time for getting data(instruction operands from memory for each instruction) = Average CPU execution time + Average address translation time for each instruction + Average memory fetch time for each instruction + Average page fault time for each instruction $=\\underbrace{100}_{\\text{Average CPU execution time}}+\\underbrace{2\\left(0.9 (0) + 0.1 (2 \\times 150)\\right)}_{\\text{Average address translation time for each instruction}} + \\underbrace{2\\times 150}_{\\text{Average memory fetch time for each instruction}} + \\underbrace{\\dfrac{1}{10000} \\times 8 \\times 10^6}_{\\text{Average page fault time for each instruction}}$ (Page Fault Rate per 10,000 instruction is directly given in question. Two memory accesses per instruction and hence we need 2 $\\times$ address translation time for average instruction execution time) [ TLB access time assumed as 0 and 2 page tables need to be accessed in case of TLB miss as the system uses two-level paging ] = $100 + 60 + 300 + 800$ = $1260 \\textsf{ ns}$ PS: GATE question might have missed the time for second address translation in their calculation which might have made them give 1230 in option D instead of 1260.",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "co-and-architecture",
+          "question_text": "Register renaming is done in pipelined processors: 0 reply Please log in or register to add a comment.",
+          "images": [],
+          "options": [
+            "A. as an alternative to register allocation at compile time",
+            "B. for efficient access to function parameters and local variables",
+            "C. to handle certain kinds of hazards",
+            "D. as part of address translation"
+          ],
+          "correct_answer": "C",
+          "explanation": "Register renaming is done to eliminate WAR (Write after Read) and WAW (Write after Write) dependency between instructions which could have caused pipieline stalls. Hence, (C) is the answer. Example: I1: Read $A$ to $B$ I2: Write $C$ to $A$ Here, there is a WAR dependency and pipeline would need stalls. In order to avoid it register renaming is done and Write $C$ to $A$ will be Write $C$ to $A$' WAR dependency is actually called anti-dependency and there is no real dependency except the fact that both uses same memory location. Register renaming can avoid this. Similarly WAW also. people.ee.duke.edu/~sorin/ece252/lectures/4.2-tomasulo.pdf",
+          "year": 2012,
           "exam_type": "GATE",
           "question_type": "MCQ"
         }
       ]
-    }
+    },
+ 
   ];
 
   for (const item of subjectData) {

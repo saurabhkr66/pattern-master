@@ -6,6 +6,7 @@ import { generateQuestionsWithDeepSeek } from "@/lib/deepseek";
 import { generateQuestionsWithOpenRouter } from "@/lib/openrouter";
 import { buildQuestionPrompt } from "@/lib/prompts";
 import { generateSemanticHash } from "@/lib/hash";
+import { auth } from "@clerk/nextjs/server";
 
 
 export async function POST(req: NextRequest) {
@@ -26,6 +27,39 @@ export async function POST(req: NextRequest) {
         if (!pattern) {
             return NextResponse.json({ error: "Pattern not found" }, { status: 404 });
         }
+
+        // --- Threshold Check ---
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const totalPYQs = await prisma.pYQ.count({
+            where: { pattern_id: patternId },
+        });
+
+        if (totalPYQs > 0) {
+            const solvedPYQs = await prisma.attempt.groupBy({
+                by: ["pyq_id"],
+                where: {
+                    user_id: userId,
+                    is_correct: true,
+                    pyq_id: { not: null },
+                    pyq: { pattern_id: patternId },
+                },
+            });
+
+            const completionPercentage = (solvedPYQs.length / totalPYQs) * 100;
+
+            if (completionPercentage < 95) {
+                return NextResponse.json({
+                    error: "mastery_required",
+                    message: `Mastery Required: You have solved ${Math.round(completionPercentage)}% of PYQs for this topic. Solve at least 95% to unlock AI question generation.`,
+                    currentProgress: Math.round(completionPercentage)
+                }, { status: 403 });
+            }
+        }
+        // ------------------------
 
         // Get recent questions to avoid duplicates
         const recentQuestions = await prisma.generatedQuestion.findMany({

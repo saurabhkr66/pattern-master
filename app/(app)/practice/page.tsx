@@ -59,11 +59,54 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
     async () => {
       const isAll = !subject || subject === "All";
 
+      // If 'All' is selected, only show subject-level practice cards to keep the UI clean.
+      // Detailed topics are only shown when a specific subject is filtered.
+      const subjectPatterns = await prisma.subjectPattern.findMany({
+        where: !isAll ? { subject_name: subject } : {},
+        select: {
+          id: true,
+          subject_name: true,
+          _count: {
+            select: { pyqs: true }
+          },
+          pyqs: {
+            select: {
+              id: true,
+              attempts: {
+                where: userId ? { user_id: userId } : { user_id: "none" },
+                select: { is_correct: true },
+                orderBy: { created_at: "desc" },
+                take: 1,
+              }
+            }
+          }
+        }
+      });
+
+      const mappedSubjects = subjectPatterns.map(sp => ({
+        id: `subject-${sp.id}`,
+        subject: sp.subject_name,
+        topic_name: sp.subject_name,
+        atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
+        isSubjectLevel: true,
+        totalQuestions: sp._count.pyqs,
+        questionsCount: 0,
+        pyqsCount: sp._count.pyqs,
+        solvedQuestions: sp.pyqs.filter(pq => pq.attempts[0]?.is_correct).length,
+        questions: [],
+        pyqs: [],
+      }));
+
+      // Only fetch individual topic patterns if a specific subject is selected
+      if (isAll) {
+        return mappedSubjects;
+      }
+
       const topicPatterns = await prisma.pattern.findMany({
         where: {
           exam_type: examType,
           ...(branch ? { branch } : {}),
-          ...(!isAll ? { subject } : {}),
+          subject,
         },
         select: {
           id: true,
@@ -99,28 +142,6 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
         orderBy: { topic_name: "asc" },
       });
 
-      const subjectPatterns = await prisma.subjectPattern.findMany({
-        where: !isAll ? { subject_name: subject } : {},
-        select: {
-          id: true,
-          subject_name: true,
-          _count: {
-            select: { pyqs: true }
-          },
-          pyqs: {
-            select: {
-              id: true,
-              attempts: {
-                where: userId ? { user_id: userId } : { user_id: "none" },
-                select: { is_correct: true },
-                orderBy: { created_at: "desc" },
-                take: 1,
-              }
-            }
-          }
-        }
-      });
-
       const mappedTopics = topicPatterns.map(p => ({
         ...p,
         totalQuestions: p._count.questions + p._count.pyqs,
@@ -133,21 +154,8 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
         pyqs: [],
       }));
 
-      const mappedSubjects = subjectPatterns.map(sp => ({
-        id: `subject-${sp.id}`,
-        subject: sp.subject_name,
-        topic_name: sp.subject_name,
-        atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
-        isSubjectLevel: true,
-        totalQuestions: sp._count.pyqs,
-        questionsCount: 0,
-        pyqsCount: sp._count.pyqs,
-        solvedQuestions: sp.pyqs.filter(pq => pq.attempts[0]?.is_correct).length,
-        questions: [],
-        pyqs: [],
-      }));
-
       return [...mappedSubjects, ...mappedTopics];
+
     },
     [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v5`],
     { revalidate: 300, tags: ["patterns"] }

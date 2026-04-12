@@ -13,12 +13,22 @@ interface MathRendererProps {
 }
 
 export default function MathRenderer({ content, className }: MathRendererProps) {
-  // Pre-process common LaTeX delimiters so remark-math recognizes them
+  // Normalise typographic/smart characters that KaTeX doesn't understand.
+  // These appear in scraped question text (e.g. "1's", "it's", "don't").
   const processedContent = (content || '')
+    // Smart/curly quotes → straight equivalents
+    .replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'")   // ' ' → '
+    .replace(/[\u201C\u201D]/g, '"')                       // " " → "
+    // Em/en dashes → hyphen
+    .replace(/[\u2013\u2014]/g, '-')
+    // Ellipsis character → three dots
+    .replace(/\u2026/g, '...')
+    // LaTeX delimiter conversions
     .replace(/\\\[/g, '$$$$')
     .replace(/\\\]/g, '$$$$')
     .replace(/\\\(/g, '$')
     .replace(/\\\)/g, '$');
+
 
   return (
     <div className={className}>

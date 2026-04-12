@@ -5,8 +5,23 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/sign-in", "/sign-up"],
-        disallow: ["/dashboard", "/practice", "/onboarding", "/api/"],
+        allow: [
+          "/",
+          "/sign-in",
+          "/sign-up",
+          "/practice",
+          "/test",
+          // Allow all question paths: /<exam>/<subject>/<topic>/<questionId>
+          "/*/*/*/pyq-",
+          "/*/*/*/spyq-",
+          "/*/*/*/gq-",
+        ],
+        disallow: [
+          "/dashboard",
+          "/onboarding",
+          "/api/",
+          "/api/maintenance/",
+        ],
       },
     ],
     sitemap: "https://patternmaster.in/sitemap.xml",
