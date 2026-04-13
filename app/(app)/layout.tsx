@@ -14,16 +14,23 @@ export default async function AppLayout({
     redirect("/sign-in");
   }
 
-  // Auto-sync user to our DB (replaces onboarding)
-  await prisma.user.upsert({
+  // Check if user exists to avoid expensive database writes on every page load
+  const dbUser = await prisma.user.findUnique({
     where: { id: userId },
-    update: { email: clerkUser.emailAddresses[0]?.emailAddress },
-    create: {
-      id: userId,
-      email: clerkUser.emailAddresses[0]?.emailAddress || "",
-      onboarded: true,
-    },
+    select: { id: true },
   });
+
+  if (!dbUser) {
+    // Auto-sync user to our DB
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: { email: clerkUser.emailAddresses[0]?.emailAddress },
+      create: {
+        id: userId,
+        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+      },
+    });
+  }
 
   return <>{children}</>;
 }

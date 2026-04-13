@@ -11,11 +11,6 @@ datasource db {
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
-  exam_type    String?
-  branch       String?
-  exam_date    DateTime?
-  target_score Int?
-  onboarded    Boolean   @default(false)
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
   attempts     Attempt[]

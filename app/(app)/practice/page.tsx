@@ -11,19 +11,7 @@ export const metadata: Metadata = {
   description: "Practice GATE CSE, ISRO, BARC & ESE topics with AI-generated questions.",
 };
 
-// Cache user profile for 1 hour to prevent DB hits on every tab switch
-const getCachedUserProfile = (userId: string) => {
-  return unstable_cache(
-    async () => {
-      return prisma.user.findUnique({
-        where: { id: userId },
-        select: { exam_type: true, branch: true },
-      });
-    },
-    [`user-profile-${userId}`],
-    { revalidate: 3600, tags: ["user-profile"] }
-  )();
-};
+
 
 // Cache unique subjects and their topic counts for the tabs
 const getSubjectStats = (examType: string, branch: string | null) => {
@@ -200,13 +188,7 @@ export default async function PracticePage({
   let baseBranch: string | null = null;
 
   try {
-    const [userProfile, examMeta] = await Promise.all([
-      userId ? getCachedUserProfile(userId) : null,
-      getCachedExamMeta(),
-    ]);
-
-    if (userProfile?.exam_type) baseExamType = userProfile.exam_type;
-    if (userProfile?.branch) baseBranch = userProfile.branch;
+    const examMeta = await getCachedExamMeta();
 
     const activeExamType = exam || baseExamType;
     const activeBranch = branchParam ?? baseBranch;
