@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
@@ -8,24 +8,20 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const { userId } = await auth();
-  const clerkUser = await currentUser();
 
-  if (!userId || !clerkUser) {
+  if (!userId) {
     redirect("/sign-in");
   }
 
-  // Auto-sync user to our DB (replaces onboarding)
-  await prisma.user.upsert({
+  // If the user row doesn't exist yet, or onboarded is false → send to onboarding.
+  const user = await prisma.user.findUnique({
     where: { id: userId },
-    update: { email: clerkUser.emailAddresses[0]?.emailAddress },
-    create: {
-      id: userId,
-      email: clerkUser.emailAddresses[0]?.emailAddress || "",
-      onboarded: true,
-      exam_type: "GATE",
-      branch: "CSE",
-    },
+    select: { onboarded: true },
   });
+
+  if (!user || !user.onboarded) {
+    redirect("/onboarding");
+  }
 
   return <>{children}</>;
 }
