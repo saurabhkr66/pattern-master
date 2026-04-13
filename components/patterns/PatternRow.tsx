@@ -227,10 +227,17 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
         <div className="hidden md:flex col-span-2 justify-center">
           <ConfidenceBadge accuracy={accuracy} />
         </div>
-        <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-3">
-          <div className="text-right hidden md:block">
-            <span className="text-sm font-black text-gray-900">{solved}</span>
-            <span className="text-xs text-gray-400 font-bold"> / {total}</span>
+        <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-2 md:gap-3">
+          <div className="text-right">
+            <div className="md:hidden">
+              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${accuracy === 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                {Math.round(accuracy)}%
+              </span>
+            </div>
+            <div className="hidden md:block">
+              <span className="text-sm font-black text-gray-900">{solved}</span>
+              <span className="text-xs text-gray-400 font-bold"> / {total}</span>
+            </div>
           </div>
           <ChevronDown
             size={16}
