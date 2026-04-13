@@ -35,6 +35,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard", "/onboarding", "/api/"],
       },
     ],
-    sitemap: "https://patternmaster.in/sitemap.xml",
+    sitemap: "https://battleexam.com/sitemap.xml",
   };
 }

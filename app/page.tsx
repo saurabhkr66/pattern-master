@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "PatternMaster – AI-Powered GATE CSE Preparation | Practice Questions",
+  title: "BattleExam – AI-Powered GATE CSE Preparation | Practice Questions",
   description:
     "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks with adaptive difficulty. Free to start.",
   keywords: [
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     "pattern based learning",
   ],
   openGraph: {
-    title: "PatternMaster – AI-Powered GATE CSE Preparation",
+    title: "BattleExam – AI-Powered GATE CSE Preparation",
     description:
       "Practice GATE CSE, ISRO & BARC with AI-generated questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, progress tracking.",
     type: "website",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PatternMaster – AI-Powered GATE CSE Preparation",
+    title: "BattleExam – AI-Powered GATE CSE Preparation",
     description:
       "Practice GATE CSE, ISRO & BARC with AI-generated questions tailored to each topic's core logic.",
   },
@@ -84,9 +84,9 @@ const SUBJECT_COLORS: Record<string, string> = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
-  name: "PatternMaster",
+  name: "BattleExam",
   description: "AI-powered exam preparation platform for GATE CSE, ISRO, BARC, and ESE",
-  url: "https://patternmaster.in",
+  url: "https://battleexam.com",
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "GATE CSE Study Topics",
@@ -106,15 +106,15 @@ const faqStructuredData = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "How is PatternMaster different from other GATE preparation platforms?",
+      name: "How is BattleExam different from other GATE preparation platforms?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "PatternMaster uses AI to generate questions based on the specific atomic logic of each GATE topic — not recycled question banks.",
+        text: "BattleExam uses AI to generate questions based on the specific atomic logic of each GATE topic — not recycled question banks.",
       },
     },
     {
       "@type": "Question",
-      name: "Which exams does PatternMaster cover?",
+      name: "Which exams does BattleExam cover?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "GATE CSE, ISRO CS, BARC CS, and ESE.",
@@ -122,7 +122,7 @@ const faqStructuredData = {
     },
     {
       "@type": "Question",
-      name: "Is PatternMaster free to use?",
+      name: "Is BattleExam free to use?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "Yes. Create an account and start practicing immediately — no credit card required.",
@@ -170,8 +170,8 @@ const STATS = [
 
 const FAQS = [
   {
-    q: "How is PatternMaster different from other GATE platforms?",
-    a: "Most platforms recycle the same question bank. PatternMaster's AI generates fresh questions every time, each targeting the specific atomic logic of the topic — the exact thinking pattern GATE examiners test.",
+    q: "How is BattleExam different from other GATE platforms?",
+    a: "Most platforms recycle the same question bank. BattleExam's AI generates fresh questions every time, each targeting the specific atomic logic of the topic — the exact thinking pattern GATE examiners test.",
   },
   {
     q: "Which exams and branches are covered?",
@@ -270,7 +270,7 @@ export default async function HomePage() {
                   className="text-base leading-relaxed mb-8 max-w-md"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Every topic has one core pattern examiners test. PatternMaster's AI
+                  Every topic has one core pattern examiners test. BattleExam's AI
                   generates fresh questions around exactly that — for GATE, ISRO, BARC &amp; ESE.
                 </p>
 
@@ -600,7 +600,7 @@ export default async function HomePage() {
               className="text-sm mb-8"
               style={{ color: "var(--text-muted)" }}
             >
-              PatternMaster is free. Start now.
+              BattleExam is free. Start now.
             </p>
             <div className="flex justify-center">
               <FinalCTAButton />
@@ -619,7 +619,7 @@ export default async function HomePage() {
                 <Brain size={13} />
               </span>
               <span className="font-bold text-sm">
-                Pattern<span className="text-violet-400">Master</span>
+                Battle<span className="text-violet-400">Exam</span>
               </span>
             </div>
             <p className="text-[11px] text-center" style={{ color: "var(--text-faint)" }}>

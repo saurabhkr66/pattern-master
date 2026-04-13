@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { toSlug } from "@/lib/seo";
 
-const BASE = "https://patternmaster.in";
+const BASE = "https://battleexam.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

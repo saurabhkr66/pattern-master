@@ -55,8 +55,8 @@ export function buildBreadcrumbSchema(items: { name: string; item: string }[]) {
  * Build global Organization and WebSite schema.
  */
 export function buildOrganizationSchema() {
-  const name = "PatternMaster";
-  const url = "https://patternmaster.in";
+  const name = "BattleExam";
+  const url = "https://battleexam.com";
   const logo = `${url}/logo.png`; // Placeholder for actual logo
 
   return {
@@ -74,8 +74,8 @@ export function buildOrganizationSchema() {
           "height": 512
         },
         "sameAs": [
-          "https://twitter.com/patternmaster", // Placeholders
-          "https://github.com/patternmaster"
+          "https://twitter.com/battleexam", // Placeholders
+          "https://github.com/battleexam"
         ]
       },
       {
@@ -119,11 +119,11 @@ export function buildQuestionSchema(q: {
 
   const publisher = {
     "@type": "Organization",
-    "name": "PatternMaster",
-    "url": "https://patternmaster.in",
+    "name": "BattleExam",
+    "url": "https://battleexam.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://patternmaster.in/logo.png"
+      "url": "https://battleexam.com/logo.png"
     }
   };
 
@@ -145,7 +145,7 @@ export function buildQuestionSchema(q: {
       "@id": q.url
     },
     "name": `${q.subject} ${q.year > 2000 ? q.year : ""} GATE Practice Question`,
-    "description": `Solve this ${q.subject} question from GATE ${q.year}. Master patterns with AI-guided explanations and instant feedback on PatternMaster.`,
+    "description": `Solve this ${q.subject} question from GATE ${q.year}. Master patterns with AI-guided explanations and instant feedback on BattleExam.`,
     "educationalLevel": "Graduate",
     "learningResourceType": "Practice problem",
     "publisher": publisher,

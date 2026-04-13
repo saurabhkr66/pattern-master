@@ -28,28 +28,28 @@ const globalSchema = buildOrganizationSchema();
 
 export const metadata: Metadata = {
   title: {
-    default: "PatternMaster – AI-Powered GATE CSE Preparation",
-    template: "%s – PatternMaster",
+    default: "BattleExam – AI-Powered GATE CSE Preparation",
+    template: "%s – BattleExam",
   },
   description:
     "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Adaptive difficulty, instant explanations, progress tracking. Free to start.",
-  metadataBase: new URL("https://patternmaster.in"),
+  metadataBase: new URL("https://battleexam.com"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "PatternMaster – AI-Powered GATE CSE Preparation",
+    title: "BattleExam – AI-Powered GATE CSE Preparation",
     description: "Master GATE CSE with AI-generated pattern-based practice. Adaptive difficulty and instant feedback.",
-    url: "https://patternmaster.in",
-    siteName: "PatternMaster",
+    url: "https://battleexam.com",
+    siteName: "BattleExam",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PatternMaster – AI-Powered GATE CSE Preparation",
+    title: "BattleExam – AI-Powered GATE CSE Preparation",
     description: "Master GATE CSE with AI-powered patterns.",
-    creator: "@patternmaster",
+    creator: "@battleexam",
   },
   robots: {
     index: true,

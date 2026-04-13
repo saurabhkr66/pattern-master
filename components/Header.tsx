@@ -56,7 +56,7 @@ export default function Header() {
             <Brain size={20} />
           </span>
           <span className="font-medium">
-            Pattern<span className="text-purple-400 font-bold">Master</span>
+            Battle<span className="text-purple-400 font-bold">Exam</span>
           </span>
         </Link>
 
