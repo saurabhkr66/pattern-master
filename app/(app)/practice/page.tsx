@@ -25,25 +25,27 @@ const getCachedUserProfile = (userId: string) => {
   )();
 };
 
-// Cache pattern list based on exam type, branch, and user
 // Cache unique subjects and their topic counts for the tabs
 const getSubjectStats = (examType: string, branch: string | null) => {
   return unstable_cache(
     async () => {
-      const regularPatterns = await prisma.pattern.findMany({
+      // Use groupBy for major performance gain over fetching all pattern rows
+      const statsBySubject = await prisma.pattern.groupBy({
+        by: ['subject'],
         where: { exam_type: examType, ...(branch ? { branch } : {}) },
-        select: { subject: true },
+        _count: { _all: true }
       });
 
       const stats: Record<string, number> = {};
-      regularPatterns.forEach(p => {
-        stats[p.subject] = (stats[p.subject] || 0) + 1;
+      statsBySubject.forEach(entry => {
+        stats[entry.subject] = entry._count._all;
       });
 
-      const subjectPatterns = await prisma.subjectPattern.findMany({
+      // Special case: subjectPatterns (subject-level practice cards)
+      const subjectPatternStats = await prisma.subjectPattern.findMany({
         select: { subject_name: true },
       });
-      subjectPatterns.forEach(sp => {
+      subjectPatternStats.forEach(sp => {
         stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
       });
 
@@ -238,6 +240,17 @@ export default async function PracticePage({
             availableBranches={availableBranches}
           />
         </header>
+
+        {/* Practice Disclaimer */}
+        <div className="mb-6 p-4 rounded-2xl border border-blue-500/10 bg-blue-500/5 flex items-start gap-3.5">
+          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-[10px] font-black text-blue-400">
+            i
+          </div>
+          <p className="text-xs md:text-[13px] leading-relaxed italic" style={{ color: "var(--text-secondary)" }}>
+            <strong className="not-italic text-blue-400 uppercase tracking-widest text-[9px] block mb-1 font-black">Practice Note</strong>
+            Topic-level questions are designed to be extremely close to the GATE standard, but they may or may not have appeared in an actual exam. For guaranteed official previous year questions, click on the <strong style={{ color: "var(--text-primary)" }} className="not-italic">Subject Name</strong> cards at the top of the list.
+          </p>
+        </div>
 
         {topics.length === 0 && (subjectParam && subjectParam !== "All") ? (
           <div className="rounded-2xl p-12 text-center" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>

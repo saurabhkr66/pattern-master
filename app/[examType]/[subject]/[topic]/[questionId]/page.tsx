@@ -5,7 +5,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { cleanTextForMeta, buildQuestionSchema, toSlug } from "@/lib/seo";
+import { cleanTextForMeta, buildQuestionSchema, toSlug, buildBreadcrumbSchema } from "@/lib/seo";
 import QuestionViewer from "@/components/question/QuestionViewer";
 
 interface PageParams {
@@ -98,7 +98,11 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
   const subjectLabel = subject.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const topicLabel   = topic.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const title = `${q.examType} ${subjectLabel} ${q.year > 2000 ? q.year : ""} – ${topicLabel} | PatternMaster`;
-  const description = cleanTextForMeta(q.questionText);
+  
+  // "Answer-First" description for GEO: start with the direct context
+  const rawDesc = cleanTextForMeta(q.questionText, 150);
+  const description = `Solve this ${q.examType} ${q.year} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
+  
   const canonical = `https://patternmaster.in/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
 
   return {
@@ -113,7 +117,7 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
       siteName: "PatternMaster",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
     },
@@ -127,7 +131,9 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
   const q = await fetchQuestion(questionId);
   if (!q) notFound();
 
-  const schema = buildQuestionSchema({
+  const url = `https://patternmaster.in/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
+
+  const questionSchema = buildQuestionSchema({
     questionText: q.questionText,
     options: q.options,
     correctAnswer: q.correctAnswer,
@@ -135,14 +141,26 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
     subject: q.subject,
     year: q.year,
     questionType: q.questionType,
+    url,
   });
+
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", item: "https://patternmaster.in" },
+    { name: "Practice", item: "https://patternmaster.in/practice" },
+    { name: q.subject, item: `https://patternmaster.in/practice?subject=${toSlug(q.subject)}` },
+    { name: q.topicName, item: url }
+  ]);
 
   return (
     <>
       {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(questionSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       <div className="max-w-3xl mx-auto py-8 md:py-14 px-4">

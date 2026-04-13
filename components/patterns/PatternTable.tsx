@@ -72,6 +72,13 @@ export default function PatternTable({
         return true;
       });
 
+  // Sync open state when navigation from search provides a highlight ID
+  useEffect(() => {
+    if (highlightPatternId) {
+      setOpenPatternId(highlightPatternId);
+    }
+  }, [highlightPatternId]);
+
   // Close filter popover on outside click
   useEffect(() => {
     if (!filterOpen) return;
@@ -84,6 +91,17 @@ export default function PatternTable({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [filterOpen]);
+
+  const handleTopicToggle = (id: string) => {
+    setOpenPatternId(openPatternId === id ? null : id);
+    
+    // Clear highlight (patternId) from URL once user interacts with any topic
+    if (searchParams.has("patternId")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("patternId");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
+  };
 
   return (
     <div className="w-full space-y-4">
@@ -207,7 +225,7 @@ export default function PatternTable({
                 pattern={pattern}
                 isHighlighted={pattern.id === highlightPatternId}
                 isOpen={openPatternId === pattern.id}
-                onToggle={() => setOpenPatternId(openPatternId === pattern.id ? null : pattern.id)}
+                onToggle={() => handleTopicToggle(pattern.id)}
               />
             ))
           ) : (

@@ -20,11 +20,22 @@ export async function GET(
           
           const subjectPattern = await prisma.subjectPattern.findUnique({
             where: { id: actualId },
-            include: {
+            select: {
+              id: true,
+              subject_name: true,
               pyqs: {
-                include: {
+                select: {
+                  id: true,
+                  question_text: true,
+                  options: true,
+                  correct_answer: true,
+                  explanation: true,
+                  year: true,
+                  question_type: true,
+                  images: true,
                   attempts: {
                     where: userId ? { user_id: userId } : { user_id: "none" },
+                    select: { id: true, is_correct: true, created_at: true },
                     orderBy: { created_at: "desc" },
                     take: 1,
                   },
@@ -47,11 +58,20 @@ export async function GET(
         // Regular Topic Pattern
         const pattern = await prisma.pattern.findUnique({
           where: { id },
-          include: {
+          select: {
             questions: {
-              include: {
+              select: {
+                id: true,
+                question_text: true,
+                options: true,
+                correct_answer: true,
+                explanation: true,
+                difficulty_level: true,
+                question_type: true,
+                images: true,
                 attempts: {
                   where: userId ? { user_id: userId } : { user_id: "none" },
+                  select: { id: true, is_correct: true, created_at: true },
                   orderBy: { created_at: "desc" },
                   take: 1,
                 },
@@ -59,9 +79,19 @@ export async function GET(
               orderBy: { created_at: "desc" },
             },
             pyqs: {
-              include: {
+              select: {
+                id: true,
+                question_text: true,
+                options: true,
+                correct_answer: true,
+                explanation: true,
+                year: true,
+                exam_type: true,
+                question_type: true,
+                images: true,
                 attempts: {
                   where: userId ? { user_id: userId } : { user_id: "none" },
+                  select: { id: true, is_correct: true, created_at: true },
                   orderBy: { created_at: "desc" },
                   take: 1,
                 },

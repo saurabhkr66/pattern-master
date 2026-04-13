@@ -17,10 +17,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { buildOrganizationSchema } from "@/lib/seo";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
+
+const globalSchema = buildOrganizationSchema();
 
 export const metadata: Metadata = {
   title: {
@@ -30,6 +34,23 @@ export const metadata: Metadata = {
   description:
     "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Adaptive difficulty, instant explanations, progress tracking. Free to start.",
   metadataBase: new URL("https://patternmaster.in"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "PatternMaster – AI-Powered GATE CSE Preparation",
+    description: "Master GATE CSE with AI-generated pattern-based practice. Adaptive difficulty and instant feedback.",
+    url: "https://patternmaster.in",
+    siteName: "PatternMaster",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PatternMaster – AI-Powered GATE CSE Preparation",
+    description: "Master GATE CSE with AI-powered patterns.",
+    creator: "@patternmaster",
+  },
   robots: {
     index: true,
     follow: true,
@@ -54,6 +75,10 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{
               __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:'dark';}catch(e){document.documentElement.dataset.theme='dark';}})();`,
             }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
           />
         </head>
         <body className="min-h-full flex flex-col">

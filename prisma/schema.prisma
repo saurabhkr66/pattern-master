@@ -33,6 +33,7 @@ model Pattern {
   pyqs         PYQ[]
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
+  @@index([exam_type, branch, subject], name: "pattern_subject_lookup")
 }
 
 model SubjectPattern {
@@ -65,7 +66,7 @@ model PYQ {
   options        Json
   correct_answer String
   explanation    String
-  year           Int
+  year          Int
   exam_type      String
   created_at     DateTime  @default(now())
   question_type  String    @default("MCQ")
@@ -74,6 +75,7 @@ model PYQ {
   pattern        Pattern   @relation(fields: [pattern_id], references: [id])
 
   @@unique([pattern_id, question_text], name: "pyq_identifier")
+  @@index([pattern_id, year(sort: Desc)])
 }
 
 model GeneratedQuestion {
@@ -90,6 +92,8 @@ model GeneratedQuestion {
   images           Json?
   attempts         Attempt[]
   pattern          Pattern   @relation(fields: [pattern_id], references: [id])
+
+  @@index([pattern_id, created_at(sort: Desc)])
 }
 
 model Attempt {
@@ -107,6 +111,9 @@ model Attempt {
   user           User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, is_correct, created_at(sort: Desc)])
+  @@index([question_id, user_id, is_correct])
+  @@index([pyq_id, user_id, is_correct])
+  @@index([subject_pyq_id, user_id, is_correct])
 }
 
 model TestSession {

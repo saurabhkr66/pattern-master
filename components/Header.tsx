@@ -48,6 +48,7 @@ export default function Header() {
         {/* Logo */}
         <Link
           href="/"
+          prefetch={true}
           className="flex items-center gap-2 text-lg"
           style={{ color: "var(--text-primary)" }}
         >
@@ -66,6 +67,7 @@ export default function Header() {
               <Link
                 key={href}
                 href={href}
+                prefetch={true}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
                   pathname === href
                     ? "text-indigo-300 bg-indigo-500/20"
@@ -162,6 +164,7 @@ export default function Header() {
                   <Link
                     key={href}
                     href={href}
+                    prefetch={true}
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
                       pathname === href

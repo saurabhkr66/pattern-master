@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import ActivityHeatmap from "@/components/dashboard/ActivityHeatmap";
 import type { Metadata } from "next";
+import { getQuestionUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Dashboard – PatternMaster",
@@ -82,10 +83,20 @@ export default async function DashboardPage() {
   const reviewItems = recentFailures.map((a: any) => {
     const q = a.question ?? a.pyq ?? a.subject_pyq;
     const pattern = q?.pattern ?? (q?.subject_pattern ? { 
-      topic_name: q.subject_pattern.subject_name, // Changed from "FULL SUBJECT PRACTICE"
+      topic_name: q.subject_pattern.subject_name,
       subject: q.subject_pattern.subject_name,
-      id: `subject-${q.subject_pattern.id}`
+      id: `subject-${q.subject_pattern.id}`,
+      exam_type: "GATE"
     } : null);
+
+    const prefix = a.question ? "gq" : a.pyq ? "pyq" : "spyq";
+    const slugUrl = getQuestionUrl({
+      id: q.id,
+      prefix,
+      subject: pattern?.subject || "general",
+      topicName: pattern?.topic_name || "topic",
+      examType: pattern?.exam_type || "GATE"
+    });
 
     return {
       id: a.id,
@@ -95,6 +106,7 @@ export default async function DashboardPage() {
       topic_name: pattern?.topic_name,
       subject: pattern?.subject,
       pattern_id: pattern?.id,
+      slugUrl
     };
   }).filter((r: any) => r.question_text);
 
@@ -210,7 +222,9 @@ export default async function DashboardPage() {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">{item.subject}</p>
                     </div>
                     <a
-                      href={`/practice?patternId=${item.pattern_id}`}
+                      href={item.slugUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="shrink-0 ml-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black px-3 py-1.5 rounded-lg transition-colors uppercase tracking-wide"
                     >
                       Solve Again

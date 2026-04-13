@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { toSlug } from "@/lib/seo";
+import { toSlug, getQuestionUrl } from "@/lib/seo";
 import PracticeButton from "./PracticeButton";
 import ConfidenceBadge from "./ConfidenceBadge";
 import MathRenderer from "@/components/ui/MathRenderer";
@@ -26,11 +26,13 @@ const difficultyColors: Record<string, string> = {
 // ── MEMOIZED QUESTION CARD ─────────────────────────────────────────────
 const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride }: any) => {
   const isPyq = isPyqOverride !== undefined ? isPyqOverride : q._isPyq;
-  const prefix = isPyq ? "pyq" : "gq";
-  const examSlug = toSlug(pattern.subject ? (q.exam_type || "gate") : "gate") + "-cse";
-  const subjectSlug = toSlug(pattern.subject || "general");
-  const topicSlug = toSlug(pattern.topic_name || "topic");
-  const seoUrl = `/${examSlug}/${subjectSlug}/${topicSlug}/${prefix}-${q.id}`;
+  const seoUrl = getQuestionUrl({
+    id: q.id,
+    prefix: isPyq ? "pyq" : "gq",
+    subject: pattern.subject,
+    topicName: pattern.topic_name,
+    examType: q.exam_type
+  });
 
   return (
     <div className="relative group/card h-full">

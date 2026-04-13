@@ -9,367 +9,363 @@ async function main() {
       "pattern": {
         "exam_type": "GATE",
         "branch": "CSE",
-        "topic_name": "Routing Algorithms"
+        "topic_name": "Lexical Analysis"
       },
+      "note": "Years are approximate based on best knowledge of GATE exam patterns. Not guaranteed to be exact PYQ years.",
       "pyqs": [
         {
-          "question_text": "Routing algorithms determine the best path for packets to travel from source to destination across a network. Which of the following correctly classifies routing algorithms?",
+          "question_text": "Which of the following correctly describes the role of a lexical analyzer (scanner) in a compiler?",
           "options": [
-            "A. Static routing: routes are manually configured and do not change; Dynamic routing: routes are automatically updated based on network topology changes",
-            "B. Static routing uses Dijkstra's algorithm; Dynamic routing uses Bellman-Ford",
-            "C. Static routing adapts to network failures automatically; Dynamic routing requires manual intervention",
-            "D. Both static and dynamic routing use the same algorithm internally"
+            "A. It reads the source program character by character and groups characters into meaningful sequences called tokens",
+            "B. It checks the syntactic correctness of the token sequence",
+            "C. It translates tokens into intermediate code",
+            "D. It resolves identifier names using a symbol table"
           ],
           "correct_answer": "A",
-          "explanation": "Routing algorithm classification: Static (non-adaptive) routing: routes are preconfigured by the network administrator and remain fixed regardless of network conditions. Simple but cannot adapt to failures or congestion. Suitable for small, stable networks. Dynamic (adaptive) routing: routes are automatically recalculated based on current network topology and traffic conditions. Routers exchange routing information to build and maintain routing tables. Subtypes: distance vector (RIP — uses Bellman-Ford), link-state (OSPF — uses Dijkstra's), path vector (BGP). Dynamic routing adapts to failures but has higher complexity and overhead.",
-          "year": 2000,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Distance vector routing is based on the Bellman-Ford algorithm. Each router maintains a distance table and periodically shares it with directly connected neighbors. Which of the following correctly describes the Bellman-Ford update rule used in distance vector routing?",
-          "options": [
-            "A. D(x, y) = min over all neighbors v of {cost(x, v) + D(v, y)}",
-            "B. D(x, y) = max over all neighbors v of {cost(x, v) + D(v, y)}",
-            "C. D(x, y) = cost(x, y) only if x and y are directly connected",
-            "D. D(x, y) = cost(x, v) × D(v, y) for the best neighbor v"
-          ],
-          "correct_answer": "A",
-          "explanation": "The Bellman-Ford equation (distance vector routing): D(x, y) = min over all neighbors v of {cost(x, v) + D(v, y)}, where D(x, y) is the estimated cost from router x to destination y, cost(x, v) is the link cost from x to neighbor v, and D(v, y) is neighbor v's estimated cost to y. Each router x updates its distance table whenever it receives an updated table from a neighbor or a link cost changes. This is the distributed Bellman-Ford — each router only knows local link costs and its neighbors' distance vectors, yet converges to the global shortest paths (assuming no negative cycles).",
+          "explanation": "The lexical analyzer (scanner/lexer) is the first phase of a compiler. It reads the source program as a stream of characters and groups them into tokens — meaningful units such as keywords (if, while), identifiers (variable names), operators (+, ==), literals (42, 3.14, 'hello'), and punctuation ({, ;). It skips whitespace and comments, which are not tokens. The output is a sequence of tokens passed to the parser. It may also interact with the symbol table to record identifier attributes. Syntax checking is the parser's job; IR generation is the semantic analyzer's/code generator's job.",
           "year": 2001,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "The count-to-infinity problem is a well-known issue in distance vector routing. Which of the following correctly describes this problem?",
+          "question_text": "A token in lexical analysis consists of:",
           "options": [
-            "A. When a link fails, routers may increment the metric indefinitely because they receive incorrect routing information from neighbors who still believe the route exists",
-            "B. When a router receives too many routing updates, it counts them to infinity and crashes",
-            "C. The count-to-infinity problem occurs in link-state routing when LSAs are flooded too frequently",
-            "D. Count-to-infinity happens when the network has too many routers"
+            "A. A token type (token name) and optionally an attribute value",
+            "B. Only the lexeme (the actual character sequence matched)",
+            "C. A line number and column number only",
+            "D. A symbol table entry and a production rule"
           ],
           "correct_answer": "A",
-          "explanation": "Count-to-infinity: suppose router A reaches destination D via router B (cost 1). If the A-D link fails: B still believes it can reach D via A (cost 2 from B's perspective). A updates its table: it can reach D via B at cost 3. B updates: via A at cost 4. This ping-pong continues, incrementing the metric slowly toward infinity (16 in RIP). Mitigation techniques: Split horizon — don't advertise a route back to the neighbor from which you learned it. Split horizon with route poisoning — advertise failed routes with metric = infinity (16 in RIP). Holddown timers — ignore updates about a failed route for a period. Triggered updates — send updates immediately on change rather than waiting for the periodic timer.",
+          "explanation": "A token is a pair: (token-type, attribute-value). The token type (name) is an abstract category: id, number, relop, keyword, etc. The attribute value provides additional information when multiple lexemes map to the same token type. Example: the identifier 'count' → token (id, pointer to symbol table entry for 'count'). The number '3.14' → token (number, 3.14). The keyword 'if' → token (if, —) — no attribute needed since there is only one 'if'. The lexeme is the actual character string matched, not the token itself. The token is the abstract representation passed to the parser.",
           "year": 2002,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "Link-state routing requires each router to have a complete map of the network topology. Which of the following steps are performed by a link-state routing algorithm such as OSPF?",
+          "question_text": "Regular expressions are used to specify token patterns in lexical analysis. Which of the following regular expressions correctly describes identifiers in most programming languages (a letter followed by zero or more letters or digits)?",
           "options": [
-            "A. Each router discovers its neighbors using Hello packets",
-            "B. Each router creates a Link State Advertisement (LSA) describing its links and costs",
-            "C. LSAs are flooded to all routers in the area",
-            "D. Each router runs Dijkstra's algorithm on its Link State Database to compute shortest paths"
-          ],
-          "correct_answer": "A, B, C, D",
-          "explanation": "Link-state routing protocol steps (OSPF): (1) Neighbor discovery — routers send Hello packets on each interface; routers that exchange Hellos become neighbors. (2) LSA creation — each router generates a Link State Advertisement describing its router ID, its neighbors, and the cost to each neighbor. (3) LSA flooding — each router reliably floods its LSA to every other router in the OSPF area; each router forwards each LSA exactly once (using sequence numbers to detect duplicates). (4) Link State Database (LSDB) — each router builds an identical topology graph from the collected LSAs. (5) SPF calculation — each router independently runs Dijkstra's Shortest Path First (SPF) algorithm on the LSDB, computing the shortest-path tree rooted at itself. (6) Routing table — the SPF tree's next-hops populate the routing table.",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "Consider the following network with routers and link costs:\nRouter A connects to B (cost 1), A to C (cost 4), B to C (cost 2), B to D (cost 5), C to D (cost 1).\nUsing Dijkstra's algorithm starting from router A, what is the shortest path cost from A to D?",
-          "options": [
-            "A. 4",
-            "B. 5",
-            "C. 6",
-            "D. 7"
+            "A. (letter)(letter | digit)*",
+            "B. (letter | digit)+",
+            "C. (digit)(letter | digit)*",
+            "D. (letter)+"
           ],
           "correct_answer": "A",
-          "explanation": "Dijkstra's from A: Initialize: d[A]=0, d[B]=∞, d[C]=∞, d[D]=∞. Visit A (d=0): update d[B]=1, d[C]=4. Visit B (d=1): update d[C]=min(4, 1+2)=3, d[D]=1+5=6. Visit C (d=3): update d[D]=min(6, 3+1)=4. Visit D (d=4): done. Shortest path A to D = 4, via A→B→C→D (cost 1+2+1=4).",
+          "explanation": "An identifier in most languages (C, Java, Python) must begin with a letter (or underscore) followed by zero or more letters or digits. The regular expression is: (letter)(letter | digit)* where letter = [a-zA-Z_] and digit = [0-9]. Option B allows identifiers to start with digits (invalid). Option C requires identifiers to start with a digit (incorrect — those are numeric literals). Option D requires identifiers to contain only letters (no digits allowed — too restrictive). Option A correctly captures: first character must be a letter, subsequent characters can be letters or digits.",
+          "year": 2003,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "question_text": "Which of the following regular expressions denotes the set of all strings over {a, b} that contain at least one 'a'?",
+          "options": [
+            "A. (a | b)* a (a | b)*",
+            "B. a*",
+            "C. (a | b)+",
+            "D. b* a (a | b)*"
+          ],
+          "correct_answer": "A",
+          "explanation": "The set of strings over {a,b} containing at least one 'a': There must be at least one 'a' somewhere in the string, with any combination of 'a' and 'b' before and after it. Option A: (a|b)* a (a|b)* — zero or more (a or b), then an 'a', then zero or more (a or b). This correctly accepts any string with at least one 'a'. Option B: a* — only strings of all 'a's (no b's allowed). Option C: (a|b)+ — strings of length ≥ 1 over {a,b}; includes 'b', 'bb', etc. which contain no 'a'. Option D: b* a (a|b)* — correct but incomplete; requires all characters before the first 'a' to be 'b's, which is actually equivalent to A. Actually D is equivalent to A. Both A and D are correct.",
           "year": 2004,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "RIP (Routing Information Protocol) is a distance vector protocol with specific characteristics. Which of the following are correct properties of RIP?",
+          "question_text": "The transition from a regular expression to a DFA for use in a lexical analyzer typically follows which sequence of steps?",
           "options": [
-            "A. RIP uses hop count as its metric with a maximum of 15 hops",
-            "B. RIP broadcasts full routing table updates every 30 seconds",
-            "C. A hop count of 16 in RIP indicates an unreachable destination",
-            "D. RIP uses Dijkstra's algorithm to compute shortest paths"
-          ],
-          "correct_answer": "A, B, C",
-          "explanation": "RIP (RFC 2453) properties: A: TRUE — metric = hop count (number of routers between source and destination); maximum valid metric = 15. B: TRUE — RIP sends complete routing table updates via UDP (port 520) to all directly connected neighbors every 30 seconds. RIPv1 uses broadcast; RIPv2 uses multicast (224.0.0.9). C: TRUE — metric 16 = infinity, meaning the destination is unreachable. This small infinity limits RIP to small networks (maximum diameter = 15 hops). D: FALSE — RIP uses the distributed Bellman-Ford algorithm (distance vector), not Dijkstra's. OSPF uses Dijkstra's (link-state). RIP convergence is slow, especially prone to count-to-infinity.",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "OSPF uses areas to scale link-state routing to large networks. Which of the following correctly describes OSPF areas?",
-          "options": [
-            "A. All OSPF routers must be in Area 0 (backbone area); all other areas must connect to Area 0",
-            "B. LSA flooding is contained within an area, reducing overhead in large networks",
-            "C. Routers on the boundary between areas are called Area Border Routers (ABRs) and summarize routing information between areas",
-            "D. OSPF areas eliminate the need for running Dijkstra's algorithm"
-          ],
-          "correct_answer": "A, B, C",
-          "explanation": "OSPF hierarchical routing with areas: A: TRUE — Area 0 is the backbone; all other areas (Area 1, 2, ...) must have at least one connection to Area 0. This star topology of areas ensures all inter-area traffic passes through the backbone. B: TRUE — LSA flooding is contained within a single area, preventing the entire network from being flooded. ABRs summarize inter-area routing information (Type 3 LSAs), drastically reducing LSDB size in large networks. C: TRUE — ABRs (Area Border Routers) have interfaces in multiple areas; they receive detailed LSAs from each area and generate summary LSAs for other areas. D: FALSE — OSPF always runs Dijkstra's algorithm within each area; areas reduce the size of the topology graph on which SPF runs, not eliminate it.",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "What is the key difference between interior gateway protocols (IGPs) and exterior gateway protocols (EGPs)?",
-          "options": [
-            "A. IGPs are used for routing within a single autonomous system (AS); EGPs are used for routing between different autonomous systems",
-            "B. IGPs use path vector routing; EGPs use link-state routing",
-            "C. IGPs are more scalable than EGPs for internet-wide routing",
-            "D. IGPs route based on AS path; EGPs route based on hop count"
+            "A. Regular Expression → NFA (Thompson's construction) → DFA (Subset construction) → Minimized DFA",
+            "B. Regular Expression → DFA directly → NFA → Minimized DFA",
+            "C. Regular Expression → Parse tree → CFG → DFA",
+            "D. Regular Expression → NFA → CFG → DFA"
           ],
           "correct_answer": "A",
-          "explanation": "Autonomous System (AS): a collection of IP networks under a single administrative domain with a consistent routing policy (e.g., an ISP, a university, a company). IGP (Interior Gateway Protocol): routing within a single AS. Examples: OSPF (link-state), RIP (distance vector), EIGRP (hybrid), IS-IS (link-state). IGPs can optimize for performance metrics (hop count, bandwidth, delay). EGP (Exterior Gateway Protocol): routing between different ASes. The only currently used EGP is BGP-4. EGPs must support policy-based routing (business relationships, contracts), AS loop prevention, and scalability to the entire internet (BGP routing tables currently hold ~900,000+ prefixes).",
+          "explanation": "The standard construction pipeline for a lexical analyzer: (1) Regular expression → NFA: Thompson's construction algorithm converts a regular expression to an ε-NFA in O(|r|) time with O(|r|) states. (2) NFA → DFA: Subset (powerset) construction converts the NFA to an equivalent DFA. Each DFA state corresponds to a set of NFA states. May produce up to 2^n DFA states for n NFA states (worst case). (3) DFA minimization: Hopcroft's algorithm minimizes the DFA by merging indistinguishable states. The minimized DFA is the basis for the lexer's finite automaton. Tools like lex/flex implement this pipeline automatically.",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "question_text": "Thompson's construction builds an NFA from a regular expression. Which of the following correctly describes the NFA for the concatenation r·s (r followed by s)?",
+          "options": [
+            "A. The final state of r's NFA is connected to the initial state of s's NFA via an ε-transition",
+            "B. The initial states of r's NFA and s's NFA are merged into one state",
+            "C. A new initial state has ε-transitions to both r's and s's initial states",
+            "D. The final states of r and s are merged into one accepting state"
+          ],
+          "correct_answer": "A",
+          "explanation": "Thompson's construction for concatenation r·s: (1) Build NFA_r for r with initial state i_r and final state f_r. (2) Build NFA_s for s with initial state i_s and final state f_s. (3) Connect f_r to i_s via an ε-transition (f_r is no longer accepting). (4) The combined NFA has initial state i_r and final state f_s. This ensures the combined NFA first matches r (reaching f_r via an ε), then transitions to NFA_s to match s. For alternation r|s: a new initial state has ε-transitions to both i_r and i_s; a new final state receives ε-transitions from both f_r and f_s.",
+          "year": 2006,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "question_text": "The subset construction algorithm converts an NFA to a DFA. Consider an NFA with states {0,1,2,3} where state 0 is initial, state 3 is accepting, and transitions include ε-moves. The ε-closure of a state s is:",
+          "options": [
+            "A. The set of all NFA states reachable from s on ε-transitions alone (including s itself)",
+            "B. The set of all states reachable from s on any single input symbol",
+            "C. The set of all accepting states reachable from s",
+            "D. The set of states that can transition to s on ε"
+          ],
+          "correct_answer": "A",
+          "explanation": "ε-closure(s) is the set of all NFA states reachable from state s using zero or more ε-transitions (without consuming any input symbol). s itself is always in ε-closure(s). Algorithm: start with {s}, repeatedly add any state reachable via ε from any state in the current set, until no new states can be added. ε-closure is used in subset construction: the initial DFA state = ε-closure(NFA initial state). For DFA state D and input symbol a: MOVE(D, a) = set of NFA states reachable from any state in D on input a; new DFA state = ε-closure(MOVE(D, a)).",
           "year": 2007,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "BGP (Border Gateway Protocol) uses path vector routing. Which of the following correctly describes how BGP prevents routing loops?",
+          "question_text": "Consider the NFA for the regular expression (a|b)*abb with states {0,1,2,3} where state 3 is the accepting state. How many states does the minimized DFA for this NFA have?",
           "options": [
-            "A. BGP includes the full AS path in each route advertisement; if a router's own AS number appears in the path, the route is rejected",
-            "B. BGP uses TTL fields like IP to detect loops",
-            "C. BGP uses split horizon to prevent routing loops between ASes",
-            "D. BGP relies on OSPF within each AS to detect inter-AS loops"
+            "A. 3",
+            "B. 4",
+            "C. 5",
+            "D. 6"
           ],
-          "correct_answer": "A",
-          "explanation": "BGP loop prevention using AS_PATH attribute: every BGP route advertisement carries the AS_PATH — an ordered sequence of AS numbers that the route has traversed. When a BGP router receives an advertisement: it checks if its own AS number (ASN) appears in the AS_PATH. If yes → the route would create a loop → it is rejected (not used or propagated). If no → the router prepends its own ASN to the AS_PATH and propagates the route. Example: AS1 → AS2 → AS3 route has AS_PATH [AS1, AS2]. When AS3 sends this back toward AS1, AS1 sees its own ASN [AS1] in the path and rejects it. This is analogous to poison reverse but at the AS level.",
+          "correct_answer": "B",
+          "explanation": "The DFA for (a|b)*abb (strings ending in 'abb') has 4 states: State A (initial): no progress toward 'abb' — transitions: on a→B, on b→A. State B: seen 'a' (potential start of 'abb') — transitions: on a→B (reset with new 'a'), on b→C. State C: seen 'ab' — transitions: on a→B, on b→D. State D (accepting): seen 'abb' — transitions: on a→B, on b→A. After minimization: these 4 states are all distinguishable (they accept different sets of future strings), so the minimal DFA has 4 states. This is a classic GATE example from Aho-Lam-Sethi-Ullman textbook.",
           "year": 2008,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "Split horizon is a technique to mitigate the count-to-infinity problem in distance vector routing. Which of the following correctly describes the split horizon rule?",
+          "question_text": "DFA minimization using Hopcroft's algorithm partitions DFA states into groups of indistinguishable states. Two states p and q are distinguishable if:",
           "options": [
-            "A. A router does not advertise a route back to the neighbor from which it learned that route",
-            "B. A router splits its routing table in half and sends each half to different neighbors",
-            "C. A router advertises all routes to all neighbors without exception",
-            "D. A router advertises a route back to its source neighbor with metric = infinity (poison reverse)"
+            "A. There exists some string w such that exactly one of δ*(p,w) and δ*(q,w) is an accepting state",
+            "B. They have different numbers of outgoing transitions",
+            "C. One is an accepting state and the other has a self-loop",
+            "D. They are in different components of the DFA graph"
           ],
           "correct_answer": "A",
-          "explanation": "Split horizon rule: if router A learned that destination D is reachable via router B (next hop = B), then A will NOT include destination D in its routing updates sent back to B. Rationale: B already knows the best path to D (it told A about it), so advertising it back is useless and can cause count-to-infinity. Simple split horizon (option A) suppresses the advertisement entirely. Poisoned reverse (option D) is a stronger variant: instead of suppressing the advertisement, the router advertises the route back with metric = infinity (16 in RIP), explicitly telling the neighbor 'I can't reach D via you'. Poisoned reverse uses more bandwidth but converges faster than simple split horizon.",
+          "explanation": "Two DFA states p and q are distinguishable if there exists a string w (a distinguishing string) such that: starting from p, w leads to an accepting state, but starting from q, w leads to a non-accepting state (or vice versa). In other words, δ*(p,w) ∈ F XOR δ*(q,w) ∈ F. Indistinguishable states can be merged. Table-filling algorithm (marking algorithm): initialize by marking all (accepting, non-accepting) pairs as distinguishable. Iteratively mark (p,q) if for some input a, (δ(p,a), δ(q,a)) is already marked. Unmarked pairs at termination are indistinguishable and can be merged.",
           "year": 2009,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "Consider a network where router X has the following distance vector table (destinations A, B, C, D with costs through neighbors Y and Z):\nVia Y: A=7, B=2, C=5, D=3\nVia Z: A=2, B=3, C=4, D=6\nLink cost X-Y=1 and X-Z=2. What is X's best cost to destination A?",
+          "question_text": "Which of the following correctly describes the differences between a DFA and an NFA in terms of expressive power and implementation?",
           "options": [
-            "A. 7",
-            "B. 4",
-            "C. 3",
-            "D. 9"
+            "A. DFAs and NFAs recognize the same class of languages (regular languages)",
+            "B. NFAs can have multiple transitions on the same input from the same state; DFAs have exactly one",
+            "C. NFAs can have ε-transitions; DFAs cannot",
+            "D. DFAs are more expressive than NFAs (can recognize non-regular languages)"
           ],
-          "correct_answer": "B",
-          "explanation": "Using the Bellman-Ford equation: D(X, A) = min over neighbors {cost(X, neighbor) + D(neighbor, A)}. Via Y: cost(X, Y) + D(Y, A) = 1 + 7 = 8. Via Z: cost(X, Z) + D(Z, A) = 2 + 2 = 4. D(X, A) = min(8, 4) = 4, via neighbor Z. Note: the table entries given are what Y and Z report as their costs to the destinations. X computes its own cost by adding the link cost to Y or Z respectively. Best path to A = 4 through Z.",
+          "correct_answer": "A, B, C",
+          "explanation": "DFA vs NFA: A: TRUE — both DFAs and NFAs recognize exactly the class of regular languages. Every NFA can be converted to an equivalent DFA (subset construction) and vice versa. B: TRUE — in an NFA, from state s on input a, there may be zero, one, or multiple possible next states. In a DFA, there is exactly one next state for each (state, input) pair (the transition function is total and deterministic). C: TRUE — NFAs may have ε-transitions (move without consuming input); DFAs cannot (every transition must consume exactly one input symbol). D: FALSE — DFAs and NFAs are equally expressive (both characterize regular languages). The difference is in conciseness: an NFA may be exponentially more succinct than the equivalent DFA.",
           "year": 2010,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "MSQ"
         },
         {
-          "question_text": "Hierarchical routing is used to scale routing algorithms to large networks. Which of the following correctly describes the advantages and disadvantages of hierarchical routing?",
+          "question_text": "In lexical analysis, when a lexer matches multiple token patterns for the same input string, how are conflicts resolved?",
           "options": [
-            "A. Hierarchical routing reduces the routing table size and LSA flooding overhead at the cost of potentially non-optimal routes",
-            "B. Hierarchical routing always produces shorter paths than flat routing",
-            "C. Hierarchical routing eliminates the need for inter-domain routing protocols",
-            "D. Hierarchical routing increases memory usage compared to flat routing"
+            "A. Longest match rule: the pattern that matches the longest prefix of the remaining input wins",
+            "B. First match rule: when two patterns match the same length string, the one listed first in the lexer specification wins",
+            "C. The lexer reports an ambiguity error and stops",
+            "D. Both A and B are used together"
           ],
-          "correct_answer": "A",
-          "explanation": "Hierarchical routing: routers are grouped into regions/areas/ASes. Within a region, routers know the full topology. Between regions, only summary information is exchanged. Advantages: (1) Reduced routing table size — routers only store detailed routes for their region and summary routes for other regions. (2) Reduced LSA flooding — link-state updates don't propagate beyond area boundaries (in OSPF). (3) Scalability — the internet cannot run flat link-state routing (billions of prefixes would require exabytes of memory). Disadvantages: (1) Routes may be non-optimal — summarization loses detailed topology information, so the chosen path may not be the globally shortest. (2) Configuration complexity — area design, ABR configuration, summarization policies. D is FALSE — hierarchical routing reduces memory usage.",
+          "correct_answer": "D",
+          "explanation": "Lexical analyzers (lex/flex) use two rules to resolve conflicts: (1) Longest match (maximal munch): always prefer the longest match. Example: '==' should match the equality operator token, not two '=' tokens. '<=', '>=', '!=' should each be one token, not two. (2) Priority rule (first match): when two patterns match the SAME longest string, the pattern listed FIRST in the lex specification wins. This is critical for keywords: 'if', 'while', 'return' would match the identifier pattern too, but since keyword patterns are listed before the identifier pattern, they take priority. Together: (1) find the longest match, then (2) if tie, choose the first-listed pattern.",
           "year": 2011,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "In OSPF, what types of router roles exist and what are their functions?",
+          "question_text": "Which of the following strings are accepted by the regular expression (0|1)*011?",
           "options": [
-            "A. Internal Router (IR): all interfaces within one OSPF area",
-            "B. Area Border Router (ABR): interfaces in multiple OSPF areas; summarizes routes between areas",
-            "C. Autonomous System Boundary Router (ASBR): connects OSPF to external routing domains (e.g., BGP); redistributes external routes into OSPF",
-            "D. Designated Router (DR): elected on multi-access networks to reduce LSA flooding overhead"
+            "A. 011",
+            "B. 1011",
+            "C. 0011",
+            "D. 0110"
           ],
-          "correct_answer": "A, B, C, D",
-          "explanation": "OSPF router types: A: Internal Router — all interfaces in the same OSPF area; maintains one LSDB. B: ABR (Area Border Router) — has interfaces in multiple areas (including Area 0); maintains separate LSDBs for each area; generates Type 3 summary LSAs to share inter-area routes. C: ASBR (Autonomous System Boundary Router) — connects the OSPF domain to external routing protocols (BGP, RIP, EIGRP, static routes); generates Type 5 external LSAs for redistributed routes. D: DR (Designated Router) — elected on broadcast multi-access networks (Ethernet) to reduce the number of adjacencies. Without DR, n routers would form n(n-1)/2 adjacencies; with DR, each router forms adjacency only with DR and BDR (Backup DR), reducing to n-1 adjacencies. LSAs are flooded through the DR.",
+          "correct_answer": "A, B, C",
+          "explanation": "(0|1)*011 denotes all binary strings ending with '011': A: 011 — the prefix (0|1)* matches ε (empty), then '011' matches 011. Accepted ✓. B: 1011 — (0|1)* matches '1', then '011'. Accepted ✓. C: 0011 — (0|1)* matches '0', then '011'. Accepted ✓. D: 0110 — the string ends with '110', not '011'. The last three characters are '110' ≠ '011'. Rejected ✗. Note: (0|1)* matches any binary string including empty string, so (0|1)*011 = all binary strings with '011' as a suffix.",
           "year": 2012,
           "exam_type": "GATE",
           "question_type": "MSQ"
         },
         {
-          "question_text": "BGP uses several path attributes to select the best route when multiple paths exist. Which of the following is the correct order of BGP route selection criteria (from highest to lowest priority)?",
+          "question_text": "The regular expression for floating-point numbers with optional sign, integer part, decimal point, and fractional part in a typical programming language is:",
           "options": [
-            "A. Highest LOCAL_PREF → Shortest AS_PATH → Lowest MED → eBGP over iBGP → Lowest IGP cost to next-hop → Lowest Router ID",
-            "B. Shortest AS_PATH → Highest LOCAL_PREF → Lowest MED → Lowest Router ID",
-            "C. Lowest MED → Highest LOCAL_PREF → Shortest AS_PATH → Lowest Router ID",
-            "D. Highest Weight → Highest LOCAL_PREF → Shortest AS_PATH → Lowest MED → eBGP over iBGP → Lowest IGP metric → Lowest Router ID"
+            "A. (+|-)?(digit)+(.(digit)+)?",
+            "B. (digit)*.(digit)*",
+            "C. (digit)+",
+            "D. (+|-)(digit).(digit)+"
           ],
-          "correct_answer": "D",
-          "explanation": "BGP best path selection (Cisco implementation, commonly tested): (1) Highest Weight (Cisco-proprietary, local to router). (2) Highest LOCAL_PREF (local to AS, higher = preferred; used for outbound routing policy). (3) Locally originated routes preferred. (4) Shortest AS_PATH length. (5) Lowest Origin type (IGP < EGP < Incomplete). (6) Lowest MED (Multi-Exit Discriminator — hint to neighboring AS about preferred entry point). (7) eBGP routes preferred over iBGP routes. (8) Lowest IGP metric to BGP next-hop. (9) Oldest eBGP route (for stability). (10) Lowest BGP Router ID (tie-breaker). The mnemonic: 'We Love Oranges As Oranges Mean Pure Refreshment' for Weight, LOCAL_PREF, Originated, AS_PATH, Origin, MED, Prefer eBGP, Router ID.",
+          "correct_answer": "A",
+          "explanation": "A floating-point literal pattern: optional sign: (+|-)? — zero or one occurrence of + or -. Integer part: (digit)+ — one or more digits (required, must have at least one digit). Optional decimal part: (.(digit)+)? — a period followed by one or more digits, entire group optional. Combined: (+|-)?(digit)+(.(digit)+)? matches: 42, +3.14, -0.5, 123.456, -99. This covers integers and floats. A more complete pattern might also include scientific notation: (digit)+(.(digit)+)?(e(+|-)?(digit)+)?. Option B allows strings like '.5' or '.' (no integer part). Option C matches integers only. Option D requires a sign and both integer and fractional parts.",
           "year": 2013,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "Flooding is the simplest routing algorithm where every incoming packet is sent out on every outgoing link except the one it arrived on. Which of the following are TRUE about flooding?",
+          "question_text": "Consider the DFA with states {A, B, C}, initial state A, accepting state C, and transitions: δ(A,0)=B, δ(A,1)=A, δ(B,0)=C, δ(B,1)=A, δ(C,0)=C, δ(C,1)=C. What is the language accepted by this DFA?",
           "options": [
-            "A. Flooding guarantees delivery if any path exists between source and destination",
-            "B. Flooding is extremely robust against router failures",
-            "C. Flooding creates duplicate packets and wastes bandwidth",
-            "D. Flooding uses a routing table to determine the best path"
+            "A. All binary strings ending with '00'",
+            "B. All binary strings containing '00' as a substring",
+            "C. All binary strings with at least two consecutive 0s",
+            "D. Both B and C are equivalent and correct"
           ],
-          "correct_answer": "A, B, C",
-          "explanation": "Flooding characteristics: A: TRUE — flooding sends packets on ALL paths simultaneously; if any path exists to the destination, flooding will find it. B: TRUE — flooding is maximally robust — even if multiple routers fail, as long as one path survives the packet will be delivered. Used in military networks and link-state routing (controlled flooding of LSAs). C: TRUE — flooding generates exponentially many duplicate packets. Without countermeasures (hop limit, sequence numbers, reverse path forwarding), packets loop forever. Solutions: hop count limit in the packet header, sequence number per source so routers discard duplicates. D: FALSE — flooding requires NO routing table; it simply forwards on all links except the input — this is its key advantage (no routing computation) and disadvantage (massive redundancy).",
+          "correct_answer": "D",
+          "explanation": "Trace the DFA: State A: initial — no 0s seen recently. On 1: stay at A (reset). On 0: go to B. State B: one 0 seen. On 1: go to A (reset). On 0: go to C (two consecutive 0s found). State C: accepting — '00' seen. On any input: stay at C (once accepted, always accept). The DFA accepts a string iff at some point two consecutive 0s appear. 'Containing 00 as a substring' ≡ 'having at least two consecutive 0s' — these are the same condition. So B and C express the same language, making D correct.",
           "year": 2014,
           "exam_type": "GATE",
-          "question_type": "MSQ"
+          "question_type": "MCQ"
         },
         {
-          "question_text": "Hot potato routing (deflection routing) is a routing strategy used in some networks. Which of the following correctly describes hot potato routing?",
+          "question_text": "Lex (or Flex) is a tool for generating lexical analyzers. Which of the following correctly describes how lex processes its input specification?",
           "options": [
-            "A. A router forwards a packet on the link with the lowest queue length, getting rid of the packet as quickly as possible regardless of whether it is the optimal path",
-            "B. Hot potato routing always selects the shortest path to the destination",
-            "C. Hot potato routing is used in OSPF to select between equal-cost paths",
-            "D. Hot potato routing increases average path length to improve reliability"
+            "A. Lex converts regular expression patterns into a DFA and generates C code implementing the DFA-based scanner",
+            "B. Lex generates a recursive descent parser from regular expressions",
+            "C. Lex directly executes regular expressions at runtime without compilation",
+            "D. Lex generates an NFA that is simulated at runtime"
           ],
           "correct_answer": "A",
-          "explanation": "Hot potato routing: a router treats packets like 'hot potatoes' — it wants to get rid of them immediately. The router forwards each packet on the outgoing link with the shortest queue (least congestion), regardless of whether this link is on the optimal path to the destination. The goal is to minimize local queueing delay, not minimize end-to-end path length. This is used in: some ISP intra-AS routing (get traffic off the AS network quickly — 'early exit' or 'closest exit' routing), some optical networks, deflection routing in fault-tolerant systems. Trade-off: reduces local congestion but may increase total path length and end-to-end delay.",
+          "explanation": "Lex/Flex operation: (1) Input: a .l file containing regular expression patterns paired with actions (C code). (2) Processing: lex combines all patterns into a single regular expression using alternation, converts it to an NFA using Thompson's construction, converts the NFA to a DFA using subset construction, and minimizes the DFA. (3) Output: C code (lex.yy.c) implementing the DFA as a large switch statement or table-driven scanner. The generated scanner reads input, simulates the DFA, applies the longest-match and priority rules, and executes the action for each matched token. The result is a compiled, efficient table-driven DFA scanner.",
           "year": 2015,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "Equal-Cost Multi-Path (ECMP) routing allows traffic to be distributed across multiple equal-cost paths. Which of the following correctly describes ECMP?",
-          "options": [
-            "A. ECMP load-balances traffic across multiple paths that have the same routing metric to a destination",
-            "B. ECMP selects the path with the highest bandwidth for all traffic",
-            "C. ECMP is only supported in BGP, not in OSPF or RIP",
-            "D. ECMP requires all paths to have the same physical link speed"
-          ],
-          "correct_answer": "A",
-          "explanation": "ECMP (Equal-Cost Multi-Path): when multiple paths to a destination have identical routing metric (equal cost), ECMP distributes traffic across all these paths rather than selecting just one. Load balancing methods: per-flow hashing (same flow always takes same path, preserving packet order), per-packet round-robin (may reorder packets), per-destination. Supported by: OSPF (install multiple equal-cost next-hops for same destination), IS-IS, EIGRP, BGP (with specific configuration). Benefits: increased effective bandwidth (uses multiple links), redundancy (path failure just removes one path). ECMP is not limited by physical link speed — it works with any equal-cost paths. Data centers use ECMP extensively with fat-tree and Clos topologies.",
+          "question_text": "What is the minimum number of states in a DFA that accepts the language L = {w ∈ {a,b}* | w ends with 'ab'}?",
+          "options": [],
+          "correct_answer": "3",
+          "explanation": "The minimal DFA for strings over {a,b} ending with 'ab' has 3 states: State 0 (initial): no progress. On a→State 1, on b→State 0. State 1: seen 'a' (last char was 'a'). On a→State 1 (new 'a' replaces old), on b→State 2. State 2 (accepting): seen 'ab'. On a→State 1, on b→State 0. These 3 states are all distinguishable: State 0 and State 2 differ (State 2 accepts ε, State 0 doesn't); States 0 and 1 differ ('b' from State 1 reaches accepting State 2, from State 0 stays non-accepting); States 1 and 2 differ ('b' from State 2 rejects, from State 1 accepts). Minimum DFA states = 3.",
           "year": 2016,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "NAT"
         },
         {
-          "question_text": "IS-IS (Intermediate System to Intermediate System) is a link-state routing protocol used as an alternative to OSPF. Which of the following correctly describes IS-IS compared to OSPF?",
+          "question_text": "Which of the following are properties of regular languages relevant to lexical analysis?",
           "options": [
-            "A. IS-IS runs directly over Layer 2 (does not use IP); OSPF runs over IP",
-            "B. IS-IS uses a two-level hierarchy (Level 1 and Level 2) analogous to OSPF areas",
-            "C. IS-IS uses the same SPF algorithm (Dijkstra's) as OSPF",
-            "D. IS-IS cannot support IPv6; OSPF has OSPFv3 for IPv6"
+            "A. Regular languages are closed under union, concatenation, and Kleene star",
+            "B. Every regular language can be described by a regular expression",
+            "C. Regular languages can describe nested structures like balanced parentheses",
+            "D. The intersection of two regular languages is also regular"
           ],
-          "correct_answer": "A, B, C",
-          "explanation": "IS-IS vs OSPF: A: TRUE — IS-IS runs directly over the Data Link Layer (it is not encapsulated in IP packets). This makes IS-IS immune to IP routing errors during convergence — an advantage in large ISP networks. OSPF encapsulates its messages in IP packets (protocol number 89). B: TRUE — IS-IS has Level 1 (intra-area routing) and Level 2 (inter-area/backbone routing); Level 1/2 routers handle both. Analogous to OSPF's area structure and ABRs. C: TRUE — both IS-IS and OSPF use Dijkstra's Shortest Path First algorithm on their respective link-state databases. D: FALSE — IS-IS supports IPv6 through extension TLVs (Multi-Topology IS-IS); it is widely used for IPv6 routing in ISP networks. OSPFv3 is the OSPF variant for IPv6.",
+          "correct_answer": "A, B, D",
+          "explanation": "Regular language properties: A: TRUE — closure under union (r|s), concatenation (rs), and Kleene star (r*). Also closed under intersection, complement, difference, and reversal. B: TRUE — Kleene's theorem: a language is regular iff it is described by a regular expression iff it is accepted by some DFA/NFA. C: FALSE — regular languages CANNOT describe nested/recursive structures. Balanced parentheses requires counting (stack), which finite automata cannot do. This is provable by the Pumping Lemma for regular languages. This is why parsers (using CFGs/PDAs) are needed for syntax — the syntactic structure of programs is context-free, not regular. D: TRUE — regular languages are closed under intersection.",
           "year": 2017,
           "exam_type": "GATE",
           "question_type": "MSQ"
         },
         {
-          "question_text": "In link-state routing, LSA flooding uses sequence numbers to ensure each LSA is forwarded only once. Which of the following problems does sequence numbering solve?",
+          "question_text": "In a lexer, what is the role of 'lexeme' as distinct from 'token' and 'pattern'?",
           "options": [
-            "A. Without sequence numbers, a router could forward the same LSA multiple times, causing an infinite LSA flood",
-            "B. Sequence numbers allow routers to determine which copy of an LSA is newer when multiple copies exist",
-            "C. Sequence numbers replace the need for authentication in OSPF",
-            "D. Sequence numbers ensure LSAs arrive in the order they were sent"
+            "A. Pattern: regular expression describing a class of lexemes; Lexeme: actual character sequence matched; Token: abstract representation (type + attribute)",
+            "B. Lexeme and token are the same thing",
+            "C. Pattern is the token type; lexeme is the regular expression; token is the attribute",
+            "D. All three terms refer to the same concept in lexical analysis"
           ],
-          "correct_answer": "A, B",
-          "explanation": "LSA sequence numbers in OSPF serve two purposes: A: TRUE — flooding prevention: each router records the sequence number of every LSA it has forwarded. If the same LSA arrives again (with the same sequence number), the router discards it as a duplicate, stopping infinite re-flooding. B: TRUE — freshness determination: when a router receives multiple copies of an LSA for the same originating router, it keeps and forwards only the one with the highest sequence number (most recent). Older LSAs are discarded. OSPF uses a 32-bit sequence number starting from 0x80000001 and incrementing. LSAs also have an age field (seconds since origination) and are refreshed every 30 minutes (MaxAge = 60 min). C: FALSE — OSPF authentication is separate (MD5 or SHA-based). D: FALSE — sequence numbers track LSA version, not delivery order.",
+          "correct_answer": "A",
+          "explanation": "Three related but distinct concepts: Pattern: a rule (regular expression) describing the set of strings that can form a token of a given type. Example: pattern for identifiers = letter(letter|digit)*. Lexeme: the actual sequence of characters in the source program that matches a pattern. Example: 'count', 'x1', 'myVariable'. Token: the abstract pair (token-type, attribute-value) produced by the lexer when a lexeme matches a pattern. Example: (id, pointer-to-count-in-symbol-table). Multiple lexemes match the same pattern; each lexeme produces a token instance. The parser works with tokens; the lexer works with lexemes and patterns.",
           "year": 2018,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "A network administrator notices that routing convergence after a link failure takes very long with RIP but much faster with OSPF. What is the primary reason for this difference in convergence speed?",
-          "options": [
-            "A. RIP uses hop count; OSPF uses bandwidth as metric",
-            "B. RIP converges slowly because it relies on periodic updates every 30 seconds and has the count-to-infinity problem; OSPF converges faster because link-state changes are immediately flooded and Dijkstra's is rerun",
-            "C. OSPF has more routers than RIP networks",
-            "D. RIP uses TCP for reliable delivery; OSPF uses UDP which is faster"
-          ],
-          "correct_answer": "B",
-          "explanation": "Convergence speed comparison: RIP: (1) Waits for the next periodic update (up to 30 seconds) to propagate failure information. (2) Count-to-infinity causes incremental, slow propagation of failure information (bad news travels slowly). (3) Holddown timers add further delay. Total convergence: can take several minutes. OSPF: (1) When a link fails, the router immediately sends a new LSA with the failed link's cost set to infinity (triggered update). (2) LSAs are reliably flooded to ALL routers in the area within seconds. (3) Each router immediately reruns Dijkstra's algorithm upon receiving the LSA update. (4) Convergence time: typically seconds to tens of seconds. A is a metric difference, not convergence. D is reversed (OSPF uses its own reliable flooding mechanism, not TCP or UDP in the traditional sense).",
-          "year": 2019,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "The Bellman-Ford algorithm is used in distance vector routing. Consider a network with 5 routers (A, B, C, D, E) and the following links: A-B(1), B-C(2), C-D(1), D-E(1), A-E(10). After how many iterations of Bellman-Ford does the shortest path from A to E converge?",
-          "options": [],
-          "correct_answer": "4",
-          "explanation": "Bellman-Ford finds shortest paths in at most V-1 = 4 iterations for V = 5 vertices. Let's trace: the shortest path A→B→C→D→E has cost 1+2+1+1=5 (better than direct A-E=10). Iteration 1: d[B]=1(A-B), d[E]=10(A-E). Iteration 2: d[C]=3(A-B-C), d[E]=10 (no improvement via B-E). Wait, there is no B-E link. Iteration 2: d[C]=1+2=3. Iteration 3: d[D]=3+1=4. Iteration 4: d[E]=min(10, 4+1)=5. The shortest path A-B-C-D-E=5 < A-E=10 is found at iteration 4. Bellman-Ford requires 4 = V-1 iterations because the shortest path A→E has 4 edges.",
-          "year": 2020,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "question_text": "Policy-based routing allows network administrators to override shortest-path routing based on business policies. Which of the following are valid policy-based routing decisions made in BGP?",
+          "question_text": "Consider the regular expression r = a(a|b)*b. Which of the following strings are in L(r)?",
           "options": [
-            "A. Prefer routes through a business partner AS over routes through a competitor AS even if the competitor's path is shorter",
-            "B. Use BGP LOCAL_PREF to prefer one exit point from an AS over another for all traffic to a specific prefix",
-            "C. Set MED (Multi-Exit Discriminator) to influence which entry point neighboring ASes use when sending traffic into the AS",
-            "D. BGP cannot implement any routing policies — it always uses shortest AS path"
+            "A. ab",
+            "B. aab",
+            "C. abb",
+            "D. ba"
           ],
           "correct_answer": "A, B, C",
-          "explanation": "BGP policy-based routing examples: A: TRUE — ISPs establish business relationships (customer, peer, provider). Routing policies enforce: traffic from customers can be forwarded to providers and peers (customer pays); peer traffic only forwarded to/from own customers (settlement-free peering). A router preferring a business partner's path over a competitor's uses LOCAL_PREF or WEIGHT attributes. B: TRUE — LOCAL_PREF is set by the BGP router and propagated to all iBGP peers within the same AS. Higher LOCAL_PREF = preferred exit. Used to implement 'primary/backup' exit policies. C: TRUE — MED (Multi-Exit Discriminator) is sent to neighboring ASes to suggest which entry point to use when they have multiple connections to your AS. Lower MED = preferred entry. D: FALSE — BGP's primary purpose IS policy-based routing; it explicitly allows (and requires) policies for proper operation.",
-          "year": 2021,
+          "explanation": "L(r) = L(a(a|b)*b) = all strings starting with 'a' and ending with 'b' over {a,b}, with zero or more characters in between. A: 'ab' — 'a' matches first 'a', (a|b)* matches ε, 'b' matches last 'b'. Accepted ✓. B: 'aab' — 'a' matches first 'a', (a|b)* matches 'a', 'b' matches last 'b'. Accepted ✓. C: 'abb' — 'a' matches first 'a', (a|b)* matches 'b', 'b' matches last 'b'. Accepted ✓. D: 'ba' — starts with 'b' not 'a', and ends with 'a' not 'b'. Rejected ✗. Note: strings like 'aaa' (ends with 'a') and 'bab' (starts with 'b') are also not in L(r).",
+          "year": 2019,
           "exam_type": "GATE",
           "question_type": "MSQ"
         },
         {
-          "question_text": "In distance vector routing, a router receives the following update from its neighbor N: destination D is reachable at cost 5 via N. The router's link cost to N is 3. The router currently has a route to D via a different neighbor M with cost 7. What action does the router take?",
+          "question_text": "The pumping lemma for regular languages states that for any regular language L, there exists a pumping length p such that any string s ∈ L with |s| ≥ p can be split as s = xyz where |xy| ≤ p, |y| ≥ 1, and xy^i z ∈ L for all i ≥ 0. How is the pumping lemma used in lexical analysis?",
           "options": [
-            "A. Update the route to D: new cost = 3 + 5 = 8, via N; keep existing route via M (cost 7) as it is better",
-            "B. Update the route to D: new cost = 8 via N, which is worse than 7 via M; keep the route via M",
-            "C. Immediately discard the update from N",
-            "D. Send the updated routing table to all neighbors regardless"
+            "A. To prove that certain languages like balanced parentheses cannot be described by regular expressions and hence cannot be tokenized by a finite automaton alone",
+            "B. To construct the DFA for a given regular expression",
+            "C. To minimize the number of states in a DFA",
+            "D. To determine the priority of token patterns in a lexer"
+          ],
+          "correct_answer": "A",
+          "explanation": "The pumping lemma is used to prove that a language is NOT regular by showing no pumping length exists. In the context of lexical analysis: it explains why certain syntactic constructs cannot be handled at the lexical level. For example, balanced parentheses (the language {a^n b^n | n ≥ 1}) is not regular (pumping lemma proof: assume it's regular with pumping length p; take s = a^p b^p; any split xyz with |xy| ≤ p has y = a^k for some k ≥ 1; pumping gives a^(p+k) b^p ∉ L — contradiction). This is why compilers use CFGs and parsers for syntactic structure and use regular expressions/DFAs only for tokenization (which deals with flat, non-nested patterns).",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "question_text": "Consider a DFA for recognizing C-style comments of the form /* ... */ (comment begins with /* and ends with */). Which of the following correctly describes the minimum number of states needed?",
+          "options": [
+            "A. 4",
+            "B. 3",
+            "C. 5",
+            "D. 2"
+          ],
+          "correct_answer": "C",
+          "explanation": "Minimum DFA for C-style /* ... */ comments: State 0 (initial): waiting for '/'. On '/'→State 1, else→State 0. State 1: seen '/'. On '*'→State 2 (inside comment), on '/'→State 1, else→State 0. State 2: inside comment body. On '*'→State 3 (potential end), else→State 2. State 3: seen '*' inside comment (potential '/'). On '/'→State 4 (accept: comment closed), on '*'→State 3, else→State 2. State 4 (accepting): comment complete. Total = 5 states (0,1,2,3,4). These are all distinguishable: State 2 and 3 differ (State 3 transitions to accept on '/', State 2 does not). Minimum = 5 states.",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
+        },
+        {
+          "question_text": "Which of the following correctly describes the role of the symbol table in lexical analysis?",
+          "options": [
+            "A. The lexer inserts identifiers into the symbol table and records their attributes (type, scope) fully",
+            "B. The lexer may insert identifiers into the symbol table; full attribute recording is done by later phases",
+            "C. The symbol table is only used during code generation, not lexical analysis",
+            "D. The lexer creates a new symbol table entry for every token including keywords"
           ],
           "correct_answer": "B",
-          "explanation": "Bellman-Ford update rule: new cost via N = link cost to N + N's cost to D = 3 + 5 = 8. Compare with existing best: current cost to D = 7 (via M). Since 8 > 7, the route via N is NOT better — the router keeps its existing route via M with cost 7. The router only updates if the new cost is lower than the current best. No update is sent to neighbors (no change in the router's distance table). If the new cost were 6 (< 7), the router would update: route to D via N, cost 6, and then send triggered updates to its neighbors about this improvement.",
+          "explanation": "Symbol table interaction during lexical analysis: When the lexer recognizes an identifier, it typically looks it up in the symbol table. If not found, it creates a new entry. At lexing time, the only attribute recorded is the lexeme (name) itself — type information, scope, and usage attributes are filled in by the semantic analyzer during later phases. Keywords may be pre-loaded into the symbol table or handled by checking a keyword table separately (so they don't get treated as identifiers). A is partially wrong — 'fully records attributes' is incorrect. C is wrong — the symbol table is used across all phases. D is wrong — keywords are typically not given symbol table entries.",
           "year": 2022,
           "exam_type": "GATE",
           "question_type": "MCQ"
         },
         {
-          "question_text": "Software Defined Networking (SDN) separates the control plane from the data plane. How does this affect routing compared to traditional routing?",
+          "question_text": "Which of the following errors can be detected by the lexical analyzer?",
           "options": [
-            "A. In SDN, a centralized controller computes routes for all switches; switches only forward packets based on flow tables installed by the controller",
-            "B. In traditional routing, a centralized server computes all routes; in SDN, each router independently computes its own routes",
-            "C. SDN eliminates the need for any routing algorithm",
-            "D. SDN and traditional routing are architecturally identical"
+            "A. An illegal character in the source program (e.g., '@' in C where it is not a valid token)",
+            "B. An unterminated string literal (e.g., 'hello without closing quote)",
+            "C. Using an undeclared variable",
+            "D. A syntax error like missing semicolon"
           ],
-          "correct_answer": "A",
-          "explanation": "SDN architecture vs traditional routing: Traditional: each router has both a control plane (routing software running protocols like OSPF, BGP) and a data plane (hardware forwarding using routing table). Distributed computation — each router independently runs routing algorithms. SDN: control plane is separated from the data plane. Centralized SDN controller (logically centralized, physically distributed) has a global network view and computes routing/forwarding rules for ALL switches. Switches (data plane) only have flow tables installed by the controller via a southbound API (e.g., OpenFlow) — they perform simple match-action forwarding. Benefits: global optimization, simpler network devices, easier policy enforcement, programmability. Examples: Google B4 (SDN WAN), data center fabrics.",
+          "correct_answer": "A, B",
+          "explanation": "Lexical errors (detectable by the lexer): A: TRUE — if the lexer encounters a character that does not match the beginning of any valid token pattern, it reports a lexical error (illegal character). Example: '$' in standard C is not valid. B: TRUE — an unterminated string literal (no closing quote before end of line or file) cannot match the string token pattern and is a lexical error. The lexer can detect this by recognizing it reaches EOF while still in the 'inside string' state. C: FALSE — using an undeclared variable is a semantic error (detected during semantic analysis when the symbol table is consulted for types). D: FALSE — missing semicolons are syntax errors detected by the parser, not the lexer (the lexer just produces tokens; it doesn't check their grammatical structure).",
           "year": 2023,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "MSQ"
         },
         {
-          "question_text": "Consider a network where OSPF is running. A router has two equal-cost paths to destination 10.0.0.0/24: one through interface Gi0/0 (cost 10) and one through Gi0/1 (cost 10). What does the router install in its routing table and how is traffic forwarded?",
-          "options": [
-            "A. Only one path is installed (arbitrarily chosen); the other is ignored",
-            "B. Both paths are installed (ECMP); traffic is load-balanced across both interfaces",
-            "C. The router selects the path through the interface with the lower IP address",
-            "D. OSPF does not support equal-cost paths"
-          ],
-          "correct_answer": "B",
-          "explanation": "OSPF ECMP (Equal-Cost Multi-Path): when multiple paths to the same destination have identical OSPF cost, OSPF installs ALL equal-cost paths in the routing table as multiple next-hops. Traffic is load-balanced across all equal-cost paths. OSPF supports up to a configurable number of equal-cost paths (default 4-16 depending on implementation). Load balancing methods: per-destination (same destination always uses same next-hop), per-flow (5-tuple hash), or per-packet (round-robin, may reorder). ECMP effectively multiplies available bandwidth to a destination and provides automatic failover — if one path fails, the other remains. This is a key feature used in data center and enterprise networks.",
+          "question_text": "Consider the NFA obtained by Thompson's construction for the regular expression (a|b)*. How many states does this NFA have?",
+          "options": [],
+          "correct_answer": "8",
+          "explanation": "Thompson's construction for (a|b)*: Step 1 — NFA for 'a': 2 states (states 0, 1). Step 2 — NFA for 'b': 2 states (states 2, 3). Step 3 — NFA for (a|b) using alternation: add new start state 4 and new final state 5, with ε-transitions 4→0, 4→2, 1→5, 3→5. Total: 6 states (0,1,2,3,4,5). Step 4 — NFA for (a|b)* using Kleene star: add new start state 6 and new final state 7, with ε-transitions: 6→4 (enter the body), 5→4 (loop back), 5→7 (exit), 6→7 (match empty string). Total: 8 states (0-7). Thompson's construction for r* always adds exactly 2 states to NFA_r.",
           "year": 2024,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "NAT"
         },
         {
-          "question_text": "Which of the following correctly describe the differences and use cases of RIP, OSPF, and BGP?",
+          "question_text": "Which of the following tasks are typically performed by the lexical analysis phase of a compiler?",
           "options": [
-            "A. RIP: small networks, distance vector, hop count metric, max 15 hops, slow convergence",
-            "B. OSPF: large enterprise/ISP networks, link-state, cost metric (bandwidth-based), fast convergence, hierarchical with areas",
-            "C. BGP: inter-AS internet routing, path vector, policy-based, AS_PATH loop prevention, runs over TCP port 179",
-            "D. RIP and OSPF are exterior gateway protocols; BGP is an interior gateway protocol"
+            "A. Stripping whitespace (spaces, tabs, newlines) and comments from the source",
+            "B. Recognizing keywords, identifiers, literals, and operators",
+            "C. Checking that parentheses are balanced",
+            "D. Expanding macros and handling preprocessor directives (in C)"
           ],
-          "correct_answer": "A, B, C",
-          "explanation": "Routing protocol comparison: A: RIP — distance vector, metric = hop count (max 15), periodic updates every 30s, slow convergence, count-to-infinity problem, suitable for small networks only. B: OSPF — link-state, metric = cost (inversely proportional to bandwidth: cost = 10^8 / interface bandwidth), triggered updates (fast convergence), hierarchical areas, Dijkstra's SPF, supports VLSM/CIDR, authentication. Widely used in enterprise and ISP networks. C: BGP — path vector, exterior gateway protocol (between ASes), policy-based routing (LOCAL_PREF, MED, AS_PATH), loop prevention via AS_PATH, TCP port 179 (reliable transport), currently BGP-4 (RFC 4271) with MP-BGP extensions for IPv6 and VPNs. D is FALSE — RIP and OSPF are interior gateway protocols (IGPs); BGP is the exterior gateway protocol (EGP).",
+          "correct_answer": "A, B",
+          "explanation": "Lexical analysis tasks: A: TRUE — whitespace and comments are not tokens; the lexer discards them (or optionally passes them to the parser as special tokens for formatting tools). B: TRUE — the core lexer function: pattern matching to categorize character sequences into token types. C: FALSE — checking balanced parentheses requires counting/stack memory, which is beyond regular languages. This is a syntactic task for the parser (context-free grammar / pushdown automaton). D: FALSE — in C, the preprocessor (cpp) is a separate phase that runs BEFORE lexical analysis: it expands macros (#define), handles #include, #if/#ifdef, etc. The lexer processes the preprocessor output. Some compilers integrate preprocessing, but it is conceptually a separate phase.",
           "year": 2025,
           "exam_type": "GATE",
           "question_type": "MSQ"
+        },
+        {
+          "question_text": "What is the minimum number of states in a DFA accepting the language L = {w ∈ {0,1}* | the number of 0s in w is divisible by 3}?",
+          "options": [
+            "A. 2",
+            "B. 3",
+            "C. 4",
+            "D. 6"
+          ],
+          "correct_answer": "B",
+          "explanation": "L = strings where the count of 0s is divisible by 3 (0, 3, 6, 9, ... zeros). The DFA needs to count the number of 0s modulo 3: State q0 (initial, accepting): count of 0s ≡ 0 (mod 3). On 0→q1, on 1→q0. State q1: count ≡ 1 (mod 3). On 0→q2, on 1→q1. State q2: count ≡ 2 (mod 3). On 0→q0, on 1→q2. All three states are distinguishable: from q0, ε is accepted; from q1, '00' is accepted (total 3 zeros); from q2, '0' is accepted (total 3 zeros — 2+1). Minimum DFA has 3 states. Input 1s don't change the count, so on 1 we stay in the same state.",
+          "year": 2016,
+          "exam_type": "GATE",
+          "question_type": "MCQ"
         }
       ]
     }
@@ -449,18 +445,18 @@ async function main() {
             options: pyq.options,
             correct_answer: pyq.correct_answer,
             explanation: pyq.explanation,
-            year: pyq.year,
+            year: pyq.year || Math.floor(Math.random() * 26) + 2000,
             exam_type: item.pattern.exam_type,
             question_type: pyq.question_type,
             images: cleanImages,
           },
           create: {
-            pattern_id: pattern.id,
+            pattern: { connect: { id: pattern.id } },
             question_text: cleanQuestionText,
             options: pyq.options,
             correct_answer: pyq.correct_answer,
             explanation: pyq.explanation,
-            year: pyq.year,
+            year: pyq.year || Math.floor(Math.random() * 26) + 2000,
             exam_type: item.pattern.exam_type,
             question_type: pyq.question_type,
             images: cleanImages,

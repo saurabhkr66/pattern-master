@@ -11,7 +11,6 @@ export default function robots(): MetadataRoute.Robots {
           "/sign-up",
           "/practice",
           "/test",
-          // Allow all question paths: /<exam>/<subject>/<topic>/<questionId>
           "/*/*/*/pyq-",
           "/*/*/*/spyq-",
           "/*/*/*/gq-",
@@ -22,6 +21,18 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/api/maintenance/",
         ],
+      },
+      // Explicitly allow AI crawlers for GEO
+      {
+        userAgent: ["GPTBot", "PerplexityBot", "ClaudeBot", "Google-Extended"],
+        allow: [
+          "/",
+          "/practice",
+          "/*/*/*/pyq-",
+          "/*/*/*/spyq-",
+          "/*/*/*/gq-",
+        ],
+        disallow: ["/dashboard", "/onboarding", "/api/"],
       },
     ],
     sitemap: "https://patternmaster.in/sitemap.xml",
