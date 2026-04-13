@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { getQuestionUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Dashboard – PatternMaster",
+  title: "Dashboard – BattleExam",
   description: "Track your GATE CSE prep progress, accuracy, streaks and review wrong answers.",
 };
 

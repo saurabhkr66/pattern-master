@@ -1,7 +1,4 @@
-// app/(app)/layout.tsx
-// Guard: authenticated users who haven't completed onboarding are redirected to /onboarding.
-// This layout wraps /practice, /dashboard — NOT /onboarding (which lives outside this group).
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
@@ -11,20 +8,24 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const { userId } = await auth();
+  const clerkUser = await currentUser();
 
-  if (!userId) {
+  if (!userId || !clerkUser) {
     redirect("/sign-in");
   }
 
-  // If the user row doesn't exist yet, or onboarded is false → send to onboarding.
-  const user = await prisma.user.findUnique({
+  // Auto-sync user to our DB (replaces onboarding)
+  await prisma.user.upsert({
     where: { id: userId },
-    select: { onboarded: true },
+    update: { email: clerkUser.emailAddresses[0]?.emailAddress },
+    create: {
+      id: userId,
+      email: clerkUser.emailAddresses[0]?.emailAddress || "",
+      onboarded: true,
+      exam_type: "GATE",
+      branch: "CSE",
+    },
   });
-
-  if (!user || !user.onboarded) {
-    redirect("/onboarding");
-  }
 
   return <>{children}</>;
 }
