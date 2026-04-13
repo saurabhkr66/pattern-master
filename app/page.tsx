@@ -201,7 +201,7 @@ const MOCK_OPTIONS = [
 
 export default async function HomePage() {
   const { userId } = await auth();
-  if (userId) redirect("/practice");
+  if (userId) redirect("/dashboard");
 
   const gatePatterns = await prisma.pattern.findMany({
     where: { exam_type: "GATE", branch: "CSE" },

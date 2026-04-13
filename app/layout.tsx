@@ -103,13 +103,13 @@ export default function RootLayout({
               `}
             </Script>
           )}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:'dark';}catch(e){document.documentElement.dataset.theme='dark';}})();`,
-            }}
-          />
-          <script
+          <Script id="theme-initialization" strategy="beforeInteractive">
+            {`(function(){try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:'dark';}catch(e){document.documentElement.dataset.theme='dark';}})();`}
+          </Script>
+          <Script
+            id="json-ld-schema"
             type="application/ld+json"
+            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
           />
         </head>
