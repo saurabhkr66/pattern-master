@@ -58,7 +58,18 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     }
   }, [initialQuestion, initialQueue]);
  
+  // ── Analytics: silently sync question ID to URL ──────────────────────
+  // Uses replaceState (not router.push) → zero re-renders, zero speed impact.
+  // GA4 + ad networks see a new URL = new page view, boosting impressions.
+  useEffect(() => {
+    if (!question?.id) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("q", question.id);
+    window.history.replaceState(null, "", url.toString());
+  }, [question?.id]);
+
   // Scroll into view when a question is opened
+
   useEffect(() => {
     if (question && containerRef.current) {
       containerRef.current.scrollIntoView({ 
