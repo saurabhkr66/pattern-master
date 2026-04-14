@@ -39,6 +39,15 @@ export default function PatternTable({
 
   const [isPending, startTransition] = React.useTransition();
 
+  // Prefetch all subject tab URLs on mount — makes tab switching instant
+  React.useEffect(() => {
+    subjects.forEach((s) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("subject", s === "PYQs by Subject" ? "All" : s);
+      router.prefetch(`/practice?${params.toString()}`);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFilterClick = (subject: string) => {
     if (isPending) return;
     // Reset filter when switching subjects
