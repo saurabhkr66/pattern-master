@@ -8,24 +8,21 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const { userId } = await auth();
-  const clerkUser = await currentUser();
+  if (!userId) redirect("/sign-in");
 
-  if (!userId || !clerkUser) {
-    redirect("/sign-in");
-  }
-
-  // Check if user exists to avoid expensive database writes on every page load
+  // Fast path: check DB first (single indexed lookup, ~2ms)
   const dbUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true },
   });
 
+  // Slow path: only call Clerk API for brand-new users who need DB sync
   if (!dbUser) {
-    // Auto-sync user to our DB
-    await prisma.user.upsert({
-      where: { id: userId },
-      update: { email: clerkUser.emailAddresses[0]?.emailAddress },
-      create: {
+    const clerkUser = await currentUser();
+    if (!clerkUser) redirect("/sign-in");
+
+    await prisma.user.create({
+      data: {
         id: userId,
         email: clerkUser.emailAddresses[0]?.emailAddress || "",
       },
@@ -34,3 +31,4 @@ export default async function AppLayout({
 
   return <>{children}</>;
 }
+

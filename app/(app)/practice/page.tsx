@@ -49,31 +49,57 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
     async () => {
       const isAll = !subject || subject === "All";
 
-      // If 'All' is selected, only show subject-level practice cards to keep the UI clean.
-      // Detailed topics are only shown when a specific subject is filtered.
+      // Fetch subject-level patterns with counts only (no individual rows)
       const subjectPatterns = await prisma.subjectPattern.findMany({
         where: !isAll ? { subject_name: subject } : {},
         select: {
           id: true,
           subject_name: true,
-          _count: {
-            select: { pyqs: true }
-          },
-          pyqs: {
-            select: {
-              id: true,
-              attempts: {
-                where: userId ? { user_id: userId } : { user_id: "none" },
-                select: { is_correct: true },
-                orderBy: { created_at: "desc" },
-                take: 1,
-              }
-            }
-          }
-        }
+          _count: { select: { pyqs: true } },
+        },
       });
 
-      const mappedSubjects = subjectPatterns.map(sp => ({
+      // Batch fetch solved counts for subject PYQs in a single query
+      let subjectSolvedMap: Record<string, number> = {};
+      if (userId && subjectPatterns.length > 0) {
+        const spIds = subjectPatterns.map((sp) => sp.id);
+        const solvedCounts = await prisma.attempt.groupBy({
+          by: ["subject_pyq_id"],
+          where: {
+            user_id: userId,
+            is_correct: true,
+            subject_pyq: { subject_pattern_id: { in: spIds } },
+          },
+          _count: true,
+        });
+        solvedCounts.forEach((row) => {
+          if (row.subject_pyq_id) {
+            // We need to map subject_pyq_id back to subject_pattern_id
+            // For simplicity, count distinct solved PYQs per subject pattern
+            subjectSolvedMap[row.subject_pyq_id] = (subjectSolvedMap[row.subject_pyq_id] || 0) + 1;
+          }
+        });
+      }
+
+      // Batch: count solved subject PYQs per subject_pattern_id
+      let solvedBySubjectPattern: Record<string, number> = {};
+      if (userId && subjectPatterns.length > 0) {
+        const spIds = subjectPatterns.map((sp) => sp.id);
+        const rows = await prisma.$queryRaw<{ sp_id: string; solved: bigint }[]>`
+          SELECT sp.subject_pattern_id as sp_id, COUNT(DISTINCT a.subject_pyq_id)::bigint as solved
+          FROM "Attempt" a
+          JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
+          WHERE a.user_id = ${userId}
+            AND a.is_correct = true
+            AND sp.subject_pattern_id = ANY(${spIds})
+          GROUP BY sp.subject_pattern_id
+        `;
+        rows.forEach((r) => {
+          solvedBySubjectPattern[r.sp_id] = Number(r.solved);
+        });
+      }
+
+      const mappedSubjects = subjectPatterns.map((sp) => ({
         id: `subject-${sp.id}`,
         subject: sp.subject_name,
         topic_name: sp.subject_name,
@@ -82,16 +108,14 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
         totalQuestions: sp._count.pyqs,
         questionsCount: 0,
         pyqsCount: sp._count.pyqs,
-        solvedQuestions: sp.pyqs.filter(pq => pq.attempts[0]?.is_correct).length,
+        solvedQuestions: solvedBySubjectPattern[sp.id] ?? 0,
         questions: [],
         pyqs: [],
       }));
 
-      // Only fetch individual topic patterns if a specific subject is selected
-      if (isAll) {
-        return mappedSubjects;
-      }
+      if (isAll) return mappedSubjects;
 
+      // Fetch topic patterns with counts only
       const topicPatterns = await prisma.pattern.findMany({
         where: {
           exam_type: examType,
@@ -104,51 +128,49 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
           subject: true,
           atomic_logic: true,
           short_notes: true,
-          _count: {
-            select: { questions: true, pyqs: true }
-          },
-          questions: {
-            select: {
-              id: true,
-              attempts: {
-                where: userId ? { user_id: userId } : { user_id: "none" },
-                select: { is_correct: true },
-                orderBy: { created_at: "desc" },
-                take: 1,
-              }
-            }
-          },
-          pyqs: {
-            select: {
-              id: true,
-              attempts: {
-                where: userId ? { user_id: userId } : { user_id: "none" },
-                select: { is_correct: true },
-                orderBy: { created_at: "desc" },
-                take: 1,
-              }
-            }
-          }
+          _count: { select: { questions: true, pyqs: true } },
         },
         orderBy: { topic_name: "asc" },
       });
 
-      const mappedTopics = topicPatterns.map(p => ({
+      // Batch fetch solved counts for topic questions + PYQs
+      let solvedQByPattern: Record<string, number> = {};
+      let solvedPByPattern: Record<string, number> = {};
+      if (userId && topicPatterns.length > 0) {
+        const patternIds = topicPatterns.map((p) => p.id);
+        const [qSolved, pSolved] = await Promise.all([
+          prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
+            SELECT q.pattern_id as pid, COUNT(DISTINCT a.question_id)::bigint as solved
+            FROM "Attempt" a
+            JOIN "GeneratedQuestion" q ON q.id = a.question_id
+            WHERE a.user_id = ${userId} AND a.is_correct = true AND q.pattern_id = ANY(${patternIds})
+            GROUP BY q.pattern_id
+          `,
+          prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
+            SELECT p.pattern_id as pid, COUNT(DISTINCT a.pyq_id)::bigint as solved
+            FROM "Attempt" a
+            JOIN "PYQ" p ON p.id = a.pyq_id
+            WHERE a.user_id = ${userId} AND a.is_correct = true AND p.pattern_id = ANY(${patternIds})
+            GROUP BY p.pattern_id
+          `,
+        ]);
+        qSolved.forEach((r) => { solvedQByPattern[r.pid] = Number(r.solved); });
+        pSolved.forEach((r) => { solvedPByPattern[r.pid] = Number(r.solved); });
+      }
+
+      const mappedTopics = topicPatterns.map((p) => ({
         ...p,
         totalQuestions: p._count.questions + p._count.pyqs,
         questionsCount: p._count.questions,
         pyqsCount: p._count.pyqs,
-        solvedQuestions: 
-          p.questions.filter(q => q.attempts[0]?.is_correct).length + 
-          p.pyqs.filter(pq => pq.attempts[0]?.is_correct).length,
+        solvedQuestions: (solvedQByPattern[p.id] ?? 0) + (solvedPByPattern[p.id] ?? 0),
         questions: [],
         pyqs: [],
       }));
 
       return [...mappedSubjects, ...mappedTopics];
-
     },
-    [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v5`],
+    [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v6`],
     { revalidate: 300, tags: ["patterns"] }
   )();
 };

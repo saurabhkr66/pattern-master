@@ -59,6 +59,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// Serve from CDN edge cache — regenerate at most once per hour
+export const revalidate = 3600;
 const subjectIcons: Record<string, React.ReactNode> = {
   Algorithms: <Cpu size={14} />,
   "Data Structures": <Code2 size={14} />,

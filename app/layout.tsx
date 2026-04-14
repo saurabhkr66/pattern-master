@@ -6,7 +6,6 @@ import Header from "@/components/Header";
 import ThemeProvider from "@/components/ThemeProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
-import "katex/dist/katex.min.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

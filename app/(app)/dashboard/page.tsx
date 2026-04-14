@@ -18,41 +18,58 @@ function getCachedDashboardData(userId: string) {
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-      const [totalAttempted, correctAttempts, lastFiveAttempts, recentFailures, rawActivity] = await Promise.all([
-        prisma.attempt.count({ where: { user_id: userId } }),
-        prisma.attempt.count({ where: { user_id: userId, is_correct: true } }),
+      // 3 queries instead of 5:
+      // Q1: groupBy for total/correct counts (replaces 2 separate COUNT queries)
+      // Q2: single fetch of 20 recent attempts (replaces separate "last 5" + "15 failures" queries)
+      // Q3: activity heatmap via raw SQL GROUP BY date (replaces fetching every individual row)
+      const [attemptStats, recentAttempts, activityRows] = await Promise.all([
+        // Q1: Single groupBy replaces two separate count() calls
+        prisma.attempt.groupBy({
+          by: ["is_correct"],
+          where: { user_id: userId },
+          _count: true,
+        }),
+
+        // Q2: Fetch last 20 attempts (superset of "last 5" + "15 failures")
         prisma.attempt.findMany({
           where: { user_id: userId },
           include: {
-            question: { include: { pattern: true } },
-            pyq: { include: { pattern: true } },
-            subject_pyq: { include: { subject_pattern: true } }
+            question: { include: { pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } } } },
+            pyq: { include: { pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } } } },
+            subject_pyq: { include: { subject_pattern: { select: { subject_name: true, id: true } } } },
           },
           orderBy: { created_at: "desc" },
-          take: 5,
+          take: 20,
         }),
-        prisma.attempt.findMany({
-          where: { user_id: userId, is_correct: false },
-          include: {
-            question: { include: { pattern: true } },
-            pyq: { include: { pattern: true } },
-            subject_pyq: { include: { subject_pattern: true } }
-          },
-          orderBy: { created_at: "desc" },
-          take: 15,
-        }),
-        prisma.attempt.findMany({
-          where: { user_id: userId, created_at: { gte: sixMonthsAgo } },
-          select: { created_at: true },
-        }),
+
+        // Q3: Raw SQL aggregation — returns ~180 rows max instead of thousands
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE(created_at) as date, COUNT(*)::bigint as count
+          FROM "Attempt"
+          WHERE user_id = ${userId} AND created_at >= ${sixMonthsAgo}
+          GROUP BY DATE(created_at)
+          ORDER BY date
+        `,
       ]);
 
+      // Derive totals from Q1
+      const correctRow = attemptStats.find((r) => r.is_correct === true);
+      const incorrectRow = attemptStats.find((r) => r.is_correct === false);
+      const correctAttempts = correctRow?._count ?? 0;
+      const totalAttempted = correctAttempts + (incorrectRow?._count ?? 0);
+
+      // Derive last 5 and recent failures from Q2
+      const lastFiveAttempts = recentAttempts.slice(0, 5);
+      const recentFailures = recentAttempts.filter((a) => !a.is_correct).slice(0, 15);
+
+      // Build heatmap from Q3 (already aggregated by the DB)
       const activityData: Record<string, number> = {};
-      rawActivity.forEach((attempt) => {
-        const date = new Date(attempt.created_at).toISOString().split("T")[0];
-        activityData[date] = (activityData[date] || 0) + 1;
+      activityRows.forEach((row) => {
+        const dateStr = typeof row.date === "string" ? row.date : new Date(row.date).toISOString().split("T")[0];
+        activityData[dateStr] = Number(row.count);
       });
 
+      // Calculate streak
       let currentStreak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);

@@ -32,11 +32,8 @@ export async function POST(req: NextRequest) {
         });
 
         // Revalidate caches so progress shows up instantly on the client
-        // Revalidate caches so progress shows up instantly on the client
-        await revalidatePath("/dashboard", "page");
-        await revalidatePath("/(app)/dashboard", "page");
-        await revalidateTag("patterns", "page");
-        await revalidateTag("dashboard", "page");
+        revalidateTag("dashboard", "page");
+        revalidateTag("patterns", "page");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {
