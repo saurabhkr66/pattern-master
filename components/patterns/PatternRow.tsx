@@ -115,6 +115,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
   const [selectedPyq, setSelectedPyq] = useState<any>(null);
   const [visibleBank, setVisibleBank] = useState(21);
   const [visiblePyqs, setVisiblePyqs] = useState(21);
+  const [questionStatusFilter, setQuestionStatusFilter] = useState<"all" | "unsolved" | "wrong" | "correct">("all");
 
   // Prefetch questions on hover — starts loading before the click
   const handlePrefetch = useCallback(() => {
@@ -176,15 +177,46 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
     localStorage.setItem("preferredDifficulty", lvl);
   };
 
+  // 0 = wrong (top), 1 = unsolved (middle), 2 = correct (bottom)
+  const getAttemptStatus = (q: any): 0 | 1 | 2 => {
+    if (!q.attempts?.length) return 1;
+    return q.attempts[0].is_correct ? 2 : 0;
+  };
+
+  const applyStatusFilter = (qs: any[]) => {
+    if (questionStatusFilter === "all") return qs;
+    if (questionStatusFilter === "unsolved") return qs.filter((q) => !q.attempts?.length);
+    if (questionStatusFilter === "wrong") return qs.filter((q) => q.attempts?.length && !q.attempts[0].is_correct);
+    if (questionStatusFilter === "correct") return qs.filter((q) => q.attempts?.length && q.attempts[0].is_correct);
+    return qs;
+  };
+
   const mixedBankQuestions = useMemo(() => {
     const regularQs =
       difficultyFilter === "All"
         ? questions
         : questions.filter((q: any) => q.difficulty_level === difficultyFilter);
-    if (!pyqs || pyqs.length === 0) return regularQs;
-    const taggedPyqs = pyqs.map((p: any) => ({ ...p, _isPyq: true }));
-    return [...regularQs, ...taggedPyqs];
+    const combined = pyqs?.length
+      ? [...regularQs, ...pyqs.map((p: any) => ({ ...p, _isPyq: true }))]
+      : regularQs;
+    // Stamp original index before sorting so question numbers don't change
+    return combined
+      .map((q: any, idx: number) => ({ ...q, _originalIndex: idx }))
+      .sort((a: any, b: any) => getAttemptStatus(a) - getAttemptStatus(b));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, pyqs, difficultyFilter]);
+
+  const sortedPyqs = useMemo(
+    () =>
+      (pyqs as any[] || [])
+        .map((p: any, idx: number) => ({ ...p, _originalIndex: idx }))
+        .sort((a, b) => getAttemptStatus(a) - getAttemptStatus(b)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pyqs]
+  );
+
+  const displayedBankQuestions = useMemo(() => applyStatusFilter(mixedBankQuestions), [mixedBankQuestions, questionStatusFilter]);
+  const displayedPyqs = useMemo(() => applyStatusFilter(sortedPyqs), [sortedPyqs, questionStatusFilter]);
 
   const resetPyq = () => setSelectedPyq(null);
 
@@ -197,9 +229,9 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
 
   const historyQueue = useMemo(() => {
     if (!selectedHistoryQuestion) return [];
-    const idx = mixedBankQuestions.findIndex((q: any) => q.id === selectedHistoryQuestion.id);
-    return idx !== -1 ? mixedBankQuestions.slice(idx + 1) : [];
-  }, [mixedBankQuestions, selectedHistoryQuestion]);
+    const idx = displayedBankQuestions.findIndex((q: any) => q.id === selectedHistoryQuestion.id);
+    return idx !== -1 ? displayedBankQuestions.slice(idx + 1) : [];
+  }, [displayedBankQuestions, selectedHistoryQuestion]);
 
   return (
     <div
@@ -279,6 +311,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                   setActiveTab(key);
                   setSelectedHistoryQuestion(null);
                   setIsGenerating(false);
+                  setQuestionStatusFilter("all");
                   resetPyq();
                 }}
                 className={`relative flex items-center gap-1.5 px-3 md:px-4 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
@@ -354,27 +387,57 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                 {activeTab === "bank" && (
                   <div>
                     <div style={{ display: (selectedHistoryQuestion || isGenerating) ? 'none' : 'block' }}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/5 rounded-lg">
-                          {["All", "Easy", "Medium", "Hard"].map((lvl) => (
-                            <button key={lvl} onClick={() => handleDifficultyChange(lvl)} className={`px-3 py-2 rounded-md text-xs font-black uppercase transition-all ${difficultyFilter === lvl ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
-                              {lvl}
-                            </button>
-                          ))}
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/5 rounded-lg">
+                            {["All", "Easy", "Medium", "Hard"].map((lvl) => (
+                              <button key={lvl} onClick={() => handleDifficultyChange(lvl)} className={`px-3 py-2 rounded-md text-xs font-black uppercase transition-all ${difficultyFilter === lvl ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
+                                {lvl}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/5 rounded-lg">
+                            {([
+                              { value: "all", label: "All" },
+                              { value: "unsolved", label: "Unsolved" },
+                              { value: "wrong", label: "Wrong" },
+                              { value: "correct", label: "Correct" },
+                            ] as const).map(({ value, label }) => (
+                              <button
+                                key={value}
+                                onClick={() => setQuestionStatusFilter(value)}
+                                className={`px-3 py-2 rounded-md text-xs font-black uppercase transition-all ${
+                                  questionStatusFilter === value
+                                    ? value === "correct"
+                                      ? "bg-emerald-500 text-white shadow-sm"
+                                      : value === "wrong"
+                                      ? "bg-red-500 text-white shadow-sm"
+                                      : value === "unsolved"
+                                      ? "bg-blue-500 text-white shadow-sm"
+                                      : "bg-white text-gray-800 shadow-sm"
+                                    : "text-gray-400 hover:text-gray-600"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                         <button onClick={() => setIsGenerating(true)} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-colors">+ Generate</button>
                       </div>
 
-                      {mixedBankQuestions.length === 0 ? (
-                        <div className="py-10 text-center text-gray-400 uppercase text-[10px] font-black tracking-widest">Bank is empty</div>
+                      {displayedBankQuestions.length === 0 ? (
+                        <div className="py-10 text-center text-gray-400 uppercase text-[10px] font-black tracking-widest">
+                          {questionStatusFilter !== "all" ? `No ${questionStatusFilter} questions.` : "Bank is empty"}
+                        </div>
                       ) : (
                         <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {mixedBankQuestions.slice(0, visibleBank).map((q: any, i: number) => (
-                              <QuestionCard key={q.id} q={q} i={i} pattern={pattern} onSelect={setSelectedHistoryQuestion} />
+                            {displayedBankQuestions.slice(0, visibleBank).map((q: any) => (
+                              <QuestionCard key={q.id} q={q} i={q._originalIndex} pattern={pattern} onSelect={setSelectedHistoryQuestion} />
                             ))}
                           </div>
-                          {mixedBankQuestions.length > visibleBank && (
+                          {displayedBankQuestions.length > visibleBank && (
                             <div className="mt-8 flex justify-center pb-4">
                               <button 
                                 onClick={() => setVisibleBank(prev => prev + 21)}
@@ -417,19 +480,45 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                 {activeTab === "pyq" && (
                   <div>
                     <div style={{ display: selectedPyq ? 'none' : 'block' }}>
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Previous Year Questions</span>
+                        <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/5 rounded-lg">
+                          {([
+                            { value: "all", label: "All" },
+                            { value: "unsolved", label: "Unsolved" },
+                            { value: "wrong", label: "Wrong" },
+                            { value: "correct", label: "Correct" },
+                          ] as const).map(({ value, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => setQuestionStatusFilter(value)}
+                              className={`px-3 py-2 rounded-md text-xs font-black uppercase transition-all ${
+                                questionStatusFilter === value
+                                  ? value === "correct"
+                                    ? "bg-emerald-500 text-white shadow-sm"
+                                    : value === "wrong"
+                                    ? "bg-red-500 text-white shadow-sm"
+                                    : value === "unsolved"
+                                    ? "bg-blue-500 text-white shadow-sm"
+                                    : "bg-white text-gray-800 shadow-sm"
+                                  : "text-gray-400 hover:text-gray-600"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       {pyqCount === 0 ? (
                         <div className="py-10 text-center text-gray-400 uppercase text-[10px] font-black tracking-widest">No PYQs yet</div>
                       ) : (
                         <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {pyqs.slice(0, visiblePyqs).map((pyq: any, i: number) => (
-                              <QuestionCard key={pyq.id} q={pyq} isPyqOverride={true} i={i} pattern={pattern} onSelect={setSelectedPyq} />
+                            {displayedPyqs.slice(0, visiblePyqs).map((pyq: any) => (
+                              <QuestionCard key={pyq.id} q={pyq} isPyqOverride={true} i={pyq._originalIndex} pattern={pattern} onSelect={setSelectedPyq} />
                             ))}
                           </div>
-                          {pyqs.length > visiblePyqs && (
+                          {displayedPyqs.length > visiblePyqs && (
                             <div className="mt-8 flex justify-center pb-4">
                               <button 
                                 onClick={() => setVisiblePyqs(prev => prev + 21)}
