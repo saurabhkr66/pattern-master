@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { trackPageView } from "@/lib/analytics";
 
 interface PracticeButtonProps {
   patternId: string;
@@ -30,6 +31,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const [aiModel, setAiModel] = useState<"gemini" | "deepseek" | "gemma">("gemini");
   const lastInitialIdRef = useRef<string | null>(initialQuestion?.id || null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,6 +69,14 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     const url = new URL(window.location.href);
     url.searchParams.set("q", question.id);
     window.history.replaceState(null, "", url.toString());
+    
+    // Skip tracking on initial mount to avoid double-counting with the layout script
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    trackPageView();
   }, [question?.id]);
 
   // Scroll into view when a question is opened

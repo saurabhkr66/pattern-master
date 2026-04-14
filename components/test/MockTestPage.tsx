@@ -6,6 +6,8 @@ import {
   CheckCircle2, XCircle, MinusCircle, BarChart3, BookOpen, Loader2,
   AlertTriangle, ArrowLeft, ChevronDown,
 } from "lucide-react";
+import { trackPageView } from "@/lib/analytics";
+
 
 /* ─────────────── Types ─────────────── */
 interface Question {
@@ -133,6 +135,24 @@ export default function MockTestPage() {
   const [mockTestTitle, setMockTestTitle] = useState<string>("");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isFirstRender = useRef(true);
+
+
+  const currentQuestion = questions[currentIdx];
+  useEffect(() => {
+    if (!currentQuestion?.id) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("q", currentQuestion.id);
+    window.history.replaceState(null, "", url.toString());
+    
+    // Skip tracking on initial mount to avoid double-counting with the layout script
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    trackPageView();
+  }, [currentQuestion?.id]);
 
   // Subject selection
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);

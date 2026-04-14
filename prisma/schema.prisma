@@ -14,6 +14,7 @@ model User {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
   attempts     Attempt[]
+  userNotes    UserNote[]
 }
 
 model Pattern {
@@ -26,6 +27,7 @@ model Pattern {
   short_notes  String?
   questions    GeneratedQuestion[]
   pyqs         PYQ[]
+  userNotes    UserNote[]
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
   @@index([exam_type, branch, subject], name: "pattern_subject_lookup")
@@ -138,4 +140,17 @@ model MockTestTemplate {
   questions       Json
   created_at      DateTime      @default(now())
   sessions        TestSession[]
+}
+model UserNote {
+  id         String   @id @default(uuid())
+  user_id    String
+  pattern_id String
+  content    String   @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  pattern    Pattern  @relation(fields: [pattern_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, pattern_id])
 }

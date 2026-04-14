@@ -1,8 +1,11 @@
 "use client"
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PatternRow from "./PatternRow";
 import { SlidersHorizontal, X } from "lucide-react";
+import { trackPageView } from "@/lib/analytics";
+
 
 type FilterState = "all" | "not-started" | "in-progress" | "mastered";
 
@@ -13,19 +16,32 @@ const FILTER_OPTIONS: { value: FilterState; label: string }[] = [
   { value: "mastered", label: "Mastered" },
 ];
 
+const fetchTopics = (exam: string, branch: string, subject: string) => {
+  const p = new URLSearchParams({ exam, branch, subject });
+  return fetch(`/api/practice/topics?${p.toString()}`).then((r) => r.json());
+};
+
 export default function PatternTable({
-  patterns,
+  patterns: initialPatterns,
   highlightPatternId,
   subjectStats,
-  activeSubject
+  activeSubject: initialSubject,
 }: {
-  patterns: any[],
-  highlightPatternId?: string,
-  subjectStats: Record<string, number>,
-  activeSubject: string
+  patterns: any[];
+  highlightPatternId?: string;
+  subjectStats: Record<string, number>;
+  activeSubject: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const exam = searchParams.get("exam") || "GATE";
+  const branch = searchParams.get("branch") || "";
+
+  // Local subject state — no server navigation needed for tab switching
+  const [localSubject, setLocalSubject] = useState(initialSubject);
+
   const [openPatternId, setOpenPatternId] = useState<string | null>(highlightPatternId || null);
   const tableRef = useRef<HTMLDivElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
@@ -33,48 +49,60 @@ export default function PatternTable({
   const [activeFilter, setActiveFilter] = useState<FilterState>("all");
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // 1. Prepare subjects for tabs — display "PYQs by Subject" but send "All" to server
+  // Fetch topics for the currently selected subject via API (client-side, cached by React Query)
+  const { data, isLoading } = useQuery({
+    queryKey: ["practiceTopics", exam, branch, localSubject],
+    queryFn: () => fetchTopics(exam, branch, localSubject),
+    initialData: localSubject === initialSubject ? { topics: initialPatterns } : undefined,
+    staleTime: 5 * 60 * 1000,  // 5 min — switching back is instant
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const patterns = data?.topics ?? initialPatterns;
+
+  // 1. Prepare subjects for tabs
   const subjects = ["PYQs by Subject", ...Object.keys(subjectStats).sort()];
   const totalTopicCount = Object.values(subjectStats).reduce((a, b) => a + b, 0);
 
-  const [isPending, startTransition] = React.useTransition();
-
-  // Prefetch all subject tab URLs on mount — makes tab switching instant
-  React.useEffect(() => {
-    subjects.forEach((s) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("subject", s === "PYQs by Subject" ? "All" : s);
-      router.prefetch(`/practice?${params.toString()}`);
+  // Prefetch all subject tabs in the background on mount
+  useEffect(() => {
+    subjects.forEach((s, i) => {
+      const subjectKey = s === "PYQs by Subject" ? "All" : s;
+      setTimeout(() => {
+        queryClient.prefetchQuery({
+          queryKey: ["practiceTopics", exam, branch, subjectKey],
+          queryFn: () => fetchTopics(exam, branch, subjectKey),
+          staleTime: 5 * 60 * 1000,
+        });
+      }, i * 300); // stagger 300ms to avoid DB overload
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterClick = (subject: string) => {
-    if (isPending) return;
-    // Reset filter when switching subjects
+    const subjectKey = subject === "PYQs by Subject" ? "All" : subject;
+    setLocalSubject(subjectKey);
     setActiveFilter("all");
+    setOpenPatternId(null);
 
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      // "PYQs by Subject" maps to "All" on the server
-      params.set("subject", subject === "PYQs by Subject" ? "All" : subject);
+    // Update URL without triggering a server re-render
+    const url = new URL(window.location.href);
+    url.searchParams.set("subject", subjectKey);
+    window.history.replaceState(null, "", url.toString());
+    trackPageView();
 
-      setOpenPatternId(null);
 
-      router.push(`?${params.toString()}`, { scroll: false });
-
-      setTimeout(() => {
-        tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
-    });
+    setTimeout(() => {
+      tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
   };
 
-  // Compute displayed subject label (server sends "All", we display "PYQs by Subject")
-  const displaySubject = activeSubject === "All" ? "PYQs by Subject" : activeSubject;
+  // Compute displayed subject label
+  const displaySubject = localSubject === "All" ? "PYQs by Subject" : localSubject;
 
-  // 2. Apply filter
+  // Apply progress filter
   const displayedPatterns = activeFilter === "all"
     ? patterns
-    : patterns.filter((p) => {
+    : patterns.filter((p: any) => {
         if (activeFilter === "not-started") return p.solvedQuestions === 0;
         if (activeFilter === "in-progress") return p.solvedQuestions > 0 && p.solvedQuestions < p.totalQuestions;
         if (activeFilter === "mastered") return p.solvedQuestions >= 5;
@@ -103,12 +131,13 @@ export default function PatternTable({
 
   const handleTopicToggle = (id: string) => {
     setOpenPatternId(openPatternId === id ? null : id);
-    
+
     // Clear highlight (patternId) from URL once user interacts with any topic
     if (searchParams.has("patternId")) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("patternId");
-      router.replace(`?${params.toString()}`, { scroll: false });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("patternId");
+      window.history.replaceState(null, "", url.toString());
+      trackPageView();
     }
   };
 
@@ -133,7 +162,7 @@ export default function PatternTable({
                     isActive
                       ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
                       : "hover:opacity-80"
-                  } ${isPending && !isActive ? "opacity-30 pointer-events-none" : ""}`}
+                  } ${isLoading && !isActive ? "opacity-50" : ""}`}
                   style={isActive ? undefined : { background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}
                 >
                   {s}
@@ -227,8 +256,20 @@ export default function PatternTable({
         </div>
 
         <div className="divide-y divide-gray-50">
-          {displayedPatterns.length > 0 ? (
-            displayedPatterns.map((pattern) => (
+          {isLoading ? (
+            // Skeleton rows while fetching new subject
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4 animate-pulse">
+                <div className="w-9 h-9 rounded-xl bg-gray-100 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 rounded bg-gray-100" style={{ width: `${40 + (i * 13) % 40}%` }} />
+                  <div className="h-3 w-16 rounded bg-gray-100" />
+                </div>
+                <div className="h-4 w-12 rounded bg-gray-100" />
+              </div>
+            ))
+          ) : displayedPatterns.length > 0 ? (
+            displayedPatterns.map((pattern: any) => (
               <PatternRow
                 key={pattern.id}
                 pattern={pattern}

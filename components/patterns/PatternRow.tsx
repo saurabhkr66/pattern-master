@@ -5,8 +5,9 @@ import { toSlug, getQuestionUrl } from "@/lib/seo";
 import PracticeButton from "./PracticeButton";
 import ConfidenceBadge from "./ConfidenceBadge";
 import MathRenderer from "@/components/ui/MathRenderer";
+import UserNotesEditor from "./UserNotesEditor";
 import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink, Sparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface PatternRowProps {
@@ -110,7 +111,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
   const [selectedHistoryQuestion, setSelectedHistoryQuestion] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState("All");
-  const [activeTab, setActiveTab] = useState<"bank" | "pyq" | "notes">(pattern.isSubjectLevel ? "pyq" : "bank");
+  const [activeTab, setActiveTab] = useState<"bank" | "pyq" | "notes" | "review-notes">(pattern.isSubjectLevel ? "pyq" : "bank");
   const [selectedPyq, setSelectedPyq] = useState<any>(null);
   const [visibleBank, setVisibleBank] = useState(21);
   const [visiblePyqs, setVisiblePyqs] = useState(21);
@@ -269,6 +270,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                   { key: "bank", label: "Question Bank", count: total, emoji: "🏦" },
                   { key: "pyq", label: "Previous Year", count: pyqCount, emoji: "📜" },
                   { key: "notes", label: "Mastery Notes", count: null, emoji: "📚" },
+                  { key: "review-notes", label: "My Notes", count: null, emoji: "📝" },
                 ] as const
             ).map(({ key, label, count, emoji }: any) => (
               <button
@@ -279,7 +281,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                   setIsGenerating(false);
                   resetPyq();
                 }}
-                className={`flex items-center gap-1.5 px-3 md:px-4 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
+                className={`relative flex items-center gap-1.5 px-3 md:px-4 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
                   activeTab === key ? `${accent.activeTab} bg-white` : "text-gray-400 border-transparent hover:text-gray-600"
                 }`}
               >
@@ -288,6 +290,12 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                 {count !== null && (
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${activeTab === key ? "bg-blue-50 text-blue-500" : "bg-gray-100 text-gray-400"}`}>
                     {count}
+                  </span>
+                )}
+                {key === "review-notes" && (
+                  <span className="absolute top-1.5 right-1 flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
                   </span>
                 )}
               </button>
@@ -334,6 +342,12 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                     ) : (
                       <div className="py-16 text-center text-gray-400">Notes coming soon.</div>
                     )}
+                  </div>
+                )}
+
+                {activeTab === "review-notes" && (
+                  <div className="animate-in fade-in duration-300">
+                    <UserNotesEditor patternId={pattern.id} />
                   </div>
                 )}
 
