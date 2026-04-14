@@ -1,4 +1,3 @@
-// components/patterns/PatternRow.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -6,9 +5,9 @@ import { toSlug, getQuestionUrl } from "@/lib/seo";
 import PracticeButton from "./PracticeButton";
 import ConfidenceBadge from "./ConfidenceBadge";
 import MathRenderer from "@/components/ui/MathRenderer";
-import { useState, useEffect, useRef, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface PatternRowProps {
   pattern: any;
@@ -21,6 +20,13 @@ const difficultyColors: Record<string, string> = {
   Easy: "bg-emerald-100 text-emerald-700",
   Medium: "bg-amber-100 text-amber-700",
   Hard: "bg-red-100 text-red-700",
+};
+
+// Shared fetch function for both query and prefetch
+const fetchPatternQuestions = async (patternId: string) => {
+  const res = await fetch(`/api/patterns/${patternId}/questions`);
+  if (!res.ok) throw new Error("Failed to fetch questions");
+  return res.json();
 };
 
 // ── MEMOIZED QUESTION CARD ─────────────────────────────────────────────
@@ -99,6 +105,7 @@ QuestionCard.displayName = "QuestionCard";
 
 export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }: PatternRowProps) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const [selectedHistoryQuestion, setSelectedHistoryQuestion] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -108,14 +115,21 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
   const [visibleBank, setVisibleBank] = useState(21);
   const [visiblePyqs, setVisiblePyqs] = useState(21);
 
+  // Prefetch questions on hover — starts loading before the click
+  const handlePrefetch = useCallback(() => {
+    queryClient.prefetchQuery({
+      queryKey: ["patternQuestions", pattern.id],
+      queryFn: () => fetchPatternQuestions(pattern.id),
+      staleTime: 5 * 60 * 1000, // Don't re-prefetch if already cached
+    });
+  }, [queryClient, pattern.id]);
+
   const { data, isLoading: isLoadingQuestions } = useQuery({
     queryKey: ["patternQuestions", pattern.id],
-    queryFn: async () => {
-      const res = await fetch(`/api/patterns/${pattern.id}/questions`);
-      if (!res.ok) throw new Error("Failed to fetch questions");
-      return res.json();
-    },
+    queryFn: () => fetchPatternQuestions(pattern.id),
     enabled: isOpen,
+    staleTime: 5 * 60 * 1000,   // Cache for 5 min — reopening a topic is instant
+    gcTime: 10 * 60 * 1000,     // Keep in memory for 10 min
   });
 
   const questions = data?.questions || [];
@@ -199,7 +213,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
           : "hover:bg-gray-50/60"
       }`}
     >
-      <div onClick={onToggle} className="grid grid-cols-12 items-center gap-3 px-5 py-4 cursor-pointer group">
+      <div onClick={onToggle} onMouseEnter={handlePrefetch} className="grid grid-cols-12 items-center gap-3 px-5 py-4 cursor-pointer group">
         <div className="col-span-8 flex items-center gap-3">
           <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base border ${
               pattern.isSubjectLevel ? "bg-indigo-600 border-indigo-500 text-white shadow-sm" : isMastered ? "bg-yellow-50 border-yellow-200" : "bg-gray-50 border-gray-200"
