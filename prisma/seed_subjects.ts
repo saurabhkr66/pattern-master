@@ -40,11 +40,14 @@ async function main() {
   ];
 
   for (const item of subjectData) {
-    const subject = await prisma.subjectPattern.upsert({
+    let subject = await prisma.subjectPattern.findFirst({
       where: { subject_name: item.subject_name },
-      update: {},
-      create: { subject_name: item.subject_name }
     });
+    if (!subject) {
+      subject = await prisma.subjectPattern.create({
+        data: { subject_name: item.subject_name },
+      });
+    }
 
     console.log(`${colors.blue}📂 Subject: ${colors.bright}${item.subject_name}${colors.reset}`);
 
