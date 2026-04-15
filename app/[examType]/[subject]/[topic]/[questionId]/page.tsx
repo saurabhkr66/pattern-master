@@ -97,13 +97,13 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
 
   const subjectLabel = subject.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const topicLabel   = topic.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  const title = `${q.examType} ${subjectLabel} ${q.year > 2000 ? q.year : ""} – ${topicLabel} | PatternMaster`;
-  
+  const title = `${q.examType} ${subjectLabel} ${q.year > 2000 ? q.year : ""} – ${topicLabel} | BattleExam`;
+
   // "Answer-First" description for GEO: start with the direct context
   const rawDesc = cleanTextForMeta(q.questionText, 150);
   const description = `Solve this ${q.examType} ${q.year} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
-  
-  const canonical = `https://patternmaster.in/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
+
+  const canonical = `https://battleexam.com/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
 
   return {
     title,
@@ -114,7 +114,7 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
       description,
       url: canonical,
       type: "article",
-      siteName: "PatternMaster",
+      siteName: "BattleExam",
     },
     twitter: {
       card: "summary_large_image",
@@ -131,7 +131,7 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
   const q = await fetchQuestion(questionId);
   if (!q) notFound();
 
-  const url = `https://patternmaster.in/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
+  const url = `https://battleexam.com/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
 
   const questionSchema = buildQuestionSchema({
     questionText: q.questionText,
@@ -145,9 +145,9 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
   });
 
   const breadcrumbSchema = buildBreadcrumbSchema([
-    { name: "Home", item: "https://patternmaster.in" },
-    { name: "Practice", item: "https://patternmaster.in/practice" },
-    { name: q.subject, item: `https://patternmaster.in/practice?subject=${toSlug(q.subject)}` },
+    { name: "Home", item: "https://battleexam.com" },
+    { name: "Practice", item: "https://battleexam.com/practice" },
+    { name: q.subject, item: `https://battleexam.com/practice?subject=${toSlug(q.subject)}` },
     { name: q.topicName, item: url }
   ]);
 

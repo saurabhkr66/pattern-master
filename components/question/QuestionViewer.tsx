@@ -3,6 +3,7 @@
 // Client component that handles "Show Answer" toggle.
 
 import { useState, useEffect, useRef } from "react";
+import { Maximize2 } from "lucide-react";
 import katex from "katex";
 
 // ------------------- Math rendering helper -----------------------------------
@@ -39,6 +40,58 @@ interface QuestionData {
   images?: { index: number; filename: string }[];
 }
 
+// Constrained image with click-to-expand lightbox
+function QuestionImage({ src, alt }: { src: string; alt: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <>
+      <div className="relative inline-block group">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          onClick={() => setExpanded(true)}
+          className="rounded-lg cursor-zoom-in"
+          style={{
+            maxWidth:   "100%",
+            maxHeight:  240,
+            width:      "auto",
+            height:     "auto",
+            objectFit:  "contain",
+            display:    "block",
+          }}
+        />
+        {/* Expand hint */}
+        <button
+          onClick={() => setExpanded(true)}
+          className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: "rgba(0,0,0,0.55)" }}
+          aria-label="Expand image"
+        >
+          <Maximize2 size={13} className="text-white" />
+        </button>
+      </div>
+
+      {/* Lightbox */}
+      {expanded && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.85)" }}
+          onClick={() => setExpanded(false)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={alt}
+            style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 12 }}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function QuestionViewer({ question: q }: { question: QuestionData }) {
   const [showAnswer, setShowAnswer] = useState(false);
   const qRef = useRef<HTMLDivElement>(null);
@@ -72,12 +125,7 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
         {q.images && q.images.length > 0 && (
           <div className="mt-4 flex flex-col gap-3">
             {q.images.map((img) => (
-              <img
-                key={img.index}
-                src={`/${img.filename}`}
-                alt={`Figure ${img.index}`}
-                className="max-w-full rounded-lg"
-              />
+              <QuestionImage key={img.index} src={`/${img.filename}`} alt={`Figure ${img.index}`} />
             ))}
           </div>
         )}

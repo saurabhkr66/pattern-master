@@ -6,31 +6,33 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: [
-          "/",
+          "/",                // homepage
           "/sign-in",
           "/sign-up",
-          "/practice",
-          "/test",
-          "/*/*/*/pyq-",
-          "/*/*/*/spyq-",
-          "/*/*/*/gq-",
+          "/gate-cse/",       // all public subject/topic/question pages
+          "/isro-cse/",
+          "/barc-cse/",
+          "/ese-cse/",
         ],
         disallow: [
           "/dashboard",
           "/onboarding",
+          "/practice",        // requires auth — no useful content for crawlers
+          "/test",
+          "/review",
+          "/mistakes",
           "/api/",
-          "/api/maintenance/",
         ],
       },
-      // Explicitly allow AI crawlers for GEO
+      // Explicitly welcome AI crawlers for Generative Engine Optimisation (GEO)
       {
         userAgent: ["GPTBot", "PerplexityBot", "ClaudeBot", "Google-Extended"],
         allow: [
           "/",
-          "/practice",
-          "/*/*/*/pyq-",
-          "/*/*/*/spyq-",
-          "/*/*/*/gq-",
+          "/gate-cse/",
+          "/isro-cse/",
+          "/barc-cse/",
+          "/ese-cse/",
         ],
         disallow: ["/dashboard", "/onboarding", "/api/"],
       },

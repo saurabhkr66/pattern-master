@@ -17,9 +17,15 @@ async function main() {
     {
       exam_type: 'GATE',
       branch: 'ECE',
-      subject: 'Network Theory',
-      topic_name: 'Network Graphs',
-      atomic_logic: `Generate GATE-level questions covering Network Graphs, including properties of Network Graphs, types of Network Graphs, Barkhausen criterion, stability analysis.`
+      subject: 'Electromagnetics',
+      topic_name: 'Waveguides',
+      atomic_logic: `Generate GATE-level questions covering Rectangular and Circular Waveguides. Focus on:
+1. Cut-off frequency and wavelength for TE and TM modes (Dominant mode TE10).
+2. Phase velocity, Group velocity, and Wave impedance in waveguides.
+3. Mode analysis: identifying valid/invalid modes, degeneracy, and field distributions.
+4. Power flow and attenuation in waveguides.
+5. Parallel plate waveguides and TEM mode characteristics.
+Questions should involve numericals on cutoff calculations, mode identification, and theoretical properties of guided waves.`
     }
   ];
 

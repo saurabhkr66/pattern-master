@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import ActivityHeatmap from "@/components/dashboard/ActivityHeatmap";
+import ShareCardButton from "@/components/dashboard/ShareCardButton";
 import type { Metadata } from "next";
 import { getQuestionUrl } from "@/lib/seo";
 
@@ -133,13 +134,16 @@ export default async function DashboardPage() {
     <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
 
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase" style={{ color: "var(--text-primary)" }}>
-          Progress Dashboard
-        </h1>
-        <p className="text-sm mt-1 font-medium" style={{ color: "var(--text-secondary)" }}>
-          Your preparation snapshot at a glance.
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase" style={{ color: "var(--text-primary)" }}>
+            Progress Dashboard
+          </h1>
+          <p className="text-sm mt-1 font-medium" style={{ color: "var(--text-secondary)" }}>
+            Your preparation snapshot at a glance.
+          </p>
+        </div>
+        <ShareCardButton userId={userId} />
       </div>
 
       {/* Stat Cards — 1 col on smallest phones, 3 col from sm up */}

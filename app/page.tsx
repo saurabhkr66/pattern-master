@@ -23,6 +23,7 @@ import {
   Code2,
   FlaskConical,
 } from "lucide-react";
+import { toSlug } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "BattleExam – AI-Powered GATE CSE Preparation | Practice Questions",
@@ -538,9 +539,10 @@ export default async function HomePage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {patterns.map((p) => (
-                        <div
+                        <Link
                           key={p.id}
-                          className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-default"
+                          href={`/gate-cse/${toSlug(p.subject)}/${toSlug(p.topic_name)}`}
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors hover:border-indigo-500/40 hover:text-indigo-400"
                           style={{
                             borderColor: "var(--border)",
                             background: "var(--bg-surface)",
@@ -554,7 +556,7 @@ export default async function HomePage() {
                               {p._count.pyqs} PYQ
                             </span>
                           )}
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>

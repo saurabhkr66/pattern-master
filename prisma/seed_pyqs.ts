@@ -8,370 +8,524 @@ async function main() {
     {
       "pattern": {
         "exam_type": "GATE",
-        "branch": "CSE",
-        "topic_name": "Error Detection & Recovery"
+        "branch": "ECE",
+        "topic_name": "Waveguides"
       },
-      "note": "Years are approximate based on best knowledge of GATE exam patterns. Not guaranteed to be exact PYQ years.",
       "pyqs": [
         {
-          "question_text": "Which of the following best describes the role of error detection in the compilation process?",
+          "topic_name": "Waveguides",
+          "question_text": "Consider an air filled rectangular waveguide with a cross-section of 5 c m × 3 c m . For this waveguide, the cut-off frequency (in MHz) of T E 21 mode is __________________",
+          "images": [],
           "options": [
-            "A. Error detection identifies incorrect tokens and replaces them with correct ones automatically",
-            "B. Error detection identifies points in the source program where the input deviates from the language specification and reports them to the user",
-            "C. Error detection converts syntactic errors into semantic errors for easier recovery",
-            "D. Error detection is performed only during code generation and not during parsing"
+            "A. The T M 10 mode of the waveguide does not exist",
+            "B. The T E 10 mode of the waveguide does not exist",
+            "C. The T M 10 and the T E 10 modes both exist and have the same cut-off frequencies",
+            "D. The T M 10 and the T M 01 modes both exist and have the same cut-off frequencies."
           ],
-          "correct_answer": "B",
-          "explanation": "Error detection in a compiler identifies locations where the source program violates the rules of the language — whether lexical (invalid characters), syntactic (malformed structure), semantic (type mismatches), or logical (undefined variables). The compiler reports these violations with meaningful messages (line number, error type) so the programmer can fix them. Error detection does NOT automatically fix errors (that is error recovery's role), and it spans multiple phases — lexical analysis, parsing, and semantic analysis — not only code generation.",
-          "year": 2000,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "In the context of compilers, which of the following is an example of a lexical error?",
-          "options": [
-            "A. Using a variable before declaring it",
-            "B. Writing `int x = ;` (missing expression after `=`)",
-            "C. Using the character `@` in an identifier name in a language that does not permit it",
-            "D. Calling a function with the wrong number of arguments"
-          ],
-          "correct_answer": "C",
-          "explanation": "Lexical errors occur when the scanner cannot form a valid token from the input characters. An illegal character such as `@` in an identifier (if the language does not allow it) is a lexical error — it does not match any token pattern in the language. Option A (undeclared variable) is a semantic error. Option B (missing expression) is a syntactic error detected by the parser. Option D (wrong argument count) is a semantic error. Lexical errors are the simplest class and are detected earliest in compilation.",
-          "year": 2001,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "Panic mode error recovery in a parser works by:",
-          "options": [
-            "A. Inserting a missing token into the input stream and resuming parsing",
-            "B. Discarding input tokens one at a time until a synchronising token (such as `;` or `}`) is found, then resuming parsing",
-            "C. Rolling back the parse stack to the last valid state and trying an alternative production",
-            "D. Reporting the error and immediately terminating compilation"
-          ],
-          "correct_answer": "B",
-          "explanation": "Panic mode is the simplest and most widely used error recovery strategy. On detecting an error, the parser discards input symbols one at a time until it finds a token belonging to a designated set of synchronising tokens — typically statement terminators like `;` or block delimiters like `}` or `end`. Parsing then resumes from that point. Advantages: simple to implement, guarantees the parser never loops. Disadvantage: it may skip a large portion of input, missing several errors. It does NOT insert tokens (that is phrase-level recovery) or backtrack (that is backtracking parsers).",
-          "year": 2002,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "Which of the following error recovery strategies for parsers involves making local corrections to the input — such as inserting, deleting, or replacing a token — to allow parsing to continue?",
-          "options": [
-            "A. Panic mode recovery",
-            "B. Error productions",
-            "C. Phrase-level recovery",
-            "D. Global correction"
-          ],
-          "correct_answer": "C",
-          "explanation": "Phrase-level recovery makes minimal local corrections to the remaining input to allow the parser to proceed. The parser may insert a missing token (e.g., insert `;` at the end of a statement), delete an extra token, or replace one token with another. These corrections are made on the input stream, not on the grammar. The risk is that the correction may introduce cascading spurious errors. This differs from panic mode (which only deletes tokens until a sync point) and error productions (which add explicit grammar rules for common mistakes).",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 2
-        },
-        {
-          "question_text": "Which of the following are valid error recovery strategies used in parsers?",
-          "options": [
-            "A. Panic mode recovery",
-            "B. Phrase-level recovery",
-            "C. Error productions",
-            "D. Global correction (minimum-cost correction)"
-          ],
-          "correct_answer": "A, B, C, D",
-          "explanation": "(A) TRUE — Panic mode: discard tokens until a synchronising token is found. Simple and widely used. (B) TRUE — Phrase-level recovery: make local corrections (insert/delete/replace token) to allow parsing to continue. (C) TRUE — Error productions: augment the grammar with productions that recognise common errors (e.g., a rule for `int x = ;`). When this production fires, a specific error message is generated. (D) TRUE — Global correction: find the minimum number of insertions/deletions/replacements to transform the erroneous input into a valid string. Theoretically optimal but computationally expensive (O(n³) DP) — rarely used in practice.",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
-        },
-        {
-          "question_text": "In an LL(1) parser using panic mode recovery, the synchronising token set for a non-terminal A is typically chosen as:",
-          "options": [
-            "A. FIRST(A) only",
-            "B. FOLLOW(A) only",
-            "C. FIRST(A) ∪ FOLLOW(A)",
-            "D. FIRST(A) ∩ FOLLOW(A)"
-          ],
-          "correct_answer": "C",
-          "explanation": "In LL(1) panic mode recovery, the synchronising set for non-terminal A is chosen as FIRST(A) ∪ FOLLOW(A). FIRST(A) tokens can begin a valid derivation of A — if the current token is in FIRST(A), the parser can attempt to parse A normally. FOLLOW(A) tokens appear after A in the grammar — if the current token is in FOLLOW(A), A is popped from the stack (treated as having been parsed as ε) and parsing continues. This two-set approach handles both 'missing A' and 'extra tokens within A' scenarios, minimising cascaded errors.",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 2
-        },
-        {
-          "question_text": "The number of errors that a good compiler should report before terminating is best described as:",
-          "options": [],
-          "correct_answer": "As many as possible — the compiler should use error recovery to detect and report multiple errors in a single compilation pass",
-          "explanation": "A good compiler does NOT stop at the first error. It uses error recovery strategies to resume parsing after each error, reporting as many errors as possible in a single compilation run. This is important because fixing one error at a time and recompiling is very inefficient — the programmer benefits from seeing all (or most) errors at once. However, compilers must avoid reporting cascaded/spurious errors caused by earlier recovery decisions. The goal is: maximise true errors reported, minimise false positives from error recovery.",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "NAT",
-          "marks": 2
-        },
-        {
-          "question_text": "Which of the following correctly classifies the error in the statement `int 3x = 5;` in a C-like language?",
-          "options": [
-            "A. Lexical error — `3x` is not a valid token",
-            "B. Syntactic error — an integer literal cannot begin an identifier",
-            "C. Semantic error — `3x` is an undeclared variable",
-            "D. Both lexical and syntactic error"
-          ],
-          "correct_answer": "A",
-          "explanation": "In most languages, an identifier must begin with a letter or underscore — not a digit. The scanner attempts to tokenize `3x`: it first reads `3` and forms the integer literal `3`, then reads `x` and forms identifier `x`. So `3x` is scanned as two tokens: integer `3` followed by identifier `x`. The error manifests as a syntactic error at the parser level (`int 3 x = 5;` is not valid syntax). However, if the language spec says the sequence `3x` cannot be tokenized at all, it is a lexical error. In standard C compilers, this is reported as an error during lexing (invalid token/preprocessing number). The most precise classification at the lexical level is option A.",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "Which of the following are TRUE about error productions as an error recovery technique?",
-          "options": [
-            "A. Error productions add grammar rules that explicitly recognise commonly occurring syntax errors",
-            "B. Error productions can generate customised, user-friendly error messages for specific known mistakes",
-            "C. Error productions increase the size of the parser but allow graceful handling of common errors",
-            "D. Error productions are most effective for recovering from semantic errors"
-          ],
-          "correct_answer": "A, B, C",
-          "explanation": "(A) TRUE — Error productions augment the grammar with rules like `expr → expr + + expr` to recognise a doubled operator. When such a rule fires, the parser knows exactly what mistake occurred. (B) TRUE — Since the error production explicitly matches a known mistake, the parser can emit a precise, helpful message such as 'duplicate operator +' rather than a generic syntax error. (C) TRUE — Adding error productions increases the grammar size and therefore the parser table size, but the benefit is graceful, informative recovery for common mistakes. (D) FALSE — Error productions handle syntactic errors (grammar-level mistakes), not semantic errors (type mismatches, undeclared variables, etc.). Semantic errors are caught during semantic analysis.",
-          "year": 2008,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
-        },
-        {
-          "question_text": "In yacc/bison, the special terminal `error` is used for error recovery. When a syntax error occurs and `error` appears in a grammar rule, the parser:",
-          "options": [
-            "A. Immediately aborts and reports a fatal error",
-            "B. Pops stack states until it finds a state where `error` can be shifted, then discards input tokens until a synchronising token is found",
-            "C. Inserts the missing token automatically by consulting the parse table",
-            "D. Calls the lexical analyser to re-scan the erroneous portion of input"
-          ],
-          "correct_answer": "B",
-          "explanation": "In yacc/bison, `error` is a special terminal for LALR(1) error recovery. When a syntax error occurs: (1) The parser pops the stack until it finds a state that has a transition on the `error` token (i.e., a state corresponding to a grammar rule with `error` on the right-hand side). (2) The `error` token is shifted onto the stack. (3) Input tokens are discarded until a synchronising token (typically `;` or `}`) is found. (4) Parsing resumes normally. This is essentially phrase-level recovery integrated into the LALR framework. The programmer controls recovery by strategically placing `error` in grammar rules, e.g., `stmt → error ';'`.",
-          "year": 2009,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 2
-        },
-        {
-          "question_text": "A semantic error that is detected at compile time is:",
-          "options": [
-            "A. Division by zero in an expression like `int x = 5 / 0;`",
-            "B. Using a variable of type `int` where a `float` is required, in a strictly typed language",
-            "C. Accessing an array index out of bounds at runtime",
-            "D. Stack overflow caused by infinite recursion at runtime"
-          ],
-          "correct_answer": "B",
-          "explanation": "Compile-time semantic errors are violations of the language's semantic rules detectable by static analysis — without running the program. A type mismatch (assigning an `int` to a `float` variable in a strictly typed language) is detected during semantic analysis (type checking phase) at compile time. Option A (division by zero) may be detectable by a smart compiler through constant folding, but is typically a runtime error. Options C and D are classic runtime errors — array bounds and recursion depth depend on runtime values not known at compile time.",
-          "year": 2010,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "How many distinct phases of a compiler can detect errors? (Count lexical analysis, syntax analysis, semantic analysis, intermediate code generation, and code optimisation as separate phases.)",
-          "options": [],
-          "correct_answer": "5",
-          "explanation": "All five major front-end and middle-end phases of a compiler can detect errors: (1) Lexical analysis — lexical errors (invalid characters, malformed tokens). (2) Syntax analysis (parsing) — syntactic errors (grammar violations). (3) Semantic analysis — semantic errors (type errors, undeclared identifiers, scope violations). (4) Intermediate code generation — errors in expressions that are semantically inconsistent at the IR level. (5) Code optimisation — detects unreachable code, use of uninitialised variables, etc. The back-end (code generation) can also detect errors (e.g., register allocation failure), but the five listed phases are the canonical answer expected in GATE.",
-          "year": 2011,
-          "exam_type": "GATE",
-          "question_type": "NAT",
-          "marks": 2
-        },
-        {
-          "question_text": "Which of the following statements about cascaded errors (spurious errors) in compilers are TRUE?",
-          "options": [
-            "A. Cascaded errors are real errors in the source program reported correctly by the compiler",
-            "B. Cascaded errors are false error messages generated by the compiler as a side effect of error recovery from an earlier genuine error",
-            "C. A good compiler minimises cascaded errors by carefully choosing its error recovery strategy",
-            "D. Panic mode recovery can cause cascaded errors because skipping tokens may leave the parser in an inconsistent state"
-          ],
-          "correct_answer": "B, C, D",
-          "explanation": "(A) FALSE — Cascaded (spurious) errors are NOT real errors. They are false positives: the compiler reports them because its error recovery from a prior genuine error left it in a confused state. (B) TRUE — This is the definition: a cascaded error is an artifact of error recovery, not a true fault in the source program. If the programmer fixes the original error, cascaded errors typically disappear. (C) TRUE — Minimising cascaded errors is a key design goal of error recovery. Strategies like using FOLLOW sets in LL(1) parsers are specifically designed to reduce spurious reports. (D) TRUE — Panic mode skips tokens until a sync point, which can leave semantic context incomplete and cause false errors when parsing resumes.",
-          "year": 2012,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
-        },
-        {
-          "question_text": "In an LR parser, when a syntax error is detected, the parser is in state s and the current input token is a. Which of the following correctly describes the error handling?",
-          "options": [
-            "A. The parser immediately reduces using the longest matching production",
-            "B. The parser calls an error routine indicated by the `error` entry in ACTION[s, a] of the parsing table",
-            "C. The parser shifts token a onto the stack and continues",
-            "D. The parser outputs the input token a as the error token and halts"
-          ],
-          "correct_answer": "B",
-          "explanation": "In an LR parser, the parsing table's ACTION function maps (state, token) pairs to actions: shift, reduce, accept, or error. When ACTION[s, a] = error, a syntax error is detected. The parser calls an error-handling routine. This routine implements the chosen recovery strategy — commonly panic mode (pop states until a state with an `error` transition is found, discard tokens) or phrase-level correction. The LR parser never shifts an invalid token or reduces on an error entry — both would corrupt the parse stack. The `error` entry is the precise detection point.",
-          "year": 2013,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 2
-        },
-        {
-          "question_text": "Global error correction finds the parse tree for the string closest to the input (in terms of minimum edit distance). If the erroneous input string is `w` and the nearest valid string is `w'`, and the edit distance (insertions + deletions) between them is `k`, what is the time complexity of the global correction algorithm (using CYK-based DP)?",
-          "options": [
-            "A. O(|w|)",
-            "B. O(|w|²)",
-            "C. O(|w|³)",
-            "D. O(k · |w|²)"
-          ],
-          "correct_answer": "C",
-          "explanation": "Global error correction uses a dynamic programming approach similar to CYK parsing (or Wagner-Fischer edit distance combined with CYK). The CYK algorithm for parsing a string of length n runs in O(n³) time and O(n²) space. Global correction extends this to find the minimum-cost edit sequence transforming w into a valid string w' — the DP table is O(|w|²) in size and filling each cell takes O(|w|) work via grammar rule enumeration, giving O(|w|³) overall. This cubic complexity is why global correction is theoretically elegant but practically unused for large inputs in production compilers.",
+          "correct_answer": "11.7",
+          "explanation": "Correct answer is 11.7",
           "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 2
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
         },
         {
-          "question_text": "Which of the following errors would be detected during semantic analysis (and NOT during lexical or syntax analysis)?",
-          "options": [],
-          "correct_answer": "Type mismatch errors, undeclared variable usage, and duplicate variable declarations in the same scope",
-          "explanation": "Semantic analysis checks for meaning-level correctness after the syntactic structure is verified. Errors caught here include: (1) Type mismatches — e.g., adding a string to an integer without coercion. (2) Undeclared identifiers — using a variable or function not declared in any enclosing scope. (3) Duplicate declarations — declaring the same variable twice in the same scope. (4) Wrong number/types of arguments in function calls. (5) Returning a value from a void function. These errors cannot be detected by pattern matching (lexer) or grammar rules (parser) alone — they require semantic context such as the symbol table and type system.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "NAT",
-          "marks": 2
-        },
-        {
-          "question_text": "Which of the following correctly distinguish compile-time errors from runtime errors?",
+          "topic_name": "Waveguides",
+          "question_text": "A waveguide consists of two infinite parallel plates (perfect conductors) at a separation of 10 − 4 cm, with air as the dielectric. Assume the speed of light in air to be 3 × 10 8 m/s. The frequency/frequencies of TM waves which can propagate in this waveguide is/are ___________.",
+          "images": [],
           "options": [
-            "A. Compile-time errors are detected by the compiler during translation; runtime errors occur during program execution",
-            "B. Syntax errors are always compile-time errors; divide-by-zero is always a runtime error",
-            "C. A compiler can always detect all runtime errors statically — this is the halting problem",
-            "D. Semantic errors can be either compile-time (type mismatch) or runtime (array index out of bounds)"
-          ],
-          "correct_answer": "A, B, D",
-          "explanation": "(A) TRUE — This is the fundamental distinction. Compile-time errors are caught before execution (by the compiler/linker). Runtime errors occur during execution and are not detectable beforehand in the general case. (B) TRUE — Syntax errors (grammar violations) are always caught at compile time by the parser. Divide-by-zero (unless the divisor is a literal constant caught by constant folding) is a runtime error since the divisor's value is generally not known until execution. (C) FALSE — This is precisely the halting problem: it is undecidable in general to determine all runtime errors statically. A compiler can catch some (constant folding, data flow analysis) but not all. (D) TRUE — Semantic errors span both compile time (type checking) and runtime (bounds checking, null dereference).",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
-        },
-        {
-          "question_text": "In panic mode error recovery for an LL(1) parser, if the current non-terminal on top of the stack is A and the current input token `a` is not in FIRST(A) and not in FOLLOW(A), the parser should:",
-          "options": [
-            "A. Report an error and pop A from the stack",
-            "B. Report an error and discard the current input token `a`",
-            "C. Report an error and terminate parsing",
-            "D. Report an error and replace A with ε"
-          ],
-          "correct_answer": "B",
-          "explanation": "In LL(1) panic mode recovery with synchronising sets: if token `a` ∈ FIRST(A), use the appropriate production. If `a` ∈ FOLLOW(A), pop A (treat as if A derived ε). If `a` is in neither set, it is an unexpected token — discard `a` (advance the input) and try again with the next token. The parser keeps discarding tokens until it finds one in FIRST(A) ∪ FOLLOW(A). This strategy — discard input when the token is in neither set — avoids popping the stack prematurely and gives the best chance of resynchronising with the actual intent of the program.",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 2
-        },
-        {
-          "question_text": "Consider the following C code fragment: `int x; x = y + 2;` where `y` has not been declared. What type of error is this, and in which compiler phase is it detected?",
-          "options": [],
-          "correct_answer": "Semantic error (undeclared identifier), detected during semantic analysis",
-          "explanation": "The token `y` is lexically valid (a legal identifier) and syntactically valid (an identifier can appear in an expression). The error is semantic: `y` has not been declared in any enclosing scope. During semantic analysis, the compiler looks up each identifier in the symbol table. Finding no entry for `y`, it reports an 'undeclared identifier' or 'undefined variable' error. This is a classic compile-time semantic error. It is NOT a lexical error (y is a valid identifier pattern) and NOT a syntactic error (the statement `x = y + 2;` is grammatically correct).",
-          "year": 2018,
-          "exam_type": "GATE",
-          "question_type": "NAT",
-          "marks": 1
-        },
-        {
-          "question_text": "Which of the following best describes the 'error productions' technique for error recovery, and what is its main limitation?",
-          "options": [
-            "A. It adds grammar rules for common errors; main limitation is that it cannot handle unexpected errors not anticipated by the grammar designer",
-            "B. It uses a priority queue of likely corrections; main limitation is exponential time complexity",
-            "C. It rolls back the parse to the last valid point; main limitation is that it may loop infinitely",
-            "D. It replaces the erroneous token with the most likely correct token; main limitation is poor error messages"
-          ],
-          "correct_answer": "A",
-          "explanation": "Error productions add explicit grammar rules that match common mistakes programmers make — e.g., a production for a missing semicolon or a doubled operator. When such a production fires, the compiler emits a precise error message. The key limitation is coverage: error productions only handle errors the grammar designer anticipated. Novel or unusual errors fall through to generic panic mode recovery, which gives much less informative messages. Additionally, adding many error productions can significantly grow the grammar and parser tables. This technique works best for languages with a small set of extremely common errors.",
-          "year": 2019,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "Which of the following are TRUE about error recovery in recursive descent parsers?",
-          "options": [
-            "A. Each parsing procedure can have its own local error recovery logic, making error handling modular",
-            "B. Recursive descent parsers cannot implement panic mode recovery",
-            "C. The FOLLOW set of a non-terminal is commonly used as the synchronising set in recursive descent error recovery",
-            "D. Recursive descent parsers can implement phrase-level recovery by inserting or deleting tokens when an error is detected"
-          ],
-          "correct_answer": "A, C, D",
-          "explanation": "(A) TRUE — Recursive descent parsers are hand-written, so each procedure for a non-terminal can implement its own tailored error recovery. This modularity is an advantage over table-driven parsers. (B) FALSE — Recursive descent parsers can absolutely implement panic mode recovery — each procedure discards tokens until a synchronising token is found before returning. (C) TRUE — FOLLOW sets indicate what comes after a non-terminal, so tokens in FOLLOW(A) serve as natural synchronisation points when parsing A fails. (D) TRUE — Since the parser is hand-written, the programmer can insert a token by calling the procedure for the expected terminal without consuming input, or delete a token by advancing past it — implementing phrase-level recovery directly.",
-          "year": 2020,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
-        },
-        {
-          "question_text": "A compiler reports the error 'expression must have integral type' for the statement `float x = 3.5; int arr[x];` in C. This is an example of:",
-          "options": [
-            "A. Lexical error",
-            "B. Syntax error",
-            "C. Semantic error",
-            "D. Runtime error"
+            "A. 6 × 10 15 Hz",
+            "B. 0.5 × 10 12 Hz",
+            "C. 8 × 10 14 Hz",
+            "D. 1 × 10 13 Hz"
           ],
           "correct_answer": "C",
-          "explanation": "In C, array dimensions must be of integral (integer) type. The declaration `int arr[x]` where `x` is a `float` violates this semantic rule. The lexical analyser correctly tokenizes all symbols. The parser accepts `int arr[x];` as syntactically valid (it matches the declaration grammar). It is the semantic analyser's type-checking phase that detects the type mismatch: the array size expression `x` has type `float` but must be an integer. This is therefore a compile-time semantic error, caught during semantic analysis.",
-          "year": 2021,
-          "exam_type": "GATE",
-          "question_type": "MCQ",
-          "marks": 1
-        },
-        {
-          "question_text": "Consider a grammar G and an erroneous input string w. The minimum number of token insertions and deletions needed to transform w into a string accepted by G is called the:",
-          "options": [],
-          "correct_answer": "Edit distance (or minimum-cost correction distance) between w and the language L(G)",
-          "explanation": "The global error correction problem formalises error recovery as finding the string w' ∈ L(G) that minimises the edit distance d(w, w') — the minimum number of insertions, deletions (and sometimes substitutions) to transform w into a valid string w'. This is the theoretical foundation of global correction. The edit distance between an erroneous program and its nearest correct version tells us the 'severity' of the errors. While theoretically clean, computing this optimally requires O(|w|³) time via DP/CYK and is too expensive for production compilers, which use faster heuristic strategies like panic mode instead.",
+          "explanation": "Let's determine the possible frequencies of Transverse Magnetic (TM) waves that can propagate in this waveguide. Given the separation d = 10 − 4 cm (which is d = 10 − 6 meters) and the speed of light in air c = 3 × 10 8 m/s, we need to find the cutoff frequencies for TM modes. For TM modes, the cutoff frequency f c is given by: f c = m c 2 d where m is the mode number (a positive integer), c is the speed of light in air, and d is the separation between the plates. First, let's calculate the cutoff frequency for the lowest TM mode (m = 1): f c 1 = 1 × 3 × 10 8 m/s 2 × 10 − 6 m = 3 × 10 8 m/s 2 × 10 − 6 m = 3 × 10 8 2 × 10 − 6 Therefore, f c 1 = 1.5 × 10 14 Hz This is the cutoff frequency for the first TM mode. Since TM waves can propagate only above this cutoff frequency, we need to consider the given options: Option A: 6 × 10 15 Hz Option B: 0.5 × 10 12 Hz Option C: 8 × 10 14 Hz Option D: 1 × 10 13 Hz Any frequency greater than 1.5 × 10 14 Hz can propagate as a TM mode in the waveguide. Thus, the correct option(s) are: Option A: 6 × 10 15 Hz Option C: 8 × 10 14 Hz",
           "year": 2022,
-          "exam_type": "GATE",
-          "question_type": "NAT",
-          "marks": 2
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
         },
         {
-          "question_text": "Which of the following are desirable properties of an error handler in a compiler?",
+          "topic_name": "Waveguides",
+          "question_text": "The modes in a rectangular waveguide are denoted by T E m n / T M m n where m and n are the eigen numbers along the larger and smaller dimensions of the waveguide respectively. Which one of the following satements is TRUE?",
+          "images": [],
           "options": [
-            "A. Report errors clearly and accurately with location information",
-            "B. Recover sufficiently from each error to continue detecting subsequent errors",
-            "C. Not significantly slow down the processing of correct programs",
-            "D. Automatically fix all errors and produce a working executable"
+            "A. The T M 10 mode of the waveguide does not exist",
+            "B. The T E 10 mode of the waveguide does not exist",
+            "C. The T M 10 and the T E 10 modes both exist and have the same cut-off frequencies",
+            "D. The T M 10 and the T M 01 modes both exist and have the same cut-off frequencies."
           ],
-          "correct_answer": "A, B, C",
-          "explanation": "(A) TRUE — Clear, precise error messages with file, line, and column information are essential for programmer productivity. Vague messages like 'syntax error' are insufficient. (B) TRUE — The ability to continue parsing after an error (error recovery) and find multiple errors in one pass is a key quality metric of a compiler. (C) TRUE — Error handling code runs on all programs including correct ones (e.g., FIRST/FOLLOW table lookups). It must be fast enough not to degrade performance for error-free programs. (D) FALSE — Automatically fixing all errors is neither feasible nor desirable. The compiler cannot know the programmer's intent. Attempting to 'fix' errors may produce a semantically different program. Compilers should report errors, not silently correct them.",
-          "year": 2023,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 2011,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
         },
         {
-          "question_text": "In an LALR(1) parser performing error recovery, after detecting a syntax error the parser pops states from the stack until it finds a state s such that a production with `error` on the right-hand side can be reduced. It then shifts the special `error` token. How many states are popped in the BEST case?",
+          "topic_name": "Waveguides",
+          "question_text": "Which of the following statements is true regarding the fundamental mode of the metallic waveguides shown?",
+          "images": [
+            {
+              "index": 1,
+              "filename": "which-of-the-followi_img1.jpg"
+            }
+          ],
+          "options": [
+            "A. Only P has no cutoff- frequency",
+            "B. Only Q has no cutoff-frequency",
+            "C. Only R has no cutoff-frequency",
+            "D. All three have cutoff-frequencies"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 2009,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The phase velocity of an electromagnetic wave propagating in a hollow metallic rectangular waveguide in the T E 10 mode is",
+          "images": [],
+          "options": [
+            "A. equal to its group velocity",
+            "B. less than the velocity of light in free space",
+            "C. equal to the velocity of light in free space",
+            "D. greater than the velocity of light in free space"
+          ],
+          "correct_answer": "D",
+          "explanation": "Currently no explanation available",
+          "year": 2004,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The phase velocity for the T E 10 mode in an air-filled rectangular waveguide is",
+          "images": [],
+          "options": [
+            "A. less than c",
+            "B. equal to c",
+            "C. greater than c",
+            "D. none of the above"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 2002,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The phase velocity of waves propagating in a hollow metal waveguide is",
+          "images": [],
+          "options": [
+            "A. greater than the velocity of light in free space",
+            "B. less than the velocity of light in free space",
+            "C. equal to the velocity of light in free space",
+            "D. equal to the group velocity"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 2001,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The dominant mode in a rectangular waveguide is T E 10 , because this mode has",
+          "images": [],
+          "options": [
+            "A. no attenuation",
+            "B. no cut-off",
+            "C. no magnetic field component",
+            "D. the highest cut-off wavelength"
+          ],
+          "correct_answer": "D",
+          "explanation": "Currently no explanation available",
+          "year": 2001,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "Indicate which one of the following modes do NOT exist in a rectangular resonant cavity.",
+          "images": [],
+          "options": [
+            "A. T E 110",
+            "B. T E 011",
+            "C. T M 110",
+            "D. T M 111"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 1999,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "A rectangular air-filled waveguide has a cross section of 4 c m × 10 c m . The minimum frequency which can propagate in the waveguide is",
+          "images": [],
+          "options": [
+            "A. 1.5 GHz",
+            "B. 2.0 GHz",
+            "C. 2.5 GHz",
+            "D. 3.0 GHz"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 1997,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The interior of a 20 3 c m × 20 4 c m rectangular waveguide is completely filled with a dielectric of ∈ r = 4 . Waves of free space wave-lengths shorter than .........can be propagated in the T E 11 mode.",
+          "images": [],
           "options": [],
-          "correct_answer": "0",
-          "explanation": "In the best case, the current top state s already has a valid action on the `error` token — i.e., ACTION[s, error] = shift. In this case, no states need to be popped: the parser immediately shifts `error` and proceeds with token discarding until a synchronising token is found. Zero pops occur when the grammar has been designed with `error` productions at a high-level rule that encompasses the current parsing context. In the worst case, the parser may pop all states down to the initial state, discarding a large portion of the parse stack.",
-          "year": 2024,
-          "exam_type": "GATE",
-          "question_type": "NAT",
-          "marks": 2
+          "correct_answer": "8",
+          "explanation": "Correct answer is 8 cm",
+          "year": 1994,
+          "marks": 1,
+          "exam_type": "GATE ECE",
+          "question_type": "NAT"
         },
         {
-          "question_text": "Which of the following correctly describe differences between error recovery in LL(1) parsers and LR(1) parsers?",
+          "topic_name": "Waveguides",
+          "question_text": "A standard air-filled rectangular waveguide with dimensions a = 8 cm , b = 4 cm , operates at 3.4 GHz . For the dominant mode of wave propagation, the phase velocity of the signal is v p . The value (rounded off to two decimal places) of v p / c , where c denotes the velocity of light, is _ _ _ _ .",
+          "images": [],
           "options": [
-            "A. LL(1) parsers use FOLLOW sets as synchronising tokens; LR parsers use a state-based `error` token mechanism",
-            "B. LR parsers can detect errors earlier (with less input consumed) than LL(1) parsers for the same grammar",
-            "C. LL(1) parsers can recover from errors in the middle of a right-hand side production; LR parsers cannot",
-            "D. LR parsers in general have more context available at the point of error detection than LL(1) parsers"
+            "A. 8.19 G H z ≤ f ≤ 13.1 G H z",
+            "B. 8.19 G H z ≤ f ≤ 12.45 G H z",
+            "C. 6.55 G H z ≤ f ≤ 13.1 G H z",
+            "D. 1.64 G H z ≤ f ≤ 10.24 G H z"
           ],
-          "correct_answer": "A, B, D",
-          "explanation": "(A) TRUE — LL(1) panic mode uses FOLLOW(A) as synchronising tokens for non-terminal A on the stack. LR parsers use the `error` terminal in the ACTION table and pop states until a state with an error transition is found. (B) TRUE — LR parsers are more powerful and detect errors as soon as a valid prefix is violated, often before an LL(1) parser would. LR(1) parsers make no incorrect moves on any valid prefix (the viable-prefix property). (C) FALSE — Both LL(1) and LR parsers can recover mid-production. In LL(1), recovery in the middle of a production is done by treating each non-terminal on the stack individually. (D) TRUE — An LR parser's state encodes the entire history of the parse (the viable prefix), giving richer context at the error point. LL(1) only knows the current non-terminal being expanded.",
-          "year": 2025,
-          "exam_type": "GATE",
-          "question_type": "MSQ",
-          "marks": 2
+          "correct_answer": "1.15",
+          "explanation": "Correct answer is 1.15 to 1.20",
+          "year": 2021,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "Standard air filled rectangular waveguides of dimensions a = 2.29cm and b = 1.02cm are designed for radar applications. It is desired that these waveguides operate only in the dominant T E 10 mode with the operating frequency at least 25% above the cut-off frequency of the T E 10 mode but not higher than 95% of the next higher cutoff frequency. The range of the allowable operating frequency f is",
+          "images": [],
+          "options": [
+            "A. 8.19 G H z ≤ f ≤ 13.1 G H z",
+            "B. 8.19 G H z ≤ f ≤ 12.45 G H z",
+            "C. 6.55 G H z ≤ f ≤ 13.1 G H z",
+            "D. 1.64 G H z ≤ f ≤ 10.24 G H z"
+          ],
+          "correct_answer": "B",
+          "explanation": "Currently no explanation available",
+          "year": 2017,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "Consider an air-filled rectangular waveguide with dimensions a = 2.286cm and b = 1.016cm. At 10GHz operating frequency, the value of the propagation constant (per meter) of the corresponding propagation mode is _____________________",
+          "images": [],
+          "options": [
+            "A. T E 01 < T E 10 < T E 11 < T E 20",
+            "B. T E 20 < T E 11 < T E 10 < T E 01",
+            "C. T E 10 < T E 20 < T E 01 < T E 11",
+            "D. T E 10 < T E 11 < T E 20 < T E 01"
+          ],
+          "correct_answer": "158",
+          "explanation": "Correct answer is 158",
+          "year": 2016,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "Consider an air-filled rectangular waveguide with dimensions a = 2.286 cm and b = 1.016 cm. The increasing order of the cut-off frequencies for different modes is",
+          "images": [],
+          "options": [
+            "A. T E 01 < T E 10 < T E 11 < T E 20",
+            "B. T E 20 < T E 11 < T E 10 < T E 01",
+            "C. T E 10 < T E 20 < T E 01 < T E 11",
+            "D. T E 10 < T E 11 < T E 20 < T E 01"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 2016,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The longitudinal component of the magnetic field inside an air-filled rectangular waveguide made of a perfect electric conductor is given by the following expression H z ( x , y , z , t ) = 0.1 cos ( 25 π x ) cos ( 30.3 π y ) cos ( 12 π × 10 9 t − β z ) ( A / m ) The cross-sectional dimemsions of the waveguide are given as a = 0.08 m and b = 0.033 m. The mode of propagation inside the waveguide is",
+          "images": [],
+          "options": [
+            "A. T M 12",
+            "B. T M 21",
+            "C. T E 21",
+            "D. T E 12"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 2015,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "An air-filled rectangular waveguide of internal dimension a c m × b c m (a > b) has a cutoff frequency of 6 GHz for the dominant T E 10 mode. For the same waveguide, if the cutoff frequency of the T E 11 mode is 15 GHz, the cutoff frequency of the T E 01 mode in GHz is _____________",
+          "images": [],
+          "options": [
+            "A. V p > c",
+            "B. V p = c",
+            "C. 0 < V p < c",
+            "D. V p = 0"
+          ],
+          "correct_answer": "13.75",
+          "explanation": "Correct answer is 13.75",
+          "year": 2015,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "For a rectangular waveguide of internal dimensions a × b (a > b), the cut-off frequency for the T E 11 mode is the arithmetic mean of the cut-off frequencies for T E 10 mode and T E 20 mode. If a = 5 c m , the value of b (in cm) is",
+          "images": [],
+          "options": [
+            "A. V p > c",
+            "B. V p = c",
+            "C. 0 < V p < c",
+            "D. V p = 0"
+          ],
+          "correct_answer": "2",
+          "explanation": "Correct answer is 2",
+          "year": 2014,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The magnetic field along the propagation direction inside a rectangular waveguide with the cross section shown in the figure is H Z = 3 cos ( 2.094 × 10 2 x ) cos ( 2.618 × 10 2 y ) cos ( 6.283 × 10 10 t − β z ) The phase velocity V p of the wave inside the waveguide satisfies",
+          "images": [
+            {
+              "index": 1,
+              "filename": "the-magnetic-field-a_img1.jpg"
+            }
+          ],
+          "options": [
+            "A. V p > c",
+            "B. V p = c",
+            "C. 0 < V p < c",
+            "D. V p = 0"
+          ],
+          "correct_answer": "D",
+          "explanation": "Currently no explanation available",
+          "year": 2012,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "A rectangular waveguide of internal dimensions (a = 4 cm and b = 3 cm ) is to be operated in T E 11 mode. The minimum operating frequency is",
+          "images": [],
+          "options": [
+            "A. 6.25 GHz",
+            "B. 6.0 GHz",
+            "C. 5.0 GHz",
+            "D. 3.75 GHz"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 2008,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The E → field in a rectangular waveguide of inner dimensions a × b is given by E → = ω μ h 2 ( π a ) H 0 sin ( 2 π x a ) sin ( ω t − β z ) y ^ , where H 0 is a constant, a and b are the dimensions along the x-axis and the y-axis respectively. The mode of propagation in the waveguide is",
+          "images": [],
+          "options": [
+            "A. T E 20",
+            "B. T M 11",
+            "C. T M 20",
+            "D. T E 10"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 2007,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "An air-filled rectangular waveguide has inner dimensions of 3 c m × 2 c m . The wave impedance of the T E 20 mode of propagation in the waveguide at a frequency of 30 GHz is (free space impedance η 0 = 377 Ω )",
+          "images": [],
+          "options": [
+            "A. 308 Ω",
+            "B. 355 Ω",
+            "C. 400 Ω",
+            "D. 461 Ω"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 2007,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "A rectangular waveguide having T E 10 mode as dominant mode is having a cutoff frequency of 18 GHz for the T E 30 mode. The inner broad-wall dimension of the rectangular waveguide is",
+          "images": [],
+          "options": [
+            "A. 5/3 cms",
+            "B. 5 cms",
+            "C. 5/2 cms",
+            "D. 10 cms"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 2006,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "Which one of the following does represent the electric field lines for the T E 02 mode in the cross-section of a hollow rectangular metallic waveguide?",
+          "images": [],
+          "options": [],
+          "correct_answer": "",
+          "explanation": "",
+          "year": 2005,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "NAT"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "A rectangular metal wave guide filled with a dielectric material of relative permittivity ε r = 4 has the inside dimensions 3.0 c m × 1.2 c m . The cut-off frequency for the dominant mode is",
+          "images": [],
+          "options": [
+            "A. 2.5 GHz",
+            "B. 5.0 GHz",
+            "C. 10.0 GHz",
+            "D. 12.5 GHz"
+          ],
+          "correct_answer": "A",
+          "explanation": "Currently no explanation available",
+          "year": 2003,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "A rectangular waveguide has dimensions 1 c m × 0.5 c m . Its cut-off frequency is",
+          "images": [],
+          "options": [
+            "A. 5 GHz",
+            "B. 10 GHz",
+            "C. 15 GHz",
+            "D. 20 GHz"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 2000,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "An optical fiber consists of a cylindrical dielectric rod of refractive index n 1 , surrounded by another dielectric of refractive index n 2 where n 2 < n 1 as shown in the following Fig. If a ray is incident from air at angle i to the axis, then it undergoes total internal reflection at the interface AB if",
+          "images": [
+            {
+              "index": 1,
+              "filename": "an-optical-fiber-con_img1.jpg"
+            }
+          ],
+          "options": [
+            "A. i ≥ sin − 1 n 1 2 − n 2 2",
+            "B. i < sin − 1 n 1 − n 2",
+            "C. i ≤ sin − 1 n 1 2 − n 2 2",
+            "D. i = sin − 1 n 1 − n 2"
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 1993,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "Choose the correct statements. For a wave propagating in an air filled rectangular wave guide",
+          "images": [],
+          "options": [
+            "A. Guided wavelength is never less than the free space wavelength",
+            "B. Wave impedance is never less than the free space impedance.",
+            "C. Phase velocity is never less than the free space velocity",
+            "D. TEM mode is possible if the dimensions of the wave guide are properly chosen."
+          ],
+          "correct_answer": "C",
+          "explanation": "Currently no explanation available",
+          "year": 1990,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "For a normal mode EM wave propagating in a hollow rectangular wave guide",
+          "images": [],
+          "options": [
+            "A. the phase velocity is greater than the group velocity",
+            "B. the phase velocity is greater than velocity of light in free space",
+            "C. the phase velocity is less than the velocity of light in free space",
+            "D. the phase velocity may be either greater than or less than the group velocity"
+          ],
+          "correct_answer": "B",
+          "explanation": "Currently no explanation available",
+          "year": 1988,
+          "marks": 2,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
+        },
+        {
+          "topic_name": "Waveguides",
+          "question_text": "The cut-off frequency of a waveguide depends upon",
+          "images": [],
+          "options": [
+            "A. The dimensions of the waveguide",
+            "B. The dielectric property of the medium in the waveguide",
+            "C. The characteristic impedance of the waveguide",
+            "D. The transverse and axial components of the fields"
+          ],
+          "correct_answer": "B",
+          "explanation": "Currently no explanation available",
+          "year": 1987,
+          "marks": 0,
+          "exam_type": "GATE ECE",
+          "question_type": "MCQ"
         }
       ]
     }
