@@ -51,7 +51,9 @@ export default function ExamSwitcher({
   const handleExamSwitch = (id: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("exam", id);
-    params.delete("branch");   // reset branch when exam changes
+    params.delete("branch");
+    params.delete("subject");
+    params.delete("q");
     params.delete("patternId");
     router.push(`/practice?${params.toString()}`);
   };
@@ -63,6 +65,9 @@ export default function ExamSwitcher({
     } else {
       params.set("branch", id);
     }
+    // Clear subject/question selection — they belong to the previous branch
+    params.delete("subject");
+    params.delete("q");
     params.delete("patternId");
     router.push(`/practice?${params.toString()}`);
   };

@@ -35,8 +35,11 @@ model Pattern {
 
 model SubjectPattern {
   id           String       @id @default(uuid())
-  subject_name String       @unique
+  subject_name String
+  branch       String       @default("CSE")
   pyqs         SubjectPYQ[]
+
+  @@unique([subject_name, branch], name: "subject_pattern_identifier")
 }
 
 model SubjectPYQ {
@@ -48,6 +51,8 @@ model SubjectPYQ {
   explanation        String
   year               Int
   question_type      String         @default("MCQ")
+  marks              Int            @default(1)
+  branch             String         @default("CSE")
   images             Json?
   created_at         DateTime       @default(now())
   attempts           Attempt[]
@@ -67,6 +72,7 @@ model PYQ {
   exam_type      String
   created_at     DateTime  @default(now())
   question_type  String    @default("MCQ")
+  marks          Int       @default(1)
   images         Json?
   attempts       Attempt[]
   pattern        Pattern   @relation(fields: [pattern_id], references: [id])
@@ -86,6 +92,7 @@ model GeneratedQuestion {
   semantic_hash    String    @unique
   created_at       DateTime  @default(now())
   question_type    String    @default("MCQ")
+  marks            Int       @default(1)
   images           Json?
   attempts         Attempt[]
   pattern          Pattern   @relation(fields: [pattern_id], references: [id])

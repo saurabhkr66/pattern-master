@@ -353,6 +353,9 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               <span className="text-xs font-black bg-gray-50 text-gray-400 border border-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wide">
                 {question.question_type || "MCQ"}
               </span>
+              <span className="text-xs font-black bg-yellow-50 text-yellow-600 border border-yellow-100 px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                {question.marks ?? 1} Mark{(question.marks ?? 1) > 1 ? "s" : ""}
+              </span>
               {isRevealed && (
                 <span className={`ml-auto text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 ${checkIsCorrect() ? "text-emerald-600" : "text-rose-600"}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${checkIsCorrect() ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />

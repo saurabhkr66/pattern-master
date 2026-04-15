@@ -3,9 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 
+// NAT and MSQ are always 2 marks; MCQ uses the stored per-question value.
+function resolveMarks(questionType: string, dbMarks: number): number {
+  if (questionType === "NAT" || questionType === "MSQ") return 2;
+  return dbMarks ?? 1;
+}
+
 const TARGET_QUESTIONS = 55;
-// 1-mark: first 22 questions, 2-mark: next 33 questions
-const ONE_MARK_COUNT = 22;
 
 function shuffle<T>(arr: T[]): T[] {
     const a = [...arr];
@@ -72,6 +76,7 @@ export async function GET(req: NextRequest) {
                     correct_answer: true,
                     explanation: true,
                     question_type: true,
+                    marks: true,
                     year: true,
                     exam_type: true,
                     images: true,
@@ -91,6 +96,7 @@ export async function GET(req: NextRequest) {
                     correct_answer: true,
                     explanation: true,
                     question_type: true,
+                    marks: true,
                     year: true,
                     images: true,
                     subject_pattern: { select: { subject_name: true } },
@@ -107,6 +113,7 @@ export async function GET(req: NextRequest) {
             correct_answer: q.correct_answer,
             explanation: q.explanation,
             question_type: q.question_type,
+            marks: resolveMarks(q.question_type, q.marks),
             year: q.year,
             subject: q.pattern?.subject ?? "Core CS",
             images: q.images,
@@ -120,6 +127,7 @@ export async function GET(req: NextRequest) {
             correct_answer: q.correct_answer,
             explanation: q.explanation,
             question_type: q.question_type,
+            marks: resolveMarks(q.question_type, q.marks),
             year: q.year,
             subject: q.subject_pattern?.subject_name ?? "General",
             images: q.images,
@@ -147,12 +155,11 @@ export async function GET(req: NextRequest) {
             ...nats.slice(0, targetNAT),
         ]).slice(0, TARGET_QUESTIONS);
 
-        // Assign marks: first ONE_MARK_COUNT questions = 1 mark, rest = 2 marks
-        const questionsWithMarks = selected.map((q, idx) => {
-            const marks = idx < ONE_MARK_COUNT ? 1 : 2;
+        // Use stored marks from DB (NAT/MSQ=2, MCQ Hard=2, MCQ Easy/Medium=1)
+        const questionsWithMarks = selected.map((q) => {
             // Remove correct_answer from client-side response to prevent cheating
             const { correct_answer, explanation, ...safeQ } = q;
-            return { ...safeQ, marks };
+            return { ...safeQ, marks: q.marks ?? 1 };
         });
 
         const maxScore = questionsWithMarks.reduce((sum, q) => sum + q.marks, 0);

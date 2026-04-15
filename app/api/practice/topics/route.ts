@@ -10,7 +10,10 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
       const isAll = !subject || subject === "All";
 
       const subjectPatterns = await prisma.subjectPattern.findMany({
-        where: !isAll ? { subject_name: subject } : {},
+        where: {
+          branch: branch || "CSE",
+          ...(!isAll ? { subject_name: subject } : {}),
+        },
         select: {
           id: true,
           subject_name: true,

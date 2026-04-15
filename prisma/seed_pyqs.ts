@@ -9,363 +9,369 @@ async function main() {
       "pattern": {
         "exam_type": "GATE",
         "branch": "CSE",
-        "topic_name": "Lexical Analysis"
+        "topic_name": "Error Detection & Recovery"
       },
       "note": "Years are approximate based on best knowledge of GATE exam patterns. Not guaranteed to be exact PYQ years.",
       "pyqs": [
         {
-          "question_text": "Which of the following correctly describes the role of a lexical analyzer (scanner) in a compiler?",
+          "question_text": "Which of the following best describes the role of error detection in the compilation process?",
           "options": [
-            "A. It reads the source program character by character and groups characters into meaningful sequences called tokens",
-            "B. It checks the syntactic correctness of the token sequence",
-            "C. It translates tokens into intermediate code",
-            "D. It resolves identifier names using a symbol table"
-          ],
-          "correct_answer": "A",
-          "explanation": "The lexical analyzer (scanner/lexer) is the first phase of a compiler. It reads the source program as a stream of characters and groups them into tokens — meaningful units such as keywords (if, while), identifiers (variable names), operators (+, ==), literals (42, 3.14, 'hello'), and punctuation ({, ;). It skips whitespace and comments, which are not tokens. The output is a sequence of tokens passed to the parser. It may also interact with the symbol table to record identifier attributes. Syntax checking is the parser's job; IR generation is the semantic analyzer's/code generator's job.",
-          "year": 2001,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "A token in lexical analysis consists of:",
-          "options": [
-            "A. A token type (token name) and optionally an attribute value",
-            "B. Only the lexeme (the actual character sequence matched)",
-            "C. A line number and column number only",
-            "D. A symbol table entry and a production rule"
-          ],
-          "correct_answer": "A",
-          "explanation": "A token is a pair: (token-type, attribute-value). The token type (name) is an abstract category: id, number, relop, keyword, etc. The attribute value provides additional information when multiple lexemes map to the same token type. Example: the identifier 'count' → token (id, pointer to symbol table entry for 'count'). The number '3.14' → token (number, 3.14). The keyword 'if' → token (if, —) — no attribute needed since there is only one 'if'. The lexeme is the actual character string matched, not the token itself. The token is the abstract representation passed to the parser.",
-          "year": 2002,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Regular expressions are used to specify token patterns in lexical analysis. Which of the following regular expressions correctly describes identifiers in most programming languages (a letter followed by zero or more letters or digits)?",
-          "options": [
-            "A. (letter)(letter | digit)*",
-            "B. (letter | digit)+",
-            "C. (digit)(letter | digit)*",
-            "D. (letter)+"
-          ],
-          "correct_answer": "A",
-          "explanation": "An identifier in most languages (C, Java, Python) must begin with a letter (or underscore) followed by zero or more letters or digits. The regular expression is: (letter)(letter | digit)* where letter = [a-zA-Z_] and digit = [0-9]. Option B allows identifiers to start with digits (invalid). Option C requires identifiers to start with a digit (incorrect — those are numeric literals). Option D requires identifiers to contain only letters (no digits allowed — too restrictive). Option A correctly captures: first character must be a letter, subsequent characters can be letters or digits.",
-          "year": 2003,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Which of the following regular expressions denotes the set of all strings over {a, b} that contain at least one 'a'?",
-          "options": [
-            "A. (a | b)* a (a | b)*",
-            "B. a*",
-            "C. (a | b)+",
-            "D. b* a (a | b)*"
-          ],
-          "correct_answer": "A",
-          "explanation": "The set of strings over {a,b} containing at least one 'a': There must be at least one 'a' somewhere in the string, with any combination of 'a' and 'b' before and after it. Option A: (a|b)* a (a|b)* — zero or more (a or b), then an 'a', then zero or more (a or b). This correctly accepts any string with at least one 'a'. Option B: a* — only strings of all 'a's (no b's allowed). Option C: (a|b)+ — strings of length ≥ 1 over {a,b}; includes 'b', 'bb', etc. which contain no 'a'. Option D: b* a (a|b)* — correct but incomplete; requires all characters before the first 'a' to be 'b's, which is actually equivalent to A. Actually D is equivalent to A. Both A and D are correct.",
-          "year": 2004,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "The transition from a regular expression to a DFA for use in a lexical analyzer typically follows which sequence of steps?",
-          "options": [
-            "A. Regular Expression → NFA (Thompson's construction) → DFA (Subset construction) → Minimized DFA",
-            "B. Regular Expression → DFA directly → NFA → Minimized DFA",
-            "C. Regular Expression → Parse tree → CFG → DFA",
-            "D. Regular Expression → NFA → CFG → DFA"
-          ],
-          "correct_answer": "A",
-          "explanation": "The standard construction pipeline for a lexical analyzer: (1) Regular expression → NFA: Thompson's construction algorithm converts a regular expression to an ε-NFA in O(|r|) time with O(|r|) states. (2) NFA → DFA: Subset (powerset) construction converts the NFA to an equivalent DFA. Each DFA state corresponds to a set of NFA states. May produce up to 2^n DFA states for n NFA states (worst case). (3) DFA minimization: Hopcroft's algorithm minimizes the DFA by merging indistinguishable states. The minimized DFA is the basis for the lexer's finite automaton. Tools like lex/flex implement this pipeline automatically.",
-          "year": 2005,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Thompson's construction builds an NFA from a regular expression. Which of the following correctly describes the NFA for the concatenation r·s (r followed by s)?",
-          "options": [
-            "A. The final state of r's NFA is connected to the initial state of s's NFA via an ε-transition",
-            "B. The initial states of r's NFA and s's NFA are merged into one state",
-            "C. A new initial state has ε-transitions to both r's and s's initial states",
-            "D. The final states of r and s are merged into one accepting state"
-          ],
-          "correct_answer": "A",
-          "explanation": "Thompson's construction for concatenation r·s: (1) Build NFA_r for r with initial state i_r and final state f_r. (2) Build NFA_s for s with initial state i_s and final state f_s. (3) Connect f_r to i_s via an ε-transition (f_r is no longer accepting). (4) The combined NFA has initial state i_r and final state f_s. This ensures the combined NFA first matches r (reaching f_r via an ε), then transitions to NFA_s to match s. For alternation r|s: a new initial state has ε-transitions to both i_r and i_s; a new final state receives ε-transitions from both f_r and f_s.",
-          "year": 2006,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "The subset construction algorithm converts an NFA to a DFA. Consider an NFA with states {0,1,2,3} where state 0 is initial, state 3 is accepting, and transitions include ε-moves. The ε-closure of a state s is:",
-          "options": [
-            "A. The set of all NFA states reachable from s on ε-transitions alone (including s itself)",
-            "B. The set of all states reachable from s on any single input symbol",
-            "C. The set of all accepting states reachable from s",
-            "D. The set of states that can transition to s on ε"
-          ],
-          "correct_answer": "A",
-          "explanation": "ε-closure(s) is the set of all NFA states reachable from state s using zero or more ε-transitions (without consuming any input symbol). s itself is always in ε-closure(s). Algorithm: start with {s}, repeatedly add any state reachable via ε from any state in the current set, until no new states can be added. ε-closure is used in subset construction: the initial DFA state = ε-closure(NFA initial state). For DFA state D and input symbol a: MOVE(D, a) = set of NFA states reachable from any state in D on input a; new DFA state = ε-closure(MOVE(D, a)).",
-          "year": 2007,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Consider the NFA for the regular expression (a|b)*abb with states {0,1,2,3} where state 3 is the accepting state. How many states does the minimized DFA for this NFA have?",
-          "options": [
-            "A. 3",
-            "B. 4",
-            "C. 5",
-            "D. 6"
+            "A. Error detection identifies incorrect tokens and replaces them with correct ones automatically",
+            "B. Error detection identifies points in the source program where the input deviates from the language specification and reports them to the user",
+            "C. Error detection converts syntactic errors into semantic errors for easier recovery",
+            "D. Error detection is performed only during code generation and not during parsing"
           ],
           "correct_answer": "B",
-          "explanation": "The DFA for (a|b)*abb (strings ending in 'abb') has 4 states: State A (initial): no progress toward 'abb' — transitions: on a→B, on b→A. State B: seen 'a' (potential start of 'abb') — transitions: on a→B (reset with new 'a'), on b→C. State C: seen 'ab' — transitions: on a→B, on b→D. State D (accepting): seen 'abb' — transitions: on a→B, on b→A. After minimization: these 4 states are all distinguishable (they accept different sets of future strings), so the minimal DFA has 4 states. This is a classic GATE example from Aho-Lam-Sethi-Ullman textbook.",
-          "year": 2008,
+          "explanation": "Error detection in a compiler identifies locations where the source program violates the rules of the language — whether lexical (invalid characters), syntactic (malformed structure), semantic (type mismatches), or logical (undefined variables). The compiler reports these violations with meaningful messages (line number, error type) so the programmer can fix them. Error detection does NOT automatically fix errors (that is error recovery's role), and it spans multiple phases — lexical analysis, parsing, and semantic analysis — not only code generation.",
+          "year": 2000,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "MCQ",
+          "marks": 1
         },
         {
-          "question_text": "DFA minimization using Hopcroft's algorithm partitions DFA states into groups of indistinguishable states. Two states p and q are distinguishable if:",
+          "question_text": "In the context of compilers, which of the following is an example of a lexical error?",
           "options": [
-            "A. There exists some string w such that exactly one of δ*(p,w) and δ*(q,w) is an accepting state",
-            "B. They have different numbers of outgoing transitions",
-            "C. One is an accepting state and the other has a self-loop",
-            "D. They are in different components of the DFA graph"
-          ],
-          "correct_answer": "A",
-          "explanation": "Two DFA states p and q are distinguishable if there exists a string w (a distinguishing string) such that: starting from p, w leads to an accepting state, but starting from q, w leads to a non-accepting state (or vice versa). In other words, δ*(p,w) ∈ F XOR δ*(q,w) ∈ F. Indistinguishable states can be merged. Table-filling algorithm (marking algorithm): initialize by marking all (accepting, non-accepting) pairs as distinguishable. Iteratively mark (p,q) if for some input a, (δ(p,a), δ(q,a)) is already marked. Unmarked pairs at termination are indistinguishable and can be merged.",
-          "year": 2009,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Which of the following correctly describes the differences between a DFA and an NFA in terms of expressive power and implementation?",
-          "options": [
-            "A. DFAs and NFAs recognize the same class of languages (regular languages)",
-            "B. NFAs can have multiple transitions on the same input from the same state; DFAs have exactly one",
-            "C. NFAs can have ε-transitions; DFAs cannot",
-            "D. DFAs are more expressive than NFAs (can recognize non-regular languages)"
-          ],
-          "correct_answer": "A, B, C",
-          "explanation": "DFA vs NFA: A: TRUE — both DFAs and NFAs recognize exactly the class of regular languages. Every NFA can be converted to an equivalent DFA (subset construction) and vice versa. B: TRUE — in an NFA, from state s on input a, there may be zero, one, or multiple possible next states. In a DFA, there is exactly one next state for each (state, input) pair (the transition function is total and deterministic). C: TRUE — NFAs may have ε-transitions (move without consuming input); DFAs cannot (every transition must consume exactly one input symbol). D: FALSE — DFAs and NFAs are equally expressive (both characterize regular languages). The difference is in conciseness: an NFA may be exponentially more succinct than the equivalent DFA.",
-          "year": 2010,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "In lexical analysis, when a lexer matches multiple token patterns for the same input string, how are conflicts resolved?",
-          "options": [
-            "A. Longest match rule: the pattern that matches the longest prefix of the remaining input wins",
-            "B. First match rule: when two patterns match the same length string, the one listed first in the lexer specification wins",
-            "C. The lexer reports an ambiguity error and stops",
-            "D. Both A and B are used together"
-          ],
-          "correct_answer": "D",
-          "explanation": "Lexical analyzers (lex/flex) use two rules to resolve conflicts: (1) Longest match (maximal munch): always prefer the longest match. Example: '==' should match the equality operator token, not two '=' tokens. '<=', '>=', '!=' should each be one token, not two. (2) Priority rule (first match): when two patterns match the SAME longest string, the pattern listed FIRST in the lex specification wins. This is critical for keywords: 'if', 'while', 'return' would match the identifier pattern too, but since keyword patterns are listed before the identifier pattern, they take priority. Together: (1) find the longest match, then (2) if tie, choose the first-listed pattern.",
-          "year": 2011,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Which of the following strings are accepted by the regular expression (0|1)*011?",
-          "options": [
-            "A. 011",
-            "B. 1011",
-            "C. 0011",
-            "D. 0110"
-          ],
-          "correct_answer": "A, B, C",
-          "explanation": "(0|1)*011 denotes all binary strings ending with '011': A: 011 — the prefix (0|1)* matches ε (empty), then '011' matches 011. Accepted ✓. B: 1011 — (0|1)* matches '1', then '011'. Accepted ✓. C: 0011 — (0|1)* matches '0', then '011'. Accepted ✓. D: 0110 — the string ends with '110', not '011'. The last three characters are '110' ≠ '011'. Rejected ✗. Note: (0|1)* matches any binary string including empty string, so (0|1)*011 = all binary strings with '011' as a suffix.",
-          "year": 2012,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "The regular expression for floating-point numbers with optional sign, integer part, decimal point, and fractional part in a typical programming language is:",
-          "options": [
-            "A. (+|-)?(digit)+(.(digit)+)?",
-            "B. (digit)*.(digit)*",
-            "C. (digit)+",
-            "D. (+|-)(digit).(digit)+"
-          ],
-          "correct_answer": "A",
-          "explanation": "A floating-point literal pattern: optional sign: (+|-)? — zero or one occurrence of + or -. Integer part: (digit)+ — one or more digits (required, must have at least one digit). Optional decimal part: (.(digit)+)? — a period followed by one or more digits, entire group optional. Combined: (+|-)?(digit)+(.(digit)+)? matches: 42, +3.14, -0.5, 123.456, -99. This covers integers and floats. A more complete pattern might also include scientific notation: (digit)+(.(digit)+)?(e(+|-)?(digit)+)?. Option B allows strings like '.5' or '.' (no integer part). Option C matches integers only. Option D requires a sign and both integer and fractional parts.",
-          "year": 2013,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Consider the DFA with states {A, B, C}, initial state A, accepting state C, and transitions: δ(A,0)=B, δ(A,1)=A, δ(B,0)=C, δ(B,1)=A, δ(C,0)=C, δ(C,1)=C. What is the language accepted by this DFA?",
-          "options": [
-            "A. All binary strings ending with '00'",
-            "B. All binary strings containing '00' as a substring",
-            "C. All binary strings with at least two consecutive 0s",
-            "D. Both B and C are equivalent and correct"
-          ],
-          "correct_answer": "D",
-          "explanation": "Trace the DFA: State A: initial — no 0s seen recently. On 1: stay at A (reset). On 0: go to B. State B: one 0 seen. On 1: go to A (reset). On 0: go to C (two consecutive 0s found). State C: accepting — '00' seen. On any input: stay at C (once accepted, always accept). The DFA accepts a string iff at some point two consecutive 0s appear. 'Containing 00 as a substring' ≡ 'having at least two consecutive 0s' — these are the same condition. So B and C express the same language, making D correct.",
-          "year": 2014,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Lex (or Flex) is a tool for generating lexical analyzers. Which of the following correctly describes how lex processes its input specification?",
-          "options": [
-            "A. Lex converts regular expression patterns into a DFA and generates C code implementing the DFA-based scanner",
-            "B. Lex generates a recursive descent parser from regular expressions",
-            "C. Lex directly executes regular expressions at runtime without compilation",
-            "D. Lex generates an NFA that is simulated at runtime"
-          ],
-          "correct_answer": "A",
-          "explanation": "Lex/Flex operation: (1) Input: a .l file containing regular expression patterns paired with actions (C code). (2) Processing: lex combines all patterns into a single regular expression using alternation, converts it to an NFA using Thompson's construction, converts the NFA to a DFA using subset construction, and minimizes the DFA. (3) Output: C code (lex.yy.c) implementing the DFA as a large switch statement or table-driven scanner. The generated scanner reads input, simulates the DFA, applies the longest-match and priority rules, and executes the action for each matched token. The result is a compiled, efficient table-driven DFA scanner.",
-          "year": 2015,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "What is the minimum number of states in a DFA that accepts the language L = {w ∈ {a,b}* | w ends with 'ab'}?",
-          "options": [],
-          "correct_answer": "3",
-          "explanation": "The minimal DFA for strings over {a,b} ending with 'ab' has 3 states: State 0 (initial): no progress. On a→State 1, on b→State 0. State 1: seen 'a' (last char was 'a'). On a→State 1 (new 'a' replaces old), on b→State 2. State 2 (accepting): seen 'ab'. On a→State 1, on b→State 0. These 3 states are all distinguishable: State 0 and State 2 differ (State 2 accepts ε, State 0 doesn't); States 0 and 1 differ ('b' from State 1 reaches accepting State 2, from State 0 stays non-accepting); States 1 and 2 differ ('b' from State 2 rejects, from State 1 accepts). Minimum DFA states = 3.",
-          "year": 2016,
-          "exam_type": "GATE",
-          "question_type": "NAT"
-        },
-        {
-          "question_text": "Which of the following are properties of regular languages relevant to lexical analysis?",
-          "options": [
-            "A. Regular languages are closed under union, concatenation, and Kleene star",
-            "B. Every regular language can be described by a regular expression",
-            "C. Regular languages can describe nested structures like balanced parentheses",
-            "D. The intersection of two regular languages is also regular"
-          ],
-          "correct_answer": "A, B, D",
-          "explanation": "Regular language properties: A: TRUE — closure under union (r|s), concatenation (rs), and Kleene star (r*). Also closed under intersection, complement, difference, and reversal. B: TRUE — Kleene's theorem: a language is regular iff it is described by a regular expression iff it is accepted by some DFA/NFA. C: FALSE — regular languages CANNOT describe nested/recursive structures. Balanced parentheses requires counting (stack), which finite automata cannot do. This is provable by the Pumping Lemma for regular languages. This is why parsers (using CFGs/PDAs) are needed for syntax — the syntactic structure of programs is context-free, not regular. D: TRUE — regular languages are closed under intersection.",
-          "year": 2017,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "In a lexer, what is the role of 'lexeme' as distinct from 'token' and 'pattern'?",
-          "options": [
-            "A. Pattern: regular expression describing a class of lexemes; Lexeme: actual character sequence matched; Token: abstract representation (type + attribute)",
-            "B. Lexeme and token are the same thing",
-            "C. Pattern is the token type; lexeme is the regular expression; token is the attribute",
-            "D. All three terms refer to the same concept in lexical analysis"
-          ],
-          "correct_answer": "A",
-          "explanation": "Three related but distinct concepts: Pattern: a rule (regular expression) describing the set of strings that can form a token of a given type. Example: pattern for identifiers = letter(letter|digit)*. Lexeme: the actual sequence of characters in the source program that matches a pattern. Example: 'count', 'x1', 'myVariable'. Token: the abstract pair (token-type, attribute-value) produced by the lexer when a lexeme matches a pattern. Example: (id, pointer-to-count-in-symbol-table). Multiple lexemes match the same pattern; each lexeme produces a token instance. The parser works with tokens; the lexer works with lexemes and patterns.",
-          "year": 2018,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Consider the regular expression r = a(a|b)*b. Which of the following strings are in L(r)?",
-          "options": [
-            "A. ab",
-            "B. aab",
-            "C. abb",
-            "D. ba"
-          ],
-          "correct_answer": "A, B, C",
-          "explanation": "L(r) = L(a(a|b)*b) = all strings starting with 'a' and ending with 'b' over {a,b}, with zero or more characters in between. A: 'ab' — 'a' matches first 'a', (a|b)* matches ε, 'b' matches last 'b'. Accepted ✓. B: 'aab' — 'a' matches first 'a', (a|b)* matches 'a', 'b' matches last 'b'. Accepted ✓. C: 'abb' — 'a' matches first 'a', (a|b)* matches 'b', 'b' matches last 'b'. Accepted ✓. D: 'ba' — starts with 'b' not 'a', and ends with 'a' not 'b'. Rejected ✗. Note: strings like 'aaa' (ends with 'a') and 'bab' (starts with 'b') are also not in L(r).",
-          "year": 2019,
-          "exam_type": "GATE",
-          "question_type": "MSQ"
-        },
-        {
-          "question_text": "The pumping lemma for regular languages states that for any regular language L, there exists a pumping length p such that any string s ∈ L with |s| ≥ p can be split as s = xyz where |xy| ≤ p, |y| ≥ 1, and xy^i z ∈ L for all i ≥ 0. How is the pumping lemma used in lexical analysis?",
-          "options": [
-            "A. To prove that certain languages like balanced parentheses cannot be described by regular expressions and hence cannot be tokenized by a finite automaton alone",
-            "B. To construct the DFA for a given regular expression",
-            "C. To minimize the number of states in a DFA",
-            "D. To determine the priority of token patterns in a lexer"
-          ],
-          "correct_answer": "A",
-          "explanation": "The pumping lemma is used to prove that a language is NOT regular by showing no pumping length exists. In the context of lexical analysis: it explains why certain syntactic constructs cannot be handled at the lexical level. For example, balanced parentheses (the language {a^n b^n | n ≥ 1}) is not regular (pumping lemma proof: assume it's regular with pumping length p; take s = a^p b^p; any split xyz with |xy| ≤ p has y = a^k for some k ≥ 1; pumping gives a^(p+k) b^p ∉ L — contradiction). This is why compilers use CFGs and parsers for syntactic structure and use regular expressions/DFAs only for tokenization (which deals with flat, non-nested patterns).",
-          "year": 2020,
-          "exam_type": "GATE",
-          "question_type": "MCQ"
-        },
-        {
-          "question_text": "Consider a DFA for recognizing C-style comments of the form /* ... */ (comment begins with /* and ends with */). Which of the following correctly describes the minimum number of states needed?",
-          "options": [
-            "A. 4",
-            "B. 3",
-            "C. 5",
-            "D. 2"
+            "A. Using a variable before declaring it",
+            "B. Writing `int x = ;` (missing expression after `=`)",
+            "C. Using the character `@` in an identifier name in a language that does not permit it",
+            "D. Calling a function with the wrong number of arguments"
           ],
           "correct_answer": "C",
-          "explanation": "Minimum DFA for C-style /* ... */ comments: State 0 (initial): waiting for '/'. On '/'→State 1, else→State 0. State 1: seen '/'. On '*'→State 2 (inside comment), on '/'→State 1, else→State 0. State 2: inside comment body. On '*'→State 3 (potential end), else→State 2. State 3: seen '*' inside comment (potential '/'). On '/'→State 4 (accept: comment closed), on '*'→State 3, else→State 2. State 4 (accepting): comment complete. Total = 5 states (0,1,2,3,4). These are all distinguishable: State 2 and 3 differ (State 3 transitions to accept on '/', State 2 does not). Minimum = 5 states.",
-          "year": 2021,
+          "explanation": "Lexical errors occur when the scanner cannot form a valid token from the input characters. An illegal character such as `@` in an identifier (if the language does not allow it) is a lexical error — it does not match any token pattern in the language. Option A (undeclared variable) is a semantic error. Option B (missing expression) is a syntactic error detected by the parser. Option D (wrong argument count) is a semantic error. Lexical errors are the simplest class and are detected earliest in compilation.",
+          "year": 2001,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "MCQ",
+          "marks": 1
         },
         {
-          "question_text": "Which of the following correctly describes the role of the symbol table in lexical analysis?",
+          "question_text": "Panic mode error recovery in a parser works by:",
           "options": [
-            "A. The lexer inserts identifiers into the symbol table and records their attributes (type, scope) fully",
-            "B. The lexer may insert identifiers into the symbol table; full attribute recording is done by later phases",
-            "C. The symbol table is only used during code generation, not lexical analysis",
-            "D. The lexer creates a new symbol table entry for every token including keywords"
+            "A. Inserting a missing token into the input stream and resuming parsing",
+            "B. Discarding input tokens one at a time until a synchronising token (such as `;` or `}`) is found, then resuming parsing",
+            "C. Rolling back the parse stack to the last valid state and trying an alternative production",
+            "D. Reporting the error and immediately terminating compilation"
           ],
           "correct_answer": "B",
-          "explanation": "Symbol table interaction during lexical analysis: When the lexer recognizes an identifier, it typically looks it up in the symbol table. If not found, it creates a new entry. At lexing time, the only attribute recorded is the lexeme (name) itself — type information, scope, and usage attributes are filled in by the semantic analyzer during later phases. Keywords may be pre-loaded into the symbol table or handled by checking a keyword table separately (so they don't get treated as identifiers). A is partially wrong — 'fully records attributes' is incorrect. C is wrong — the symbol table is used across all phases. D is wrong — keywords are typically not given symbol table entries.",
-          "year": 2022,
+          "explanation": "Panic mode is the simplest and most widely used error recovery strategy. On detecting an error, the parser discards input symbols one at a time until it finds a token belonging to a designated set of synchronising tokens — typically statement terminators like `;` or block delimiters like `}` or `end`. Parsing then resumes from that point. Advantages: simple to implement, guarantees the parser never loops. Disadvantage: it may skip a large portion of input, missing several errors. It does NOT insert tokens (that is phrase-level recovery) or backtrack (that is backtracking parsers).",
+          "year": 2002,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "MCQ",
+          "marks": 1
         },
         {
-          "question_text": "Which of the following errors can be detected by the lexical analyzer?",
+          "question_text": "Which of the following error recovery strategies for parsers involves making local corrections to the input — such as inserting, deleting, or replacing a token — to allow parsing to continue?",
           "options": [
-            "A. An illegal character in the source program (e.g., '@' in C where it is not a valid token)",
-            "B. An unterminated string literal (e.g., 'hello without closing quote)",
-            "C. Using an undeclared variable",
-            "D. A syntax error like missing semicolon"
+            "A. Panic mode recovery",
+            "B. Error productions",
+            "C. Phrase-level recovery",
+            "D. Global correction"
           ],
-          "correct_answer": "A, B",
-          "explanation": "Lexical errors (detectable by the lexer): A: TRUE — if the lexer encounters a character that does not match the beginning of any valid token pattern, it reports a lexical error (illegal character). Example: '$' in standard C is not valid. B: TRUE — an unterminated string literal (no closing quote before end of line or file) cannot match the string token pattern and is a lexical error. The lexer can detect this by recognizing it reaches EOF while still in the 'inside string' state. C: FALSE — using an undeclared variable is a semantic error (detected during semantic analysis when the symbol table is consulted for types). D: FALSE — missing semicolons are syntax errors detected by the parser, not the lexer (the lexer just produces tokens; it doesn't check their grammatical structure).",
-          "year": 2023,
+          "correct_answer": "C",
+          "explanation": "Phrase-level recovery makes minimal local corrections to the remaining input to allow the parser to proceed. The parser may insert a missing token (e.g., insert `;` at the end of a statement), delete an extra token, or replace one token with another. These corrections are made on the input stream, not on the grammar. The risk is that the correction may introduce cascading spurious errors. This differs from panic mode (which only deletes tokens until a sync point) and error productions (which add explicit grammar rules for common mistakes).",
+          "year": 2003,
           "exam_type": "GATE",
-          "question_type": "MSQ"
+          "question_type": "MCQ",
+          "marks": 2
         },
         {
-          "question_text": "Consider the NFA obtained by Thompson's construction for the regular expression (a|b)*. How many states does this NFA have?",
+          "question_text": "Which of the following are valid error recovery strategies used in parsers?",
+          "options": [
+            "A. Panic mode recovery",
+            "B. Phrase-level recovery",
+            "C. Error productions",
+            "D. Global correction (minimum-cost correction)"
+          ],
+          "correct_answer": "A, B, C, D",
+          "explanation": "(A) TRUE — Panic mode: discard tokens until a synchronising token is found. Simple and widely used. (B) TRUE — Phrase-level recovery: make local corrections (insert/delete/replace token) to allow parsing to continue. (C) TRUE — Error productions: augment the grammar with productions that recognise common errors (e.g., a rule for `int x = ;`). When this production fires, a specific error message is generated. (D) TRUE — Global correction: find the minimum number of insertions/deletions/replacements to transform the erroneous input into a valid string. Theoretically optimal but computationally expensive (O(n³) DP) — rarely used in practice.",
+          "year": 2004,
+          "exam_type": "GATE",
+          "question_type": "MSQ",
+          "marks": 2
+        },
+        {
+          "question_text": "In an LL(1) parser using panic mode recovery, the synchronising token set for a non-terminal A is typically chosen as:",
+          "options": [
+            "A. FIRST(A) only",
+            "B. FOLLOW(A) only",
+            "C. FIRST(A) ∪ FOLLOW(A)",
+            "D. FIRST(A) ∩ FOLLOW(A)"
+          ],
+          "correct_answer": "C",
+          "explanation": "In LL(1) panic mode recovery, the synchronising set for non-terminal A is chosen as FIRST(A) ∪ FOLLOW(A). FIRST(A) tokens can begin a valid derivation of A — if the current token is in FIRST(A), the parser can attempt to parse A normally. FOLLOW(A) tokens appear after A in the grammar — if the current token is in FOLLOW(A), A is popped from the stack (treated as having been parsed as ε) and parsing continues. This two-set approach handles both 'missing A' and 'extra tokens within A' scenarios, minimising cascaded errors.",
+          "year": 2005,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 2
+        },
+        {
+          "question_text": "The number of errors that a good compiler should report before terminating is best described as:",
           "options": [],
-          "correct_answer": "8",
-          "explanation": "Thompson's construction for (a|b)*: Step 1 — NFA for 'a': 2 states (states 0, 1). Step 2 — NFA for 'b': 2 states (states 2, 3). Step 3 — NFA for (a|b) using alternation: add new start state 4 and new final state 5, with ε-transitions 4→0, 4→2, 1→5, 3→5. Total: 6 states (0,1,2,3,4,5). Step 4 — NFA for (a|b)* using Kleene star: add new start state 6 and new final state 7, with ε-transitions: 6→4 (enter the body), 5→4 (loop back), 5→7 (exit), 6→7 (match empty string). Total: 8 states (0-7). Thompson's construction for r* always adds exactly 2 states to NFA_r.",
-          "year": 2024,
+          "correct_answer": "As many as possible — the compiler should use error recovery to detect and report multiple errors in a single compilation pass",
+          "explanation": "A good compiler does NOT stop at the first error. It uses error recovery strategies to resume parsing after each error, reporting as many errors as possible in a single compilation run. This is important because fixing one error at a time and recompiling is very inefficient — the programmer benefits from seeing all (or most) errors at once. However, compilers must avoid reporting cascaded/spurious errors caused by earlier recovery decisions. The goal is: maximise true errors reported, minimise false positives from error recovery.",
+          "year": 2006,
           "exam_type": "GATE",
-          "question_type": "NAT"
+          "question_type": "NAT",
+          "marks": 2
         },
         {
-          "question_text": "Which of the following tasks are typically performed by the lexical analysis phase of a compiler?",
+          "question_text": "Which of the following correctly classifies the error in the statement `int 3x = 5;` in a C-like language?",
           "options": [
-            "A. Stripping whitespace (spaces, tabs, newlines) and comments from the source",
-            "B. Recognizing keywords, identifiers, literals, and operators",
-            "C. Checking that parentheses are balanced",
-            "D. Expanding macros and handling preprocessor directives (in C)"
+            "A. Lexical error — `3x` is not a valid token",
+            "B. Syntactic error — an integer literal cannot begin an identifier",
+            "C. Semantic error — `3x` is an undeclared variable",
+            "D. Both lexical and syntactic error"
           ],
-          "correct_answer": "A, B",
-          "explanation": "Lexical analysis tasks: A: TRUE — whitespace and comments are not tokens; the lexer discards them (or optionally passes them to the parser as special tokens for formatting tools). B: TRUE — the core lexer function: pattern matching to categorize character sequences into token types. C: FALSE — checking balanced parentheses requires counting/stack memory, which is beyond regular languages. This is a syntactic task for the parser (context-free grammar / pushdown automaton). D: FALSE — in C, the preprocessor (cpp) is a separate phase that runs BEFORE lexical analysis: it expands macros (#define), handles #include, #if/#ifdef, etc. The lexer processes the preprocessor output. Some compilers integrate preprocessing, but it is conceptually a separate phase.",
-          "year": 2025,
+          "correct_answer": "A",
+          "explanation": "In most languages, an identifier must begin with a letter or underscore — not a digit. The scanner attempts to tokenize `3x`: it first reads `3` and forms the integer literal `3`, then reads `x` and forms identifier `x`. So `3x` is scanned as two tokens: integer `3` followed by identifier `x`. The error manifests as a syntactic error at the parser level (`int 3 x = 5;` is not valid syntax). However, if the language spec says the sequence `3x` cannot be tokenized at all, it is a lexical error. In standard C compilers, this is reported as an error during lexing (invalid token/preprocessing number). The most precise classification at the lexical level is option A.",
+          "year": 2007,
           "exam_type": "GATE",
-          "question_type": "MSQ"
+          "question_type": "MCQ",
+          "marks": 1
         },
         {
-          "question_text": "What is the minimum number of states in a DFA accepting the language L = {w ∈ {0,1}* | the number of 0s in w is divisible by 3}?",
+          "question_text": "Which of the following are TRUE about error productions as an error recovery technique?",
           "options": [
-            "A. 2",
-            "B. 3",
-            "C. 4",
-            "D. 6"
+            "A. Error productions add grammar rules that explicitly recognise commonly occurring syntax errors",
+            "B. Error productions can generate customised, user-friendly error messages for specific known mistakes",
+            "C. Error productions increase the size of the parser but allow graceful handling of common errors",
+            "D. Error productions are most effective for recovering from semantic errors"
+          ],
+          "correct_answer": "A, B, C",
+          "explanation": "(A) TRUE — Error productions augment the grammar with rules like `expr → expr + + expr` to recognise a doubled operator. When such a rule fires, the parser knows exactly what mistake occurred. (B) TRUE — Since the error production explicitly matches a known mistake, the parser can emit a precise, helpful message such as 'duplicate operator +' rather than a generic syntax error. (C) TRUE — Adding error productions increases the grammar size and therefore the parser table size, but the benefit is graceful, informative recovery for common mistakes. (D) FALSE — Error productions handle syntactic errors (grammar-level mistakes), not semantic errors (type mismatches, undeclared variables, etc.). Semantic errors are caught during semantic analysis.",
+          "year": 2008,
+          "exam_type": "GATE",
+          "question_type": "MSQ",
+          "marks": 2
+        },
+        {
+          "question_text": "In yacc/bison, the special terminal `error` is used for error recovery. When a syntax error occurs and `error` appears in a grammar rule, the parser:",
+          "options": [
+            "A. Immediately aborts and reports a fatal error",
+            "B. Pops stack states until it finds a state where `error` can be shifted, then discards input tokens until a synchronising token is found",
+            "C. Inserts the missing token automatically by consulting the parse table",
+            "D. Calls the lexical analyser to re-scan the erroneous portion of input"
           ],
           "correct_answer": "B",
-          "explanation": "L = strings where the count of 0s is divisible by 3 (0, 3, 6, 9, ... zeros). The DFA needs to count the number of 0s modulo 3: State q0 (initial, accepting): count of 0s ≡ 0 (mod 3). On 0→q1, on 1→q0. State q1: count ≡ 1 (mod 3). On 0→q2, on 1→q1. State q2: count ≡ 2 (mod 3). On 0→q0, on 1→q2. All three states are distinguishable: from q0, ε is accepted; from q1, '00' is accepted (total 3 zeros); from q2, '0' is accepted (total 3 zeros — 2+1). Minimum DFA has 3 states. Input 1s don't change the count, so on 1 we stay in the same state.",
+          "explanation": "In yacc/bison, `error` is a special terminal for LALR(1) error recovery. When a syntax error occurs: (1) The parser pops the stack until it finds a state that has a transition on the `error` token (i.e., a state corresponding to a grammar rule with `error` on the right-hand side). (2) The `error` token is shifted onto the stack. (3) Input tokens are discarded until a synchronising token (typically `;` or `}`) is found. (4) Parsing resumes normally. This is essentially phrase-level recovery integrated into the LALR framework. The programmer controls recovery by strategically placing `error` in grammar rules, e.g., `stmt → error ';'`.",
+          "year": 2009,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 2
+        },
+        {
+          "question_text": "A semantic error that is detected at compile time is:",
+          "options": [
+            "A. Division by zero in an expression like `int x = 5 / 0;`",
+            "B. Using a variable of type `int` where a `float` is required, in a strictly typed language",
+            "C. Accessing an array index out of bounds at runtime",
+            "D. Stack overflow caused by infinite recursion at runtime"
+          ],
+          "correct_answer": "B",
+          "explanation": "Compile-time semantic errors are violations of the language's semantic rules detectable by static analysis — without running the program. A type mismatch (assigning an `int` to a `float` variable in a strictly typed language) is detected during semantic analysis (type checking phase) at compile time. Option A (division by zero) may be detectable by a smart compiler through constant folding, but is typically a runtime error. Options C and D are classic runtime errors — array bounds and recursion depth depend on runtime values not known at compile time.",
+          "year": 2010,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 1
+        },
+        {
+          "question_text": "How many distinct phases of a compiler can detect errors? (Count lexical analysis, syntax analysis, semantic analysis, intermediate code generation, and code optimisation as separate phases.)",
+          "options": [],
+          "correct_answer": "5",
+          "explanation": "All five major front-end and middle-end phases of a compiler can detect errors: (1) Lexical analysis — lexical errors (invalid characters, malformed tokens). (2) Syntax analysis (parsing) — syntactic errors (grammar violations). (3) Semantic analysis — semantic errors (type errors, undeclared identifiers, scope violations). (4) Intermediate code generation — errors in expressions that are semantically inconsistent at the IR level. (5) Code optimisation — detects unreachable code, use of uninitialised variables, etc. The back-end (code generation) can also detect errors (e.g., register allocation failure), but the five listed phases are the canonical answer expected in GATE.",
+          "year": 2011,
+          "exam_type": "GATE",
+          "question_type": "NAT",
+          "marks": 2
+        },
+        {
+          "question_text": "Which of the following statements about cascaded errors (spurious errors) in compilers are TRUE?",
+          "options": [
+            "A. Cascaded errors are real errors in the source program reported correctly by the compiler",
+            "B. Cascaded errors are false error messages generated by the compiler as a side effect of error recovery from an earlier genuine error",
+            "C. A good compiler minimises cascaded errors by carefully choosing its error recovery strategy",
+            "D. Panic mode recovery can cause cascaded errors because skipping tokens may leave the parser in an inconsistent state"
+          ],
+          "correct_answer": "B, C, D",
+          "explanation": "(A) FALSE — Cascaded (spurious) errors are NOT real errors. They are false positives: the compiler reports them because its error recovery from a prior genuine error left it in a confused state. (B) TRUE — This is the definition: a cascaded error is an artifact of error recovery, not a true fault in the source program. If the programmer fixes the original error, cascaded errors typically disappear. (C) TRUE — Minimising cascaded errors is a key design goal of error recovery. Strategies like using FOLLOW sets in LL(1) parsers are specifically designed to reduce spurious reports. (D) TRUE — Panic mode skips tokens until a sync point, which can leave semantic context incomplete and cause false errors when parsing resumes.",
+          "year": 2012,
+          "exam_type": "GATE",
+          "question_type": "MSQ",
+          "marks": 2
+        },
+        {
+          "question_text": "In an LR parser, when a syntax error is detected, the parser is in state s and the current input token is a. Which of the following correctly describes the error handling?",
+          "options": [
+            "A. The parser immediately reduces using the longest matching production",
+            "B. The parser calls an error routine indicated by the `error` entry in ACTION[s, a] of the parsing table",
+            "C. The parser shifts token a onto the stack and continues",
+            "D. The parser outputs the input token a as the error token and halts"
+          ],
+          "correct_answer": "B",
+          "explanation": "In an LR parser, the parsing table's ACTION function maps (state, token) pairs to actions: shift, reduce, accept, or error. When ACTION[s, a] = error, a syntax error is detected. The parser calls an error-handling routine. This routine implements the chosen recovery strategy — commonly panic mode (pop states until a state with an `error` transition is found, discard tokens) or phrase-level correction. The LR parser never shifts an invalid token or reduces on an error entry — both would corrupt the parse stack. The `error` entry is the precise detection point.",
+          "year": 2013,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 2
+        },
+        {
+          "question_text": "Global error correction finds the parse tree for the string closest to the input (in terms of minimum edit distance). If the erroneous input string is `w` and the nearest valid string is `w'`, and the edit distance (insertions + deletions) between them is `k`, what is the time complexity of the global correction algorithm (using CYK-based DP)?",
+          "options": [
+            "A. O(|w|)",
+            "B. O(|w|²)",
+            "C. O(|w|³)",
+            "D. O(k · |w|²)"
+          ],
+          "correct_answer": "C",
+          "explanation": "Global error correction uses a dynamic programming approach similar to CYK parsing (or Wagner-Fischer edit distance combined with CYK). The CYK algorithm for parsing a string of length n runs in O(n³) time and O(n²) space. Global correction extends this to find the minimum-cost edit sequence transforming w into a valid string w' — the DP table is O(|w|²) in size and filling each cell takes O(|w|) work via grammar rule enumeration, giving O(|w|³) overall. This cubic complexity is why global correction is theoretically elegant but practically unused for large inputs in production compilers.",
+          "year": 2014,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 2
+        },
+        {
+          "question_text": "Which of the following errors would be detected during semantic analysis (and NOT during lexical or syntax analysis)?",
+          "options": [],
+          "correct_answer": "Type mismatch errors, undeclared variable usage, and duplicate variable declarations in the same scope",
+          "explanation": "Semantic analysis checks for meaning-level correctness after the syntactic structure is verified. Errors caught here include: (1) Type mismatches — e.g., adding a string to an integer without coercion. (2) Undeclared identifiers — using a variable or function not declared in any enclosing scope. (3) Duplicate declarations — declaring the same variable twice in the same scope. (4) Wrong number/types of arguments in function calls. (5) Returning a value from a void function. These errors cannot be detected by pattern matching (lexer) or grammar rules (parser) alone — they require semantic context such as the symbol table and type system.",
+          "year": 2015,
+          "exam_type": "GATE",
+          "question_type": "NAT",
+          "marks": 2
+        },
+        {
+          "question_text": "Which of the following correctly distinguish compile-time errors from runtime errors?",
+          "options": [
+            "A. Compile-time errors are detected by the compiler during translation; runtime errors occur during program execution",
+            "B. Syntax errors are always compile-time errors; divide-by-zero is always a runtime error",
+            "C. A compiler can always detect all runtime errors statically — this is the halting problem",
+            "D. Semantic errors can be either compile-time (type mismatch) or runtime (array index out of bounds)"
+          ],
+          "correct_answer": "A, B, D",
+          "explanation": "(A) TRUE — This is the fundamental distinction. Compile-time errors are caught before execution (by the compiler/linker). Runtime errors occur during execution and are not detectable beforehand in the general case. (B) TRUE — Syntax errors (grammar violations) are always caught at compile time by the parser. Divide-by-zero (unless the divisor is a literal constant caught by constant folding) is a runtime error since the divisor's value is generally not known until execution. (C) FALSE — This is precisely the halting problem: it is undecidable in general to determine all runtime errors statically. A compiler can catch some (constant folding, data flow analysis) but not all. (D) TRUE — Semantic errors span both compile time (type checking) and runtime (bounds checking, null dereference).",
           "year": 2016,
           "exam_type": "GATE",
-          "question_type": "MCQ"
+          "question_type": "MSQ",
+          "marks": 2
+        },
+        {
+          "question_text": "In panic mode error recovery for an LL(1) parser, if the current non-terminal on top of the stack is A and the current input token `a` is not in FIRST(A) and not in FOLLOW(A), the parser should:",
+          "options": [
+            "A. Report an error and pop A from the stack",
+            "B. Report an error and discard the current input token `a`",
+            "C. Report an error and terminate parsing",
+            "D. Report an error and replace A with ε"
+          ],
+          "correct_answer": "B",
+          "explanation": "In LL(1) panic mode recovery with synchronising sets: if token `a` ∈ FIRST(A), use the appropriate production. If `a` ∈ FOLLOW(A), pop A (treat as if A derived ε). If `a` is in neither set, it is an unexpected token — discard `a` (advance the input) and try again with the next token. The parser keeps discarding tokens until it finds one in FIRST(A) ∪ FOLLOW(A). This strategy — discard input when the token is in neither set — avoids popping the stack prematurely and gives the best chance of resynchronising with the actual intent of the program.",
+          "year": 2017,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 2
+        },
+        {
+          "question_text": "Consider the following C code fragment: `int x; x = y + 2;` where `y` has not been declared. What type of error is this, and in which compiler phase is it detected?",
+          "options": [],
+          "correct_answer": "Semantic error (undeclared identifier), detected during semantic analysis",
+          "explanation": "The token `y` is lexically valid (a legal identifier) and syntactically valid (an identifier can appear in an expression). The error is semantic: `y` has not been declared in any enclosing scope. During semantic analysis, the compiler looks up each identifier in the symbol table. Finding no entry for `y`, it reports an 'undeclared identifier' or 'undefined variable' error. This is a classic compile-time semantic error. It is NOT a lexical error (y is a valid identifier pattern) and NOT a syntactic error (the statement `x = y + 2;` is grammatically correct).",
+          "year": 2018,
+          "exam_type": "GATE",
+          "question_type": "NAT",
+          "marks": 1
+        },
+        {
+          "question_text": "Which of the following best describes the 'error productions' technique for error recovery, and what is its main limitation?",
+          "options": [
+            "A. It adds grammar rules for common errors; main limitation is that it cannot handle unexpected errors not anticipated by the grammar designer",
+            "B. It uses a priority queue of likely corrections; main limitation is exponential time complexity",
+            "C. It rolls back the parse to the last valid point; main limitation is that it may loop infinitely",
+            "D. It replaces the erroneous token with the most likely correct token; main limitation is poor error messages"
+          ],
+          "correct_answer": "A",
+          "explanation": "Error productions add explicit grammar rules that match common mistakes programmers make — e.g., a production for a missing semicolon or a doubled operator. When such a production fires, the compiler emits a precise error message. The key limitation is coverage: error productions only handle errors the grammar designer anticipated. Novel or unusual errors fall through to generic panic mode recovery, which gives much less informative messages. Additionally, adding many error productions can significantly grow the grammar and parser tables. This technique works best for languages with a small set of extremely common errors.",
+          "year": 2019,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 1
+        },
+        {
+          "question_text": "Which of the following are TRUE about error recovery in recursive descent parsers?",
+          "options": [
+            "A. Each parsing procedure can have its own local error recovery logic, making error handling modular",
+            "B. Recursive descent parsers cannot implement panic mode recovery",
+            "C. The FOLLOW set of a non-terminal is commonly used as the synchronising set in recursive descent error recovery",
+            "D. Recursive descent parsers can implement phrase-level recovery by inserting or deleting tokens when an error is detected"
+          ],
+          "correct_answer": "A, C, D",
+          "explanation": "(A) TRUE — Recursive descent parsers are hand-written, so each procedure for a non-terminal can implement its own tailored error recovery. This modularity is an advantage over table-driven parsers. (B) FALSE — Recursive descent parsers can absolutely implement panic mode recovery — each procedure discards tokens until a synchronising token is found before returning. (C) TRUE — FOLLOW sets indicate what comes after a non-terminal, so tokens in FOLLOW(A) serve as natural synchronisation points when parsing A fails. (D) TRUE — Since the parser is hand-written, the programmer can insert a token by calling the procedure for the expected terminal without consuming input, or delete a token by advancing past it — implementing phrase-level recovery directly.",
+          "year": 2020,
+          "exam_type": "GATE",
+          "question_type": "MSQ",
+          "marks": 2
+        },
+        {
+          "question_text": "A compiler reports the error 'expression must have integral type' for the statement `float x = 3.5; int arr[x];` in C. This is an example of:",
+          "options": [
+            "A. Lexical error",
+            "B. Syntax error",
+            "C. Semantic error",
+            "D. Runtime error"
+          ],
+          "correct_answer": "C",
+          "explanation": "In C, array dimensions must be of integral (integer) type. The declaration `int arr[x]` where `x` is a `float` violates this semantic rule. The lexical analyser correctly tokenizes all symbols. The parser accepts `int arr[x];` as syntactically valid (it matches the declaration grammar). It is the semantic analyser's type-checking phase that detects the type mismatch: the array size expression `x` has type `float` but must be an integer. This is therefore a compile-time semantic error, caught during semantic analysis.",
+          "year": 2021,
+          "exam_type": "GATE",
+          "question_type": "MCQ",
+          "marks": 1
+        },
+        {
+          "question_text": "Consider a grammar G and an erroneous input string w. The minimum number of token insertions and deletions needed to transform w into a string accepted by G is called the:",
+          "options": [],
+          "correct_answer": "Edit distance (or minimum-cost correction distance) between w and the language L(G)",
+          "explanation": "The global error correction problem formalises error recovery as finding the string w' ∈ L(G) that minimises the edit distance d(w, w') — the minimum number of insertions, deletions (and sometimes substitutions) to transform w into a valid string w'. This is the theoretical foundation of global correction. The edit distance between an erroneous program and its nearest correct version tells us the 'severity' of the errors. While theoretically clean, computing this optimally requires O(|w|³) time via DP/CYK and is too expensive for production compilers, which use faster heuristic strategies like panic mode instead.",
+          "year": 2022,
+          "exam_type": "GATE",
+          "question_type": "NAT",
+          "marks": 2
+        },
+        {
+          "question_text": "Which of the following are desirable properties of an error handler in a compiler?",
+          "options": [
+            "A. Report errors clearly and accurately with location information",
+            "B. Recover sufficiently from each error to continue detecting subsequent errors",
+            "C. Not significantly slow down the processing of correct programs",
+            "D. Automatically fix all errors and produce a working executable"
+          ],
+          "correct_answer": "A, B, C",
+          "explanation": "(A) TRUE — Clear, precise error messages with file, line, and column information are essential for programmer productivity. Vague messages like 'syntax error' are insufficient. (B) TRUE — The ability to continue parsing after an error (error recovery) and find multiple errors in one pass is a key quality metric of a compiler. (C) TRUE — Error handling code runs on all programs including correct ones (e.g., FIRST/FOLLOW table lookups). It must be fast enough not to degrade performance for error-free programs. (D) FALSE — Automatically fixing all errors is neither feasible nor desirable. The compiler cannot know the programmer's intent. Attempting to 'fix' errors may produce a semantically different program. Compilers should report errors, not silently correct them.",
+          "year": 2023,
+          "exam_type": "GATE",
+          "question_type": "MSQ",
+          "marks": 2
+        },
+        {
+          "question_text": "In an LALR(1) parser performing error recovery, after detecting a syntax error the parser pops states from the stack until it finds a state s such that a production with `error` on the right-hand side can be reduced. It then shifts the special `error` token. How many states are popped in the BEST case?",
+          "options": [],
+          "correct_answer": "0",
+          "explanation": "In the best case, the current top state s already has a valid action on the `error` token — i.e., ACTION[s, error] = shift. In this case, no states need to be popped: the parser immediately shifts `error` and proceeds with token discarding until a synchronising token is found. Zero pops occur when the grammar has been designed with `error` productions at a high-level rule that encompasses the current parsing context. In the worst case, the parser may pop all states down to the initial state, discarding a large portion of the parse stack.",
+          "year": 2024,
+          "exam_type": "GATE",
+          "question_type": "NAT",
+          "marks": 2
+        },
+        {
+          "question_text": "Which of the following correctly describe differences between error recovery in LL(1) parsers and LR(1) parsers?",
+          "options": [
+            "A. LL(1) parsers use FOLLOW sets as synchronising tokens; LR parsers use a state-based `error` token mechanism",
+            "B. LR parsers can detect errors earlier (with less input consumed) than LL(1) parsers for the same grammar",
+            "C. LL(1) parsers can recover from errors in the middle of a right-hand side production; LR parsers cannot",
+            "D. LR parsers in general have more context available at the point of error detection than LL(1) parsers"
+          ],
+          "correct_answer": "A, B, D",
+          "explanation": "(A) TRUE — LL(1) panic mode uses FOLLOW(A) as synchronising tokens for non-terminal A on the stack. LR parsers use the `error` terminal in the ACTION table and pop states until a state with an error transition is found. (B) TRUE — LR parsers are more powerful and detect errors as soon as a valid prefix is violated, often before an LL(1) parser would. LR(1) parsers make no incorrect moves on any valid prefix (the viable-prefix property). (C) FALSE — Both LL(1) and LR parsers can recover mid-production. In LL(1), recovery in the middle of a production is done by treating each non-terminal on the stack individually. (D) TRUE — An LR parser's state encodes the entire history of the parse (the viable prefix), giving richer context at the error point. LL(1) only knows the current non-terminal being expanded.",
+          "year": 2025,
+          "exam_type": "GATE",
+          "question_type": "MSQ",
+          "marks": 2
         }
       ]
     }

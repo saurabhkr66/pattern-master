@@ -65,11 +65,14 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride }: any) => {
               </span>
             )}
             <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase ${
-              isPyq 
-                ? 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400' 
+              isPyq
+                ? 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
                 : (difficultyColors[q.difficulty_level] || "bg-gray-100 text-gray-500")
             }`}>
               {isPyq ? q.exam_type : q.difficulty_level}
+            </span>
+            <span className="text-[8px] font-black px-2 py-0.5 rounded uppercase bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400">
+              {(q.marks ?? 1)}M
             </span>
           </div>
         </div>
@@ -222,10 +225,9 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
 
   const pyqQueue = useMemo(() => {
     if (!selectedPyq) return [];
-    const all = (pyqs || []).map((p: any) => ({ ...p, _isPyq: true }));
-    const idx = all.findIndex((p: any) => p.id === selectedPyq.id);
-    return idx !== -1 ? all.slice(idx + 1) : [];
-  }, [pyqs, selectedPyq]);
+    const idx = displayedPyqs.findIndex((p: any) => p.id === selectedPyq.id);
+    return idx !== -1 ? displayedPyqs.slice(idx + 1).map((p: any) => ({ ...p, _isPyq: true })) : [];
+  }, [displayedPyqs, selectedPyq]);
 
   const historyQueue = useMemo(() => {
     if (!selectedHistoryQuestion) return [];

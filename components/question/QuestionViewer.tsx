@@ -68,11 +68,18 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
           style={{ color: "var(--text-primary)" }}
         />
 
-        {/* Optional images (linked, not embedded – avoids CDN dependency) */}
+        {/* Question images */}
         {q.images && q.images.length > 0 && (
-          <p className="mt-3 text-xs" style={{ color: "var(--text-secondary)" }}>
-            📎 This question contains {q.images.length} image(s). Please refer to the original GATE paper for the figure.
-          </p>
+          <div className="mt-4 flex flex-col gap-3">
+            {q.images.map((img) => (
+              <img
+                key={img.index}
+                src={`/${img.filename}`}
+                alt={`Figure ${img.index}`}
+                className="max-w-full rounded-lg"
+              />
+            ))}
+          </div>
         )}
       </div>
 

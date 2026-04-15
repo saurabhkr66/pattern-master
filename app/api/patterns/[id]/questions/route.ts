@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { unstable_cache } from "next/cache";
 
+// NAT and MSQ are always 2 marks; MCQ uses the stored per-question value.
+function resolveMarks(questionType: string, dbMarks: number): number {
+  if (questionType === "NAT" || questionType === "MSQ") return 2;
+  return dbMarks ?? 1;
+}
+
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -32,6 +38,7 @@ export async function GET(
                                     explanation: true,
                                     year: true,
                                     question_type: true,
+                                    marks: true,
                                     images: true,
                                     attempts: {
                                         where: userId ? { user_id: userId } : { user_id: "none" },
@@ -50,7 +57,11 @@ export async function GET(
                     return {
                         data: {
                             questions: [],
-                            pyqs: subjectPattern.pyqs.map(pyq => ({ ...pyq, _isSubjectPyq: true })),
+                            pyqs: subjectPattern.pyqs.map(pyq => ({
+                                ...pyq,
+                                marks: resolveMarks(pyq.question_type, pyq.marks),
+                                _isSubjectPyq: true,
+                            })),
                         }
                     };
                 }
@@ -68,6 +79,7 @@ export async function GET(
                                 explanation: true,
                                 difficulty_level: true,
                                 question_type: true,
+                                marks: true,
                                 images: true,
                                 attempts: {
                                     where: userId ? { user_id: userId } : { user_id: "none" },
@@ -88,6 +100,7 @@ export async function GET(
                                 year: true,
                                 exam_type: true,
                                 question_type: true,
+                                marks: true,
                                 images: true,
                                 attempts: {
                                     where: userId ? { user_id: userId } : { user_id: "none" },
@@ -105,8 +118,14 @@ export async function GET(
 
                 return {
                     data: {
-                        questions: pattern.questions,
-                        pyqs: pattern.pyqs,
+                        questions: pattern.questions.map(q => ({
+                            ...q,
+                            marks: resolveMarks(q.question_type, q.marks),
+                        })),
+                        pyqs: pattern.pyqs.map(q => ({
+                            ...q,
+                            marks: resolveMarks(q.question_type, q.marks),
+                        })),
                     }
                 };
             },

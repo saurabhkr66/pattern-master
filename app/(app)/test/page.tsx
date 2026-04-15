@@ -9,9 +9,15 @@ export const metadata: Metadata = {
   description: "Take a full GATE CSE mock test with 55 questions, real-time scoring, and detailed analysis.",
 };
 
-export default async function TestPage() {
+export default async function TestPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  return <MockTestPage />;
+  const { branch } = await searchParams;
+
+  return <MockTestPage branch={branch ?? "CSE"} />;
 }

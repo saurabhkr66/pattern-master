@@ -117,7 +117,7 @@ function HistoryPanel({ onViewResult }: { onViewResult: (id: string) => void }) 
 }
 
 /* ─────────────── Main Component ─────────────── */
-export default function MockTestPage() {
+export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
   const [phase, setPhase] = useState<Phase>("start");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
@@ -160,7 +160,7 @@ export default function MockTestPage() {
 
   // Fetch available subjects on mount
   useEffect(() => {
-    fetch("/api/test/subjects")
+    fetch(`/api/test/subjects?branch=${branch}`)
       .then(r => r.json())
       .then(d => setAvailableSubjects(d.subjects || []))
       .catch(() => {});

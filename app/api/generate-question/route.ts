@@ -115,6 +115,13 @@ export async function POST(req: NextRequest) {
             questionsArray = Array.isArray(parsedArray) ? parsedArray : [parsedArray];
         }
 
+        // Marks rule: NAT/MSQ → 2, MCQ Hard → 2, MCQ Easy/Medium → 1
+        const computeMarks = (questionType: string, diff: string): number => {
+            if (questionType === "NAT" || questionType === "MSQ") return 2;
+            if (questionType === "MCQ" && diff === "Hard") return 2;
+            return 1;
+        };
+
         // Save all unique questions to DB
         const savedQuestions = [];
 
@@ -137,6 +144,7 @@ export async function POST(req: NextRequest) {
                     explanation: q.explanation,
                     difficulty_level: difficulty,
                     question_type: q.question_type || "MCQ",
+                    marks: computeMarks(q.question_type || "MCQ", difficulty),
                     semantic_hash: hash,
                 },
             });

@@ -29,17 +29,19 @@ const getSubjectStats = (examType: string, branch: string | null) => {
         stats[entry.subject] = entry._count._all;
       });
 
-      // Special case: subjectPatterns (subject-level practice cards)
-      const subjectPatternStats = await prisma.subjectPattern.findMany({
-        select: { subject_name: true },
-      });
-      subjectPatternStats.forEach(sp => {
-        stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
-      });
+      // Subject-level patterns only apply to CSE — skip entirely for other branches
+      if (!branch || branch === "CSE") {
+        const subjectPatternStats = await prisma.subjectPattern.findMany({
+          select: { subject_name: true },
+        });
+        subjectPatternStats.forEach(sp => {
+          stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
+        });
+      }
 
       return stats;
     },
-    [`subject-stats-${examType}-${branch || "all"}`],
+    [`subject-stats-${examType}-${branch || "all"}-v3`],
     { revalidate: 3600, tags: ["patterns"] }
   )();
 };
@@ -49,15 +51,17 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
     async () => {
       const isAll = !subject || subject === "All";
 
-      // Fetch subject-level patterns with counts only (no individual rows)
-      const subjectPatterns = await prisma.subjectPattern.findMany({
-        where: !isAll ? { subject_name: subject } : {},
-        select: {
-          id: true,
-          subject_name: true,
-          _count: { select: { pyqs: true } },
-        },
-      });
+      // Subject-level patterns only apply to CSE — skip entirely for other branches
+      const subjectPatterns = (!branch || branch === "CSE")
+        ? await prisma.subjectPattern.findMany({
+            where: !isAll ? { subject_name: subject } : {},
+            select: {
+              id: true,
+              subject_name: true,
+              _count: { select: { pyqs: true } },
+            },
+          })
+        : [];
 
       // Batch fetch solved counts for subject PYQs in a single query
       let subjectSolvedMap: Record<string, number> = {};
@@ -113,14 +117,14 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
         pyqs: [],
       }));
 
-      if (isAll) return mappedSubjects;
+      if (isAll && mappedSubjects.length > 0) return mappedSubjects;
 
       // Fetch topic patterns with counts only
       const topicPatterns = await prisma.pattern.findMany({
         where: {
           exam_type: examType,
           ...(branch ? { branch } : {}),
-          subject,
+          ...(!isAll ? { subject } : {}),
         },
         select: {
           id: true,
@@ -170,7 +174,7 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
 
       return [...mappedSubjects, ...mappedTopics];
     },
-    [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v6`],
+    [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v8`],
     { revalidate: 300, tags: ["patterns"] }
   )();
 };
