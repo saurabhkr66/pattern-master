@@ -13,7 +13,7 @@ async function main() {
 
   // 2. Define some GATE Computer Science patterns
   const patterns = [
-  
+
     {
       exam_type: 'GATE',
       branch: 'ECE',

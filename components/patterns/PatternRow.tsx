@@ -45,7 +45,7 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride }: any) => {
     <div className="relative group/card h-full">
       <button
         onClick={() => onSelect(q)}
-        className={`w-full flex flex-col p-5 rounded-2xl border-2 bg-white dark:bg-[#111] hover:shadow-xl transition-all text-left relative overflow-hidden h-full ${
+        className={`w-full flex flex-col p-3 md:p-5 rounded-2xl border-2 bg-white dark:bg-[#111] hover:shadow-xl transition-all text-left relative overflow-hidden h-full ${
           q._isPyq 
             ? 'border-orange-100 dark:border-orange-500/20 hover:border-orange-300 hover:shadow-orange-500/5' 
             : 'border-gray-50 dark:border-white/5 hover:border-blue-200 hover:shadow-blue-500/5'
@@ -248,7 +248,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
           : "hover:bg-gray-50/60"
       }`}
     >
-      <div onClick={onToggle} onMouseEnter={handlePrefetch} className="grid grid-cols-12 items-center gap-3 px-5 py-4 cursor-pointer group">
+      <div onClick={onToggle} onMouseEnter={handlePrefetch} className="grid grid-cols-12 items-center gap-3 px-3 md:px-5 py-4 cursor-pointer group">
         <div className="col-span-8 flex items-center gap-3">
           <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base border ${
               pattern.isSubjectLevel ? "bg-indigo-600 border-indigo-500 text-white shadow-sm" : isMastered ? "bg-yellow-50 border-yellow-200" : "bg-gray-50 border-gray-200"
@@ -296,7 +296,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
       </div>
 
       {isOpen && (
-        <div className="px-3 md:px-5 pb-5 md:pb-7">
+        <div className="px-1 md:px-5 pb-4 md:pb-7">
           <div className="flex items-center gap-0.5 border-b border-gray-100 mb-5 overflow-x-auto scrollbar-hide">
             {(pattern.isSubjectLevel 
               ? [ { key: "pyq", label: "Previous Year", count: pyqCount, emoji: "📜" } ]
@@ -337,7 +337,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
             ))}
           </div>
 
-          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-100 dark:border-white/5 p-4 md:p-6 min-h-[240px] flex flex-col">
+          <div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-100 dark:border-white/5 p-2 md:p-6 min-h-[240px] flex flex-col">
             {isLoadingQuestions ? (
               <div className="flex-grow flex flex-col items-center justify-center py-20">
                 <div className="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />

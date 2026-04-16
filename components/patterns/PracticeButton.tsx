@@ -331,7 +331,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           </div>
 
           {/* Question card */}
-          <div className={`rounded-2xl border-2 p-5 md:p-6 mb-4 bg-white dark:bg-[#111] transition-all ${
+          <div className={`rounded-2xl border-2 p-3 md:p-6 mb-4 bg-white dark:bg-[#111] transition-all ${
             question._isPyq 
               ? 'border-orange-100 dark:border-orange-500/20 shadow-orange-500/5' 
               : 'border-gray-50 dark:border-white/5 shadow-blue-500/5'

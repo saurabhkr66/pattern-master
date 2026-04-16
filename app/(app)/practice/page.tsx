@@ -228,7 +228,7 @@ export default async function PracticePage({
 
 
     return (
-      <div className="max-w-4xl mx-auto py-8 md:py-12 px-4">
+      <div className="max-w-4xl mx-auto py-6 md:py-12 px-2 md:px-4">
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase" style={{ color: "var(--text-primary)" }}>

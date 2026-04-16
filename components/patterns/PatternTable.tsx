@@ -145,7 +145,7 @@ export default function PatternTable({
     <div className="w-full space-y-4">
       {/* Sticky subject filter bar */}
       <div
-        className="sticky top-[60px] z-30 -mx-4 px-4 py-3 backdrop-blur-md border-b"
+        className="sticky top-[60px] z-30 -mx-2 md:-mx-4 px-2 md:px-4 py-3 backdrop-blur-md border-b"
         style={{ background: "var(--sticky-bar-bg)", borderColor: "var(--border)" }}
       >
         <div className="flex items-center gap-2">
