@@ -18,10 +18,12 @@ const geistMono = Geist_Mono({
 });
 
 import { buildOrganizationSchema } from "@/lib/seo";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#2563eb",
 };
 
 const globalSchema = buildOrganizationSchema();
@@ -113,6 +115,7 @@ export default function RootLayout({
               `
             }} />
           )}
+          <ServiceWorkerRegistration />
           <ThemeProvider>
             <QueryProvider>
               <Header />

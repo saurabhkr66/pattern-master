@@ -28,7 +28,7 @@ import { toSlug } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "BattleExam – AI-Powered GATE CSE Preparation | Practice Questions",
   description:
-    "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks with adaptive difficulty. Free to start.",
+    "Master GATE, ISRO, BARC & ESE with pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks with adaptive difficulty. Free to start.",
   keywords: [
     "GATE CSE preparation",
     "GATE CSE practice questions",
@@ -120,7 +120,7 @@ const faqStructuredData = {
       name: "Which exams does BattleExam cover?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "GATE CSE, ISRO CS, BARC CS, and ESE.",
+        text: "GATE, ISRO, BARC, and ESE.",
       },
     },
     {

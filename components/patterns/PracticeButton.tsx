@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { Maximize2, Minimize2 } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { trackPageView } from "@/lib/analytics";
 
@@ -34,6 +35,18 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const isFirstRender = useRef(true);
 
   const [error, setError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [questionHistory, setQuestionHistory] = useState<any[]>([]);
+
+  // Lock body scroll while fullscreen is open
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isFullscreen]);
 
   useEffect(() => {
     // Only reset everything IF the parent has explicitly changed the question ID.
@@ -49,6 +62,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setMsqSelections([]);
         setNatValue("");
         setError(null);
+        setQuestionHistory([]);
         lastInitialIdRef.current = currentInitialId;
       }
     } else {
@@ -120,6 +134,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const handleNextFromQueue = () => {
     if (questionQueue.length > 0) {
       const [next, ...rest] = questionQueue;
+      setQuestionHistory((h) => [...h, question]);
       setQuestion(next);
       setQuestionQueue(rest);
       setSelectedAnswer(null);
@@ -128,12 +143,25 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       setIsRevealed(false);
     } else {
       if (isPyqMode) {
+        setIsFullscreen(false);
         if (onExit) onExit();
         else setQuestion(null);
       } else {
         handleGenerate();
       }
     }
+  };
+
+  const handlePrevious = () => {
+    if (questionHistory.length === 0) return;
+    const prev = questionHistory[questionHistory.length - 1];
+    setQuestionHistory((h) => h.slice(0, -1));
+    setQuestionQueue((q) => [question, ...q]);
+    setQuestion(prev);
+    setSelectedAnswer(null);
+    setMsqSelections([]);
+    setNatValue("");
+    setIsRevealed(false);
   };
 
   const toggleMsqSelection = (letter: string) => {
@@ -314,24 +342,14 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         </div>
       ) : (
         /* ── Question Mode ── */
-        <div>
-          {/* Back bar */}
-          <div className="flex items-center justify-between mb-4">
-            {/* <button
-              onClick={() => { setQuestion(null); setQuestionQueue([]); }}
-              className="text-xs font-black text-gray-400 hover:text-blue-600 uppercase tracking-widest transition-colors py-1"
-            >
-              ← Back
-            </button> */}
-            {/* {questionQueue.length > 0 && (
-              <span className="text-[10px] font-black bg-blue-50 text-blue-500 px-2.5 py-1 rounded-full">
-                {questionQueue.length} queued
-              </span>
-            )} */}
-          </div>
+        <div className={isFullscreen
+          ? "fixed inset-0 z-[60] overflow-y-auto bg-white dark:bg-[#0a0a0a]"
+          : ""
+        }>
+          <div className={isFullscreen ? "max-w-2xl mx-auto px-4 py-6" : ""}>
 
           {/* Question card */}
-          <div className={`rounded-2xl border-2 p-3 md:p-6 mb-4 bg-white dark:bg-[#111] transition-all ${
+          <div className={`relative rounded-2xl border-2 p-3 md:p-6 mb-4 bg-white dark:bg-[#111] transition-all ${
             question._isPyq 
               ? 'border-orange-100 dark:border-orange-500/20 shadow-orange-500/5' 
               : 'border-gray-50 dark:border-white/5 shadow-blue-500/5'
@@ -347,6 +365,11 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   : question.difficulty_level === "Hard"
                   ? "bg-red-50 text-red-600 border-red-100"
                   : "bg-amber-50 text-amber-600 border-amber-100"
+
+
+
+
+                  
               }`}>
                 {question.difficulty_level || "Medium"}
               </span>
@@ -357,11 +380,18 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 {question.marks ?? 1} Mark{(question.marks ?? 1) > 1 ? "s" : ""}
               </span>
               {isRevealed && (
-                <span className={`ml-auto text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 ${checkIsCorrect() ? "text-emerald-600" : "text-rose-600"}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 ${checkIsCorrect() ? "text-emerald-600" : "text-rose-600"}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${checkIsCorrect() ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
                   {checkIsCorrect() ? "Correct!" : "Wrong"}
                 </span>
               )}
+              <button
+                onClick={() => setIsFullscreen(v => !v)}
+                className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              </button>
             </div>
             <div className="space-y-4 md:space-y-6">
               <MathRenderer 
@@ -495,13 +525,21 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
             )}
             
             {!isRevealed && (
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex items-center justify-between">
+                {questionHistory.length > 0 ? (
+                  <button
+                    onClick={handlePrevious}
+                    className="text-[11px] font-black text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-widest transition-colors flex items-center gap-1"
+                  >
+                    ← Previous
+                  </button>
+                ) : <span />}
                 <button
                   onClick={handleNextFromQueue}
                   className="text-[11px] font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 uppercase tracking-widest transition-colors flex items-center gap-1"
                 >
-                  {questionQueue.length > 0 
-                    ? "Skip Question →" 
+                  {questionQueue.length > 0
+                    ? "Skip Question →"
                     : isPyqMode ? "Finish Review →" : "Skip & Generate →"}
                 </button>
               </div>
@@ -511,17 +549,27 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           {/* Explanation (after reveal) */}
           {isRevealed && (
             <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-4 pt-2">
-              <button 
-                onClick={handleNextFromQueue}
-                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs md:text-sm font-black py-4 rounded-xl transition-colors shadow-lg shadow-blue-500/20 uppercase tracking-wide flex justify-center items-center gap-2"
-              >
-                {questionQueue.length > 0 
-                  ? "Next Question →"
-                  : isPyqMode
-                    ? "Finish Review →"
-                    : "Generate 5 More →"
-                }
-              </button>
+              <div className="flex gap-2">
+                {questionHistory.length > 0 && (
+                  <button
+                    onClick={handlePrevious}
+                    className="flex-1 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 text-xs md:text-sm font-black py-4 rounded-xl transition-colors uppercase tracking-wide"
+                  >
+                    ← Previous
+                  </button>
+                )}
+                <button
+                  onClick={handleNextFromQueue}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs md:text-sm font-black py-4 rounded-xl transition-colors shadow-lg shadow-blue-500/20 uppercase tracking-wide flex justify-center items-center gap-2"
+                >
+                  {questionQueue.length > 0
+                    ? "Next Question →"
+                    : isPyqMode
+                      ? "Finish Review →"
+                      : "Generate 5 More →"
+                  }
+                </button>
+              </div>
 
               <div className="bg-gray-900 text-white p-5 md:p-6 rounded-2xl shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl md:text-6xl font-black">?</div>
@@ -533,6 +581,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
     </div>
