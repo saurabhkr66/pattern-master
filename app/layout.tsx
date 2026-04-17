@@ -64,6 +64,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { LanguageProvider } from "@/components/providers/LanguageProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -116,12 +118,14 @@ export default function RootLayout({
             }} />
           )}
           <ServiceWorkerRegistration />
-          <ThemeProvider>
-            <QueryProvider>
-              <Header />
-              <main className="flex-1">{children}</main>
-            </QueryProvider>
-          </ThemeProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <QueryProvider>
+                <Header />
+                <main className="flex-1">{children}</main>
+              </QueryProvider>
+            </ThemeProvider>
+          </LanguageProvider>
         </body>
       </html>
     </ClerkProvider>

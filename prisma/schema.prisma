@@ -25,6 +25,7 @@ model Pattern {
   atomic_logic String
   branch       String
   short_notes  String?
+  short_notes_hindi String?
   questions    GeneratedQuestion[]
   pyqs         PYQ[]
   userNotes    UserNote[]
@@ -46,9 +47,12 @@ model SubjectPYQ {
   id                 String         @id @default(uuid())
   subject_pattern_id String
   question_text      String
+  question_text_hindi String?
   options            Json
+  options_hindi      Json?
   correct_answer     String
   explanation        String
+  explanation_hindi  String?
   year               Int
   question_type      String         @default("MCQ")
   marks              Int            @default(1)
@@ -65,9 +69,12 @@ model PYQ {
   id             String    @id @default(uuid())
   pattern_id     String
   question_text  String
+  question_text_hindi String?
   options        Json
+  options_hindi  Json?
   correct_answer String
   explanation    String
+  explanation_hindi String?
   year          Int
   exam_type      String
   created_at     DateTime  @default(now())
@@ -85,9 +92,12 @@ model GeneratedQuestion {
   id               String    @id @default(uuid())
   pattern_id       String
   question_text    String
+  question_text_hindi String?
   options          Json
+  options_hindi    Json?
   correct_answer   String
   explanation      String
+  explanation_hindi String?
   difficulty_level String
   semantic_hash    String    @unique
   created_at       DateTime  @default(now())

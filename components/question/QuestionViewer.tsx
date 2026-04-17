@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Maximize2 } from "lucide-react";
 import katex from "katex";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // ------------------- Math rendering helper -----------------------------------
 function renderMath(text: string): string {
@@ -33,9 +34,12 @@ interface QuestionData {
   id: string;
   prefix: string;
   questionText: string;
+  questionTextHindi?: string;
   options: string[];
+  optionsHindi?: string[];
   correctAnswer: string;
   explanation: string;
+  explanationHindi?: string;
   questionType: string;
   images?: { index: number; filename: string }[];
 }
@@ -94,19 +98,24 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
 
 export default function QuestionViewer({ question: q }: { question: QuestionData }) {
   const [showAnswer, setShowAnswer] = useState(false);
+  const { language, setLanguage } = useLanguage();
   const qRef = useRef<HTMLDivElement>(null);
   const expRef = useRef<HTMLDivElement>(null);
 
   // Render math into DOM refs after mount
   useEffect(() => {
-    if (qRef.current) qRef.current.innerHTML = renderMath(q.questionText);
-  }, [q.questionText]);
+    if (qRef.current) {
+      const text = (language === "hi" && q.questionTextHindi) ? q.questionTextHindi : q.questionText;
+      qRef.current.innerHTML = renderMath(text);
+    }
+  }, [q.questionText, q.questionTextHindi, language]);
 
   useEffect(() => {
     if (showAnswer && expRef.current) {
-      expRef.current.innerHTML = renderMath(q.explanation);
+      const text = (language === "hi" && q.explanationHindi) ? q.explanationHindi : q.explanation;
+      expRef.current.innerHTML = renderMath(text);
     }
-  }, [showAnswer, q.explanation]);
+  }, [showAnswer, q.explanation, q.explanationHindi, language]);
 
   const correctLetters = q.correctAnswer.split(";").map(s => s.trim());
 
@@ -147,7 +156,11 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
                   color: "var(--text-primary)",
                   fontWeight: isCorrect ? 700 : 400,
                 }}
-                dangerouslySetInnerHTML={{ __html: renderMath(opt) }}
+                dangerouslySetInnerHTML={{ 
+                  __html: renderMath(
+                    (language === "hi" && q.optionsHindi && q.optionsHindi[i]) ? q.optionsHindi[i] : opt
+                  ) 
+                }}
               />
             );
           })}
@@ -172,6 +185,32 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
           <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Answer: <strong style={{ color: "var(--text-primary)" }}>{q.correctAnswer}</strong>
           </span>
+        )}
+
+        {/* Language Toggle */}
+        {(q.questionTextHindi || (q.optionsHindi && q.optionsHindi.length > 0)) && (
+          <div className="ml-auto flex gap-1 p-1 rounded-xl" style={{ background: "var(--bg-surface-2)", border: "1px solid var(--border)" }}>
+            <button
+              onClick={() => setLanguage("en")}
+              className="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all"
+              style={{
+                background: language === "en" ? "var(--accent)" : "transparent",
+                color: language === "en" ? "#fff" : "var(--text-secondary)",
+              }}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLanguage("hi")}
+              className="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all"
+              style={{
+                background: language === "hi" ? "var(--accent)" : "transparent",
+                color: language === "hi" ? "#fff" : "var(--text-secondary)",
+              }}
+            >
+              हिन्दी
+            </button>
+          </div>
         )}
       </div>
 

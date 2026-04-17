@@ -15,17 +15,17 @@ async function main() {
   const patterns = [
 
     {
-      exam_type: 'GATE',
-      branch: 'ECE',
-      subject: 'Electromagnetics',
-      topic_name: 'Waveguides',
-      atomic_logic: `Generate GATE-level questions covering Rectangular and Circular Waveguides. Focus on:
-1. Cut-off frequency and wavelength for TE and TM modes (Dominant mode TE10).
-2. Phase velocity, Group velocity, and Wave impedance in waveguides.
-3. Mode analysis: identifying valid/invalid modes, degeneracy, and field distributions.
-4. Power flow and attenuation in waveguides.
-5. Parallel plate waveguides and TEM mode characteristics.
-Questions should involve numericals on cutoff calculations, mode identification, and theoretical properties of guided waves.`
+      exam_type: 'SSC',
+      branch: 'Quantitative Aptitude',
+      subject: 'Time and Work',
+      topic_name: 'Time and Work',
+      atomic_logic: `Generate SSC-level questions covering Time and Work. Focus on:
+1. Basic concepts of work, rate, and time.
+2. Efficiency and combined work of multiple individuals.
+3. Pipes and Cisterns problems.
+4. Men-days concept and variations.
+5. Alternating work patterns and complex scenarios.
+Questions should involve numericals on work calculations, efficiency comparisons, and time estimations.`
     }
   ];
 

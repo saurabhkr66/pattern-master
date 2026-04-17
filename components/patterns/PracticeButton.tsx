@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Maximize2, Minimize2 } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { trackPageView } from "@/lib/analytics";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PracticeButtonProps {
   patternId: string;
@@ -37,6 +38,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
+  const { language, setLanguage } = useLanguage();
 
   // Lock body scroll while fullscreen is open
   useEffect(() => {
@@ -392,10 +394,32 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               >
                 {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
               </button>
+              
+              {/* Language Toggle */}
+              {(question.question_text_hindi || (question.options_hindi && question.options_hindi.length > 0)) && (
+                <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/10 rounded-lg">
+                  <button
+                    onClick={() => setLanguage("en")}
+                    className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${
+                      language === "en" ? "bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm" : "text-gray-400"
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLanguage("hi")}
+                    className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${
+                      language === "hi" ? "bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm" : "text-gray-400"
+                    }`}
+                  >
+                    हिन्दी
+                  </button>
+                </div>
+              )}
             </div>
             <div className="space-y-4 md:space-y-6">
               <MathRenderer 
-                content={question.question_text} 
+                content={(language === "hi" && question.question_text_hindi) ? question.question_text_hindi : question.question_text} 
                 className="text-sm md:text-base font-bold text-gray-700 dark:text-gray-300 leading-relaxed" 
               />
 
@@ -477,7 +501,11 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                         {letter}
                       </span>
                       <MathRenderer 
-                        content={option.includes('.') ? option.split('.').slice(1).join('.').trim() : option} 
+                        content={
+                          language === "hi" && question.options_hindi && question.options_hindi[i]
+                            ? (question.options_hindi[i].includes('.') ? question.options_hindi[i].split('.').slice(1).join('.').trim() : question.options_hindi[i])
+                            : (option.includes('.') ? option.split('.').slice(1).join('.').trim() : option)
+                        } 
                         className="font-bold text-[11px] md:text-base leading-tight text-gray-700 dark:text-gray-300" 
                       />
                     </button>
@@ -575,7 +603,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl md:text-6xl font-black">?</div>
                 <h4 className="text-blue-400 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2 md:mb-3">Logic Breakdown</h4>
                 <MathRenderer 
-                  content={question.explanation} 
+                  content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : question.explanation} 
                   className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10 break-words" 
                 />
               </div>

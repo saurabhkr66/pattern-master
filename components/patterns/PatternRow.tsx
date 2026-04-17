@@ -9,6 +9,7 @@ import UserNotesEditor from "./UserNotesEditor";
 import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { ChevronDown, ExternalLink, Sparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PatternRowProps {
   pattern: any;
@@ -31,7 +32,7 @@ const fetchPatternQuestions = async (patternId: string) => {
 };
 
 // ── MEMOIZED QUESTION CARD ─────────────────────────────────────────────
-const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride }: any) => {
+const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride, language }: any) => {
   const isPyq = isPyqOverride !== undefined ? isPyqOverride : q._isPyq;
   const seoUrl = getQuestionUrl({
     id: q.id,
@@ -77,7 +78,7 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride }: any) => {
           </div>
         </div>
         <MathRenderer 
-          content={q.question_text} 
+          content={(language === "hi" && q.question_text_hindi) ? q.question_text_hindi : q.question_text} 
           className="text-xs font-bold text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 flex-grow" 
         />
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50 dark:border-white/5">
@@ -110,6 +111,7 @@ QuestionCard.displayName = "QuestionCard";
 export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }: PatternRowProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { language } = useLanguage();
 
   const [selectedHistoryQuestion, setSelectedHistoryQuestion] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -355,11 +357,11 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                         Practice Mode →
                       </button>
                     </div>
-                    {pattern.short_notes ? (
+                    {((language === "hi" && pattern.short_notes_hindi) ? pattern.short_notes_hindi : pattern.short_notes) ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                         {[0, 1].map((col) => (
                           <div key={col} className="flex flex-col gap-4">
-                            {pattern.short_notes.split(/###\s+/).filter(Boolean).map((s: string, idx: number) => ({ s, idx })).filter((x: any) => x.idx % 2 === col).map(({ s, idx }: any) => {
+                            {((language === "hi" && pattern.short_notes_hindi) ? pattern.short_notes_hindi : pattern.short_notes).split(/###\s+/).filter(Boolean).map((s: string, idx: number) => ({ s, idx })).filter((x: any) => x.idx % 2 === col).map(({ s, idx }: any) => {
                               const lines = s.split("\n");
                               return (
                                 <div key={idx} className="bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 p-5">
@@ -436,7 +438,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                         <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {displayedBankQuestions.slice(0, visibleBank).map((q: any) => (
-                              <QuestionCard key={q.id} q={q} i={q._originalIndex} pattern={pattern} onSelect={setSelectedHistoryQuestion} />
+                              <QuestionCard key={q.id} q={q} i={q._originalIndex} pattern={pattern} onSelect={setSelectedHistoryQuestion} language={language} />
                             ))}
                           </div>
                           {displayedBankQuestions.length > visibleBank && (
@@ -517,7 +519,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle }:
                         <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {displayedPyqs.slice(0, visiblePyqs).map((pyq: any) => (
-                              <QuestionCard key={pyq.id} q={pyq} isPyqOverride={true} i={pyq._originalIndex} pattern={pattern} onSelect={setSelectedPyq} />
+                              <QuestionCard key={pyq.id} q={pyq} isPyqOverride={true} i={pyq._originalIndex} pattern={pattern} onSelect={setSelectedPyq} language={language} />
                             ))}
                           </div>
                           {displayedPyqs.length > visiblePyqs && (

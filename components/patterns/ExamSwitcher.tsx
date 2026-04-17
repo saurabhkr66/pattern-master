@@ -12,6 +12,7 @@ const EXAM_ICONS: Record<string, LucideIcon> = {
   BARC: BookOpen,
   ESE:  FlaskConical,
   JEE:  Zap,
+  SSC:  Zap,
 };
 
 const BRANCH_ICONS: Record<string, LucideIcon> = {

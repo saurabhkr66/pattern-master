@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import GlobalSearch from "./search/GlobalSearch";
+import { useLanguage } from "./providers/LanguageProvider";
 
 const navLinks = [
   { href: "/practice", label: "Practice", icon: BookOpen },
@@ -37,6 +38,7 @@ export default function Header() {
   const { user } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggle } = useTheme();
+  const { language, setLanguage } = useLanguage();
 
   return (
     <header
@@ -104,6 +106,26 @@ export default function Header() {
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+
+          {/* Global Language Toggle */}
+          <div className="hidden sm:flex gap-0.5 p-0.5 bg-white/5 rounded-xl border border-white/10">
+            <button
+              onClick={() => setLanguage("en")}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                language === "en" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLanguage("hi")}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                language === "hi" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              हिन्दी
+            </button>
+          </div>
 
           {/* Auth */}
           <Show when="signed-out">

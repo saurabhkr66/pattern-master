@@ -50,6 +50,7 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
           subject: true,
           atomic_logic: true,
           short_notes: true,
+          short_notes_hindi: true,
           _count: { select: { questions: true, pyqs: true } },
         },
         orderBy: { topic_name: "asc" },
@@ -67,7 +68,7 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
 
       return { subjects: mappedSubjectsBase, topics: mappedTopicsBase };
     },
-    [`topics-base-${examType}-${branch || "all"}-${subject || "all"}-v1`],
+    [`topics-base-${examType}-${branch || "all"}-${subject || "all"}-v2`],
     { revalidate: 600, tags: ["patterns"] }
   )();
 
