@@ -22,11 +22,17 @@ import {
   Database,
   Code2,
   FlaskConical,
+  ArrowRight,
+  Flame,
+  Trophy,
+  RefreshCcw,
+  Layers,
+  Star,
 } from "lucide-react";
 import { toSlug } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "BattleExam – AI-Powered GATE CSE Preparation | Practice Questions",
+  title: "BattleExam – Pattern-Based GATE CSE Preparation | Practice Questions",
   description:
     "Master GATE, ISRO, BARC & ESE with pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks with adaptive difficulty. Free to start.",
   keywords: [
@@ -39,29 +45,29 @@ export const metadata: Metadata = {
     "GATE computer networks",
     "ISRO CSE preparation",
     "BARC preparation",
-    "AI exam practice",
     "GATE 2026",
     "GATE 2027",
     "pattern based learning",
   ],
   openGraph: {
-    title: "BattleExam – AI-Powered GATE CSE Preparation",
+    title: "BattleExam – Pattern-Based GATE CSE Preparation",
     description:
-      "Practice GATE CSE, ISRO & BARC with AI-generated questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, progress tracking.",
+      "Practice GATE CSE, ISRO & BARC with questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, progress tracking.",
     type: "website",
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BattleExam – AI-Powered GATE CSE Preparation",
+    title: "BattleExam – Pattern-Based GATE CSE Preparation",
     description:
-      "Practice GATE CSE, ISRO & BARC with AI-generated questions tailored to each topic's core logic.",
+      "Practice GATE CSE, ISRO & BARC with questions tailored to each topic's core logic.",
   },
   alternates: { canonical: "/" },
 };
 
 // Serve from CDN edge cache — regenerate at most once per hour
 export const revalidate = 3600;
+
 const subjectIcons: Record<string, React.ReactNode> = {
   Algorithms: <Cpu size={14} />,
   "Data Structures": <Code2 size={14} />,
@@ -88,7 +94,7 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   name: "BattleExam",
-  description: "AI-powered exam preparation platform for GATE CSE, ISRO, BARC, and ESE",
+  description: "Pattern-based exam preparation platform for GATE CSE, ISRO, BARC, and ESE",
   url: "https://battleexam.com",
   hasOfferCatalog: {
     "@type": "OfferCatalog",
@@ -112,7 +118,7 @@ const faqStructuredData = {
       name: "How is BattleExam different from other GATE preparation platforms?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "BattleExam uses AI to generate questions based on the specific atomic logic of each GATE topic — not recycled question banks.",
+        text: "BattleExam generates questions based on the specific atomic logic of each GATE topic — not recycled question banks.",
       },
     },
     {
@@ -136,45 +142,99 @@ const faqStructuredData = {
 
 const STEPS = [
   {
-    n: "1",
-    title: "Pick a topic",
-    body: "Choose any GATE CSE topic. See the one core idea that all exam questions for it test.",
+    n: "01",
+    title: "Identify the core pattern",
+    body: "Every GATE topic has one atomic logic that examiners always test. We show it to you before you even start.",
     icon: Target,
     accent: "text-indigo-400",
-    bg: "bg-indigo-500/10",
+    bg: "bg-indigo-500/8",
     border: "border-indigo-500/15",
+    glow: "shadow-indigo-500/10",
   },
   {
-    n: "2",
-    title: "Practice with fresh AI questions",
-    body: "Gemini generates 5 unique questions every session. Easy, Medium, or Hard — your call. You never see the same question twice.",
-    icon: Zap,
+    n: "02",
+    title: "Get fresh questions every time",
+    body: "Fresh questions are generated every session — Easy, Medium, or Hard. Semantic dedup means you never see repeats.",
+    icon: RefreshCcw,
     accent: "text-violet-400",
-    bg: "bg-violet-500/10",
+    bg: "bg-violet-500/8",
     border: "border-violet-500/15",
+    glow: "shadow-violet-500/10",
   },
   {
-    n: "3",
-    title: "Track what needs work",
-    body: "Your dashboard shows accuracy by topic and surfaces wrong answers for review. Know exactly where you stand.",
+    n: "03",
+    title: "Know exactly what to fix",
+    body: "Your dashboard tracks accuracy per topic. Wrong answers surface in a flashcard review deck — targeted practice, not busywork.",
     icon: BarChart3,
     accent: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    bg: "bg-emerald-500/8",
     border: "border-emerald-500/15",
+    glow: "shadow-emerald-500/10",
   },
 ];
 
 const STATS = [
-  { value: "50+", label: "GATE Topics" },
-  { value: "3", label: "Difficulty Levels" },
-  { value: "4", label: "Exams" },
-  { value: "∞", label: "AI Questions" },
+  { value: "50+", label: "GATE Topics", icon: Layers },
+  { value: "3", label: "Difficulty Levels", icon: Flame },
+  { value: "4", label: "Exams Covered", icon: Trophy },
+  { value: "∞", label: "Unique Questions", icon: RefreshCcw },
+];
+
+const FEATURES = [
+  {
+    icon: Brain,
+    title: "Pattern-first learning",
+    body: "We don't dump questions at you. We teach the exact mental model each GATE topic tests — then reinforce it with targeted questions.",
+    accent: "text-indigo-400",
+    bg: "bg-indigo-500/8",
+    border: "border-indigo-500/15",
+  },
+  {
+    icon: Zap,
+    title: "Infinite fresh questions",
+    body: "Every session is different. Questions are generated fresh with distractors that mirror real exam misdirection.",
+    accent: "text-violet-400",
+    bg: "bg-violet-500/8",
+    border: "border-violet-500/15",
+  },
+  {
+    icon: Target,
+    title: "Adaptive difficulty",
+    body: "Start Easy to build confidence, push to Hard when you're ready. The difficulty slider is yours — no forced progression.",
+    accent: "text-rose-400",
+    bg: "bg-rose-500/8",
+    border: "border-rose-500/15",
+  },
+  {
+    icon: BarChart3,
+    title: "Mistake-driven review",
+    body: "Wrong answers don't disappear. They go into a Mistakes Room — flashcard-style review that targets your exact weak spots.",
+    accent: "text-emerald-400",
+    bg: "bg-emerald-500/8",
+    border: "border-emerald-500/15",
+  },
+  {
+    icon: Star,
+    title: "PYQ bank included",
+    body: "Real Previous Year Questions are tagged to every topic so you can cross-check your practice against official GATE paper patterns.",
+    accent: "text-amber-400",
+    bg: "bg-amber-500/8",
+    border: "border-amber-500/15",
+  },
+  {
+    icon: Trophy,
+    title: "Built for GATE rank, not just pass",
+    body: "Questions are calibrated to GATE scoring patterns. Hard mode questions are genuinely AIR-100 level — not artificially inflated.",
+    accent: "text-cyan-400",
+    bg: "bg-cyan-500/8",
+    border: "border-cyan-500/15",
+  },
 ];
 
 const FAQS = [
   {
     q: "How is BattleExam different from other GATE platforms?",
-    a: "Most platforms recycle the same question bank. BattleExam's AI generates fresh questions every time, each targeting the specific atomic logic of the topic — the exact thinking pattern GATE examiners test.",
+    a: "Most platforms recycle the same question bank. BattleExam generates fresh questions every time, each targeting the specific atomic logic of the topic — the exact thinking pattern GATE examiners test.",
   },
   {
     q: "Which exams and branches are covered?",
@@ -185,7 +245,7 @@ const FAQS = [
     a: "Yes. Create an account and start practicing immediately — no credit card, no trial limits.",
   },
   {
-    q: "How does the AI generate questions without repeating them?",
+    q: "How does BattleExam generate questions without repeating them?",
     a: "Every generated question gets a semantic fingerprint. If an identical question already exists in the database, it's skipped — guaranteeing a growing bank of unique questions.",
   },
   {
@@ -194,13 +254,13 @@ const FAQS = [
   },
 ];
 
-// The mock options for the hero card
 const MOCK_OPTIONS = [
   { label: "A", text: "T(n) = T(n/2) + O(1)", correct: false },
   { label: "B", text: "T(n) = 2T(n/2) + O(n)", correct: true },
   { label: "C", text: "T(n) = T(n−1) + O(n)", correct: false },
   { label: "D", text: "T(n) = 4T(n/4) + O(n²)", correct: false },
 ];
+
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -241,11 +301,11 @@ export default async function HomePage() {
 
         {/* ── HERO ─────────────────────────────────── */}
         <section className="relative overflow-hidden px-6 pt-24 pb-20">
-          {/* Ambient glow — sits behind everything */}
+          {/* Ambient glow */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[420px] w-[700px] rounded-full opacity-30 blur-[100px]"
-            style={{ background: "radial-gradient(ellipse, #6366f1 0%, transparent 70%)" }}
+            className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[800px] rounded-full opacity-20 blur-[120px]"
+            style={{ background: "radial-gradient(ellipse, #6366f1 0%, #8b5cf6 40%, transparent 70%)" }}
           />
 
           <div className="relative max-w-6xl mx-auto">
@@ -253,34 +313,42 @@ export default async function HomePage() {
 
               {/* LEFT ── headline + CTAs */}
               <div className="flex-1 min-w-0">
-                {/* Eyebrow */}
-                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-5">
-                  AI-Powered GATE Preparation
-                </p>
+                {/* Eyebrow pill */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/25 bg-indigo-500/8 mb-6">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                  <span className="text-xs font-bold text-indigo-400 tracking-wide">
+                    Pattern-Based · GATE 2026 / 2027
+                  </span>
+                </div>
 
                 <h1
-                  className="text-4xl md:text-[52px] font-black leading-[1.1] tracking-tight mb-4"
+                  className="text-4xl md:text-[56px] font-black leading-[1.05] tracking-tight mb-5"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  Practice GATE CSE
+                  Stop memorising.
                   <br />
-                  <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-                    the smart way.
+                  <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+                    Start understanding.
                   </span>
                 </h1>
 
                 <p
-                  className="text-base leading-relaxed mb-8 max-w-md"
+                  className="text-base md:text-lg leading-relaxed mb-8 max-w-[440px]"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Every topic has one core pattern examiners test. BattleExam's AI
-                  generates fresh questions around exactly that — for GATE, ISRO, BARC &amp; ESE.
+                  BattleExam shows you the <strong style={{ color: "var(--text-primary)" }}>one core pattern</strong> each
+                  GATE topic tests — then drills it with infinite fresh questions until you own it.
                 </p>
 
                 <HeroCTAs />
 
                 <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6">
-                  {["Free to start", "GATE 2027 syllabus", "Instant explanations"].map((t) => (
+                  {[
+                    "100% free to start",
+                    "GATE 2026 & 2027 syllabus",
+                    "Instant explanations",
+                    "PYQs included",
+                  ].map((t) => (
                     <span
                       key={t}
                       className="flex items-center gap-1.5 text-xs"
@@ -293,9 +361,8 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              {/* RIGHT ── practice card */}
-              <div className="hidden lg:block flex-shrink-0 w-[340px]">
-                {/* Label above card */}
+              {/* RIGHT ── animated practice card */}
+              <div className="hidden lg:block flex-shrink-0 w-[350px]">
                 <p
                   className="text-[11px] font-semibold uppercase tracking-widest mb-3 text-center"
                   style={{ color: "var(--text-muted)" }}
@@ -303,11 +370,11 @@ export default async function HomePage() {
                   Live practice session
                 </p>
 
-                {/* Card with ambient glow behind */}
                 <div className="relative">
+                  {/* Glow behind card */}
                   <div
                     aria-hidden
-                    className="absolute inset-0 rounded-2xl blur-2xl opacity-20 scale-95"
+                    className="absolute inset-0 rounded-2xl blur-2xl opacity-25 scale-95"
                     style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
                   />
                   <div
@@ -320,7 +387,7 @@ export default async function HomePage() {
                     {/* Card top bar */}
                     <div
                       className="flex items-center justify-between px-4 py-3 border-b"
-                      style={{ borderColor: "var(--border)" }}
+                      style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
                     >
                       <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
@@ -328,7 +395,7 @@ export default async function HomePage() {
                           className="text-[11px] font-bold uppercase tracking-wider"
                           style={{ color: "var(--text-muted)" }}
                         >
-                          Algorithms
+                          Algorithms · Merge Sort
                         </span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/15 text-orange-400 uppercase tracking-wider">
@@ -336,10 +403,22 @@ export default async function HomePage() {
                       </span>
                     </div>
 
+                    {/* Atomic logic hint */}
+                    <div
+                      className="mx-3 mt-3 px-3 py-2 rounded-lg border border-indigo-500/20 bg-indigo-500/6"
+                    >
+                      <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">
+                        Core pattern
+                      </p>
+                      <p className="text-[10px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        Divide-and-conquer recurrence: cost = 2 sub-problems of n/2 + linear merge.
+                      </p>
+                    </div>
+
                     {/* Question */}
-                    <div className="px-4 pt-4 pb-3">
+                    <div className="px-4 pt-3 pb-3">
                       <p
-                        className="text-sm font-semibold leading-snug mb-4"
+                        className="text-sm font-semibold leading-snug mb-3"
                         style={{ color: "var(--text-primary)" }}
                       >
                         What is the recurrence relation for Merge Sort on{" "}
@@ -350,15 +429,15 @@ export default async function HomePage() {
                         {MOCK_OPTIONS.map((opt) => (
                           <div
                             key={opt.label}
-                            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border text-xs font-mono ${
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border text-xs font-mono transition-colors ${
                               opt.correct
                                 ? "border-emerald-500/30 bg-emerald-500/8 text-emerald-400"
-                                : "text-[--text-muted]"
+                                : "opacity-50"
                             }`}
                             style={
                               opt.correct
                                 ? undefined
-                                : { borderColor: "var(--border)", background: "var(--bg-surface-2)" }
+                                : { borderColor: "var(--border)", background: "var(--bg-surface-2)", color: "var(--text-muted)" }
                             }
                           >
                             <span
@@ -379,18 +458,18 @@ export default async function HomePage() {
                     {/* Explanation */}
                     <div className="mx-3 mb-3 px-3 py-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/6">
                       <p className="text-[10px] font-bold text-emerald-400 mb-0.5">
-                        Correct — here&apos;s why
+                        ✓ Correct — here&apos;s why
                       </p>
                       <p
                         className="text-[11px] leading-relaxed"
                         style={{ color: "var(--text-secondary)" }}
                       >
                         Merge Sort splits into 2 sub-problems of size n/2 (→ 2T(n/2)) and merges
-                        in O(n), giving O(n log n) overall.
+                        in O(n), giving O(n log n) overall by Master Theorem.
                       </p>
                     </div>
 
-                    {/* Progress bar strip */}
+                    {/* Progress bar */}
                     <div
                       className="px-4 py-2.5 flex items-center justify-between border-t"
                       style={{ borderColor: "var(--border)" }}
@@ -399,25 +478,29 @@ export default async function HomePage() {
                         className="text-[10px] font-medium"
                         style={{ color: "var(--text-muted)" }}
                       >
-                        Question 3 of 5
+                        Question 3 / 5
                       </span>
-                      <div
-                        className="flex gap-1"
-                      >
+                      <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map((i) => (
                           <span
                             key={i}
                             className={`w-5 h-1 rounded-full ${
-                              i === 3
-                                ? "bg-indigo-500"
-                                : i < 3
-                                ? "bg-emerald-500"
-                                : "bg-white/10"
+                              i === 3 ? "bg-indigo-500" : i < 3 ? "bg-emerald-500" : "bg-white/10"
                             }`}
                           />
                         ))}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Below card — score badge */}
+                <div className="mt-3 flex justify-center">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/6">
+                    <CheckCircle2 size={11} className="text-emerald-400" />
+                    <span className="text-[10px] font-semibold text-emerald-400">
+                      2 / 2 correct so far
+                    </span>
                   </div>
                 </div>
               </div>
@@ -426,16 +509,45 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── STATS ────────────────────────────────── */}
+        {/* ── SOCIAL PROOF BANNER ───────────────────── */}
+        {/* TODO: add real social proof here (user count, testimonials teaser, etc.) */}
+        {/*
         <div
-          className="border-y py-8 px-6"
+          className="border-y py-4 px-6 overflow-hidden"
           style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
         >
+          <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-6 md:gap-10 text-center">
+            {[
+              { icon: "🎯", text: "Pattern-based — not question-bank" },
+              { icon: "⚡", text: "Instant explanations" },
+              { icon: "🔁", text: "Never see the same question twice" },
+              { icon: "📊", text: "Per-topic accuracy tracking" },
+              { icon: "🆓", text: "Free forever" },
+            ].map((item) => (
+              <span
+                key={item.text}
+                className="flex items-center gap-2 text-xs font-medium"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <span>{item.icon}</span>
+                {item.text}
+              </span>
+            ))}
+          </div>
+        </div>
+        */}
+
+        {/* ── STATS ────────────────────────────────── */}
+        <div className="py-16 px-6">
           <div className="max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS.map((s) => (
-              <div key={s.label} className="text-center">
+              <div
+                key={s.label}
+                className="text-center p-5 rounded-2xl border"
+                style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+              >
                 <p
-                  className="text-3xl font-black mb-0.5"
+                  className="text-4xl font-black mb-1"
                   style={{ color: "var(--text-primary)" }}
                 >
                   {s.value}
@@ -452,31 +564,50 @@ export default async function HomePage() {
         </div>
 
         {/* ── HOW IT WORKS ─────────────────────────── */}
-        <section className="px-6 py-20">
+        <section
+          className="px-6 py-20 border-t"
+          style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
+        >
           <div className="max-w-5xl mx-auto">
-            <h2
-              className="text-2xl md:text-3xl font-black mb-12 text-center"
-              style={{ color: "var(--text-primary)" }}
-            >
-              How it works
-            </h2>
+            <div className="text-center mb-14">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-400 mb-2">
+                The Method
+              </p>
+              <h2
+                className="text-2xl md:text-3xl font-black"
+                style={{ color: "var(--text-primary)" }}
+              >
+                How BattleExam actually works
+              </h2>
+              <p className="mt-3 text-sm max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
+                Not another question dump. A system designed around how GATE toppers actually think.
+              </p>
+            </div>
 
-            <div className="grid md:grid-cols-3 gap-5">
+            <div className="grid md:grid-cols-3 gap-5 relative">
+              {/* Connector line on desktop */}
+              <div
+                aria-hidden
+                className="hidden md:block absolute top-10 left-[calc(33%+16px)] right-[calc(33%+16px)] h-px"
+                style={{ background: "var(--border)" }}
+              />
+
               {STEPS.map((step) => (
                 <div
                   key={step.n}
-                  className={`relative p-6 rounded-2xl border ${step.border} ${step.bg}`}
+                  className={`relative p-6 rounded-2xl border ${step.border} ${step.bg} shadow-lg ${step.glow}`}
                 >
-                  {/* Step number — large, faded, top right */}
-                  <span
-                    className={`absolute top-4 right-5 text-5xl font-black leading-none ${step.accent} opacity-10 select-none`}
-                  >
-                    {step.n}
-                  </span>
-                  <div
-                    className={`w-9 h-9 rounded-xl ${step.bg} border ${step.border} flex items-center justify-center mb-4`}
-                  >
-                    <step.icon size={17} className={step.accent} />
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className={`w-10 h-10 rounded-xl ${step.bg} border ${step.border} flex items-center justify-center shrink-0`}
+                    >
+                      <step.icon size={18} className={step.accent} />
+                    </div>
+                    <span
+                      className={`text-4xl font-black leading-none ${step.accent} opacity-15 select-none`}
+                    >
+                      {step.n}
+                    </span>
                   </div>
                   <h3
                     className="font-bold text-sm mb-2 leading-snug"
@@ -496,10 +627,56 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ── FEATURES GRID ────────────────────────── */}
+        <section className="px-6 py-20">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-14">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-violet-400 mb-2">
+                Features
+              </p>
+              <h2
+                className="text-2xl md:text-3xl font-black"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Everything you need to crack GATE
+              </h2>
+            </div>
+
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {FEATURES.map((f) => (
+                <div
+                  key={f.title}
+                  className={`p-5 rounded-2xl border ${f.border} ${f.bg} hover:shadow-lg transition-shadow`}
+                >
+                  <div
+                    className={`w-9 h-9 rounded-xl ${f.bg} border ${f.border} flex items-center justify-center mb-3`}
+                  >
+                    <f.icon size={17} className={f.accent} />
+                  </div>
+                  <h3
+                    className="font-bold text-sm mb-1.5"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {f.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── TESTIMONIALS ─────────────────────────── */}
+        {/* TODO: add real testimonials */}
+
         {/* ── TOPICS ───────────────────────────────── */}
         <section
-          className="px-6 py-20 border-y"
-          style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
+          className="px-6 py-20"
           aria-labelledby="topics-heading"
         >
           <div className="max-w-5xl mx-auto">
@@ -514,6 +691,9 @@ export default async function HomePage() {
               >
                 Every topic. Every pattern.
               </h2>
+              <p className="mt-3 text-sm max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
+                Click any topic to see its core atomic logic — even before you sign up.
+              </p>
             </div>
 
             <div className="space-y-8">
@@ -542,7 +722,7 @@ export default async function HomePage() {
                         <Link
                           key={p.id}
                           href={`/gate-cse/${toSlug(p.subject)}/${toSlug(p.topic_name)}`}
-                          className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors hover:border-indigo-500/40 hover:text-indigo-400"
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-all hover:border-indigo-500/40 hover:text-indigo-400 hover:bg-indigo-500/5"
                           style={{
                             borderColor: "var(--border)",
                             background: "var(--bg-surface)",
@@ -571,27 +751,43 @@ export default async function HomePage() {
         </section>
 
         {/* ── FAQ ──────────────────────────────────── */}
-        <section className="px-6 py-20" aria-labelledby="faq-heading">
+        <section
+          className="px-6 py-20 border-t"
+          style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
+          aria-labelledby="faq-heading"
+        >
           <div className="max-w-2xl mx-auto">
             <h2
               id="faq-heading"
               className="text-2xl md:text-3xl font-black mb-10 text-center"
               style={{ color: "var(--text-primary)" }}
             >
-              FAQ
+              Frequently asked questions
             </h2>
             <FAQAccordion faqs={FAQS} />
           </div>
         </section>
 
         {/* ── FINAL CTA ────────────────────────────── */}
-        <section
-          className="px-6 py-20 border-t"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <div className="max-w-xl mx-auto text-center">
+        <section className="px-6 py-24 relative overflow-hidden">
+          {/* Background glow */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[600px] rounded-full opacity-15 blur-[100px]"
+            style={{ background: "radial-gradient(ellipse, #6366f1 0%, transparent 70%)" }}
+          />
+
+          <div className="relative max-w-2xl mx-auto text-center">
+            {/* Urgency pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/25 bg-orange-500/8 mb-6">
+              <Flame size={12} className="text-orange-400" />
+              <span className="text-xs font-bold text-orange-400">
+                GATE 2027 prep window is now
+              </span>
+            </div>
+
             <h2
-              className="text-3xl md:text-4xl font-black mb-3 leading-tight"
+              className="text-3xl md:text-5xl font-black mb-4 leading-tight"
               style={{ color: "var(--text-primary)" }}
             >
               Your GATE rank is decided
@@ -601,38 +797,73 @@ export default async function HomePage() {
               </span>
             </h2>
             <p
-              className="text-sm mb-8"
-              style={{ color: "var(--text-muted)" }}
+              className="text-sm md:text-base mb-2 max-w-md mx-auto leading-relaxed"
+              style={{ color: "var(--text-secondary)" }}
             >
-              BattleExam is free. Start now.
+              Top rankers don&apos;t study more — they practice smarter. BattleExam gives you
+              the same pattern-based system, for free.
             </p>
-            <div className="flex justify-center">
+            <p className="text-xs mb-8" style={{ color: "var(--text-muted)" }}>
+              No credit card. No trial limits. Start in 30 seconds.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <FinalCTAButton />
+              <Link
+                href="/gate-cse/algorithms/merge-sort"
+                className="flex items-center gap-1.5 text-sm font-medium hover:text-indigo-400 transition-colors"
+                style={{ color: "var(--text-muted)" }}
+              >
+                See a topic first <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            {/* Trust signals below CTA */}
+            <div className="flex flex-wrap items-center justify-center gap-5 mt-8">
+              {[
+                "Free forever",
+                "No spam",
+                "Instant access",
+                "GATE + ISRO + BARC + ESE",
+              ].map((t) => (
+                <span
+                  key={t}
+                  className="flex items-center gap-1.5 text-xs"
+                  style={{ color: "var(--text-faint)" }}
+                >
+                  <CheckCircle2 size={11} className="text-emerald-500/60 shrink-0" />
+                  {t}
+                </span>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ── FOOTER ───────────────────────────────── */}
         <footer
-          className="border-t px-6 py-8"
+          className="border-t px-6 py-10"
           style={{ borderColor: "var(--border)" }}
         >
-          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
-              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
-                <Brain size={13} />
-              </span>
-              <span className="font-bold text-sm">
-                Battle<span className="text-violet-400">Exam</span>
-              </span>
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
+                <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
+                  <Brain size={14} className="text-white" />
+                </span>
+                <span className="font-black text-base">
+                  Battle<span className="text-violet-400">Exam</span>
+                </span>
+              </div>
+              <p className="text-[11px] text-center" style={{ color: "var(--text-faint)" }}>
+                Pattern-based GATE CSE, ISRO, BARC &amp; ESE preparation.
+              </p>
+              <div className="flex items-center gap-5 text-xs" style={{ color: "var(--text-muted)" }}>
+                <Link href="/sign-in" className="hover:text-indigo-400 transition-colors">Sign in</Link>
+                <Link href="/sign-up" className="hover:text-indigo-400 transition-colors">Sign up</Link>
+              </div>
             </div>
-            <p className="text-[11px] text-center" style={{ color: "var(--text-faint)" }}>
-              AI-powered GATE CSE, ISRO, BARC &amp; ESE preparation.
+            <p className="text-center text-[10px]" style={{ color: "var(--text-faint)" }}>
+              © {new Date().getFullYear()} BattleExam. Built for Indian engineering aspirants.
             </p>
-            <div className="flex items-center gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
-              <Link href="/sign-in" className="hover:underline">Sign in</Link>
-              <Link href="/sign-up" className="hover:underline">Sign up</Link>
-            </div>
           </div>
         </footer>
 
