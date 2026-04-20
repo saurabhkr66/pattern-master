@@ -41,7 +41,7 @@ interface QuestionData {
   explanation: string;
   explanationHindi?: string;
   questionType: string;
-  images?: { index: number; filename: string }[];
+  images?: { index: number; filename: string; type?: string }[];
 }
 
 // Constrained image with click-to-expand lightbox
@@ -130,10 +130,10 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
           style={{ color: "var(--text-primary)" }}
         />
 
-        {/* Question images */}
-        {q.images && q.images.length > 0 && (
+        {/* Question images (exclude explanation-type images) */}
+        {q.images && q.images.filter(img => img.type !== "explanation").length > 0 && (
           <div className="mt-4 flex flex-col gap-3">
-            {q.images.map((img) => (
+            {q.images.filter(img => img.type !== "explanation").map((img) => (
               <QuestionImage key={img.index} src={`/${img.filename}`} alt={`Figure ${img.index}`} />
             ))}
           </div>
@@ -230,6 +230,14 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
               ref={expRef}
               style={{ color: "var(--text-primary)" }}
             />
+            {/* Explanation images */}
+            {q.images && q.images.filter(img => img.type === "explanation").length > 0 && (
+              <div className="mt-4 flex flex-col gap-3">
+                {q.images.filter(img => img.type === "explanation").map((img) => (
+                  <QuestionImage key={img.index} src={`/${img.filename}`} alt={`Explanation Figure ${img.index}`} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

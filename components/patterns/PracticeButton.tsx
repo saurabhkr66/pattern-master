@@ -189,9 +189,15 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       finalAnswer = userAns;
     } else if (type === "NAT") {
       const correctAnsStr = question.correct_answer.trim();
-      if (correctAnsStr.includes(":")) {
+      const userVal = parseFloat(natValue.trim());
+      // Support both "min:max" and "min to max" range formats
+      const colonRange = correctAnsStr.includes(":") && !correctAnsStr.toLowerCase().includes(" to ");
+      const toRange = / to /i.test(correctAnsStr);
+      if (colonRange) {
         const [minStr, maxStr] = correctAnsStr.split(":");
-        const userVal = parseFloat(natValue.trim());
+        isCorrect = !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
+      } else if (toRange) {
+        const [minStr, maxStr] = correctAnsStr.split(/ to /i);
         isCorrect = !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
       } else {
         isCorrect = natValue.trim() === correctAnsStr;
@@ -256,9 +262,16 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     }
     if (type === "NAT") {
       const correctAnsStr = (question.correct_answer || "").trim();
-      if (correctAnsStr.includes(":")) {
+      const userVal = parseFloat(natValue.trim());
+      // Support both "min:max" and "min to max" range formats
+      const colonRange = correctAnsStr.includes(":") && !correctAnsStr.toLowerCase().includes(" to ");
+      const toRange = / to /i.test(correctAnsStr);
+      if (colonRange) {
         const [minStr, maxStr] = correctAnsStr.split(":");
-        const userVal = parseFloat(natValue.trim());
+        return !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
+      }
+      if (toRange) {
+        const [minStr, maxStr] = correctAnsStr.split(/ to /i);
         return !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
       }
       return natValue.trim() === correctAnsStr;

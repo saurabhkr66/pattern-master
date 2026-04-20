@@ -15,9 +15,15 @@ interface SubmittedAnswer {
 function checkNat(userAnswer: string, correctAnswer: string): boolean {
     if (!userAnswer) return false;
     const ca = correctAnswer.trim();
-    if (ca.includes(":")) {
+    const val = parseFloat(userAnswer.trim());
+    // Support "min:max" colon format
+    if (ca.includes(":") && !ca.toLowerCase().includes(" to ")) {
         const [minStr, maxStr] = ca.split(":");
-        const val = parseFloat(userAnswer.trim());
+        return !isNaN(val) && val >= parseFloat(minStr) && val <= parseFloat(maxStr);
+    }
+    // Support "min to max" format (e.g. "3.9 to 4.1")
+    if (/ to /i.test(ca)) {
+        const [minStr, maxStr] = ca.split(/ to /i);
         return !isNaN(val) && val >= parseFloat(minStr) && val <= parseFloat(maxStr);
     }
     return userAnswer.trim() === ca;

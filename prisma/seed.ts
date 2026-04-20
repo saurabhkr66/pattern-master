@@ -13,19 +13,51 @@ async function main() {
 
   // 2. Define some GATE Computer Science patterns
   const patterns = [
-
     {
-      exam_type: 'SSC',
-      branch: 'Quantitative Aptitude',
-      subject: 'Time and Work',
-      topic_name: 'Time and Work',
-      atomic_logic: `Generate SSC-level questions covering Time and Work. Focus on:
-1. Basic concepts of work, rate, and time.
-2. Efficiency and combined work of multiple individuals.
-3. Pipes and Cisterns problems.
-4. Men-days concept and variations.
-5. Alternating work patterns and complex scenarios.
-Questions should involve numericals on work calculations, efficiency comparisons, and time estimations.`
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Electronic Devices and VLSI',
+      topic_name: 'Semiconductor Physics',
+      atomic_logic: `Generate GATE-level questions on Semiconductor Physics. Focus on:
+1. Energy bands in intrinsic and extrinsic silicon.
+2. Carrier transport: diffusion current, drift current, mobility, and resistivity.
+3. Generation and recombination of carriers.
+4. Poisson and continuity equations.
+5. Hall Effect applications and numericals.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Electronic Devices and VLSI',
+      topic_name: 'PN Junction',
+      atomic_logic: `Generate GATE-level questions on P-N Junctions. Focus on:
+1. P-N junction characteristics and energy band diagrams.
+2. Zener and Avalanche breakdown mechanisms.
+3. Capacitance: Depletion and Diffusion capacitance.
+4. I-V characteristics and small-signal models.
+5. Numerical problems on built-in potential and depletion width.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Electronic Devices and VLSI',
+      topic_name: 'BJT and FET',
+      atomic_logic: `Generate GATE-level questions on BJT and FET physics. Focus on:
+1. BJT: Transistor action, gain parameters (alpha, beta), and Eber-Moll model.
+2. JFET: Pinch-off voltage and ohmic/saturation region characteristics.
+3. Impact of scaling and high-frequency effects in BJTs.
+4. Biasing and transistor as an amplifier/switch.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Electronic Devices and VLSI',
+      topic_name: 'IC Basics and MOSFET',
+      atomic_logic: `Generate GATE-level questions on IC Fabrication and MOSFETs. Focus on:
+1. MOSFET: Threshold voltage, I-V characteristics, and NMOS/PMOS construction.
+2. Non-ideal effects: Channel length modulation, Body effect, and Sub-threshold conduction.
+3. CMOS inverter basics and CMOS logic construction.
+4. IC Fabrication: Diffusion, Ion Implantation, Photolithography, and Etching basics.`
     }
   ];
 
