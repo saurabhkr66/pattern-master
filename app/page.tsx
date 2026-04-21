@@ -6,22 +6,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   HeroCTAs,
-  TopicsSignUpButton,
   FinalCTAButton,
 } from "@/components/landing/LandingAuthButtons";
 import FAQAccordion from "@/components/landing/FAQAccordion";
+import TopicsExplorer, { type BranchSubjectData } from "@/components/landing/TopicsExplorer";
 import {
   Brain,
   Zap,
   Target,
   BarChart3,
   CheckCircle2,
-  BookOpen,
-  Cpu,
-  Network,
-  Database,
-  Code2,
-  FlaskConical,
   ArrowRight,
   Flame,
   Trophy,
@@ -29,7 +23,6 @@ import {
   Layers,
   Star,
 } from "lucide-react";
-import { toSlug } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "BattleExam – Pattern-Based GATE CSE Preparation | Practice Questions",
@@ -68,27 +61,6 @@ export const metadata: Metadata = {
 // Serve from CDN edge cache — regenerate at most once per hour
 export const revalidate = 3600;
 
-const subjectIcons: Record<string, React.ReactNode> = {
-  Algorithms: <Cpu size={14} />,
-  "Data Structures": <Code2 size={14} />,
-  "Operating Systems": <FlaskConical size={14} />,
-  "Computer Networks": <Network size={14} />,
-  DBMS: <Database size={14} />,
-  "Computer Organization": <Cpu size={14} />,
-  "Digital Logic": <Zap size={14} />,
-  Default: <BookOpen size={14} />,
-};
-
-const SUBJECT_COLORS: Record<string, string> = {
-  Algorithms: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Data Structures": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Operating Systems": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  "Computer Networks": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  DBMS: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "Computer Organization": "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  "Digital Logic": "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  Default: "bg-white/5 text-white/50 border-white/10",
-};
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -266,25 +238,29 @@ export default async function HomePage() {
   const { userId } = await auth();
   if (userId) redirect("/dashboard");
 
-  const gatePatterns = await prisma.pattern.findMany({
-    where: { exam_type: "GATE", branch: "CSE" },
-    select: {
-      id: true,
-      topic_name: true,
-      subject: true,
-      atomic_logic: true,
-      _count: { select: { pyqs: true } },
-    },
-    orderBy: { subject: "asc" },
-    take: 24,
+  // Fetch distinct branch+subject+exam combinations for the Topics explorer
+  const branchSubjectRows = await prisma.pattern.findMany({
+    select: { exam_type: true, branch: true, subject: true },
+    distinct: ["exam_type", "branch", "subject"],
+    orderBy: [{ branch: "asc" }, { subject: "asc" }],
   });
 
-  const bySubject: Record<string, typeof gatePatterns> = {};
-  for (const p of gatePatterns) {
-    const s = p.subject ?? "Other";
-    if (!bySubject[s]) bySubject[s] = [];
-    bySubject[s].push(p);
+  // Group by branch: pick primary exam per branch (first one encountered)
+  const branchMap = new Map<string, { exam: string; subjects: Set<string> }>();
+  for (const row of branchSubjectRows) {
+    if (!branchMap.has(row.branch)) {
+      branchMap.set(row.branch, { exam: row.exam_type, subjects: new Set() });
+    }
+    branchMap.get(row.branch)!.subjects.add(row.subject);
   }
+
+  const topicsData: BranchSubjectData[] = Array.from(branchMap.entries()).map(
+    ([branch, { exam, subjects }]) => ({
+      branch,
+      exam,
+      subjects: Array.from(subjects).sort(),
+    })
+  );
 
   return (
     <>
@@ -682,71 +658,21 @@ export default async function HomePage() {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-400 mb-2">
-                GATE CSE Coverage
+                Coverage
               </p>
               <h2
                 id="topics-heading"
                 className="text-2xl md:text-3xl font-black"
                 style={{ color: "var(--text-primary)" }}
               >
-                Every topic. Every pattern.
+                Pick your stream. Start practicing.
               </h2>
               <p className="mt-3 text-sm max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
-                Click any topic to see its core atomic logic — even before you sign up.
+                Click any subject — you&apos;ll land directly on that topic after signing up.
               </p>
             </div>
 
-            <div className="space-y-8">
-              {Object.entries(bySubject).map(([subject, patterns]) => {
-                const colorClass = SUBJECT_COLORS[subject] ?? SUBJECT_COLORS.Default;
-                const icon = subjectIcons[subject] ?? subjectIcons.Default;
-                return (
-                  <div key={subject}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <span
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold ${colorClass}`}
-                      >
-                        {icon}
-                        {subject}
-                      </span>
-                      <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                      <span
-                        className="text-[10px] font-semibold uppercase tracking-widest"
-                        style={{ color: "var(--text-faint)" }}
-                      >
-                        {patterns.length} topics
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {patterns.map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/gate-cse/${toSlug(p.subject)}/${toSlug(p.topic_name)}`}
-                          className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-all hover:border-indigo-500/40 hover:text-indigo-400 hover:bg-indigo-500/5"
-                          style={{
-                            borderColor: "var(--border)",
-                            background: "var(--bg-surface)",
-                            color: "var(--text-secondary)",
-                          }}
-                          title={p.atomic_logic ?? undefined}
-                        >
-                          {p.topic_name}
-                          {p._count.pyqs > 0 && (
-                            <span className="ml-1.5 text-[9px] font-bold bg-orange-500/10 text-orange-400 px-1 py-0.5 rounded">
-                              {p._count.pyqs} PYQ
-                            </span>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-12 flex justify-center">
-              <TopicsSignUpButton />
-            </div>
+            <TopicsExplorer data={topicsData} />
           </div>
         </section>
 

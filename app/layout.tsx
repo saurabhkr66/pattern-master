@@ -65,6 +65,7 @@ export const metadata: Metadata = {
 };
 
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
+import PostLoginRedirect from "@/components/landing/PostLoginRedirect";
 
 export default function RootLayout({
   children,
@@ -122,6 +123,7 @@ export default function RootLayout({
             <ThemeProvider>
               <QueryProvider>
                 <Header />
+                <PostLoginRedirect />
                 <main className="flex-1">{children}</main>
               </QueryProvider>
             </ThemeProvider>
