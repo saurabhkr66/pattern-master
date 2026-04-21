@@ -21,11 +21,14 @@ export default async function AppLayout({
     const clerkUser = await currentUser();
     if (!clerkUser) redirect("/sign-in");
 
-    await prisma.user.create({
-      data: {
-        id: userId,
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
-      },
+    const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+
+    // Use upsert on email as well to handle the case where a user record
+    // already exists under this email (e.g. from a previous social login)
+    await prisma.user.upsert({
+      where: { email },
+      create: { id: userId, email },
+      update: { id: userId },
     });
   }
 
