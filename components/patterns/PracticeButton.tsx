@@ -37,6 +37,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFullscreenHint, setShowFullscreenHint] = useState(!!(initialQuestion));
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const { language, setLanguage } = useLanguage();
 
@@ -105,6 +106,20 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       });
     }
   }, [question?.id, !!question]);
+
+  // Auto-dismiss fullscreen hint after 5s;
+  // Also show it whenever a new question first appears (AI generated)
+  const hintShownRef = useRef(!!(initialQuestion));
+  useEffect(() => {
+    if (question && !hintShownRef.current) {
+      hintShownRef.current = true;
+      setShowFullscreenHint(true);
+    }
+    if (question) {
+      const timer = setTimeout(() => setShowFullscreenHint(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [!!question]);
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -400,13 +415,70 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   {checkIsCorrect() ? "Correct!" : "Wrong"}
                 </span>
               )}
-              <button
-                onClick={() => setIsFullscreen(v => !v)}
-                className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
-                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-              >
-                {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-              </button>
+              <div className="ml-auto relative shrink-0">
+                <button
+                  onClick={() => {
+                    setIsFullscreen(v => !v);
+                    setShowFullscreenHint(false);
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                >
+                  {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                </button>
+
+                {/* Fullscreen hint tooltip — shown for 5s on first question load */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '10px',
+                    zIndex: 9999,
+                    opacity: showFullscreenHint && !isFullscreen ? 1 : 0,
+                    transform: showFullscreenHint && !isFullscreen ? 'translateY(0)' : 'translateY(-6px)',
+                    transition: 'opacity 0.4s ease, transform 0.4s ease',
+                    pointerEvents: showFullscreenHint && !isFullscreen ? 'auto' : 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {/* Arrow pointing up */}
+                  <div style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: 8,
+                    width: 12,
+                    height: 12,
+                    background: '#2563eb',
+                    transform: 'rotate(45deg)',
+                    borderRadius: 2,
+                  }} />
+                  <div style={{
+                    background: '#2563eb',
+                    color: 'white',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    padding: '8px 14px',
+                    borderRadius: 10,
+                    boxShadow: '0 8px 24px rgba(37,99,235,0.45)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'white',
+                      animation: 'pulse 1.5s infinite',
+                    }} />
+                    Full Screen Mode
+                  </div>
+                </div>
+              </div>
               
               {/* Language Toggle */}
               {(question.question_text_hindi || (question.options_hindi && question.options_hindi.length > 0)) && (
@@ -436,10 +508,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 className="text-sm md:text-base font-bold text-gray-700 dark:text-gray-300 leading-relaxed" 
               />
 
-              {/* Question Images */}
-              {question.images && Array.isArray(question.images) && question.images.length > 0 && (
+              {/* Question Images – exclude explanation-only images */}
+              {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type !== 'explanation').length > 0 && (
                 <div className="flex flex-col gap-4 py-2">
-                  {question.images.map((img: any, idx: number) => {
+                  {question.images.filter((img: any) => img.type !== 'explanation').map((img: any, idx: number) => {
                     const getImageUrl = (img: any) => {
                       if (img.base64) return img.base64;
                       if (!img.url) return '';
@@ -619,6 +691,25 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : question.explanation} 
                   className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10 break-words" 
                 />
+                {/* Explanation images – only shown after answer is revealed */}
+                {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type === 'explanation').length > 0 && (
+                  <div className="mt-4 flex flex-col gap-3">
+                    {question.images.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => {
+                      const url = img.base64 || img.url || '';
+                      if (!url) return null;
+                      return (
+                        <div key={idx} className="flex justify-center bg-black/20 rounded-xl p-2 overflow-hidden">
+                          <img
+                            src={url}
+                            alt={`Explanation figure ${img.index || idx + 1}`}
+                            className="max-w-full h-auto rounded-lg object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
