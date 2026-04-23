@@ -261,7 +261,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                     borderBottom: `2px solid ${active ? BE.accent : 'transparent'}`,
                     marginBottom: -1, cursor: 'pointer',
                     display: 'inline-flex', alignItems: 'center', gap: 8,
-                    letterSpacing: 0.04, textTransform: 'uppercase', whitespace: 'nowrap'
+                    letterSpacing: 0.04, textTransform: 'uppercase', whiteSpace: 'nowrap'
                   }}>
                   <TabIcon kind={t.icon} active={active} className="w-4 h-4 md:w-[13px] md:h-[13px]" />
                   <span className="hidden md:inline">{t.label}</span>

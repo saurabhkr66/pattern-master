@@ -301,7 +301,7 @@ export default async function PracticePage({
           </div>
 
           {/* Right Rail Mock */}
-          <div style={{ width: 300, display: 'none', lg: 'block' }}>
+          <div className="hidden lg:block w-[300px] shrink-0">
             {/* Ad Rail or Info Rail would go here */}
           </div>
         </div>
