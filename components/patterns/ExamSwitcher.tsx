@@ -1,42 +1,11 @@
 "use client";
-
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  GraduationCap, Award, Zap, BookOpen, Cpu, Globe, Settings, Wrench, FlaskConical, type LucideIcon,
-} from "lucide-react";
-
-// Static icon maps — add more as new exams/branches are seeded
-const EXAM_ICONS: Record<string, LucideIcon> = {
-  GATE: GraduationCap,
-  ISRO: Award,
-  BARC: BookOpen,
-  ESE:  FlaskConical,
-  JEE:  Zap,
-  SSC:  Zap,
-};
-
-const BRANCH_ICONS: Record<string, LucideIcon> = {
-  CSE: Cpu,
-  IT:  Globe,
-  ECE: Zap,
-  ME:  Settings,
-  EE:  Wrench,
-};
-
-const BRANCH_LABELS: Record<string, string> = {
-  CSE: "CS",
-  IT:  "IT",
-  ECE: "ECE",
-  ME:  "ME",
-  EE:  "EE",
-};
+import { BE } from "@/lib/theme";
 
 interface ExamSwitcherProps {
   currentExam: string;
   currentBranch: string | null;
-  /** All exam_type values that have patterns in the DB */
   availableExams: string[];
-  /** All branch values for the currently active exam */
   availableBranches: string[];
 }
 
@@ -62,67 +31,70 @@ export default function ExamSwitcher({
   const handleBranchSwitch = (id: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (currentBranch === id) {
-      params.delete("branch"); // toggle off
+      params.delete("branch");
     } else {
       params.set("branch", id);
     }
-    // Clear subject/question selection — they belong to the previous branch
     params.delete("subject");
     params.delete("q");
     params.delete("patternId");
     router.push(`/practice?${params.toString()}`);
   };
 
-  return (
-    <div className="flex flex-col gap-3 mt-4">
-      {/* Exam pills */}
-      <div className="flex flex-wrap gap-2">
-        {availableExams.map((examId) => {
-          const Icon = EXAM_ICONS[examId] ?? GraduationCap;
-          const isActive = currentExam === examId;
-          return (
-            <button
-              key={examId}
-              onClick={() => handleExamSwitch(examId)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-black transition-all border ${
-                isActive
-                  ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
-                  : "hover:opacity-80"
-              }`}
-              style={isActive ? undefined : { background: "var(--bg-surface-2)", borderColor: "var(--border-strong)", color: "var(--text-secondary)" }}
-            >
-              <Icon size={14} className={isActive ? "text-blue-200" : undefined} style={isActive ? undefined : { color: "var(--text-muted)" }} />
-              {examId}
-            </button>
-          );
-        })}
-      </div>
+  const hasBranches = availableBranches.length > 0;
 
-      {/* Branch pills */}
-      {availableBranches.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Branch:</span>
-          {availableBranches.map((branchId) => {
-            const Icon = BRANCH_ICONS[branchId] ?? Settings;
-            const isActive = currentBranch === branchId;
+  return (
+    <div style={{ border: `1px solid ${BE.line}`, borderRadius: 12, padding: '10px 14px', marginBottom: 18, background: 'rgba(255,255,255,0.015)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 32 }}>
+        <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: 0.1, textTransform: 'uppercase', fontWeight: 600, minWidth: 48 }}>Exam</div>
+        <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
+          {availableExams.map(examId => {
+            const on = examId === currentExam;
             return (
-              <button
-                key={branchId}
-                onClick={() => handleBranchSwitch(branchId)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-black transition-all border ${
-                  isActive
-                    ? "bg-indigo-600 border-indigo-500 text-white"
-                    : "hover:opacity-80"
-                }`}
-                style={isActive ? undefined : { background: "var(--bg-surface-2)", borderColor: "var(--border-strong)", color: "var(--text-secondary)" }}
-              >
-                <Icon size={12} style={isActive ? undefined : { color: "var(--text-muted)" }} />
-                {BRANCH_LABELS[branchId] ?? branchId}
-              </button>
+              <div key={examId} 
+                onClick={() => handleExamSwitch(examId)}
+                style={{
+                  padding: '5px 10px', borderRadius: 7,
+                  background: on ? BE.accentSoft : 'transparent',
+                  color: on ? BE.accent : BE.textDim,
+                  fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'baseline', gap: 6,
+                }}>
+                {examId}
+              </div>
             );
           })}
+        </div>
+      </div>
+      {hasBranches && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 32, marginTop: 4, paddingTop: 8, borderTop: `1px solid ${BE.line}` }}>
+          <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: 0.1, textTransform: 'uppercase', fontWeight: 600, minWidth: 48 }}>
+            Branch
+          </div>
+          <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
+            {availableBranches.map(b => {
+              const on = b === currentBranch;
+              return (
+                <div key={b} 
+                  onClick={() => handleBranchSwitch(b)}
+                  style={{
+                    padding: '4px 10px', borderRadius: 6,
+                    border: `1px solid ${on ? BE.accent : 'transparent'}`,
+                    color: on ? BE.text : BE.textDim,
+                    background: on ? 'rgba(255,255,255,0.04)' : 'transparent',
+                    fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: BE.mono,
+                  }}>{b}</div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {!hasBranches && (
+        <div style={{ fontSize: 11, color: BE.textMute, marginTop: 6, paddingTop: 6, borderTop: `1px solid ${BE.line}`, fontStyle: 'italic', fontFamily: BE.serif }}>
+          {currentExam} has a single unified syllabus — no branch selection needed.
         </div>
       )}
     </div>
   );
 }
+

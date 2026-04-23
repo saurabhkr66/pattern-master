@@ -9,26 +9,29 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @updatedAt
-  attempts     Attempt[]
-  userNotes    UserNote[]
+  id               String      @id @default(cuid())
+  email            String      @unique
+  preferred_exam   String?
+  preferred_branch String?
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  attempts         Attempt[]
+  userNotes        UserNote[]
+  flashcards       Flashcard[]
 }
 
 model Pattern {
-  id           String              @id @default(uuid())
-  exam_type    String
-  subject      String
-  topic_name   String
-  atomic_logic String
-  branch       String
-  short_notes  String?
+  id                String              @id @default(uuid())
+  exam_type         String
+  subject           String
+  topic_name        String
+  atomic_logic      String
+  branch            String
+  short_notes       String?
   short_notes_hindi String?
-  questions    GeneratedQuestion[]
-  pyqs         PYQ[]
-  userNotes    UserNote[]
+  questions         GeneratedQuestion[]
+  pyqs              PYQ[]
+  userNotes         UserNote[]
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
   @@index([exam_type, branch, subject], name: "pattern_subject_lookup")
@@ -44,68 +47,68 @@ model SubjectPattern {
 }
 
 model SubjectPYQ {
-  id                 String         @id @default(uuid())
-  subject_pattern_id String
-  question_text      String
+  id                  String         @id @default(uuid())
+  subject_pattern_id  String
+  question_text       String
   question_text_hindi String?
-  options            Json
-  options_hindi      Json?
-  correct_answer     String
-  explanation        String
-  explanation_hindi  String?
-  year               Int
-  question_type      String         @default("MCQ")
-  marks              Int            @default(1)
-  branch             String         @default("CSE")
-  images             Json?
-  created_at         DateTime       @default(now())
-  attempts           Attempt[]
-  subject_pattern    SubjectPattern @relation(fields: [subject_pattern_id], references: [id])
+  options             Json
+  options_hindi       Json?
+  correct_answer      String
+  explanation         String
+  explanation_hindi   String?
+  year                Int
+  question_type       String         @default("MCQ")
+  marks               Int            @default(1)
+  branch              String         @default("CSE")
+  images              Json?
+  created_at          DateTime       @default(now())
+  attempts            Attempt[]
+  subject_pattern     SubjectPattern @relation(fields: [subject_pattern_id], references: [id])
 
   @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
 }
 
 model PYQ {
-  id             String    @id @default(uuid())
-  pattern_id     String
-  question_text  String
+  id                  String    @id @default(uuid())
+  pattern_id          String
+  question_text       String
   question_text_hindi String?
-  options        Json
-  options_hindi  Json?
-  correct_answer String
-  explanation    String
-  explanation_hindi String?
-  year          Int
-  exam_type      String
-  created_at     DateTime  @default(now())
-  question_type  String    @default("MCQ")
-  marks          Int       @default(1)
-  images         Json?
-  attempts       Attempt[]
-  pattern        Pattern   @relation(fields: [pattern_id], references: [id])
+  options             Json
+  options_hindi       Json?
+  correct_answer      String
+  explanation         String
+  explanation_hindi   String?
+  year                Int
+  exam_type           String
+  created_at          DateTime  @default(now())
+  question_type       String    @default("MCQ")
+  marks               Int       @default(1)
+  images              Json?
+  attempts            Attempt[]
+  pattern             Pattern   @relation(fields: [pattern_id], references: [id])
 
   @@unique([pattern_id, question_text], name: "pyq_identifier")
   @@index([pattern_id, year(sort: Desc)])
 }
 
 model GeneratedQuestion {
-  id               String    @id @default(uuid())
-  pattern_id       String
-  question_text    String
+  id                  String    @id @default(uuid())
+  pattern_id          String
+  question_text       String
   question_text_hindi String?
-  options          Json
-  options_hindi    Json?
-  correct_answer   String
-  explanation      String
-  explanation_hindi String?
-  difficulty_level String
-  semantic_hash    String    @unique
-  created_at       DateTime  @default(now())
-  question_type    String    @default("MCQ")
-  marks            Int       @default(1)
-  images           Json?
-  attempts         Attempt[]
-  pattern          Pattern   @relation(fields: [pattern_id], references: [id])
+  options             Json
+  options_hindi       Json?
+  correct_answer      String
+  explanation         String
+  explanation_hindi   String?
+  difficulty_level    String
+  semantic_hash       String    @unique
+  created_at          DateTime  @default(now())
+  question_type       String    @default("MCQ")
+  marks               Int       @default(1)
+  images              Json?
+  attempts            Attempt[]
+  pattern             Pattern   @relation(fields: [pattern_id], references: [id])
 
   @@index([pattern_id, created_at(sort: Desc)])
 }
@@ -119,6 +122,7 @@ model Attempt {
   pyq_id         String?
   user_answer    String?
   subject_pyq_id String?
+  time_spent     Int?
   pyq            PYQ?               @relation(fields: [pyq_id], references: [id])
   question       GeneratedQuestion? @relation(fields: [question_id], references: [id])
   subject_pyq    SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id])
@@ -158,6 +162,7 @@ model MockTestTemplate {
   created_at      DateTime      @default(now())
   sessions        TestSession[]
 }
+
 model UserNote {
   id         String   @id @default(uuid())
   user_id    String
@@ -166,8 +171,38 @@ model UserNote {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  pattern    Pattern  @relation(fields: [pattern_id], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pattern Pattern @relation(fields: [pattern_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, pattern_id])
+}
+
+/// Spaced Repetition System card state per user per question.
+/// Uses a SuperMemo-2 inspired algorithm.
+model Flashcard {
+  id             String   @id @default(uuid())
+  user_id        String
+  // Exactly one of these is set
+  question_id    String?
+  pyq_id         String?
+  subject_pyq_id String?
+
+  // SM-2 fields
+  interval       Int      @default(0)    // Days until next review
+  ease_factor    Float    @default(2.5)  // Difficulty multiplier
+  repetitions    Int      @default(0)    // Consecutive successful reviews
+  next_review    DateTime @default(now())
+  status         String   @default("new") // new | learning | review | lapsed
+
+  last_grade     String?                 // again | hard | good | easy
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, question_id])
+  @@unique([user_id, pyq_id])
+  @@unique([user_id, subject_pyq_id])
+  @@index([user_id, next_review])
+  @@index([user_id, status])
 }

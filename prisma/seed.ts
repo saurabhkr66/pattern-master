@@ -5,60 +5,85 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // 1. Clear existing data (optional but helpful for fresh start)
-  // Order matters because of foreign key constraints
-  // await prisma.attempt.deleteMany();
-  // await prisma.generatedQuestion.deleteMany();
-  // await prisma.pattern.deleteMany();
-
-  // 2. Define some GATE Computer Science patterns
   const patterns = [
+    // ── Analog Circuits (8 Topics matching JSON Files) ───────────────────────
     {
       exam_type: 'GATE',
       branch: 'ECE',
-      subject: 'Electronic Devices and VLSI',
-      topic_name: 'Semiconductor Physics',
-      atomic_logic: `Generate GATE-level questions on Semiconductor Physics. Focus on:
-1. Energy bands in intrinsic and extrinsic silicon.
-2. Carrier transport: diffusion current, drift current, mobility, and resistivity.
-3. Generation and recombination of carriers.
-4. Poisson and continuity equations.
-5. Hall Effect applications and numericals.`
+      subject: 'Analog Circuits',
+      topic_name: 'Diode Applications',
+      atomic_logic: `Generate GATE-level questions on Diode Applications. Focus on:
+1. Rectifiers: Half-wave, Full-wave, and Bridge rectifiers.
+2. Clipping and Clamping circuits.
+3. Zener diode voltage regulators.`
     },
     {
       exam_type: 'GATE',
       branch: 'ECE',
-      subject: 'Electronic Devices and VLSI',
-      topic_name: 'PN Junction',
-      atomic_logic: `Generate GATE-level questions on P-N Junctions. Focus on:
-1. P-N junction characteristics and energy band diagrams.
-2. Zener and Avalanche breakdown mechanisms.
-3. Capacitance: Depletion and Diffusion capacitance.
-4. I-V characteristics and small-signal models.
-5. Numerical problems on built-in potential and depletion width.`
+      subject: 'Analog Circuits',
+      topic_name: 'BJT Analysis and Biasing',
+      atomic_logic: `Generate GATE-level questions on BJT Analysis. Focus on:
+1. Biasing and Stability: Fixed bias, Collector to base bias, and Self-bias.
+2. Small signal analysis: h-parameter and r_e models.
+3. Common Emitter, Common Base, and Common Collector configurations.`
     },
     {
       exam_type: 'GATE',
       branch: 'ECE',
-      subject: 'Electronic Devices and VLSI',
-      topic_name: 'BJT and FET',
-      atomic_logic: `Generate GATE-level questions on BJT and FET physics. Focus on:
-1. BJT: Transistor action, gain parameters (alpha, beta), and Eber-Moll model.
-2. JFET: Pinch-off voltage and ohmic/saturation region characteristics.
-3. Impact of scaling and high-frequency effects in BJTs.
-4. Biasing and transistor as an amplifier/switch.`
+      subject: 'Analog Circuits',
+      topic_name: 'FET and MOSFET Analysis',
+      atomic_logic: `Generate GATE-level questions on FET/MOSFET Analysis. Focus on:
+1. Biasing of JFET and MOSFET.
+2. Small signal analysis and CS, CD, CG configurations.
+3. CMOS inverter and switching characteristics.`
     },
     {
       exam_type: 'GATE',
       branch: 'ECE',
-      subject: 'Electronic Devices and VLSI',
-      topic_name: 'IC Basics and MOSFET',
-      atomic_logic: `Generate GATE-level questions on IC Fabrication and MOSFETs. Focus on:
-1. MOSFET: Threshold voltage, I-V characteristics, and NMOS/PMOS construction.
-2. Non-ideal effects: Channel length modulation, Body effect, and Sub-threshold conduction.
-3. CMOS inverter basics and CMOS logic construction.
-4. IC Fabrication: Diffusion, Ion Implantation, Photolithography, and Etching basics.`
-    }
+      subject: 'Analog Circuits',
+      topic_name: 'Frequency Response of Amplifiers',
+      atomic_logic: `Generate GATE-level questions on Frequency Response. Focus on:
+1. Low and High frequency response of BJT/MOSFET amplifiers.
+2. Miller effect and Cascode amplifiers.
+3. Gain-bandwidth product.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Analog Circuits',
+      topic_name: 'Feedback Amplifiers',
+      atomic_logic: `Generate GATE-level questions on Feedback Amplifiers. Focus on:
+1. Feedback topologies: Voltage-series, Voltage-shunt, Current-series, Current-shunt.
+2. Effect of feedback on Gain, Bandwidth, and Impedance.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Analog Circuits',
+      topic_name: 'Operational Amplifiers (Op-Amps)',
+      atomic_logic: `Generate GATE-level questions on Op-Amps. Focus on:
+1. Ideal Op-Amp characteristics and Virtual ground.
+2. Applications: Inverting/Non-inverting amplifiers, Summing, Differentiator, Integrator.
+3. Precision rectifiers, Log/Antilog amplifiers, and Active filters.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Analog Circuits',
+      topic_name: 'Oscillator Circuits',
+      atomic_logic: `Generate GATE-level questions on Oscillators. Focus on:
+1. Barkhausen criterion.
+2. RC Phase shift, Wein Bridge, Hartley, Colpitts, and Crystal oscillators.`
+    },
+    {
+      exam_type: 'GATE',
+      branch: 'ECE',
+      subject: 'Analog Circuits',
+      topic_name: 'Multivibrators and 555 Timer',
+      atomic_logic: `Generate GATE-level questions on Multivibrators and 555 Timer. Focus on:
+1. Astable, Monostable, and Bistable multivibrators.
+2. 555 Timer applications and Duty cycle calculations.`
+    },
   ];
 
   for (const pattern of patterns) {
@@ -70,7 +95,10 @@ async function main() {
           topic_name: pattern.topic_name
         }
       },
-      update: {},
+      update: {
+        subject: pattern.subject,
+        atomic_logic: pattern.atomic_logic
+      },
       create: pattern,
     });
     console.log(`✅ Created pattern: ${created.topic_name}`);

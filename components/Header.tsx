@@ -27,7 +27,7 @@ import { useLanguage } from "./providers/LanguageProvider";
 
 const navLinks = [
   { href: "/practice", label: "Practice", icon: BookOpen },
-  { href: "/test", label: "Mock Test", icon: ClipboardList },
+  { href: "/test", label: "Mock Test", icon: ClipboardList, disabled: true },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/review", label: "Review", icon: RotateCcw },
   { href: "/mistakes", label: "Mistakes", icon: XCircle },
@@ -54,37 +54,58 @@ export default function Header() {
           className="flex items-center gap-2 text-lg"
           style={{ color: "var(--text-primary)" }}
         >
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6]">
+          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#f59e0b] to-[#fb923c]">
             <Brain size={20} />
           </span>
           <span className="font-medium">
-            Battle<span className="text-purple-400 font-bold">Exam</span>
+            Battle<span className="text-orange-400 font-bold">Exam</span>
           </span>
         </Link>
 
         {/* Desktop Nav */}
         <Show when="signed-in">
           <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
-            {navLinks.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                prefetch={true}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-                  pathname === href
-                    ? "text-indigo-300 bg-indigo-500/20"
-                    : "hover:bg-white/5"
-                }`}
-                style={
-                  pathname === href
-                    ? undefined
-                    : { color: "var(--text-secondary)" }
-                }
-              >
-                <Icon size={16} />
-                {label}
-              </Link>
-            ))}
+            {navLinks.map(({ href, label, icon: Icon, disabled }) => {
+              const content = (
+                <>
+                  <Icon size={16} />
+                  {label}
+                </>
+              );
+
+              if (disabled) {
+                return (
+                  <span
+                    key={href}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm opacity-40 cursor-not-allowed"
+                    style={{ color: "var(--text-secondary)" }}
+                    title="Coming soon"
+                  >
+                    {content}
+                  </span>
+                );
+              }
+
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  prefetch={true}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
+                    pathname === href
+                      ? "text-amber-300 bg-amber-500/20"
+                      : "hover:bg-white/5"
+                  }`}
+                  style={
+                    pathname === href
+                      ? undefined
+                      : { color: "var(--text-secondary)" }
+                  }
+                >
+                  {content}
+                </Link>
+              );
+            })}
           </nav>
         </Show>
 
@@ -112,7 +133,7 @@ export default function Header() {
             <button
               onClick={() => setLanguage("en")}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                language === "en" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "text-gray-400 hover:text-gray-200"
+                language === "en" ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" : "text-gray-400 hover:text-gray-200"
               }`}
             >
               EN
@@ -120,7 +141,7 @@ export default function Header() {
             <button
               onClick={() => setLanguage("hi")}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                language === "hi" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "text-gray-400 hover:text-gray-200"
+                language === "hi" ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" : "text-gray-400 hover:text-gray-200"
               }`}
             >
               हिन्दी
@@ -140,7 +161,7 @@ export default function Header() {
               </SignInButton>
 
               <SignUpButton mode="modal">
-                <button className="bg-gradient-to-br from-indigo-500 to-purple-500 px-4 py-2 rounded-lg text-white text-sm">
+                <button className="bg-gradient-to-br from-amber-500 to-orange-500 px-4 py-2 rounded-lg text-white text-sm">
                   Get Started
                 </button>
               </SignUpButton>
@@ -151,15 +172,17 @@ export default function Header() {
             <UserButton />
           </Show>
 
-          {/* Hamburger */}
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 z-[120]"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Hamburger (only shown if not signed in or as a fallback) */}
+          <Show when="signed-out">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 z-[120]"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </Show>
         </div>
       </div>
 
@@ -182,27 +205,47 @@ export default function Header() {
             <nav className="flex flex-col p-4 gap-2">
 
               <Show when="signed-in">
-                {navLinks.map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    prefetch={true}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
-                      pathname === href
-                        ? "text-indigo-300 bg-indigo-500/20"
-                        : "hover:bg-white/5"
-                    }`}
-                    style={
-                      pathname === href
-                        ? undefined
-                        : { color: "var(--text-secondary)" }
-                    }
-                  >
-                    <Icon size={18} />
-                    {label}
-                  </Link>
-                ))}
+                {navLinks.map(({ href, label, icon: Icon, disabled }) => {
+                  const content = (
+                    <>
+                      <Icon size={18} />
+                      {label}
+                    </>
+                  );
+
+                  if (disabled) {
+                    return (
+                      <div
+                        key={href}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl opacity-40 cursor-not-allowed"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        {content}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      prefetch={true}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
+                        pathname === href
+                          ? "text-amber-300 bg-amber-500/20"
+                          : "hover:bg-white/5"
+                      }`}
+                      style={
+                        pathname === href
+                          ? undefined
+                          : { color: "var(--text-secondary)" }
+                      }
+                    >
+                      {content}
+                    </Link>
+                  );
+                })}
               </Show>
 
               <Show when="signed-out">
@@ -219,7 +262,7 @@ export default function Header() {
                 <SignUpButton mode="modal">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="bg-indigo-500 text-white px-4 py-3 rounded-xl mt-2"
+                    className="bg-amber-500 text-white px-4 py-3 rounded-xl mt-2"
                   >
                     Get Started
                   </button>

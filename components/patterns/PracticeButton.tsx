@@ -8,6 +8,7 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { trackPageView } from "@/lib/analytics";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { BE } from "@/lib/theme";
 
 interface PracticeButtonProps {
   patternId: string;
@@ -39,6 +40,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenHint, setShowFullscreenHint] = useState(!!(initialQuestion));
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
+  const [seconds, setSeconds] = useState(0);
   const { language, setLanguage } = useLanguage();
 
   // Lock body scroll while fullscreen is open
@@ -66,6 +68,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setNatValue("");
         setError(null);
         setQuestionHistory([]);
+        setSeconds(0);
         lastInitialIdRef.current = currentInitialId;
       }
     } else {
@@ -111,15 +114,56 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   // Also show it whenever a new question first appears (AI generated)
   const hintShownRef = useRef(!!(initialQuestion));
   useEffect(() => {
-    if (question && !hintShownRef.current) {
-      hintShownRef.current = true;
-      setShowFullscreenHint(true);
-    }
     if (question) {
       const timer = setTimeout(() => setShowFullscreenHint(false), 5000);
       return () => clearTimeout(timer);
     }
   }, [!!question]);
+
+  // Real-time Timer logic
+  useEffect(() => {
+    if (!question || isRevealed) return;
+    const interval = setInterval(() => {
+      setSeconds(s => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [question, isRevealed]);
+
+  const formatTime = (totalSeconds: number) => {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!question) return;
+    const handler = (e: KeyboardEvent) => {
+      // If we're revealed, Enter should go to next
+      if (isRevealed) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleNextFromQueue();
+        }
+        return;
+      }
+
+      // If not revealed, standard controls
+      const key = e.key.toUpperCase();
+      if (['A', 'B', 'C', 'D'].includes(key)) {
+        if (question.question_type === 'MSQ') toggleMsqSelection(key);
+        else setSelectedAnswer(key);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (question.question_type === 'MCQ' && selectedAnswer) handleSubmit();
+        else if (question.question_type === 'MSQ' && msqSelections.length > 0) handleSubmit();
+        else if (question.question_type === 'NAT' && natValue.trim()) handleSubmit();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [question?.id, isRevealed, selectedAnswer, msqSelections, questionQueue?.length]);
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -158,6 +202,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       setMsqSelections([]);
       setNatValue("");
       setIsRevealed(false);
+      setSeconds(0);
     } else {
       if (isPyqMode) {
         setIsFullscreen(false);
@@ -191,12 +236,16 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const handleSubmit = async (finalAnswerOverride?: string) => {
     if (isRevealed) return;
     let isCorrect = false;
-    let finalAnswer = finalAnswerOverride || "";
     const type = question.question_type || "MCQ";
+    let finalAnswer = finalAnswerOverride || (
+      type === "MCQ" ? selectedAnswer :
+      type === "MSQ" ? msqSelections.sort().join(", ") :
+      natValue
+    ) || "";
 
     if (type === "MCQ") {
       isCorrect = finalAnswer.trim().toUpperCase() === question.correct_answer.trim().toUpperCase();
-      setSelectedAnswer(finalAnswer);
+      if (!finalAnswerOverride) setSelectedAnswer(finalAnswer);
     } else if (type === "MSQ") {
       const userAns = msqSelections.sort().join(", ");
       const correctAns = question.correct_answer.split(",").map((s: string) => s.trim()).sort().join(", ");
@@ -253,6 +302,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           subjectPyqId: question._isSubjectPyq ? question.id : undefined,
           isCorrect,
           userAnswer: finalAnswer,
+          timeSpent: seconds,
         }),
       });
       // Removing router.refresh() to prevent massive full-page re-renders freezing the browser.
@@ -264,21 +314,22 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const checkIsCorrect = () => {
     if (!question) return false;
     const type = question.question_type || "MCQ";
-    if (type === "MCQ") return selectedAnswer === question.correct_answer;
+    if (type === "MCQ") {
+      return (selectedAnswer || "").trim().toUpperCase() === (question.correct_answer || "").trim().toUpperCase();
+    }
     if (type === "MSQ") {
-      const userAns = msqSelections.sort().join("");
+      const userAns = msqSelections.sort().join(", ");
       const correctAns = (question.correct_answer || "")
         .split(/[;,]/)
         .map((s: string) => s.trim())
         .filter(Boolean)
         .sort()
-        .join("");
+        .join(", ");
       return userAns === correctAns;
     }
     if (type === "NAT") {
       const correctAnsStr = (question.correct_answer || "").trim();
       const userVal = parseFloat(natValue.trim());
-      // Support both "min:max" and "min to max" range formats
       const colonRange = correctAnsStr.includes(":") && !correctAnsStr.toLowerCase().includes(" to ");
       const toRange = / to /i.test(correctAnsStr);
       if (colonRange) {
@@ -338,7 +389,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   key={id}
                   onClick={() => setAiModel(id)}
                   className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wide transition-all ${
-                    aiModel === id ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                    aiModel === id ? "bg-white text-amber-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
                   <span>{icon}</span>
@@ -352,7 +403,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           <button
             onClick={handleGenerate}
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-black py-3.5 px-6 rounded-xl shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white font-black py-3.5 px-6 rounded-xl shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -372,350 +423,231 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         </div>
       ) : (
         /* ── Question Mode ── */
+        /* ── Question Mode ── */
         <div className={isFullscreen
-          ? "fixed inset-0 z-[60] overflow-y-auto bg-white dark:bg-[#0a0a0a]"
-          : ""
+          ? "fixed inset-0 z-[60] overflow-y-auto bg-white dark:bg-[#0a0a0a] flex flex-col"
+          : "bg-white dark:bg-[#0d0d0f] rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden flex flex-col w-full"
         }>
-          <div className={isFullscreen ? "max-w-2xl mx-auto px-4 py-6" : ""}>
+          {/* Progress Rail — Mobile Responsive */}
+          <div style={{
+            borderBottom: `1px solid ${BE.line}`,
+            padding: '10px 14px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: isFullscreen ? (undefined as any) : 'rgba(255,255,255,0.02)',
+            flexWrap: 'nowrap', minWidth: 0,
+          }}>
+            <div 
+              onClick={() => { setIsFullscreen(false); if(onExit) onExit(); else setQuestion(null); }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, color: BE.textDim, fontSize: 12, cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 3L5 7l4 4"/></svg>
+              <span className="hidden sm:inline">Back</span>
+            </div>
+            <div style={{ width: 1, height: 14, background: BE.line, flexShrink: 0 }} />
 
-          {/* Question card */}
-          <div className={`relative rounded-2xl border-2 p-3 md:p-6 mb-4 bg-white dark:bg-[#111] transition-all ${
-            question._isPyq 
-              ? 'border-orange-100 dark:border-orange-500/20 shadow-orange-500/5' 
-              : 'border-gray-50 dark:border-white/5 shadow-blue-500/5'
-          }`}>
-            {/* Meta bar */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="text-xs font-black bg-blue-600 text-white px-2.5 py-1 rounded-lg uppercase tracking-wide">
-                {topicName}
-              </span>
-              <span className={`text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wide border ${
-                question.difficulty_level === "Easy"
-                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                  : question.difficulty_level === "Hard"
-                  ? "bg-red-50 text-red-600 border-red-100"
-                  : "bg-amber-50 text-amber-600 border-amber-100"
-
-
-
-
-                  
-              }`}>
-                {question.difficulty_level || "Medium"}
-              </span>
-              <span className="text-xs font-black bg-gray-50 text-gray-400 border border-gray-100 px-2.5 py-1 rounded-lg uppercase tracking-wide">
-                {question.question_type || "MCQ"}
-              </span>
-              <span className="text-xs font-black bg-yellow-50 text-yellow-600 border border-yellow-100 px-2.5 py-1 rounded-lg uppercase tracking-wide">
-                {question.marks ?? 1} Mark{(question.marks ?? 1) > 1 ? "s" : ""}
-              </span>
-              {isRevealed && (
-                <span className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 ${checkIsCorrect() ? "text-emerald-600" : "text-rose-600"}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${checkIsCorrect() ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
-                  {checkIsCorrect() ? "Correct!" : "Wrong"}
-                </span>
-              )}
-              <div className="ml-auto relative shrink-0">
-                <button
-                  onClick={() => {
-                    setIsFullscreen(v => !v);
-                    setShowFullscreenHint(false);
-                  }}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                >
-                  {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                </button>
-
-                {/* Fullscreen hint tooltip — shown for 5s on first question load */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    marginTop: '10px',
-                    zIndex: 9999,
-                    opacity: showFullscreenHint && !isFullscreen ? 1 : 0,
-                    transform: showFullscreenHint && !isFullscreen ? 'translateY(0)' : 'translateY(-6px)',
-                    transition: 'opacity 0.4s ease, transform 0.4s ease',
-                    pointerEvents: showFullscreenHint && !isFullscreen ? 'auto' : 'none',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {/* Arrow pointing up */}
-                  <div style={{
-                    position: 'absolute',
-                    top: -6,
-                    right: 8,
-                    width: 12,
-                    height: 12,
-                    background: '#2563eb',
-                    transform: 'rotate(45deg)',
-                    borderRadius: 2,
-                  }} />
-                  <div style={{
-                    background: '#2563eb',
-                    color: 'white',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    padding: '8px 14px',
-                    borderRadius: 10,
-                    boxShadow: '0 8px 24px rgba(37,99,235,0.45)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}>
-                    <span style={{
-                      display: 'inline-block',
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: 'white',
-                      animation: 'pulse 1.5s infinite',
-                    }} />
-                    Full Screen Mode
-                  </div>
-                </div>
+            {/* Progress counter + bar */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <div style={{ fontSize: 11, color: BE.textDim, fontFamily: BE.mono, flexShrink: 0 }}>{questionHistory.length + 1}/{questionHistory.length + questionQueue.length + 1}</div>
+              <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ width: `${((questionHistory.length + 1) / (questionHistory.length + questionQueue.length + 1)) * 100}%`, height: '100%', background: BE.accent, transition: 'width 0.3s ease' }} />
               </div>
-              
-              {/* Language Toggle */}
-              {(question.question_text_hindi || (question.options_hindi && question.options_hindi.length > 0)) && (
-                <div className="flex gap-0.5 p-0.5 bg-gray-100 dark:bg-white/10 rounded-lg">
-                  <button
-                    onClick={() => setLanguage("en")}
-                    className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${
-                      language === "en" ? "bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm" : "text-gray-400"
-                    }`}
-                  >
-                    EN
-                  </button>
-                  <button
-                    onClick={() => setLanguage("hi")}
-                    className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${
-                      language === "hi" ? "bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm" : "text-gray-400"
-                    }`}
-                  >
-                    हिन्दी
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="space-y-4 md:space-y-6">
-              <MathRenderer 
-                content={(language === "hi" && question.question_text_hindi) ? question.question_text_hindi : question.question_text} 
-                className="text-sm md:text-base font-bold text-gray-700 dark:text-gray-300 leading-relaxed" 
-              />
-
-              {/* Question Images – exclude explanation-only images */}
-              {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type !== 'explanation').length > 0 && (
-                <div className="flex flex-col gap-4 py-2">
-                  {question.images.filter((img: any) => img.type !== 'explanation').map((img: any, idx: number) => {
-                    const getImageUrl = (img: any) => {
-                      if (img.base64) return img.base64;
-                      if (!img.url) return '';
-                      
-                      // Fix common corruption in seed: prefixing data:image with site URL
-                      if (img.url.includes('data:image')) {
-                        const dataUriMatch = img.url.match(/data:image\/[^;]+;base64,[^"']+/);
-                        if (dataUriMatch) return dataUriMatch[0];
-                      }
-
-                      // Use proxy for external gateoverflow.in links to avoid CORS issues
-                      if (img.url.includes('gateoverflow.in')) {
-                        return `/api/proxy-image?url=${encodeURIComponent(img.url)}`;
-                      }
-                      
-                      return img.url;
-                    };
-
-                    return (
-                      <div key={idx} className="flex justify-center bg-white dark:bg-black/20 rounded-xl p-2 border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden">
-                        <img 
-                          src={getImageUrl(img)} 
-                          alt={`Question detail ${img.index || idx}`}
-                          className="max-w-full h-auto rounded-lg object-contain"
-                          loading="lazy"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
 
-            {/* MCQ / MSQ options */}
-            {(question.question_type === "MCQ" || question.question_type === "MSQ" || !question.question_type) && (
-              <div className="space-y-2">
-                {question.options.map((option: string, i: number) => {
-                  const letter = option.trim().charAt(0).toUpperCase();
-                  const isActuallyCorrect = question.correct_answer.includes(letter);
-                  const isSelected =
-                    question.question_type === "MSQ"
-                      ? msqSelections.includes(letter)
-                      : selectedAnswer === letter;
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: BE.textDim, fontFamily: BE.mono }}>
+                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="7" cy="7.5" r="5"/><path d="M7 4.5v3l2 1.5M7 1v1.5"/></svg>
+                {formatTime(seconds)}
+              </div>
+              <div style={{ width: 1, height: 14, background: BE.line }} />
+              <button 
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="hover:text-amber-500 transition-colors p-1"
+                style={{ fontSize: 11, fontWeight: 700, color: BE.textDim, display: 'flex', alignItems: 'center', gap: 3 }}
+                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              >
+                {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                <span className="hidden md:inline" style={{ fontSize: 10 }}>{isFullscreen ? 'Exit' : 'Focus'}</span>
+              </button>
+            </div>
+          </div>
 
-                  return (
-                    <button
-                      key={i}
-                      disabled={isRevealed}
-                      onClick={() => {
-                        if (question.question_type === "MSQ") toggleMsqSelection(letter);
-                        else handleSubmit(letter);
-                      }}
-                      className={`w-full text-left flex items-center gap-2 md:gap-3 p-2 md:p-3 border-2 rounded-[10px] md:rounded-xl transition-all touch-manipulation ${
-                        isRevealed
-                          ? isActuallyCorrect
-                            ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/10"
-                            : isSelected
-                            ? "border-red-400 dark:border-red-500/50 bg-red-50 dark:bg-red-500/10 opacity-80"
-                            : "border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 opacity-40"
-                          : "border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 hover:bg-blue-50/40 dark:hover:bg-blue-500/10 hover:border-blue-200 dark:hover:border-blue-500/30"
-                      }`}
-                    >
-                      <span
-                        className={`shrink-0 w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-md md:rounded-lg font-black text-[10px] md:text-xs border-2 transition-colors ${
-                          isRevealed && isActuallyCorrect
-                            ? "bg-emerald-500 border-emerald-500 text-white"
-                            : isSelected
-                            ? "bg-blue-600 border-blue-600 text-white"
-                            : "bg-white dark:bg-white/10 border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500"
-                        }`}
-                      >
-                        {letter}
-                      </span>
-                      <MathRenderer 
-                        content={
-                          language === "hi" && question.options_hindi && question.options_hindi[i]
-                            ? (question.options_hindi[i].includes('.') ? question.options_hindi[i].split('.').slice(1).join('.').trim() : question.options_hindi[i])
-                            : (option.includes('.') ? option.split('.').slice(1).join('.').trim() : option)
-                        } 
-                        className="font-bold text-[11px] md:text-base leading-tight text-gray-700 dark:text-gray-300" 
-                      />
-                    </button>
-                  );
-                })}
+          <div className={isFullscreen 
+            ? "max-w-3xl mx-auto w-full px-4 pt-6 pb-24 sm:py-10 md:py-14" 
+            : "p-4 sm:p-6 md:p-8 pb-20 sm:pb-8"
+          }>
+            {/* Meta bar — Typographic design */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10.5, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 20 }}>
+              <span style={{ color: BE.accent }}>{topicName}</span>
+              <span>·</span>
+              <span style={{ color: question.difficulty_level === 'Hard' ? BE.bad : question.difficulty_level === 'Easy' ? BE.good : BE.warn }}>{question.difficulty_level || 'Medium'}</span>
+              <span>·</span>
+              <span>{question.question_type || 'MCQ'} · {question.marks || 1} mark{(question.marks || 1) > 1 ? 's' : ''}</span>
+              <span style={{ flex: 1 }} />
+              <span style={{ fontFamily: BE.mono, textTransform: 'none', letterSpacing: 0, fontWeight: 500, opacity: 0.6 }}>#{question.id?.slice(-5)}</span>
+            </div>
 
-                {question.question_type === "MSQ" && !isRevealed && (
-                  <button
-                    onClick={() => handleSubmit()}
-                    disabled={msqSelections.length === 0}
-                    className="mt-3 w-full bg-gray-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 disabled:bg-gray-200 dark:disabled:bg-white/5 text-white font-black text-sm py-3 rounded-xl transition-colors shadow-lg shadow-blue-500/10"
-                  >
-                    Submit Answer
-                  </button>
-                )}
+            {/* Question Text */}
+            <div style={{ fontSize: 'clamp(15px, 4vw, 20px)', lineHeight: 1.6, letterSpacing: -0.2, fontWeight: 400, marginBottom: 24, fontFamily: BE.serif, color: BE.text, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+              <MathRenderer content={(language === "hi" && question.question_text_hindi) ? question.question_text_hindi : question.question_text} />
+            </div>
+
+            {/* Question Images */}
+            {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type !== 'explanation').length > 0 && (
+              <div className="flex flex-col gap-4 mb-8">
+                {question.images.filter((img: any) => img.type !== 'explanation').map((img: any, idx: number) => (
+                  <div key={idx} className="flex justify-center bg-white dark:bg-black/20 rounded-xl p-3 border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden">
+                    <img src={img.url || img.base64} alt="Question figure" className="max-w-full h-auto rounded-lg object-contain" />
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* NAT input */}
+            {/* MCQ / MSQ Options Grid */}
+            {(question.question_type === 'MCQ' || question.question_type === 'MSQ' || !question.question_type) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {question.options.map((option: string, i: number) => {
+                  const letter = option.trim().charAt(0).toUpperCase();
+                  const isSelected = question.question_type === 'MSQ' ? msqSelections.includes(letter) : selectedAnswer === letter;
+                  const isActuallyCorrect = isRevealed && question.correct_answer.includes(letter);
+                  const isWrong = isRevealed && isSelected && !isActuallyCorrect;
+                  
+                  const bg = isActuallyCorrect ? BE.goodSoft : isWrong ? BE.badSoft : isSelected ? BE.accentSoft : BE.surface;
+                  const bd = isActuallyCorrect ? BE.good : isWrong ? BE.bad : isSelected ? BE.accent : BE.line;
+
+                  return (
+                    <div 
+                      key={i} 
+                      onClick={() => !isRevealed && (question.question_type === 'MSQ' ? toggleMsqSelection(letter) : setSelectedAnswer(letter))}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '12px 14px', border: `1.5px solid ${bd}`, borderRadius: 12,
+                        background: bg, cursor: isRevealed ? 'default' : 'pointer',
+                        transition: 'all 0.15s ease', minWidth: 0,
+                      }}
+                      className={!isRevealed ? "hover:border-amber-500/50" : ""}
+                    >
+                      <div style={{
+                        width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                        background: isSelected || isActuallyCorrect ? bd : 'rgba(255,255,255,0.06)',
+                        color: isSelected || isActuallyCorrect ? '#fff' : BE.textDim,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, fontWeight: 900, fontFamily: BE.mono,
+                      }}>{letter}</div>
+                      <div style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', color: BE.text, flex: 1, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                        <MathRenderer content={option.includes('.') ? option.split('.').slice(1).join('.').trim() : option} />
+                      </div>
+                      {isActuallyCorrect && <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={BE.good} strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M3 8l3.5 3.5L13 5"/></svg>}
+                      {isWrong && <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={BE.bad} strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M4 4l8 8M12 4l-8 8"/></svg>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* NAT Input */}
             {question.question_type === "NAT" && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Enter numerical answer…"
                   value={natValue}
                   onChange={(e) => setNatValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && natValue.trim() && !isRevealed) {
+                      handleSubmit();
+                    }
+                  }}
                   disabled={isRevealed}
-                  className="w-full p-4 border-2 border-gray-100 dark:border-white/5 rounded-xl focus:border-blue-400 focus:outline-none font-bold text-center text-lg bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white"
+                  className="w-full p-5 border-2 border-gray-100 dark:border-white/5 rounded-2xl focus:border-amber-400 focus:outline-none font-black text-center text-xl bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white"
                 />
-                {!isRevealed && (
-                  <button
-                    onClick={() => handleSubmit()}
-                    disabled={!natValue.trim()}
-                    className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-black text-sm py-3 rounded-xl transition-colors"
-                  >
-                    Submit
-                  </button>
-                )}
                 {isRevealed && (
-                  <div className={`p-4 rounded-xl text-center font-bold text-sm border-2 ${checkIsCorrect() ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+                  <div style={{ background: checkIsCorrect() ? BE.goodSoft : BE.badSoft, border: `1px solid ${checkIsCorrect() ? BE.good : BE.bad}`, color: checkIsCorrect() ? BE.good : BE.bad }} className="p-4 rounded-xl text-center font-bold text-sm">
                     Correct Answer: {question.correct_answer}
                   </div>
                 )}
               </div>
             )}
-            
-            {!isRevealed && (
-              <div className="mt-6 flex items-center justify-between">
-                {questionHistory.length > 0 ? (
-                  <button
-                    onClick={handlePrevious}
-                    className="text-[11px] font-black text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-widest transition-colors flex items-center gap-1"
+
+            {/* Action Row — Mobile stacks, desktop inline */}
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${BE.line}` }}>
+              {!isRevealed ? (
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: BE.textMute, fontWeight: 700, textTransform: 'uppercase' }} className="hidden md:flex mr-auto">
+                    <kbd style={kbdStyle}>A</kbd><kbd style={kbdStyle}>B</kbd><kbd style={kbdStyle}>C</kbd><kbd style={kbdStyle}>D</kbd>
+                    <span style={{ marginLeft: 4 }}>Select</span>
+                    <kbd style={{ ...kbdStyle, minWidth: 32 }}>ENTER</kbd>
+                    <span style={{ marginLeft: 4 }}>Submit</span>
+                  </div>
+                  <div className="hidden md:block flex-1" />
+                  <button onClick={handlePrevious} disabled={questionHistory.length === 0} className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30">Prev</button>
+                  <button onClick={handleNextFromQueue} className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Skip</button>
+                  {(question.question_type === 'MCQ' || question.question_type === 'MSQ' || question.question_type === 'NAT') && (
+                    <button 
+                      onClick={() => handleSubmit()} 
+                      disabled={
+                        question.question_type === 'MCQ' ? !selectedAnswer :
+                        question.question_type === 'MSQ' ? msqSelections.length === 0 : 
+                        !natValue.trim()
+                      } 
+                      className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-600 text-white shadow-lg shadow-amber-500/20 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Submit
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <button 
+                    onClick={handleNextFromQueue} 
+                    className="w-full sm:w-auto px-8 py-3 rounded-xl text-sm font-black uppercase tracking-wider bg-amber-600 text-white shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2"
                   >
-                    ← Previous
+                    {questionQueue.length > 0 ? "Next Question" : "Finish Review"}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 10l3-3-3-3"/></svg>
                   </button>
-                ) : <span />}
-                <button
-                  onClick={handleNextFromQueue}
-                  className="text-[11px] font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 uppercase tracking-widest transition-colors flex items-center gap-1"
-                >
-                  {questionQueue.length > 0
-                    ? "Skip Question →"
-                    : isPyqMode ? "Finish Review →" : "Skip & Generate →"}
-                </button>
+                </div>
+              )}
+            </div>
+
+            {/* Revealed Explanation */}
+            {isRevealed && (
+              <div className="mt-6 animate-in slide-in-from-bottom-4 duration-500">
+                <div style={{ border: `1px solid ${BE.line}`, borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ padding: '12px 14px', borderBottom: `1px solid ${BE.line}`, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.01)' }}>
+                    <span style={{ 
+                      fontSize: 10, fontWeight: 900, textTransform: 'uppercase', padding: '4px 8px', borderRadius: 6,
+                      background: checkIsCorrect() ? BE.goodSoft : BE.badSoft,
+                      color: checkIsCorrect() ? BE.good : BE.bad,
+                      flexShrink: 0,
+                    }}>
+                      {checkIsCorrect() ? '✓ Correct' : '× Wrong'}
+                    </span>
+                    <div style={{ fontSize: 11, color: BE.textDim, fontWeight: 600, flexShrink: 0 }}>
+                      {seconds}s
+                    </div>
+                    <span style={{ fontSize: 11, color: BE.textDim, fontWeight: 500 }}>Explanation & Logic</span>
+                  </div>
+                  <div style={{ padding: '16px 16px', fontSize: 'clamp(13px, 3.5vw, 15px)', lineHeight: 1.75, color: BE.textDim, fontFamily: BE.serif, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                    <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : question.explanation} />
+                    {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
+                      <div key={idx} className="mt-4 flex justify-center bg-black/20 rounded-xl p-3">
+                        <img src={img.url || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-
-          {/* Explanation (after reveal) */}
-          {isRevealed && (
-            <div className="animate-in slide-in-from-bottom-4 duration-500 space-y-4 pt-2">
-              <div className="flex gap-2">
-                {questionHistory.length > 0 && (
-                  <button
-                    onClick={handlePrevious}
-                    className="flex-1 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-300 text-xs md:text-sm font-black py-4 rounded-xl transition-colors uppercase tracking-wide"
-                  >
-                    ← Previous
-                  </button>
-                )}
-                <button
-                  onClick={handleNextFromQueue}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs md:text-sm font-black py-4 rounded-xl transition-colors shadow-lg shadow-blue-500/20 uppercase tracking-wide flex justify-center items-center gap-2"
-                >
-                  {questionQueue.length > 0
-                    ? "Next Question →"
-                    : isPyqMode
-                      ? "Finish Review →"
-                      : "Generate 5 More →"
-                  }
-                </button>
-              </div>
-
-              <div className="bg-gray-900 text-white p-5 md:p-6 rounded-2xl shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 text-5xl md:text-6xl font-black">?</div>
-                <h4 className="text-blue-400 font-black text-[10px] md:text-xs uppercase tracking-[0.2em] mb-2 md:mb-3">Logic Breakdown</h4>
-                <MathRenderer 
-                  content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : question.explanation} 
-                  className="text-gray-300 text-xs md:text-sm leading-relaxed relative z-10 break-words" 
-                />
-                {/* Explanation images – only shown after answer is revealed */}
-                {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type === 'explanation').length > 0 && (
-                  <div className="mt-4 flex flex-col gap-3">
-                    {question.images.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => {
-                      const url = img.base64 || img.url || '';
-                      if (!url) return null;
-                      return (
-                        <div key={idx} className="flex justify-center bg-black/20 rounded-xl p-2 overflow-hidden">
-                          <img
-                            src={url}
-                            alt={`Explanation figure ${img.index || idx + 1}`}
-                            className="max-w-full h-auto rounded-lg object-contain"
-                            loading="lazy"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           </div>
         </div>
       )}
     </div>
   );
 }
+
+const kbdStyle = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  minWidth: 18, height: 18, padding: '0 5px',
+  border: `1.2px solid ${BE.line}`, borderRadius: 4,
+  background: 'rgba(255,255,255,0.03)', color: BE.textDim,
+  fontFamily: BE.mono, fontSize: 10, fontWeight: 800,
+};

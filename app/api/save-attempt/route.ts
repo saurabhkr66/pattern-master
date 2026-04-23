@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { questionId, pyqId, subjectPyqId, isCorrect, userAnswer } = body;
+        const { questionId, pyqId, subjectPyqId, isCorrect, userAnswer, timeSpent } = body;
 
         if ((!questionId && !pyqId && !subjectPyqId) || isCorrect === undefined) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -28,12 +28,13 @@ export async function POST(req: NextRequest) {
                 is_correct: isCorrect,
                 user_answer: userAnswer ? String(userAnswer) : null,
                 user_id: userId,
+                time_spent: timeSpent || null,
             },
         });
 
         // Revalidate caches so progress shows up instantly on the client
-        revalidateTag("dashboard", "page");
-        revalidateTag("patterns", "page");
+        revalidateTag("dashboard", "max");
+        revalidateTag("patterns", "max");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {

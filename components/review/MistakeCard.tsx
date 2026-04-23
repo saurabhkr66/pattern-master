@@ -38,7 +38,7 @@ export default function MistakeCard({ attempt, question, pattern }: MistakeCardP
     <div className="rounded-2xl overflow-hidden border border-gray-100 dark:border-white/5 bg-white dark:bg-[#111] shadow-sm">
       {/* Topic bar */}
       <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
-        <span className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
+        <span className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest">
           {pattern.subject}
         </span>
         <span className="text-gray-300 dark:text-gray-600">·</span>
@@ -132,19 +132,19 @@ export default function MistakeCard({ attempt, question, pattern }: MistakeCardP
             {!showExplanation ? (
               <button
                 onClick={() => setShowExplanation(true)}
-                className="w-full py-2.5 rounded-xl border border-blue-100 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/5 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors"
+                className="w-full py-2.5 rounded-xl border border-amber-100 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors"
               >
                 Show Explanation 💡
               </button>
             ) : (
-              <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl px-4 py-3">
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl px-4 py-3">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest">
                     Logic Breakdown
                   </p>
                   <button
                     onClick={() => setShowExplanation(false)}
-                    className="text-[10px] font-black text-blue-400 hover:text-blue-600 uppercase tracking-widest"
+                    className="text-[10px] font-black text-amber-400 hover:text-amber-600 uppercase tracking-widest"
                   >
                     Hide
                   </button>

@@ -1,6 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import PreferenceModal from "@/components/onboarding/PreferenceModal";
 
 export default async function AppLayout({
   children,
@@ -13,7 +14,11 @@ export default async function AppLayout({
   // Fast path: check DB first (single indexed lookup, ~2ms)
   const dbUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true },
+    select: { 
+      id: true, 
+      preferred_exam: true, 
+      preferred_branch: true 
+    },
   });
 
   // Slow path: only call Clerk API for brand-new users who need DB sync
@@ -32,6 +37,14 @@ export default async function AppLayout({
     });
   }
 
-  return <>{children}</>;
+  const needsOnboarding = dbUser && (!dbUser.preferred_exam || !dbUser.preferred_branch);
+
+  return (
+    <>
+      {needsOnboarding && <PreferenceModal />}
+      {children}
+    </>
+  );
 }
+
 

@@ -483,7 +483,7 @@ export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
   if (phase === "submitting") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <Loader2 size={40} className="animate-spin text-indigo-400" />
+        <Loader2 size={40} className="animate-spin text-amber-400" />
         <p className="text-lg" style={{ color: "var(--text-secondary)" }}>Evaluating answers…</p>
       </div>
     );
@@ -592,7 +592,7 @@ export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
                              #{i + 1}
                            </span>
                            <div className="flex items-center gap-1.5">
-                             <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                             <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
                                {item.source === 'pyq' || item.source === 'subject_pyq' ? 'PYQ' : 'AI'}
                              </span>
                              <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
@@ -612,7 +612,7 @@ export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
                                    const letter = ["A","B","C","D","E"][oi] || String(oi);
                                    return (
                                        <div key={oi} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-transparent">
-                                          <span className="font-bold text-blue-500 shrink-0">{letter}.</span>
+                                          <span className="font-bold text-amber-500 shrink-0">{letter}.</span>
                                           <div className="min-w-0">
                                             <MathRenderer content={typeof opt === 'string' ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
                                           </div>
@@ -641,7 +641,7 @@ export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
 
                        {item.explanation && (
                          <details className="text-[10px] text-gray-400 dark:text-gray-500 mb-4 group/details relative z-10 w-full">
-                           <summary className="cursor-pointer hover:text-blue-500 font-black uppercase tracking-widest sticky top-0 bg-white dark:bg-[#111] py-1">
+                           <summary className="cursor-pointer hover:text-amber-500 font-black uppercase tracking-widest sticky top-0 bg-white dark:bg-[#111] py-1">
                              Show Explanation
                            </summary>
                            <div className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed font-medium p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
@@ -860,7 +860,7 @@ export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
                   placeholder="Type your numerical answer..."
                   value={natValues[currentIdx] || ""}
                   onChange={e => handleNatChange(currentIdx, e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 border text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-xl px-4 py-3 border text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   style={{
                     background: "var(--bg-base)",
                     borderColor: "var(--border)",

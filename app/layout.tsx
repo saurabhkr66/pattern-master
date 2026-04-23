@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
 import Header from "@/components/Header";
+import MobileNav from "@/components/MobileNav";
 import ThemeProvider from "@/components/ThemeProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
@@ -23,7 +24,7 @@ import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#2563eb",
+  themeColor: "#f59e0b",
 };
 
 const globalSchema = buildOrganizationSchema();
@@ -124,7 +125,8 @@ export default function RootLayout({
               <QueryProvider>
                 <Header />
                 <PostLoginRedirect />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 pb-[calc(env(safe-area-inset-bottom)+70px)] md:pb-0">{children}</main>
+                <MobileNav />
               </QueryProvider>
             </ThemeProvider>
           </LanguageProvider>

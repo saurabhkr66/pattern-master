@@ -4,16 +4,16 @@ import { SignUpButton, SignInButton } from "@clerk/nextjs";
 import { ArrowRight, Zap } from "lucide-react";
 
 const primaryCls =
-  "flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 active:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/30 select-none";
+  "flex items-center gap-2 bg-amber-600 hover:bg-amber-500 active:scale-95 active:bg-amber-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-amber-500/30 select-none";
 
 const ghostCls =
-  "px-5 py-2.5 rounded-xl text-sm font-medium border border-[var(--border-strong)] hover:border-indigo-500/40 hover:text-indigo-400 active:scale-95 transition-all cursor-pointer select-none";
+  "px-5 py-2.5 rounded-xl text-sm font-medium border border-[var(--border-strong)] hover:border-amber-500/40 hover:text-amber-400 active:scale-95 transition-all cursor-pointer select-none";
 
 export function HeroCTAs() {
   return (
     <div className="flex items-center gap-3 flex-wrap">
       <SignUpButton mode="modal">
-        <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.97] active:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/30 select-none">
+        <button className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 active:scale-[0.97] active:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-amber-500/30 select-none">
           <Zap size={15} className="fill-white" />
           Start free — no card needed
         </button>
@@ -40,7 +40,7 @@ export function TopicsSignUpButton() {
 export function FinalCTAButton() {
   return (
     <SignUpButton mode="modal">
-      <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.97] active:bg-indigo-700 text-white font-bold px-7 py-3.5 rounded-xl text-base transition-all cursor-pointer shadow-xl shadow-indigo-500/30 select-none">
+      <button className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 active:scale-[0.97] active:bg-amber-700 text-white font-bold px-7 py-3.5 rounded-xl text-base transition-all cursor-pointer shadow-xl shadow-amber-500/30 select-none">
         <Zap size={16} className="fill-white" />
         Start practicing free
         <ArrowRight size={16} />

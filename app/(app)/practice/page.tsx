@@ -5,6 +5,7 @@ import PatternTable from "@/components/patterns/PatternTable";
 import ExamSwitcher from "@/components/patterns/ExamSwitcher";
 import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
+import { BE } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "Practice – PatternMaster",
@@ -203,9 +204,9 @@ const getCachedExamMeta = unstable_cache(
 export default async function PracticePage({
   searchParams,
 }: {
-  searchParams: Promise<{ patternId?: string; exam?: string; branch?: string; subject?: string }>;
+  searchParams: Promise<{ patternId?: string; exam?: string; branch?: string; subject?: string; questionId?: string }>;
 }) {
-  const { patternId, exam, branch: branchParam, subject: subjectParam } = await searchParams;
+  const { patternId, exam, branch: branchParam, subject: subjectParam, questionId } = await searchParams;
   const { userId } = await auth();
 
   let topics: any[] = [];
@@ -216,8 +217,14 @@ export default async function PracticePage({
   try {
     const examMeta = await getCachedExamMeta();
 
-    const activeExamType = exam || baseExamType;
-    const activeBranch = branchParam ?? baseBranch;
+    // Fetch user preferences for defaults
+    const dbUser = userId ? await prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferred_exam: true, preferred_branch: true }
+    }) : null;
+
+    const activeExamType = exam || dbUser?.preferred_exam || baseExamType;
+    const activeBranch = branchParam ?? dbUser?.preferred_branch ?? baseBranch;
 
     const availableBranches = examMeta.branchesByExam[activeExamType] ?? [];
 
@@ -228,54 +235,76 @@ export default async function PracticePage({
 
 
     return (
-      <div className="max-w-4xl mx-auto py-6 md:py-12 px-2 md:px-4">
-        <header className="mb-8">
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase" style={{ color: "var(--text-primary)" }}>
-              Prep Tracker
-            </h1>
-            <span className="bg-blue-600 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
-              {activeExamType}{activeBranch ? ` · ${activeBranch}` : ""}
-            </span>
-          </div>
-          <p className="text-sm font-medium mb-4" style={{ color: "var(--text-secondary)" }}>
-            Master every topic with AI-generated pattern questions.
-          </p>
-          <ExamSwitcher
-            currentExam={activeExamType}
-            currentBranch={activeBranch}
-            availableExams={examMeta.exams}
-            availableBranches={availableBranches}
-          />
-        </header>
+      <div className="be-screen" style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="max-w-[1280px] mx-auto w-full flex flex-col md:flex-row gap-8 px-4 py-6 md:px-8 md:py-12 md:pb-20">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Header — tighter */}
+            <div className="mb-5 md:mb-6">
+              <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2" style={{ color: BE.textMute }}>
+                {activeExamType}{activeBranch ? ` · ${activeBranch}` : ''} · Prep tracker
+              </div>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tight mb-2 leading-[1.1]" style={{ fontFamily: BE.serif, color: BE.text }}>
+                Master every topic, One pattern at a time.
+              </h1>
+              <div className="text-sm md:text-[15.5px] leading-relaxed max-w-[640px]" style={{ color: BE.textDim }}>
+                Practice across {Object.keys(subjectStats).length} subjects. Drill into any subtopic to get the question bank, previous years, and your notes.
+              </div>
+            </div>
 
-        {/* Practice Disclaimer */}
-        <div className="mb-6 p-4 rounded-2xl border border-blue-500/10 bg-blue-500/5 flex items-start gap-3.5">
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-[10px] font-black text-blue-400">
-            i
+            <ExamSwitcher
+              currentExam={activeExamType}
+              currentBranch={activeBranch}
+              availableExams={examMeta.exams}
+              availableBranches={availableBranches}
+            />
+
+            {/* Practice Disclaimer */}
+            {/* <div style={{ 
+              marginBottom: 18, 
+              padding: '12px 16px', 
+              borderRadius: 12, 
+              border: `1px solid ${BE.line}`, 
+              background: BE.accentSoft,
+              display: 'flex',
+              gap: 12,
+              alignItems: 'flex-start'
+            }}>
+              <div style={{ 
+                width: 20, height: 20, borderRadius: 10, 
+                background: BE.accentSoft, color: BE.accent,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 900, flexShrink: 0
+              }}>i</div>
+              <p style={{ fontSize: 13, color: BE.textDim, lineHeight: 1.5, margin: 0, fontStyle: 'italic', fontFamily: BE.serif }}>
+                <strong style={{ fontStyle: 'normal', color: BE.accent, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 10, display: 'block', marginBottom: 2, fontWeight: 800 }}>Practice Note</strong>
+                Topic-level questions are designed to be extremely close to the GATE standard. For guaranteed official previous year questions, select the <strong style={{ color: BE.text, fontStyle: 'normal' }}>PYQ</strong> tab within any subtopic.
+              </p>
+            </div> */}
+
+            {topics.length === 0 && (subjectParam && subjectParam !== "All") ? (
+              <div style={{ borderRadius: 16, padding: '48px 24px', textAlign: 'center', background: BE.surface, border: `1px solid ${BE.line}` }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 16, marginBottom: 16, fontSize: 24, background: 'var(--bg-surface-2)' }}>🔍</div>
+                <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 4, color: BE.text }}>No topics found</h3>
+                <p style={{ fontSize: 14, color: BE.textDim }}>
+                  We haven&apos;t added study patterns for {subjectParam} yet.
+                </p>
+              </div>
+            ) : (
+              <PatternTable 
+                patterns={topics} 
+                highlightPatternId={patternId} 
+                directQuestionId={questionId}
+                subjectStats={subjectStats}
+                activeSubject={subjectParam || "All"}
+              />
+            )}
           </div>
-          <p className="text-xs md:text-[13px] leading-relaxed italic" style={{ color: "var(--text-secondary)" }}>
-            <strong className="not-italic text-blue-400 uppercase tracking-widest text-[9px] block mb-1 font-black">Practice Note</strong>
-            Topic-level questions are designed to be extremely close to the GATE standard, but they may or may not have appeared in an actual exam. For guaranteed official previous year questions, click on the <strong style={{ color: "var(--text-primary)" }} className="not-italic">Subject Name</strong> cards at the top of the list.
-          </p>
+
+          {/* Right Rail Mock */}
+          <div style={{ width: 300, display: 'none', lg: 'block' }}>
+            {/* Ad Rail or Info Rail would go here */}
+          </div>
         </div>
-
-        {topics.length === 0 && (subjectParam && subjectParam !== "All") ? (
-          <div className="rounded-2xl p-12 text-center" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 text-2xl" style={{ background: "var(--bg-surface-2)" }}>🔍</div>
-            <h3 className="text-lg font-black mb-1" style={{ color: "var(--text-primary)" }}>No topics found</h3>
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              We haven&apos;t added study patterns for {subjectParam} yet.
-            </p>
-          </div>
-        ) : (
-          <PatternTable 
-            patterns={topics} 
-            highlightPatternId={patternId} 
-            subjectStats={subjectStats}
-            activeSubject={subjectParam || "All"}
-          />
-        )}
       </div>
     );
   } catch (err) {
