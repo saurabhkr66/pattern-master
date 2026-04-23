@@ -1,13 +1,10 @@
 "use client";
 
-import { SignUpButton, SignInButton } from "@clerk/nextjs";
+import { SignUpButton } from "@clerk/nextjs";
 import { ArrowRight, Zap } from "lucide-react";
 
 const primaryCls =
   "flex items-center gap-2 bg-amber-600 hover:bg-amber-500 active:scale-95 active:bg-amber-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all cursor-pointer shadow-lg shadow-amber-500/30 select-none";
-
-const ghostCls =
-  "px-5 py-2.5 rounded-xl text-sm font-medium border border-[var(--border-strong)] hover:border-amber-500/40 hover:text-amber-400 active:scale-95 transition-all cursor-pointer select-none";
 
 export function HeroCTAs() {
   return (
@@ -18,11 +15,13 @@ export function HeroCTAs() {
           Start free — no card needed
         </button>
       </SignUpButton>
-      <SignInButton mode="modal">
-        <button className={ghostCls} style={{ color: "var(--text-secondary)" }}>
-          Sign in
-        </button>
-      </SignInButton>
+      <a
+        href="#topics"
+        className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium border transition-all hover:border-indigo-500/40 hover:text-indigo-400 active:scale-95 select-none"
+        style={{ color: "var(--text-secondary)", borderColor: "var(--border-strong)" }}
+      >
+        See topics <ArrowRight size={14} />
+      </a>
     </div>
   );
 }

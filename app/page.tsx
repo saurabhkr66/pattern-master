@@ -11,7 +11,6 @@ import {
 import FAQAccordion from "@/components/landing/FAQAccordion";
 import TopicsExplorer, { type BranchSubjectData } from "@/components/landing/TopicsExplorer";
 import {
-  Brain,
   Zap,
   Target,
   BarChart3,
@@ -20,8 +19,8 @@ import {
   Flame,
   Trophy,
   RefreshCcw,
-  Layers,
   Star,
+  Brain,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -112,45 +111,6 @@ const faqStructuredData = {
   ],
 };
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Identify the core pattern",
-    body: "Every GATE topic has one atomic logic that examiners always test. We show it to you before you even start.",
-    icon: Target,
-    accent: "text-indigo-400",
-    bg: "bg-indigo-500/8",
-    border: "border-indigo-500/15",
-    glow: "shadow-indigo-500/10",
-  },
-  {
-    n: "02",
-    title: "Get fresh questions every time",
-    body: "Fresh questions are generated every session — Easy, Medium, or Hard. Semantic dedup means you never see repeats.",
-    icon: RefreshCcw,
-    accent: "text-violet-400",
-    bg: "bg-violet-500/8",
-    border: "border-violet-500/15",
-    glow: "shadow-violet-500/10",
-  },
-  {
-    n: "03",
-    title: "Know exactly what to fix",
-    body: "Your dashboard tracks accuracy per topic. Wrong answers surface in a flashcard review deck — targeted practice, not busywork.",
-    icon: BarChart3,
-    accent: "text-emerald-400",
-    bg: "bg-emerald-500/8",
-    border: "border-emerald-500/15",
-    glow: "shadow-emerald-500/10",
-  },
-];
-
-const STATS = [
-  { value: "50+", label: "GATE Topics", icon: Layers },
-  { value: "3", label: "Difficulty Levels", icon: Flame },
-  { value: "4", label: "Exams Covered", icon: Trophy },
-  { value: "∞", label: "Unique Questions", icon: RefreshCcw },
-];
 
 const FEATURES = [
   {
@@ -514,26 +474,42 @@ export default async function HomePage() {
         */}
 
         {/* ── STATS ────────────────────────────────── */}
-        <div className="py-16 px-6">
-          <div className="max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
-            {STATS.map((s) => (
+        <div
+          className="px-6 py-8 border-y"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div className="max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4">
+            {[
+              { value: "50+", label: "GATE Topics" },
+              { value: "6", label: "Exams Covered" },
+              { value: "∞", label: "Unique Questions" },
+              { value: "0 ₹", label: "Core Practice" },
+            ].map((s, i, arr) => (
               <div
                 key={s.label}
-                className="text-center p-5 rounded-2xl border"
-                style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+                className="px-5 py-4"
+                style={{
+                  borderRight: i < arr.length - 1 ? "1px solid var(--border)" : "none",
+                }}
               >
-                <p
-                  className="text-4xl font-black mb-1"
-                  style={{ color: "var(--text-primary)" }}
+                <div
+                  style={{
+                    fontFamily: "var(--font-geist-mono, monospace)",
+                    fontSize: "clamp(28px, 5vw, 40px)",
+                    fontWeight: 600,
+                    letterSpacing: "-0.8px",
+                    color: "var(--text-primary)",
+                    lineHeight: 1,
+                  }}
                 >
                   {s.value}
-                </p>
-                <p
-                  className="text-[11px] font-semibold uppercase tracking-widest"
+                </div>
+                <div
+                  className="mt-1.5 text-[11px] font-semibold uppercase tracking-widest"
                   style={{ color: "var(--text-muted)" }}
                 >
                   {s.label}
-                </p>
+                </div>
               </div>
             ))}
           </div>
@@ -545,60 +521,164 @@ export default async function HomePage() {
           style={{ borderColor: "var(--border)", background: "var(--bg-surface-2)" }}
         >
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-14">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-400 mb-2">
-                The Method
-              </p>
-              <h2
-                className="text-2xl md:text-3xl font-black"
-                style={{ color: "var(--text-primary)" }}
-              >
-                How BattleExam actually works
-              </h2>
-              <p className="mt-3 text-sm max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
-                Not another question dump. A system designed around how GATE toppers actually think.
-              </p>
-            </div>
+            <p
+              className="text-center text-[11px] font-bold uppercase tracking-widest mb-2.5"
+              style={{ color: "var(--text-muted)" }}
+            >
+              How it works
+            </p>
+            <h2
+              className="text-center mb-10 mx-auto"
+              style={{
+                fontFamily: "var(--be-font-serif, Georgia, serif)",
+                fontSize: "clamp(26px, 4vw, 36px)",
+                fontWeight: 600,
+                letterSpacing: "-0.6px",
+                lineHeight: 1.2,
+                color: "var(--text-primary)",
+                maxWidth: 600,
+              }}
+            >
+              A feedback loop that gets sharper every session.
+            </h2>
 
-            <div className="grid md:grid-cols-3 gap-5 relative">
-              {/* Connector line on desktop */}
-              <div
-                aria-hidden
-                className="hidden md:block absolute top-10 left-[calc(33%+16px)] right-[calc(33%+16px)] h-px"
-                style={{ background: "var(--border)" }}
-              />
-
-              {STEPS.map((step) => (
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                {
+                  n: "01",
+                  title: "Answer",
+                  body: "Generated questions at your level. Each tagged to a pattern — not just a topic.",
+                },
+                {
+                  n: "02",
+                  title: "Understand",
+                  body: "Instant explanation, reasoning steps, and links to the short-note for the pattern.",
+                },
+                {
+                  n: "03",
+                  title: "Fix the pattern",
+                  body: "Next session focuses on the patterns you're weakest on. Drill until mastered.",
+                },
+              ].map((s) => (
                 <div
-                  key={step.n}
-                  className={`relative p-6 rounded-2xl border ${step.border} ${step.bg} shadow-lg ${step.glow}`}
+                  key={s.n}
+                  className="p-6 rounded-2xl border"
+                  style={{
+                    borderColor: "var(--border)",
+                    background: "var(--bg-surface)",
+                  }}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className={`w-10 h-10 rounded-xl ${step.bg} border ${step.border} flex items-center justify-center shrink-0`}
-                    >
-                      <step.icon size={18} className={step.accent} />
-                    </div>
-                    <span
-                      className={`text-4xl font-black leading-none ${step.accent} opacity-15 select-none`}
-                    >
-                      {step.n}
-                    </span>
+                  <div
+                    className="mb-2.5"
+                    style={{
+                      fontFamily: "var(--be-font-mono)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "var(--be-purple-500)",
+                    }}
+                  >
+                    {s.n}
                   </div>
                   <h3
-                    className="font-bold text-sm mb-2 leading-snug"
-                    style={{ color: "var(--text-primary)" }}
+                    className="mb-2"
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 600,
+                      color: "var(--text-primary)",
+                    }}
                   >
-                    {step.title}
+                    {s.title}
                   </h3>
                   <p
-                    className="text-xs leading-relaxed"
-                    style={{ color: "var(--text-secondary)" }}
+                    style={{
+                      fontSize: 13.5,
+                      lineHeight: 1.55,
+                      color: "var(--text-secondary)",
+                    }}
                   >
-                    {step.body}
+                    {s.body}
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FEATURE STRIP ────────────────────────── */}
+        <section className="px-6 pb-20">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-[2fr_1fr] gap-4 items-stretch">
+            {/* Left — Mistake log card */}
+            <div
+              className="rounded-2xl border p-7"
+              style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
+            >
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ color: "#8b5cf6" }}>
+                Mistake log · Pattern analysis
+              </p>
+              <h3
+                style={{
+                  fontFamily: "var(--be-font-serif, Georgia, serif)",
+                  fontSize: "clamp(20px, 3vw, 26px)",
+                  fontWeight: 600,
+                  letterSpacing: "-0.4px",
+                  color: "var(--text-primary)",
+                  margin: "0 0 8px",
+                }}
+              >
+                See the gaps in your reasoning.
+              </h3>
+              <p className="text-[13.5px] leading-relaxed max-w-xl" style={{ color: "var(--text-secondary)" }}>
+                We group wrong answers by the concept beneath them. 4 patterns account for 30 of 34 recent mistakes.
+              </p>
+              <div className="flex items-start gap-3 mt-5">
+                <div
+                  className="shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center"
+                  style={{ background: "rgba(220,38,38,0.1)", color: "#dc2626" }}
+                >
+                  <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontWeight: 700, fontSize: 18, lineHeight: 1 }}>17</span>
+                  <span style={{ fontSize: 8, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.8, marginTop: 2 }}>wrong</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Secondary index B+ tree calculations</p>
+                  <p
+                    className="text-[13px] mt-1 italic"
+                    style={{ fontFamily: "var(--be-font-serif, Georgia, serif)", color: "var(--text-secondary)" }}
+                  >
+                    &ldquo;You miscount leaf-level capacity when fan-out exceeds key size.&rdquo;
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right — Ad-free solver card */}
+            <div
+              className="rounded-2xl p-7 flex flex-col justify-between"
+              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff" }}
+            >
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ opacity: 0.85 }}>
+                  Solver focus mode
+                </p>
+                <h3
+                  style={{
+                    fontFamily: "var(--be-font-serif, Georgia, serif)",
+                    fontSize: "clamp(18px, 2.5vw, 24px)",
+                    fontWeight: 600,
+                    margin: "0 0 8px",
+                  }}
+                >
+                  Ad-free while you&apos;re thinking.
+                </h3>
+                <p className="text-[13px] leading-relaxed" style={{ opacity: 0.85 }}>
+                  Ads keep BattleExam free — but they never appear on the solver or during flashcards. Ever.
+                </p>
+              </div>
+              <p
+                className="mt-8 text-[11px]"
+                style={{ opacity: 0.75, fontFamily: "var(--font-geist-mono, monospace)" }}
+              >
+                Our contract with you.
+              </p>
             </div>
           </div>
         </section>
@@ -652,6 +732,7 @@ export default async function HomePage() {
 
         {/* ── TOPICS ───────────────────────────────── */}
         <section
+          id="topics"
           className="px-6 py-20"
           aria-labelledby="topics-heading"
         >
@@ -772,9 +853,18 @@ export default async function HomePage() {
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
-                <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600">
-                  <Brain size={14} className="text-white" />
-                </span>
+                <svg width="22" height="28" viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <g transform="translate(0, 2)">
+                    <path d="M 50 2 C 22 8 8 25 8 45 L 8 75 C 8 98 30 112 50 120 L 50 2 Z" fill="#0A1A2F"/>
+                    <path d="M 50 2 C 78 8 92 25 92 45 L 92 75 C 92 98 70 112 50 120" fill="none" stroke="#FF6B00" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M 50 12 L 38 48 L 45 66 L 32 66 L 32 72 L 44 72 L 44 94 L 36 102 L 50 108 Z" fill="#FFFFFF"/>
+                    <path d="M 50 12 L 62 48 L 55 66 L 68 66 L 68 72 L 56 72 L 56 94 L 64 102 L 50 108 Z" fill="#0A1A2F"/>
+                    <path d="M 50 40 A 4 4 0 0 0 50 48 Z" fill="#0A1A2F"/>
+                    <rect x="49" y="22" width="1" height="18" fill="#0A1A2F"/>
+                    <path d="M 50 40 A 4 4 0 0 1 50 48 Z" fill="#FFFFFF"/>
+                    <rect x="50" y="22" width="1" height="18" fill="#FFFFFF"/>
+                  </g>
+                </svg>
                 <span className="font-black text-base">
                   Battle<span className="text-violet-400">Exam</span>
                 </span>

@@ -10,7 +10,6 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import {
-  Brain,
   LayoutDashboard,
   BookOpen,
   RotateCcw,
@@ -54,9 +53,18 @@ export default function Header() {
           className="flex items-center gap-2 text-lg"
           style={{ color: "var(--text-primary)" }}
         >
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#f59e0b] to-[#fb923c]">
-            <Brain size={20} />
-          </span>
+          <svg width="28" height="35" viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <g transform="translate(0, 2)">
+              <path d="M 50 2 C 22 8 8 25 8 45 L 8 75 C 8 98 30 112 50 120 L 50 2 Z" fill="#0A1A2F"/>
+              <path d="M 50 2 C 78 8 92 25 92 45 L 92 75 C 92 98 70 112 50 120" fill="none" stroke="#FF6B00" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M 50 12 L 38 48 L 45 66 L 32 66 L 32 72 L 44 72 L 44 94 L 36 102 L 50 108 Z" fill="#FFFFFF"/>
+              <path d="M 50 12 L 62 48 L 55 66 L 68 66 L 68 72 L 56 72 L 56 94 L 64 102 L 50 108 Z" fill="#0A1A2F"/>
+              <path d="M 50 40 A 4 4 0 0 0 50 48 Z" fill="#0A1A2F"/>
+              <rect x="49" y="22" width="1" height="18" fill="#0A1A2F"/>
+              <path d="M 50 40 A 4 4 0 0 1 50 48 Z" fill="#FFFFFF"/>
+              <rect x="50" y="22" width="1" height="18" fill="#FFFFFF"/>
+            </g>
+          </svg>
           <span className="font-medium">
             Battle<span className="text-orange-400 font-bold">Exam</span>
           </span>
