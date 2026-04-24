@@ -12,6 +12,7 @@ export const BE = {
   textDim: 'var(--text-secondary)',
   textMute: 'var(--text-muted)',
   line: 'var(--border)',
+  lineSoft: 'var(--border-soft)',
   lineHi: 'rgba(255, 255, 255, 0.1)',
   surface: 'var(--bg-surface)',
   serif: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',

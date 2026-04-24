@@ -6,6 +6,7 @@
   --bg-surface: #ffffff;
   --bg-surface-2: #f0eff5;
   --border: rgba(0, 0, 0, 0.08);
+  --border-soft: rgba(0, 0, 0, 0.04);
   --border-strong: rgba(0, 0, 0, 0.15);
   --text-primary: #111111;
   --text-secondary: rgba(0, 0, 0, 0.50);
@@ -21,6 +22,7 @@
   --bg-surface: #111111;
   --bg-surface-2: rgba(255, 255, 255, 0.02);
   --border: rgba(255, 255, 255, 0.10);
+  --border-soft: rgba(255, 255, 255, 0.05);
   --border-strong: rgba(255, 255, 255, 0.15);
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.60);

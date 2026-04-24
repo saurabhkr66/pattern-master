@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { BE } from "@/lib/theme";
+import { Bookmark } from "lucide-react";
 
 interface PatternRowProps {
   pattern: any;
@@ -53,6 +54,9 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride, language }:
         <span>· {q.exam_type}</span>
         <span>· {q.marks}M</span>
         <span style={{ flex: 1 }} />
+        {q.isBookmarked && (
+          <Bookmark size={11} fill={BE.accent} stroke="none" />
+        )}
         <span style={{ width: 6, height: 6, borderRadius: 3, background: statusDot }} />
       </div>
       <div style={{ fontSize: 13, color: BE.text, lineHeight: 1.5, fontFamily: BE.serif, flex: 1,

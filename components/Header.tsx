@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -19,6 +19,7 @@ import {
   Sun,
   Moon,
   ClipboardList,
+  Bookmark,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import GlobalSearch from "./search/GlobalSearch";
@@ -30,14 +31,20 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/review", label: "Review", icon: RotateCcw },
   { href: "/mistakes", label: "Mistakes", icon: XCircle },
+  { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
 ];
 
 export default function Header() {
   const pathname = usePathname();
   const { user } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { theme, toggle } = useTheme();
   const { language, setLanguage } = useLanguage();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header
@@ -133,7 +140,13 @@ export default function Header() {
             style={{ color: "var(--text-secondary)" }}
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {!mounted ? (
+              <div className="w-[18px] h-[18px]" />
+            ) : theme === "dark" ? (
+              <Sun size={18} />
+            ) : (
+              <Moon size={18} />
+            )}
           </button>
 
           {/* Global Language Toggle */}

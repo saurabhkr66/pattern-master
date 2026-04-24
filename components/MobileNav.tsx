@@ -12,6 +12,7 @@ export default function MobileNav() {
     { id: 'Stats', href: '/dashboard', icon: 'chart' },
     { id: 'Review', href: '/review', icon: 'flip' },
     { id: 'Mistakes', href: '/mistakes', icon: 'user' },
+    { id: 'Saved', href: '/bookmarks', icon: 'bookmark' },
   ];
 
   const ic = (k: string, c: string) => {
@@ -21,6 +22,7 @@ export default function MobileNav() {
     if (k === 'chart')return <svg {...p}><path d="M4 17V9M10 17V5M16 17v-5"/><path d="M3 19h17"/></svg>;
     if (k === 'flip') return <svg {...p}><rect x="3" y="5" width="16" height="12" rx="2"/><path d="M7 9h8M7 13h5"/></svg>;
     if (k === 'user') return <svg {...p}><circle cx="11" cy="8" r="3.5"/><path d="M4.5 19c1.5-3 4-4.5 6.5-4.5s5 1.5 6.5 4.5"/></svg>;
+    if (k === 'bookmark') return <svg {...p}><path d="M16 3H6a2 2 0 00-2 2v14l7-4.5 7 4.5V5a2 2 0 00-2-2z"/></svg>;
     return null;
   };
 

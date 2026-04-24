@@ -80,18 +80,18 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
-        <body className="min-h-full flex flex-col">
+        <head>
           <script
-            suppressHydrationWarning
             dangerouslySetInnerHTML={{
               __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:'dark';}catch(e){document.documentElement.dataset.theme='dark';}})();`,
             }}
           />
           <script
             type="application/ld+json"
-            suppressHydrationWarning
             dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
           />
+        </head>
+        <body className="min-h-full flex flex-col">
           {process.env.NEXT_PUBLIC_GA_ID && (
             <>
               <Script

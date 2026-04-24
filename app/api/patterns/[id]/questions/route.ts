@@ -49,6 +49,11 @@ export async function GET(
                                         orderBy: { created_at: "desc" },
                                         take: 1,
                                     },
+                                    bookmarks: {
+                                        where: userId ? { user_id: userId } : { user_id: "none" },
+                                        select: { id: true },
+                                        take: 1,
+                                    },
                                 },
                                 orderBy: { year: "desc" },
                             },
@@ -63,6 +68,7 @@ export async function GET(
                             pyqs: subjectPattern.pyqs.map(pyq => ({
                                 ...pyq,
                                 marks: resolveMarks(pyq.question_type, pyq.marks),
+                                isBookmarked: pyq.bookmarks?.length > 0,
                                 _isSubjectPyq: true,
                             })),
                         }
@@ -93,6 +99,11 @@ export async function GET(
                                     orderBy: { created_at: "desc" },
                                     take: 1,
                                 },
+                                bookmarks: {
+                                    where: userId ? { user_id: userId } : { user_id: "none" },
+                                    select: { id: true },
+                                    take: 1,
+                                },
                             },
                             orderBy: { created_at: "desc" },
                         },
@@ -117,6 +128,11 @@ export async function GET(
                                     orderBy: { created_at: "desc" },
                                     take: 1,
                                 },
+                                bookmarks: {
+                                    where: userId ? { user_id: userId } : { user_id: "none" },
+                                    select: { id: true },
+                                    take: 1,
+                                },
                             },
                             orderBy: { year: "desc" },
                         },
@@ -130,10 +146,12 @@ export async function GET(
                         questions: pattern.questions.map(q => ({
                             ...q,
                             marks: resolveMarks(q.question_type, q.marks),
+                            isBookmarked: q.bookmarks?.length > 0,
                         })),
                         pyqs: pattern.pyqs.map(q => ({
                             ...q,
                             marks: resolveMarks(q.question_type, q.marks),
+                            isBookmarked: q.bookmarks?.length > 0,
                         })),
                     }
                 };

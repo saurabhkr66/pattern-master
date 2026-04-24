@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Bookmark } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { trackPageView } from "@/lib/analytics";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -41,6 +41,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const [showFullscreenHint, setShowFullscreenHint] = useState(!!(initialQuestion));
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const [seconds, setSeconds] = useState(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
   const { language, setLanguage } = useLanguage();
 
   // Lock body scroll while fullscreen is open
@@ -69,6 +71,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setError(null);
         setQuestionHistory([]);
         setSeconds(0);
+        setIsBookmarked(!!initialQuestion?.isBookmarked);
         lastInitialIdRef.current = currentInitialId;
       }
     } else {
@@ -76,10 +79,17 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       if (lastInitialIdRef.current !== null) {
         setQuestion(null);
         setQuestionQueue([]);
+        setIsBookmarked(false);
         lastInitialIdRef.current = null;
       }
     }
   }, [initialQuestion, initialQueue]);
+
+  useEffect(() => {
+    if (question) {
+        setIsBookmarked(!!question.isBookmarked);
+    }
+  }, [question?.id]);
  
   // ── Analytics: silently sync question ID to URL ──────────────────────
   // Uses replaceState (not router.push) → zero re-renders, zero speed impact.
@@ -311,6 +321,49 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     }
   };
 
+  const handleToggleBookmark = async () => {
+    if (!question || isBookmarking) return;
+    setIsBookmarking(true);
+    
+    const prev = isBookmarked;
+    setIsBookmarked(!prev);
+
+    try {
+      const res = await fetch("/api/bookmarks/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: (question._isPyq || question._isSubjectPyq) ? undefined : question.id,
+          pyqId: (question._isPyq && !question._isSubjectPyq) ? question.id : undefined,
+          subjectPyqId: question._isSubjectPyq ? question.id : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setIsBookmarked(data.bookmarked);
+
+      // Sync React Query cache
+      queryClient.setQueryData(["patternQuestions", patternId], (oldData: any) => {
+        if (!oldData) return oldData;
+        const targetId = question.id;
+        const updateArray = (arr: any[]) => (arr || []).map(q => 
+          q.id === targetId ? { ...q, isBookmarked: data.bookmarked } : q
+        );
+        return {
+          ...oldData,
+          questions: updateArray(oldData.questions),
+          pyqs: updateArray(oldData.pyqs),
+        };
+      });
+    } catch (err) {
+      console.error("Failed to toggle bookmark:", err);
+      setIsBookmarked(prev); // Revert on error
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
+
   const checkIsCorrect = () => {
     if (!question) return false;
     const type = question.question_type || "MCQ";
@@ -424,16 +477,22 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       ) : (
         /* ── Question Mode ── */
         /* ── Question Mode ── */
-        <div className={isFullscreen
-          ? "fixed inset-0 z-[60] overflow-y-auto bg-white dark:bg-[#0a0a0a] flex flex-col"
-          : "bg-white dark:bg-[#0d0d0f] rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden flex flex-col w-full"
-        }>
+        <div 
+          className={isFullscreen
+            ? "fixed inset-0 z-[60] overflow-y-auto flex flex-col"
+            : "rounded-2xl border overflow-hidden flex flex-col w-full shadow-sm"
+          }
+          style={{ 
+            background: isFullscreen ? 'var(--bg-base)' : 'var(--bg-surface)',
+            borderColor: BE.line
+          }}
+        >
           {/* Progress Rail — Mobile Responsive */}
           <div style={{
             borderBottom: `1px solid ${BE.line}`,
             padding: '10px 14px',
             display: 'flex', alignItems: 'center', gap: 10,
-            background: isFullscreen ? (undefined as any) : 'rgba(255,255,255,0.02)',
+            background: isFullscreen ? 'transparent' : BE.lineSoft,
             flexWrap: 'nowrap', minWidth: 0,
           }}>
             <div 
@@ -448,7 +507,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
             {/* Progress counter + bar */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <div style={{ fontSize: 11, color: BE.textDim, fontFamily: BE.mono, flexShrink: 0 }}>{questionHistory.length + 1}/{questionHistory.length + questionQueue.length + 1}</div>
-              <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ flex: 1, height: 3, background: BE.lineSoft, borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ width: `${((questionHistory.length + 1) / (questionHistory.length + questionQueue.length + 1)) * 100}%`, height: '100%', background: BE.accent, transition: 'width 0.3s ease' }} />
               </div>
             </div>
@@ -483,6 +542,25 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               <span>·</span>
               <span>{question.question_type || 'MCQ'} · {question.marks || 1} mark{(question.marks || 1) > 1 ? 's' : ''}</span>
               <span style={{ flex: 1 }} />
+              <button 
+                onClick={handleToggleBookmark}
+                disabled={isBookmarking}
+                style={{ 
+                    display: 'flex', alignItems: 'center', gap: 4, 
+                    color: isBookmarked ? BE.accent : BE.textDim,
+                    transition: 'all 0.2s',
+                    cursor: 'pointer',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 4,
+                    borderRadius: 6
+                }}
+                className="hover:bg-white/5 active:scale-90"
+                title={isBookmarked ? "Remove Bookmark" : "Bookmark Question"}
+              >
+                <Bookmark size={14} fill={isBookmarked ? BE.accent : "none"} strokeWidth={isBookmarked ? 0 : 2} />
+              </button>
+              <span style={{ width: 1, height: 12, background: BE.line }} />
               <span style={{ fontFamily: BE.mono, textTransform: 'none', letterSpacing: 0, fontWeight: 500, opacity: 0.6 }}>#{question.id?.slice(-5)}</span>
             </div>
 
@@ -495,7 +573,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
             {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type !== 'explanation').length > 0 && (
               <div className="flex flex-col gap-4 mb-8">
                 {question.images.filter((img: any) => img.type !== 'explanation').map((img: any, idx: number) => (
-                  <div key={idx} className="flex justify-center bg-white dark:bg-black/20 rounded-xl p-3 border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden">
+                  <div key={idx} className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden" style={{ background: BE.surface, borderColor: BE.line }}>
                     <img src={img.url || img.base64} alt="Question figure" className="max-w-full h-auto rounded-lg object-contain" />
                   </div>
                 ))}
@@ -528,7 +606,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                     >
                       <div style={{
                         width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-                        background: isSelected || isActuallyCorrect ? bd : 'rgba(255,255,255,0.06)',
+                        background: isSelected || isActuallyCorrect ? bd : BE.lineSoft,
                         color: isSelected || isActuallyCorrect ? '#fff' : BE.textDim,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 11, fontWeight: 900, fontFamily: BE.mono,
@@ -558,7 +636,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                     }
                   }}
                   disabled={isRevealed}
-                  className="w-full p-5 border-2 border-gray-100 dark:border-white/5 rounded-2xl focus:border-amber-400 focus:outline-none font-black text-center text-xl bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white"
+                  className="w-full p-5 border-2 rounded-2xl focus:border-amber-400 focus:outline-none font-black text-center text-xl"
+                  style={{ background: BE.lineSoft, borderColor: BE.line, color: BE.text }}
                 />
                 {isRevealed && (
                   <div style={{ background: checkIsCorrect() ? BE.goodSoft : BE.badSoft, border: `1px solid ${checkIsCorrect() ? BE.good : BE.bad}`, color: checkIsCorrect() ? BE.good : BE.bad }} className="p-4 rounded-xl text-center font-bold text-sm">
@@ -612,7 +691,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
             {isRevealed && (
               <div className="mt-6 animate-in slide-in-from-bottom-4 duration-500">
                 <div style={{ border: `1px solid ${BE.line}`, borderRadius: 16, overflow: 'hidden' }}>
-                  <div style={{ padding: '12px 14px', borderBottom: `1px solid ${BE.line}`, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.01)' }}>
+                  <div style={{ padding: '12px 14px', borderBottom: `1px solid ${BE.line}`, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, background: BE.lineSoft }}>
                     <span style={{ 
                       fontSize: 10, fontWeight: 900, textTransform: 'uppercase', padding: '4px 8px', borderRadius: 6,
                       background: checkIsCorrect() ? BE.goodSoft : BE.badSoft,
@@ -629,7 +708,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                   <div style={{ padding: '16px 16px', fontSize: 'clamp(13px, 3.5vw, 15px)', lineHeight: 1.75, color: BE.textDim, fontFamily: BE.serif, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                     <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : question.explanation} />
                     {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
-                      <div key={idx} className="mt-4 flex justify-center bg-black/20 rounded-xl p-3">
+                      <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
                         <img src={img.url || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
                       </div>
                     ))}
@@ -648,6 +727,6 @@ const kbdStyle = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
   minWidth: 18, height: 18, padding: '0 5px',
   border: `1.2px solid ${BE.line}`, borderRadius: 4,
-  background: 'rgba(255,255,255,0.03)', color: BE.textDim,
+  background: BE.lineSoft, color: BE.textDim,
   fontFamily: BE.mono, fontSize: 10, fontWeight: 800,
 };

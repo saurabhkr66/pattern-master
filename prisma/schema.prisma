@@ -18,6 +18,7 @@ model User {
   attempts         Attempt[]
   userNotes        UserNote[]
   flashcards       Flashcard[]
+  bookmarks        Bookmark[]
 }
 
 model Pattern {
@@ -64,6 +65,7 @@ model SubjectPYQ {
   created_at          DateTime       @default(now())
   attempts            Attempt[]
   subject_pattern     SubjectPattern @relation(fields: [subject_pattern_id], references: [id])
+  bookmarks           Bookmark[]
 
   @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
 }
@@ -86,6 +88,7 @@ model PYQ {
   images              Json?
   attempts            Attempt[]
   pattern             Pattern   @relation(fields: [pattern_id], references: [id])
+  bookmarks           Bookmark[]
 
   @@unique([pattern_id, question_text], name: "pyq_identifier")
   @@index([pattern_id, year(sort: Desc)])
@@ -109,6 +112,7 @@ model GeneratedQuestion {
   images              Json?
   attempts            Attempt[]
   pattern             Pattern   @relation(fields: [pattern_id], references: [id])
+  bookmarks           Bookmark[]
 
   @@index([pattern_id, created_at(sort: Desc)])
 }
@@ -205,4 +209,25 @@ model Flashcard {
   @@unique([user_id, subject_pyq_id])
   @@index([user_id, next_review])
   @@index([user_id, status])
+}
+
+model Bookmark {
+  id             String   @id @default(uuid())
+  user_id        String
+  // Exactly one of these is set
+  question_id    String?
+  pyq_id         String?
+  subject_pyq_id String?
+
+  created_at     DateTime @default(now())
+
+  user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  question    GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  pyq         PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
+  subject_pyq SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, question_id])
+  @@unique([user_id, pyq_id])
+  @@unique([user_id, subject_pyq_id])
+  @@index([user_id])
 }

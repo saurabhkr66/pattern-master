@@ -27,52 +27,40 @@ const FILE_TOPIC_MAP: Array<{
   branch: string;
 }> = [
   {
-    file: 'gate_ec_diodes_applications.json',
-    topic_name: 'Diode Applications',
+    file: 'gate_ee_Analog_Electronics_bjt_fet_and_their_biasing_circuits.json',
+    topic_name: 'BJT, FET and their Biasing Circuits',
     exam_type: 'GATE',
-    branch: 'ECE',
+    branch: 'EE',
   },
   {
-    file: 'gate_ec_bjt_analysis.json',
-    topic_name: 'BJT Analysis and Biasing',
+    file: 'gate_ee_Analog_Electronics_diodes_and_their_applications.json',
+    topic_name: 'Diodes and their Applications',
     exam_type: 'GATE',
-    branch: 'ECE',
+    branch: 'EE',
   },
   {
-    file: 'gate_ec_fet_and_mosfet_analysis.json',
-    topic_name: 'FET and MOSFET Analysis',
+    file: 'gate_ee_Analog_Electronics_operational_amplifiers.json',
+    topic_name: 'Operational Amplifiers',
     exam_type: 'GATE',
-    branch: 'ECE',
+    branch: 'EE',
   },
   {
-    file: 'gate_ec_frequency_response_of_amplifier.json',
-    topic_name: 'Frequency Response of Amplifiers',
+    file: 'gate_ee_Analog_Electronics_oscillators_and_feedback_amplifiers.json',
+    topic_name: 'Oscillators and Feedback Amplifiers',
     exam_type: 'GATE',
-    branch: 'ECE',
+    branch: 'EE',
   },
   {
-    file: 'gate_ec_feedback_amplifiers.json',
-    topic_name: 'Feedback Amplifiers',
+    file: 'gate_ee_Analog_Electronics_small_signal_analysis.json',
+    topic_name: 'Small Signal Analysis',
     exam_type: 'GATE',
-    branch: 'ECE',
+    branch: 'EE',
   },
   {
-    file: 'gate_ec_operational_amplifiers.json',
-    topic_name: 'Operational Amplifiers (Op-Amps)',
+    file: 'gate_ee_Analog_Electronics_miscellaneous.json',
+    topic_name: 'Miscellaneous',
     exam_type: 'GATE',
-    branch: 'ECE',
-  },
-  {
-    file: 'gate_ec_oscillator_circuits.json',
-    topic_name: 'Oscillator Circuits',
-    exam_type: 'GATE',
-    branch: 'ECE',
-  },
-  {
-    file: 'gate_ec_multivibrators_and_555_timer.json',
-    topic_name: 'Multivibrators and 555 Timer',
-    exam_type: 'GATE',
-    branch: 'ECE',
+    branch: 'EE',
   },
 ];
 
@@ -114,10 +102,10 @@ async function main() {
       pattern = await prisma.pattern.create({
         data: {
           topic_name: entry.topic_name,
-          subject: 'Analog Circuits',
+          subject: entry.branch === 'EE' ? 'Electric Circuits' : 'Analog Circuits',
           exam_type: entry.exam_type,
           branch: entry.branch,
-          atomic_logic: `Practice problems for ${entry.topic_name}`,
+          atomic_logic: `Practice problems for ${entry.topic_name} in ${entry.branch === 'EE' ? 'Electric Circuits' : 'Analog Circuits'}.`,
         },
       });
     }
