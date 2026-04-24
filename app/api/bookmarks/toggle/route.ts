@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
             await prisma.bookmark.delete({
                 where: { id: existingBookmark.id }
             });
-            revalidateTag("bookmarks");
-            revalidateTag("patterns");
+            revalidateTag("bookmarks", "page");
+            revalidateTag("patterns", "page");
             return NextResponse.json({ bookmarked: false });
         } else {
             await prisma.bookmark.create({
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
                     subject_pyq_id: subjectPyqId || null,
                 }
             });
-            revalidateTag("bookmarks");
-            revalidateTag("patterns");
+            revalidateTag("bookmarks", "page");
+            revalidateTag("patterns", "page");
             return NextResponse.json({ bookmarked: true });
         }
     } catch (error) {
