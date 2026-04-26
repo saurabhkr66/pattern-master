@@ -6,11 +6,12 @@ import { SignIn, useSignIn } from '@clerk/nextjs';
 import { Browser } from '@capacitor/browser';
 
 function MobileNativeLogin() {
-  const { signIn, isLoaded } = useSignIn();
+  const { signIn } = useSignIn();
+  const isLoaded = !!signIn;
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) return;
     setLoading(true);
     try {
       // 1. Tell Clerk we want to use Google OAuth
@@ -20,8 +21,8 @@ function MobileNativeLogin() {
         redirectUrl: '/sso-callback', 
       });
 
-      // 2. Get the generated Google Auth URL
-      const { verification } = response.firstFactorVerification;
+      // @ts-ignore - Clerk v7 type definitions hide the internal response properties
+      const verification = response.firstFactorVerification || response?.signIn?.firstFactorVerification;
       
       if (verification && verification.externalVerificationRedirectURL) {
         // 3. Open that URL using the native System Browser
