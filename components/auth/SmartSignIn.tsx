@@ -25,8 +25,16 @@ function MobileNativeLogin() {
       const verification = response.firstFactorVerification || response?.signIn?.firstFactorVerification;
       
       if (verification && verification.externalVerificationRedirectURL) {
-        // 3. Open that URL using the native System Browser
-        await Browser.open({ url: verification.externalVerificationRedirectURL.href });
+        // In some versions this is a URL object, in others it's a raw string
+        const authUrl = verification.externalVerificationRedirectURL.href || verification.externalVerificationRedirectURL;
+        
+        if (typeof authUrl === 'string') {
+          await Browser.open({ url: authUrl });
+        } else {
+          alert("Error: Extracted URL is invalid: " + JSON.stringify(verification));
+        }
+      } else {
+        alert("Error: Clerk did not return an OAuth URL. Response: " + JSON.stringify(response));
       }
     } catch (err) {
       console.error('OAuth error', err);
