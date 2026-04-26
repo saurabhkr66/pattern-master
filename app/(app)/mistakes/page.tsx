@@ -13,8 +13,28 @@ export const metadata: Metadata = {
 function getCachedMistakes(userId: string) {
   return unstable_cache(
     async () => {
+      // 1. Find only the LATEST attempt for each question that is WRONG.
+      // If the latest attempt is correct, the question is removed from the mistake log.
+      const latestWrongRows = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM (
+          SELECT id, is_correct, created_at,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id) 
+                   ORDER BY created_at DESC
+                 ) as rn
+          FROM "Attempt"
+          WHERE user_id = ${userId}
+        ) t
+        WHERE rn = 1 AND is_correct = false
+        ORDER BY created_at DESC
+        LIMIT 200
+      `;
+
+      const ids = latestWrongRows.map((r) => r.id);
+      if (ids.length === 0) return [];
+
       const wrongAttempts = await prisma.attempt.findMany({
-        where: { user_id: userId, is_correct: false },
+        where: { id: { in: ids } },
         include: {
           question: {
             include: {
@@ -31,7 +51,6 @@ function getCachedMistakes(userId: string) {
           },
         },
         orderBy: { created_at: "desc" },
-        take: 200,
       });
 
       // De-duplicate: one card per question, keep most recent attempt
@@ -50,7 +69,7 @@ function getCachedMistakes(userId: string) {
             a.question?.pattern ??
             a.pyq?.pattern ??
             (sp
-              ? { id: sp.id, topic_name: sp.subject_name, subject: sp.subject_name, exam_type: "GATE" }
+              ? { id: `subject-${sp.id}`, topic_name: sp.subject_name, subject: sp.subject_name, exam_type: "GATE" }
               : null);
           if (!q || !pattern) return null;
 

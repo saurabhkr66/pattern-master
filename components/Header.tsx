@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  SignInButton,
-  SignUpButton,
   Show,
   UserButton,
   useUser,
@@ -172,20 +170,20 @@ export default function Header() {
           {/* Auth */}
           <Show when="signed-out">
             <div className="hidden sm:flex gap-2">
-              <SignInButton mode="modal">
+              <Link href="/sign-in">
                 <button
                   className="border px-4 py-2 rounded-lg text-sm"
                   style={{ color: "var(--text-secondary)", borderColor: "var(--border-strong)" }}
                 >
                   Sign In
                 </button>
-              </SignInButton>
+              </Link>
 
-              <SignUpButton mode="modal">
+              <Link href="/sign-up">
                 <button className="bg-gradient-to-br from-amber-500 to-orange-500 px-4 py-2 rounded-lg text-white text-sm">
                   Get Started
                 </button>
-              </SignUpButton>
+              </Link>
             </div>
           </Show>
 
@@ -270,24 +268,24 @@ export default function Header() {
               </Show>
 
               <Show when="signed-out">
-                <SignInButton mode="modal">
+                <Link href="/sign-in">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="text-left px-4 py-3"
+                    className="w-full text-left px-4 py-3"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     Sign In
                   </button>
-                </SignInButton>
+                </Link>
 
-                <SignUpButton mode="modal">
+                <Link href="/sign-up">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="bg-amber-500 text-white px-4 py-3 rounded-xl mt-2"
+                    className="w-full bg-amber-500 text-white px-4 py-3 rounded-xl mt-2"
                   >
                     Get Started
                   </button>
-                </SignUpButton>
+                </Link>
               </Show>
 
             </nav>

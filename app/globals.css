@@ -70,4 +70,21 @@ body {
 
 * {
   -webkit-tap-highlight-color: transparent;
+  /* Prevent system callouts on images/links during long press */
+  -webkit-touch-callout: none;
 }
+
+body {
+  /* Prevent the entire app from bouncing on iOS (optional) */
+  /* overscroll-behavior-y: none; */
+  
+  /* Ensure content respects the status bar/notch on mobile */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.be-screen {
+  min-height: 100vh;
+  /* fallback for older browsers */
+  min-height: 100dvh; 
+}

@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 import { getQuestionUrl } from "@/lib/seo";
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
-import { format, subDays, startOfDay, subMonths, eachDayOfInterval, startOfWeek, isSameDay } from "date-fns";
+import { format, subDays, startOfDay, subMonths, eachDayOfInterval, startOfWeek, isSameDay, formatDistanceToNow } from "date-fns";
 
 export const metadata: Metadata = {
   title: "Dashboard – BattleExam",
@@ -22,7 +22,7 @@ function getCachedDashboardData(userId: string) {
       const sixMonthsAgo = subMonths(new Date(), 6);
       const lastWeekStart = subDays(new Date(), 7);
 
-      const [attemptStats, recentAttempts, activityRows, topicStats] = await Promise.all([
+      const [attemptStats, recentAttempts, activityRows, topicStats, currentMistakes] = await Promise.all([
         prisma.attempt.groupBy({
           by: ["is_correct"],
           where: { user_id: userId },
@@ -48,43 +48,85 @@ function getCachedDashboardData(userId: string) {
           ORDER BY date
         `,
 
-        // Find weak topics (topics with most incorrect attempts)
-        prisma.attempt.findMany({
-          where: { 
-            user_id: userId, 
-            is_correct: false,
-            created_at: { gte: subDays(new Date(), 14) } // Last 2 weeks
-          },
-          include: {
-            question: { select: { pattern: { select: { topic_name: true, subject: true, id: true } } } },
-            pyq: { select: { pattern: { select: { topic_name: true, subject: true, id: true } } } },
-          },
-          take: 50,
-        })
+        // Find weak topics based on CURRENT uncorrected mistakes
+        prisma.$queryRaw<{ pattern_id: string; topic_name: string; subject: string; count: bigint }[]>`
+          SELECT 
+            t.pattern_id,
+            COALESCE(pat.topic_name, sp_pat.subject_name, 'Unknown Topic') as topic_name,
+            COALESCE(pat.subject, sp_pat.subject_name, 'General') as subject,
+            t.count
+          FROM (
+            SELECT 
+              COALESCE(q.pattern_id, p.pattern_id, 'subject-' || sp.subject_pattern_id) as pattern_id,
+              COUNT(*)::bigint as count
+            FROM (
+              SELECT question_id, pyq_id, subject_pyq_id, is_correct,
+                     ROW_NUMBER() OVER (
+                       PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id) 
+                       ORDER BY created_at DESC
+                     ) as rn
+              FROM "Attempt"
+              WHERE user_id = ${userId}
+            ) latest
+            LEFT JOIN "GeneratedQuestion" q ON q.id = latest.question_id
+            LEFT JOIN "PYQ" p ON p.id = latest.pyq_id
+            LEFT JOIN "SubjectPYQ" sp ON sp.id = latest.subject_pyq_id
+            WHERE latest.rn = 1 AND latest.is_correct = false
+            GROUP BY 1
+          ) t
+          LEFT JOIN "Pattern" pat ON pat.id = t.pattern_id
+          LEFT JOIN "SubjectPattern" sp_pat ON ('subject-' || sp_pat.id) = t.pattern_id
+          WHERE t.pattern_id IS NOT NULL 
+            AND (pat.id IS NOT NULL OR sp_pat.id IS NOT NULL)
+            AND t.count > 0
+          ORDER BY t.count DESC
+          LIMIT 5
+        `,
+
+        // Find current uncorrected mistakes (total count)
+        prisma.$queryRaw<{ count: bigint }[]>`
+          SELECT COUNT(*)::bigint as count FROM (
+            SELECT is_correct, 
+                   ROW_NUMBER() OVER (
+                     PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id) 
+                     ORDER BY created_at DESC
+                   ) as rn
+            FROM "Attempt"
+            WHERE user_id = ${userId}
+          ) t
+          WHERE rn = 1 AND is_correct = false
+        `
       ]);
 
-      // Weakest Topic Logic
-      const errorMap: Record<string, { count: number; subject: string; id: string }> = {};
-      topicStats.forEach(a => {
-        const pattern = a.question?.pattern || a.pyq?.pattern;
-        if (pattern) {
-          if (!errorMap[pattern.topic_name]) {
-            errorMap[pattern.topic_name] = { count: 0, subject: pattern.subject, id: pattern.id };
-          }
-          errorMap[pattern.topic_name].count++;
-        }
-      });
-      const weakestTopic = Object.entries(errorMap).sort((a, b) => b[1].count - a[1].count)[0];
+      // Weakest Topic is simply the first result from the topicStats query
+      const weakestRow = topicStats[0];
+      const weakestTopic = weakestRow ? {
+        id: weakestRow.pattern_id,
+        name: weakestRow.topic_name,
+        subject: weakestRow.subject,
+        count: Number(weakestRow.count)
+      } : null;
 
       // Derive totals
       const correctRow = attemptStats.find((r) => r.is_correct === true);
       const incorrectRow = attemptStats.find((r) => r.is_correct === false);
       const correctAttempts = correctRow?._count ?? 0;
       const totalAttempted = correctAttempts + (incorrectRow?._count ?? 0);
+      const currentMistakesCount = Number(currentMistakes[0]?.count ?? 0);
 
-      // Derive last 5 and recent failures
-      const lastFiveAttempts = recentAttempts.slice(0, 5);
-      const recentFailures = recentAttempts.filter((a) => !a.is_correct).slice(0, 10);
+      // Derive last 5 and recent failures from the latest status of each question
+      const latestRecentAttempts: any[] = [];
+      const seenQ = new Set<string>();
+      recentAttempts.forEach((a) => {
+        const qId = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
+        if (!seenQ.has(qId)) {
+          latestRecentAttempts.push(a);
+          seenQ.add(qId);
+        }
+      });
+
+      const lastFiveAttempts = latestRecentAttempts.slice(0, 5);
+      const recentFailures = latestRecentAttempts.filter((a) => !a.is_correct).slice(0, 10);
 
       // Heatmap Data
       const activityData: Record<string, number> = {};
@@ -107,15 +149,16 @@ function getCachedDashboardData(userId: string) {
       return { 
         totalAttempted, 
         correctAttempts, 
+        currentMistakesCount,
         lastFiveAttempts, 
         recentFailures, 
         activityData, 
         currentStreak,
-        weakestTopic: weakestTopic ? { name: weakestTopic[0], ...weakestTopic[1] } : null
+        weakestTopic
       };
     },
-    [`dashboard-v2-${userId}`],
-    { revalidate: 30, tags: ["dashboard"] }
+    [`dashboard-v3-${userId}`],
+    { revalidate: 30, tags: ["dashboard", "mistakes"] }
   )();
 }
 
@@ -158,7 +201,7 @@ export default async function DashboardPage() {
 
   if (!clerkUser) redirect("/sign-in");
 
-  const { totalAttempted, correctAttempts, lastFiveAttempts, recentFailures, activityData, currentStreak, weakestTopic } = data;
+  const { totalAttempted, correctAttempts, currentMistakesCount, lastFiveAttempts, recentFailures, activityData, currentStreak, weakestTopic } = data;
   const accuracy = totalAttempted > 0 ? Math.round((correctAttempts / totalAttempted) * 100) : 0;
   const firstName = clerkUser.firstName || clerkUser.username || "Learner";
 
@@ -206,7 +249,7 @@ export default async function DashboardPage() {
       correct_answer: q?.correct_answer,
       topic_name: pattern?.topic_name,
       subject: pattern?.subject,
-      age: format(new Date(a.created_at), "h'h ago'"),
+      age: formatDistanceToNow(new Date(a.created_at), { addSuffix: true }).replace('about ', '').replace('almost ', ''),
       practiceUrl: `/practice?patternId=${patternId}&questionId=${q?.id}&subject=${encodeURIComponent(pattern?.subject || 'All')}`,
       slugUrl: getQuestionUrl({
         id: q?.id,
@@ -295,10 +338,10 @@ export default async function DashboardPage() {
           {/* Stat strip — compact, with deltas */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 1, background: BE.line, border: `1px solid ${BE.line}`, borderRadius: 12, marginBottom: 24, overflow: 'hidden' }} className="db-stats">
             {[
-              { label: 'Answered', val: totalAttempted, sub: 'total', delta: `${totalAttempted > 0 ? '+'+Math.ceil(totalAttempted/8) : '0'} this week`, good: true },
-              { label: 'Accuracy', val: `${accuracy}%`, sub: 'of ' + totalAttempted, delta: accuracy > 70 ? 'Above target' : 'Needs focus', good: accuracy > 70 },
-              { label: 'Streak', val: currentStreak, sub: 'days', delta: currentStreak > 0 ? 'Active streak' : 'Longest: 14', good: currentStreak > 3 },
-              { label: 'Correct', val: correctAttempts, sub: 'solved', delta: 'Total mastery', good: true },
+              { label: 'Answered', val: totalAttempted, sub: 'attempts', delta: `${totalAttempted > 0 ? '+'+Math.ceil(totalAttempted/8) : '0'} this week`, good: true },
+              { label: 'Mistakes', val: currentMistakesCount, sub: 'to fix', delta: currentMistakesCount === 0 ? 'Perfect status' : 'Uncorrected gaps', good: currentMistakesCount === 0 },
+              { label: 'Accuracy', val: `${accuracy}%`, sub: 'all-time', delta: accuracy > 70 ? 'Above target' : 'Needs focus', good: accuracy > 70 },
+              { label: 'Streak', val: currentStreak, sub: 'days', delta: currentStreak > 0 ? 'Active streak' : 'Target: 30', good: currentStreak > 3 },
             ].map(s => (
               <div key={s.label} style={{ padding: '18px 20px', background: BE.surface }} className="db-stat-cell">
                 <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: 0.08, textTransform: 'uppercase', fontWeight: 600, marginBottom: 8 }}>{s.label}</div>
@@ -385,7 +428,7 @@ export default async function DashboardPage() {
               {lastFiveAttempts.map((attempt: any, i, arr) => {
                 const topicName = attempt.question?.pattern?.topic_name ?? attempt.pyq?.pattern?.topic_name ?? attempt.subject_pyq?.subject_pattern?.subject_name ?? "Subject Practice";
                 const subject = attempt.question?.pattern?.subject ?? attempt.pyq?.pattern?.subject ?? attempt.subject_pyq?.subject_pattern?.subject_name ?? "";
-                const when = format(new Date(attempt.created_at), "h'h ago'");
+                const when = formatDistanceToNow(new Date(attempt.created_at), { addSuffix: true }).replace('about ', '').replace('almost ', '');
                 const r = attempt.is_correct ? 'correct' : 'wrong';
 
                 return (

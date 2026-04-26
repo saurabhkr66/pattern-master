@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { BE } from "@/lib/theme";
 import { Bookmark } from "lucide-react";
+import MasteryNotes from "../MasteryNotes";
 
 interface PatternRowProps {
   pattern: any;
@@ -326,12 +327,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                   </>
                 ) : activeTab === 'notes' ? (
                   <div style={{ padding: '10px 0' }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12, color: BE.text, fontFamily: BE.serif }}>Mastery Notes</h3>
-                    {pattern.short_notes ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <MathRenderer content={pattern.short_notes} />
-                      </div>
-                    ) : <p style={{ color: BE.textMute, fontSize: 13 }}>No mastery notes yet.</p>}
+                    <MasteryNotes data={pattern.short_notes} />
                   </div>
                 ) : (
                   <UserNotesEditor patternId={pattern.id} />

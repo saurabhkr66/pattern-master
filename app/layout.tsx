@@ -25,6 +25,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#f59e0b",
+  viewportFit: "cover", // Ensures the app uses the full screen behind notches
 };
 
 const globalSchema = buildOrganizationSchema();
@@ -67,6 +68,7 @@ export const metadata: Metadata = {
 
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import PostLoginRedirect from "@/components/landing/PostLoginRedirect";
+import NativeMobileBridge from "@/components/providers/NativeMobileBridge";
 
 export default function RootLayout({
   children,
@@ -120,6 +122,7 @@ export default function RootLayout({
             }} />
           )}
           <ServiceWorkerRegistration />
+          <NativeMobileBridge />
           <LanguageProvider>
             <ThemeProvider>
               <QueryProvider>

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import FlashcardDeck from "@/components/review/FlashcardDeck";
 import type { Metadata } from "next";
 
@@ -15,9 +16,36 @@ export default async function ReviewPage() {
 
   const now = new Date();
 
-  // Fetch wrong attempts
+  // 1. Find only the LATEST attempt for each question that is WRONG.
+  // If the latest attempt is correct, the question is removed from the review deck.
+  const latestWrongRows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM (
+      SELECT id, is_correct, created_at,
+             ROW_NUMBER() OVER (
+               PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id) 
+               ORDER BY created_at DESC
+             ) as rn
+      FROM "Attempt"
+      WHERE user_id = ${userId}
+    ) t
+    WHERE rn = 1 AND is_correct = false
+    ORDER BY created_at DESC
+    LIMIT 500
+  `;
+
+  const ids = latestWrongRows.map((r) => r.id);
+  if (ids.length === 0) return (
+    <div className="be-screen" style={{ minHeight: "100%", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="text-center">
+        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>All clear!</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>You have no uncorrected mistakes to review.</p>
+        <Link href="/practice" className="mt-4 inline-block text-amber-500 font-bold">Go practice →</Link>
+      </div>
+    </div>
+  );
+
   const wrongAttempts = await prisma.attempt.findMany({
-    where: { user_id: userId, is_correct: false },
+    where: { id: { in: ids } },
     include: {
       question: { include: { pattern: true } },
       pyq: { include: { pattern: true } },
@@ -54,7 +82,7 @@ export default async function ReviewPage() {
       const pattern =
         a.question?.pattern ??
         a.pyq?.pattern ??
-        (sp ? { id: sp.id, topic_name: sp.subject_name, subject: sp.subject_name } : null);
+        (sp ? { id: `subject-${sp.id}`, topic_name: sp.subject_name, subject: sp.subject_name } : null);
       if (!q || !pattern) return null;
 
       const qId = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
