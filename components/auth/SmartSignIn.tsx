@@ -64,7 +64,9 @@ export default function SmartSignIn() {
   const [isNative, setIsNative] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsNative(Capacitor.isNativePlatform());
+    // Check if the Capacitor bridge is active, or fallback to our custom User Agent
+    const isApp = Capacitor.isNativePlatform() || navigator.userAgent.includes('BattleExamApp');
+    setIsNative(isApp);
   }, []);
 
   if (isNative === null) {
