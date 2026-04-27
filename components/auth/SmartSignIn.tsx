@@ -17,6 +17,7 @@ function MobileNativeLogin() {
       await signIn.create({
         strategy: 'oauth_google',
         redirectUrl: 'https://battleexam.com/sso-callback',
+        actionCompleteRedirectUrl: '/dashboard',
       });
 
       const verification = signIn.firstFactorVerification;
