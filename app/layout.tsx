@@ -33,37 +33,72 @@ const globalSchema = buildOrganizationSchema();
 export const metadata: Metadata = {
   title: {
     default: "BattleExam – AI-Powered GATE CSE Preparation",
-    template: "%s – BattleExam",
+    template: "%s | BattleExam",
   },
   description:
     "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Adaptive difficulty, instant explanations, progress tracking. Free to start.",
   metadataBase: new URL("https://battleexam.com"),
   alternates: {
-    canonical: "/",
+    canonical: "https://battleexam.com",
   },
   openGraph: {
     title: "BattleExam – AI-Powered GATE CSE Preparation",
-    description: "Master GATE CSE with AI-generated pattern-based practice. Adaptive difficulty and instant feedback.",
+    description:
+      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice. Adaptive difficulty, instant explanations, PYQs. Free to start.",
     url: "https://battleexam.com",
     siteName: "BattleExam",
-    locale: "en_US",
+    locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "https://battleexam.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "BattleExam – Pattern-Based GATE CSE Preparation Platform",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "BattleExam – AI-Powered GATE CSE Preparation",
-    description: "Master GATE CSE with AI-powered patterns.",
+    description:
+      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice. Free to start.",
     creator: "@battleexam",
+    images: ["https://battleexam.com/opengraph-image"],
   },
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true },
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",
   },
+  keywords: [
+    "GATE CSE preparation",
+    "GATE practice questions",
+    "GATE previous year questions",
+    "GATE 2026",
+    "GATE 2027",
+    "ISRO CSE preparation",
+    "BARC preparation",
+    "ESE preparation",
+    "pattern based learning",
+    "AI generated questions",
+    "GATE algorithms",
+    "GATE data structures",
+    "GATE operating systems",
+    "GATE DBMS",
+    "GATE computer networks",
+    "competitive exam preparation India",
+  ],
 };
 
 import { LanguageProvider } from "@/components/providers/LanguageProvider";

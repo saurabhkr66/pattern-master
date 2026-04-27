@@ -32,6 +32,7 @@ const navLinks = [
   { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
 ];
 
+
 export default function Header() {
   const pathname = usePathname();
   const { user } = useUser();
@@ -75,52 +76,50 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <Show when="signed-in">
-          <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
-            {navLinks.map(({ href, label, icon: Icon, disabled }) => {
-              const content = (
-                <>
-                  <Icon size={16} />
-                  {label}
-                </>
-              );
+        {/* Desktop Nav — always visible */}
+        <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
+          {navLinks.map(({ href, label, icon: Icon, disabled }) => {
+            const content = (
+              <>
+                <Icon size={16} />
+                {label}
+              </>
+            );
 
-              if (disabled) {
-                return (
-                  <span
-                    key={href}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm opacity-40 cursor-not-allowed"
-                    style={{ color: "var(--text-secondary)" }}
-                    title="Coming soon"
-                  >
-                    {content}
-                  </span>
-                );
-              }
-
+            if (disabled) {
               return (
-                <Link
+                <span
                   key={href}
-                  href={href}
-                  prefetch={true}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-                    pathname === href
-                      ? "text-amber-300 bg-amber-500/20"
-                      : "hover:bg-white/5"
-                  }`}
-                  style={
-                    pathname === href
-                      ? undefined
-                      : { color: "var(--text-secondary)" }
-                  }
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm opacity-40 cursor-not-allowed"
+                  style={{ color: "var(--text-secondary)" }}
+                  title="Coming soon"
                 >
                   {content}
-                </Link>
+                </span>
               );
-            })}
-          </nav>
-        </Show>
+            }
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                prefetch={true}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
+                  pathname === href
+                    ? "text-amber-300 bg-amber-500/20"
+                    : "hover:bg-white/5"
+                }`}
+                style={
+                  pathname === href
+                    ? undefined
+                    : { color: "var(--text-secondary)" }
+                }
+              >
+                {content}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
@@ -223,67 +222,65 @@ export default function Header() {
 
             <nav className="flex flex-col p-4 gap-2">
 
-              <Show when="signed-in">
-                {navLinks.map(({ href, label, icon: Icon, disabled }) => {
-                  const content = (
-                    <>
-                      <Icon size={18} />
-                      {label}
-                    </>
-                  );
+              {navLinks.map(({ href, label, icon: Icon, disabled }) => {
+                const content = (
+                  <>
+                    <Icon size={18} />
+                    {label}
+                  </>
+                );
 
-                  if (disabled) {
-                    return (
-                      <div
-                        key={href}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl opacity-40 cursor-not-allowed"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        {content}
-                      </div>
-                    );
-                  }
-
+                if (disabled) {
                   return (
-                    <Link
+                    <div
                       key={href}
-                      href={href}
-                      prefetch={true}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
-                        pathname === href
-                          ? "text-amber-300 bg-amber-500/20"
-                          : "hover:bg-white/5"
-                      }`}
-                      style={
-                        pathname === href
-                          ? undefined
-                          : { color: "var(--text-secondary)" }
-                      }
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl opacity-40 cursor-not-allowed"
+                      style={{ color: "var(--text-secondary)" }}
                     >
                       {content}
-                    </Link>
+                    </div>
                   );
-                })}
-              </Show>
+                }
+
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    prefetch={true}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
+                      pathname === href
+                        ? "text-amber-300 bg-amber-500/20"
+                        : "hover:bg-white/5"
+                    }`}
+                    style={
+                      pathname === href
+                        ? undefined
+                        : { color: "var(--text-secondary)" }
+                    }
+                  >
+                    {content}
+                  </Link>
+                );
+              })}
 
               <Show when="signed-out">
+                <div className="border-t my-2" style={{ borderColor: "var(--border)" }} />
                 <Link href="/sign-in">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full text-left px-4 py-3"
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm hover:bg-white/5"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     Sign In
                   </button>
                 </Link>
-
                 <Link href="/sign-up">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full bg-amber-500 text-white px-4 py-3 rounded-xl mt-2"
+                    className="w-full bg-amber-500 text-white px-4 py-3 rounded-xl mt-1 font-semibold text-sm"
                   >
-                    Get Started
+                    Get Started — Free
                   </button>
                 </Link>
               </Show>

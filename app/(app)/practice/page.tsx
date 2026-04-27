@@ -8,8 +8,8 @@ import type { Metadata } from "next";
 import { BE } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "Practice – PatternMaster",
-  description: "Practice GATE CSE, ISRO, BARC & ESE topics with AI-generated questions.",
+  title: "Practice",
+  description: "Browse GATE CSE, ISRO, BARC & ESE topics and practice with AI-generated questions and previous year papers.",
 };
 
 

@@ -57,7 +57,7 @@ export function buildBreadcrumbSchema(items: { name: string; item: string }[]) {
 export function buildOrganizationSchema() {
   const name = "BattleExam";
   const url = "https://battleexam.com";
-  const logo = `${url}/logo.png`; // Placeholder for actual logo
+  const logo = `${url}/icon.png`;
 
   return {
     "@context": "https://schema.org",
@@ -66,16 +66,29 @@ export function buildOrganizationSchema() {
         "@type": "Organization",
         "@id": `${url}/#organization`,
         "name": name,
+        "alternateName": "BattleExam – GATE CSE Prep",
         "url": url,
         "logo": {
           "@type": "ImageObject",
+          "@id": `${url}/#logo`,
           "url": logo,
           "width": 512,
-          "height": 512
+          "height": 512,
+          "caption": "BattleExam"
+        },
+        "image": { "@id": `${url}/#logo` },
+        "description": "AI-powered pattern-based exam preparation platform for GATE CSE, ISRO, BARC, and ESE. Free to start.",
+        "foundingDate": "2024",
+        "areaServed": {
+          "@type": "Country",
+          "name": "India"
+        },
+        "audience": {
+          "@type": "EducationalAudience",
+          "educationalRole": "student"
         },
         "sameAs": [
-          "https://twitter.com/battleexam", // Placeholders
-          "https://github.com/battleexam"
+          "https://twitter.com/battleexam"
         ]
       },
       {
@@ -83,6 +96,8 @@ export function buildOrganizationSchema() {
         "@id": `${url}/#website`,
         "url": url,
         "name": name,
+        "description": "Pattern-based GATE CSE, ISRO, BARC & ESE preparation with AI-generated questions.",
+        "inLanguage": "en-IN",
         "publisher": { "@id": `${url}/#organization` },
         "potentialAction": {
           "@type": "SearchAction",
@@ -94,6 +109,38 @@ export function buildOrganizationSchema() {
         }
       }
     ]
+  };
+}
+
+/**
+ * Build schema.org JSON-LD for a subject hub page (e.g., /gate-cse/algorithms).
+ */
+export function buildSubjectPageSchema(opts: {
+  examLabel: string;
+  subjectLabel: string;
+  canonical: string;
+  description: string;
+  topicCount: number;
+  questionCount: number;
+  year: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": opts.canonical,
+    "name": `${opts.examLabel} ${opts.subjectLabel} Practice Questions`,
+    "description": opts.description,
+    "url": opts.canonical,
+    "inLanguage": "en-IN",
+    "isPartOf": { "@id": "https://battleexam.com/#website" },
+    "about": {
+      "@type": "EducationalOccupationalProgram",
+      "name": `${opts.examLabel} Computer Science – ${opts.subjectLabel}`,
+      "educationalCredentialAwarded": `${opts.examLabel} Score`,
+      "provider": { "@type": "Organization", "name": "BattleExam", "url": "https://battleexam.com" }
+    },
+    "educationalLevel": "Graduate",
+    "numberOfItems": opts.questionCount,
   };
 }
 

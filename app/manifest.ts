@@ -2,16 +2,16 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PatternMaster – GATE CSE Prep",
-    short_name: "PatternMaster",
+    name: "BattleExam – GATE CSE Prep",
+    short_name: "BattleExam",
     description:
-      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions.",
-    start_url: "/practice",
+      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Free to start.",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#0a0a0a",
-    theme_color: "#2563eb",
+    theme_color: "#6366f1",
     icons: [
       {
         src: "/icon.png",

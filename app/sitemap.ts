@@ -37,7 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const topicPages: MetadataRoute.Sitemap = topicRows.map((r) => ({
     url: `${BASE}/${toSlug(r.exam_type)}-cse/${toSlug(r.subject)}/${toSlug(r.topic_name)}`,
     lastModified: now,
-    changeFrequency: "daily" as const,
+    changeFrequency: "weekly" as const,
     priority: 0.85,
   }));
 
@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const generatedPages: MetadataRoute.Sitemap = generatedQuestions.map((q) => ({
     url: `${BASE}/${toSlug(q.pattern.exam_type)}-cse/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/gq-${q.id}`,
     lastModified: q.created_at,
-    changeFrequency: "monthly" as const,
+    changeFrequency: "yearly" as const,
     priority: 0.6,
   }));
 

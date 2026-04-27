@@ -84,8 +84,8 @@ export async function generateMetadata({
   const canonical = `${BASE}/${examType}/${subject}/${topic}`;
   const year = new Date().getFullYear() + 1;
 
-  const title = `${topicLabel} – GATE ${subjectLabel} Practice Questions & PYQs | BattleExam`;
-  const description = `Practise ${topicLabel} for GATE CSE ${year} with AI-generated questions and previous year questions (PYQs). Understand the exact pattern ${examLabel} examiners test on ${topicLabel}.`;
+  const title = `${topicLabel} – ${examLabel} ${subjectLabel} Practice Questions & PYQs | BattleExam`;
+  const description = `Practise ${topicLabel} for ${examLabel} CSE ${year} with AI-generated questions and previous year questions (PYQs). Understand the exact pattern ${examLabel} examiners test on ${topicLabel}. Free on BattleExam.`;
 
   return {
     title,
@@ -99,6 +99,8 @@ export async function generateMetadata({
       `${examLabel} ${topicLabel} questions`,
       `${topicLabel} GATE CSE ${year}`,
       `${topicLabel} questions and answers`,
+      `${topicLabel} GATE pattern`,
+      `${examLabel} ${subjectLabel} ${topicLabel} MCQ`,
     ],
     alternates: { canonical },
     openGraph: {
@@ -107,8 +109,22 @@ export async function generateMetadata({
       url: canonical,
       type: "website",
       siteName: "BattleExam",
+      locale: "en_IN",
+      images: [
+        {
+          url: "https://battleexam.com/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: `${topicLabel} – ${examLabel} Practice Questions | BattleExam`,
+        },
+      ],
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["https://battleexam.com/opengraph-image"],
+    },
   };
 }
 

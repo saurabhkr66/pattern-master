@@ -93,7 +93,7 @@ async function fetchQuestion(questionId: string) {
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
   const { questionId, subject, topic } = await params;
   const q = await fetchQuestion(questionId);
-  if (!q) return { title: "Question Not Found – PatternMaster" };
+  if (!q) return { title: "Question Not Found | BattleExam" };
 
   const subjectLabel = subject.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const topicLabel   = topic.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -115,11 +115,21 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
       url: canonical,
       type: "article",
       siteName: "BattleExam",
+      locale: "en_IN",
+      images: [
+        {
+          url: "https://battleexam.com/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: ["https://battleexam.com/opengraph-image"],
     },
   };
 }
@@ -144,11 +154,15 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
     url,
   });
 
+  const examSlug = `${toSlug(q.examType)}-cse`;
+  const subjectSlug = toSlug(q.subject);
+  const topicSlug = toSlug(q.topicName);
+
   const breadcrumbSchema = buildBreadcrumbSchema([
     { name: "Home", item: "https://battleexam.com" },
-    { name: "Practice", item: "https://battleexam.com/practice" },
-    { name: q.subject, item: `https://battleexam.com/practice?subject=${toSlug(q.subject)}` },
-    { name: q.topicName, item: url }
+    { name: `${q.examType} CSE`, item: `https://battleexam.com/${examSlug}/${subjectSlug}` },
+    { name: q.subject, item: `https://battleexam.com/${examSlug}/${subjectSlug}` },
+    { name: q.topicName, item: `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}` },
   ]);
 
   return (
@@ -168,12 +182,13 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
         <nav className="text-xs font-medium mb-6 flex items-center gap-2 flex-wrap" style={{ color: "var(--text-secondary)" }}>
           <a href="/" className="hover:underline">Home</a>
           <span>›</span>
-          <a href="/practice" className="hover:underline">Practice</a>
-          <span>›</span>
-          <span style={{ color: "var(--text-primary)" }}>
-            {q.subject}
-            {q.topicName !== q.subject && ` · ${q.topicName}`}
-          </span>
+          <a href={`/${examSlug}/${subjectSlug}`} className="hover:underline">{q.subject}</a>
+          {q.topicName !== q.subject && (
+            <>
+              <span>›</span>
+              <a href={`/${examSlug}/${subjectSlug}/${topicSlug}`} className="hover:underline">{q.topicName}</a>
+            </>
+          )}
         </nav>
 
         {/* Meta pills */}

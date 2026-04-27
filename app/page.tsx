@@ -26,35 +26,52 @@ import {
 export const metadata: Metadata = {
   title: "BattleExam – Pattern-Based GATE CSE Preparation | Practice Questions",
   description:
-    "Master GATE, ISRO, BARC & ESE with pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks with adaptive difficulty. Free to start.",
+    "Master GATE CSE 2026/2027, ISRO, BARC & ESE with AI-generated pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks. Free to start.",
   keywords: [
     "GATE CSE preparation",
     "GATE CSE practice questions",
-    "GATE algorithms",
+    "GATE 2026 preparation",
+    "GATE 2027 preparation",
+    "GATE algorithms practice",
     "GATE data structures",
     "GATE operating systems",
     "GATE DBMS",
     "GATE computer networks",
+    "GATE previous year questions",
+    "GATE PYQ",
     "ISRO CSE preparation",
+    "ISRO CS exam",
     "BARC preparation",
-    "GATE 2026",
-    "GATE 2027",
-    "pattern based learning",
+    "ESE preparation",
+    "pattern based learning GATE",
+    "AI generated GATE questions",
+    "GATE CSE mock test",
+    "computer science competitive exam",
+    "engineering entrance exam preparation India",
   ],
   openGraph: {
     title: "BattleExam – Pattern-Based GATE CSE Preparation",
     description:
-      "Practice GATE CSE, ISRO & BARC with questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, progress tracking.",
+      "Practice GATE CSE, ISRO & BARC with AI questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, PYQs included. Free.",
     type: "website",
     locale: "en_IN",
+    images: [
+      {
+        url: "https://battleexam.com/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "BattleExam – Pattern-Based GATE CSE Preparation",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "BattleExam – Pattern-Based GATE CSE Preparation",
     description:
-      "Practice GATE CSE, ISRO & BARC with questions tailored to each topic's core logic.",
+      "Practice GATE CSE, ISRO & BARC with AI questions tailored to each topic's core logic. Free.",
+    images: ["https://battleexam.com/opengraph-image"],
   },
-  alternates: { canonical: "/" },
+  alternates: { canonical: "https://battleexam.com" },
 };
 
 // Serve from CDN edge cache — regenerate at most once per hour
@@ -71,12 +88,82 @@ const structuredData = {
     "@type": "OfferCatalog",
     name: "GATE CSE Study Topics",
     itemListElement: [
-      { "@type": "Course", name: "GATE Algorithms", courseCode: "GATE-ALGO" },
-      { "@type": "Course", name: "GATE Data Structures", courseCode: "GATE-DS" },
-      { "@type": "Course", name: "GATE Operating Systems", courseCode: "GATE-OS" },
-      { "@type": "Course", name: "GATE Computer Networks", courseCode: "GATE-CN" },
-      { "@type": "Course", name: "GATE DBMS", courseCode: "GATE-DBMS" },
+      {
+        "@type": "Course",
+        name: "GATE Algorithms",
+        courseCode: "GATE-ALGO",
+        url: "https://battleexam.com/gate-cse/algorithms",
+        description: "Master sorting, graph algorithms, dynamic programming, divide-and-conquer recurrences for GATE CSE.",
+        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+      },
+      {
+        "@type": "Course",
+        name: "GATE Data Structures",
+        courseCode: "GATE-DS",
+        url: "https://battleexam.com/gate-cse/data-structures",
+        description: "Practice trees, heaps, hashing, and linked lists with GATE-pattern questions.",
+        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+      },
+      {
+        "@type": "Course",
+        name: "GATE Operating Systems",
+        courseCode: "GATE-OS",
+        url: "https://battleexam.com/gate-cse/operating-systems",
+        description: "Process scheduling, memory management, deadlocks, and file systems for GATE.",
+        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+      },
+      {
+        "@type": "Course",
+        name: "GATE Computer Networks",
+        courseCode: "GATE-CN",
+        url: "https://battleexam.com/gate-cse/computer-networks",
+        description: "TCP/IP, routing protocols, subnetting, and OSI model questions for GATE.",
+        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+      },
+      {
+        "@type": "Course",
+        name: "GATE DBMS",
+        courseCode: "GATE-DBMS",
+        url: "https://battleexam.com/gate-cse/dbms",
+        description: "Normalization, SQL, relational algebra, and transaction management for GATE.",
+        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+      },
     ],
+  },
+};
+
+const softwareAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "BattleExam",
+  operatingSystem: "Web, Android, iOS",
+  applicationCategory: "EducationApplication",
+  applicationSubCategory: "Exam Preparation",
+  url: "https://battleexam.com",
+  description:
+    "AI-powered pattern-based exam preparation platform for GATE CSE, ISRO, BARC, and ESE. Practice with adaptive-difficulty questions, access previous year papers, and track your progress.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "INR",
+    availability: "https://schema.org/InStock",
+    description: "Free core practice. No credit card required.",
+  },
+  featureList: [
+    "AI-generated pattern-based questions",
+    "Previous Year Questions (PYQs) for GATE, ISRO, BARC, ESE",
+    "Adaptive difficulty: Easy, Medium, Hard",
+    "Instant explanations and step-by-step solutions",
+    "Progress tracking and accuracy analytics",
+    "Mistake review and flashcard mode",
+    "Covers GATE CSE, ISRO CS, BARC CS, ESE subjects",
+  ],
+  screenshot: "https://battleexam.com/opengraph-image",
+  inLanguage: "en-IN",
+  audience: {
+    "@type": "EducationalAudience",
+    educationalRole: "student",
+    audienceType: "Engineering students preparing for GATE, ISRO, BARC, ESE",
   },
 };
 
@@ -89,15 +176,15 @@ const faqStructuredData = {
       name: "How is BattleExam different from other GATE preparation platforms?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "BattleExam generates questions based on the specific atomic logic of each GATE topic — not recycled question banks.",
+        text: "BattleExam generates questions based on the specific atomic logic of each GATE topic — not recycled question banks. Every question targets the exact thinking pattern GATE examiners test, so practice is always relevant and non-repetitive.",
       },
     },
     {
       "@type": "Question",
-      name: "Which exams does BattleExam cover?",
+      name: "Which exams and subjects does BattleExam cover?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "GATE, ISRO, BARC, and ESE.",
+        text: "BattleExam covers GATE CSE, ISRO CS, BARC CS, and ESE (Engineering Services Examination) with subjects including Algorithms, Data Structures, Operating Systems, DBMS, Computer Networks, Theory of Computation, Compiler Design, and more.",
       },
     },
     {
@@ -105,7 +192,47 @@ const faqStructuredData = {
       name: "Is BattleExam free to use?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. Create an account and start practicing immediately — no credit card required.",
+        text: "Yes. Create an account and start practicing immediately — no credit card required. The core practice, PYQs, and progress tracking are completely free.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Does BattleExam have GATE previous year questions (PYQs)?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. BattleExam includes a complete PYQ bank for GATE CSE, organized by topic and year. Every previous year question is tagged to the exact pattern it tests, so you can study PYQs in context rather than in isolation.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How does BattleExam generate questions without repeating them?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Every generated question gets a semantic fingerprint. If an identical question already exists in the database, it is skipped — guaranteeing a growing bank of unique, non-repetitive questions.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is pattern-based learning for GATE?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Every GATE question tests one core idea — for example, every Merge Sort question ultimately tests how divide-and-conquer recurrences resolve. Pattern-based learning identifies that core idea (the atomic logic) and drills it with varied questions until you own it — instead of memorising individual questions.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can BattleExam help me prepare for ISRO or BARC?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. ISRO CS and BARC CS share roughly 80% of their syllabus with GATE CSE. BattleExam's question bank and topic-level practice are directly applicable to both exams, and subject-specific ISRO and BARC question sets are available.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What difficulty levels are available?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "BattleExam offers Easy, Medium, and Hard difficulty modes. Hard mode questions are calibrated to AIR-100 level — genuinely challenging, not artificially inflated. You control the difficulty slider at any time.",
       },
     },
   ],
@@ -227,6 +354,10 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
       />
       <script
         type="application/ld+json"
@@ -851,7 +982,7 @@ export default async function HomePage() {
           style={{ borderColor: "var(--border)" }}
         >
           <div className="max-w-5xl mx-auto">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
               <div className="flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
                 <svg width="22" height="28" viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <g transform="translate(0, 2)">
@@ -877,6 +1008,37 @@ export default async function HomePage() {
                 <Link href="/sign-up" className="hover:text-indigo-400 transition-colors">Sign up</Link>
               </div>
             </div>
+
+            {/* Subject links — internal linking for crawlers */}
+            <nav aria-label="GATE CSE subjects" className="mb-8">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "var(--text-faint)" }}>
+                GATE CSE Topics
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {[
+                  { label: "Algorithms", href: "/gate-cse/algorithms" },
+                  { label: "Data Structures", href: "/gate-cse/data-structures" },
+                  { label: "Operating Systems", href: "/gate-cse/operating-systems" },
+                  { label: "DBMS", href: "/gate-cse/dbms" },
+                  { label: "Computer Networks", href: "/gate-cse/computer-networks" },
+                  { label: "Theory of Computation", href: "/gate-cse/theory-of-computation" },
+                  { label: "Compiler Design", href: "/gate-cse/compiler-design" },
+                  { label: "Digital Logic", href: "/gate-cse/digital-logic" },
+                  { label: "Computer Organisation", href: "/gate-cse/computer-organisation" },
+                  { label: "Discrete Mathematics", href: "/gate-cse/discrete-mathematics" },
+                ].map((s) => (
+                  <Link
+                    key={s.href}
+                    href={s.href}
+                    className="text-[11px] hover:text-indigo-400 transition-colors"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+
             <p className="text-center text-[10px]" style={{ color: "var(--text-faint)" }}>
               © {new Date().getFullYear()} BattleExam. Built for Indian engineering aspirants.
             </p>
