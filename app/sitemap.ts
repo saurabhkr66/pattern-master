@@ -18,12 +18,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ---------- Subject hub pages  /[examType]/[subject] ----------------------
   const subjectRows = await prisma.pattern.findMany({
-    select: { exam_type: true, subject: true },
-    distinct: ["exam_type", "subject"],
+    select: { exam_type: true, branch: true, subject: true },
+    distinct: ["exam_type", "branch", "subject"],
   });
 
   const subjectPages: MetadataRoute.Sitemap = subjectRows.map((r) => ({
-    url: `${BASE}/${toSlug(r.exam_type)}-cse/${toSlug(r.subject)}`,
+    url: `${BASE}/${toSlug(r.exam_type)}-${toSlug(r.branch)}/${toSlug(r.subject)}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
     priority: 0.9,
@@ -31,11 +31,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ---------- Topic hub pages  /[examType]/[subject]/[topic] ----------------
   const topicRows = await prisma.pattern.findMany({
-    select: { exam_type: true, subject: true, topic_name: true },
+    select: { exam_type: true, branch: true, subject: true, topic_name: true },
   });
 
   const topicPages: MetadataRoute.Sitemap = topicRows.map((r) => ({
-    url: `${BASE}/${toSlug(r.exam_type)}-cse/${toSlug(r.subject)}/${toSlug(r.topic_name)}`,
+    url: `${BASE}/${toSlug(r.exam_type)}-${toSlug(r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
     priority: 0.85,
@@ -46,12 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: {
       id: true,
       created_at: true,
-      pattern: { select: { exam_type: true, subject: true, topic_name: true } },
+      pattern: { select: { exam_type: true, branch: true, subject: true, topic_name: true } },
     },
   });
 
   const pyqPages: MetadataRoute.Sitemap = pyqs.map((q) => ({
-    url: `${BASE}/${toSlug(q.pattern.exam_type)}-cse/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/pyq-${q.id}`,
+    url: `${BASE}/${toSlug(q.pattern.exam_type)}-${toSlug(q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/pyq-${q.id}`,
     lastModified: q.created_at,
     changeFrequency: "yearly" as const,
     priority: 0.8,
@@ -62,12 +62,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: {
       id: true,
       created_at: true,
-      subject_pattern: { select: { subject_name: true } },
+      subject_pattern: { select: { subject_name: true, branch: true } },
     },
   });
 
   const subjectPYQPages: MetadataRoute.Sitemap = subjectPYQs.map((q) => ({
-    url: `${BASE}/gate-cse/${toSlug(q.subject_pattern.subject_name)}/${toSlug(q.subject_pattern.subject_name)}/spyq-${q.id}`,
+    url: `${BASE}/gate-${toSlug(q.subject_pattern.branch)}/${toSlug(q.subject_pattern.subject_name)}/${toSlug(q.subject_pattern.subject_name)}/spyq-${q.id}`,
     lastModified: q.created_at,
     changeFrequency: "yearly" as const,
     priority: 0.75,
@@ -78,12 +78,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: {
       id: true,
       created_at: true,
-      pattern: { select: { exam_type: true, subject: true, topic_name: true } },
+      pattern: { select: { exam_type: true, branch: true, subject: true, topic_name: true } },
     },
   });
 
   const generatedPages: MetadataRoute.Sitemap = generatedQuestions.map((q) => ({
-    url: `${BASE}/${toSlug(q.pattern.exam_type)}-cse/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/gq-${q.id}`,
+    url: `${BASE}/${toSlug(q.pattern.exam_type)}-${toSlug(q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/gq-${q.id}`,
     lastModified: q.created_at,
     changeFrequency: "yearly" as const,
     priority: 0.6,
