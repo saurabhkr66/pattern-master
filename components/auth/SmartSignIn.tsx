@@ -23,8 +23,15 @@ function MobileNativeLogin() {
         redirectUrl: absoluteRedirectUrl, 
       });
 
-      // @ts-ignore - Clerk v7 type definitions hide the internal response properties
-      const verification = response.firstFactorVerification || response?.signIn?.firstFactorVerification;
+      // Clerk v7 uses safe return types { result, error }
+      if ((response as any).error) {
+        alert("Clerk Error: " + JSON.stringify((response as any).error));
+        return;
+      }
+      
+      // Extract the actual SignInResource object from the safe wrapper
+      const actualSignIn = (response as any).result || response;
+      const verification = actualSignIn.firstFactorVerification || actualSignIn?.signIn?.firstFactorVerification;
       
       if (verification && verification.externalVerificationRedirectURL) {
         // In some versions this is a URL object, in others it's a raw string
@@ -36,11 +43,10 @@ function MobileNativeLogin() {
           alert("Error: Extracted URL is invalid: " + JSON.stringify(verification));
         }
       } else {
-        // DEBUG: find out what's inside the response object
-        const anyResponse = response as any;
+        // DEBUG
+        const anyResponse = actualSignIn as any;
         const keys = Object.getOwnPropertyNames(anyResponse).concat(Object.keys(anyResponse));
-        const status = anyResponse.status;
-        alert("Debug Clerk v7 object. Status: " + status + ". Keys: " + keys.join(', '));
+        alert("Debug actualSignIn object. Status: " + anyResponse.status + ". Keys: " + keys.join(', '));
       }
     } catch (err) {
       console.error('OAuth error', err);
