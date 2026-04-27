@@ -37,8 +37,9 @@ function MobileNativeLogin() {
         }
       } else {
         // DEBUG: find out what's inside the response object
-        const keys = Object.getOwnPropertyNames(response).concat(Object.keys(response));
-        const status = response.status;
+        const anyResponse = response as any;
+        const keys = Object.getOwnPropertyNames(anyResponse).concat(Object.keys(anyResponse));
+        const status = anyResponse.status;
         alert("Debug Clerk v7 object. Status: " + status + ". Keys: " + keys.join(', '));
       }
     } catch (err) {
