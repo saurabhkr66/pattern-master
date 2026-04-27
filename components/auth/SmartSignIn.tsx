@@ -15,10 +15,12 @@ function MobileNativeLogin() {
     setLoading(true);
     try {
       // 1. Tell Clerk we want to use Google OAuth
+      const absoluteRedirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/sso-callback` : '/sso-callback';
+      
       const response = await signIn.create({
         strategy: 'oauth_google',
         // In Capacitor, we redirect back to our app's custom scheme or web domain
-        redirectUrl: '/sso-callback', 
+        redirectUrl: absoluteRedirectUrl, 
       });
 
       // @ts-ignore - Clerk v7 type definitions hide the internal response properties
@@ -34,7 +36,10 @@ function MobileNativeLogin() {
           alert("Error: Extracted URL is invalid: " + JSON.stringify(verification));
         }
       } else {
-        alert("Error: Clerk did not return an OAuth URL. Response: " + JSON.stringify(response));
+        // DEBUG: find out what's inside the response object
+        const keys = Object.getOwnPropertyNames(response).concat(Object.keys(response));
+        const status = response.status;
+        alert("Debug Clerk v7 object. Status: " + status + ". Keys: " + keys.join(', '));
       }
     } catch (err) {
       console.error('OAuth error', err);
