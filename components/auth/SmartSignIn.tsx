@@ -1,17 +1,32 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { SignIn, useSignIn } from '@clerk/nextjs';
 import { Browser } from '@capacitor/browser';
 
 function MobileNativeLogin() {
   const { signIn } = useSignIn();
-  const isLoaded = !!signIn;
   const [loading, setLoading] = useState(false);
+  const [oauthPending, setOauthPending] = useState(false);
+
+  // Ref so the browserFinished listener always sees the latest signIn object.
+  const signInRef = useRef(signIn);
+  signInRef.current = signIn;
+
+  // Clerk v7: signIn.status is reactive. When the OAuth completes in the
+  // Chrome Custom Tab, Clerk updates the status to 'complete' and we call
+  // finalize() to activate the session in the WebView — no cookie sharing needed.
+  useEffect(() => {
+    if (!oauthPending || !signIn || signIn.status !== 'complete') return;
+    setOauthPending(false);
+    signIn.finalize().then(({ error }) => {
+      if (!error) window.location.href = '/dashboard';
+    });
+  }, [signIn?.status, oauthPending]);
 
   const handleGoogleLogin = async () => {
-    if (!isLoaded || !signIn) return;
+    if (!signIn) return;
 
     if (!Capacitor.isNativePlatform()) {
       alert('Native bridge not available. Please reinstall the app.');
@@ -46,14 +61,25 @@ function MobileNativeLogin() {
       const url = new URL(rawUrl);
       url.searchParams.set('prompt', 'select_account');
 
+      setOauthPending(true);
       await Browser.open({ url: url.toString() });
 
-      const listener = await Browser.addListener('browserFinished', () => {
+      // Fallback: if the reactive status update hasn't fired by the time the
+      // Custom Tab closes, try finalize() directly.
+      const listener = await Browser.addListener('browserFinished', async () => {
         listener.remove();
+        setLoading(false);
+        const current = signInRef.current;
+        if (current?.status === 'complete') {
+          const { error } = await current.finalize();
+          if (!error) { window.location.href = '/dashboard'; return; }
+        }
+        setOauthPending(false);
         window.location.href = 'https://battleexam.com/';
       });
     } catch (err: unknown) {
       setLoading(false);
+      setOauthPending(false);
       const msg = err instanceof Error ? err.message : String(err);
       console.error('OAuth error', msg);
       alert('Sign-in error: ' + msg);
