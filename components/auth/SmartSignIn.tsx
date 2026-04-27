@@ -20,16 +20,18 @@ function MobileNativeLogin() {
 
     setLoading(true);
     try {
-      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://battleexam.com';
+      // Always use the production URL — this is a native app, the redirect must
+      // be whitelisted in Clerk regardless of which server the WebView is loading from.
       await signIn.create({
         strategy: 'oauth_google',
-        redirectUrl: `${currentOrigin}/sso-callback`,
+        redirectUrl: 'https://battleexam.com/sso-callback',
         actionCompleteRedirectUrl: '/dashboard',
       });
 
       const verification = signIn.firstFactorVerification;
 
       if (!verification?.externalVerificationRedirectURL) {
+        setLoading(false);
         alert('Sign-in failed: could not get Google redirect URL. Please try again.');
         return;
       }
@@ -39,23 +41,22 @@ function MobileNativeLogin() {
           ? verification.externalVerificationRedirectURL
           : verification.externalVerificationRedirectURL.href;
 
-      // Force Google to always show the account picker, even if one account
-      // is already authorized, so the user can choose which Gmail to use.
-      const authUrl = rawUrl + (rawUrl.includes('?') ? '&' : '?') + 'prompt=select_account';
+      // Use URLSearchParams to properly set prompt — Clerk's URL may already
+      // have a prompt param and simple concatenation would create duplicates.
+      const url = new URL(rawUrl);
+      url.searchParams.set('prompt', 'select_account');
 
-      await Browser.open({ url: authUrl });
+      await Browser.open({ url: url.toString() });
 
-      // When the Custom Tab closes (OAuth done or user dismissed),
-      // reload the WebView so Clerk picks up the new session.
       const listener = await Browser.addListener('browserFinished', () => {
         listener.remove();
         window.location.href = 'https://battleexam.com/';
       });
-    } catch (err) {
-      console.error('OAuth error', err);
-      alert('Sign-in error: ' + (err instanceof Error ? err.message : String(err)));
-    } finally {
+    } catch (err: unknown) {
       setLoading(false);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('OAuth error', msg);
+      alert('Sign-in error: ' + msg);
     }
   };
 
