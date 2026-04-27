@@ -14,42 +14,31 @@ function MobileNativeLogin() {
     if (!isLoaded || !signIn) return;
     setLoading(true);
     try {
-      // 1. Tell Clerk we want to use Google OAuth
       const absoluteRedirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/sso-callback` : '/sso-callback';
-      
-      const response = await signIn.create({
+
+      await signIn.create({
         strategy: 'oauth_google',
-        // In Capacitor, we redirect back to our app's custom scheme or web domain
-        redirectUrl: absoluteRedirectUrl, 
+        redirectUrl: absoluteRedirectUrl,
       });
 
-      // Clerk v7 uses safe return types { result, error }
-      if ((response as any).error) {
-        alert("Clerk Error: " + JSON.stringify((response as any).error));
-        return;
-      }
-      
-      // Extract the actual SignInResource object from the safe wrapper
-      const actualSignIn = (response as any).result || response;
-      const verification = actualSignIn.firstFactorVerification || actualSignIn?.signIn?.firstFactorVerification;
-      
-      if (verification && verification.externalVerificationRedirectURL) {
-        // In some versions this is a URL object, in others it's a raw string
-        const authUrl = verification.externalVerificationRedirectURL.href || verification.externalVerificationRedirectURL;
-        
-        if (typeof authUrl === 'string') {
-          await Browser.open({ url: authUrl });
-        } else {
-          alert("Error: Extracted URL is invalid: " + JSON.stringify(verification));
-        }
+      // After create(), Clerk mutates the signIn object from the hook.
+      // On Android WebView, result from create() is null, so we read from
+      // the hook directly rather than from the return value.
+      const verification = signIn.firstFactorVerification;
+
+      if (verification?.externalVerificationRedirectURL) {
+        const authUrl =
+          typeof verification.externalVerificationRedirectURL === 'string'
+            ? verification.externalVerificationRedirectURL
+            : verification.externalVerificationRedirectURL.href;
+        await Browser.open({ url: authUrl });
       } else {
-        // DEBUG
-        const anyResponse = actualSignIn as any;
-        const keys = Object.getOwnPropertyNames(anyResponse).concat(Object.keys(anyResponse));
-        alert("Debug actualSignIn object. Status: " + anyResponse.status + ". Keys: " + keys.join(', '));
+        console.error('OAuth: no redirect URL from Clerk', verification);
+        alert('Sign-in failed: could not get Google redirect URL. Please try again.');
       }
     } catch (err) {
       console.error('OAuth error', err);
+      alert('Sign-in error: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setLoading(false);
     }
