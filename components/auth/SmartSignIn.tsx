@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { SignIn, useSignIn } from '@clerk/nextjs';
-import { Browser } from '@capacitor/browser';
 
 function MobileNativeLogin() {
   const { signIn } = useSignIn();
@@ -31,7 +30,7 @@ function MobileNativeLogin() {
           typeof verification.externalVerificationRedirectURL === 'string'
             ? verification.externalVerificationRedirectURL
             : verification.externalVerificationRedirectURL.href;
-        await Browser.open({ url: authUrl });
+        window.location.href = authUrl;
       } else {
         console.error('OAuth: no redirect URL from Clerk', verification);
         alert('Sign-in failed: could not get Google redirect URL. Please try again.');
