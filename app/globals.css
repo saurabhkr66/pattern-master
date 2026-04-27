@@ -58,6 +58,9 @@ body {
   margin: 0;
 }
 
+/* Force bottom nav visible in the native Android/iOS app regardless of viewport width */
+.native-app .mobile-nav-bar { display: block !important; }
+
 /* Hide scrollbar for horizontal filter bars */
 .scrollbar-hide {
   -ms-overflow-style: none;

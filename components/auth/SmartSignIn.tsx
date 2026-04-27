@@ -12,11 +12,18 @@ function MobileNativeLogin() {
 
   const handleGoogleLogin = async () => {
     if (!isLoaded || !signIn) return;
+
+    if (!Capacitor.isNativePlatform()) {
+      alert('Native bridge not available. Please reinstall the app.');
+      return;
+    }
+
     setLoading(true);
     try {
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://battleexam.com';
       await signIn.create({
         strategy: 'oauth_google',
-        redirectUrl: 'https://battleexam.com/sso-callback',
+        redirectUrl: `${currentOrigin}/sso-callback`,
         actionCompleteRedirectUrl: '/dashboard',
       });
 
@@ -81,7 +88,7 @@ export default function SmartSignIn() {
   const [isNative, setIsNative] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const isApp = Capacitor.isNativePlatform() || navigator.userAgent.includes('BattleExamApp');
+    const isApp = Capacitor.isNativePlatform();
     setIsNative(isApp);
   }, []);
 

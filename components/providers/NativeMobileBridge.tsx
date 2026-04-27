@@ -15,11 +15,17 @@ export default function NativeMobileBridge() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Mark the HTML element so CSS can target native-app-specific styles
+    // (works even if the Capacitor bridge hasn't fully initialized yet)
+    if (navigator.userAgent.includes('BattleExamApp')) {
+      document.documentElement.classList.add('native-app');
+    }
+
     // Only run on Native platforms
     if (!Capacitor.isNativePlatform()) return;
 
     // 1. Handle Android Hardware Back Button
-    const backButtonListener = App.addListener("backButton", (data) => {
+    const backButtonListener = App.addListener("backButton", (_data) => {
       if (pathname === "/" || pathname === "/dashboard") {
         // Exit app if on root pages
         App.exitApp();
