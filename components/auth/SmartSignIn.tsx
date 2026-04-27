@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { SignIn, useSignIn } from '@clerk/nextjs';
+import { Browser } from '@capacitor/browser';
 
 function MobileNativeLogin() {
   const { signIn } = useSignIn();
@@ -13,28 +14,35 @@ function MobileNativeLogin() {
     if (!isLoaded || !signIn) return;
     setLoading(true);
     try {
-      const absoluteRedirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/sso-callback` : '/sso-callback';
-
       await signIn.create({
         strategy: 'oauth_google',
-        redirectUrl: absoluteRedirectUrl,
+        redirectUrl: 'https://battleexam.com/sso-callback',
       });
 
-      // After create(), Clerk mutates the signIn object from the hook.
-      // On Android WebView, result from create() is null, so we read from
-      // the hook directly rather than from the return value.
       const verification = signIn.firstFactorVerification;
 
-      if (verification?.externalVerificationRedirectURL) {
-        const authUrl =
-          typeof verification.externalVerificationRedirectURL === 'string'
-            ? verification.externalVerificationRedirectURL
-            : verification.externalVerificationRedirectURL.href;
-        window.location.href = authUrl;
-      } else {
-        console.error('OAuth: no redirect URL from Clerk', verification);
+      if (!verification?.externalVerificationRedirectURL) {
         alert('Sign-in failed: could not get Google redirect URL. Please try again.');
+        return;
       }
+
+      const rawUrl =
+        typeof verification.externalVerificationRedirectURL === 'string'
+          ? verification.externalVerificationRedirectURL
+          : verification.externalVerificationRedirectURL.href;
+
+      // Force Google to always show the account picker, even if one account
+      // is already authorized, so the user can choose which Gmail to use.
+      const authUrl = rawUrl + (rawUrl.includes('?') ? '&' : '?') + 'prompt=select_account';
+
+      await Browser.open({ url: authUrl });
+
+      // When the Custom Tab closes (OAuth done or user dismissed),
+      // reload the WebView so Clerk picks up the new session.
+      const listener = await Browser.addListener('browserFinished', () => {
+        listener.remove();
+        window.location.href = 'https://battleexam.com/';
+      });
     } catch (err) {
       console.error('OAuth error', err);
       alert('Sign-in error: ' + (err instanceof Error ? err.message : String(err)));
@@ -49,8 +57,8 @@ function MobileNativeLogin() {
         <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Welcome Back</h2>
         <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Sign in to continue to BattleExam</p>
       </div>
-      
-      <button 
+
+      <button
         onClick={handleGoogleLogin}
         disabled={loading}
         className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl border transition-all hover:bg-gray-50 active:scale-95"
@@ -72,7 +80,6 @@ export default function SmartSignIn() {
   const [isNative, setIsNative] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check if the Capacitor bridge is active, or fallback to our custom User Agent
     const isApp = Capacitor.isNativePlatform() || navigator.userAgent.includes('BattleExamApp');
     setIsNative(isApp);
   }, []);

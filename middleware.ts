@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   "/",                    // Landing page (unauthenticated)
   "/sign-in(.*)",         // Clerk sign-in pages
   "/sign-up(.*)",         // Clerk sign-up pages
+  "/sso-callback(.*)",    // OAuth callback (must be public for Clerk to complete handshake)
   "/api/cron/(.*)",       // Cron jobs (secured via CRON_SECRET)
   "/api/maintenance/(.*)",// One-off maintenance endpoints
   "/:examType/:subject/:topic/:questionId", // Public SEO question pages
