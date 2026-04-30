@@ -46,11 +46,13 @@ export async function resolveReport(
     });
   }
 
-  // Mark report as resolved
-  await prisma.questionReport.update({
-    where: { id: reportId },
-    data: { status: "resolved" }
-  });
+  // Mark report as resolved ONLY if it's a real report, not a virtual one
+  if (!reportId.startsWith("auto-empty-")) {
+    await prisma.questionReport.update({
+      where: { id: reportId },
+      data: { status: "resolved" }
+    });
+  }
 
   revalidatePath("/admin/reports");
 }
