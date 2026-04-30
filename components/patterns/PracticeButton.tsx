@@ -247,10 +247,56 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     );
   };
 
+  // NEW: Shared robust evaluation logic to prevent discrepancies between UI and DB
+  const evaluateAnswer = (userAns: string, questionObj: any) => {
+    if (!userAns || !questionObj) return false;
+    const type = questionObj.question_type || "MCQ";
+    const dbAns = (questionObj.correct_answer || "").trim();
+
+    if (type === "MCQ") {
+      // Standardize both to just the letter (A, B, C, D)
+      const cleanUser = userAns.trim().charAt(0).toUpperCase();
+      const cleanDb = dbAns.charAt(0).toUpperCase();
+      return cleanUser === cleanDb;
+    }
+
+    if (type === "MSQ") {
+      // Support both comma and semicolon separators, and handle messy whitespace/empty entries
+      const parse = (str: string) => str
+        .split(/[;,]/)
+        .map(s => s.trim().toUpperCase())
+        .filter(Boolean)
+        .sort()
+        .join(",");
+      
+      return parse(userAns) === parse(dbAns);
+    }
+
+    if (type === "NAT") {
+      const userVal = parseFloat(userAns.trim());
+      if (isNaN(userVal)) return false;
+
+      // Range logic: "min:max" or "min to max"
+      const rangeMatch = dbAns.match(/^([\d.-]+)\s*(?::|to)\s*([\d.-]+)$/i);
+      if (rangeMatch) {
+        const min = parseFloat(rangeMatch[1]);
+        const max = parseFloat(rangeMatch[2]);
+        return userVal >= min && userVal <= max;
+      }
+
+      // Single value match (using string comparison for precision or float comparison for tolerance?)
+      // Let's use float comparison with a tiny epsilon for robustness
+      const dbVal = parseFloat(dbAns);
+      return !isNaN(dbVal) && Math.abs(userVal - dbVal) < 0.000001;
+    }
+
+    return false;
+  };
+
   const handleSubmit = async (finalAnswerOverride?: string) => {
     if (isRevealed) return;
     if (!isSignedIn) { setShowSignInModal(true); return; }
-    let isCorrect = false;
+
     const type = question.question_type || "MCQ";
     let finalAnswer = finalAnswerOverride || (
       type === "MCQ" ? selectedAnswer :
@@ -258,30 +304,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       natValue
     ) || "";
 
-    if (type === "MCQ") {
-      isCorrect = finalAnswer.trim().toUpperCase() === question.correct_answer.trim().toUpperCase();
-      if (!finalAnswerOverride) setSelectedAnswer(finalAnswer);
-    } else if (type === "MSQ") {
-      const userAns = msqSelections.sort().join(", ");
-      const correctAns = question.correct_answer.split(",").map((s: string) => s.trim()).sort().join(", ");
-      isCorrect = userAns === correctAns;
-      finalAnswer = userAns;
-    } else if (type === "NAT") {
-      const correctAnsStr = question.correct_answer.trim();
-      const userVal = parseFloat(natValue.trim());
-      // Support both "min:max" and "min to max" range formats
-      const colonRange = correctAnsStr.includes(":") && !correctAnsStr.toLowerCase().includes(" to ");
-      const toRange = / to /i.test(correctAnsStr);
-      if (colonRange) {
-        const [minStr, maxStr] = correctAnsStr.split(":");
-        isCorrect = !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
-      } else if (toRange) {
-        const [minStr, maxStr] = correctAnsStr.split(/ to /i);
-        isCorrect = !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
-      } else {
-        isCorrect = natValue.trim() === correctAnsStr;
-      }
-      finalAnswer = natValue;
+    const isCorrect = evaluateAnswer(finalAnswer, question);
+
+    if (type === "MCQ" && !finalAnswerOverride) {
+      setSelectedAnswer(finalAnswer);
     }
 
     setIsRevealed(true);
@@ -373,35 +399,12 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const checkIsCorrect = () => {
     if (!question) return false;
     const type = question.question_type || "MCQ";
-    if (type === "MCQ") {
-      return (selectedAnswer || "").trim().toUpperCase() === (question.correct_answer || "").trim().toUpperCase();
-    }
-    if (type === "MSQ") {
-      const userAns = msqSelections.sort().join(", ");
-      const correctAns = (question.correct_answer || "")
-        .split(/[;,]/)
-        .map((s: string) => s.trim())
-        .filter(Boolean)
-        .sort()
-        .join(", ");
-      return userAns === correctAns;
-    }
-    if (type === "NAT") {
-      const correctAnsStr = (question.correct_answer || "").trim();
-      const userVal = parseFloat(natValue.trim());
-      const colonRange = correctAnsStr.includes(":") && !correctAnsStr.toLowerCase().includes(" to ");
-      const toRange = / to /i.test(correctAnsStr);
-      if (colonRange) {
-        const [minStr, maxStr] = correctAnsStr.split(":");
-        return !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
-      }
-      if (toRange) {
-        const [minStr, maxStr] = correctAnsStr.split(/ to /i);
-        return !isNaN(userVal) && userVal >= parseFloat(minStr) && userVal <= parseFloat(maxStr);
-      }
-      return natValue.trim() === correctAnsStr;
-    }
-    return false;
+    const currentAnswer = 
+      type === "MCQ" ? selectedAnswer :
+      type === "MSQ" ? msqSelections.sort().join(", ") :
+      natValue;
+    
+    return evaluateAnswer(currentAnswer || "", question);
   };
 
   const difficultyConfig: Record<string, { label: string; active: string }> = {

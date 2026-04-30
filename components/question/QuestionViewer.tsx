@@ -117,7 +117,10 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
     }
   }, [showAnswer, q.explanation, q.explanationHindi, language]);
 
-  const correctLetters = q.correctAnswer.split(";").map(s => s.trim());
+  const correctLetters = q.correctAnswer
+    .split(/[;,]/)
+    .map(s => s.trim().toUpperCase())
+    .filter(Boolean);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}>
@@ -145,7 +148,7 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
         <div className="px-6 pb-2 md:px-8 grid gap-2">
           {q.options.map((opt, i) => {
             const letter = opt.trim().match(/^([A-Z])[.)]/)?.[1] ?? String.fromCharCode(65 + i);
-            const isCorrect = showAnswer && correctLetters.includes(letter);
+            const isCorrect = showAnswer && correctLetters.includes(letter.toUpperCase());
             return (
               <div
                 key={i}
