@@ -45,6 +45,13 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Reporting State
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [isReporting, setIsReporting] = useState(false);
+  const [hasReported, setHasReported] = useState(false);
   const [showFullscreenHint, setShowFullscreenHint] = useState(!!(initialQuestion));
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const [seconds, setSeconds] = useState(0);
@@ -80,6 +87,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setSeconds(0);
         setIsBookmarked(!!initialQuestion?.isBookmarked);
         setGeneratedExplanation(null);
+        setHasReported(false);
+        setShowReportModal(false);
         lastInitialIdRef.current = currentInitialId;
       }
     } else {
@@ -89,6 +98,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setQuestionQueue([]);
         setIsBookmarked(false);
         setGeneratedExplanation(null);
+        setHasReported(false);
+        setShowReportModal(false);
         lastInitialIdRef.current = null;
       }
     }
@@ -585,9 +596,23 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               <span>·</span>
               <span>{question.question_type || 'MCQ'} · {question.marks || 1} mark{(question.marks || 1) > 1 ? 's' : ''}</span>
               <span style={{ flex: 1 }} />
-              <button 
-                onClick={handleToggleBookmark}
-                disabled={isBookmarking}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button 
+                  onClick={() => setShowReportModal(true)}
+                  disabled={hasReported}
+                  style={{ 
+                      display: 'flex', alignItems: 'center', gap: 4, 
+                      color: hasReported ? '#ef4444' : BE.textDim,
+                      transition: 'all 0.2s', cursor: hasReported ? 'default' : 'pointer', background: 'transparent', border: 'none', padding: 4, borderRadius: 6
+                  }}
+                  title={hasReported ? "Report submitted" : "Report an issue"}
+                  className={hasReported ? "" : "hover:text-red-500"}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={hasReported ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg>
+                </button>
+                <button 
+                  onClick={handleToggleBookmark}
+                  disabled={isBookmarking}
                 style={{ 
                     display: 'flex', alignItems: 'center', gap: 4, 
                     color: isBookmarked ? BE.accent : BE.textDim,
@@ -603,6 +628,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               >
                 <Bookmark size={14} fill={isBookmarked ? BE.accent : "none"} strokeWidth={isBookmarked ? 0 : 2} />
               </button>
+              </div>
               <span style={{ width: 1, height: 12, background: BE.line }} />
               <span style={{ fontFamily: BE.mono, textTransform: 'none', letterSpacing: 0, fontWeight: 500, opacity: 0.6 }}>#{question.id?.slice(-5)}</span>
             </div>
@@ -768,6 +794,71 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Report Issue Modal ─────────────────────────────────────────── */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }} onClick={(e) => { if (e.target === e.currentTarget) setShowReportModal(false); }}>
+          <div className="relative w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-500/10 text-red-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg>
+              </div>
+              <h3 className="text-lg font-black" style={{ color: "var(--text-primary)" }}>Report Issue</h3>
+            </div>
+            
+            <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>What seems to be the problem with this question?</p>
+            
+            <div className="flex flex-col gap-2 mb-4">
+              {['Incorrect Answer', 'Typo / Formatting Issue', 'Explanation is wrong', 'Other'].map(r => (
+                <label key={r} className="flex items-center gap-3 cursor-pointer p-3 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/5" style={{ border: `1px solid ${reportReason === r ? 'var(--accent)' : 'transparent'}`, background: reportReason === r ? 'var(--bg-surface-2)' : 'transparent' }}>
+                  <input type="radio" name="report_reason" checked={reportReason === r} onChange={() => setReportReason(r)} className="accent-amber-500 w-4 h-4" />
+                  <span style={{ color: "var(--text-primary)", fontSize: 14, fontWeight: reportReason === r ? 600 : 500 }}>{r}</span>
+                </label>
+              ))}
+            </div>
+
+            {reportReason === 'Other' && (
+              <textarea
+                placeholder="Please describe the issue (optional)..."
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+                className="w-full p-3 rounded-xl mb-4 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                style={{ background: "var(--bg-surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)", outline: 'none' }}
+                rows={3}
+              />
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowReportModal(false)} className="flex-1 py-3 rounded-xl font-bold text-sm" style={{ background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}>Cancel</button>
+              <button 
+                onClick={async () => {
+                  if (!reportReason || !isSignedIn) {
+                    if (!isSignedIn) { setShowReportModal(false); setShowSignInModal(true); }
+                    return;
+                  }
+                  setIsReporting(true);
+                  try {
+                    await fetch("/api/questions/report", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ questionId: question.id, isPyq: question._isPyq, isSubjectPyq: question._isSubjectPyq, reason: reportReason, details: reportDetails })
+                    });
+                    setHasReported(true);
+                    setShowReportModal(false);
+                    setReportReason("");
+                    setReportDetails("");
+                  } finally { setIsReporting(false); }
+                }} 
+                disabled={!reportReason || isReporting}
+                className="flex-1 py-3 rounded-xl font-black text-sm text-white disabled:opacity-50 transition-transform active:scale-95 flex justify-center items-center"
+                style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}
+              >
+                {isReporting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Submit Report'}
+              </button>
+            </div>
           </div>
         </div>
       )}
