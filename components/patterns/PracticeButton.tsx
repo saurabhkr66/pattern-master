@@ -39,6 +39,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const containerRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
 
+  // AI Auto-Fill State
+  const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
+  const [generatedExplanation, setGeneratedExplanation] = useState<string | null>(null);
+
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenHint, setShowFullscreenHint] = useState(!!(initialQuestion));
@@ -75,6 +79,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setQuestionHistory([]);
         setSeconds(0);
         setIsBookmarked(!!initialQuestion?.isBookmarked);
+        setGeneratedExplanation(null);
         lastInitialIdRef.current = currentInitialId;
       }
     } else {
@@ -83,6 +88,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setQuestion(null);
         setQuestionQueue([]);
         setIsBookmarked(false);
+        setGeneratedExplanation(null);
         lastInitialIdRef.current = null;
       }
     }
@@ -113,7 +119,6 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   }, [question?.id]);
 
   // Scroll into view when a question is opened
-
   useEffect(() => {
     if (question && containerRef.current) {
       containerRef.current.scrollIntoView({ 
@@ -122,6 +127,35 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       });
     }
   }, [question?.id, !!question]);
+
+  // AI Explanation Generator
+  useEffect(() => {
+    if (isRevealed && question && !question.explanation && !generatedExplanation && !isGeneratingExplanation) {
+      const generateExplanation = async () => {
+        setIsGeneratingExplanation(true);
+        try {
+          const res = await fetch("/api/questions/generate-explanation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              questionId: question.id,
+              isSubjectPyq: question._isSubjectPyq,
+              isPyq: question._isPyq
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setGeneratedExplanation(data.explanation);
+          }
+        } catch (e) {
+          console.error("Failed to generate explanation", e);
+        } finally {
+          setIsGeneratingExplanation(false);
+        }
+      };
+      generateExplanation();
+    }
+  }, [isRevealed, question, generatedExplanation, isGeneratingExplanation]);
 
   // Auto-dismiss fullscreen hint after 5s;
   // Also show it whenever a new question first appears (AI generated)
@@ -715,12 +749,21 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                     <span style={{ fontSize: 11, color: BE.textDim, fontWeight: 500 }}>Explanation & Logic</span>
                   </div>
                   <div style={{ padding: '16px 16px', fontSize: 'clamp(13px, 3.5vw, 15px)', lineHeight: 1.75, color: BE.textDim, fontFamily: BE.serif, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                    <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : question.explanation} />
-                    {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
-                      <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
-                        <img src={img.url || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                    {isGeneratingExplanation ? (
+                      <div className="flex flex-col items-center justify-center py-8 gap-3 animate-in fade-in duration-500">
+                        <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-xs font-bold text-amber-600 uppercase tracking-widest animate-pulse">AI is generating logic...</span>
                       </div>
-                    ))}
+                    ) : (
+                      <>
+                        <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : (generatedExplanation || question.explanation || "No explanation available.")} />
+                        {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
+                          <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
+                            <img src={img.url || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
