@@ -84,3 +84,38 @@ export async function deleteQuestion(
 
   revalidatePath("/admin/reports");
 }
+
+export async function quickEditExplanation(
+  questionId: string,
+  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | string,
+  explanation: string
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  const userEmail = dbUser?.email?.toLowerCase();
+  if (!userEmail) throw new Error("User email not found in database.");
+
+  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
+  if (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com") {
+    throw new Error("Forbidden: You are not an admin.");
+  }
+
+  if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
+    await prisma.subjectPYQ.update({
+      where: { id: questionId },
+      data: { explanation }
+    });
+  } else if (questionType === "PYQ" || questionType === "pyq") {
+    await prisma.pYQ.update({
+      where: { id: questionId },
+      data: { explanation }
+    });
+  } else {
+    await prisma.generatedQuestion.update({
+      where: { id: questionId },
+      data: { explanation }
+    });
+  }
+}

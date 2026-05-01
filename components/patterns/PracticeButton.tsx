@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Maximize2, Minimize2, Bookmark } from "lucide-react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { quickEditExplanation } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { trackPageView } from "@/lib/analytics";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -24,6 +25,15 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
+  const isAdmin = userEmail === "sauravkum4200@gmail.com" || userEmail === "sauravkum420@gmail.com";
+  
+  const [isEditingExplanation, setIsEditingExplanation] = useState(false);
+  const [editedExplanation, setEditedExplanation] = useState("");
+  const [isSavingExplanation, setIsSavingExplanation] = useState(false);
+
   const isPyqMode = _propIsPyqMode || initialQuestion?._isPyq;
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -394,6 +404,25 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       // Removing router.refresh() to prevent massive full-page re-renders freezing the browser.
     } catch (err) {
       console.error("Failed to save attempt:", err);
+    }
+  };
+
+  const handleSaveExplanation = async () => {
+    if (!isAdmin || !question) return;
+    setIsSavingExplanation(true);
+    try {
+      const type = question._isSubjectPyq ? "SubjectPYQ" : (question._isPyq ? "PYQ" : "GeneratedQuestion");
+      await quickEditExplanation(question.id, type, editedExplanation);
+      
+      // Update local state
+      setQuestion({ ...question, explanation: editedExplanation });
+      setGeneratedExplanation(null);
+      setIsEditingExplanation(false);
+    } catch (err) {
+      console.error("Failed to save explanation:", err);
+      alert("Failed to save explanation.");
+    } finally {
+      setIsSavingExplanation(false);
     }
   };
 
@@ -773,12 +802,50 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                       {seconds}s
                     </div>
                     <span style={{ fontSize: 11, color: BE.textDim, fontWeight: 500 }}>Explanation & Logic</span>
+                    <div style={{ flex: 1 }}></div>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          if (isEditingExplanation) {
+                            setIsEditingExplanation(false);
+                          } else {
+                            setEditedExplanation(generatedExplanation || question.explanation || "");
+                            setIsEditingExplanation(true);
+                          }
+                        }}
+                        className="px-2 py-1 text-[10px] font-bold rounded bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+                      >
+                        {isEditingExplanation ? "Cancel Edit" : "Edit Explanation"}
+                      </button>
+                    )}
                   </div>
                   <div style={{ padding: '16px 16px', fontSize: 'clamp(13px, 3.5vw, 15px)', lineHeight: 1.75, color: BE.textDim, fontFamily: BE.serif, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                     {isGeneratingExplanation ? (
                       <div className="flex flex-col items-center justify-center py-8 gap-3 animate-in fade-in duration-500">
                         <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
                         <span className="text-xs font-bold text-amber-600 uppercase tracking-widest animate-pulse">AI is generating logic...</span>
+                      </div>
+                    ) : isEditingExplanation ? (
+                      <div className="flex flex-col gap-3 animate-in fade-in">
+                        <textarea
+                          value={editedExplanation}
+                          onChange={(e) => setEditedExplanation(e.target.value)}
+                          className="w-full p-4 rounded-xl text-sm bg-black/5 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 focus:border-amber-500 outline-none font-mono"
+                          rows={6}
+                        />
+                        {editedExplanation && (
+                          <div className="p-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 text-sm">
+                            <span className="text-[10px] uppercase font-bold text-amber-500 mb-2 block">Live Preview</span>
+                            <MathRenderer content={editedExplanation} />
+                          </div>
+                        )}
+                        <button
+                          onClick={handleSaveExplanation}
+                          disabled={isSavingExplanation}
+                          className="self-end px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition-all"
+                        >
+                          {isSavingExplanation ? "Saving..." : "Save Changes"}
+                        </button>
                       </div>
                     ) : (
                       <>
