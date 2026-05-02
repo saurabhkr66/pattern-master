@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/saura/OneDrive/Desktop/projects/examside-scraper/**)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(python3 fix_analysis_math.py)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

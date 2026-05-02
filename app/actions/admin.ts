@@ -4,12 +4,19 @@ import { prisma } from "@/lib/prisma";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 export async function resolveReport(
   reportId: string, 
   questionId: string, 
   questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion",
-  updates: { question_text?: string, correct_answer?: string, explanation?: string }
+  updates: { 
+    question_text?: string, 
+    correct_answer?: string, 
+    explanation?: string,
+    options?: any,
+    images?: any
+  }
 ) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -18,12 +25,7 @@ export async function resolveReport(
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const userEmail = dbUser?.email?.toLowerCase();
   
-  if (!userEmail) throw new Error("User email not found in database.");
-
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-  
-  // SECURE: Replace the email below with your actual email if you don't use the .env variable
-  if (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com") {
+  if (!checkIsAdmin(userEmail)) {
     throw new Error("Forbidden: You are not an admin.");
   }
 
@@ -66,10 +68,7 @@ export async function deleteQuestion(
   
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const userEmail = dbUser?.email?.toLowerCase();
-  if (!userEmail) throw new Error("User email not found in database.");
-
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-  if (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com") {
+  if (!checkIsAdmin(userEmail)) {
     throw new Error("Forbidden: You are not an admin.");
   }
 
@@ -95,10 +94,7 @@ export async function quickEditExplanation(
   
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const userEmail = dbUser?.email?.toLowerCase();
-  if (!userEmail) throw new Error("User email not found in database.");
-
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-  if (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com") {
+  if (!checkIsAdmin(userEmail)) {
     throw new Error("Forbidden: You are not an admin.");
   }
 
@@ -118,4 +114,27 @@ export async function quickEditExplanation(
       data: { explanation }
     });
   }
+}
+
+export async function deleteMockTest(mockTestId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  const userEmail = dbUser?.email?.toLowerCase();
+  if (!checkIsAdmin(userEmail)) {
+    throw new Error("Forbidden: You are not an admin.");
+  }
+
+  // Delete all related test sessions first (manual cascade)
+  await prisma.testSession.deleteMany({
+    where: { mock_test_id: mockTestId }
+  });
+
+  // Then delete the template
+  await prisma.mockTestTemplate.delete({
+    where: { id: mockTestId }
+  });
+
+  revalidatePath("/mocktest");
 }

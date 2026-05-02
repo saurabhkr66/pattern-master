@@ -43,9 +43,10 @@ model SubjectPattern {
   id           String       @id @default(uuid())
   subject_name String
   branch       String       @default("CSE")
+  exam_type    String       @default("GATE")
   pyqs         SubjectPYQ[]
 
-  @@unique([subject_name, branch], name: "subject_pattern_identifier")
+  @@unique([subject_name, branch, exam_type], name: "subject_pattern_identifier")
 }
 
 model SubjectPYQ {
@@ -145,6 +146,8 @@ model Attempt {
 model TestSession {
   id              String            @id @default(uuid())
   user_id         String
+  exam_type       String            @default("GATE")
+  branch          String?
   score           Float
   max_score       Float
   total_questions Int
@@ -152,23 +155,33 @@ model TestSession {
   wrong_count     Int
   skipped_count   Int
   time_taken_secs Int?
+  section_scores  Json?
   answers         Json
   created_at      DateTime          @default(now())
   mock_test_id    String?
   mock_test       MockTestTemplate? @relation(fields: [mock_test_id], references: [id])
 
   @@index([user_id, created_at(sort: Desc)])
+  @@index([user_id, exam_type, created_at(sort: Desc)])
 }
 
 model MockTestTemplate {
   id              String        @id @default(uuid())
+  exam_type       String        @default("GATE")
+  branch          String?
+  mock_number     Int           @default(0)
+  mode            String        @default("random")
   title           String
   subjects        String[]
   total_questions Int
   max_score       Int
+  duration_secs   Int           @default(10800)
+  sections        Json?
   questions       Json
   created_at      DateTime      @default(now())
   sessions        TestSession[]
+
+  @@index([exam_type, branch, mock_number, mode])
 }
 
 model UserNote {

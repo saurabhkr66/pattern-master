@@ -17,7 +17,7 @@ const colors = {
 
 const SCRAPER_OUTPUT_DIR = path.resolve(
   __dirname,
-  '../../exam-scraper/practicepaper-scraper/data/output'
+  '../../practicepaper-scraper/data/output'
 );
 
 const FILE_TOPIC_MAP: Array<{
@@ -27,40 +27,16 @@ const FILE_TOPIC_MAP: Array<{
   branch: string;
 }> = [
   {
-    file: 'gate_ee_Analog_Electronics_bjt_fet_and_their_biasing_circuits.json',
-    topic_name: 'BJT, FET and their Biasing Circuits',
+    file: 'gate_ce_Engineering_Hydrology_infiltration_runoff_and_hydrographs.json',
+    topic_name: 'Infiltration Runoff And Hydrographs',
     exam_type: 'GATE',
-    branch: 'EE',
+    branch: 'CE',
   },
   {
-    file: 'gate_ee_Analog_Electronics_diodes_and_their_applications.json',
-    topic_name: 'Diodes and their Applications',
+    file: 'gate_ce_Environmental_Engineering_air_and_noise_pollution.json',
+    topic_name: 'Air And Noise Pollution',
     exam_type: 'GATE',
-    branch: 'EE',
-  },
-  {
-    file: 'gate_ee_Analog_Electronics_operational_amplifiers.json',
-    topic_name: 'Operational Amplifiers',
-    exam_type: 'GATE',
-    branch: 'EE',
-  },
-  {
-    file: 'gate_ee_Analog_Electronics_oscillators_and_feedback_amplifiers.json',
-    topic_name: 'Oscillators and Feedback Amplifiers',
-    exam_type: 'GATE',
-    branch: 'EE',
-  },
-  {
-    file: 'gate_ee_Analog_Electronics_small_signal_analysis.json',
-    topic_name: 'Small Signal Analysis',
-    exam_type: 'GATE',
-    branch: 'EE',
-  },
-  {
-    file: 'gate_ee_Analog_Electronics_miscellaneous.json',
-    topic_name: 'Miscellaneous',
-    exam_type: 'GATE',
-    branch: 'EE',
+    branch: 'CE',
   },
 ];
 
@@ -113,62 +89,78 @@ async function main() {
     try {
       let count = 0;
       for (const pyq of pyqs) {
-        const cleanQuestionText = (pyq.question_text ?? '')
-          .replace(/0 reply\s*Please log in or register to add a comment\./gi, '')
-          .replace(/0 reply/gi, '')
-          .replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 "[^"]*"/gi, '')
-          .trim();
+        try {
+          const cleanQuestionText = (pyq.question_text ?? '')
+            .replace(/0 reply\s*Please log in or register to add a comment\./gi, '')
+            .replace(/0 reply/gi, '')
+            .replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 "[^"]*"/gi, '')
+            .trim();
 
-        let cleanCorrectAnswer: string = pyq.correct_answer ?? '';
-        if ((pyq.question_type === 'MCQ' || pyq.question_type === 'MSQ') && cleanCorrectAnswer.includes('.')) {
-          cleanCorrectAnswer = cleanCorrectAnswer.split('.')[0].trim();
-        }
+          let cleanCorrectAnswer: string = pyq.correct_answer ?? '';
+          if ((pyq.question_type === 'MCQ' || pyq.question_type === 'MSQ') && cleanCorrectAnswer.includes('.')) {
+            cleanCorrectAnswer = cleanCorrectAnswer.split('.')[0].trim();
+          }
 
-        const cleanImages = (pyq.images ?? []).map((img: any) => ({
-          ...img,
-          url: img.filename ? `/${img.filename}` : img.url,
-        }));
+          const cleanImages = (pyq.images ?? []).map((img: any) => ({
+            ...img,
+            url: img.filename ? `/${img.filename}` : img.url,
+          }));
 
-        await prisma.pYQ.upsert({
-          where: {
-            pyq_identifier: {
-              pattern_id: pattern.id,
-              question_text: cleanQuestionText,
+          const existingPYQ = await prisma.pYQ.findUnique({
+            where: {
+              pyq_identifier: {
+                pattern_id: pattern.id,
+                question_text: cleanQuestionText,
+              },
             },
-          },
-          update: {
-            question_text_hindi:  pyq.question_text_hindi,
-            options:              pyq.options ?? [],
-            options_hindi:        pyq.options_hindi,
-            correct_answer:       cleanCorrectAnswer,
-            explanation:          pyq.explanation ?? '',
-            explanation_hindi:    pyq.explanation_hindi,
-            year:                 pyq.year || Math.floor(Math.random() * 26) + 2000,
-            exam_type:            entry.exam_type,
-            question_type:        pyq.question_type,
-            images:               cleanImages,
-          },
-          create: {
-            pattern: { connect: { id: pattern.id } },
-            question_text:       cleanQuestionText,
-            question_text_hindi: pyq.question_text_hindi,
-            options:             pyq.options ?? [],
-            options_hindi:       pyq.options_hindi,
-            correct_answer:      cleanCorrectAnswer,
-            explanation:         pyq.explanation ?? '',
-            explanation_hindi:   pyq.explanation_hindi,
-            year:                pyq.year || Math.floor(Math.random() * 26) + 2000,
-            exam_type:           entry.exam_type,
-            question_type:       pyq.question_type,
-            images:              cleanImages,
-          },
-        });
-        count++;
-        totalQuestions++;
+          });
+
+          if (existingPYQ) {
+            await prisma.pYQ.update({
+              where: { id: existingPYQ.id },
+              data: {
+                question_text_hindi:  pyq.question_text_hindi,
+                options:              pyq.options ?? [],
+                options_hindi:        pyq.options_hindi,
+                correct_answer:       cleanCorrectAnswer,
+                explanation:          pyq.explanation ?? '',
+                explanation_hindi:    pyq.explanation_hindi,
+                year:                 pyq.year || Math.floor(Math.random() * 20) + 2005,
+                exam_type:            entry.exam_type,
+                question_type:        pyq.question_type,
+                images:               cleanImages,
+              },
+            });
+          } else {
+            await prisma.pYQ.create({
+              data: {
+                pattern: { connect: { id: pattern.id } },
+                question_text:       cleanQuestionText,
+                question_text_hindi: pyq.question_text_hindi,
+                options:             pyq.options ?? [],
+                options_hindi:       pyq.options_hindi,
+                correct_answer:      cleanCorrectAnswer,
+                explanation:         pyq.explanation ?? '',
+                explanation_hindi:   pyq.explanation_hindi,
+                year:                pyq.year || Math.floor(Math.random() * 20) + 2005,
+                exam_type:           entry.exam_type,
+                question_type:       pyq.question_type,
+                images:              cleanImages,
+              },
+            });
+          }
+          count++;
+          totalQuestions++;
+        } catch (err: any) {
+          console.log(`${colors.red}  ❌ Error seeding question: ${pyq.question_text?.substring(0, 100)}...${colors.reset}`);
+          console.error(`     Reason: ${err.message}`);
+          console.log(`     Cleaned Text: "${(pyq.question_text ?? '').replace(/0 reply\s*Please log in or register to add a comment\./gi, '').replace(/0 reply/gi, '').replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 "[^"]*"/gi, '').trim()}"`);
+          errors++;
+        }
       }
       console.log(`${colors.green}✅ ${progress} Seeded ${colors.bright}${count}${colors.reset}${colors.green} PYQs for: ${colors.bright}${entry.topic_name}${colors.reset}`);
     } catch (err: any) {
-      console.log(`${colors.red}❌ ${progress} Error seeding ${entry.topic_name}${colors.reset}`);
+      console.log(`${colors.red}❌ ${progress} Fatal error seeding topic ${entry.topic_name}${colors.reset}`);
       console.error(err.message);
       errors++;
     }

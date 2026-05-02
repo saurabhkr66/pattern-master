@@ -1,911 +1,756 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
-import MathRenderer from "@/components/ui/MathRenderer";
+import { useState, useEffect, useCallback } from "react";
 import {
-  Clock, ChevronLeft, ChevronRight, Flag, Send, Trophy,
-  CheckCircle2, XCircle, MinusCircle, BarChart3, BookOpen, Loader2,
-  AlertTriangle, ArrowLeft, ChevronDown,
+  Loader2, AlertTriangle, ArrowLeft, Check, Trash2,
 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { deleteMockTest } from "@/app/actions/admin";
+import {
+  EXAM_CONFIGS, getExamConfig, fmtDuration,
+  type ExamType, type ExamConfig,
+} from "@/lib/examConfigs";
+import TestEngine, { type TestQuestion, type SubmitAnswer } from "@/components/test/TestEngine";
+import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
 import { trackPageView } from "@/lib/analytics";
-
+import { BE } from "@/lib/theme";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import React from "react";
 
 /* ─────────────── Types ─────────────── */
-interface Question {
+type Phase =
+  | "exam_select" | "branch_select" | "mode_select"
+  | "mock_select" | "random_config" | "brief" | "loading" | "test"
+  | "submitting" | "results";
+
+interface SeededMock {
   id: string;
-  source: "pyq" | "subject_pyq";
-  question_text: string;
-  options: string[];
-  question_type: string;
-  marks: number;
-  year: number;
-  subject: string;
-  images?: { index: number; filename: string }[] | null;
+  mock_number: number;
+  title: string;
+  total_questions: number;
+  max_score: number;
+  duration_secs: number;
+  session?: {
+    score: number;
+    max_score: number;
+    correct_count: number;
+    wrong_count: number;
+    skipped_count: number;
+    created_at: string;
+  } | null;
 }
 
-interface Answer {
-  questionId: string;
-  source: "pyq" | "subject_pyq";
-  questionType: string;
-  marks: number;
-  userAnswer: string | null;
-}
+/* ─────────────── Top wizard rail ─────────────────────────────────────── */
+function MTRail({ phase, branchSkipped }: { phase: Phase; branchSkipped: boolean }) {
+  const stepMap: Record<Phase, number> = {
+    exam_select: 1, branch_select: 2, mode_select: 3,
+    mock_select: 4, random_config: 4, brief: 5, loading: 5,
+    test: 6, submitting: 6, results: 7,
+  };
+  const step = stepMap[phase] ?? 1;
 
-interface BreakdownItem {
-  questionId: string;
-  source: string;
-  questionType: string;
-  marks: number;
-  userAnswer: string | null;
-  correctAnswer: string;
-  isCorrect: boolean;
-  isSkipped: boolean;
-  explanation: string;
-  questionText: string;
-  options: string[];
-}
-
-interface ResultData {
-  sessionId: string;
-  score: number;
-  maxScore: number;
-  correctCount: number;
-  wrongCount: number;
-  skippedCount: number;
-  breakdown: BreakdownItem[];
-}
-
-type Phase = "start" | "loading" | "test" | "submitting" | "results";
-type QStatus = "unseen" | "answered" | "skipped" | "review";
-
-const TOTAL_SECS = 3 * 3600; // 3 hours
-
-/* ─────────────── Timer util ─────────────── */
-function fmtTime(secs: number) {
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = secs % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-/* ─────────────── History Card ─────────────── */
-function HistoryPanel({ onViewResult }: { onViewResult: (id: string) => void }) {
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/test/history")
-      .then(r => r.json())
-      .then(d => { setSessions(d.sessions || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="text-center py-4" style={{ color: "var(--text-muted)" }}>Loading history…</div>;
-  if (!sessions.length) return <div className="text-center py-4" style={{ color: "var(--text-muted)" }}>No tests taken yet.</div>;
-
+  const all = [
+    { n: 1, label: 'Exam' },
+    { n: 2, label: 'Branch' },
+    { n: 3, label: 'Mode' },
+    { n: 4, label: 'Configure' },
+    { n: 5, label: 'Brief' },
+    { n: 6, label: 'Test' },
+    { n: 7, label: 'Analysis' },
+  ];
   return (
-    <div className="space-y-3">
-      {sessions.map((s, i) => {
-        const pct = Math.round((s.score / s.max_score) * 100);
-        const color = pct >= 70 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+    <div className="flex items-center gap-0 px-6 py-3.5 border-b shrink-0 overflow-x-auto scrollbar-hide" style={{ borderColor: BE.line, background: BE.surface }}>
+      {all.map((s, i) => {
+        const skipped = s.n === 2 && branchSkipped;
+        const active = s.n === step;
+        const done = s.n < step && !skipped;
+        const color = active ? BE.accent : done ? BE.good : skipped ? BE.textMute : BE.textDim;
         return (
-          <div key={s.id} 
-            onClick={() => onViewResult(s.id)}
-            className="rounded-xl border p-4 flex items-center justify-between gap-4 cursor-pointer transition-all hover:bg-white/5"
-            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <div>
-              <div className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                Test #{sessions.length - i}
-              </div>
-              <div className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
-                {new Date(s.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                {s.time_taken_secs ? ` · ${fmtTime(TOTAL_SECS - s.time_taken_secs)} taken` : ""}
-              </div>
+          <React.Fragment key={s.n}>
+            <div className="flex items-center gap-2 shrink-0" style={{ opacity: skipped ? 0.4 : 1 }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: 11, fontSize: 11, fontWeight: 600,
+                fontFamily: BE.mono, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: active ? BE.accent : done ? BE.good + '22' : 'transparent',
+                color: active ? '#fff' : color,
+                border: `1px solid ${active || done ? color : BE.line}`,
+              }}>{done ? '✓' : skipped ? '–' : s.n}</div>
+              <span style={{ fontSize: 11.5, fontWeight: 500, color, letterSpacing: '0.02em' }}>{s.label}</span>
             </div>
-            <div className="text-right">
-              <div className="text-xl font-bold" style={{ color }}>
-                {s.score}/{s.max_score}
-              </div>
-              <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                ✓ {s.correct_count} · ✗ {s.wrong_count} · — {s.skipped_count}
-              </div>
-            </div>
-          </div>
+            {i < all.length - 1 && <div className="mx-2.5 flex-1 min-w-[12px] h-[1px]" style={{ background: BE.line }} />}
+          </React.Fragment>
         );
       })}
     </div>
   );
 }
 
-/* ─────────────── Main Component ─────────────── */
-export default function MockTestPage({ branch = "CSE" }: { branch?: string }) {
-  const [phase, setPhase] = useState<Phase>("start");
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<Record<number, Answer>>({});
-  const [statuses, setStatuses] = useState<Record<number, QStatus>>({});
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_SECS);
-  const [markedForReview, setMarkedForReview] = useState<Set<number>>(new Set());
-  const [msqSelections, setMsqSelections] = useState<Record<number, string[]>>({});
-  const [natValues, setNatValues] = useState<Record<number, string>>({});
-  const [mcqSelected, setMcqSelected] = useState<Record<number, string>>({});
-  const [result, setResult] = useState<ResultData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showPalette, setShowPalette] = useState(false);
-  const [mockTestId, setMockTestId] = useState<string | null>(null);
-  const [mockTestTitle, setMockTestTitle] = useState<string>("");
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isFirstRender = useRef(true);
+function MTPage({ children, phase, branchSkipped, maxWidth = 980 }: { children: React.ReactNode; phase: Phase; branchSkipped: boolean; maxWidth?: number }) {
+  return (
+    <div className="be-screen flex flex-col min-h-full" style={{ background: 'var(--bg-base)' }}>
+      <MTRail phase={phase} branchSkipped={branchSkipped} />
+      <div className="flex-1 overflow-auto">
+        <div style={{ maxWidth, margin: '0 auto', padding: '32px 32px 60px' }}>{children}</div>
+      </div>
+    </div>
+  );
+}
 
+function MTHeader({ eyebrow, title, sub }: { eyebrow: string; title: React.ReactNode; sub?: string }) {
+  return (
+    <div className="mb-[22px]">
+      <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 6 }}>{eyebrow}</div>
+      <h1 style={{ fontFamily: BE.serif, fontWeight: 500, fontSize: 32, letterSpacing: '-0.8px', margin: '0 0 6px', lineHeight: 1.1, color: BE.text }}>{title}</h1>
+      {sub && <div style={{ fontSize: 13.5, color: BE.textDim, lineHeight: 1.5, maxWidth: 600 }}>{sub}</div>}
+    </div>
+  );
+}
 
-  const currentQuestion = questions[currentIdx];
-  useEffect(() => {
-    if (!currentQuestion?.id) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("q", currentQuestion.id);
-    window.history.replaceState(null, "", url.toString());
-    
-    // Skip tracking on initial mount to avoid double-counting with the layout script
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    
-    trackPageView();
-  }, [currentQuestion?.id]);
-
-  // Subject selection
+/* ─────────────── Main component ─────────────── */
+export default function MockTestPage() {
+  const [phase, setPhase] = useState<Phase>("exam_select");
+  const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [selectedMode, setSelectedMode] = useState<"seeded" | "random" | null>(null);
+  const [selectedMock, setSelectedMock] = useState<SeededMock | null>(null);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+  const [seededMocks, setSeededMocks] = useState<SeededMock[]>([]);
+  const [briefAgreed, setBriefAgreed] = useState(false);
+  const { user } = useUser();
+  const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+  const isAdmin = checkIsAdmin(userEmail);
 
-  // Fetch available subjects on mount
+  const [questions, setQuestions] = useState<TestQuestion[]>([]);
+  const [mockTestId, setMockTestId] = useState<string | null>(null);
+  const [mockTestTitle, setMockTestTitle] = useState("");
+  const [result, setResult] = useState<ResultData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const config: ExamConfig | null = selectedExam
+    ? getExamConfig(selectedExam, selectedBranch ?? undefined)
+    : null;
+
+  const hasBranches = config?.hasBranches ?? true;
+
+  /* fetch subjects + seeded mocks whenever exam/branch changes */
   useEffect(() => {
-    fetch(`/api/test/subjects?branch=${branch}`)
-      .then(r => r.json())
-      .then(d => setAvailableSubjects(d.subjects || []))
+    if (!selectedExam) return;
+    const params = new URLSearchParams({ exam_type: selectedExam });
+    if (selectedBranch) params.set("branch", selectedBranch);
+    fetch(`/api/test/subjects?${params}`)
+      .then((r) => r.json())
+      .then((d) => setAvailableSubjects(d.subjects ?? []))
       .catch(() => {});
-  }, []);
+    fetch(`/api/test/mocks?${params}`)
+      .then((r) => r.json())
+      .then((d) => setSeededMocks(d.mocks ?? []))
+      .catch(() => {});
+  }, [selectedExam, selectedBranch]);
 
-  /* Start timer */
-  useEffect(() => {
-    if (phase !== "test") return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          handleSubmit(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current!);
-  }, [phase]);
-
-  /* Fetch Leaderboard on Results */
-  useEffect(() => {
-    if (phase === "results" && mockTestId) {
-       fetch(`/api/test/leaderboard?testId=${mockTestId}`)
-         .then(r => r.json())
-         .then(d => setLeaderboard(d.leaderboard || []))
-         .catch(console.error);
-    }
-  }, [phase, mockTestId]);
-
-  /* Load questions */
-  const startTest = async () => {
+  /* start test */
+  const startTest = useCallback(async () => {
+    if (!selectedExam || !selectedMode) return;
     setPhase("loading");
     setError(null);
+
+    const params = new URLSearchParams({ exam_type: selectedExam, mode: selectedMode });
+    if (selectedBranch) params.set("branch", selectedBranch);
+    if (selectedMode === "seeded" && selectedMock) {
+      params.set("mock_number", String(selectedMock.mock_number));
+    }
+    selectedSubjects.forEach((s) => params.append("subject", s));
+
     try {
-      const params = new URLSearchParams();
-      selectedSubjects.forEach(s => params.append("subject", s));
-      const qs = params.toString();
-      const url = qs ? `/api/test/generate?${qs}` : "/api/test/generate";
-      const res = await fetch(url);
+      const res = await fetch(`/api/test/generate?${params}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load questions");
+      if (!res.ok) throw new Error(data.error ?? "Failed to load questions");
       setQuestions(data.questions);
-      setMockTestId(data.mockTestId || null);
-      setMockTestTitle(data.title || "GATE Mock Test");
-      setAnswers({});
-      setStatuses({});
-      setMsqSelections({});
-      setNatValues({});
-      setMcqSelected({});
-      setMarkedForReview(new Set());
-      setCurrentIdx(0);
-      setTimeLeft(TOTAL_SECS);
+      setMockTestId(data.mockTestId ?? null);
+      setMockTestTitle(data.title ?? config?.label ?? "Mock Test");
       setPhase("test");
+      trackPageView();
     } catch (e: any) {
       setError(e.message);
-      setPhase("start");
+      setPhase("brief");
     }
-  };
+  }, [selectedExam, selectedBranch, selectedMode, selectedMock, selectedSubjects, config]);
 
-  /* Load Past Result */
-  const loadPastResult = async (sessionId: string) => {
-    setPhase("loading");
-    setError(null);
-    try {
-      const res = await fetch(`/api/test/history/${sessionId}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load past test");
-      
-      const s = data.session;
-      setResult({
-        sessionId: s.id,
-        score: s.score,
-        maxScore: s.max_score,
-        correctCount: s.correct_count,
-        wrongCount: s.wrong_count,
-        skippedCount: s.skipped_count,
-        breakdown: s.answers
-      });
-      setMockTestId(s.mock_test_id || null);
-      setMockTestTitle(s.mock_test?.title || `Past Mock Test (${new Date(s.created_at).toLocaleDateString()})`);
-      setPhase("results");
-    } catch (e: any) {
-      setError(e.message);
-      setPhase("start");
-    }
-  };
-
-  /* Build answers payload and submit */
-  const handleSubmit = useCallback(async (autoSubmit = false) => {
-    if (!autoSubmit) {
-      const unanswered = questions.length - Object.keys(answers).length;
-      if (unanswered > 0) {
-        const ok = window.confirm(`You have ${unanswered} unanswered questions. Submit anyway?`);
-        if (!ok) return;
-      }
-    }
-    clearInterval(timerRef.current!);
-    setPhase("submitting");
-
-    const payload: Answer[] = questions.map((q, idx) => {
-      const existing = answers[idx];
-      if (existing) return existing;
-      return {
-        questionId: q.id,
-        source: q.source,
-        questionType: q.question_type,
-        marks: q.marks,
-        userAnswer: null,
-      };
-    });
-
+  /* submit */
+  const handleSubmit = useCallback(async (answers: SubmitAnswer[], timeTakenSecs: number) => {
+    setSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/test/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: payload, timeTakenSecs: TOTAL_SECS - timeLeft, mockTestId }),
+        body: JSON.stringify({
+          mockTestId,
+          answers,
+          timeTakenSecs,
+          examType: selectedExam,
+          branch: selectedBranch,
+        }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Submission failed");
-      setResult(data);
-      setPhase("results");
-    } catch (e: any) {
-      setError(e.message);
-      setPhase("test");
-    }
-  }, [questions, answers, timeLeft]);
+      if (data.error) throw new Error(data.error);
 
-  /* Record answer for current question */
-  const recordAnswer = (idx: number, q: Question, userAnswer: string | null) => {
-    if (userAnswer === null || userAnswer.trim() === "") {
-      const newAns = { ...answers };
-      delete newAns[idx];
-      setAnswers(newAns);
-      setStatuses(prev => ({ ...prev, [idx]: "skipped" }));
-    } else {
-      setAnswers(prev => ({
-        ...prev,
-        [idx]: {
-          questionId: q.id,
-          source: q.source,
-          questionType: q.question_type,
-          marks: q.marks,
-          userAnswer,
-        },
+      // Map API response to ResultData structure for TestAnalysis
+      const breakdown = data.breakdown || [];
+      const accuracy = (data.correctCount + data.wrongCount) > 0 
+        ? (data.correctCount / (data.correctCount + data.wrongCount)) * 100 
+        : 0;
+      
+      // Calculate subject-wise breakdown
+      const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number }> = {};
+      breakdown.forEach((q: any) => {
+        const subName = q.subject || "General";
+        if (!subjectMap[subName]) {
+          subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0 };
+        }
+        const s = subjectMap[subName];
+        s.max += q.marks;
+        s.total += 1;
+        if (q.isCorrect) {
+          s.score += q.marks;
+          s.correct += 1;
+        }
+      });
+
+      const subjectBreakdown = Object.values(subjectMap).map(s => ({
+        subject: s.subject,
+        score: s.score,
+        max: s.max,
+        accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0
       }));
-      setStatuses(prev => ({ ...prev, [idx]: markedForReview.has(idx) ? "review" : "answered" }));
+
+      const finalResult: ResultData = {
+        score: data.score,
+        maxScore: data.maxScore,
+        accuracy,
+        timeTakenSecs: data.timeTakenSecs,
+        attempted: data.correctCount + data.wrongCount,
+        correct: data.correctCount,
+        incorrect: data.wrongCount,
+        unattempted: data.skippedCount,
+        subjectBreakdown,
+        questions: breakdown.map((q: any) => ({
+          id: q.questionId,
+          question_text: q.questionText,
+          options: q.options,
+          question_type: q.questionType,
+          correct_answer: q.correctAnswer,
+          user_answer: q.userAnswer,
+          is_correct: q.isCorrect,
+          marks: q.marks,
+          subject: q.subject || "General",
+          explanation: q.explanation
+        }))
+      };
+
+      setResult(finalResult);
+      setPhase("results");
+    } catch (err: any) {
+      setSubmitError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [mockTestId, selectedExam, selectedBranch]);
+
+  /* retake / new test */
+  const handleRetake = () => {
+    setPhase("mode_select");
+    setSelectedMode(null);
+    setSelectedMock(null);
+    setBriefAgreed(false);
+    setQuestions([]);
+    setResult(null);
+    setMockTestId(null);
+    setSubmitError(null);
+    setError(null);
+  };
+
+  const goBack = (to: Phase) => { setError(null); setPhase(to); };
+
+  const handleDeleteTest = async (mockId: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete "${title}"? All sessions and data for this test will be lost.`)) return;
+    try {
+      await deleteMockTest(mockId);
+      setSeededMocks(prev => prev.filter(m => m.id !== mockId));
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
-  const toggleMsq = (idx: number, letter: string) => {
-    const cur = msqSelections[idx] || [];
-    const next = cur.includes(letter) ? cur.filter(l => l !== letter) : [...cur, letter].sort();
-    setMsqSelections(prev => ({ ...prev, [idx]: next }));
-    const q = questions[idx];
-    const answer = next.join(";");
-    recordAnswer(idx, q, answer || null);
-  };
-
-  const handleMcqSelect = (idx: number, letter: string) => {
-    setMcqSelected(prev => ({ ...prev, [idx]: letter }));
-    recordAnswer(idx, questions[idx], letter);
-  };
-
-  const handleNatChange = (idx: number, val: string) => {
-    setNatValues(prev => ({ ...prev, [idx]: val }));
-    recordAnswer(idx, questions[idx], val || null);
-  };
-
-  const toggleReview = (idx: number) => {
-    const newSet = new Set(markedForReview);
-    if (newSet.has(idx)) {
-      newSet.delete(idx);
-      if (answers[idx]) setStatuses(prev => ({ ...prev, [idx]: "answered" }));
-      else setStatuses(prev => ({ ...prev, [idx]: "skipped" }));
-    } else {
-      newSet.add(idx);
-      setStatuses(prev => ({ ...prev, [idx]: "review" }));
-    }
-    setMarkedForReview(newSet);
-  };
-
-  const navigate = (next: number) => {
-    const clamped = Math.max(0, Math.min(questions.length - 1, next));
-    setCurrentIdx(clamped);
-    setShowPalette(false);
-  };
-
-  /* ─── Status color ─── */
-  const statusColor = (s: QStatus | undefined) => {
-    if (s === "answered") return "#22c55e";
-    if (s === "review") return "#f59e0b";
-    if (s === "skipped") return "#ef4444";
-    return undefined;
-  };
-
-  /* ─── Timer color ─── */
-  const timerColor = timeLeft < 600 ? "#ef4444" : timeLeft < 1800 ? "#f59e0b" : "var(--text-primary)";
-
-  const answeredCount = Object.keys(answers).length;
-
-  /* ════════════════════════════════════════════
-     START PHASE
-  ════════════════════════════════════════════ */
-  if (phase === "start" || phase === "loading") {
+  /* ════════════════════════════════════
+     STEP 1 — Exam select
+  ════════════════════════════════════ */
+  if (phase === "exam_select") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-        style={{ background: "var(--bg-base)" }}>
-        <div className="max-w-2xl w-full space-y-6">
+      <MTPage phase={phase} branchSkipped={!hasBranches}>
+        <MTHeader eyebrow="Step 1 of 7" title="Pick your exam." sub="All exams ship with curated mock series and a random-paper generator. Pick yours, then we'll narrow down to your branch and mode." />
 
-          {/* hero */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-3"
-              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-              <BookOpen size={30} className="text-white" />
-            </div>
-            <h1 className="text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
-              GATE CSE Mock Test
-            </h1>
-            <p style={{ color: "var(--text-secondary)" }}>
-              55 questions · 85 marks · 3 hours
-            </p>
-          </div>
-
-          {/* Subject Selector */}
-          <div className="rounded-2xl border p-5 space-y-3"
-            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <div className="font-semibold" style={{ color: "var(--text-primary)" }}>Select Subjects</div>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Choose subjects to focus on. Leave empty to select all subjects for a mixed GATE-style test.
-            </p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {availableSubjects.map(s => {
-                  const isSelected = selectedSubjects.includes(s);
-                  return (
-                      <button
-                        key={s}
-                        onClick={() => {
-                            if (isSelected) {
-                                setSelectedSubjects(prev => prev.filter(x => x !== s));
-                            } else {
-                                setSelectedSubjects(prev => [...prev, s]);
-                            }
-                        }}
-                        className="px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
-                        style={{
-                            background: isSelected ? "#6366f120" : "var(--bg-base)",
-                            borderColor: isSelected ? "#6366f1" : "var(--border)",
-                            color: isSelected ? "#818cf8" : "var(--text-secondary)",
-                        }}
-                      >
-                        {s}
-                      </button>
-                  );
-              })}
-            </div>
-            {selectedSubjects.length > 0 && (
-              <div className="text-xs px-3 py-2 rounded-lg mt-3"
-                style={{ background: "#6366f120", color: "#818cf8" }}>
-                ✦ Questions will be from <strong>{selectedSubjects.join(", ")}</strong> only
-              </div>
-            )}
-          </div>
-
-          {/* rules */}
-          <div className="rounded-2xl border p-6 space-y-4"
-            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <h2 className="font-semibold text-lg" style={{ color: "var(--text-primary)" }}>Exam Rules</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              {[
-                ["MCQ", "1-mark → -⅓  |  2-mark → -⅔"],
-                ["MSQ", "No negative marking"],
-                ["NAT", "No negative marking"],
-                ["Types", "~62% MCQ  ·  ~13% MSQ  ·  ~25% NAT"],
-                ["Marks", "~22 questions × 1 mark  ·  ~33 questions × 2 marks"],
-                ["Timer", "Auto-submits when 3:00:00 is up"],
-              ].map(([k, v]) => (
-                <div key={k} className="rounded-xl p-3" style={{ background: "var(--bg-base)" }}>
-                  <div className="font-medium" style={{ color: "var(--text-primary)" }}>{k}</div>
-                  <div className="mt-0.5" style={{ color: "var(--text-muted)" }}>{v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl p-4 text-sm bg-red-500/10 text-red-400 border border-red-500/30">
-              <AlertTriangle size={16} /> {error}
-            </div>
-          )}
-
-          <button
-            onClick={startTest}
-            disabled={phase === "loading"}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-semibold text-lg transition-all disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-            {phase === "loading"
-              ? <><Loader2 size={20} className="animate-spin" /> Loading questions…</>
-              : selectedSubjects.length > 0
-                ? `Start Topic Test (${selectedSubjects.length} subject${selectedSubjects.length > 1 ? "s" : ""}) →`
-                : "Start Full Mock Test →"
-            }
-          </button>
-
-          {/* history */}
-          <div className="rounded-2xl border p-6 space-y-4"
-            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <h2 className="font-semibold text-lg" style={{ color: "var(--text-primary)" }}>Past Tests</h2>
-            <HistoryPanel onViewResult={loadPastResult} />
-          </div>
+        {/* Search placeholder */}
+        <div className="flex items-center gap-2 px-3 py-2 border rounded-lg mb-6 max-w-[460px]" style={{ borderColor: BE.line, background: BE.surface }}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={BE.textDim} strokeWidth="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+          <span style={{ fontSize: 13, color: BE.textMute }}>Search exams…</span>
         </div>
-      </div>
+
+        {["Engineering", "Medical"].map((catLabel) => {
+          const catExams = EXAM_CONFIGS.filter(e => {
+            if (catLabel === "Engineering") return ["GATE", "JEE_MAIN", "JEE_ADVANCED"].includes(e.examType);
+            if (catLabel === "Medical") return ["NEET"].includes(e.examType);
+            return false;
+          });
+          if (!catExams.length) return null;
+          return (
+            <div key={catLabel} className="mb-6">
+              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 8 }}>{catLabel}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {catExams.map((exam) => (
+                  <div
+                    key={exam.examType}
+                    onClick={() => {
+                      setSelectedExam(exam.examType);
+                      setSelectedBranch(null);
+                      setSelectedMode(null);
+                      setSelectedMock(null);
+                      setPhase(exam.hasBranches ? "branch_select" : "mode_select");
+                    }}
+                    className="border rounded-xl p-3.5 cursor-pointer relative hover:shadow-sm transition-all"
+                    style={{ background: BE.surface, borderColor: BE.line }}
+                  >
+                    <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px', marginBottom: 2, color: BE.text }}>{exam.label}</div>
+                    <div style={{ fontSize: 11.5, color: BE.textDim, marginBottom: 12 }}>{exam.description}</div>
+                    <div className="flex gap-3 pt-2.5 border-t" style={{ borderColor: BE.line, fontSize: 10.5, color: BE.textMute }}>
+                      <div><span style={{ color: BE.text, fontFamily: BE.mono, fontSize: 12, fontWeight: 600 }}>{exam.totalQuestions}</span> Q</div>
+                      <div><span style={{ color: BE.text, fontFamily: BE.mono, fontSize: 12, fontWeight: 600 }}>{exam.maxScore}</span> marks</div>
+                      <div><span style={{ color: BE.text, fontFamily: BE.mono, fontSize: 12, fontWeight: 600 }}>{Math.round(exam.durationSecs/60)}</span> min</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </MTPage>
     );
   }
 
-  /* ════════════════════════════════════════════
-     SUBMITTING
-  ════════════════════════════════════════════ */
-  if (phase === "submitting") {
+  /* ════════════════════════════════════
+     STEP 2 — Branch select
+  ════════════════════════════════════ */
+  if (phase === "branch_select" && selectedExam && config) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <Loader2 size={40} className="animate-spin text-amber-400" />
-        <p className="text-lg" style={{ color: "var(--text-secondary)" }}>Evaluating answers…</p>
-      </div>
+      <MTPage phase={phase} branchSkipped={false}>
+        <MTHeader eyebrow={`Step 2 of 7 · ${config.label}`} title="Which paper?" sub="Pick the branch you're appearing for. The mock series and question pool are scoped to it." />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+          {config.branches?.map((b) => (
+            <div
+              key={b.id}
+              onClick={() => { setSelectedBranch(b.id); setPhase("mode_select"); }}
+              className="border rounded-lg p-3.5 cursor-pointer flex gap-3 items-center hover:shadow-sm transition-all"
+              style={{ background: BE.surface, borderColor: BE.line }}
+            >
+              <div
+                className="flex items-center justify-center rounded-lg text-[13px] font-bold shrink-0"
+                style={{ width: 40, height: 40, background: 'rgba(255,255,255,0.05)', color: BE.textDim, fontFamily: BE.mono }}
+              >
+                {b.id}
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold text-[13px] truncate" style={{ color: BE.text }}>{b.id}</div>
+                <div className="text-[11px] truncate" style={{ color: BE.textMute }}>{b.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11.5, color: BE.textMute, fontStyle: 'italic', fontFamily: BE.serif }}>Tip · You can change branch later from your dashboard. Your mistake log stays per-branch.</div>
+        <div className="flex justify-between items-center mt-[22px] pt-[18px] border-t" style={{ borderColor: BE.line }}>
+          <button className="be-btn" onClick={() => goBack("exam_select")}>← Exam</button>
+        </div>
+      </MTPage>
     );
   }
 
-  /* ════════════════════════════════════════════
-     RESULTS PHASE
-  ════════════════════════════════════════════ */
-  if (phase === "results" && result) {
-    const pct = Math.round((result.score / result.maxScore) * 100);
-    const grade = pct >= 80 ? "Excellent" : pct >= 65 ? "Good" : pct >= 50 ? "Average" : "Needs Work";
-    const gradeColor = pct >= 80 ? "#22c55e" : pct >= 65 ? "#6366f1" : pct >= 50 ? "#f59e0b" : "#ef4444";
-
+  /* ════════════════════════════════════
+     STEP 3 — Mode select
+  ════════════════════════════════════ */
+  if (phase === "mode_select" && selectedExam && config) {
     return (
-      <div className="min-h-screen py-12 px-4" style={{ background: "var(--bg-base)" }}>
-        <div className="max-w-4xl mx-auto space-y-6">
-
-          {/* Score Card */}
-          <div className="rounded-2xl border p-8 text-center space-y-4"
-            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl"
-              style={{ background: `${gradeColor}20` }}>
-              <Trophy size={30} style={{ color: gradeColor }} />
+      <MTPage phase={phase} branchSkipped={!hasBranches}>
+        <MTHeader eyebrow="Step 3 of 7" title="How do you want to take it?" sub="Two ways. Both score the same, but the question selection works differently." />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Specialized */}
+          <div
+            onClick={() => { setSelectedMode("seeded"); setPhase("mock_select"); }}
+            className="border-2 rounded-[14px] p-[22px] cursor-pointer relative transition-all"
+            style={{ borderColor: BE.accent, background: `linear-gradient(135deg, ${BE.accent}10, transparent)` }}
+          >
+            <div className="absolute top-3.5 right-3.5 text-[9.5px] font-bold tracking-[0.1em] px-2 py-0.5 rounded-[4px] text-white" style={{ background: BE.accent }}>
+              RECOMMENDED
             </div>
-            <div>
-              <div className="text-5xl font-bold" style={{ color: gradeColor }}>
-                {result.score}
-              </div>
-              <div className="text-lg mt-1" style={{ color: "var(--text-muted)" }}>
-                out of {result.maxScore} marks
-              </div>
-              <div className="text-xl font-semibold mt-2" style={{ color: gradeColor }}>{grade}</div>
-              <div className="text-sm font-medium mt-1" style={{ color: "var(--text-secondary)" }}>{mockTestTitle}</div>
+            <div className="flex items-center justify-center w-10 h-10 rounded-[9px] mb-3.5" style={{ background: BE.accentSoft, color: BE.accent }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
             </div>
-
-            <div className="grid grid-cols-3 gap-4 mt-6">
-              {[
-                { label: "Correct", value: result.correctCount, icon: CheckCircle2, color: "#22c55e" },
-                { label: "Wrong", value: result.wrongCount, icon: XCircle, color: "#ef4444" },
-                { label: "Skipped", value: result.skippedCount, icon: MinusCircle, color: "#94a3b8" },
-              ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="rounded-xl p-4" style={{ background: "var(--bg-base)" }}>
-                  <Icon size={20} style={{ color }} className="mx-auto mb-1" />
-                  <div className="text-2xl font-bold" style={{ color }}>{value}</div>
-                  <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</div>
-                </div>
-              ))}
-            </div>
+            <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginBottom: 4, color: BE.text }}>Specialized Mock</div>
+            <div style={{ fontSize: 13, color: BE.textDim, lineHeight: 1.5, marginBottom: 14 }}>A curated, fixed-set paper. Same exact questions every time you take Mock #N — just like the real exam booklet.</div>
+            <ul className="flex flex-col gap-1.5 list-none p-0 m-0 text-xs" style={{ color: BE.text }}>
+              <li>✓ Mirrors exam-day pattern exactly</li>
+              <li>✓ Comparable scores across attempts</li>
+              <li>✓ Leaderboard & percentile rank</li>
+            </ul>
           </div>
-
-          {/* Leaderboard */}
-          {leaderboard.length > 0 && (
-            <div className="rounded-2xl border p-6 space-y-4"
-              style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-              <h2 className="font-semibold text-lg flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-                <Trophy size={20} className="text-yellow-400" /> 
-                Leaderboard: {mockTestTitle}
-              </h2>
-              <div className="space-y-2">
-                {leaderboard.map((entry, idx) => {
-                    const isTop3 = idx < 3;
-                    const rColor = idx === 0 ? "#facc15" : idx === 1 ? "#94a3b8" : idx === 2 ? "#b45309" : "var(--text-muted)";
-                    const rBg = idx === 0 ? "#facc1530" : idx === 1 ? "#94a3b830" : idx === 2 ? "#b4530930" : "var(--bg-card)";
-                    return (
-                      <div key={idx} className="flex items-center justify-between p-3 rounded-xl border"
-                           style={{ background: "var(--bg-base)", borderColor: "var(--border)", opacity: entry.score === result.score ? 1 : 0.8 }}>
-                          <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
-                                   style={{ background: rBg, color: rColor }}>
-                                  #{entry.rank}
-                              </div>
-                              <span className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{entry.user}</span>
-                          </div>
-                          <div className="text-right">
-                             <div className="font-bold text-sm" style={{ color: "#22c55e" }}>{entry.score} <span className="text-xs font-normal opacity-70">marks</span></div>
-                             <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{fmtTime(entry.timeTakenSecs || 0)}</div>
-                          </div>
-                      </div>
-                    );
-                })}
-              </div>
+          {/* Random */}
+          <div
+            onClick={() => { setSelectedMode("random"); setPhase("random_config"); }}
+            className="border rounded-[14px] p-[22px] cursor-pointer hover:shadow-sm transition-all"
+            style={{ borderColor: BE.line, background: BE.surface }}
+          >
+            <div className="flex items-center justify-center w-10 h-10 rounded-[9px] mb-3.5" style={{ background: 'rgba(255,255,255,0.05)', color: BE.textDim }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
             </div>
-          )}
-
-          {/* Per-question Review */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Question Review</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-              {result.breakdown.map((item, i) => {
-                 const isCorrect = item.isCorrect;
-                 const isSkipped = item.isSkipped;
-                 return (
-                   <div key={item.questionId} className="relative group/card h-[400px]">
-                     <div className={`w-full flex flex-col p-4 rounded-2xl border-2 bg-white dark:bg-[#111] hover:shadow-xl transition-all text-left relative overflow-hidden h-full ${
-                        isSkipped ? 'border-gray-100 dark:border-white/5 hover:border-gray-300' :
-                        isCorrect ? 'border-green-100 dark:border-green-500/20 hover:border-green-300 hover:shadow-green-500/5' :
-                        'border-red-100 dark:border-red-500/20 hover:border-red-300 hover:shadow-red-500/5'
-                     }`}>
-                       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2">
-                         <div className="flex justify-between items-start mb-3">
-                           <span className={`text-[10px] font-black transition-colors ${
-                                isSkipped ? 'text-gray-300 dark:text-gray-500 group-hover/card:text-gray-400' :
-                                isCorrect ? 'text-green-200 dark:text-green-800 group-hover/card:text-green-400' :
-                                'text-red-200 dark:text-red-800 group-hover/card:text-red-400'
-                           }`}>
-                             #{i + 1}
-                           </span>
-                           <div className="flex items-center gap-1.5">
-                             <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                               {item.source === 'pyq' || item.source === 'subject_pyq' ? 'PYQ' : 'AI'}
-                             </span>
-                             <span className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
-                               {item.questionType} · {item.marks}M
-                             </span>
-                           </div>
-                         </div>
-
-                         <MathRenderer 
-                           content={item.questionText} 
-                           className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-4" 
-                         />
-
-                         {item.options && Array.isArray(item.options) && item.options.length > 0 && (
-                            <div className="space-y-1 mb-4">
-                               {item.options.map((opt, oi) => {
-                                   const letter = ["A","B","C","D","E"][oi] || String(oi);
-                                   return (
-                                       <div key={oi} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-transparent">
-                                          <span className="font-bold text-amber-500 shrink-0">{letter}.</span>
-                                          <div className="min-w-0">
-                                            <MathRenderer content={typeof opt === 'string' ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
-                                          </div>
-                                       </div>
-                                   );
-                               })}
-                            </div>
-                         )}
-
-                       {!isSkipped && (
-                         <div className="text-[10px] space-y-1 mt-2 mb-4 p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-                           <div className="text-gray-500 dark:text-gray-400">
-                             Your Answer:{" "}
-                             <span className={isCorrect ? "text-green-500 font-black" : "text-red-400 font-black"}>
-                               {item.userAnswer ?? "—"}
-                             </span>
-                           </div>
-                           {!isCorrect && (
-                             <div className="text-gray-500 dark:text-gray-400">
-                               Correct Answer:{" "}
-                               <span className="text-green-500 font-black">{item.correctAnswer}</span>
-                             </div>
-                           )}
-                         </div>
-                       )}
-
-                       {item.explanation && (
-                         <details className="text-[10px] text-gray-400 dark:text-gray-500 mb-4 group/details relative z-10 w-full">
-                           <summary className="cursor-pointer hover:text-amber-500 font-black uppercase tracking-widest sticky top-0 bg-white dark:bg-[#111] py-1">
-                             Show Explanation
-                           </summary>
-                           <div className="mt-2 text-gray-600 dark:text-gray-300 leading-relaxed font-medium p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
-                             <MathRenderer content={item.explanation} />
-                           </div>
-                         </details>
-                       )}
-                       </div> {/* end of scrollable area */}
-
-                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-white/5 shrink-0 z-10 bg-white dark:bg-[#111]">
-                         {isSkipped ? (
-                           <span className="text-[10px] font-black text-gray-400 flex items-center gap-1 uppercase tracking-wider">
-                             <MinusCircle size={12} /> Skipped (0)
-                           </span>
-                         ) : (
-                           <span className={`text-[10px] font-black flex items-center gap-1 uppercase tracking-wider ${
-                             isCorrect ? "text-green-500" : "text-red-400"
-                           }`}>
-                             {isCorrect ? (
-                               <><CheckCircle2 size={12} /> Correct (+{item.marks})</>
-                             ) : (
-                               <><XCircle size={12} /> Wrong {item.questionType === 'MCQ' ? `(-${item.marks===1 ? '0.33' : '0.66'})` : '(0)'}</>
-                             )}
-                           </span>
-                         )}
-                       </div>
-                     </div>
-                   </div>
-                 );
-              })}
-            </div>
+            <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginBottom: 4, color: BE.text }}>Random Test</div>
+            <div style={{ fontSize: 13, color: BE.textDim, lineHeight: 1.5, marginBottom: 14 }}>System generates a fresh paper from the bank. Filter by subjects. Great for daily drilling.</div>
+            <ul className="flex flex-col gap-1.5 list-none p-0 m-0 text-xs" style={{ color: BE.textDim }}>
+              <li>✓ Custom topic mix</li>
+              <li>✓ Fresh questions every attempt</li>
+              <li>✓ No two papers ever the same</li>
+            </ul>
           </div>
-
-          <button onClick={() => { setPhase("start"); setResult(null); }}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-white"
-            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-            <ArrowLeft size={18} /> Take Another Test
-          </button>
         </div>
-      </div>
+        <div className="flex justify-between items-center mt-[22px] pt-[18px] border-t" style={{ borderColor: BE.line }}>
+          <button className="be-btn" onClick={() => goBack(hasBranches ? "branch_select" : "exam_select")}>← Back</button>
+        </div>
+      </MTPage>
     );
   }
 
-  /* ════════════════════════════════════════════
-     TEST PHASE
-  ════════════════════════════════════════════ */
-  if (phase !== "test" || questions.length === 0) return null;
+  /* ════════════════════════════════════
+     STEP 4A — Seeded mock list
+  ════════════════════════════════════ */
+  if (phase === "mock_select" && config) {
+    return (
+      <MTPage phase={phase} branchSkipped={!hasBranches} maxWidth={1100}>
+        <MTHeader eyebrow="Step 4 of 7 · Specialized" title="Pick a past paper." sub="Each mock is a real previous-year paper. Same questions, same order, same printed sections — just the way it appeared on exam day." />
 
-  const q = questions[currentIdx];
-  const qStatus = statuses[currentIdx];
-  const optionLetters = ["A", "B", "C", "D", "E"];
-
-  return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-base)" }}>
-
-      {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-50 border-b px-4 py-2 flex items-center justify-between gap-4"
-        style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-sm font-bold"
-            style={{ background: "var(--bg-base)", color: timerColor }}>
-            <Clock size={16} />
-            {fmtTime(timeLeft)}
-          </div>
-          <div className="hidden sm:flex items-center gap-1 text-sm" style={{ color: "var(--text-muted)" }}>
-            <CheckCircle2 size={14} className="text-green-400" />
-            {answeredCount}/{questions.length}
+        {/* Constraint disclosure */}
+        <div className="flex gap-2.5 p-3 border rounded-xl mb-4.5" style={{ borderColor: BE.line, background: BE.surface }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={BE.textDim} strokeWidth="1.5" className="shrink-0 mt-0.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3.5M8 11v.5"/></svg>
+          <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5 }}>
+            <span style={{ color: BE.text, fontWeight: 600 }}>Past papers don't carry subject tags.</span>{' '}
+            You'll get full score, percentile, and right/wrong per question — but topic-wise breakdown isn't available. After the test you can hand-tag wrong answers to feed your mistake log.
           </div>
         </div>
 
-        <div className="font-semibold text-sm" style={{ color: "var(--text-secondary)" }}>
-          Q{currentIdx + 1} of {questions.length}
-          <span className="ml-2 text-xs px-2 py-0.5 rounded-full"
-            style={{ background: "#6366f120", color: "#818cf8" }}>
-            {q.marks}M · {q.question_type}
-          </span>
-        </div>
-
-        <button onClick={() => setShowPalette(p => !p)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border"
-          style={{ borderColor: "var(--border)", color: "var(--text-secondary)", background: "var(--bg-base)" }}>
-          <BarChart3 size={15} /> Palette
-        </button>
-      </div>
-
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* ── Palette sidebar (desktop) ── */}
-        <aside className="hidden lg:flex flex-col w-64 border-r p-4 gap-3 overflow-y-auto"
-          style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
-          <div className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Question Palette</div>
-          <div className="grid grid-cols-5 gap-1.5">
-            {questions.map((_, i) => {
-              const s = statuses[i];
-              const isCur = i === currentIdx;
-              const bg = isCur ? "#6366f1" : s === "answered" ? "#22c55e" : s === "review" ? "#f59e0b" : s === "skipped" ? "#ef444480" : "var(--bg-base)";
+        {seededMocks.length === 0 ? (
+          <div className="border border-dashed rounded-xl p-12 text-center" style={{ borderColor: BE.line }}>
+            <div className="text-2xl mb-2">📭</div>
+            <div className="font-semibold" style={{ color: BE.text }}>No papers seeded yet.</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
+            {seededMocks.map((m) => {
+              const taken = !!m.session;
+              const isSelected = selectedMock?.mock_number === m.mock_number;
               return (
-                <button key={i} onClick={() => navigate(i)}
-                  className="w-9 h-9 rounded-lg text-xs font-bold border transition-all hover:scale-105"
-                  style={{
-                    background: bg,
-                    color: (isCur || s === "answered" || s === "review") ? "#fff" : "var(--text-muted)",
-                    borderColor: isCur ? "#6366f1" : "var(--border)",
-                  }}>
-                  {i + 1}
-                </button>
+                <div
+                  key={m.mock_number}
+                   onClick={() => setSelectedMock(m)}
+                  className="border rounded-xl p-3.5 cursor-pointer relative hover:shadow-sm transition-all group"
+                   style={{
+                    borderColor: isSelected ? BE.accent : BE.line,
+                    background: isSelected ? `${BE.accent}10` : BE.surface,
+                  }}
+                >
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTest(m.id, m.title);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete Mock Test"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div style={{ fontFamily: BE.mono, fontSize: 11, color: BE.textMute, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>Mock #{String(m.mock_number).padStart(2,'0')}</div>
+                    {taken && <span style={{ fontSize: 9.5, color: BE.good, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>● Done</span>}
+                  </div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 17, fontWeight: 600, letterSpacing: '-0.3px', marginBottom: 2, color: BE.text }}>{m.title}</div>
+                  <div style={{ fontSize: 11, color: BE.textDim, marginBottom: 8 }}>{m.total_questions} Q · {fmtDuration(m.duration_secs)}</div>
+                  {taken && m.session ? (
+                    <div className="pt-2 border-t" style={{ borderColor: BE.line }}>
+                      <div style={{ fontFamily: BE.mono, fontSize: 12, fontWeight: 600, color: BE.text }}>{m.session.score} / {m.session.max_score}</div>
+                      <div style={{ fontSize: 10.5, color: BE.textMute }}>{new Date(m.session.created_at).toLocaleDateString()}</div>
+                    </div>
+                  ) : (
+                    <div className="pt-2 border-t text-[11px]" style={{ borderColor: BE.line, color: BE.textDim }}>{config.totalQuestions} Q · {Math.round(config.durationSecs/60)} min</div>
+                  )}
+                </div>
               );
             })}
           </div>
-          <div className="space-y-1.5 text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-            {[["#22c55e", "Answered"], ["#f59e0b", "Marked Review"], ["#ef4444", "Skipped"], ["#6366f1", "Current"]].map(([c, l]) => (
-              <div key={l} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ background: c }} />
-                {l}
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        {/* ── Mobile palette overlay ── */}
-        {showPalette && (
-          <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setShowPalette(false)}>
-            <div className="absolute right-0 top-[100px] bottom-0 w-72 border-l p-4 overflow-y-auto"
-              style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}
-              onClick={e => e.stopPropagation()}>
-              <div className="text-sm font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>Question Palette</div>
-              <div className="grid grid-cols-5 gap-2">
-                {questions.map((_, i) => {
-                  const s = statuses[i];
-                  const isCur = i === currentIdx;
-                  const bg = isCur ? "#6366f1" : s === "answered" ? "#22c55e" : s === "review" ? "#f59e0b" : s === "skipped" ? "#ef444480" : "var(--bg-base)";
-                  return (
-                    <button key={i} onClick={() => navigate(i)}
-                      className="w-10 h-10 rounded-lg text-xs font-bold border"
-                      style={{
-                        background: bg,
-                        color: (isCur || s === "answered" || s === "review") ? "#fff" : "var(--text-muted)",
-                        borderColor: "var(--border)",
-                      }}>
-                      {i + 1}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
         )}
 
-        {/* ── Main question area ── */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex justify-between items-center mt-5.5 pt-[18px] border-t" style={{ borderColor: BE.line }}>
+          <button className="be-btn" onClick={() => goBack("mode_select")}>← Mode</button>
+          <button
+            className="be-btn be-btn-primary"
+            disabled={!selectedMock}
+            onClick={() => selectedMock && (setBriefAgreed(false), setPhase("brief"))}
+            style={{ padding: '9px 18px' }}
+          >
+            Continue with {selectedMock ? selectedMock.title : "mock"} →
+          </button>
+        </div>
+      </MTPage>
+    );
+  }
 
-            {/* Question text */}
-            <div className="rounded-2xl border p-6"
-              style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-              <div className="text-xs mb-3 flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
-                <span className="px-2 py-0.5 rounded-full" style={{ background: "#6366f120", color: "#818cf8" }}>
-                  {q.subject}
-                </span>
-                <span>{q.year}</span>
-              </div>
-              <div className="text-base leading-relaxed" style={{ color: "var(--text-primary)" }}>
-                <MathRenderer content={q.question_text} />
+  /* ════════════════════════════════════
+     STEP 4B — Random config
+  ════════════════════════════════════ */
+  if (phase === "random_config" && config) {
+    return (
+      <MTPage phase={phase} branchSkipped={!hasBranches} maxWidth={1100}>
+        <MTHeader eyebrow="Step 4 of 7 · Random" title="Configure the paper." sub="Filter by subjects to generate a fresh paper from your branch's bank." />
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-[18px]">
+          {/* Left: General stats */}
+          <div className="flex flex-col gap-3.5">
+            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4, color: BE.text }}>Difficulty mix</div>
+              <div style={{ fontSize: 11.5, color: BE.textDim, marginBottom: 12 }}>Standard GATE difficulty distribution.</div>
+              <div className="flex h-7 rounded-[7px] overflow-hidden mb-2">
+                <div className="flex items-center justify-center text-[11px] font-bold text-black" style={{ flex: 30, background: BE.good + '99' }}>Easy 30%</div>
+                <div className="flex items-center justify-center text-[11px] font-bold text-black" style={{ flex: 50, background: BE.warn + '99' }}>Medium 50%</div>
+                <div className="flex items-center justify-center text-[11px] font-bold text-white" style={{ flex: 20, background: BE.bad + '99' }}>Hard 20%</div>
               </div>
             </div>
 
-            {/* Answer area */}
-            <div className="rounded-2xl border p-6 space-y-3"
-              style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-              <div className="text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
-                {q.question_type === "MSQ" ? "Select all that apply:" : q.question_type === "NAT" ? "Enter your answer:" : "Select one:"}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="border rounded-xl p-3.5" style={{ borderColor: BE.line, background: BE.surface }}>
+                <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Total questions</div>
+                <div className="flex items-baseline gap-2 mt-1.5">
+                  <div style={{ fontFamily: BE.serif, fontSize: 32, fontWeight: 600, color: BE.text }}>{config.totalQuestions}</div>
+                </div>
               </div>
-
-              {/* MCQ */}
-              {q.question_type === "MCQ" && Array.isArray(q.options) && q.options.map((opt, oi) => {
-                const letter = optionLetters[oi] || String(oi);
-                const isSelected = mcqSelected[currentIdx] === letter;
-                return (
-                  <button key={oi} onClick={() => handleMcqSelect(currentIdx, letter)}
-                    className="w-full text-left rounded-xl px-4 py-3 border text-sm transition-all"
-                    style={{
-                      background: isSelected ? "#6366f120" : "var(--bg-base)",
-                      borderColor: isSelected ? "#6366f1" : "var(--border)",
-                      color: "var(--text-primary)",
-                    }}>
-                    <span className="font-bold mr-2" style={{ color: "#818cf8" }}>{letter}.</span>
-                    <MathRenderer content={typeof opt === "string" ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
-                  </button>
-                );
-              })}
-
-              {/* MSQ */}
-              {q.question_type === "MSQ" && Array.isArray(q.options) && q.options.map((opt, oi) => {
-                const letter = optionLetters[oi] || String(oi);
-                const isSelected = (msqSelections[currentIdx] || []).includes(letter);
-                return (
-                  <button key={oi} onClick={() => toggleMsq(currentIdx, letter)}
-                    className="w-full text-left rounded-xl px-4 py-3 border text-sm transition-all"
-                    style={{
-                      background: isSelected ? "#6366f120" : "var(--bg-base)",
-                      borderColor: isSelected ? "#6366f1" : "var(--border)",
-                      color: "var(--text-primary)",
-                    }}>
-                    <span className="font-bold mr-2" style={{ color: "#818cf8" }}>{letter}.</span>
-                    <MathRenderer content={typeof opt === "string" ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
-                  </button>
-                );
-              })}
-
-              {/* NAT */}
-              {q.question_type === "NAT" && (
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="Type your numerical answer..."
-                  value={natValues[currentIdx] || ""}
-                  onChange={e => handleNatChange(currentIdx, e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 border text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                  style={{
-                    background: "var(--bg-base)",
-                    borderColor: "var(--border)",
-                    color: "var(--text-primary)",
-                  }}
-                />
-              )}
+              <div className="border rounded-xl p-3.5" style={{ borderColor: BE.line, background: BE.surface }}>
+                <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Time limit</div>
+                <div className="flex items-baseline gap-2 mt-1.5">
+                  <div style={{ fontFamily: BE.serif, fontSize: 32, fontWeight: 600, color: BE.text }}>{Math.round(config.durationSecs/60)}</div>
+                  <div style={{ fontSize: 11, color: BE.textDim }}>min</div>
+                </div>
+              </div>
             </div>
 
-            {/* Navigation */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button onClick={() => navigate(currentIdx - 1)} disabled={currentIdx === 0}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border disabled:opacity-40 transition-all hover:bg-white/5"
-                  style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
-                  <ChevronLeft size={16} /> Prev
-                </button>
-                <button onClick={() => navigate(currentIdx + 1)} disabled={currentIdx === questions.length - 1}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border disabled:opacity-40 transition-all hover:bg-white/5"
-                  style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}>
-                  Next <ChevronRight size={16} />
-                </button>
+            <div className="border rounded-xl p-3.5 flex items-center gap-4" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div className="flex-1">
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: BE.text }}>Negative marking</div>
+                <div style={{ fontSize: 11, color: BE.textDim, marginTop: 1 }}>−⅓ for MCQs, none for MSQ/NAT (real GATE rules)</div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => toggleReview(currentIdx)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all"
-                  style={{
-                    borderColor: markedForReview.has(currentIdx) ? "#f59e0b" : "var(--border)",
-                    color: markedForReview.has(currentIdx) ? "#f59e0b" : "var(--text-muted)",
-                    background: markedForReview.has(currentIdx) ? "#f59e0b15" : undefined,
-                  }}>
-                  <Flag size={15} /> {markedForReview.has(currentIdx) ? "Unmark" : "Mark Review"}
-                </button>
-
-                <button onClick={() => handleSubmit(false)}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all"
-                  style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-                  <Send size={15} /> Submit
-                </button>
+              <div className="w-[30px] h-[18px] rounded-[9px] relative" style={{ background: BE.accent }}>
+                <div className="absolute right-0.5 top-0.5 w-[14px] h-[14px] rounded-full bg-white" />
               </div>
             </div>
           </div>
-        </main>
+
+          {/* Right: Topic selection */}
+          <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+            <div className="flex items-center justify-between mb-2.5">
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: BE.text }}>Select subjects</div>
+                <div style={{ fontSize: 11, color: BE.textDim }}>Choose specific topics or leave all for mix.</div>
+              </div>
+              <button className="be-btn text-[10.5px] px-2 py-1" onClick={() => setSelectedSubjects([])}>Clear all</button>
+            </div>
+            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+              {availableSubjects.map((s) => {
+                const sel = selectedSubjects.includes(s);
+                return (
+                  <div
+                    key={s}
+                    onClick={() => setSelectedSubjects(prev => sel ? prev.filter(x => x !== s) : [...prev, s])}
+                    className="flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all"
+                    style={{
+                      borderColor: sel ? BE.accent : BE.line,
+                      background: sel ? BE.accentSoft : 'transparent'
+                    }}
+                  >
+                    <div className="w-3.5 h-3.5 rounded border flex items-center justify-center text-[10px] text-white" style={{ borderColor: sel ? BE.accent : BE.line, background: sel ? BE.accent : 'transparent' }}>{sel && "✓"}</div>
+                    <span style={{ fontSize: 12, color: BE.text }}>{s}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mt-5.5 pt-[18px] border-t" style={{ borderColor: BE.line }}>
+          <button className="be-btn" onClick={() => goBack("mode_select")}>← Mode</button>
+          <button className="be-btn be-btn-primary" onClick={() => (setBriefAgreed(false), setPhase("brief"))} style={{ padding: '9px 18px' }}>Generate paper →</button>
+        </div>
+      </MTPage>
+    );
+  }
+
+  /* ════════════════════════════════════
+     STEP 5 — Pre-test brief
+  ════════════════════════════════════ */
+  if (phase === "brief" && config) {
+    const isSpec = selectedMode === "seeded";
+    return (
+      <MTPage phase={phase} branchSkipped={!hasBranches}>
+        <MTHeader
+          eyebrow={isSpec ? 'Step 5 of 7 · Past paper' : 'Step 5 of 7 · Random test'}
+          title="Read this. Then begin."
+          sub={isSpec
+            ? `${selectedMock?.title} · ${config.label} · Specialized series.`
+            : `Custom paper · ${config.label} · Generated from your tagged bank.`
+          }
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3.5 mb-4">
+          <div className="flex flex-col gap-2.5">
+            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Exam pattern</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <BriefStat label="Questions" val={isSpec ? String(selectedMock?.total_questions) : String(config.totalQuestions)} />
+                <BriefStat label="Total marks" val={isSpec ? String(selectedMock?.max_score) : String(config.maxScore)} />
+                <BriefStat label="Time" val={isSpec ? fmtDuration(selectedMock?.duration_secs ?? 0) : "3h"} sub={isSpec ? "" : "180 minutes"} />
+                <BriefStat label="Sections" val={String(config.sections.length)} sub="GA + Subject" />
+              </div>
+            </div>
+            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Marking scheme</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <MarkRow type="MCQ" marks="+1 / +2" neg="−⅓ / −⅔" />
+                <MarkRow type="MSQ" marks="+1 / +2" neg="No partial penalty" />
+                <MarkRow type="NAT" marks="+1 / +2" neg="No penalty" />
+              </div>
+            </div>
+            <div className="border rounded-xl p-3.5 flex gap-2.5" style={{ borderColor: BE.warn + '33', background: `linear-gradient(135deg, ${BE.warn}08, transparent)` }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke={BE.warn} strokeWidth="1.6" className="shrink-0 mt-0.5"><circle cx="9" cy="9" r="7.5"/><path d="M9 5v4M9 12v.5"/></svg>
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: BE.text }}>Timer cannot be paused.</div>
+                <div style={{ fontSize: 11.5, color: BE.textDim, lineHeight: 1.5 }}>Refreshing is fine — answers auto-save. Closing the tab won't stop the clock.</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Instructions</div>
+            <ol className="flex flex-col gap-2.5 list-none p-0 m-0 text-xs leading-relaxed" style={{ color: BE.text }}>
+              {[
+                'Use the question palette to navigate freely.',
+                'Mark for review to revisit later.',
+                'Type numeric answers for NAT questions.',
+                'A virtual calculator is available (Ctrl+K).',
+                'Auto-saves every 8 seconds.',
+                'You can change answers before final submit.'
+              ].map((t, i) => (
+                <li key={i} className="flex gap-2.5">
+                  <span style={{ fontFamily: BE.mono, fontSize: 10.5, color: BE.accent, fontWeight: 600, minWidth: 14 }}>{String(i+1).padStart(2,'0')}</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+
+        <div
+          className="border rounded-xl p-3.5 flex items-center gap-2.5 cursor-pointer select-none transition-all"
+          style={{ borderColor: briefAgreed ? BE.accent : BE.line, background: BE.surface }}
+          onClick={() => setBriefAgreed(v => !v)}
+        >
+          <div
+            className="flex items-center justify-center rounded-[4px] shrink-0 border transition-all"
+            style={{ width: 18, height: 18, background: briefAgreed ? BE.accent : 'transparent', borderColor: briefAgreed ? BE.accent : BE.line, color: '#fff' }}
+          >
+            {briefAgreed && <Check size={11} />}
+          </div>
+          <div style={{ fontSize: 12.5, color: BE.text }}>I have read the instructions and agree to abide by them.</div>
+        </div>
+
+        {error && <div className="mt-4 p-3 rounded-lg border text-sm text-red-500 bg-red-500/10" style={{ borderColor: BE.bad + '33' }}>{error}</div>}
+
+        <div className="flex justify-between items-center mt-5 pt-[18px] border-t" style={{ borderColor: BE.line }}>
+          <button className="be-btn" onClick={() => goBack(isSpec ? "mock_select" : "random_config")}>← Back</button>
+          <button className="be-btn be-btn-primary" disabled={!briefAgreed} onClick={startTest} style={{ padding: '11px 26px', fontSize: 14 }}>Begin Test →</button>
+        </div>
+      </MTPage>
+    );
+  }
+
+  /* ════════════════════════════════════
+     LOADING / SUBMITTING
+  ════════════════════════════════════ */
+  if (phase === "loading" || phase === "submitting") {
+    return (
+      <div className="be-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg-base)' }}>
+        <Loader2 size={36} className="animate-spin" style={{ color: BE.accent }} />
+        <p style={{ fontSize: 14, color: BE.textDim }}>{phase === "loading" ? "Preparing your paper…" : "Evaluating your answers…"}</p>
       </div>
+    );
+  }
+
+  /* ════════════════════════════════════
+     STEP 6 — Test
+  ════════════════════════════════════ */
+  if (phase === "test" && config && questions.length > 0) {
+    return (
+      <TestEngine
+        questions={questions}
+        config={config}
+        branch={selectedBranch ?? undefined}
+        mockTestId={mockTestId}
+        mockTestTitle={mockTestTitle}
+        onSubmit={handleSubmit}
+        submitting={submitting}
+        submitError={submitError}
+      />
+    );
+  }
+
+  /* ════════════════════════════════════
+     STEP 7 — Results
+  ════════════════════════════════════ */
+  if (phase === "results" && result) {
+    return (
+      <TestAnalysis
+        result={result}
+        onRestart={handleRetake}
+      />
+    );
+  }
+
+  return (
+    <div className="be-screen flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
+      <Loader2 size={32} className="animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function BriefStat({ label, val, sub }: { label: string; val: string; sub?: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 600, letterSpacing: '-0.4px', marginTop: 2, color: BE.text }}>{val}</div>
+      {sub && <div style={{ fontSize: 10.5, color: BE.textDim }}>{sub}</div>}
+    </div>
+  );
+}
+
+function MarkRow({ type, marks, neg }: { type: string; marks: string; neg: string }) {
+  return (
+    <div className="p-2.5 border rounded-lg" style={{ borderColor: BE.line }}>
+      <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: BE.accent, marginBottom: 4 }}>{type}</div>
+      <div style={{ fontSize: 11, color: BE.text, marginBottom: 1 }}>+ {marks}</div>
+      <div style={{ fontSize: 10.5, color: BE.textMute }}>{neg}</div>
     </div>
   );
 }

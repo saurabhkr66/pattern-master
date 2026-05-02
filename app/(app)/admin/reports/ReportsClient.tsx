@@ -9,7 +9,9 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
   const [formData, setFormData] = useState({
     question_text: "",
     correct_answer: "",
-    explanation: ""
+    explanation: "",
+    options: [] as string[],
+    images: [] as any[]
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -28,7 +30,9 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
     setFormData({
       question_text: questionData?.question_text || "",
       correct_answer: questionData?.correct_answer || "",
-      explanation: questionData?.explanation || ""
+      explanation: questionData?.explanation || "",
+      options: (questionData?.options as string[]) || [],
+      images: (questionData?.images as any[]) || []
     });
   };
 
@@ -160,6 +164,100 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
                     <MathRenderer content={formData.question_text} />
                   </div>
                 )}
+              </div>
+
+              {/* IMAGES SECTION */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Question Images</label>
+                <div className="flex flex-col gap-3">
+                  {formData.images.map((img, idx) => (
+                    <div key={idx} className="flex gap-2 items-center bg-gray-50 dark:bg-black/20 p-3 rounded-xl border dark:border-zinc-800">
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="filename.png"
+                          value={img.filename} 
+                          onChange={(e) => {
+                            const newImages = [...formData.images];
+                            newImages[idx].filename = e.target.value;
+                            setFormData({...formData, images: newImages});
+                          }}
+                          className="p-2 rounded bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-xs"
+                        />
+                        <select 
+                          value={img.type || "question"}
+                          onChange={(e) => {
+                            const newImages = [...formData.images];
+                            newImages[idx].type = e.target.value;
+                            setFormData({...formData, images: newImages});
+                          }}
+                          className="p-2 rounded bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-xs"
+                        >
+                          <option value="question">Question</option>
+                          <option value="explanation">Explanation</option>
+                        </select>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const newImages = formData.images.filter((_, i) => i !== idx);
+                          setFormData({...formData, images: newImages});
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => setFormData({...formData, images: [...formData.images, { index: formData.images.length + 1, filename: "", type: "question" }]})}
+                    className="text-xs font-bold text-amber-500 hover:underline text-left w-fit"
+                  >
+                    + Add Image
+                  </button>
+                </div>
+              </div>
+
+              {/* OPTIONS SECTION */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Options</label>
+                <div className="flex flex-col gap-3">
+                  {formData.options.map((opt, idx) => (
+                    <div key={idx} className="flex flex-col gap-2">
+                      <div className="flex gap-2 items-center">
+                        <span className="font-bold text-gray-400 w-6">{String.fromCharCode(65 + idx)}.</span>
+                        <textarea 
+                          value={opt}
+                          onChange={(e) => {
+                            const newOptions = [...formData.options];
+                            newOptions[idx] = e.target.value;
+                            setFormData({...formData, options: newOptions});
+                          }}
+                          className="w-full p-3 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {formData.options.length === 0 && (
+                    <p className="text-xs text-gray-500 italic">No options (Numerical Answer Type?)</p>
+                  )}
+                  <div className="flex gap-2">
+                     <button 
+                      onClick={() => setFormData({...formData, options: [...formData.options, ""]})}
+                      className="text-xs font-bold text-amber-500 hover:underline"
+                    >
+                      + Add Option
+                    </button>
+                    {formData.options.length > 0 && (
+                       <button 
+                       onClick={() => setFormData({...formData, options: formData.options.slice(0, -1)})}
+                       className="text-xs font-bold text-red-500 hover:underline"
+                     >
+                       - Remove Last
+                     </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div>
