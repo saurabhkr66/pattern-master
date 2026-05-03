@@ -115,7 +115,6 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   const questions = data?.questions || [];
   const pyqs = data?.pyqs || [];
 
-  // Handle direct question selection from dashboard link
   useEffect(() => {
     if (directQuestionId && (questions.length > 0 || pyqs.length > 0)) {
       const q = questions.find((x: any) => x.id === directQuestionId);
@@ -131,6 +130,18 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
       }
     }
   }, [directQuestionId, questions, pyqs]);
+
+  // Sync URL when question is cleared
+  useEffect(() => {
+    if (!selectedQuestion && !directQuestionId) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("q") || url.searchParams.has("questionId")) {
+        url.searchParams.delete("q");
+        url.searchParams.delete("questionId");
+        window.history.replaceState(null, "", url.toString());
+      }
+    }
+  }, [selectedQuestion, directQuestionId]);
 
   const total = pattern.totalQuestions || 0;
   const solved = pattern.solvedQuestions || 0;
@@ -166,8 +177,16 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   const queue = useMemo(() => {
     if (!selectedQuestion) return [];
     const source = selectedQuestion._isPyq ? displayedPyqs : displayedBank;
-    const idx = source.findIndex(q => q.id === selectedQuestion.id);
-    return idx !== -1 ? source.slice(idx + 1) : [];
+    
+    // Filter the source to only include the current question + subsequent unsolved/wrong questions
+    const filteredSource = source.filter(q => {
+      if (q.id === selectedQuestion.id) return true;
+      const isCorrect = q.attempts?.length && q.attempts[0].is_correct;
+      return !isCorrect;
+    });
+
+    const idx = filteredSource.findIndex(q => q.id === selectedQuestion.id);
+    return idx !== -1 ? filteredSource.slice(idx + 1) : [];
   }, [selectedQuestion, displayedBank, displayedPyqs]);
 
   return (

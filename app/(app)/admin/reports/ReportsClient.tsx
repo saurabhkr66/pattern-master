@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo } from "react"; // AI Model selection enabled 2026-05-03
 import { resolveReport, deleteQuestion, generateAIExplanation, processMockTestExplanations } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
@@ -30,6 +30,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
   const [batchProcessing, setBatchProcessing] = useState<string | null>(null);
   const [batchResult, setBatchResult] = useState<{total: number, fixed: number, failed: number} | null>(null);
   const [showBatchPanel, setShowBatchPanel] = useState(false);
+  const [selectedAIModel, setSelectedAIModel] = useState<"gemini" | "gpt-4o-mini">("gemini");
 
   // Process reports to extract exam, subject, and type for easier filtering and display
   const processedReports = useMemo(() => {
@@ -180,14 +181,16 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
   const handleGenerateAI = async () => {
     if (!editingReport) return;
+    console.log(`[CLIENT] Requesting AI explanation using model: ${selectedAIModel}`);
     setIsGeneratingAI(true);
     try {
-      const explanation = await generateAIExplanation(
+      const result = await generateAIExplanation(
         editingReport.questionId,
         editingReport.questionType,
-        editingReport.mock_test_id
+        editingReport.mock_test_id,
+        selectedAIModel
       );
-      setFormData({ ...formData, explanation });
+      setFormData({ ...formData, explanation: (result as any).explanation });
     } catch (error) {
       console.error("AI generation failed", error);
       alert("Failed to generate explanation. Check console for details.");
@@ -205,7 +208,9 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     total: number;
     fixed: number;
     failed: number;
-    log: { id: string; text: string; status: "ok" | "fail"; question: any; explanation: string }[];
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    log: { id: string; text: string; status: "ok" | "fail"; question: any; explanation: string; tokens?: { input: number; output: number } }[];
     done: boolean;
   } | null>(null);
 
@@ -232,12 +237,16 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       total: missingQs.length,
       fixed: 0,
       failed: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
       log: [],
       done: false,
     });
-
+    
     let fixed = 0;
     let failed = 0;
+    let cumulativeInput = 0;
+    let cumulativeOutput = 0;
 
     for (let i = 0; i < missingQs.length; i++) {
       const q = missingQs[i];
@@ -250,38 +259,54 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       } : null);
 
       try {
-        const explanation = await generateAIExplanation(q.id, "MockQuestion", testId);
-        fixed++;
-
-        setLiveFeed(prev => prev ? {
-          ...prev,
-          currentExplanation: explanation,
-          fixed,
-          log: [...prev.log, { 
-            id: q.id, 
-            text: (q.question_text || "").substring(0, 80) + "...", 
-            status: "ok",
-            question: q,
-            explanation,
-          }],
-        } : null);
+          const result = await generateAIExplanation(q.id, "MockQuestion", testId, selectedAIModel);
+          const explanation = (result as any).explanation;
+          const usage = (result as any).usage;
+          
+          fixed++;
+          cumulativeInput += usage?.input || 0;
+          cumulativeOutput += usage?.output || 0;
+          
+          setLiveFeed(prev => prev ? {
+            ...prev,
+            currentExplanation: explanation,
+            fixed,
+            totalInputTokens: cumulativeInput,
+            totalOutputTokens: cumulativeOutput,
+            log: [...prev.log, { 
+              id: q.id, 
+              text: (q.question_text || "").substring(0, 80) + "...", 
+              status: "ok",
+              question: q,
+              explanation,
+              tokens: usage
+            }],
+          } : null);
       } catch (err) {
         // Retry once after 15 seconds (handles 429 rate limit)
         console.log(`[AI] Retrying question ${q.id} after 15s...`);
         await new Promise(resolve => setTimeout(resolve, 15000));
         try {
-          const explanation = await generateAIExplanation(q.id, "MockQuestion", testId);
+          const result = await generateAIExplanation(q.id, "MockQuestion", testId, selectedAIModel);
+          const explanation = (result as any).explanation;
+          const usage = (result as any).usage;
           fixed++;
+          cumulativeInput += usage?.input || 0;
+          cumulativeOutput += usage?.output || 0;
+
           setLiveFeed(prev => prev ? {
             ...prev,
             currentExplanation: explanation,
             fixed,
+            totalInputTokens: cumulativeInput,
+            totalOutputTokens: cumulativeOutput,
             log: [...prev.log, { 
               id: q.id, 
               text: (q.question_text || "").substring(0, 80) + "... (retry ✓)", 
               status: "ok",
               question: q,
               explanation,
+              tokens: usage
             }],
           } : null);
         } catch {
@@ -450,8 +475,11 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                 <div className="mt-4 p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-center">
                   <div className="text-2xl mb-2">🎉</div>
                   <div className="text-sm font-bold text-green-800 dark:text-green-300">All done!</div>
-                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  <div className="text-[10px] text-green-600 dark:text-green-400 mt-1">
                     {liveFeed.fixed} explanations generated{liveFeed.failed > 0 ? `, ${liveFeed.failed} failed` : ""}
+                  </div>
+                  <div className="mt-2 text-[10px] font-mono text-gray-500 bg-black/5 dark:bg-black/20 p-2 rounded-lg inline-block">
+                    📊 Tokens Used: {liveFeed.totalInputTokens.toLocaleString()} (Input) + {liveFeed.totalOutputTokens.toLocaleString()} (Output) = <span className="font-bold">{(liveFeed.totalInputTokens + liveFeed.totalOutputTokens).toLocaleString()}</span>
                   </div>
                 </div>
               )}
@@ -496,19 +524,29 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                           {test.exam_type} · {questions.length} Qs · <span className={missing > 0 ? "text-red-500 font-bold" : "text-green-500"}>{missing} missing</span>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleBatchProcess(test.id)}
-                        disabled={isProcessing || missing === 0}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
-                          missing === 0
-                            ? "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400 cursor-default"
-                            : isProcessing
-                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400 animate-pulse"
-                            : "bg-purple-500 text-white hover:bg-purple-600"
-                        }`}
-                      >
-                        {missing === 0 ? "✅ Complete" : isProcessing ? `⏳ Processing...` : `Generate ${missing} Explanations`}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={selectedAIModel}
+                          onChange={(e) => setSelectedAIModel(e.target.value as any)}
+                          className="px-2 py-2 rounded-lg text-[10px] font-bold bg-white dark:bg-zinc-800 border dark:border-zinc-700 outline-none"
+                        >
+                          <option value="gemini">Gemini Flash</option>
+                          <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        </select>
+                        <button
+                          onClick={() => handleBatchProcess(test.id)}
+                          disabled={isProcessing || missing === 0}
+                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+                            missing === 0
+                              ? "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400 cursor-default"
+                              : isProcessing
+                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400 animate-pulse"
+                              : "bg-purple-500 text-white hover:bg-purple-600"
+                          }`}
+                        >
+                          {missing === 0 ? "✅ Complete" : isProcessing ? `⏳ Processing...` : `Generate ${missing} Explanations`}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -779,14 +817,24 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Explanation (Supports LaTeX)</label>
-                  <button
-                    type="button"
-                    onClick={handleGenerateAI}
-                    disabled={isGeneratingAI}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-                  >
-                    {isGeneratingAI ? "⏳ Generating..." : "✨ Generate with AI"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedAIModel}
+                      onChange={(e) => setSelectedAIModel(e.target.value as any)}
+                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-gray-50 dark:bg-zinc-800 border dark:border-zinc-700 outline-none"
+                    >
+                      <option value="gemini">Gemini</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleGenerateAI}
+                      disabled={isGeneratingAI}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                    >
+                      {isGeneratingAI ? "⏳ Generating..." : "✨ Generate AI"}
+                    </button>
+                  </div>
                 </div>
                 <textarea 
                   value={formData.explanation}

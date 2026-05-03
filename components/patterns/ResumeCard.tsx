@@ -27,7 +27,7 @@ function timeAgo(iso: string): string {
 export default function ResumeCard({
   onResume,
 }: {
-  onResume: (patternId: string) => void;
+  onResume: (patternId: string, subject: string) => void;
 }) {
   const { data, isLoading } = useQuery({
     queryKey: ["lastSession"],
@@ -103,7 +103,7 @@ export default function ResumeCard({
 
       {/* CTA */}
       <button
-        onClick={() => onResume(session.patternId)}
+  onClick={() => onResume(session.patternId, session.subject)}
         className="w-full py-3 rounded-xl font-black text-sm transition-all hover:opacity-90 active:scale-95"
         style={{
           background: BE.accent,

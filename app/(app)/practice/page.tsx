@@ -226,11 +226,25 @@ export default async function PracticePage({
     const activeExamType = exam || dbUser?.preferred_exam || baseExamType;
     const activeBranch = branchParam ?? dbUser?.preferred_branch ?? baseBranch;
 
+    let activeSubject = subjectParam || "All";
+    
+    // If we have a patternId but no subject, resolve the subject so topics are fetched correctly
+    if (patternId && activeSubject === "All") {
+      if (patternId.startsWith("subject-")) {
+        const spId = patternId.replace("subject-", "");
+        const sp = await prisma.subjectPattern.findUnique({ where: { id: spId }, select: { subject_name: true } });
+        if (sp) activeSubject = sp.subject_name;
+      } else {
+        const p = await prisma.pattern.findUnique({ where: { id: patternId }, select: { subject: true } });
+        if (p) activeSubject = p.subject;
+      }
+    }
+
     const availableBranches = examMeta.branchesByExam[activeExamType] ?? [];
 
     [subjectStats, topics] = await Promise.all([
       getSubjectStats(activeExamType, activeBranch),
-      getTopicsForSubject(userId, activeExamType, activeBranch, subjectParam || "All"),
+      getTopicsForSubject(userId, activeExamType, activeBranch, activeSubject),
     ]);
 
 
@@ -295,7 +309,7 @@ export default async function PracticePage({
                 highlightPatternId={patternId} 
                 directQuestionId={questionId}
                 subjectStats={subjectStats}
-                activeSubject={subjectParam || "All"}
+                activeSubject={activeSubject}
               />
             )}
           </div>

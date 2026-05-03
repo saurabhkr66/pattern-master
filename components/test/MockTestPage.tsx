@@ -27,11 +27,13 @@ interface SeededMock {
   max_score: number;
   duration_secs: number;
   session?: {
+    id: string;
     score: number;
     max_score: number;
     correct_count: number;
     wrong_count: number;
     skipped_count: number;
+    section_scores?: any;
     created_at: string;
   } | null;
 }
@@ -146,7 +148,17 @@ export default function MockTestPage() {
       .catch(() => {});
     fetch(`/api/test/mocks?${params}`)
       .then((r) => r.json())
-      .then((d) => setSeededMocks(d.mocks ?? []))
+      .then((d) => {
+        const mocks = d.mocks ?? [];
+        const sorted = [...mocks].sort((a, b) => {
+          const aTaken = !!a.session;
+          const bTaken = !!b.session;
+          if (aTaken && !bTaken) return -1;
+          if (!aTaken && bTaken) return 1;
+          return a.mock_number - b.mock_number;
+        });
+        setSeededMocks(sorted);
+      })
       .catch(() => {});
   }, [selectedExam, selectedBranch]);
 
@@ -240,6 +252,50 @@ export default function MockTestPage() {
     setQuestions([]); setResult(null); setMockTestId(null);
     setSubmitError(null); setError(null);
   };
+
+  const loadAnalysis = useCallback(async (mock: SeededMock) => {
+    if (!mock.session?.id) return;
+    setPhase("loading");
+    setError(null);
+    try {
+      const res = await fetch(`/api/test/history/${mock.session.id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load analysis");
+      const s = data.session;
+      const breakdown: any[] = Array.isArray(s.answers) ? s.answers : [];
+      const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number }> = {};
+      breakdown.forEach((q: any) => {
+        const subName = q.subject || "General";
+        if (!subjectMap[subName]) subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0 };
+        const sub = subjectMap[subName];
+        sub.max += q.marks; sub.total += 1;
+        if (q.isCorrect) { sub.score += q.marks; sub.correct += 1; }
+      });
+      const accuracy = (s.correct_count + s.wrong_count) > 0
+        ? (s.correct_count / (s.correct_count + s.wrong_count)) * 100 : 0;
+      setMockTestTitle(s.mock_test?.title ?? mock.title);
+      setResult({
+        score: s.score, maxScore: s.max_score, accuracy,
+        timeTakenSecs: s.time_taken_secs,
+        attempted: s.correct_count + s.wrong_count,
+        correct: s.correct_count, incorrect: s.wrong_count, unattempted: s.skipped_count,
+        subjectBreakdown: Object.values(subjectMap).map(sub => ({
+          subject: sub.subject, score: sub.score, max: sub.max,
+          accuracy: sub.total > 0 ? (sub.correct / sub.total) * 100 : 0,
+        })),
+        questions: breakdown.map((q: any) => ({
+          id: q.questionId, question_text: q.questionText, options: q.options,
+          question_type: q.questionType, correct_answer: q.correctAnswer,
+          user_answer: q.userAnswer, is_correct: q.isCorrect,
+          marks: q.marks, subject: q.subject || "General", explanation: q.explanation,
+        })),
+      });
+      setPhase("results");
+    } catch (e: any) {
+      setError(e.message);
+      setPhase("setup");
+    }
+  }, []);
 
   const handleDeleteTest = async (mockId: string, title: string) => {
     if (!confirm(`Delete "${title}"? All sessions will be lost.`)) return;
@@ -403,14 +459,33 @@ export default function MockTestPage() {
                         ><Trash2 size={12} /></button>
                       )}
                       <div style={{ fontFamily: BE.mono, fontSize: 10, color: BE.textMute, textTransform: 'uppercase', fontWeight: 600, marginBottom: 4 }}>
-                        Mock #{String(m.mock_number).padStart(2, '0')}
+                        {m.mock_number}
                         {taken && <span className="ml-2" style={{ color: BE.good }}>● Done</span>}
                       </div>
                       <div style={{ fontFamily: BE.serif, fontSize: 15, fontWeight: 600, color: BE.text, marginBottom: 2 }}>{m.title}</div>
                       <div style={{ fontSize: 11, color: BE.textDim }}>{m.total_questions} Q · {fmtDuration(m.duration_secs)}</div>
                       {taken && m.session && (
-                        <div className="mt-2 pt-2 border-t" style={{ borderColor: BE.line }}>
-                          <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 600, color: BE.text }}>{m.session.score} / {m.session.max_score}</div>
+                        <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: BE.line }}>
+                          <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 700, color: BE.text }}>
+                            Score: {m.session.score} / {m.session.max_score}
+                          </div>
+                          {m.session.section_scores && Array.isArray(m.session.section_scores) && (
+                            <div className="grid grid-cols-1 gap-0.5 pt-0.5 border-t border-dashed mt-1" style={{ borderColor: BE.line }}>
+                              {m.session.section_scores.map((ss: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-[9px] leading-tight">
+                                  <div style={{ color: BE.textMute, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{ss.name}</div>
+                                  <div style={{ fontWeight: 600, color: BE.textDim }}>{ss.score}/{ss.maxScore}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); loadAnalysis(m); }}
+                            className="w-full mt-1 rounded-lg py-1 text-[10px] font-semibold transition-colors"
+                            style={{ background: BE.accentSoft, color: BE.accent }}
+                          >
+                            View Analysis
+                          </button>
                         </div>
                       )}
                     </div>

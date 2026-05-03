@@ -44,7 +44,7 @@ export default function PatternTable({
   const exam = searchParams.get("exam") || "GATE";
   const branch = searchParams.get("branch") || "";
   // Read live from URL so it reacts to client-side navigation (e.g. "Solve again")
-  const urlQuestionId = searchParams.get("questionId") ?? directQuestionId;
+  const urlQuestionId = searchParams.get("questionId") ?? searchParams.get("q") ?? directQuestionId;
   const urlPatternId = searchParams.get("patternId") ?? highlightPatternId;
   const urlSubject = searchParams.get("subject");
 
@@ -86,13 +86,19 @@ export default function PatternTable({
   };
 
   const handleTopicToggle = (id: string) => {
-    setOpenPatternId(openPatternId === id ? null : id);
-    if (searchParams.has("patternId")) {
-      const url = new URL(window.location.href);
+    const isOpening = openPatternId !== id;
+    setOpenPatternId(isOpening ? id : null);
+    
+    const url = new URL(window.location.href);
+    if (isOpening) {
+      url.searchParams.set("patternId", id);
+    } else {
       url.searchParams.delete("patternId");
-      window.history.replaceState(null, "", url.toString());
-      trackPageView();
+      url.searchParams.delete("questionId");
+      url.searchParams.delete("q");
     }
+    window.history.replaceState(null, "", url.toString());
+    trackPageView();
   };
 
   // Stats for the snapshot strip
@@ -141,16 +147,20 @@ export default function PatternTable({
       <div className="flex flex-col md:flex-row items-stretch gap-6 mb-6">
         <div className="md:w-[40%] min-w-0 flex">
           <ResumeCard
-            onResume={(patternId) => {
+            onResume={(patternId, subject) => {
+              if (subject && subject !== localSubject) {
+                setLocalSubject(subject);
+                const url = new URL(window.location.href);
+                url.searchParams.set("subject", subject);
+                url.searchParams.set("patternId", patternId);
+                window.history.replaceState(null, "", url.toString());
+              }
               setOpenPatternId(patternId);
               setTimeout(() => {
                 const el = document.getElementById(`pattern-${patternId}`);
                 if (!el) return;
-                if (window.innerWidth < 768) {
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-                } else {
-                  el.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
+                const block = window.innerWidth < 768 ? "start" : "center";
+                el.scrollIntoView({ behavior: "smooth", block });
               }, 100);
             }}
           />

@@ -25,11 +25,13 @@ export async function GET(req: NextRequest) {
         sessions: {
           where: { user_id: userId },
           select: {
+            id: true,
             score: true,
             max_score: true,
             correct_count: true,
             wrong_count: true,
             skipped_count: true,
+            section_scores: true,
             created_at: true,
           },
           orderBy: { created_at: "desc" },

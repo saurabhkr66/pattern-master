@@ -184,6 +184,8 @@ export async function deleteMockTest(mockTestId: string) {
 }
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+import OpenAI from "openai";
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 /**
  * Generates an AI explanation for a single question and saves it to the DB.
@@ -191,14 +193,17 @@ const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GE
 export async function generateAIExplanation(
   questionId: string,
   questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion",
-  mockTestId?: string
+  mockTestId?: string,
+  aiModel: "gemini" | "gpt-4o-mini" = "gemini"
 ) {
+  console.log(`[AI] Generating explanation for ${questionId} using model: ${aiModel}`);
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
 
-  if (!genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
 
   // Fetch the question data
   let questionData: any = null;
@@ -221,18 +226,31 @@ export async function generateAIExplanation(
   if (!questionData) throw new Error("Question not found");
 
   // Build content parts for Gemini (text + images if any)
-  const textPrompt = `You are an expert educator. Give a SHORT and PRECISE explanation for this question in 3-5 sentences max.
+  let cleanQuestionText = questionData.question_text || "";
+  // Strip massive base64 strings from text if they exist (they eat tokens)
+  cleanQuestionText = cleanQuestionText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
-Question: ${questionData.question_text}
+  const textPrompt = `You are an expert educator. Your task is to provide a SHORT and PRECISE explanation for this question.
+
+Question: ${cleanQuestionText}
 Options: ${JSON.stringify(questionData.options)}
-Correct Answer: ${questionData.correct_answer}
+Target Answer: ${questionData.correct_answer}
 
-Rules: Be concise. Use LaTeX ($, $$) for math. State the key concept, explain why the answer is correct in 4-6 lines. No preamble, no markdown code blocks.`;
+Rules:
+1. Be objective. If the 'Target Answer' provided above is mathematically or logically incorrect, state so clearly and provide the correct derivation.
+2. Use LaTeX ($, $$) for all math.
+3. Keep the total explanation to 4-6 lines max.
+4. Focus only on the core concept.
+5. No preamble, no markdown code blocks.`;
+
+  console.log(`[AI] Debug - Text Length: ${textPrompt.length}, Options Length: ${JSON.stringify(questionData.options).length}`);
+  console.log(`[AI] Prompt Snippet: ${textPrompt.substring(0, 150)}...`);
 
   const contentParts: any[] = [textPrompt];
 
   // If question has images, fetch them and include as inline data
   const images = (questionData.images as any[]) || [];
+  console.log(`[AI] Found ${images.length} images to process`);
   if (images.length > 0) {
     const fs = await import("fs");
     const path = await import("path");
@@ -265,9 +283,61 @@ Rules: Be concise. Use LaTeX ($, $$) for math. State the key concept, explain wh
     }
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  const result = await model.generateContent(contentParts);
-  let explanation = result.response.text();
+  let explanation = "";
+  let openaiUsage: any = null;
+  let geminiUsage: any = null;
+
+  if (aiModel === "gpt-4o-mini" && openai) {
+    const messages: any[] = [{ role: "user", content: [{ type: "text", text: textPrompt }] }];
+    
+    // Add images if any
+    if (images.length > 0) {
+      const fs = await import("fs");
+      const path = await import("path");
+      for (const img of images) {
+        const filename = img.filename || img.url;
+        if (!filename) continue;
+        const possiblePaths = [
+          path.join(process.cwd(), "public", "images", "questions", filename),
+          path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+        ];
+        for (const filePath of possiblePaths) {
+          try {
+            if (fs.existsSync(filePath)) {
+              const imageData = fs.readFileSync(filePath);
+              const base64 = imageData.toString("base64");
+              const ext = path.extname(filePath).slice(1).toLowerCase();
+              const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
+              messages[0].content.push({
+                type: "image_url",
+                image_url: { 
+                  url: `data:${mimeType};base64,${base64}`,
+                  detail: "low"
+                }
+              });
+              break;
+            }
+          } catch { /* skip */ }
+        }
+      }
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+    });
+    explanation = response.choices[0].message.content || "";
+    openaiUsage = response.usage;
+    console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
+  } else {
+    const model = genAI!.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+    });
+    const result = await model.generateContent(contentParts);
+    explanation = result.response.text();
+    geminiUsage = result.response.usageMetadata;
+    console.log(`[AI] Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}, Total: ${geminiUsage?.totalTokenCount}`);
+  }
 
   // Clean markdown artifacts
   explanation = explanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
@@ -295,7 +365,13 @@ Rules: Be concise. Use LaTeX ($, $$) for math. State the key concept, explain wh
   }
 
   revalidatePath("/admin/reports");
-  return explanation;
+  return { 
+    explanation, 
+    usage: { 
+      input: aiModel === "gpt-4o-mini" ? (openaiUsage?.prompt_tokens || 0) : (geminiUsage?.promptTokenCount || 0),
+      output: aiModel === "gpt-4o-mini" ? (openaiUsage?.completion_tokens || 0) : (geminiUsage?.candidatesTokenCount || 0)
+    }
+  };
 }
 
 /**
@@ -305,13 +381,14 @@ Rules: Be concise. Use LaTeX ($, $$) for math. State the key concept, explain wh
  *
  * Returns { total, fixed, failed }
  */
-export async function processMockTestExplanations(mockTestId: string) {
+export async function processMockTestExplanations(mockTestId: string, aiModel: "gemini" | "gpt-4o-mini" = "gemini") {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
 
-  if (!genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
 
   const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
   if (!template) throw new Error("Mock test not found");
@@ -320,6 +397,8 @@ export async function processMockTestExplanations(mockTestId: string) {
   const total = questions.length;
   let fixed = 0;
   let failed = 0;
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
 
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
@@ -327,17 +406,116 @@ export async function processMockTestExplanations(mockTestId: string) {
       try {
         console.log(`[AI] (${fixed + failed + 1}) Generating explanation for Q: ${q.id} in "${template.title}"...`);
 
-        const prompt = `You are an expert educator. Give a SHORT and PRECISE explanation for this question in 3-5 sentences max.
 
-Question: ${q.question_text}
+        let cleanQText = q.question_text || "";
+        cleanQText = cleanQText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
+
+        const prompt = `You are an expert educator. Your task is to provide a SHORT and PRECISE explanation for this question.
+
+Question: ${cleanQText}
 Options: ${JSON.stringify(q.options)}
-Correct Answer: ${q.correct_answer}
+Target Answer: ${q.correct_answer}
 
-Rules: Be concise. Use LaTeX ($, $$) for math. State the key concept, explain why the answer is correct in 2-3 lines. No preamble, no markdown code blocks.`;
+Rules:
+1. Be objective. If the 'Target Answer' provided above is mathematically or logically incorrect, state so clearly and provide the correct derivation.
+2. Use LaTeX ($, $$) for all math.
+3. Keep the total explanation to 4-6 lines max.
+4. Focus only on the core concept.
+5. No preamble, no markdown code blocks.`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.generateContent(prompt);
-        let explanation = result.response.text();
+        const contentParts: any[] = [prompt];
+
+        // NEW: Fetch images for batch processing too
+        const images = (q.images as any[]) || [];
+        if (images.length > 0) {
+          const fs = await import("fs");
+          const path = await import("path");
+
+          for (const img of images) {
+            const filename = img.filename || img.url;
+            if (!filename) continue;
+
+            const possiblePaths = [
+              path.join(process.cwd(), "public", "images", "questions", filename),
+              path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+            ];
+
+            for (const filePath of possiblePaths) {
+              try {
+                if (fs.existsSync(filePath)) {
+                  const imageData = fs.readFileSync(filePath);
+                  const base64 = imageData.toString("base64");
+                  const ext = path.extname(filePath).slice(1).toLowerCase();
+                  const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
+
+                  contentParts.push({
+                    inlineData: { data: base64, mimeType }
+                  });
+                  break;
+                }
+              } catch { /* skip */ }
+            }
+          }
+        }
+
+        let explanation = "";
+
+        if (aiModel === "gpt-4o-mini" && openai) {
+          const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
+          // Add images for GPT-4o-mini batch too
+          if (images.length > 0) {
+            for (const img of images) {
+              const filename = img.filename || img.url;
+              if (!filename) continue;
+              const path = await import("path");
+              const fs = await import("fs");
+              const possiblePaths = [
+                path.join(process.cwd(), "public", "images", "questions", filename),
+                path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+              ];
+              for (const filePath of possiblePaths) {
+                try {
+                  if (fs.existsSync(filePath)) {
+                    const imageData = fs.readFileSync(filePath);
+                    const base64 = imageData.toString("base64");
+                    const ext = path.extname(filePath).slice(1).toLowerCase();
+                    const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
+                    messages[0].content.push({
+                      type: "image_url",
+                      image_url: { 
+                        url: `data:${mimeType};base64,${base64}`,
+                        detail: "low"
+                      }
+                    });
+                    break;
+                  }
+                } catch { /* skip */ }
+              }
+            }
+          }
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages,
+          });
+          explanation = response.choices[0].message.content || "";
+          const iTokens = response.usage?.prompt_tokens || 0;
+          const oTokens = response.usage?.completion_tokens || 0;
+          totalInputTokens += iTokens;
+          totalOutputTokens += oTokens;
+          console.log(`[AI] OpenAI Tokens (Batch): Input: ${iTokens}, Output: ${oTokens}`);
+        } else {
+          const model = genAI!.getGenerativeModel({ 
+            model: "gemini-1.5-flash",
+          });
+          const result = await model.generateContent(contentParts);
+          explanation = result.response.text();
+          const usage = result.response.usageMetadata;
+          const iTokens = usage?.promptTokenCount || 0;
+          const oTokens = usage?.candidatesTokenCount || 0;
+          totalInputTokens += iTokens;
+          totalOutputTokens += oTokens;
+          console.log(`[AI] Gemini Tokens (Batch): Input: ${iTokens}, Output: ${oTokens}`);
+        }
         explanation = explanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
 
         questions[i] = { ...questions[i], explanation };
@@ -362,6 +540,7 @@ Rules: Be concise. Use LaTeX ($, $$) for math. State the key concept, explain wh
   }
 
   console.log(`[AI] 🏁 Batch complete for "${template.title}": ${fixed} fixed, ${failed} failed, ${total} total`);
+  console.log(`[AI] 📊 Total Tokens for Batch: Input: ${totalInputTokens}, Output: ${totalOutputTokens}, Sum: ${totalInputTokens + totalOutputTokens}`);
   revalidatePath("/admin/reports");
-  return { total, fixed, failed };
+  return { total, fixed, failed, totalInputTokens, totalOutputTokens };
 }
