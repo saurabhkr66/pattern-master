@@ -262,16 +262,13 @@ export async function POST(req: NextRequest) {
       if (!(dbErr?.code === "P2021" || dbErr?.message?.includes("does not exist"))) throw dbErr;
     }
 
-    // Save individual attempts for dashboard tracking (only correct ones for Mock Tests per user request)
+    // Save individual attempts for dashboard tracking (all answered questions — correct and wrong)
     await Promise.allSettled(
       answers.map(async (ans) => {
         const qData = getQData(ans);
         if (!qData || !ans.userAnswer || ans.userAnswer.trim() === "") return;
 
         const isCorrect = isAnswerCorrect(ans.questionType, ans.userAnswer, qData.correct_answer);
-        
-        // Skip saving wrong questions from mock tests to avoid cluttering mistake/review pages
-        if (!isCorrect) return;
 
         await prisma.attempt.create({
           data: {

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import {
-  Loader2, AlertTriangle, ArrowLeft, Check, Trash2,
+  Loader2, AlertTriangle, Check, Trash2,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { deleteMockTest } from "@/app/actions/admin";
@@ -17,10 +17,7 @@ import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import React from "react";
 
 /* ─────────────── Types ─────────────── */
-type Phase =
-  | "exam_select" | "branch_select" | "mode_select"
-  | "mock_select" | "random_config" | "brief" | "loading" | "test"
-  | "submitting" | "results";
+type Phase = "setup" | "brief" | "loading" | "test" | "submitting" | "results";
 
 interface SeededMock {
   id: string;
@@ -39,75 +36,79 @@ interface SeededMock {
   } | null;
 }
 
-/* ─────────────── Top wizard rail ─────────────────────────────────────── */
-function MTRail({ phase, branchSkipped }: { phase: Phase; branchSkipped: boolean }) {
+/* ─────────────── Rail ─────────────── */
+function MTRail({ phase }: { phase: Phase }) {
   const stepMap: Record<Phase, number> = {
-    exam_select: 1, branch_select: 2, mode_select: 3,
-    mock_select: 4, random_config: 4, brief: 5, loading: 5,
-    test: 6, submitting: 6, results: 7,
+    setup: 1, brief: 2, loading: 2, test: 3, submitting: 3, results: 4,
   };
   const step = stepMap[phase] ?? 1;
-
   const all = [
-    { n: 1, label: 'Exam' },
-    { n: 2, label: 'Branch' },
-    { n: 3, label: 'Mode' },
-    { n: 4, label: 'Configure' },
-    { n: 5, label: 'Brief' },
-    { n: 6, label: 'Test' },
-    { n: 7, label: 'Analysis' },
+    { n: 1, label: 'Setup' },
+    { n: 2, label: 'Brief' },
+    { n: 3, label: 'Test' },
+    { n: 4, label: 'Analysis' },
   ];
   return (
-    <div className="flex items-center gap-0 px-6 py-3.5 border-b shrink-0 overflow-x-auto scrollbar-hide" style={{ borderColor: BE.line, background: BE.surface }}>
-      {all.map((s, i) => {
-        const skipped = s.n === 2 && branchSkipped;
-        const active = s.n === step;
-        const done = s.n < step && !skipped;
-        const color = active ? BE.accent : done ? BE.good : skipped ? BE.textMute : BE.textDim;
-        return (
-          <React.Fragment key={s.n}>
-            <div className="flex items-center gap-2 shrink-0" style={{ opacity: skipped ? 0.4 : 1 }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 11, fontSize: 11, fontWeight: 600,
-                fontFamily: BE.mono, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: active ? BE.accent : done ? BE.good + '22' : 'transparent',
-                color: active ? '#fff' : color,
-                border: `1px solid ${active || done ? color : BE.line}`,
-              }}>{done ? '✓' : skipped ? '–' : s.n}</div>
-              <span style={{ fontSize: 11.5, fontWeight: 500, color, letterSpacing: '0.02em' }}>{s.label}</span>
-            </div>
-            {i < all.length - 1 && <div className="mx-2.5 flex-1 min-w-[12px] h-[1px]" style={{ background: BE.line }} />}
-          </React.Fragment>
-        );
-      })}
-    </div>
+    <>
+      {/* Desktop */}
+      <div className="hidden md:flex items-center gap-0 px-6 py-3.5 border-b shrink-0" style={{ borderColor: BE.line, background: BE.surface }}>
+        {all.map((s, i) => {
+          const active = s.n === step;
+          const done = s.n < step;
+          const color = active ? BE.accent : done ? BE.good : BE.textDim;
+          return (
+            <React.Fragment key={s.n}>
+              <div className="flex items-center gap-2 shrink-0">
+                <div style={{
+                  width: 22, height: 22, borderRadius: 11, fontSize: 11, fontWeight: 600,
+                  fontFamily: BE.mono, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: active ? BE.accent : done ? BE.good + '22' : 'transparent',
+                  color: active ? '#fff' : color,
+                  border: `1px solid ${active || done ? color : BE.line}`,
+                }}>{done ? '✓' : s.n}</div>
+                <span style={{ fontSize: 11.5, fontWeight: 500, color, letterSpacing: '0.02em' }}>{s.label}</span>
+              </div>
+              {i < all.length - 1 && <div className="mx-2.5 flex-1 min-w-[12px] h-[1px]" style={{ background: BE.line }} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
+      {/* Mobile dots */}
+      <div className="flex md:hidden items-center justify-between px-4 py-2.5 border-b shrink-0" style={{ borderColor: BE.line, background: BE.surface }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: BE.textMute }}>Step {step} of 4</div>
+        <div className="flex items-center gap-1.5">
+          {all.map((s) => {
+            const active = s.n === step;
+            const done = s.n < step;
+            return (
+              <div key={s.n} style={{
+                width: active ? 16 : 8, height: 8, borderRadius: 4,
+                background: active ? BE.accent : done ? BE.good : 'transparent',
+                border: `1px solid ${active ? BE.accent : done ? BE.good : BE.line}`,
+                transition: 'width 0.2s ease',
+              }} />
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 }
 
-function MTPage({ children, phase, branchSkipped, maxWidth = 980 }: { children: React.ReactNode; phase: Phase; branchSkipped: boolean; maxWidth?: number }) {
+function MTPage({ children, phase, maxWidth = 980 }: { children: React.ReactNode; phase: Phase; maxWidth?: number }) {
   return (
     <div className="be-screen flex flex-col min-h-full" style={{ background: 'var(--bg-base)' }}>
-      <MTRail phase={phase} branchSkipped={branchSkipped} />
+      <MTRail phase={phase} />
       <div className="flex-1 overflow-auto">
-        <div style={{ maxWidth, margin: '0 auto', padding: '32px 32px 60px' }}>{children}</div>
+        <div style={{ maxWidth, margin: '0 auto', padding: '32px 24px 60px' }}>{children}</div>
       </div>
-    </div>
-  );
-}
-
-function MTHeader({ eyebrow, title, sub }: { eyebrow: string; title: React.ReactNode; sub?: string }) {
-  return (
-    <div className="mb-[22px]">
-      <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 6 }}>{eyebrow}</div>
-      <h1 style={{ fontFamily: BE.serif, fontWeight: 500, fontSize: 32, letterSpacing: '-0.8px', margin: '0 0 6px', lineHeight: 1.1, color: BE.text }}>{title}</h1>
-      {sub && <div style={{ fontSize: 13.5, color: BE.textDim, lineHeight: 1.5, maxWidth: 600 }}>{sub}</div>}
     </div>
   );
 }
 
 /* ─────────────── Main component ─────────────── */
 export default function MockTestPage() {
-  const [phase, setPhase] = useState<Phase>("exam_select");
+  const [phase, setPhase] = useState<Phase>("setup");
   const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<"seeded" | "random" | null>(null);
@@ -132,7 +133,7 @@ export default function MockTestPage() {
     ? getExamConfig(selectedExam, selectedBranch ?? undefined)
     : null;
 
-  const hasBranches = config?.hasBranches ?? true;
+  const hasBranches = !!(config?.branches?.length);
 
   /* fetch subjects + seeded mocks whenever exam/branch changes */
   useEffect(() => {
@@ -149,19 +150,25 @@ export default function MockTestPage() {
       .catch(() => {});
   }, [selectedExam, selectedBranch]);
 
+  /* restore brief agreement from localStorage */
+  useEffect(() => {
+    if (phase === "brief") {
+      try { if (localStorage.getItem("pm_brief_agreed") === "true") setBriefAgreed(true); }
+      catch {}
+    }
+  }, [phase]);
+
   /* start test */
   const startTest = useCallback(async () => {
     if (!selectedExam || !selectedMode) return;
     setPhase("loading");
     setError(null);
-
     const params = new URLSearchParams({ exam_type: selectedExam, mode: selectedMode });
     if (selectedBranch) params.set("branch", selectedBranch);
     if (selectedMode === "seeded" && selectedMock) {
       params.set("mock_number", String(selectedMock.mock_number));
     }
     selectedSubjects.forEach((s) => params.append("subject", s));
-
     try {
       const res = await fetch(`/api/test/generate?${params}`);
       const data = await res.json();
@@ -185,71 +192,40 @@ export default function MockTestPage() {
       const res = await fetch("/api/test/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mockTestId,
-          answers,
-          timeTakenSecs,
-          examType: selectedExam,
-          branch: selectedBranch,
-        }),
+        body: JSON.stringify({ mockTestId, answers, timeTakenSecs, examType: selectedExam, branch: selectedBranch }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      // Map API response to ResultData structure for TestAnalysis
       const breakdown = data.breakdown || [];
-      const accuracy = (data.correctCount + data.wrongCount) > 0 
-        ? (data.correctCount / (data.correctCount + data.wrongCount)) * 100 
-        : 0;
-      
-      // Calculate subject-wise breakdown
+      const accuracy = (data.correctCount + data.wrongCount) > 0
+        ? (data.correctCount / (data.correctCount + data.wrongCount)) * 100 : 0;
+
       const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number }> = {};
       breakdown.forEach((q: any) => {
         const subName = q.subject || "General";
-        if (!subjectMap[subName]) {
-          subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0 };
-        }
+        if (!subjectMap[subName]) subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0 };
         const s = subjectMap[subName];
-        s.max += q.marks;
-        s.total += 1;
-        if (q.isCorrect) {
-          s.score += q.marks;
-          s.correct += 1;
-        }
+        s.max += q.marks; s.total += 1;
+        if (q.isCorrect) { s.score += q.marks; s.correct += 1; }
       });
 
-      const subjectBreakdown = Object.values(subjectMap).map(s => ({
-        subject: s.subject,
-        score: s.score,
-        max: s.max,
-        accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0
-      }));
-
-      const finalResult: ResultData = {
-        score: data.score,
-        maxScore: data.maxScore,
-        accuracy,
+      setResult({
+        score: data.score, maxScore: data.maxScore, accuracy,
         timeTakenSecs: data.timeTakenSecs,
         attempted: data.correctCount + data.wrongCount,
-        correct: data.correctCount,
-        incorrect: data.wrongCount,
-        unattempted: data.skippedCount,
-        subjectBreakdown,
+        correct: data.correctCount, incorrect: data.wrongCount, unattempted: data.skippedCount,
+        subjectBreakdown: Object.values(subjectMap).map(s => ({
+          subject: s.subject, score: s.score, max: s.max,
+          accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0,
+        })),
         questions: breakdown.map((q: any) => ({
-          id: q.questionId,
-          question_text: q.questionText,
-          options: q.options,
-          question_type: q.questionType,
-          correct_answer: q.correctAnswer,
-          user_answer: q.userAnswer,
-          is_correct: q.isCorrect,
-          marks: q.marks,
-          subject: q.subject || "General",
-          explanation: q.explanation
-        }))
-      };
-
-      setResult(finalResult);
+          id: q.questionId, question_text: q.questionText, options: q.options,
+          question_type: q.questionType, correct_answer: q.correctAnswer,
+          user_answer: q.userAnswer, is_correct: q.isCorrect,
+          marks: q.marks, subject: q.subject || "General", explanation: q.explanation,
+        })),
+      });
       setPhase("results");
     } catch (err: any) {
       setSubmitError(err.message);
@@ -258,253 +234,250 @@ export default function MockTestPage() {
     }
   }, [mockTestId, selectedExam, selectedBranch]);
 
-  /* retake / new test */
   const handleRetake = () => {
-    setPhase("mode_select");
-    setSelectedMode(null);
-    setSelectedMock(null);
-    setBriefAgreed(false);
-    setQuestions([]);
-    setResult(null);
-    setMockTestId(null);
-    setSubmitError(null);
-    setError(null);
+    setPhase("setup");
+    setSelectedMode(null); setSelectedMock(null); setBriefAgreed(false);
+    setQuestions([]); setResult(null); setMockTestId(null);
+    setSubmitError(null); setError(null);
   };
 
-  const goBack = (to: Phase) => { setError(null); setPhase(to); };
-
   const handleDeleteTest = async (mockId: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"? All sessions and data for this test will be lost.`)) return;
+    if (!confirm(`Delete "${title}"? All sessions will be lost.`)) return;
     try {
       await deleteMockTest(mockId);
       setSeededMocks(prev => prev.filter(m => m.id !== mockId));
-    } catch (err: any) {
-      alert(err.message);
-    }
+    } catch (err: any) { alert(err.message); }
   };
 
   /* ════════════════════════════════════
-     STEP 1 — Exam select
+     STEP 1 — Setup (Exam + Branch + Mode + Config)
   ════════════════════════════════════ */
-  if (phase === "exam_select") {
-    return (
-      <MTPage phase={phase} branchSkipped={!hasBranches}>
-        <MTHeader eyebrow="Step 1 of 7" title="Pick your exam." sub="All exams ship with curated mock series and a random-paper generator. Pick yours, then we'll narrow down to your branch and mode." />
+  if (phase === "setup") {
+    const isSpec = selectedMode === "seeded";
+    const isRandom = selectedMode === "random";
 
-        {/* Search placeholder */}
-        <div className="flex items-center gap-2 px-3 py-2 border rounded-lg mb-6 max-w-[460px]" style={{ borderColor: BE.line, background: BE.surface }}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={BE.textDim} strokeWidth="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
-          <span style={{ fontSize: 13, color: BE.textMute }}>Search exams…</span>
-        </div>
-
-        {["Engineering", "Medical"].map((catLabel) => {
-          const catExams = EXAM_CONFIGS.filter(e => {
-            if (catLabel === "Engineering") return ["GATE", "JEE_MAIN", "JEE_ADVANCED"].includes(e.examType);
-            if (catLabel === "Medical") return ["NEET"].includes(e.examType);
-            return false;
-          });
-          if (!catExams.length) return null;
-          return (
-            <div key={catLabel} className="mb-6">
-              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 8 }}>{catLabel}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {catExams.map((exam) => (
-                  <div
-                    key={exam.examType}
-                    onClick={() => {
-                      setSelectedExam(exam.examType);
-                      setSelectedBranch(null);
-                      setSelectedMode(null);
-                      setSelectedMock(null);
-                      setPhase(exam.hasBranches ? "branch_select" : "mode_select");
-                    }}
-                    className="border rounded-xl p-3.5 cursor-pointer relative hover:shadow-sm transition-all"
-                    style={{ background: BE.surface, borderColor: BE.line }}
-                  >
-                    <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.5px', marginBottom: 2, color: BE.text }}>{exam.label}</div>
-                    <div style={{ fontSize: 11.5, color: BE.textDim, marginBottom: 12 }}>{exam.description}</div>
-                    <div className="flex gap-3 pt-2.5 border-t" style={{ borderColor: BE.line, fontSize: 10.5, color: BE.textMute }}>
-                      <div><span style={{ color: BE.text, fontFamily: BE.mono, fontSize: 12, fontWeight: 600 }}>{exam.totalQuestions}</span> Q</div>
-                      <div><span style={{ color: BE.text, fontFamily: BE.mono, fontSize: 12, fontWeight: 600 }}>{exam.maxScore}</span> marks</div>
-                      <div><span style={{ color: BE.text, fontFamily: BE.mono, fontSize: 12, fontWeight: 600 }}>{Math.round(exam.durationSecs/60)}</span> min</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </MTPage>
+    // Determine if user can proceed to brief
+    const canContinue = !!(
+      selectedExam &&
+      (!hasBranches || selectedBranch) &&
+      selectedMode &&
+      (!isSpec || selectedMock)
     );
-  }
 
-  /* ════════════════════════════════════
-     STEP 2 — Branch select
-  ════════════════════════════════════ */
-  if (phase === "branch_select" && selectedExam && config) {
     return (
-      <MTPage phase={phase} branchSkipped={false}>
-        <MTHeader eyebrow={`Step 2 of 7 · ${config.label}`} title="Which paper?" sub="Pick the branch you're appearing for. The mock series and question pool are scoped to it." />
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
-          {config.branches?.map((b) => (
-            <div
-              key={b.id}
-              onClick={() => { setSelectedBranch(b.id); setPhase("mode_select"); }}
-              className="border rounded-lg p-3.5 cursor-pointer flex gap-3 items-center hover:shadow-sm transition-all"
-              style={{ background: BE.surface, borderColor: BE.line }}
-            >
-              <div
-                className="flex items-center justify-center rounded-lg text-[13px] font-bold shrink-0"
-                style={{ width: 40, height: 40, background: 'rgba(255,255,255,0.05)', color: BE.textDim, fontFamily: BE.mono }}
-              >
-                {b.id}
-              </div>
-              <div className="min-w-0">
-                <div className="font-semibold text-[13px] truncate" style={{ color: BE.text }}>{b.id}</div>
-                <div className="text-[11px] truncate" style={{ color: BE.textMute }}>{b.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: 11.5, color: BE.textMute, fontStyle: 'italic', fontFamily: BE.serif }}>Tip · You can change branch later from your dashboard. Your mistake log stays per-branch.</div>
-        <div className="flex justify-between items-center mt-[22px] pt-[18px] border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => goBack("exam_select")}>← Exam</button>
-        </div>
-      </MTPage>
-    );
-  }
+      <MTPage phase={phase} maxWidth={1100}>
+        {/* ── Section A: Exam ── */}
+        <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Step 1 of 4 · Setup</div>
+        <h1 style={{ fontFamily: BE.serif, fontWeight: 500, fontSize: 28, letterSpacing: '-0.6px', marginBottom: 20, color: BE.text }}>Configure your test.</h1>
 
-  /* ════════════════════════════════════
-     STEP 3 — Mode select
-  ════════════════════════════════════ */
-  if (phase === "mode_select" && selectedExam && config) {
-    return (
-      <MTPage phase={phase} branchSkipped={!hasBranches}>
-        <MTHeader eyebrow="Step 3 of 7" title="How do you want to take it?" sub="Two ways. Both score the same, but the question selection works differently." />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {/* Specialized */}
-          <div
-            onClick={() => { setSelectedMode("seeded"); setPhase("mock_select"); }}
-            className="border-2 rounded-[14px] p-[22px] cursor-pointer relative transition-all"
-            style={{ borderColor: BE.accent, background: `linear-gradient(135deg, ${BE.accent}10, transparent)` }}
-          >
-            <div className="absolute top-3.5 right-3.5 text-[9.5px] font-bold tracking-[0.1em] px-2 py-0.5 rounded-[4px] text-white" style={{ background: BE.accent }}>
-              RECOMMENDED
-            </div>
-            <div className="flex items-center justify-center w-10 h-10 rounded-[9px] mb-3.5" style={{ background: BE.accentSoft, color: BE.accent }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-            </div>
-            <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginBottom: 4, color: BE.text }}>Specialized Mock</div>
-            <div style={{ fontSize: 13, color: BE.textDim, lineHeight: 1.5, marginBottom: 14 }}>A curated, fixed-set paper. Same exact questions every time you take Mock #N — just like the real exam booklet.</div>
-            <ul className="flex flex-col gap-1.5 list-none p-0 m-0 text-xs" style={{ color: BE.text }}>
-              <li>✓ Mirrors exam-day pattern exactly</li>
-              <li>✓ Comparable scores across attempts</li>
-              <li>✓ Leaderboard & percentile rank</li>
-            </ul>
-          </div>
-          {/* Random */}
-          <div
-            onClick={() => { setSelectedMode("random"); setPhase("random_config"); }}
-            className="border rounded-[14px] p-[22px] cursor-pointer hover:shadow-sm transition-all"
-            style={{ borderColor: BE.line, background: BE.surface }}
-          >
-            <div className="flex items-center justify-center w-10 h-10 rounded-[9px] mb-3.5" style={{ background: 'rgba(255,255,255,0.05)', color: BE.textDim }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
-            </div>
-            <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginBottom: 4, color: BE.text }}>Random Test</div>
-            <div style={{ fontSize: 13, color: BE.textDim, lineHeight: 1.5, marginBottom: 14 }}>System generates a fresh paper from the bank. Filter by subjects. Great for daily drilling.</div>
-            <ul className="flex flex-col gap-1.5 list-none p-0 m-0 text-xs" style={{ color: BE.textDim }}>
-              <li>✓ Custom topic mix</li>
-              <li>✓ Fresh questions every attempt</li>
-              <li>✓ No two papers ever the same</li>
-            </ul>
-          </div>
-        </div>
-        <div className="flex justify-between items-center mt-[22px] pt-[18px] border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => goBack(hasBranches ? "branch_select" : "exam_select")}>← Back</button>
-        </div>
-      </MTPage>
-    );
-  }
-
-  /* ════════════════════════════════════
-     STEP 4A — Seeded mock list
-  ════════════════════════════════════ */
-  if (phase === "mock_select" && config) {
-    return (
-      <MTPage phase={phase} branchSkipped={!hasBranches} maxWidth={1100}>
-        <MTHeader eyebrow="Step 4 of 7 · Specialized" title="Pick a past paper." sub="Each mock is a real previous-year paper. Same questions, same order, same printed sections — just the way it appeared on exam day." />
-
-        {/* Constraint disclosure */}
-        <div className="flex gap-2.5 p-3 border rounded-xl mb-4.5" style={{ borderColor: BE.line, background: BE.surface }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={BE.textDim} strokeWidth="1.5" className="shrink-0 mt-0.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3.5M8 11v.5"/></svg>
-          <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5 }}>
-            <span style={{ color: BE.text, fontWeight: 600 }}>Past papers don't carry subject tags.</span>{' '}
-            You'll get full score, percentile, and right/wrong per question — but topic-wise breakdown isn't available. After the test you can hand-tag wrong answers to feed your mistake log.
-          </div>
-        </div>
-
-        {seededMocks.length === 0 ? (
-          <div className="border border-dashed rounded-xl p-12 text-center" style={{ borderColor: BE.line }}>
-            <div className="text-2xl mb-2">📭</div>
-            <div className="font-semibold" style={{ color: BE.text }}>No papers seeded yet.</div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
-            {seededMocks.map((m) => {
-              const taken = !!m.session;
-              const isSelected = selectedMock?.mock_number === m.mock_number;
+        {/* Exam selection */}
+        <div className="mb-6">
+          <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Exam</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {EXAM_CONFIGS.map((exam) => {
+              const sel = selectedExam === exam.examType;
               return (
                 <div
-                  key={m.mock_number}
-                   onClick={() => setSelectedMock(m)}
-                  className="border rounded-xl p-3.5 cursor-pointer relative hover:shadow-sm transition-all group"
-                   style={{
-                    borderColor: isSelected ? BE.accent : BE.line,
-                    background: isSelected ? `${BE.accent}10` : BE.surface,
+                  key={exam.examType}
+                  onClick={() => {
+                    setSelectedExam(exam.examType);
+                    setSelectedBranch(null);
+                    setSelectedMode(null);
+                    setSelectedMock(null);
+                  }}
+                  className="border rounded-xl p-3 cursor-pointer transition-all hover:shadow-sm"
+                  style={{
+                    borderColor: sel ? BE.accent : BE.line,
+                    borderWidth: sel ? 2 : 1,
+                    background: sel ? `${BE.accent}10` : BE.surface,
                   }}
                 >
-                  {isAdmin && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteTest(m.id, m.title);
-                      }}
-                      className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Delete Mock Test"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                  <div className="flex items-center justify-between mb-2.5">
-                    <div style={{ fontFamily: BE.mono, fontSize: 11, color: BE.textMute, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>Mock #{String(m.mock_number).padStart(2,'0')}</div>
-                    {taken && <span style={{ fontSize: 9.5, color: BE.good, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>● Done</span>}
+                  <div style={{ fontFamily: BE.serif, fontSize: 18, fontWeight: 600, color: BE.text, marginBottom: 2 }}>{exam.label}</div>
+                  <div style={{ fontSize: 11, color: BE.textDim, marginBottom: 8 }}>{exam.description}</div>
+                  <div className="flex gap-2.5 pt-2 border-t" style={{ borderColor: BE.line, fontSize: 10, color: BE.textMute }}>
+                    <span><span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{exam.totalQuestions}</span> Q</span>
+                    <span><span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{Math.round(exam.durationSecs / 60)}</span> min</span>
                   </div>
-                  <div style={{ fontFamily: BE.serif, fontSize: 17, fontWeight: 600, letterSpacing: '-0.3px', marginBottom: 2, color: BE.text }}>{m.title}</div>
-                  <div style={{ fontSize: 11, color: BE.textDim, marginBottom: 8 }}>{m.total_questions} Q · {fmtDuration(m.duration_secs)}</div>
-                  {taken && m.session ? (
-                    <div className="pt-2 border-t" style={{ borderColor: BE.line }}>
-                      <div style={{ fontFamily: BE.mono, fontSize: 12, fontWeight: 600, color: BE.text }}>{m.session.score} / {m.session.max_score}</div>
-                      <div style={{ fontSize: 10.5, color: BE.textMute }}>{new Date(m.session.created_at).toLocaleDateString()}</div>
-                    </div>
-                  ) : (
-                    <div className="pt-2 border-t text-[11px]" style={{ borderColor: BE.line, color: BE.textDim }}>{config.totalQuestions} Q · {Math.round(config.durationSecs/60)} min</div>
-                  )}
                 </div>
               );
             })}
           </div>
+        </div>
+
+        {/* Branch selection — only when exam has branches */}
+        {selectedExam && config && hasBranches && (
+          <div className="mb-6">
+            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Branch</div>
+            <div className="flex flex-wrap gap-2">
+              {config.branches?.map((b) => {
+                const sel = selectedBranch === b.id;
+                return (
+                  <div
+                    key={b.id}
+                    onClick={() => { setSelectedBranch(b.id); setSelectedMode(null); setSelectedMock(null); }}
+                    className="border rounded-lg px-3.5 py-2.5 cursor-pointer transition-all flex items-center gap-2.5"
+                    style={{
+                      borderColor: sel ? BE.accent : BE.line,
+                      borderWidth: sel ? 2 : 1,
+                      background: sel ? `${BE.accent}10` : BE.surface,
+                    }}
+                  >
+                    <span style={{ fontFamily: BE.mono, fontSize: 12, fontWeight: 700, color: sel ? BE.accent : BE.textDim }}>{b.id}</span>
+                    <span style={{ fontSize: 12, color: BE.text }}>{b.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
-        <div className="flex justify-between items-center mt-5.5 pt-[18px] border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => goBack("mode_select")}>← Mode</button>
+        {/* Mode selection — shown once exam (and branch if needed) is picked */}
+        {selectedExam && (!hasBranches || selectedBranch) && (
+          <div className="mb-6">
+            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Mode</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Specialized */}
+              <div
+                onClick={() => { setSelectedMode("seeded"); setSelectedMock(null); }}
+                className="border-2 rounded-xl p-4 cursor-pointer transition-all"
+                style={{
+                  borderColor: isSpec ? BE.accent : BE.line,
+                  background: isSpec ? `${BE.accent}10` : BE.surface,
+                }}
+              >
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: isSpec ? BE.accentSoft : 'rgba(255,255,255,0.05)', color: isSpec ? BE.accent : BE.textDim }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                  </div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 16, fontWeight: 600, color: BE.text }}>Specialized Mock</div>
+                  {!selectedMode && <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: BE.accent }}>REC</span>}
+                </div>
+                <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5 }}>Fixed past-paper set. Same questions every attempt — comparable scores.</div>
+              </div>
+              {/* Random */}
+              <div
+                onClick={() => { setSelectedMode("random"); setSelectedMock(null); }}
+                className="border-2 rounded-xl p-4 cursor-pointer transition-all"
+                style={{
+                  borderColor: isRandom ? BE.accent : BE.line,
+                  background: isRandom ? `${BE.accent}10` : BE.surface,
+                }}
+              >
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: isRandom ? BE.accentSoft : 'rgba(255,255,255,0.05)', color: isRandom ? BE.accent : BE.textDim }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+                  </div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 16, fontWeight: 600, color: BE.text }}>Random Test</div>
+                </div>
+                <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5 }}>Fresh paper from the bank. Filter by subjects. Great for daily drilling.</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Config panel — shown once mode is picked */}
+        {isSpec && (
+          <div className="mb-6">
+            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Select Paper</div>
+            {seededMocks.length === 0 ? (
+              <div className="border border-dashed rounded-xl p-10 text-center" style={{ borderColor: BE.line }}>
+                <div className="text-xl mb-2">📭</div>
+                <div style={{ fontSize: 13, color: BE.textDim }}>No papers seeded yet.</div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {seededMocks.map((m) => {
+                  const taken = !!m.session;
+                  const isSel = selectedMock?.mock_number === m.mock_number;
+                  return (
+                    <div
+                      key={m.mock_number}
+                      onClick={() => setSelectedMock(m)}
+                      className="border rounded-xl p-3 cursor-pointer relative hover:shadow-sm transition-all group"
+                      style={{ borderColor: isSel ? BE.accent : BE.line, borderWidth: isSel ? 2 : 1, background: isSel ? `${BE.accent}10` : BE.surface }}
+                    >
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteTest(m.id, m.title); }}
+                          className="absolute top-2 right-2 p-1 rounded-full hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        ><Trash2 size={12} /></button>
+                      )}
+                      <div style={{ fontFamily: BE.mono, fontSize: 10, color: BE.textMute, textTransform: 'uppercase', fontWeight: 600, marginBottom: 4 }}>
+                        Mock #{String(m.mock_number).padStart(2, '0')}
+                        {taken && <span className="ml-2" style={{ color: BE.good }}>● Done</span>}
+                      </div>
+                      <div style={{ fontFamily: BE.serif, fontSize: 15, fontWeight: 600, color: BE.text, marginBottom: 2 }}>{m.title}</div>
+                      <div style={{ fontSize: 11, color: BE.textDim }}>{m.total_questions} Q · {fmtDuration(m.duration_secs)}</div>
+                      {taken && m.session && (
+                        <div className="mt-2 pt-2 border-t" style={{ borderColor: BE.line }}>
+                          <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 600, color: BE.text }}>{m.session.score} / {m.session.max_score}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {isRandom && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4 mb-6">
+            {/* Difficulty + stats */}
+            <div className="flex flex-col gap-3">
+              <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: BE.text, marginBottom: 8 }}>Difficulty mix</div>
+                <div className="flex h-6 rounded-lg overflow-hidden mb-1">
+                  <div className="flex items-center justify-center text-[10px] font-bold text-black" style={{ flex: 30, background: BE.good + '99' }}>Easy 30%</div>
+                  <div className="flex items-center justify-center text-[10px] font-bold text-black" style={{ flex: 50, background: BE.warn + '99' }}>Medium 50%</div>
+                  <div className="flex items-center justify-center text-[10px] font-bold text-white" style={{ flex: 20, background: BE.bad + '99' }}>Hard 20%</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="border rounded-xl p-3" style={{ borderColor: BE.line, background: BE.surface }}>
+                  <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Questions</div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{config?.totalQuestions}</div>
+                </div>
+                <div className="border rounded-xl p-3" style={{ borderColor: BE.line, background: BE.surface }}>
+                  <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Duration</div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{Math.round((config?.durationSecs ?? 0) / 60)}<span style={{ fontSize: 12, color: BE.textDim }}> min</span></div>
+                </div>
+              </div>
+            </div>
+            {/* Subject filter */}
+            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div className="flex items-center justify-between mb-3">
+                <div style={{ fontSize: 12, fontWeight: 600, color: BE.text }}>Filter subjects <span style={{ color: BE.textMute, fontWeight: 400 }}>(optional)</span></div>
+                <button className="be-btn text-[10px] px-2 py-1" onClick={() => setSelectedSubjects([])}>Clear</button>
+              </div>
+              <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
+                {availableSubjects.map((s) => {
+                  const sel = selectedSubjects.includes(s);
+                  return (
+                    <div
+                      key={s}
+                      onClick={() => setSelectedSubjects(prev => sel ? prev.filter(x => x !== s) : [...prev, s])}
+                      className="flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all"
+                      style={{ borderColor: sel ? BE.accent : BE.line, background: sel ? BE.accentSoft : 'transparent' }}
+                    >
+                      <div className="w-3 h-3 rounded border flex items-center justify-center text-[9px] text-white shrink-0" style={{ borderColor: sel ? BE.accent : BE.line, background: sel ? BE.accent : 'transparent' }}>{sel && "✓"}</div>
+                      <span style={{ fontSize: 12, color: BE.text }}>{s}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-4 border-t" style={{ borderColor: BE.line }}>
           <button
             className="be-btn be-btn-primary"
-            disabled={!selectedMock}
-            onClick={() => selectedMock && (setBriefAgreed(false), setPhase("brief"))}
-            style={{ padding: '9px 18px' }}
+            disabled={!canContinue}
+            onClick={() => { setBriefAgreed(false); setPhase("brief"); }}
+            style={{ padding: '10px 24px', opacity: canContinue ? 1 : 0.4 }}
           >
-            Continue with {selectedMock ? selectedMock.title : "mock"} →
+            Continue →
           </button>
         </div>
       </MTPage>
@@ -512,107 +485,19 @@ export default function MockTestPage() {
   }
 
   /* ════════════════════════════════════
-     STEP 4B — Random config
-  ════════════════════════════════════ */
-  if (phase === "random_config" && config) {
-    return (
-      <MTPage phase={phase} branchSkipped={!hasBranches} maxWidth={1100}>
-        <MTHeader eyebrow="Step 4 of 7 · Random" title="Configure the paper." sub="Filter by subjects to generate a fresh paper from your branch's bank." />
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-[18px]">
-          {/* Left: General stats */}
-          <div className="flex flex-col gap-3.5">
-            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4, color: BE.text }}>Difficulty mix</div>
-              <div style={{ fontSize: 11.5, color: BE.textDim, marginBottom: 12 }}>Standard GATE difficulty distribution.</div>
-              <div className="flex h-7 rounded-[7px] overflow-hidden mb-2">
-                <div className="flex items-center justify-center text-[11px] font-bold text-black" style={{ flex: 30, background: BE.good + '99' }}>Easy 30%</div>
-                <div className="flex items-center justify-center text-[11px] font-bold text-black" style={{ flex: 50, background: BE.warn + '99' }}>Medium 50%</div>
-                <div className="flex items-center justify-center text-[11px] font-bold text-white" style={{ flex: 20, background: BE.bad + '99' }}>Hard 20%</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="border rounded-xl p-3.5" style={{ borderColor: BE.line, background: BE.surface }}>
-                <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Total questions</div>
-                <div className="flex items-baseline gap-2 mt-1.5">
-                  <div style={{ fontFamily: BE.serif, fontSize: 32, fontWeight: 600, color: BE.text }}>{config.totalQuestions}</div>
-                </div>
-              </div>
-              <div className="border rounded-xl p-3.5" style={{ borderColor: BE.line, background: BE.surface }}>
-                <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Time limit</div>
-                <div className="flex items-baseline gap-2 mt-1.5">
-                  <div style={{ fontFamily: BE.serif, fontSize: 32, fontWeight: 600, color: BE.text }}>{Math.round(config.durationSecs/60)}</div>
-                  <div style={{ fontSize: 11, color: BE.textDim }}>min</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border rounded-xl p-3.5 flex items-center gap-4" style={{ borderColor: BE.line, background: BE.surface }}>
-              <div className="flex-1">
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: BE.text }}>Negative marking</div>
-                <div style={{ fontSize: 11, color: BE.textDim, marginTop: 1 }}>−⅓ for MCQs, none for MSQ/NAT (real GATE rules)</div>
-              </div>
-              <div className="w-[30px] h-[18px] rounded-[9px] relative" style={{ background: BE.accent }}>
-                <div className="absolute right-0.5 top-0.5 w-[14px] h-[14px] rounded-full bg-white" />
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Topic selection */}
-          <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-            <div className="flex items-center justify-between mb-2.5">
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: BE.text }}>Select subjects</div>
-                <div style={{ fontSize: 11, color: BE.textDim }}>Choose specific topics or leave all for mix.</div>
-              </div>
-              <button className="be-btn text-[10.5px] px-2 py-1" onClick={() => setSelectedSubjects([])}>Clear all</button>
-            </div>
-            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-              {availableSubjects.map((s) => {
-                const sel = selectedSubjects.includes(s);
-                return (
-                  <div
-                    key={s}
-                    onClick={() => setSelectedSubjects(prev => sel ? prev.filter(x => x !== s) : [...prev, s])}
-                    className="flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all"
-                    style={{
-                      borderColor: sel ? BE.accent : BE.line,
-                      background: sel ? BE.accentSoft : 'transparent'
-                    }}
-                  >
-                    <div className="w-3.5 h-3.5 rounded border flex items-center justify-center text-[10px] text-white" style={{ borderColor: sel ? BE.accent : BE.line, background: sel ? BE.accent : 'transparent' }}>{sel && "✓"}</div>
-                    <span style={{ fontSize: 12, color: BE.text }}>{s}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center mt-5.5 pt-[18px] border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => goBack("mode_select")}>← Mode</button>
-          <button className="be-btn be-btn-primary" onClick={() => (setBriefAgreed(false), setPhase("brief"))} style={{ padding: '9px 18px' }}>Generate paper →</button>
-        </div>
-      </MTPage>
-    );
-  }
-
-  /* ════════════════════════════════════
-     STEP 5 — Pre-test brief
+     STEP 2 — Brief
   ════════════════════════════════════ */
   if (phase === "brief" && config) {
     const isSpec = selectedMode === "seeded";
     return (
-      <MTPage phase={phase} branchSkipped={!hasBranches}>
-        <MTHeader
-          eyebrow={isSpec ? 'Step 5 of 7 · Past paper' : 'Step 5 of 7 · Random test'}
-          title="Read this. Then begin."
-          sub={isSpec
-            ? `${selectedMock?.title} · ${config.label} · Specialized series.`
-            : `Custom paper · ${config.label} · Generated from your tagged bank.`
-          }
-        />
+      <MTPage phase={phase}>
+        <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>
+          Step 2 of 4 · {isSpec ? 'Past paper' : 'Random test'}
+        </div>
+        <h1 style={{ fontFamily: BE.serif, fontWeight: 500, fontSize: 28, letterSpacing: '-0.6px', marginBottom: 4, color: BE.text }}>Read this. Then begin.</h1>
+        <div style={{ fontSize: 13.5, color: BE.textDim, marginBottom: 20 }}>
+          {isSpec ? `${selectedMock?.title} · ${config.label}` : `Custom paper · ${config.label}`}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3.5 mb-4">
           <div className="flex flex-col gap-2.5">
@@ -621,15 +506,15 @@ export default function MockTestPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <BriefStat label="Questions" val={isSpec ? String(selectedMock?.total_questions) : String(config.totalQuestions)} />
                 <BriefStat label="Total marks" val={isSpec ? String(selectedMock?.max_score) : String(config.maxScore)} />
-                <BriefStat label="Time" val={isSpec ? fmtDuration(selectedMock?.duration_secs ?? 0) : "3h"} sub={isSpec ? "" : "180 minutes"} />
-                <BriefStat label="Sections" val={String(config.sections.length)} sub="GA + Subject" />
+                <BriefStat label="Time" val={isSpec ? fmtDuration(selectedMock?.duration_secs ?? 0) : "3h"} />
+                <BriefStat label="Sections" val={String(config.sections.length)} />
               </div>
             </div>
             <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
               <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Marking scheme</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <MarkRow type="MCQ" marks="+1 / +2" neg="−⅓ / −⅔" />
-                <MarkRow type="MSQ" marks="+1 / +2" neg="No partial penalty" />
+                <MarkRow type="MSQ" marks="+1 / +2" neg="No partial" />
                 <MarkRow type="NAT" marks="+1 / +2" neg="No penalty" />
               </div>
             </div>
@@ -651,10 +536,10 @@ export default function MockTestPage() {
                 'Type numeric answers for NAT questions.',
                 'A virtual calculator is available (Ctrl+K).',
                 'Auto-saves every 8 seconds.',
-                'You can change answers before final submit.'
+                'You can change answers before final submit.',
               ].map((t, i) => (
                 <li key={i} className="flex gap-2.5">
-                  <span style={{ fontFamily: BE.mono, fontSize: 10.5, color: BE.accent, fontWeight: 600, minWidth: 14 }}>{String(i+1).padStart(2,'0')}</span>
+                  <span style={{ fontFamily: BE.mono, fontSize: 10.5, color: BE.accent, fontWeight: 600, minWidth: 14 }}>{String(i + 1).padStart(2, '0')}</span>
                   <span>{t}</span>
                 </li>
               ))}
@@ -663,23 +548,25 @@ export default function MockTestPage() {
         </div>
 
         <div
-          className="border rounded-xl p-3.5 flex items-center gap-2.5 cursor-pointer select-none transition-all"
+          className="border rounded-xl p-3.5 flex items-center gap-2.5 cursor-pointer select-none mb-4"
           style={{ borderColor: briefAgreed ? BE.accent : BE.line, background: BE.surface }}
-          onClick={() => setBriefAgreed(v => !v)}
+          onClick={() => setBriefAgreed(v => {
+            const next = !v;
+            try { localStorage.setItem("pm_brief_agreed", String(next)); } catch {}
+            return next;
+          })}
         >
-          <div
-            className="flex items-center justify-center rounded-[4px] shrink-0 border transition-all"
-            style={{ width: 18, height: 18, background: briefAgreed ? BE.accent : 'transparent', borderColor: briefAgreed ? BE.accent : BE.line, color: '#fff' }}
-          >
+          <div className="flex items-center justify-center rounded-[4px] shrink-0 border transition-all"
+            style={{ width: 18, height: 18, background: briefAgreed ? BE.accent : 'transparent', borderColor: briefAgreed ? BE.accent : BE.line, color: '#fff' }}>
             {briefAgreed && <Check size={11} />}
           </div>
           <div style={{ fontSize: 12.5, color: BE.text }}>I have read the instructions and agree to abide by them.</div>
         </div>
 
-        {error && <div className="mt-4 p-3 rounded-lg border text-sm text-red-500 bg-red-500/10" style={{ borderColor: BE.bad + '33' }}>{error}</div>}
+        {error && <div className="mb-4 p-3 rounded-lg border text-sm text-red-500 bg-red-500/10" style={{ borderColor: BE.bad + '33' }}>{error}</div>}
 
-        <div className="flex justify-between items-center mt-5 pt-[18px] border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => goBack(isSpec ? "mock_select" : "random_config")}>← Back</button>
+        <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: BE.line }}>
+          <button className="be-btn" onClick={() => { setError(null); setPhase("setup"); }}>← Back</button>
           <button className="be-btn be-btn-primary" disabled={!briefAgreed} onClick={startTest} style={{ padding: '11px 26px', fontSize: 14 }}>Begin Test →</button>
         </div>
       </MTPage>
@@ -699,9 +586,23 @@ export default function MockTestPage() {
   }
 
   /* ════════════════════════════════════
-     STEP 6 — Test
+     STEP 3 — Test
   ════════════════════════════════════ */
-  if (phase === "test" && config && questions.length > 0) {
+  if (phase === "test" && config) {
+    if (questions.length === 0) {
+      return (
+        <MTPage phase={phase}>
+          <div className="flex flex-col items-center justify-center gap-6 py-20 text-center">
+            <AlertTriangle size={40} style={{ color: BE.warn }} />
+            <div>
+              <div style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 600, color: BE.text, marginBottom: 8 }}>No questions were loaded.</div>
+              <div style={{ fontSize: 14, color: BE.textDim }}>The paper couldn't be generated. Try a different configuration.</div>
+            </div>
+            <button className="be-btn" onClick={() => { setPhase("setup"); setError(null); setQuestions([]); }}>← Back to Setup</button>
+          </div>
+        </MTPage>
+      );
+    }
     return (
       <TestEngine
         questions={questions}
@@ -717,15 +618,10 @@ export default function MockTestPage() {
   }
 
   /* ════════════════════════════════════
-     STEP 7 — Results
+     STEP 4 — Results
   ════════════════════════════════════ */
   if (phase === "results" && result) {
-    return (
-      <TestAnalysis
-        result={result}
-        onRestart={handleRetake}
-      />
-    );
+    return <TestAnalysis result={result} onRestart={handleRetake} />;
   }
 
   return (
@@ -739,7 +635,7 @@ function BriefStat({ label, val, sub }: { label: string; val: string; sub?: stri
   return (
     <div>
       <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</div>
-      <div style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 600, letterSpacing: '-0.4px', marginTop: 2, color: BE.text }}>{val}</div>
+      <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginTop: 2, color: BE.text }}>{val}</div>
       {sub && <div style={{ fontSize: 10.5, color: BE.textDim }}>{sub}</div>}
     </div>
   );

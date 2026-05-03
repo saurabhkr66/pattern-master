@@ -1,46 +1,12 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import katex from "katex";
 import {
   Clock, ChevronLeft, ChevronRight, Flag, Send,
   CheckCircle2, BarChart3, Loader2, AlertTriangle, RotateCcw,
 } from "lucide-react";
 import { fmtTimer, type ExamConfig, type SectionConfig } from "@/lib/examConfigs";
 import { BE } from "@/lib/theme";
-
-/* ─────────────── Math helper ─────────────── */
-function renderMath(text: string): string {
-  if (!text) return '';
-  let t = text
-    .replace(/[‘’ʼ]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/…/g, '...');
-  // Break adjacent inline-math junctions: $A$$B$ becomes $A$ $B$
-  // Without this the $$B$$ regex fires and wraps B in a display-math span.
-  t = t.replace(/\$\$/g, '$ $');
-  t = t.replace(/\\\[([\s\S]*?)\\\]/g, (_: string, m: string) => {
-    try { return '<span class="math-block">' + katex.renderToString(m.trim(), { displayMode: true, throwOnError: false }) + '</span>'; }
-    catch { return '<span>[math]</span>'; }
-  });
-  t = t.replace(/\\\(([\s\S]*?)\\\)/g, (_: string, m: string) => {
-    try { return katex.renderToString(m.trim(), { displayMode: false, throwOnError: false }); }
-    catch { return '[math]'; }
-  });
-  t = t.replace(/\$\$([^$]+?)\$\$/g, (_: string, m: string) => {
-    try { return '<span class="math-block">' + katex.renderToString(m.trim(), { displayMode: true, throwOnError: false }) + '</span>'; }
-    catch { return '<span>[math]</span>'; }
-  });
-  t = t.replace(/\$([^$\n]+?)\$/g, (_: string, m: string) => {
-    try { return katex.renderToString(m.trim(), { displayMode: false, throwOnError: false }); }
-    catch { return '[math]'; }
-  });
-  return t;
-}
-
-function MathText({ content, className }: { content: string; className?: string }) {
-  return <span className={className} dangerouslySetInnerHTML={{ __html: renderMath(content) }} />;
-}
+import { MathText } from "@/components/MathText";
 
 /* ─────────────── Types ─────────────── */
 export interface TestQuestion {
@@ -285,7 +251,14 @@ export default function TestEngine({
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="be-btn be-btn-primary" onClick={() => setConfirmSubmit(true)} style={{ background: BE.bad, borderColor: BE.bad, color: '#fff' }}>Submit Test</button>
+          {/* Submit button — hidden on mobile (shown in sticky bottom nav instead) */}
+          <button
+            className="be-btn be-btn-primary hidden md:flex"
+            onClick={() => setConfirmSubmit(true)}
+            style={{ background: BE.accent, borderColor: BE.accent, color: '#fff' }}
+          >
+            Submit Test
+          </button>
           <button onClick={() => setShowPalette(!showPalette)} className="lg:hidden p-2 rounded-lg border" style={{ borderColor: BE.line }}><BarChart3 size={18} /></button>
         </div>
       </header>
@@ -318,81 +291,91 @@ export default function TestEngine({
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── QUESTION AREA ── */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-10">
-          <div className="max-w-3xl mx-auto">
-            {/* Meta */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div style={{ fontFamily: BE.serif, fontSize: 18, fontWeight: 600, color: BE.text }}>Question {currentIdx + 1}</div>
-                <div className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: BE.accentSoft, color: BE.accent }}>{currentQ.marks} MARKS</div>
-                <div className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.05)', color: BE.textMute }}>{currentQ.question_type}</div>
-                {currentQ.isOptional && <div className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: BE.warn + '22', color: BE.warn }}>OPTIONAL ({optCountSoFar}/{optLimit})</div>}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Scrollable question body */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
+            <div className="max-w-3xl mx-auto">
+              {/* Meta */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div style={{ fontFamily: BE.serif, fontSize: 18, fontWeight: 600, color: BE.text }}>Question {currentIdx + 1}</div>
+                  <div className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: BE.accentSoft, color: BE.accent }}>{currentQ.marks} MARKS</div>
+                  <div className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.05)', color: BE.textMute }}>{currentQ.question_type}</div>
+                  {currentQ.isOptional && <div className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: BE.warn + '22', color: BE.warn }}>OPTIONAL ({optCountSoFar}/{optLimit})</div>}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BE.textMute, textTransform: 'uppercase' }}>{currentQ.subject}</div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: BE.textMute, textTransform: 'uppercase' }}>{currentQ.subject}</div>
-            </div>
 
-            {/* Question Text */}
-            <div className="mb-8" style={{ fontSize: 16, lineHeight: 1.6, color: BE.text }}>
-              {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
-                <div className="mb-6 flex flex-wrap gap-4">
-                  {(currentQ.images as { index: number; filename: string }[]).map((img) => (
-                    <img key={img.index} src={`/images/questions/${img.filename}`} alt="" className="rounded-lg border max-h-[300px]" style={{ borderColor: BE.line }} />
-                  ))}
-                </div>
-              )}
-              <MathText content={currentQ.question_text} />
-            </div>
+              {/* Question Text */}
+              <div className="mb-8" style={{ fontSize: 16, lineHeight: 1.6, color: BE.text }}>
+                {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
+                  <div className="mb-6 flex flex-wrap gap-4">
+                    {(currentQ.images as { index: number; filename: string }[]).map((img) => (
+                      <img key={img.index} src={`/images/questions/${img.filename}`} alt="" className="rounded-lg border max-h-[300px]" style={{ borderColor: BE.line }} />
+                    ))}
+                  </div>
+                )}
+                <MathText content={currentQ.question_text} />
+              </div>
 
-            {/* Options */}
-            <div className="space-y-3 mb-10">
-              {currentQ.question_type === "NAT" ? (
-                <div className="max-w-[200px]">
-                  <input
-                    type="number" step="any" autoFocus
-                    value={curNat} onChange={(e) => handleNat(currentQ, e.target.value)}
-                    placeholder="Value..."
-                    className="w-full px-4 py-3 rounded-xl border text-lg font-bold focus:outline-none"
-                    style={{ background: BE.surface, borderColor: curNat ? BE.accent : BE.line, color: BE.text, fontFamily: BE.mono }}
-                  />
-                  <div className="mt-2 text-[11px]" style={{ color: BE.textMute }}>Enter exact numeric value.</div>
-                </div>
-              ) : (
-                currentQ.options?.map((opt, oi) => {
-                  const letter = optionLetters[oi];
-                  const isMSQ = currentQ.question_type === "MSQ";
-                  const selected = isMSQ ? curMsq.includes(letter) : curMcq === letter;
-                  return (
-                    <div
-                      key={oi}
-                      onClick={() => isMSQ ? handleMsq(currentQ, letter) : handleMcq(currentQ, letter)}
-                      className="group flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all hover:shadow-sm"
-                      style={{ background: selected ? BE.accentSoft : BE.surface, borderColor: selected ? BE.accent : BE.line }}
-                    >
+              {/* Options */}
+              <div className="space-y-3 mb-4">
+                {currentQ.question_type === "NAT" ? (
+                  <div className="max-w-[200px]">
+                    <input
+                      type="number" step="any" autoFocus
+                      value={curNat} onChange={(e) => handleNat(currentQ, e.target.value)}
+                      placeholder="Value..."
+                      className="w-full px-4 py-3 rounded-xl border text-lg font-bold focus:outline-none"
+                      style={{ background: BE.surface, borderColor: curNat ? BE.accent : BE.line, color: BE.text, fontFamily: BE.mono }}
+                    />
+                    <div className="mt-2 text-[11px]" style={{ color: BE.textMute }}>Enter exact numeric value.</div>
+                  </div>
+                ) : (
+                  currentQ.options?.map((opt, oi) => {
+                    const letter = optionLetters[oi];
+                    const isMSQ = currentQ.question_type === "MSQ";
+                    const selected = isMSQ ? curMsq.includes(letter) : curMcq === letter;
+                    return (
                       <div
-                        className="flex items-center justify-center rounded-lg text-xs font-bold shrink-0 transition-all"
-                        style={{
-                          width: 30, height: 30,
-                          background: selected ? BE.accent : 'rgba(255,255,255,0.05)',
-                          color: selected ? '#fff' : BE.textMute,
-                          borderColor: selected ? BE.accent : BE.line,
-                          border: '1px solid',
-                          fontFamily: BE.mono,
-                        }}
+                        key={oi}
+                        onClick={() => isMSQ ? handleMsq(currentQ, letter) : handleMcq(currentQ, letter)}
+                        className="group flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all hover:shadow-sm"
+                        style={{ background: selected ? BE.accentSoft : BE.surface, borderColor: selected ? BE.accent : BE.line }}
                       >
-                        {letter}
+                        <div
+                          className="flex items-center justify-center rounded-lg text-xs font-bold shrink-0 transition-all"
+                          style={{
+                            width: 30, height: 30,
+                            background: selected ? BE.accent : 'rgba(255,255,255,0.05)',
+                            color: selected ? '#fff' : BE.textMute,
+                            borderColor: selected ? BE.accent : BE.line,
+                            border: '1px solid',
+                            fontFamily: BE.mono,
+                          }}
+                        >
+                          {letter}
+                        </div>
+                        <div className="flex-1 text-[15px] pt-[3px]" style={{ color: selected ? BE.text : BE.textDim }}>
+                          <MathText content={typeof opt === "string" ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
+                        </div>
                       </div>
-                      <div className="flex-1 text-[15px] pt-[3px]" style={{ color: selected ? BE.text : BE.textDim }}>
-                        <MathText content={typeof opt === "string" ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+              </div>
 
-            {/* Nav */}
-            <div className="flex items-center justify-between pt-8 border-t" style={{ borderColor: BE.line }}>
-              <div className="flex items-center gap-3">
+              {submitError && <div className="mt-4 p-3 rounded-lg bg-red-500/10 text-red-500 text-xs border border-red-500/30">{submitError}</div>}
+            </div>
+          </div>
+
+          {/* Sticky bottom nav bar */}
+          <div
+            className="shrink-0 border-t px-4 md:px-8 py-3"
+            style={{ background: 'var(--bg-base)', borderColor: BE.line }}
+          >
+            <div className="max-w-3xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => goToIdx(currentIdx - 1)}
                   disabled={currentIdx === 0}
@@ -411,25 +394,32 @@ export default function TestEngine({
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button onClick={() => clearResponse(currentQ)} className="text-[11.5px] font-bold px-4 py-2 rounded-lg border" style={{ borderColor: BE.line, color: BE.textMute }}>Clear</button>
                 <button
                   onClick={() => toggleReview(currentQ)}
                   className="flex items-center gap-2 text-[11.5px] font-bold px-4 py-2 rounded-lg border transition-all"
                   style={{ background: isReviewed ? BE.warn + '11' : 'transparent', borderColor: isReviewed ? BE.warn : BE.line, color: isReviewed ? BE.warn : BE.textMute }}
                 >
-                  <Flag size={14} /> {isReviewed ? 'Unmark' : 'Mark Review'}
+                  <Flag size={14} /> <span className="hidden sm:inline">{isReviewed ? 'Unmark' : 'Mark Review'}</span>
+                </button>
+                {/* Mobile submit button */}
+                <button
+                  onClick={() => setConfirmSubmit(true)}
+                  className="md:hidden flex items-center gap-1.5 text-[11.5px] font-bold px-3 py-2 rounded-lg"
+                  style={{ background: BE.accent, color: '#fff' }}
+                >
+                  <Send size={13} /> Submit
                 </button>
               </div>
             </div>
-            {submitError && <div className="mt-6 p-3 rounded-lg bg-red-500/10 text-red-500 text-xs border border-red-500/30">{submitError}</div>}
           </div>
         </main>
 
         {/* ── PALETTE SIDEBAR ── */}
         <aside className="hidden lg:flex flex-col w-72 border-l p-6 overflow-y-auto" style={{ borderColor: BE.line, background: BE.surface }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: BE.textMute, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 16 }}>Question Palette</div>
-          
+
           <div className="space-y-8">
             {sections.map((sec, si) => (
               <div key={si}>
@@ -481,7 +471,7 @@ export default function TestEngine({
           <div className="w-full max-w-md rounded-2xl p-8 border" style={{ background: BE.surface, borderColor: BE.line }}>
             <div style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 600, marginBottom: 6, color: BE.text }}>Submit your test?</div>
             <div style={{ fontSize: 14, color: BE.textDim, marginBottom: 24 }}>You have {questions.length - answeredCount - reviewCount} questions remaining. You cannot change your answers after submitting.</div>
-            
+
             <div className="grid grid-cols-2 gap-3 mb-8">
               <div className="p-4 rounded-xl border text-center" style={{ borderColor: BE.line, background: BE.surface }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: BE.good, fontFamily: BE.mono }}>{answeredCount}</div>
