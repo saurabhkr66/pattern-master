@@ -353,12 +353,12 @@ export default function MockTestPage() {
       const accuracy = (data.correctCount + data.wrongCount) > 0
         ? (data.correctCount / (data.correctCount + data.wrongCount)) * 100 : 0;
 
-      const sectionMap: Record<string, { 
+      const sectionMap: Record<string, {
         name: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number;
         topics: Record<string, { topic: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number; }>
       }> = {};
       const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number }> = {};
-      
+
       breakdown.forEach((q: any) => {
         const secName = q.sectionName || "Section";
         if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0, topics: {} };
@@ -434,12 +434,12 @@ export default function MockTestPage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to load analysis");
       const s = data.session;
       const breakdown: any[] = Array.isArray(s.answers) ? s.answers : [];
-      const sectionMap: Record<string, { 
+      const sectionMap: Record<string, {
         name: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number;
         topics: Record<string, { topic: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number; }>
       }> = {};
       const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number }> = {};
-      
+
       breakdown.forEach((q: any) => {
         const secName = q.sectionName || "Section";
         if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0, topics: {} };
@@ -497,6 +497,7 @@ export default function MockTestPage() {
       goTo("setup", true);
     }
   }, [goTo]);
+
 
   const handleDeleteTest = async (mockId: string, title: string) => {
     if (!confirm(`Delete "${title}"? All sessions will be lost.`)) return;

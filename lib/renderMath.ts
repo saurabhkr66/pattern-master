@@ -5,6 +5,7 @@ export function renderMath(text: string): string {
   let t = text
     .replace(/[''ʼ]/g, "'").replace(/[""]/g, '"')
     .replace(/[–—]/g, '-').replace(/…/g, '...');
+  t = t.replace(/\$\$/g, '$ $');
   // display: \[...\]
   t = t.replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => {
     try { return '<span class="math-block">' + katex.renderToString(m.trim(), { displayMode: true, throwOnError: false }) + '</span>'; }
