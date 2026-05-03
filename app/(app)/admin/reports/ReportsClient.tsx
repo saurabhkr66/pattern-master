@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { resolveReport, deleteQuestion } from "@/app/actions/admin";
+import { useState, useMemo } from "react";
+import { resolveReport, deleteQuestion, generateAIExplanation, processMockTestExplanations } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
 
-export default function ReportsClient({ reports }: { reports: any[] }) {
+export default function ReportsClient({ reports, mockTests }: { reports: any[], mockTests?: any[] }) {
   const [editingReport, setEditingReport] = useState<any | null>(null);
+  const [filterExam, setFilterExam] = useState<string>("all");
+  const [filterSubject, setFilterSubject] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
+
+  // Reset subject filter when exam filter changes
+  const handleExamChange = (newExam: string) => {
+    setFilterExam(newExam);
+    setFilterSubject("all");
+  };
+
   const [formData, setFormData] = useState({
     question_text: "",
     correct_answer: "",
@@ -15,16 +26,104 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [batchProcessing, setBatchProcessing] = useState<string | null>(null);
+  const [batchResult, setBatchResult] = useState<{total: number, fixed: number, failed: number} | null>(null);
+  const [showBatchPanel, setShowBatchPanel] = useState(false);
+
+  // Process reports to extract exam, subject, and type for easier filtering and display
+  const processedReports = useMemo(() => {
+    return reports.map(r => {
+      const q = r.q || r.question || r.pyq || r.subject_pyq;
+      let exam = "Other";
+      let subject = "Other";
+      let type = "Generated";
+
+      if (r.subject_pyq) {
+        exam = r.subject_pyq.subject_pattern?.exam_type || "GATE";
+        subject = r.subject_pyq.subject_pattern?.subject_name || "Unknown";
+        type = "SubjectPYQ";
+      } else if (r.pyq) {
+        exam = r.pyq.exam_type || r.pyq.pattern?.exam_type || "GATE";
+        subject = r.pyq.pattern?.subject || "Unknown";
+        type = "PYQ";
+      } else if (r.question) {
+        exam = r.question.pattern?.exam_type || "GATE";
+        subject = r.question.pattern?.subject || "Unknown";
+        type = "Generated";
+      } else if (r.isMock) {
+        exam = r.exam_type || "Unknown";
+        subject = r.subject || "Unknown";
+        type = "Mock";
+      }
+
+      return { ...r, exam, subject, type, q };
+    });
+  }, [reports]);
+
+  // Unique values for filters
+  const exams = useMemo(() => {
+    const standardExams = EXAM_CONFIGS.map(e => e.examType);
+    const foundExams = processedReports.map(r => r.exam);
+    return Array.from(new Set([...standardExams, ...foundExams])).sort();
+  }, [processedReports]);
+
+  const subjects = useMemo(() => {
+    const foundSubjects = processedReports
+      .filter(r => filterExam === "all" || r.exam === filterExam)
+      .map(r => r.subject);
+
+    let configSubjects: string[] = [];
+    if (filterExam === "all") {
+      // Collect all subjects from all configs
+      EXAM_CONFIGS.forEach(config => {
+        config.sections.forEach(sec => {
+          if (sec.name) configSubjects.push(sec.name);
+          if (sec.subjects) configSubjects.push(...sec.subjects);
+        });
+      });
+      configSubjects.push(...GATE_BRANCHES.map(b => b.id));
+    } else {
+      const config = EXAM_CONFIGS.find(e => e.examType === filterExam);
+      if (config) {
+        config.sections.forEach(sec => {
+          if (sec.name) configSubjects.push(sec.name);
+          if (sec.subjects) configSubjects.push(...sec.subjects);
+        });
+      }
+      if (filterExam === "GATE") {
+        configSubjects.push(...GATE_BRANCHES.map(b => b.id));
+      }
+    }
+
+    return Array.from(new Set([...configSubjects, ...foundSubjects])).filter(s => s && s !== "Other" && s !== "Unknown").sort();
+  }, [processedReports, filterExam]);
+
+  const types = ["PYQ", "SubjectPYQ", "Mock", "Generated"];
+
+  // Filtered reports
+  const filteredReports = useMemo(() => {
+    return processedReports.filter(r => {
+      if (filterExam !== "all" && r.exam !== filterExam) return false;
+      if (filterSubject !== "all" && r.subject !== filterSubject) return false;
+      if (filterType !== "all" && r.type !== filterType) return false;
+      return true;
+    });
+  }, [processedReports, filterExam, filterSubject, filterType]);
 
   const openEditor = (report: any) => {
-    // Determine the question type and data
-    const questionData = report.question || report.pyq || report.subject_pyq;
+    const questionData = report.q;
     
+    let questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" = "GeneratedQuestion";
+    if (report.subject_pyq_id) questionType = "SubjectPYQ";
+    else if (report.pyq_id) questionType = "PYQ";
+    else if (report.isMock) questionType = "MockQuestion";
+
     setEditingReport({
       ...report,
       questionData,
-      questionType: report.subject_pyq_id ? "SubjectPYQ" : (report.pyq_id ? "PYQ" : "GeneratedQuestion"),
-      questionId: report.subject_pyq_id || report.pyq_id || report.question_id
+      questionType,
+      questionId: report.subject_pyq_id || report.pyq_id || report.question_id || report.mock_question_id
     });
 
     setFormData({
@@ -44,7 +143,10 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
         editingReport.id,
         editingReport.questionId,
         editingReport.questionType,
-        formData
+        {
+          ...formData,
+          mockTestId: editingReport.mock_test_id
+        }
       );
       setEditingReport(null);
     } catch (error) {
@@ -62,7 +164,11 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
 
     setIsDeleting(true);
     try {
-      await deleteQuestion(editingReport.questionId, editingReport.questionType);
+      await deleteQuestion(
+        editingReport.questionId, 
+        editingReport.questionType,
+        editingReport.mock_test_id
+      );
       setEditingReport(null);
     } catch (error) {
       console.error("Failed to delete", error);
@@ -72,33 +178,428 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
     }
   };
 
+  const handleGenerateAI = async () => {
+    if (!editingReport) return;
+    setIsGeneratingAI(true);
+    try {
+      const explanation = await generateAIExplanation(
+        editingReport.questionId,
+        editingReport.questionType,
+        editingReport.mock_test_id
+      );
+      setFormData({ ...formData, explanation });
+    } catch (error) {
+      console.error("AI generation failed", error);
+      alert("Failed to generate explanation. Check console for details.");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // Live feed state
+  const [liveFeed, setLiveFeed] = useState<{
+    testTitle: string;
+    currentQ: any;
+    currentExplanation: string;
+    progress: number;
+    total: number;
+    fixed: number;
+    failed: number;
+    log: { id: string; text: string; status: "ok" | "fail"; question: any; explanation: string }[];
+    done: boolean;
+  } | null>(null);
+
+  const [logPreview, setLogPreview] = useState<{ question: any; explanation: string } | null>(null);
+
+  const handleBatchProcess = async (testId: string) => {
+    const test = mockTests?.find(t => t.id === testId);
+    if (!test) return;
+
+    const confirmed = confirm(`This will generate AI explanations for all missing questions in "${test.title}". Continue?`);
+    if (!confirmed) return;
+
+    const questions = (test.questions as any[]) || [];
+    const missingQs = questions.filter(q => !q.explanation || q.explanation.trim() === "");
+
+    if (missingQs.length === 0) return;
+
+    setBatchProcessing(testId);
+    setLiveFeed({
+      testTitle: test.title,
+      currentQ: null,
+      currentExplanation: "",
+      progress: 0,
+      total: missingQs.length,
+      fixed: 0,
+      failed: 0,
+      log: [],
+      done: false,
+    });
+
+    let fixed = 0;
+    let failed = 0;
+
+    for (let i = 0; i < missingQs.length; i++) {
+      const q = missingQs[i];
+
+      setLiveFeed(prev => prev ? {
+        ...prev,
+        currentQ: q,
+        currentExplanation: "",
+        progress: i,
+      } : null);
+
+      try {
+        const explanation = await generateAIExplanation(q.id, "MockQuestion", testId);
+        fixed++;
+
+        setLiveFeed(prev => prev ? {
+          ...prev,
+          currentExplanation: explanation,
+          fixed,
+          log: [...prev.log, { 
+            id: q.id, 
+            text: (q.question_text || "").substring(0, 80) + "...", 
+            status: "ok",
+            question: q,
+            explanation,
+          }],
+        } : null);
+      } catch (err) {
+        // Retry once after 15 seconds (handles 429 rate limit)
+        console.log(`[AI] Retrying question ${q.id} after 15s...`);
+        await new Promise(resolve => setTimeout(resolve, 15000));
+        try {
+          const explanation = await generateAIExplanation(q.id, "MockQuestion", testId);
+          fixed++;
+          setLiveFeed(prev => prev ? {
+            ...prev,
+            currentExplanation: explanation,
+            fixed,
+            log: [...prev.log, { 
+              id: q.id, 
+              text: (q.question_text || "").substring(0, 80) + "... (retry ✓)", 
+              status: "ok",
+              question: q,
+              explanation,
+            }],
+          } : null);
+        } catch {
+          failed++;
+          setLiveFeed(prev => prev ? {
+            ...prev,
+            failed,
+            log: [...prev.log, { 
+              id: q.id, 
+              text: (q.question_text || "").substring(0, 80) + "...", 
+              status: "fail",
+              question: q,
+              explanation: "",
+            }],
+          } : null);
+        }
+      }
+
+      // Wait 7 seconds after each completed question before starting next
+      if (i < missingQs.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 8000));
+      }
+    }
+
+    setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);
+    setBatchProcessing(null);
+    setBatchResult({ total: questions.length, fixed, failed });
+  };
+
   return (
     <>
-      {reports.length === 0 ? (
+      {/* LOG PREVIEW POPUP */}
+      {logPreview && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 max-h-[80vh] overflow-y-auto">
+            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
+              <span className="text-sm font-black">Question Preview</span>
+              <button onClick={() => setLogPreview(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Question</div>
+                <div className="p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-xs"><MathRenderer content={logPreview.question.question_text || ""} /></div>
+              </div>
+              {logPreview.question.options && (
+                <div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Options</div>
+                  <div className="flex flex-col gap-1">
+                    {(logPreview.question.options as string[]).map((opt: string, i: number) => (
+                      <div key={i} className={`p-2 rounded-lg text-xs border ${opt === logPreview.question.correct_answer ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 font-bold" : "bg-gray-50 dark:bg-black/20 dark:border-zinc-800"}`}>
+                        <span className="font-bold text-gray-400 mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <div className="text-[10px] font-bold text-green-500 uppercase mb-1">Correct Answer</div>
+                <div className="p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-xs font-bold">{logPreview.question.correct_answer}</div>
+              </div>
+              {logPreview.explanation && (
+                <div>
+                  <div className="text-[10px] font-bold text-purple-500 uppercase mb-1">AI Explanation</div>
+                  <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/10 text-xs"><MathRenderer content={logPreview.explanation} /></div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIVE FEED MODAL */}
+      {liveFeed && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 flex flex-col max-h-[80vh]">
+            
+            {/* Header */}
+            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-black flex items-center gap-2">
+                  {liveFeed.done ? "✅" : "⚡"} AI Explanation Generator
+                </h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">{liveFeed.testTitle}</p>
+              </div>
+              {liveFeed.done && (
+                <button 
+                  onClick={() => setLiveFeed(null)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs"
+                >✕</button>
+              )}
+            </div>
+
+            {/* Progress Bar */}
+            <div className="px-4 pt-3">
+              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                <span>{liveFeed.progress} / {liveFeed.total}</span>
+                <span className="flex gap-3">
+                  <span className="text-green-500">✅ {liveFeed.fixed}</span>
+                  {liveFeed.failed > 0 && <span className="text-red-500">❌ {liveFeed.failed}</span>}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(liveFeed.progress / liveFeed.total) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Current Question */}
+            <div className="p-4 flex-1 overflow-y-auto">
+              {liveFeed.currentQ && !liveFeed.done && (
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1.5">Currently Processing</div>
+                  <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/10 text-xs text-gray-700 dark:text-gray-300">
+                    <MathRenderer content={liveFeed.currentQ.question_text || ""} />
+                  </div>
+                  {/* Options & Answer */}
+                  <div className="mt-2 flex flex-col gap-1">
+                    {(liveFeed.currentQ.options as string[] || []).map((opt: string, i: number) => (
+                      <div key={i} className={`px-2 py-1 rounded text-[10px] ${opt === liveFeed.currentQ.correct_answer ? "bg-green-100 dark:bg-green-500/10 font-bold text-green-700 dark:text-green-400" : "text-gray-500"}`}>
+                        {String.fromCharCode(65 + i)}. {opt}
+                      </div>
+                    ))}
+                    <div className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-1">
+                      ✓ Answer: {liveFeed.currentQ.correct_answer}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Latest Generated Explanation */}
+              {liveFeed.currentExplanation && (
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">
+                    {liveFeed.done ? "Last Generated" : "Generated Explanation"}
+                  </div>
+                  <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10 text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto">
+                    <MathRenderer content={liveFeed.currentExplanation} />
+                  </div>
+                </div>
+              )}
+
+              {/* Completed Log */}
+              {liveFeed.log.length > 0 && (
+                <div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Log ({liveFeed.log.length}) · click to preview</div>
+                  <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+                    {[...liveFeed.log].reverse().map((entry, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => setLogPreview({ question: entry.question, explanation: entry.explanation })}
+                        className="flex items-center gap-2 text-[10px] text-gray-500 py-1.5 px-2 rounded bg-gray-50 dark:bg-black/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors text-left w-full"
+                      >
+                        <span>{entry.status === "ok" ? "✅" : "❌"}</span>
+                        <span className="truncate flex-1">{entry.text}</span>
+                        <span className="text-gray-300">→</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Done Message */}
+              {liveFeed.done && (
+                <div className="mt-4 p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-center">
+                  <div className="text-2xl mb-2">🎉</div>
+                  <div className="text-sm font-bold text-green-800 dark:text-green-300">All done!</div>
+                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    {liveFeed.fixed} explanations generated{liveFeed.failed > 0 ? `, ${liveFeed.failed} failed` : ""}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {!liveFeed.done && (
+              <div className="p-3 border-t dark:border-zinc-800 text-center">
+                <div className="text-[10px] text-gray-400 animate-pulse">
+                  ⏳ ~{(liveFeed.total - liveFeed.progress) * 8}s remaining · 8s delay (10 RPM limit)
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* BATCH AI PANEL */}
+      {mockTests && mockTests.length > 0 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowBatchPanel(!showBatchPanel)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 hover:bg-purple-200 dark:hover:bg-purple-500/20 transition-colors mb-4"
+          >
+            ✨ AI Batch Explanation Generator
+            <span className="text-xs opacity-60">{showBatchPanel ? '▲' : '▼'}</span>
+          </button>
+
+          {showBatchPanel && (
+            <div className="p-5 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm mb-6">
+              <p className="text-xs text-gray-500 mb-4">Select a mock test below to auto-generate explanations for all questions missing them. Each request has a 5-second delay to stay within API limits.</p>
+              <div className="flex flex-col gap-3">
+                {mockTests.map((test: any) => {
+                  const questions = (test.questions as any[]) || [];
+                  const missing = questions.filter(q => !q.explanation || q.explanation.trim() === "").length;
+                  const isProcessing = batchProcessing === test.id;
+                  return (
+                    <div key={test.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800">
+                      <div>
+                        <div className="font-bold text-sm">{test.title}</div>
+                        <div className="text-[10px] text-gray-500">
+                          {test.exam_type} · {questions.length} Qs · <span className={missing > 0 ? "text-red-500 font-bold" : "text-green-500"}>{missing} missing</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleBatchProcess(test.id)}
+                        disabled={isProcessing || missing === 0}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+                          missing === 0
+                            ? "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400 cursor-default"
+                            : isProcessing
+                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400 animate-pulse"
+                            : "bg-purple-500 text-white hover:bg-purple-600"
+                        }`}
+                      >
+                        {missing === 0 ? "✅ Complete" : isProcessing ? `⏳ Processing...` : `Generate ${missing} Explanations`}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              {batchResult && (
+                <div className="mt-4 p-3 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-sm text-green-800 dark:text-green-300">
+                  ✅ Last batch: {batchResult.fixed} fixed, {batchResult.failed} failed, {batchResult.total} total questions.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FILTER BAR */}
+      <div className="mb-8 p-4 bg-gray-50 dark:bg-zinc-900/50 border dark:border-zinc-800 rounded-2xl flex flex-wrap gap-4 items-end">
+        <div className="flex-1 min-w-[150px]">
+          <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Exam</label>
+          <select 
+            value={filterExam} 
+            onChange={(e) => handleExamChange(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+          >
+            <option value="all">All Exams</option>
+            {exams.map(e => <option key={e} value={e}>{e}</option>)}
+          </select>
+        </div>
+
+        <div className="flex-1 min-w-[150px]">
+          <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Subject</label>
+          <select 
+            value={filterSubject} 
+            onChange={(e) => setFilterSubject(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+          >
+            <option value="all">All Subjects</option>
+            {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div className="flex-1 min-w-[150px]">
+          <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Type</label>
+          <select 
+            value={filterType} 
+            onChange={(e) => setFilterType(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+          >
+            <option value="all">All Types</option>
+            {types.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+
+        <button 
+          onClick={() => { setFilterExam("all"); setFilterSubject("all"); setFilterType("all"); }}
+          className="p-2.5 px-4 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          Reset
+        </button>
+      </div>
+
+      {filteredReports.length === 0 ? (
         <div className="text-center py-20 border rounded-2xl bg-gray-50 dark:bg-zinc-900/50 dark:border-zinc-800">
           <div className="text-4xl mb-4">🎉</div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">All caught up!</h3>
-          <p className="text-gray-500">No pending reports found.</p>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">No reports found!</h3>
+          <p className="text-gray-500">Try adjusting your filters or check back later.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {reports.map((r: any) => {
-            const q = r.question || r.pyq || r.subject_pyq;
+          {filteredReports.map((r: any) => {
+            const q = r.q;
             return (
-              <div key={r.id} className="p-6 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row gap-6">
+              <div key={r.id} className="p-6 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow">
                 
                 {/* Report Info */}
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 mb-2">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">
                         {r.reason}
                       </span>
-                      <div className="text-sm text-gray-500 font-mono mt-1">
-                        ID: {r.subject_pyq_id || r.pyq_id || r.question_id}
-                      </div>
+                      <span className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 text-[10px] font-bold uppercase">
+                        {r.exam}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[10px] font-bold uppercase">
+                        {r.subject}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400 text-[10px] font-bold uppercase">
+                        {r.type}
+                      </span>
                     </div>
-                    <div className="text-right text-xs text-gray-400 font-medium">
+                    <div className="text-right text-[10px] text-gray-400 font-medium">
                       {r.user?.email || 'Unknown'} <br/>
                       {new Date(r.created_at).toLocaleDateString()}
                     </div>
@@ -117,12 +618,17 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
                     </div>
                   )}
 
-                  <button 
-                    onClick={() => openEditor(r)}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"
-                  >
-                    Review & Fix Issue
-                  </button>
+                  <div className="flex justify-between items-center">
+                    <div className="text-[10px] text-gray-400 font-mono">
+                      ID: {r.subject_pyq_id || r.pyq_id || r.question_id || r.mock_question_id}
+                    </div>
+                    <button 
+                      onClick={() => openEditor(r)}
+                      className="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"
+                    >
+                      Review & Fix Issue
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -138,7 +644,7 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
             <div className="p-6 border-b dark:border-zinc-800 flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-black">Fix Question</h3>
-                <p className="text-sm text-gray-500 font-mono mt-1">ID: {editingReport.questionId}</p>
+                <p className="text-sm text-gray-500 font-mono mt-1">ID: {editingReport.questionId} ({editingReport.questionType})</p>
               </div>
               <button onClick={() => setEditingReport(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700">✕</button>
             </div>
@@ -271,7 +777,17 @@ export default function ReportsClient({ reports }: { reports: any[] }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Explanation (Supports LaTeX)</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Explanation (Supports LaTeX)</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAI}
+                    disabled={isGeneratingAI}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                  >
+                    {isGeneratingAI ? "⏳ Generating..." : "✨ Generate with AI"}
+                  </button>
+                </div>
                 <textarea 
                   value={formData.explanation}
                   onChange={(e) => setFormData({...formData, explanation: e.target.value})}
