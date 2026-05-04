@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BE } from "@/lib/theme";
-import { MathText } from "@/components/MathText";
+import MathRenderer from "@/components/ui/MathRenderer";
 
 /* ─────────────── Types ─────────────── */
 export interface ResultData {
@@ -230,7 +230,7 @@ export default function TestAnalysis({ result, onRestart }: Props) {
                   </div>
 
                   <div className="p-6 space-y-6">
-                    <div style={{ fontSize: 15, lineHeight: 1.6, color: BE.text }}><MathText content={q.question_text} /></div>
+                    <div style={{ fontSize: 15, lineHeight: 1.6, color: BE.text }}><MathRenderer content={q.question_text} /></div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 rounded-xl border" style={{ background: BE.surface, borderColor: BE.line }}>
@@ -257,7 +257,7 @@ export default function TestAnalysis({ result, onRestart }: Props) {
                         <div className="flex items-center gap-2 mb-2" style={{ fontSize: 12, fontWeight: 700, color: BE.accent }}>
                           <Brain size={14} /> Solution Explanation
                         </div>
-                        <div style={{ fontSize: 13, lineHeight: 1.6, color: BE.textDim }}><MathText content={q.explanation} /></div>
+                        <div style={{ fontSize: 13, lineHeight: 1.6, color: BE.textDim }}><MathRenderer content={q.explanation} /></div>
                       </div>
                     )}
                   </div>

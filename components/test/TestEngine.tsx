@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { fmtTimer, type ExamConfig, type SectionConfig } from "@/lib/examConfigs";
 import { BE } from "@/lib/theme";
-import { MathText } from "@/components/MathText";
+import MathRenderer from "@/components/ui/MathRenderer";
 
 /* ─────────────── Types ─────────────── */
 export interface TestQuestion {
@@ -315,7 +315,7 @@ export default function TestEngine({
                     ))}
                   </div>
                 )}
-                <MathText content={currentQ.question_text} />
+                <MathRenderer content={currentQ.question_text} />
               </div>
 
               {/* Options */}
@@ -357,7 +357,7 @@ export default function TestEngine({
                           {letter}
                         </div>
                         <div className="flex-1 text-[15px] pt-[3px]" style={{ color: selected ? BE.text : BE.textDim }}>
-                          <MathText content={typeof opt === "string" ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
+                          <MathRenderer content={typeof opt === "string" ? opt.replace(/^[A-E]\.\s*/, "") : String(opt)} />
                         </div>
                       </div>
                     );
