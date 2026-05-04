@@ -30,7 +30,19 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\\\[/g, '$$$$')
     .replace(/\\\]/g, '$$$$')
     .replace(/\\\(/g, '$')
-    .replace(/\\\)/g, '$');
+    .replace(/\\\)/g, '$')
+    // JEE scraper: backslash + Unicode commands → valid KaTeX
+    .replace(/\\∝/g, '\\propto')
+    .replace(/\\∵/g, '\\because')
+    .replace(/\\⇒/g, '\\Rightarrow')
+    .replace(/\\Δ/g, '\\Delta')
+    .replace(/\\δ/g, '\\delta')
+    .replace(/\\λ/g, '\\lambda')
+    // JEE scraper: bare Unicode inside math that KaTeX may reject
+    .replace(/\$([^$]*?)∵([^$]*?)\$/g, (_, a, b) => `$${a}\\because ${b}$`)
+    .replace(/\$([^$]*?)⇒([^$]*?)\$/g, (_, a, b) => `$${a}\\Rightarrow ${b}$`)
+    // JEE scraper: {A}/{B} fake fractions → \frac{A}{B}
+    .replace(/\{([^{}]+)\}\/\{([^{}]+)\}/g, '\\frac{$1}{$2}');
 
 
   return (
