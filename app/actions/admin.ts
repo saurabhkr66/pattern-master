@@ -6,6 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { getCloudinaryUrl } from "@/lib/imageUtils";
 
 export async function resolveReport(
   reportId: string,
@@ -188,6 +189,45 @@ import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 /**
+ * Helper to fetch image as base64 from local or Cloudinary
+ */
+async function getImageBase64(filename: string) {
+  const fs = await import("fs");
+  const path = await import("path");
+  
+  // 1. Try local paths first
+  const possiblePaths = [
+    path.join(process.cwd(), "public", "images", "questions", filename),
+    path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+  ];
+  for (const filePath of possiblePaths) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath);
+        const ext = path.extname(filePath).slice(1).toLowerCase();
+        const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
+        return { data: data.toString("base64"), mimeType };
+      }
+    } catch {}
+  }
+
+  // 2. Fallback to Cloudinary URL
+  const cloudinaryUrl = getCloudinaryUrl(filename);
+  if (cloudinaryUrl.startsWith("http")) {
+    try {
+      const response = await fetch(cloudinaryUrl);
+      if (response.ok) {
+        const buffer = Buffer.from(await response.arrayBuffer());
+        return { data: buffer.toString("base64"), mimeType: response.headers.get("content-type") || "image/jpeg" };
+      }
+    } catch (err) {
+      console.error(`[AI] Failed to fetch image from Cloudinary: ${cloudinaryUrl}`, err);
+    }
+  }
+  return null;
+}
+
+/**
  * Generates an AI explanation for a single question and saves it to the DB.
  */
 export async function generateAIExplanation(
@@ -254,33 +294,15 @@ Rules:
   const images = (questionData.images as any[]) || [];
   console.log(`[AI] Found ${images.length} images to process`);
   if (images.length > 0) {
-    const fs = await import("fs");
-    const path = await import("path");
-
     for (const img of images) {
       const filename = img.filename || img.url;
       if (!filename) continue;
 
-      // Try multiple possible paths
-      const possiblePaths = [
-        path.join(process.cwd(), "public", "images", "questions", filename),
-        path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-      ];
-
-      for (const filePath of possiblePaths) {
-        try {
-          if (fs.existsSync(filePath)) {
-            const imageData = fs.readFileSync(filePath);
-            const base64 = imageData.toString("base64");
-            const ext = path.extname(filePath).slice(1).toLowerCase();
-            const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
-
-            contentParts.push({
-              inlineData: { data: base64, mimeType }
-            });
-            break;
-          }
-        } catch { /* skip if file not found */ }
+      const imgResult = await getImageBase64(filename);
+      if (imgResult) {
+        contentParts.push({
+          inlineData: { data: imgResult.data, mimeType: imgResult.mimeType }
+        });
       }
     }
   }
@@ -294,32 +316,18 @@ Rules:
     
     // Add images if any
     if (images.length > 0) {
-      const fs = await import("fs");
-      const path = await import("path");
       for (const img of images) {
         const filename = img.filename || img.url;
         if (!filename) continue;
-        const possiblePaths = [
-          path.join(process.cwd(), "public", "images", "questions", filename),
-          path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-        ];
-        for (const filePath of possiblePaths) {
-          try {
-            if (fs.existsSync(filePath)) {
-              const imageData = fs.readFileSync(filePath);
-              const base64 = imageData.toString("base64");
-              const ext = path.extname(filePath).slice(1).toLowerCase();
-              const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
-              messages[0].content.push({
-                type: "image_url",
-                image_url: { 
-                  url: `data:${mimeType};base64,${base64}`,
-                  detail: "low"
-                }
-              });
-              break;
+        const imgResult = await getImageBase64(filename);
+        if (imgResult) {
+          messages[0].content.push({
+            type: "image_url",
+            image_url: { 
+              url: `data:${imgResult.mimeType};base64,${imgResult.data}`,
+              detail: "low"
             }
-          } catch { /* skip */ }
+          });
         }
       }
     }
@@ -444,32 +452,14 @@ Rules:
         // NEW: Fetch images for batch processing too
         const images = (q.images as any[]) || [];
         if (images.length > 0) {
-          const fs = await import("fs");
-          const path = await import("path");
-
           for (const img of images) {
             const filename = img.filename || img.url;
             if (!filename) continue;
-
-            const possiblePaths = [
-              path.join(process.cwd(), "public", "images", "questions", filename),
-              path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-            ];
-
-            for (const filePath of possiblePaths) {
-              try {
-                if (fs.existsSync(filePath)) {
-                  const imageData = fs.readFileSync(filePath);
-                  const base64 = imageData.toString("base64");
-                  const ext = path.extname(filePath).slice(1).toLowerCase();
-                  const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
-
-                  contentParts.push({
-                    inlineData: { data: base64, mimeType }
-                  });
-                  break;
-                }
-              } catch { /* skip */ }
+            const imgRes = await getImageBase64(filename);
+            if (imgRes) {
+              contentParts.push({
+                inlineData: { data: imgRes.data, mimeType: imgRes.mimeType }
+              });
             }
           }
         }
@@ -483,23 +473,12 @@ Rules:
             for (const img of images) {
               const filename = img.filename || img.url;
               if (!filename) continue;
-              const path = await import("path");
-              const fs = await import("fs");
-              const possiblePaths = [
-                path.join(process.cwd(), "public", "images", "questions", filename),
-                path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-              ];
-              for (const filePath of possiblePaths) {
-                try {
-                  if (fs.existsSync(filePath)) {
-                    const imageData = fs.readFileSync(filePath);
-                    const base64 = imageData.toString("base64");
-                    const ext = path.extname(filePath).slice(1).toLowerCase();
-                    const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
-                    messages[0].content.push({ type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}`, detail: "low" } });
-                    break;
-                  }
-                } catch { /* skip */ }
+              const imgRes = await getImageBase64(filename);
+              if (imgRes) {
+                messages[0].content.push({ 
+                  type: "image_url", 
+                  image_url: { url: `data:${imgRes.mimeType};base64,${imgRes.data}`, detail: "low" } 
+                });
               }
             }
           }
@@ -632,39 +611,17 @@ Options: ${JSON.stringify(options)}`;
 
   // Process Images
   if (images.length > 0) {
-    const fs = await import("fs");
-    const path = await import("path");
-
     for (const img of images) {
       const filename = img.filename || img.url;
       if (!filename) continue;
 
-      const possiblePaths = [
-        path.join(process.cwd(), "public", "images", "questions", filename),
-        path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-      ];
-
-      for (const filePath of possiblePaths) {
-        try {
-          if (fs.existsSync(filePath)) {
-            const imageData = fs.readFileSync(filePath);
-            const base64 = imageData.toString("base64");
-            const ext = path.extname(filePath).slice(1).toLowerCase();
-            const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
-
-            // For Gemini
-            contentParts.push({
-              inlineData: { data: base64, mimeType }
-            });
-
-            // For GPT
-            (gptMessages[0].content as any[]).push({
-              type: "image_url",
-              image_url: { url: `data:${mimeType};base64,${base64}`, detail: "low" }
-            });
-            break;
-          }
-        } catch { /* skip */ }
+      const imgRes = await getImageBase64(filename);
+      if (imgRes) {
+        contentParts.push({ inlineData: { data: imgRes.data, mimeType: imgRes.mimeType } });
+        (gptMessages[0].content as any[]).push({
+          type: "image_url",
+          image_url: { url: `data:${imgRes.mimeType};base64,${imgRes.data}`, detail: "low" }
+        });
       }
     }
   }
