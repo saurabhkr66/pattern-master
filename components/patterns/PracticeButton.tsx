@@ -123,22 +123,14 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   }, [question?.id]);
  
   // ── Analytics: silently sync question ID to URL ──────────────────────
-  // Uses replaceState (not router.push) → zero re-renders, zero speed impact.
-  // GA4 + ad networks see a new URL = new page view, boosting impressions.
+  // Uses router.replace (shallow) → zero re-renders of parent, zero speed impact.
+  // The GlobalAnalyticsTracker will detect this change and notify GA.
   useEffect(() => {
     if (!question?.id) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("q", question.id);
-    window.history.replaceState(null, "", url.toString());
-    
-    // Skip tracking on initial mount to avoid double-counting with the layout script
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    
-    trackPageView();
-  }, [question?.id]);
+    const params = new URLSearchParams(window.location.search);
+    params.set("q", question.id);
+    router.replace(`/practice?${params.toString()}`, { scroll: false });
+  }, [question?.id, router]);
 
   // Scroll into view when a question is opened
   useEffect(() => {
@@ -659,8 +651,29 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                 <Bookmark size={14} fill={isBookmarked ? BE.accent : "none"} strokeWidth={isBookmarked ? 0 : 2} />
               </button>
               </div>
-              <span style={{ width: 1, height: 12, background: BE.line }} />
               <span style={{ fontFamily: BE.mono, textTransform: 'none', letterSpacing: 0, fontWeight: 500, opacity: 0.6 }}>#{question.id?.slice(-5)}</span>
+              
+              {/* Contextual Language Switcher */}
+              {question.question_text_hindi && (
+                <div className="flex gap-0.5 p-0.5 bg-white/5 rounded-lg border border-white/10 ml-2">
+                  <button
+                    onClick={() => setLanguage("en")}
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                      language === "en" ? "bg-amber-600 text-white" : "text-gray-400 hover:text-gray-200"
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLanguage("hi")}
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                      language === "hi" ? "bg-amber-600 text-white" : "text-gray-400 hover:text-gray-200"
+                    }`}
+                  >
+                    हिन्दी
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Question Text */}

@@ -105,6 +105,7 @@ export const metadata: Metadata = {
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import PostLoginRedirect from "@/components/landing/PostLoginRedirect";
 import NativeMobileBridge from "@/components/providers/NativeMobileBridge";
+import GlobalAnalyticsTracker from "@/components/providers/GlobalAnalyticsTracker";
 
 export default function RootLayout({
   children,
@@ -163,6 +164,7 @@ export default function RootLayout({
             <ThemeProvider>
               <QueryProvider>
                 <Header />
+                <GlobalAnalyticsTracker />
                 <PostLoginRedirect />
                 <main className="flex-1 pb-[calc(env(safe-area-inset-bottom)+70px)] md:pb-0">{children}</main>
                 <MobileNav />

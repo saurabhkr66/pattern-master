@@ -8,10 +8,51 @@ export async function GET(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
     const examType = searchParams.get("exam_type");
     const branch = searchParams.get("branch") ?? null;
 
-    if (!examType) return NextResponse.json({ error: "exam_type required" }, { status: 400 });
+    if (id) {
+      const mock = await prisma.mockTestTemplate.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          mock_number: true,
+          title: true,
+          total_questions: true,
+          max_score: true,
+          duration_secs: true,
+          exam_type: true,
+          branch: true,
+          sessions: {
+            where: { user_id: userId },
+            select: {
+              id: true,
+              score: true,
+              max_score: true,
+              correct_count: true,
+              wrong_count: true,
+              skipped_count: true,
+              section_scores: true,
+              created_at: true,
+            },
+            orderBy: { created_at: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      if (!mock) return NextResponse.json({ error: "Mock test not found" }, { status: 404 });
+
+      return NextResponse.json({
+        mock: {
+          ...mock,
+          session: mock.sessions[0] ?? null,
+        }
+      });
+    }
+
+    if (!examType) return NextResponse.json({ error: "exam_type or id required" }, { status: 400 });
 
     const mocks = await prisma.mockTestTemplate.findMany({
       where: { exam_type: examType, branch, mode: "seeded" },

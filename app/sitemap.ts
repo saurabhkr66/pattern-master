@@ -13,8 +13,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE,              lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
     { url: `${BASE}/sign-up`, lastModified: now, changeFrequency: "yearly",  priority: 0.7 },
     { url: `${BASE}/sign-in`, lastModified: now, changeFrequency: "yearly",  priority: 0.5 },
-    // /practice requires auth — excluded to avoid wasting crawl budget
+    { url: `${BASE}/practice`, lastModified: now, changeFrequency: "daily",  priority: 0.95 },
+    { url: `${BASE}/mock-tests`, lastModified: now, changeFrequency: "daily", priority: 0.95 },
   ];
+
+  // ---------- Mock Test SEO Pages ---------------------------------------------
+  const mockTemplates = await prisma.mockTestTemplate.findMany({
+    select: { id: true, exam_type: true, branch: true, created_at: true },
+  });
+
+  const mockPages: MetadataRoute.Sitemap = [];
+  
+  // Unique Exams and Branches for hubs
+  const uniqueExams = Array.from(new Set(mockTemplates.map(t => t.exam_type)));
+  uniqueExams.forEach(exam => {
+    mockPages.push({
+      url: `${BASE}/mock-tests/${toSlug(exam)}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85
+    });
+    
+    const branches = Array.from(new Set(mockTemplates.filter(t => t.exam_type === exam).map(t => t.branch || "All Subjects")));
+    branches.forEach(branch => {
+      mockPages.push({
+        url: `${BASE}/mock-tests/${toSlug(exam)}/${toSlug(branch)}`,
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.8
+      });
+    });
+  });
+
+  // Individual Mock Test Pages
+  mockTemplates.forEach(test => {
+    mockPages.push({
+      url: `${BASE}/mock-tests/${toSlug(test.exam_type)}/${toSlug(test.branch || "All Subjects")}/${test.id}`,
+      lastModified: test.created_at,
+      changeFrequency: "monthly",
+      priority: 0.75
+    });
+  });
 
   // ---------- Subject hub pages  /[examType]/[subject] ----------------------
   const subjectRows = await prisma.pattern.findMany({
@@ -91,6 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticPages,
+    ...mockPages,
     ...subjectPages,
     ...topicPages,
     ...pyqPages,

@@ -20,7 +20,7 @@ export async function GET() {
     orderBy: { created_at: "desc" },
     include: {
       question: { include: { pattern: { select: { id: true, topic_name: true, subject: true } } } },
-      pyq:      { include: { pattern: { select: { id: true, topic_name: true, subject: true } } } },
+      pyq: { include: { pattern: { select: { id: true, topic_name: true, subject: true } } } },
     },
   });
 
@@ -38,24 +38,24 @@ export async function GET() {
       created_at: { gte: since },
       OR: [
         { question: { pattern_id: pattern.id } },
-        { pyq:      { pattern_id: pattern.id } },
+        { pyq: { pattern_id: pattern.id } },
       ],
     },
     select: { is_correct: true },
   });
 
-  const total    = sessionAttempts.length;
-  const correct  = sessionAttempts.filter(a => a.is_correct).length;
+  const total = sessionAttempts.length;
+  const correct = sessionAttempts.filter(a => a.is_correct).length;
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
   return NextResponse.json({
     session: {
-      patternId:  pattern.id,
-      topicName:  pattern.topic_name,
-      subject:    pattern.subject,
-      questions:  total,
+      patternId: pattern.id,
+      topicName: pattern.topic_name,
+      subject: pattern.subject,
+      questions: total,
       accuracy,
-      lastAt:     lastAttempt.created_at,
+      lastAt: lastAttempt.created_at,
     },
   });
 }

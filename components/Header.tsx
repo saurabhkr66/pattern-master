@@ -61,14 +61,14 @@ export default function Header() {
         >
           <svg width="28" height="35" viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <g transform="translate(0, 2)">
-              <path d="M 50 2 C 22 8 8 25 8 45 L 8 75 C 8 98 30 112 50 120 L 50 2 Z" fill="#0A1A2F"/>
-              <path d="M 50 2 C 78 8 92 25 92 45 L 92 75 C 92 98 70 112 50 120" fill="none" stroke="#FF6B00" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M 50 12 L 38 48 L 45 66 L 32 66 L 32 72 L 44 72 L 44 94 L 36 102 L 50 108 Z" fill="#FFFFFF"/>
-              <path d="M 50 12 L 62 48 L 55 66 L 68 66 L 68 72 L 56 72 L 56 94 L 64 102 L 50 108 Z" fill="#0A1A2F"/>
-              <path d="M 50 40 A 4 4 0 0 0 50 48 Z" fill="#0A1A2F"/>
-              <rect x="49" y="22" width="1" height="18" fill="#0A1A2F"/>
-              <path d="M 50 40 A 4 4 0 0 1 50 48 Z" fill="#FFFFFF"/>
-              <rect x="50" y="22" width="1" height="18" fill="#FFFFFF"/>
+              <path d="M 50 2 C 22 8 8 25 8 45 L 8 75 C 8 98 30 112 50 120 L 50 2 Z" fill="var(--text-primary)"/>
+              <path d="M 50 2 C 78 8 92 25 92 45 L 92 75 C 92 98 70 112 50 120" fill="none" stroke="#FF8F00" strokeWidth="7.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M 50 12 L 38 48 L 45 66 L 32 66 L 32 72 L 44 72 L 44 94 L 36 102 L 50 108 Z" fill="var(--bg-surface)"/>
+              <path d="M 50 12 L 62 48 L 55 66 L 68 66 L 68 72 L 56 72 L 56 94 L 64 102 L 50 108 Z" fill="var(--text-primary)"/>
+              <path d="M 50 40 A 4 4 0 0 0 50 48 Z" fill="var(--text-primary)"/>
+              <rect x="49" y="22" width="1" height="18" fill="var(--text-primary)"/>
+              <path d="M 50 40 A 4 4 0 0 1 50 48 Z" fill="var(--bg-surface)"/>
+              <rect x="50" y="22" width="1" height="18" fill="var(--bg-surface)"/>
             </g>
           </svg>
           <span className="font-medium">
@@ -145,26 +145,6 @@ export default function Header() {
               <Moon size={18} />
             )}
           </button>
-
-          {/* Global Language Toggle */}
-          <div className="hidden sm:flex gap-0.5 p-0.5 bg-white/5 rounded-xl border border-white/10">
-            <button
-              onClick={() => setLanguage("en")}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                language === "en" ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLanguage("hi")}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                language === "hi" ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              हिन्दी
-            </button>
-          </div>
 
           {/* Auth */}
           <Show when="signed-out">

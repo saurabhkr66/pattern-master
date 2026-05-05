@@ -18,6 +18,7 @@ export default function GlobalSearch() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resultsCache = useRef<Record<string, SearchResult>>({});
 
   const exam = searchParams.get("exam") ?? undefined;
   const branch = searchParams.get("branch") ?? undefined;
@@ -29,12 +30,22 @@ export default function GlobalSearch() {
 
   const doSearch = useCallback(
     (q: string) => {
+      const cacheKey = `${q}_${exam || ""}_${branch || ""}`;
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      
       if (q.length < 2) {
         setResults({ subjects: [], topics: [] });
         setIsLoading(false);
         return;
       }
+
+      // 1. Check Cache for INSTANT results
+      if (resultsCache.current[cacheKey]) {
+        setResults(resultsCache.current[cacheKey]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       debounceRef.current = setTimeout(async () => {
         try {
@@ -43,13 +54,16 @@ export default function GlobalSearch() {
           if (branch) params.set("branch", branch);
           const res = await fetch(`/api/search?${params}`);
           const data = await res.json();
+          
+          // 2. Save to Cache
+          resultsCache.current[cacheKey] = data;
           setResults(data);
         } catch {
           // ignore
         } finally {
           setIsLoading(false);
         }
-      }, 300);
+      }, 200); // Faster debounce: 200ms
     },
     [exam, branch]
   );

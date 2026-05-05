@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/practice",            // Practice page — browsable without login; answer submission is gated client-side
   "/practice/(.*)",
   "/api/practice/topics", // Used by PatternTable to filter by subject; works for guests (solvedCounts default to 0)
+  "/mock-tests(.*)",      // Public SEO mock test landing pages
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

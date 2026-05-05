@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Loader2, AlertTriangle, Check, Trash2,
 } from "lucide-react";
@@ -14,6 +14,7 @@ import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
 import { trackPageView } from "@/lib/analytics";
 import { BE } from "@/lib/theme";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
+import { useSearchParams } from "next/navigation";
 import React from "react";
 
 /* ─────────────── Types ─────────────── */
@@ -26,6 +27,8 @@ interface SeededMock {
   total_questions: number;
   max_score: number;
   duration_secs: number;
+  exam_type?: string;
+  branch?: string | null;
   session?: {
     id: string;
     score: number;
@@ -110,6 +113,9 @@ function MTPage({ children, phase, maxWidth = 980 }: { children: React.ReactNode
 
 /* ─────────────── Main component ─────────────── */
 export default function MockTestPage() {
+  const searchParams = useSearchParams();
+  const urlTestId = searchParams.get("id");
+
   const [phase, setPhase] = useState<Phase>("setup");
   const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
@@ -130,6 +136,35 @@ export default function MockTestPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const hasAttemptedHydration = useRef(false);
+
+  /* Deep-linking: Load test by ID if present in URL */
+  useEffect(() => {
+    if (urlTestId && phase === "setup" && !hasAttemptedHydration.current) {
+      hasAttemptedHydration.current = true;
+      setPhase("loading");
+      fetch(`/api/test/mocks?id=${urlTestId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.mock) {
+            const m = data.mock;
+            setSelectedExam(m.exam_type as ExamType);
+            setSelectedBranch(m.branch);
+            setSelectedMode("seeded");
+            setSelectedMock(m);
+            setPhase("brief");
+          } else {
+            console.error("Mock test not found for ID:", urlTestId);
+            setPhase("setup");
+          }
+        })
+        .catch((err) => {
+          console.error("Deep-linking fetch error:", err);
+          setPhase("setup");
+        });
+    }
+  }, [urlTestId, phase]);
 
   const config: ExamConfig | null = selectedExam
     ? getExamConfig(selectedExam, selectedBranch ?? undefined)

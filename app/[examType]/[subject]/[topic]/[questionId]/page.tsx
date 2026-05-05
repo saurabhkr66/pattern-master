@@ -95,15 +95,30 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
   const q = await fetchQuestion(questionId);
   if (!q) return { title: "Question Not Found | BattleExam" };
 
-  const subjectLabel = subject.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  const topicLabel   = topic.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  const title = `${q.examType} ${subjectLabel} ${q.year > 2000 ? q.year : ""} – ${topicLabel} | BattleExam`;
+  const examLabel = q.examType;
+  const subjectLabel = q.subject;
+  const topicLabel = q.topicName;
+  
+  const title = `${examLabel} ${subjectLabel} ${q.year > 2000 ? q.year : ""} – ${topicLabel} | BattleExam`;
 
   // "Answer-First" description for GEO: start with the direct context
   const rawDesc = cleanTextForMeta(q.questionText, 150);
-  const description = `Solve this ${q.examType} ${q.year} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
+  const description = `Solve this ${examLabel} ${q.year} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
 
-  const canonical = `https://battleexam.com/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
+  // POINT CANONICAL TO PRACTICE PAGE
+  // We need the pattern ID to open the right topic in the dashboard
+  let patternId = "";
+  if (q.prefix === "pyq" || q.prefix === "gq") {
+     const dbQ = q.prefix === "pyq" 
+        ? await prisma.pYQ.findUnique({ where: { id: q.id }, select: { pattern_id: true } })
+        : await prisma.generatedQuestion.findUnique({ where: { id: q.id }, select: { pattern_id: true } });
+     patternId = dbQ?.pattern_id || "";
+  } else if (q.prefix === "spyq") {
+     const dbQ = await prisma.subjectPYQ.findUnique({ where: { id: q.id }, select: { subject_pattern_id: true } });
+     patternId = dbQ?.subject_pattern_id ? `subject-${dbQ.subject_pattern_id}` : "";
+  }
+
+  const canonical = `https://battleexam.com/practice?q=${questionId}${patternId ? `&patternId=${patternId}` : ""}`;
 
   return {
     title,

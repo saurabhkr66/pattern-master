@@ -1,6 +1,8 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BE } from "@/lib/theme";
+import { useTransition, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ExamSwitcherProps {
   currentExam: string;
@@ -15,36 +17,69 @@ export default function ExamSwitcher({
   availableExams,
   availableBranches,
 }: ExamSwitcherProps) {
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Persist preferences to localStorage
+  useEffect(() => {
+    if (currentExam) localStorage.setItem("pref_exam", currentExam);
+    if (currentBranch) localStorage.setItem("pref_branch", currentBranch);
+  }, [currentExam, currentBranch]);
+
   const handleExamSwitch = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("exam", id);
-    params.delete("branch");
-    params.delete("subject");
-    params.delete("q");
-    params.delete("patternId");
-    router.push(`/practice?${params.toString()}`);
+    startTransition(() => {
+      localStorage.setItem("pref_exam", id);
+      localStorage.removeItem("pref_branch"); // Reset branch when exam changes
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("exam", id);
+      params.delete("branch");
+      params.delete("subject");
+      params.delete("q");
+      params.delete("patternId");
+      router.push(`/practice?${params.toString()}`);
+    });
   };
 
   const handleBranchSwitch = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (currentBranch === id) {
-      params.delete("branch");
-    } else {
-      params.set("branch", id);
-    }
-    params.delete("subject");
-    params.delete("q");
-    params.delete("patternId");
-    router.push(`/practice?${params.toString()}`);
+    startTransition(() => {
+      localStorage.setItem("pref_branch", id);
+      const params = new URLSearchParams(searchParams.toString());
+      if (currentBranch === id) {
+        params.delete("branch");
+        localStorage.removeItem("pref_branch");
+      } else {
+        params.set("branch", id);
+      }
+      params.delete("subject");
+      params.delete("q");
+      params.delete("patternId");
+      router.push(`/practice?${params.toString()}`);
+    });
   };
 
   const hasBranches = availableBranches.length > 0;
 
   return (
-    <div style={{ border: `1px solid ${BE.line}`, borderRadius: 12, padding: '10px 14px', marginBottom: 18, background: 'rgba(255,255,255,0.015)' }}>
+    <div 
+      style={{ 
+        border: `1px solid ${BE.line}`, 
+        borderRadius: 12, 
+        padding: '10px 14px', 
+        marginBottom: 18, 
+        background: 'rgba(255,255,255,0.015)',
+        position: 'relative',
+        opacity: isPending ? 0.7 : 1,
+        transition: 'opacity 0.2s',
+        pointerEvents: isPending ? 'none' : 'auto'
+      }}
+    >
+      {isPending && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/5 rounded-xl">
+          <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
+        </div>
+      )}
+      
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 32 }}>
         <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: 0.1, textTransform: 'uppercase', fontWeight: 600, minWidth: 48 }}>Exam</div>
         <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>

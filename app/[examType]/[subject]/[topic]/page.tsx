@@ -141,7 +141,7 @@ export default async function TopicPage({
   const pattern = await fetchPattern(examLabel, subjectLabel, topic);
   if (!pattern) notFound();
 
-  const canonical = `${BASE}/${examType}/${subject}/${topic}`;
+  const canonical = `${BASE}/practice?patternId=${pattern.id}`;
   const year = new Date().getFullYear() + 1;
   const totalQ = pattern.pyqs.length + pattern.questions.length;
 
@@ -292,7 +292,7 @@ export default async function TopicPage({
               {pattern.pyqs.map((q) => (
                 <Link
                   key={q.id}
-                  href={`/${examType}/${subject}/${topic}/pyq-${q.id}`}
+                  href={`/practice?patternId=${pattern.id}&q=pyq-${q.id}`}
                   className="flex items-start gap-3 p-4 rounded-xl border hover:border-indigo-500/40 transition-colors group"
                   style={{
                     background: "var(--bg-surface)",
@@ -354,7 +354,7 @@ export default async function TopicPage({
               {pattern.questions.map((q) => (
                 <Link
                   key={q.id}
-                  href={`/${examType}/${subject}/${topic}/gq-${q.id}`}
+                  href={`/practice?patternId=${pattern.id}&q=gq-${q.id}`}
                   className="flex items-start gap-3 p-4 rounded-xl border hover:border-violet-500/40 transition-colors group"
                   style={{
                     background: "var(--bg-surface)",

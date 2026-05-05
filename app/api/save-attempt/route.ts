@@ -32,9 +32,10 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // Revalidate caches so progress shows up instantly on the client
-        revalidateTag("dashboard", "max");
-        revalidateTag("patterns", "max");
+        // Revalidate caches so progress and mistakes update instantly
+        revalidateTag("dashboard");
+        revalidateTag("patterns");
+        revalidatePath("/mistakes");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {

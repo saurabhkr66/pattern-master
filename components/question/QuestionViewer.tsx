@@ -185,6 +185,18 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
           {showAnswer ? "Hide Answer" : "Show Answer"}
         </button>
 
+        <a
+          href={`/practice?q=${q.prefix}-${q.id}`}
+          className="hidden sm:inline-flex rounded-xl px-6 py-2.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
+          style={{
+            background: "var(--bg-surface-2)",
+            color: "var(--accent)",
+            border: "1px solid var(--accent)",
+          }}
+        >
+          🚀 Solve in Practice Mode
+        </a>
+
         {q.questionType === "NAT" && showAnswer && (
           <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Answer: <strong style={{ color: "var(--text-primary)" }}>{q.correctAnswer}</strong>

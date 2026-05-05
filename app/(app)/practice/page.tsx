@@ -1,16 +1,73 @@
 // app/(app)/practice/page.tsx
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { cleanTextForMeta, toSlug } from "@/lib/seo";
 import PatternTable from "@/components/patterns/PatternTable";
 import ExamSwitcher from "@/components/patterns/ExamSwitcher";
+import PracticeHydrator from "@/components/patterns/PracticeHydrator";
 import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
 import { BE } from "@/lib/theme";
 
-export const metadata: Metadata = {
-  title: "Practice",
-  description: "Browse GATE CSE, ISRO, BARC & ESE topics and practice with AI-generated questions and previous year papers.",
-};
+// Metadata is now dynamic to support topic-specific SEO on the dashboard
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ patternId?: string; q?: string; questionId?: string }> }): Promise<Metadata> {
+  const { patternId, q, questionId } = await searchParams;
+  const qId = q || questionId;
+
+  const BASE = "https://battleexam.com";
+  
+  if (qId) {
+    // If a specific question is selected in the dashboard
+    let questionText = "";
+    let topicName = "";
+    
+    if (qId.startsWith("pyq-")) {
+      const dbQ = await prisma.pYQ.findUnique({ where: { id: qId.slice(4) }, select: { question_text: true, pattern: { select: { topic_name: true } } } });
+      questionText = dbQ?.question_text || "";
+      topicName = dbQ?.pattern?.topic_name || "";
+    } else if (qId.startsWith("gq-")) {
+      const dbQ = await prisma.generatedQuestion.findUnique({ where: { id: qId.slice(3) }, select: { question_text: true, pattern: { select: { topic_name: true } } } });
+      questionText = dbQ?.question_text || "";
+      topicName = dbQ?.pattern?.topic_name || "";
+    }
+
+    if (questionText) {
+      const clean = cleanTextForMeta(questionText, 120);
+      return {
+        title: `Solve: ${topicName} Question | Practice on BattleExam`,
+        description: `Practice this ${topicName} question with instant feedback and AI explanations. ${clean}`,
+        alternates: { canonical: `${BASE}/practice?q=${qId}${patternId ? `&patternId=${patternId}` : ""}` }
+      };
+    }
+  }
+
+  if (patternId) {
+    // If a topic is selected
+    const actualId = patternId.startsWith("subject-") ? patternId.replace("subject-", "") : patternId;
+    let name = "";
+    if (patternId.startsWith("subject-")) {
+      const sp = await prisma.subjectPattern.findUnique({ where: { id: actualId }, select: { subject_name: true } });
+      name = sp?.subject_name || "";
+    } else {
+      const p = await prisma.pattern.findUnique({ where: { id: actualId }, select: { topic_name: true } });
+      name = p?.topic_name || "";
+    }
+
+    if (name) {
+      return {
+        title: `${name} Practice Questions & PYQs | BattleExam`,
+        description: `Practice ${name} questions for GATE CSE. Track your progress, solve previous year questions, and master patterns.`,
+        alternates: { canonical: `${BASE}/practice?patternId=${patternId}` }
+      };
+    }
+  }
+
+  return {
+    title: "Practice Dashboard | BattleExam",
+    description: "Browse GATE CSE, ISRO, BARC & ESE topics and practice with AI-generated questions and previous year papers.",
+    alternates: { canonical: `${BASE}/practice` }
+  };
+}
 
 
 
@@ -47,7 +104,8 @@ const getSubjectStats = (examType: string, branch: string | null) => {
   )();
 };
 
-const getTopicsForSubject = (userId: string | null, examType: string, branch: string | null, subject: string | null) => {
+// Global cache — no userId. Topic names, counts etc. are static data shared across all users.
+const getTopicsForSubject = (examType: string, branch: string | null, subject: string | null) => {
   return unstable_cache(
     async () => {
       const isAll = !subject || subject === "All";
@@ -64,48 +122,9 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
           })
         : [];
 
-      // Batch fetch solved counts for subject PYQs in a single query
-      let subjectSolvedMap: Record<string, number> = {};
-      if (userId && subjectPatterns.length > 0) {
-        const spIds = subjectPatterns.map((sp) => sp.id);
-        const solvedCounts = await prisma.attempt.groupBy({
-          by: ["subject_pyq_id"],
-          where: {
-            user_id: userId,
-            is_correct: true,
-            subject_pyq: { subject_pattern_id: { in: spIds } },
-          },
-          _count: true,
-        });
-        solvedCounts.forEach((row) => {
-          if (row.subject_pyq_id) {
-            // We need to map subject_pyq_id back to subject_pattern_id
-            // For simplicity, count distinct solved PYQs per subject pattern
-            subjectSolvedMap[row.subject_pyq_id] = (subjectSolvedMap[row.subject_pyq_id] || 0) + 1;
-          }
-        });
-      }
-
-      // Batch: count solved subject PYQs per subject_pattern_id
-      let solvedBySubjectPattern: Record<string, number> = {};
-      if (userId && subjectPatterns.length > 0) {
-        const spIds = subjectPatterns.map((sp) => sp.id);
-        const rows = await prisma.$queryRaw<{ sp_id: string; solved: bigint }[]>`
-          SELECT sp.subject_pattern_id as sp_id, COUNT(DISTINCT a.subject_pyq_id)::bigint as solved
-          FROM "Attempt" a
-          JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
-          WHERE a.user_id = ${userId}
-            AND a.is_correct = true
-            AND sp.subject_pattern_id = ANY(${spIds})
-          GROUP BY sp.subject_pattern_id
-        `;
-        rows.forEach((r) => {
-          solvedBySubjectPattern[r.sp_id] = Number(r.solved);
-        });
-      }
-
       const mappedSubjects = subjectPatterns.map((sp) => ({
         id: `subject-${sp.id}`,
+        _rawId: sp.id,
         subject: sp.subject_name,
         topic_name: sp.subject_name,
         atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
@@ -113,7 +132,7 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
         totalQuestions: sp._count.pyqs,
         questionsCount: 0,
         pyqsCount: sp._count.pyqs,
-        solvedQuestions: solvedBySubjectPattern[sp.id] ?? 0,
+        solvedQuestions: 0, // hydrated on the client
         questions: [],
         pyqs: [],
       }));
@@ -138,45 +157,20 @@ const getTopicsForSubject = (userId: string | null, examType: string, branch: st
         orderBy: { topic_name: "asc" },
       });
 
-      // Batch fetch solved counts for topic questions + PYQs
-      let solvedQByPattern: Record<string, number> = {};
-      let solvedPByPattern: Record<string, number> = {};
-      if (userId && topicPatterns.length > 0) {
-        const patternIds = topicPatterns.map((p) => p.id);
-        const [qSolved, pSolved] = await Promise.all([
-          prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
-            SELECT q.pattern_id as pid, COUNT(DISTINCT a.question_id)::bigint as solved
-            FROM "Attempt" a
-            JOIN "GeneratedQuestion" q ON q.id = a.question_id
-            WHERE a.user_id = ${userId} AND a.is_correct = true AND q.pattern_id = ANY(${patternIds})
-            GROUP BY q.pattern_id
-          `,
-          prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
-            SELECT p.pattern_id as pid, COUNT(DISTINCT a.pyq_id)::bigint as solved
-            FROM "Attempt" a
-            JOIN "PYQ" p ON p.id = a.pyq_id
-            WHERE a.user_id = ${userId} AND a.is_correct = true AND p.pattern_id = ANY(${patternIds})
-            GROUP BY p.pattern_id
-          `,
-        ]);
-        qSolved.forEach((r) => { solvedQByPattern[r.pid] = Number(r.solved); });
-        pSolved.forEach((r) => { solvedPByPattern[r.pid] = Number(r.solved); });
-      }
-
       const mappedTopics = topicPatterns.map((p) => ({
         ...p,
         totalQuestions: p._count.questions + p._count.pyqs,
         questionsCount: p._count.questions,
         pyqsCount: p._count.pyqs,
-        solvedQuestions: (solvedQByPattern[p.id] ?? 0) + (solvedPByPattern[p.id] ?? 0),
+        solvedQuestions: 0, // hydrated on the client
         questions: [],
         pyqs: [],
       }));
 
       return [...mappedSubjects, ...mappedTopics];
     },
-    [`topics-${examType}-${branch || "all"}-${userId || "guest"}-${subject || "all"}-v8`],
-    { revalidate: 300, tags: ["patterns"] }
+    [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v1`],
+    { revalidate: 600, tags: ["patterns"] }
   )();
 };
 
@@ -224,12 +218,34 @@ export default async function PracticePage({
     }) : null;
 
     const activeExamType = exam || dbUser?.preferred_exam || baseExamType;
-    const activeBranch = branchParam ?? dbUser?.preferred_branch ?? baseBranch;
+    let activeBranch = branchParam ?? dbUser?.preferred_branch ?? baseBranch;
+
+    const availableBranches = examMeta.branchesByExam[activeExamType] ?? [];
+    
+    // VALIDATION: If the saved/param branch doesn't exist for THIS exam, reset it
+    if (activeBranch && !availableBranches.includes(activeBranch)) {
+      activeBranch = null;
+    }
+
+    // SMART DEFAULT: If no branch (or invalid branch), pick a random one
+    if (!activeBranch && availableBranches.length > 0) {
+      activeBranch = availableBranches[Math.floor(Math.random() * availableBranches.length)];
+    }
 
     let activeSubject = subjectParam || "All";
     
+    // Fetch stats for the active exam/branch
+    subjectStats = await getSubjectStats(activeExamType, activeBranch);
+    
+    // SMART DEFAULT: If subject is "All" and we have subjects, pick a random one for first-time engagement
+    // But ONLY if the user didn't explicitly ask for "All" in the URL
+    if (activeSubject === "All" && !subjectParam && Object.keys(subjectStats).length > 0) {
+      const subjectKeys = Object.keys(subjectStats);
+      activeSubject = subjectKeys[Math.floor(Math.random() * subjectKeys.length)];
+    }
+
     // If we have a patternId but no subject, resolve the subject so topics are fetched correctly
-    if (patternId && activeSubject === "All") {
+    if (patternId && (activeSubject === "All" || !subjectParam)) {
       if (patternId.startsWith("subject-")) {
         const spId = patternId.replace("subject-", "");
         const sp = await prisma.subjectPattern.findUnique({ where: { id: spId }, select: { subject_name: true } });
@@ -240,16 +256,12 @@ export default async function PracticePage({
       }
     }
 
-    const availableBranches = examMeta.branchesByExam[activeExamType] ?? [];
-
-    [subjectStats, topics] = await Promise.all([
-      getSubjectStats(activeExamType, activeBranch),
-      getTopicsForSubject(userId, activeExamType, activeBranch, activeSubject),
-    ]);
+    topics = await getTopicsForSubject(activeExamType, activeBranch, activeSubject);
 
 
     return (
       <div className="be-screen" style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+        <PracticeHydrator />
         <div className="max-w-[1280px] mx-auto w-full flex flex-col md:flex-row gap-8 px-4 py-6 md:px-8 md:py-12 md:pb-20">
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Header — tighter */}

@@ -30,6 +30,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
   const [batchProcessing, setBatchProcessing] = useState<string | null>(null);
   const [batchResult, setBatchResult] = useState<{total: number, fixed: number, failed: number} | null>(null);
   const [showBatchPanel, setShowBatchPanel] = useState(false);
+  const [isScanningLatex, setIsScanningLatex] = useState(false);
+  const [latexReports, setLatexReports] = useState<any[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<"gemini" | "gpt-4o-mini">("gemini");
 
   // Process reports to extract exam, subject, and type for easier filtering and display
@@ -60,17 +62,44 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
       return { ...r, exam, subject, type, q };
     });
-  }, [reports]);
+  }, [reports, latexReports]);
+
+  const allProcessedReports = useMemo(() => {
+    const latexProcessed = latexReports.map(lr => {
+      const q = lr.q || lr.question || lr.pyq || lr.subject_pyq;
+      let exam = "Other";
+      let subject = "Other";
+      let type = "Generated";
+
+      if (lr.subject_pyq) {
+        exam = lr.subject_pyq.subject_pattern?.exam_type || "GATE";
+        subject = lr.subject_pyq.subject_pattern?.subject_name || "Unknown";
+        type = "SubjectPYQ";
+      } else if (lr.pyq) {
+        exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE";
+        subject = lr.pyq.pattern?.subject || "Unknown";
+        type = "PYQ";
+      } else if (lr.question) {
+        exam = lr.question.pattern?.exam_type || "GATE";
+        subject = lr.question.pattern?.subject || "Unknown";
+        type = "Generated";
+      }
+      return { ...lr, exam, subject, type, q };
+    });
+
+    // Put LaTeX issues at the top, followed by existing reports
+    return [...latexProcessed, ...processedReports];
+  }, [processedReports, latexReports]);
 
   // Unique values for filters
   const exams = useMemo(() => {
     const standardExams = EXAM_CONFIGS.map(e => e.examType);
-    const foundExams = processedReports.map(r => r.exam);
+    const foundExams = allProcessedReports.map(r => r.exam);
     return Array.from(new Set([...standardExams, ...foundExams])).sort();
-  }, [processedReports]);
+  }, [allProcessedReports]);
 
   const subjects = useMemo(() => {
-    const foundSubjects = processedReports
+    const foundSubjects = allProcessedReports
       .filter(r => filterExam === "all" || r.exam === filterExam)
       .map(r => r.subject);
 
@@ -98,19 +127,19 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     }
 
     return Array.from(new Set([...configSubjects, ...foundSubjects])).filter(s => s && s !== "Other" && s !== "Unknown").sort();
-  }, [processedReports, filterExam]);
+  }, [allProcessedReports, filterExam]);
 
   const types = ["PYQ", "SubjectPYQ", "Mock", "Generated"];
 
   // Filtered reports
   const filteredReports = useMemo(() => {
-    return processedReports.filter(r => {
+    return allProcessedReports.filter(r => {
       if (filterExam !== "all" && r.exam !== filterExam) return false;
       if (filterSubject !== "all" && r.subject !== filterSubject) return false;
       if (filterType !== "all" && r.type !== filterType) return false;
       return true;
     });
-  }, [processedReports, filterExam, filterSubject, filterType]);
+  }, [allProcessedReports, filterExam, filterSubject, filterType]);
 
   const openEditor = (report: any) => {
     const questionData = report.q;
@@ -149,6 +178,12 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
           mockTestId: editingReport.mock_test_id
         }
       );
+      
+      // If this was a diagnostic report, remove it from the local list immediately
+      if (editingReport.id.startsWith("auto-latex-")) {
+        setLatexReports(prev => prev.filter(r => r.id !== editingReport.id));
+      }
+      
       setEditingReport(null);
     } catch (error) {
       console.error("Failed to resolve", error);
@@ -358,6 +393,21 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);
     setBatchProcessing(null);
     setBatchResult({ total: questions.length, fixed, failed });
+  };
+
+  const handleScanLatex = async () => {
+    setIsScanningLatex(true);
+    try {
+      const res = await fetch("/api/admin/scan-latex");
+      const data = await res.json();
+      if (data.results) {
+        setLatexReports(data.results);
+      }
+    } catch (error) {
+      console.error("Scan failed", error);
+    } finally {
+      setIsScanningLatex(false);
+    }
   };
 
   return (
@@ -613,6 +663,31 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         </div>
       )}
 
+      {/* LATEX HEALTH PANEL */}
+      <div className="mb-8 p-6 rounded-2xl border-2 border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col items-center text-center">
+        <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h3 className="text-sm font-black mb-1">LaTeX Health Diagnostic</h3>
+        <p className="text-xs text-gray-500 max-w-sm mb-4">Run a server-side scan to detect broken formulas, undefined Greek letters, or unescaped characters across your database.</p>
+        <button 
+          onClick={handleScanLatex}
+          disabled={isScanningLatex}
+          className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${
+            isScanningLatex 
+              ? "bg-gray-100 text-gray-400 dark:bg-zinc-800 animate-pulse cursor-wait" 
+              : "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20"
+          }`}
+        >
+          {isScanningLatex ? "🔍 Scanning Database..." : "🚀 Run Health Scan"}
+        </button>
+        {latexReports.length > 0 && (
+          <div className="mt-4 text-[10px] font-black text-red-500 uppercase tracking-widest">
+            ⚠️ {latexReports.length} Issues Detected
+          </div>
+        )}
+      </div>
+
       {/* FILTER BAR */}
       <div className="mb-8 p-4 bg-gray-50 dark:bg-zinc-900/50 border dark:border-zinc-800 rounded-2xl flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[150px]">
@@ -696,8 +771,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                   </div>
                   
                   {r.details && (
-                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-white/5 text-sm text-gray-700 dark:text-gray-300 mb-4">
-                      <strong>User Comment:</strong> "{r.details}"
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-white/5 text-sm text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-wrap">
+                      <strong>{r.reason === "LaTeX Error" ? "Diagnostic Details" : "User Comment"}:</strong> {r.details}
                     </div>
                   )}
                   

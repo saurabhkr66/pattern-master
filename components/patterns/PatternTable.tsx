@@ -1,10 +1,10 @@
 "use client"
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PatternRow from "./PatternRow";
 import ResumeCard from "./ResumeCard";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Loader2 } from "lucide-react";
 import { trackPageView } from "@/lib/analytics";
 
 
@@ -52,6 +52,7 @@ export default function PatternTable({
   const [openPatternId, setOpenPatternId] = useState<string | null>(urlPatternId || null);
   const [sortMode, setSortMode] = useState<"default" | "practiced">("default");
   const tableRef = useRef<HTMLDivElement>(null);
+  const [isPending, startTransition] = useTransition();
 
   // React to client-side URL changes (e.g. "Solve again" from dashboard)
   useEffect(() => {
@@ -72,18 +73,57 @@ export default function PatternTable({
     gcTime: 10 * 60 * 1000,
   });
 
-  const patterns = data?.topics ?? initialPatterns;
+  const rawPatterns = data?.topics ?? initialPatterns;
+
+  // ── Client-side progress hydration ──
+  // Fetch user's solved counts separately so the topic list can be CDN-cached globally.
+  const patternIds = React.useMemo(() => rawPatterns.map((p: any) => p.id).filter(Boolean), [rawPatterns]);
+  const topicIds = React.useMemo(() => patternIds.filter((id: string) => !id.startsWith("subject-")), [patternIds]);
+  const subjectRawIds = React.useMemo(() => rawPatterns.filter((p: any) => p._rawId).map((p: any) => p._rawId), [rawPatterns]);
+
+  const { data: progressData } = useQuery({
+    queryKey: ["practiceProgress", topicIds.join(","), subjectRawIds.join(",")],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (topicIds.length > 0) params.set("ids", topicIds.join(","));
+      if (subjectRawIds.length > 0) params.set("spIds", subjectRawIds.join(","));
+      const res = await fetch(`/api/practice/progress?${params.toString()}`);
+      return res.json();
+    },
+    enabled: patternIds.length > 0,
+    staleTime: 60 * 1000, // user progress is mildly dynamic — refresh every 60s
+    gcTime: 5 * 60 * 1000,
+  });
+
+  const progress: Record<string, number> = progressData?.progress ?? {};
+
+  // Merge static patterns with dynamic progress
+  const patterns = React.useMemo(() =>
+    rawPatterns.map((p: any) => ({
+      ...p,
+      solvedQuestions: progress[p.id] ?? p.solvedQuestions ?? 0,
+    })),
+    [rawPatterns, progress]
+  );
+
   const subjects = [{ id: 'All', name: 'All subjects', n: Object.values(subjectStats).reduce((a, b) => a + b, 0) }, 
                     ...Object.keys(subjectStats).sort().map(s => ({ id: s, name: s, n: subjectStats[s] }))];
 
   const handleFilterClick = (subjectId: string) => {
-    setLocalSubject(subjectId);
-    setOpenPatternId(null);
-    const url = new URL(window.location.href);
-    url.searchParams.set("subject", subjectId);
-    window.history.replaceState(null, "", url.toString());
-    trackPageView();
+    startTransition(() => {
+      localStorage.setItem("pref_subject", subjectId);
+      setLocalSubject(subjectId);
+      setOpenPatternId(null);
+      const url = new URL(window.location.href);
+      url.searchParams.set("subject", subjectId);
+      window.history.replaceState(null, "", url.toString());
+      trackPageView();
+    });
   };
+
+  useEffect(() => {
+    if (localSubject) localStorage.setItem("pref_subject", localSubject);
+  }, [localSubject]);
 
   const handleTopicToggle = (id: string) => {
     const isOpening = openPatternId !== id;
@@ -199,6 +239,7 @@ export default function PatternTable({
           onClick={() => setSortMode(prev => prev === "default" ? "practiced" : "default")}
           style={{ color: BE.accent, cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
         >
+          {isPending && <Loader2 size={14} className="animate-spin text-amber-500" />}
           Sort: {sortMode === "practiced" ? "Most practiced ↓" : "Default"}
         </div>
       </div>
