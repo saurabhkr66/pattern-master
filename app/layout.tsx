@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -164,7 +165,9 @@ export default function RootLayout({
             <ThemeProvider>
               <QueryProvider>
                 <Header />
-                <GlobalAnalyticsTracker />
+                <Suspense fallback={null}>
+                  <GlobalAnalyticsTracker />
+                </Suspense>
                 <PostLoginRedirect />
                 <main className="flex-1 pb-[calc(env(safe-area-inset-bottom)+70px)] md:pb-0">{children}</main>
                 <MobileNav />
