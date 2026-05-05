@@ -243,7 +243,7 @@ export default function MockTestPage() {
       });
 
       setResult({
-        examType: selectedExam,
+        examType: selectedExam ?? undefined,
         score: data.score, maxScore: data.maxScore, accuracy,
         timeTakenSecs: data.timeTakenSecs,
         attempted: data.correctCount + data.wrongCount,

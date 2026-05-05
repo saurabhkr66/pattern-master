@@ -273,16 +273,15 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
       try {
         // 1. Generate Explanation via AI
-        const result = await generateAIExplanation(q.id, q.question_text || "", (q.options as string[]) || [], q.correct_answer || "", selectedAIModel);
+        const result = await generateAIExplanation(q.id, "MockQuestion", testId, selectedAIModel);
         
-        const explanation = result.explanation;
-        const usage = result.usage;
-        const isMismatch = result.isMismatch;
-        const aiDetectedAnswer = result.aiDetectedAnswer;
+        const explanation = (result as any).explanation;
+        const usage = (result as any).usage;
+        const isMismatch = (result as any).isMismatch;
+        const aiDetectedAnswer = (result as any).aiDetectedAnswer;
         
         // 2. Save Explanation
-        // Assuming resolveReport exists in scope; if report not available, adjust to API call
-        await resolveReport(q.id, q.id, "MockQuestion", { explanation }, testId);
+        await resolveReport("auto-" + q.id, q.id, "MockQuestion", { explanation, mockTestId: testId });
         
         fixed++;
         cumulativeInput += usage.input;

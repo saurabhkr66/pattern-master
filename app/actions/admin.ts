@@ -477,7 +477,7 @@ Rules:
         let explanation = "";
 
         if (aiModel === "gpt-4o-mini" && openai) {
-          const messages: any[] = [{ role: "user", content: [{ type: "text", text: textPrompt }] }];
+          const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
           // Add images for GPT-4o-mini batch too
           if (images.length > 0) {
             for (const img of images) {
