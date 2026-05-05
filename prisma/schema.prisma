@@ -70,6 +70,7 @@ model SubjectPYQ {
   bookmarks           Bookmark[]
   questionReports     QuestionReport[]
 
+  topic               String?          // AI assigned topic
   @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
 }
 
@@ -94,6 +95,7 @@ model PYQ {
   bookmarks           Bookmark[]
   questionReports     QuestionReport[]
 
+  topic               String?          // AI assigned topic
   @@unique([pattern_id, question_text], name: "pyq_identifier")
   @@index([pattern_id, year(sort: Desc)])
 }
@@ -119,6 +121,7 @@ model GeneratedQuestion {
   bookmarks           Bookmark[]
   questionReports     QuestionReport[]
 
+  topic               String?          // AI assigned topic
   @@index([pattern_id, created_at(sort: Desc)])
 }
 
@@ -177,6 +180,7 @@ model MockTestTemplate {
   max_score       Int
   duration_secs   Int           @default(10800)
   sections        Json?
+  topics          String[]      @default([]) // Summary of all topics in this test
   questions       Json
   created_at      DateTime      @default(now())
   sessions        TestSession[]

@@ -1,0 +1,1956 @@
+[
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "When both jaws of vernier callipers touch each other, zero mark of the vernier scale is right to zero mark of main scale, $4^{\\;\\text{th }\\;}$ mark on vernier scale coincides with certain mark on the main scale. While measuring the length of a cylinder, observer observes 15 divisions on main scale and $5^{\\;\\text{th }\\;}$ division of vernier scale coincides with a main scale division. Measured length of cylinder is $\\_\\_\\_\\_$ mm. (Least count of Vernier calliper $=0.1 mm$ )",
+    "images": [],
+    "options": [
+      "A. 15.5",
+      "B. 15.4",
+      "C. 15.9",
+      "D. 15.1"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List - I with List - II. List -1 List - II A. Coefficient of viscosity B. Surface tension C. Pressure D. Surface energy I. $[ ML ^{-1} T^{-2}]$ II. $[ ML ^2 T^{-2}]$ III. $[ ML ^0 T^{-2}]$ IV. $[ ML ^{-1} T^{-1}]$ Choose the correct answer from the options given below :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085305.webp"
+      }
+    ],
+    "options": [
+      "A. A-I, B-II, C-IV, D-III",
+      "B. A-IV, B-III, C-I, D-II",
+      "C. A-IV, B-I, C-II, D-III",
+      "D. A-I, B-III, C-II, D-IV"
+    ],
+    "correct_answer": "B",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In a vernier callipers, 50 vernier scale divisions are equal to 48 main scale divisions. If one main scale division $=0.05 mm$, then the least count of the vernier callipers is $\\_\\_\\_\\_$ mm.",
+    "images": [],
+    "options": [
+      "A. 0.002",
+      "B. 0.02",
+      "C. 0.05",
+      "D. 0.005"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The speed of a longitudinal wave in a metallic bar is $400 m / s$. If the density and Young's modulus of the bar material are increased by $0.5 \\%$ and $1 \\%$, respectively then the speed of the wave is changed approximately to $\\_\\_\\_\\_$ $m / s$.",
+    "images": [],
+    "options": [
+      "A. 398",
+      "B. 402",
+      "C. 401",
+      "D. 399"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In a screw gauge, the zero of the circular scale lies 3 divisions above the horizontal pitch line when their metallic studs are brought in contact. Using this instrument thickness of a sheet is measured. If pitch scale reading is 1 mm and the circular scale reading is 51 then the correct thickness of the sheet is $\\_\\_\\_\\_$ mm. [Assume least count is 0.01 mm ]",
+    "images": [],
+    "options": [
+      "A. 1.54",
+      "B. 1.50",
+      "C. 1.51",
+      "D. 1.48"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Four persons measure the length of a rod as $20.00 cm, 19.75 cm, 17.01 cm$ and 18.25 cm . The relative error in the measurement of average length of the rod is :",
+    "images": [],
+    "options": [
+      "A. 0.18",
+      "B. 0.24",
+      "C. 0.06",
+      "D. 0.08"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If $E, E$ and $t$ represent the free space permittivity, electric field and time respectively, then the unit of $\\;\\frac{E E}{t}$ will be :",
+    "images": [],
+    "options": [
+      "A. Am",
+      "B. $A / m$",
+      "C. $A / m ^2$",
+      "D. $Am ^2$"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match the LIST-I with LIST-II List-I List-II A. Spring constant I. $ML ^2 T^{-2} K^{-1}$ B. Thermal conductivity II. $ML ^0 T^{-2}$ C. Boltzmann constant III. $ML ^2 T^{-3} A^{-2}$ D. Inductive reactance IV. $MLT ^{-3} K^{-1}$ Choose the correct answer from the options given below:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-the-list-i-with-list-ii-_img1_20260504_085324.webp"
+      }
+    ],
+    "options": [
+      "A. A-III, B-II, C-IV, D-I",
+      "B. A-I, B-IV, C-II, D-III",
+      "C. A-II, B-I, C-IV, D-III",
+      "D. A-II, B-IV, C-I, D-III"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Keeping the significant figures in view, the sum of the physical quantities $52.01 m, 153.2 m$ and 0.123 m is :",
+    "images": [],
+    "options": [
+      "A. 205.3 m",
+      "B. 205 m",
+      "C. 205.333 m",
+      "D. 205.33 m"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A spherical body of radius $r$ and density $σ$ falls freely through a viscous liquid having density $ρ$ and viscosity $η$ and attains a terminal velocity $v_0$. Estimated maximum error in the quantity $η$ is : (Ignore errors associated with $σ, ρ$ and $g$, gravitational acceleration)",
+    "images": [],
+    "options": [
+      "A. $2 [\\;\\frac{∆ r}{r}-\\;\\frac{∆ v_0}{v_0}]$",
+      "B. $2 [\\;\\frac{∆ r}{r}+\\;\\frac{∆ v_0}{v_0}]$",
+      "C. $\\;\\frac{2 ∆ r}{r}+\\;\\frac{∆ v_0}{v_0}$",
+      "D. $2 \\;\\frac{∆ r}{r}-\\;\\frac{∆ v_0}{v_0}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an experiment the values of two spring constants were measured as $k_1=(10 ± 0.2) N / m$ and $k_2=(20 ± 0.3) N / m$. If these springs are connected in parallel, then the percentage error in equivalent spring constant is :",
+    "images": [],
+    "options": [
+      "A. $1.33 \\%$",
+      "B. 2.67",
+      "C. $1.67 \\%$",
+      "D. 2.33"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Consider a modified Bernoulli equation. $(P+\\;\\frac{A}{B t^2}) +ρ g(h+B t)+\\;\\frac{1}{2} ρ V^2=\\;\\text{ constant }\\;$ If $t$ has the dimension of time then the dimensions of $A$ and $B$ are $\\_\\_\\_\\_$ , $\\_\\_\\_\\_$ respectively.",
+    "images": [],
+    "options": [
+      "A. $[ ML ^0 T^{-1}]$ and $[ M ^0 LT ]$",
+      "B. $[ ML ^0 T^{-2}]$ and $[ M ^0 LT ^{-1}]$",
+      "C. $[ ML ^0 T^{-2}]$ and $[ M ^0 LT ^{-2}]$",
+      "D. $[ ML ^0 T^{-1}]$ and $[ M ^0 LT ^{-1}]$"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A quantity $Q$ is formulated as $X^{-2} Y^{+\\;\\frac{3}{2}} Z^{-\\;\\frac{2}{5}}, X, Y$ and $Z$ are independent parameters which have fractional errors of $0.1,0.2$ and 0.5 , respectively in measurement. The maximum fractional error of $Q$ is",
+    "images": [],
+    "options": [
+      "A. 0.1",
+      "B. 0.6",
+      "C. 0.7",
+      "D. 0.8"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;\\frac{∆ Q}{Q}=-2 \\;\\frac{( ± ∆ x)}{x}+\\;\\frac{3}{2} \\;\\frac{( ± ∆ y)}{y}-\\;\\frac{2}{5} \\;\\frac{( ± ∆ z)}{z}$For maximum fractional error$\\;\\frac{∆ Q}{Q}\\;=\\;\\frac{2 ∆ x}{x}+\\;\\frac{3}{2} \\;\\frac{∆ y}{y}+\\;\\frac{2}{5} \\;\\frac{∆ z}{z}$ $\\;=2 × 0.1+\\;\\frac{3}{2} × 0.2+\\;\\frac{2}{5} × 0.5$ $\\;=0.7$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The dimension of $\\sqrt{\\;\\frac{µ_0}{ε_0}}$ is equal to that of : ( $µ_0=$ Vacuum permeability and $ε_0=$ Vacuum permittivity)",
+    "images": [],
+    "options": [
+      "A. Inductance",
+      "B. Resistance",
+      "C. Capacitance",
+      "D. Voltage"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;{ [µ_0] = [M L T^{-2} A^{-2}] }$ $\\;{ [ε_0] = [M^{-1} L^{-3} T^4 A^2] }$ $\\;{ [\\sqrt{\\;\\frac{µ_0}{ε_0}}] = [M L^2 T^{-3} A^{-2}] =[R]}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List-I with List-II. List-I List-II a. Mass density (i) $[ {\\text{ML}}^2 {\\text{T}}^{-3}]$ b. Impulse (ii) $[ {\\text{MLT}}^{-1}]$ c. Power (iii) $[ {\\text{ML}}^2 {\\text{T}}^0]$ d. Moment of inertia (iv) $[ {\\text{ML}}^{-3} {\\text{T}}^0]$ Choose the correct answer from the options given below :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085345.webp"
+      }
+    ],
+    "options": [
+      "A. a(iv), b(ii), c(i), d(iii)",
+      "B. a(i), b(iii), c(iv), d(ii)",
+      "C. a(ii), b(iii), c(iv), d(i)",
+      "D. a(iv), b(ii), c(iii), d(i)"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;ρ=\\;{ {\\text{kg}}}/{m^3} ⇒ [ {\\text{ML}}^{-3} {\\text{T}}^0]$......(iv)$\\;I=F ⋅ ∆ t ⇒ [ {\\text{MLT}}^{-1}]$.......(ii)$\\;P=\\;\\frac{w}{t} ⇒ [ {\\text{ML}}^2 {\\text{T}}^{-3}]$........(i)$\\;I=\\;\\frac{M R^2}{n} ⇒ [ {\\text{ML}}^2 {\\text{T}}^0]$.........(iii)",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an electromagnetic system, a quantity defined as the ratio of electric dipole moment and magnetic dipole moment has dimension of $[M^P L^Q T^R A^S]$. The value of $P$ and $Q$ are :",
+    "images": [],
+    "options": [
+      "A. $1,-1$",
+      "B. $-1,0$",
+      "C. $0,-1$",
+      "D. $-1,1$"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "For the determination of refractive index of glass slab, a travelling microscope is used whose main scale contains 300 equal divisions equals to 15 cm . The vernier scale attached to the microscope has 25 divisions equals to 24 divisions of main scale. The least count (LC) of the travelling microscope is (in cm)",
+    "images": [],
+    "options": [
+      "A. 0.0005",
+      "B. 0.001",
+      "C. 0.002",
+      "D. 0.0025"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an electromagnetic system, the quantity representing the ratio of electric flux and magnetic flux has dimension of $M^P L^Q T^R A^S$, where value of ' $Q$ ' and ' $R$ ' is",
+    "images": [],
+    "options": [
+      "A. $(-2,1)$",
+      "B. $(1,-1)$",
+      "C. $(-2,2)$",
+      "D. $(3,-5)$"
+    ],
+    "correct_answer": "B",
+    "explanation": "",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match the LIST-I with LIST-II. LIST-ILIST-IIA.Boltzmann constantI.${\\text{ML}}^2 {\\text{T}}^{-1}$B.Coefficient of viscosityII.${\\text{MLT}}^{-3} {\\text{K}}^{-1}$C.Planck's constantIII.${\\text{ML}}^2 {\\text{T}}^{-2} {\\text{K}}^{-1}$D.Thermal conductivityIV.${\\text{ML}}^{-1} {\\text{T}}^{-1}$Choose the correct answer from the options given below.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-the-list-i-with-list-ii-_img1_20260504_085356.webp"
+      }
+    ],
+    "options": [
+      "A. ${\\text{A}}- {\\text{III}}, {\\text{B}}- {\\text{IV}}, {\\text{C}}- {\\text{I}}, {\\text{D}}- {\\text{II}}$",
+      "B. $A-I I I, B-I I, C-I, D-I V$",
+      "C. ${\\text{A}}- {\\text{II}}, {\\text{B}}- {\\text{III}}, {\\text{C}}- {\\text{IV}}, {\\text{D}}- {\\text{I}}$",
+      "D. A - III, B - IV, C - II, D - I"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;k t=\\;\\text{ Energy }\\; ⇒ k= {\\text{ML}}^2 {\\text{T}}^{-2} {\\text{K}}^{-1}$ $\\; {\\text{A}} ⟶ {\\text{III}}$ $\\;F=6 π η r u ⇒ η=\\;{ {\\text{MLT}}^{-2}}/{ {\\text{LLT}}^{-1}}$ $\\;η= {\\text{ML}}^{-1} {\\text{T}}^{-1}$ $\\; {\\text{B}} ⟶ {\\text{IV}}$ $\\;E=h v=h= {\\text{ML}}^2 {\\text{T}}^{-1}$ $\\; {\\text{C}} ⟶ {\\text{I}}$ $\\;H=\\;\\frac{k A ∆ T}{I}=k=\\;{ {\\text{ML}}^2 {\\text{T}}^{-3}}/{ {\\text{LK}}}= {\\text{MLT}}^{-3} {\\text{K}}^{-1}$ $\\; {\\text{D}} ⟶ {\\text{II}}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A physical quantity $C$ is related to four other quantities $p, q, r$ and $s$ as follows $C=\\;{p q^2}/{r^3 {\\sqrt{s}}}$. The percentage errors in the measurement of $p, q, r$ and $s$ are $1 \\%, 2 \\%, 3 \\%$ and $2 \\%$, respectively. The percentage error in the measurement of $C$ will be $\\_\\_\\_\\_$ $\\%$.",
+    "images": [],
+    "options": [],
+    "correct_answer": "15",
+    "explanation": "$\\;\\;\\frac{∆ C}{C}=\\;\\frac{∆ p}{p}+2 \\;\\frac{∆ q}{q}+\\;\\frac{3 ∆ r}{r}+\\;\\frac{1}{2} \\;\\frac{∆ s}{s}$ $\\;\\% \\;\\text{ error }\\;=1+2 × 2+3 × 3+\\;\\frac{1}{2} × 2$ $\\; \\;\\; =1+4+9+1$ $\\; \\;\\; =15$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A person measures mass of 3 different particles as $435.42 {\\text{g}}, 226.3 {\\text{g}}$ and 0.125 g . According to the rules for arithmetic operations with significant figures, the addition of the masses of 3 particles will be",
+    "images": [],
+    "options": [
+      "A. 661.8 g",
+      "B. 661.84 g",
+      "C. 662 g",
+      "D. 661.845 g"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;435.42$ $\\;226.3$ $\\;\\;\\;\\;\\;0.125$ $\\;───$ $661.845$For addition, minimum decimal number is considered for reporting the measured value$⇒ 661.8$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If $µ_0$ and $ε_0$ are the permeability and permittivity of free space, respectively, then the dimension of $(\\;\\frac{1}{µ_0 ε_0})$ is",
+    "images": [],
+    "options": [
+      "A. $T^2 / L^2$",
+      "B. $L^2 / T^2$",
+      "C. $T^2 / L$",
+      "D. $L / T^2$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;C=\\;{1}/{{\\sqrt{µ_0 ε_0}}}$ $\\;µ_0 ε_0 ≡ \\;\\frac{1}{C^2} ≡ [L^{-2} T^2]$ $\\; ∴ [\\;\\frac{1}{µ_0 ε_0}] =\\;\\frac{L^2}{T^2}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Given a charge $q$, current $I$ and permeability of vacuum $µ_0$. Which of the following quantity has the dimension of momentum?",
+    "images": [],
+    "options": [
+      "A. $q µ_0 / I$",
+      "B. $q I / µ_0$",
+      "C. $q µ_0I$",
+      "D. $q^2 µ_0 I$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;\\;\\text{ Momentum }\\;=m v$ $\\;F ≡ B v q$ $\\;\\;\\frac{m v}{t} ≡ \\;\\frac{µ_0 I v q}{r}$ $\\;m v ≡ µ_0 I q$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List-I with List-II. LIST-ILIST-II(A)Coefficient of viscosity(I)$[ {\\text{ML}}^0 {\\text{T}}^{-3}]$(B)Intensity of wave(II)$[ {\\text{ML}}^{-2} {\\text{T}}^{-2}]$(C)Pressure gradient(III)[ ${\\text{M}}^{-1} {\\text{LT}}^2$ ](D)Compressibility(IV)$[ {\\text{ML}}^{-1} {\\text{T}}^{-1}]$ Choose the correct answer from the options given below.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085412.webp"
+      }
+    ],
+    "options": [
+      "A. (A)-(IV), (B)-(I), (C)-(II), (D)-(III)",
+      "B. (A)-(II), (B)-(III), (C)-(IV), (D)-(I)",
+      "C. (A)-(IV), (B)-(II), (C)-(I), (D)-(III)",
+      "D. (A)-(I), (B)-(IV), (C)-(III), (D)-(II)"
+    ],
+    "correct_answer": "A",
+    "explanation": "$η ≡ \\;\\frac{F}{r V} ≡ [ {\\text{ML}}^{-1} {\\text{T}}^{-1}] \\; \\; \\; \\; \\; {\\text{A}} ⟶ {\\text{IV}}$ $I ≡ \\;\\frac{P}{A} ≡ [ {\\text{MT}}^{-3}] \\;\\; \\; \\; \\; \\; \\; \\; \\; \\; \\; \\; {\\text{B}} ⟶ {\\text{I}}$ $\\;\\frac{d P}{d x} ≡ [ {\\text{ML}}^{-2} {\\text{T}}^{-2}] \\; \\; \\; \\; \\; \\; \\; \\; \\; \\; \\; {\\text{C}} ⟶ {\\text{II}}$ $K ≡ \\;\\frac{1}{D} ≡ [ {\\text{M}}^{-1} {\\text{LT}}^2] \\; \\; \\; \\; \\; \\; \\; \\; {\\text{D}} ⟶ {\\text{III}}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Given below are two statements : Statement-I: In a vernier callipers, one vernier scale division is always smaller than one main scale division.Statement-II: The vernier constant is given by one main scale division multiplied by the number of vernier scale divisions.In the light of the above statements, choose the correct answer from the options given below.",
+    "images": [],
+    "options": [
+      "A. Both Statement-I and Statement-II are true",
+      "B. Both Statement-I and Statement-II are false",
+      "C. Statement-I is false but Statement-II is true",
+      "D. Statement-I is true but Statement-II is false"
+    ],
+    "correct_answer": "B",
+    "explanation": "1 vernier scale division is not always smaller than 1 main scale divisions statement-I is not correct.Vernier constant = 1 main scale division - 1 vernier scale divisionStatement-II is not true",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If $B$ is magnetic field and $µ_0$ is permeability of free space, then the dimensions of $(B / µ_0)$ is",
+    "images": [],
+    "options": [
+      "A. ${\\text{ML}}^2 {\\text{T}}^{-2} {\\text{A}}^{-1}$",
+      "B. ${\\text{L}}^{-1} {\\text{A}}$",
+      "C. ${\\text{LT}}^{-2} {\\text{A}}^{-1}$",
+      "D. ${\\text{MT}}^{-2} {\\text{A}}^{-1}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "For a current carrying loop at centre$\\;B=\\;\\frac{µ_0 i}{2 R}$ $\\; ∴ \\;\\; \\;\\frac{B}{µ_0} ≡ \\;\\frac{i}{R} ≡ [AL^{-1}]$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A physical quantity $Q$ is related to four observables$a, b, c, d$ as follows :$Q=\\;\\frac{a b^4}{c d}$where, $a=(60 ± 3) {\\text{Pa}} ; b=(20 ± 0.1) {\\text{m}} ; c=(40 ±$ $0.2) {\\text{Nsm}}^{-2}$ and $d=(50 ± 0.1) {\\text{m}}$, then the percentage error in $Q$ is $\\;\\frac{x}{1000}$, where $x=$ ______ .",
+    "images": [],
+    "options": [],
+    "correct_answer": "7700",
+    "explanation": "$\\;\\;\\text{ Here, }\\; \\;\\;\\frac{∆ Q}{Q} × 100= [\\;\\frac{∆ a}{a}+4 \\;\\frac{∆ b}{b}+\\;\\frac{∆ c}{c}+\\;\\frac{∆ d}{d}] × 100$ $\\;\\; = [\\;\\frac{3}{60}+\\;\\frac{0.4}{20}+\\;\\frac{0.2}{40}+\\;\\frac{0.1}{50}]$ $\\;\\;\\frac{x}{1000}= [\\;\\frac{3}{60}+\\;\\frac{0.4}{20}+\\;\\frac{0.2}{40}+\\;\\frac{0.1}{50}] × 100$ $\\;x=7700$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List - I with List - II. List - I List - II (A) Young's Modulus (I) ${\\text{ML}}^{-1} {\\text{T}}^{-1}$ (B) Torque (II) ${\\text{ML}}^{-1} {\\text{T}}^{-2}$ (C) Coefficient of Viscosity (III) ${\\text{M}}^{-1} {\\text{L}}^3 {\\text{T}}^{-2}$ (D) Gravitational Constant (IV) ${\\text{ML}}^2 {\\text{T}}^{-2}$ Choose the correct answer from the options given below :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085426.webp"
+      }
+    ],
+    "options": [
+      "A. (A)-(I), (B)- (III), (C)-(II), (D)-(IV)",
+      "B. (A)-(IV), (B)-(II), (C)-(III), (D)-(I)",
+      "C. (A)-(II), (B)-(IV), (C)-(I), (D)-(III)",
+      "D. (A)-(II), (B)-(I), (C)-(IV), (D)-(III)"
+    ],
+    "correct_answer": "C",
+    "explanation": "(A) Young's Modulus $(Y)=Y=\\;{F}/{A (\\;\\frac{∆ I}{I}) }$ $[Y]= [ML^{-1} T^{-2}]$(B) Torque $(ξ^{-1}) =\\vec{r} × \\vec{F}$ $[ξ]= [ML^2 T^{-2}]$(C) Coefficient of Viscosity $(η)$ $F=η A \\;\\frac{d V}{d t}$ $[η]= [M L^{-1} T^{-1}]$(D) Gravitational Constant $[G]=\\;\\frac{F ⋅ d^2}{m_1 m_2}$ $[G]= [M^{-1} L^3 T^{-2}]$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The expression given below shows the variation of velocity $(v)$ with lime $(t), \\;\\; v=A t^2+\\;\\frac{B t}{C+t}$. The dimension of $A B C$ is :",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{M}}^0 {\\text{L}}^1 {\\text{T}}^{-2}]$",
+      "B. $[ {\\text{M}}^0 {\\text{L}}^1 {\\text{T}}^{-3}]$",
+      "C. $[ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-3}]$",
+      "D. $[M^0 L^2 T^{-2}]$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;v=A t^2+\\;\\frac{B t}{C+t}$ $\\;{[v]=[A] t^2= [\\;\\frac{B t}{C+t}] }$ $\\;{[A]= LT ^{-3}}$ $\\;{[C]= T }$ $\\;{[B]= LT ^{-1}}$ $\\;{[A B C]= L ^2 T^{-3}}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The pair of physical quantities not having same dimensions is :",
+    "images": [],
+    "options": [
+      "A. Angular momentum and Planck's constant",
+      "B. Torque and energy",
+      "C. Surface tension and impulse",
+      "D. Pressure and Young's modulus"
+    ],
+    "correct_answer": "C",
+    "explanation": "[Angular momentum] $= ML ^2 T^{-1}$[Planck's Constant] $= ML ^2 T^{-1}$[Torque] $= ML ^2 T^{-2}$[Energy] $= ML ^2 T^{-2}$[Surface tension] $= MT ^{-2}$[Impulse] $= MLT ^{-1}$[Pressure] $= ML ^{-1} T^{-2}$[Young's modulus] $= ML ^{-1} T^{-2}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List-I with List-II. List-I List-II (A) Angular Impulse (I) $[ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-2}]$ (B) Latent Heat (II) $[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-3} {\\text{A}}^{-1}]$ (C) Electrical resistivity (III) $[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-1}]$ (D) Electromotive force (IV) $[ {\\text{M}} {\\text{L}}^3 {\\text{T}}^{-3} {\\text{A}}^{-2}]$ Choose the correct answer from the options given below.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085437.webp"
+      }
+    ],
+    "options": [
+      "A. (A)-(III), (B)-(I), (C)-(IV), (D)-(II)",
+      "B. (A)-(III), (B)-(I), (C)-(II), (D)-(IV)",
+      "C. (A)-(II), (B)-(I), (C)-(IV), (D)-(III)",
+      "D. (A)-(I), (B)-(III), (C)-(IV), (D)-(II)"
+    ],
+    "correct_answer": "A",
+    "explanation": "[Angular Impulse] $= M L ^2 T^{-1}$[Latent Heat] $= M ^0 L^2 T^{-2}$[Electrical resistivity] $= M L ^3 T^{-3} A^{-2}$[Electromotive force] $= M L ^2 T^{-3} A^{-1}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A tiny metallic rectangular sheet has length and breadth of 5 mm and 2.5 mm , respectively. Using a specially designed screw gauge which has pitch of 0.75 mm and 15 divisions in the circular scale, you are asked to find the area of the sheet. In this measurement, the maximum fractional error will be $\\;\\frac{x}{100}$ where $x$ is ______",
+    "images": [],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "Least count of screw gauge =$\\; \\;\\;\\;\\; \\;{\\;\\text{ Pitch }\\;}/{\\;\\text{ Number of circular scale divisions }\\;}$ $\\;⇒ LC=\\;\\frac{0.75 mm}{15}=0.05 mm$ $\\;\\;\\text{ Length, }\\; ℓ=5 mm$ $\\;\\;\\text{ Breadth, }\\; b=2.5 mm$ $\\;\\;\\text{ Area }\\;=ℓ b$ $\\;⇒ \\% \\;\\text{ error in area }\\;=(\\% \\;\\text{ error in length }\\;)+(\\% \\;\\text{ error }\\;$ $\\;\\;\\text{ in breadth }\\;)=\\;\\frac{∆ ℓ}{ℓ} × 100+\\;\\frac{∆ b}{b} × 100$ $\\;=\\;\\frac{0.05}{5} × 100+\\;\\frac{0.05}{2.5} × 100$ $\\;=3 \\%$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "For an experimental expression $y=\\;\\frac{32.3 × 1125}{27.4}$, where all the digits are significant. Then to report the value of $y$ we should write",
+    "images": [],
+    "options": [
+      "A. $y=1330$",
+      "B. $y=1326.2$",
+      "C. $y=1326.19$",
+      "D. $y=1326.186$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$y=\\;\\frac{32.3 × 1125}{27.4}=1326.18$So we need to report to three significant digit.So, $y=1330$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The least count of a screw gauge is 0.01 mm . If the pitch is increased by $75 \\%$ and number of divisions on the circular scale is reduced by $50 \\%$, the new least count will be _____ $× 10^{-3} {\\text{mm}}$.",
+    "images": [],
+    "options": [],
+    "correct_answer": "35",
+    "explanation": "$\\;\\;\\text{ Least count }\\;=0.01= (\\;\\frac{L}{N})$ $\\;\\;\\text{ Now }\\; \\;\\frac{1.75 L}{N / 2}\\;=\\;\\text{ New least count }\\;$ $⇒ 3.5 × \\;\\frac{L}{N}\\;=3.5 × 0.01 mm$ $\\;=35 × 10^{-3} mm$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The energy of a system is given as $E(t)=α^3 e^{-β t}$, where $t$ is the time and $β=0.3 {\\ s}^{-1}$. The errors in the measurement of $α$ and $t$ are $1.2 \\%$ and $1.6 \\%$, respectively. At $t=5 {\\ s}$, maximum percentage error in the energy is :",
+    "images": [],
+    "options": [
+      "A. $6 \\%$",
+      "B. $4 \\%$",
+      "C. $8.4 \\%$",
+      "D. $11.6 \\%$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;d E=3 α^2 d α e^{-β t}+α^3 e^{-β t}(-β) \\text{dt}$ $\\;\\;\\frac{d E}{E}=\\;\\frac{3 d α}{α}+(-β) \\text{dt}$ $\\;\\;\\frac{∆ E}{E}=\\;\\frac{3 ∆ α}{α}+β ∆ t$(\\%) $∆ t=1.6 \\% × 5=8 \\%$ $\\% (\\;\\frac{3 ∆ α}{α}) =3 × 1.2 \\%=3.6 \\%$Putting values we get$⇒ \\;\\; 3.6+8 × 0.3=6 \\%$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List- 1 with List-II List - I List - II (A) Permeability of free space (I) $[ {\\text{M}}^2 {\\text{T}}^{-2}]$ (B) Magnetic field (II) $[ {\\text{MT}}^{-2} {\\text{A}}^{-1}]$ (C) Magnetic moment (III) $[ {\\text{MLT}}^{-2} {\\text{A}}^{-2}]$ (D) Torsional constant (IV) $[ {\\text{L}}^2 {\\text{A}}]$ Choose the correct answer from the options given below",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-1-with-list-ii-list_img1_20260504_085453.webp"
+      }
+    ],
+    "options": [
+      "A. (A)-(III), (B)-(II), (C)-(IV), (D)-(I)",
+      "B. (A)-(II), (B)-(I), (C)-(III), (D)-(IV)",
+      "C. (A)-(I), (B)-(IV), (C)-(II), (D)-(III)",
+      "D. (A)-(IV), (B)-(III), (C)-(I), (D)-(II)"
+    ],
+    "correct_answer": "A",
+    "explanation": "(A) $B=\\;\\frac{µ_0 i}{2 π r} & q v B=F$ $µ_0 ≡ \\;\\frac{B r}{i} ≡ \\;\\frac{F r}{q v i} ≡ \\;{MLT^{-2} × L}/{A^2 TLT^{-1}} ≡ MLT^{-2} A^{-2} \\;\\;(\\text{III})$ (B) $B ≡ \\;\\frac{F}{q v} ≡ \\;{ MLT ^{-2}}/{ ATLT ^{-1}}= MT ^{-2} A^{-1} \\;\\;(\\text{II})$ (C) $M=i A ≡ AL ^2 \\;\\;(\\text{IV})$ (D) $τ=C θ ⇒ C ≡ ML ^2 T^{-2} \\;\\;(\\text{I})$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The position of a particle moving on $x$-axis is given by $x(t)=A sin \\;t+B \\cos ^2 t+C t^2+D$, where $t$ is time. The dimension of $\\;\\frac{A B C}{D}$ is",
+    "images": [],
+    "options": [
+      "A. ${\\text{L}}^2 {\\text{T}}^{-2}$",
+      "B. ${\\text{L}}^3 {\\text{T}}^{-2}$",
+      "C. L",
+      "D. ${\\text{L}}^2$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;A ≡ {\\text{L}}$ $\\;B ≡ {\\text{L}}$ $\\;C ≡ {\\text{LT}}^{-2}$ $\\;D ≡ {\\text{L}}$ $\\;⇒ \\;\\frac{A B C}{D}=\\;{ {\\text{L}} × {\\text{L}} × {\\text{LT}}^2}/{ {\\text{L}}}= {\\text{L}}^2 {\\text{T}}^{-2}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The maximum percentage error in the measurement of density of a wire is[Given, mass of wire $=(0.60 ± 0.003) {\\text{g}}$radius of wire $=(0.50 ± 0.01) {\\text{cm}}$length of wire $=(10.00 ± 0.05) {\\text{cm}}]$",
+    "images": [],
+    "options": [
+      "A. 5",
+      "B. 8",
+      "C. 4",
+      "D. 7"
+    ],
+    "correct_answer": "A",
+    "explanation": "$ρ=\\;\\frac{m}{v}=\\;\\frac{m}{π r^2 l}$ $\\;\\;\\frac{∆ ρ}{ρ}=\\;\\frac{∆ m}{m}+\\;\\frac{∆ l}{l}+\\;\\frac{2 ∆ r}{r}$ $\\;=\\;\\frac{1}{2} \\%+\\;\\frac{1}{2} \\%+2 × 2 \\%$ $\\;=5 \\%$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The de-Broglie wavelength associated with a particle of mass $m$ and energy $E$ is ${\\text{h}} / {\\sqrt{2 m E}}$. The dimensional formula for Planck's constant is :",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{ML}}^{-1} {\\text{T}}^{-2}]$",
+      "B. $[ {\\text{ML}}^2 {\\text{T}}^{-1}]$",
+      "C. $[ {\\text{MLT}}^{-2}]$",
+      "D. $[ {\\text{M}}^2 {\\text{L}}^2 {\\text{T}}^{-2}]$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;λ=\\;{ {\\text{h}}}/{\\sqrt{2 {\\text{mE}}}} \\;\\text{ or }\\; {\\text{E}}= {\\text{h}} v$ $\\;{ [ {\\text{ML}}^2 {\\text{T}}^{-2}] = {\\text{h}} [ {\\text{T}}^{-1}] }$ $\\; {\\text{h}}= [ {\\text{ML}}^2 {\\text{T}}^{-1}]$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The dimensional formula of latent heat is:",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{M}}^0 {\\text{LT}}^{-2}]$",
+      "B. $[ {\\text{MLT}}^{-2}]$",
+      "C. $[ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-2}]$",
+      "D. $[ {\\text{ML}}^2 {\\text{T}}^{-2}]$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Latent heat is specific heat$⇒ \\;{ {\\text{ML}}^2 {\\text{T}}^{-2}}/{ {\\text{M}}}= {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-2}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "One main scale division of a vernier caliper is equal to ${\\text{m}}$ units. If ${\\text{n}}^{\\;\\text{th }\\;}$ division of main scale coincides with $( {\\text{n}}+1)^{\\;\\text{th }\\;}$ division of vernier scale, the least count of the vernier caliper is:",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{n}{(n+1)}$",
+      "B. $\\;\\frac{m}{(n+1)}$",
+      "C. $\\;{1}/{( {\\text{n}}+1)}$",
+      "D. $\\;{m}/{ {\\text{n}}( {\\text{n}}+1)}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;n {\\text{MSD}}=(n+1) {\\text{VSD}}$ $\\;⇒ 1 {\\text{VSD}}=\\;\\frac{n}{n+1} {\\text{MSD}}$ $\\;L ⋅ C=1 M S D-1 {\\text{VSD}}$ $\\;L ⋅ C=m-m (\\;\\frac{n}{n+1})$ $\\;L ⋅ C=m (\\;\\frac{n+1-n}{n+1})$ $\\;⇒ L ⋅ C= (\\;\\frac{m}{n+1})$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If $E_0$ is the permittivity of free space and $E$ is the electric field, then $E_0 {\\text{E}}^2$ has the dimensions :",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{M}}^0 {\\text{L}}^{-2} {\\text{TA}}]$",
+      "B. $[ {\\text{M}} {\\text{L}}^{-1} {\\text{T}}^{-2}]$",
+      "C. $[ {\\text{M}}^{-1} {\\text{L}}^{-3} {\\text{T}}^4 {\\text{A}}^2]$",
+      "D. $[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-2}]$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;E=\\;\\frac{K Q}{R^2}$ $\\;E=\\;\\frac{Q}{4 π ε_0 R^2}$ $\\;ε_0=\\;\\frac{Q}{4 π R^2 E}$ $\\;\\;\\text{ Now, }\\; ε_0 {\\text{E}}^2=\\;{ {\\text{Q}}}/{4 π {\\text{R}}^2 {\\text{E}}} ⋅ {\\text{E}}^2=\\;{ {\\text{Q}}}/{4 π {\\text{R}}^2} ⋅ {\\text{E}}$ $\\;{ [ε_0 {\\text{E}}^2] = [\\;{ {\\text{QE}}}/{ {\\text{R}}^2}] =\\;{[ {\\text{Q}}][ {\\text{E}}]}/{ [ {\\text{R}}^2] }=\\;{[ {\\text{Q}}]}/{ [ {\\text{R}}^2] [ {\\text{Q}}][ {\\text{R}}]}}$ $\\;=\\;{[ {\\text{W}}]}/{ [ {\\text{R}}^3] }=\\;{ {\\text{ML}}^2 {\\text{T}}^{-2}}/{ {\\text{L}}^3}= {\\text{ML}}^{-1} {\\text{T}}^{-2}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Least count of a vernier caliper is $\\;{1}/{20 {\\text{N}}} {\\text{cm}}$. The value of one division on the main scale is $1 {\\text{mm}}$. Then the number of divisions of main scale that coincide with ${\\text{N}}$ divisions of vernier scale is :",
+    "images": [],
+    "options": [
+      "A. $(\\;{2 {\\text{N}}-1}/{20 {\\text{N}}})$",
+      "B. $(\\;{2 {\\text{N}}-1}/{2})$",
+      "C. $(2 {\\text{N}}-1)$",
+      "D. $(\\;{2 {\\text{N}}-1}/{2 {\\text{N}}})$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;\\;\\text{ Least count of vernier calipers }\\;=\\;{1}/{20 {\\text{N}}} {\\text{cm}}$ $\\; ∵ \\;\\text{ Least count }\\;=1 {\\text{MSD}}-1 {\\text{VSD}}$let ${\\text{x}}$ no. of divisions of main scale coincides with ${\\text{N}}$ division of vernier scale, then$\\;1 {\\text{VSD}}=\\;{ {\\text{x}} × 1 {\\text{mm}}}/{ {\\text{N}}}$ $\\; ∴ \\;{1}/{20 {\\text{N}}} {\\text{cm}}=1 {\\text{mm}}-\\;{ {\\text{x}} × 1 {\\text{mm}}}/{ {\\text{N}}}$ $\\;\\;{1}/{2 {\\text{N}}} {\\text{mm}}=1 {\\text{mm}}-\\;{ {\\text{x}}}/{ {\\text{N}}} {\\text{mm}}$ $\\; {\\text{x}}= (1-\\;{1}/{2 {\\text{N}}}) {\\text{N}}$ $\\; {\\text{x}}=\\;{2 {\\text{N}}-1}/{2}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "There are 100 divisions on the circular scale of a screw gauge of pitch $1 {\\text{mm}}$. With no measuring quantity in between the jaws, the zero of the circular scale lies 5 divisions below the reference line. The diameter of a wire is then measured using this screw gauge. It is found the 4 linear scale divisions are clearly visible while 60 divisions on circular scale coincide with the reference line. The diameter of the wire is :",
+    "images": [],
+    "options": [
+      "A. $4.65 {\\text{mm}}$",
+      "B. $4.55 {\\text{mm}}$",
+      "C. $4.60 {\\text{mm}}$",
+      "D. $3.35 {\\text{mm}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;\\;\\text{ Least count }\\;=\\;\\frac{1}{100} {\\text{mm}}=0.01 {\\text{mm}}$ $\\;\\;\\text{ zero error }\\;=+0.05 {\\text{mm}}$ $\\;\\;\\text{ Reading }\\;=4 × 1 {\\text{mm}}+60 × 0.01 {\\text{mm}}-0.05 {\\text{mm}}$ $\\;=4.55 {\\text{mm}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The diameter of a sphere is measured using a vernier caliper whose 9 divisions of main scale are equal to 10 divisions of vernier scale. The shortest division on the main scale is equal to $1 {\\text{mm}}$. The main scale reading is $2 {\\text{cm}}$ and second division of vernier scale coincides with a division on main scale. If mass of the sphere is $8.635 {\\text{g}}$, the density of the sphere is:",
+    "images": [],
+    "options": [
+      "A. $2.5 {\\text{g}} / {\\text{cm}}^3$",
+      "B. $1.7 {\\text{g}} / {\\text{cm}}^3$",
+      "C. $2.2 {\\text{g}} / {\\text{cm}}^3$",
+      "D. $2.0 {\\text{g}} / {\\text{cm}}^3$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;\\;\\text{ Given }\\; 9 {\\text{MSD}}=10 {\\text{VSD}}$ $\\;\\;\\text{ mass }\\;=8.635 {\\text{g}}$ $\\; {\\text{LC}}=1 {\\text{MSD}}-1 {\\text{VSD}}$ $\\; {\\text{LC}}=1 {\\text{MSD}}-\\;\\frac{9}{10} {\\text{MSD}}$ $\\; {\\text{LC}}=\\;\\frac{1}{10} {\\text{MSD}}$ $\\; {\\text{LC}}=0.01 {\\text{cm}}$ $\\;\\;\\text{ Reading of diameter }\\;= {\\text{MSR}}+ {\\text{LC}} × {\\text{VSR}}$ $\\;=2 {\\text{cm}}+(0.01) ×(2)$ $\\;=2.02 {\\text{cm}}$ $\\;\\;\\text{ Volume of sphere }\\;=\\;\\frac{4}{3} π (\\;{ {\\text{d}}}/{2}) ^3=\\;\\frac{4}{3} π (\\;\\frac{2.02}{2}) ^3$ $\\;=4.32 {\\text{cm}}^3$ $\\;\\;\\text{ Density }\\;=\\;{\\;\\text{ mass }\\;}/{\\;\\text{ volume }\\;}=\\;\\frac{8.635}{4.32}=1.998 ∼ 2.00 {\\text{g}}$ $\\;$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an expression ${\\text{a}} × 10^{ {\\text{b}}}$ :",
+    "images": [],
+    "options": [
+      "A. ${\\text{a}}$ is order of magnitude for ${\\text{b}} ≤ 5$",
+      "B. $b$ is order of magnitude for $a ≤ 5$",
+      "C. $b$ is order of magnitude for $5 < a ≤ 10$",
+      "D. $b$ is order of magnitude for $a ≥ 5$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;a × 10^b$ $\\;\\;\\text{ if }\\; a ≤ 5 \\;\\text{ order is }\\; b$ $\\;a > 5 \\;\\text{ order is }\\; b+1$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In finding out refractive index of glass slab the following observations were made through travelling microscope 50 vernier scale division $=$ 49 MSD; 20 divisions on main scale in each ${\\text{cm}}$ For mark on paper${\\text{MSR}}=8.45 {\\text{cm}}, {\\text{VC}}=26$For mark on paper seen through slab${\\text{MSR}}=7.12 {\\text{cm}}, {\\text{VC}}=41$For powder particle on the top surface of the glass slab${\\text{MSR}}=4.05 {\\text{cm}}, {\\text{VC}}=1$(MSR $=$ Main Scale Reading, ${\\text{VC}}=$ Vernier Coincidence)Refractive index of the glass slab is:",
+    "images": [],
+    "options": [
+      "A. 1.42",
+      "B. 1.52",
+      "C. 1.24",
+      "D. 1.35"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;1 {\\text{MSD}}=\\;{1 {\\text{cm}}}/{20}=0.05 {\\text{cm}}$ $\\;1 {\\text{VSD}}=\\;\\frac{49}{50} {\\text{MSD}}=\\;\\frac{49}{50} × 0.05 {\\text{cm}}=0.049 {\\text{cm}}$ $\\; {\\text{LC}}=1 {\\text{MSD}}-1 {\\text{VSD}}=0.001 {\\text{cm}}$For mark on paper, ${\\text{L}}_1=8.45 {\\text{cm}}+26 × 0.001 {\\text{cm}}$ $=84.76 {\\text{mm}}$For mark on paper through slab, L2 $=7.12 {\\text{cm}}+$ $41 × 0.001 {\\text{cm}}=71.61 {\\text{mm}}$For powder particle on top surface, ${\\text{ZE}}=4.05 {\\text{cm}}$ $\\;+1 × 0.001 {\\text{cm}}=40.51 {\\text{mm}}$ $\\; ∴ \\;\\; \\;\\text{ actual }\\; {\\text{L}}_1=84.76-40.51=44.25 {\\text{mm}}$ $\\; \\;\\; \\;\\text{ actual }\\; {\\text{L}}_2=71.61-40.51=31.10 {\\text{mm}}$ $\\; \\;\\; {\\text{L}}_2=\\;{ {\\text{L}}_1}/{µ}$ $\\;⇒ µ=\\;{ {\\text{L}}_1}/{ {\\text{L}}_2}=\\;\\frac{44.25}{31.10}=1.42$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In a vernier calliper, when both jaws touch each other, zero of the vernier scale shifts towards left and its $4^{\\;\\text{th }\\;}$ division coincides exactly with a certain division on main scale. If 50 vernier scale divisions equal to 49 main scale divisions and zero error in the instrument is $0.04 {\\text{mm}}$ then how many main scale divisions are there in $1 {\\text{cm}}$ ?",
+    "images": [],
+    "options": [
+      "A. 40",
+      "B. 5",
+      "C. 20",
+      "D. 10"
+    ],
+    "correct_answer": "C",
+    "explanation": "$4^{\\;\\text{th }\\;}$ division coincides with $3^{\\;\\text{rd }\\;}$ division then$0.004 {\\text{cm}}=4 {\\text{VSD}}-3 {\\text{MSD}}$ $49 {\\text{MSD}}=50 {\\text{VSD}}$ $1 {\\text{MSD}}=\\;{1}/{ {\\text{N}}} {\\text{cm}}$ $0.004=4 \\{\\;\\frac{49}{50} {\\text{MSD}}\\} -3 {\\text{MSD}}$ $0.004= (\\;\\frac{196}{50}-3) (\\;{1}/{ {\\text{N}}})$ ${\\text{N}}=\\;\\frac{46}{50} × \\;\\frac{1000}{4}=\\;\\frac{46 × 1000}{200}=230$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "While measuring diameter of wire using screw gauge the following readings were noted. Main scale reading is $1 {\\text{mm}}$ and circular scale reading is equal to 42 divisions. Pitch of screw gauge is $1 {\\text{mm}}$ and it has 100 divisions on circular scale. The diameter of the wire is $\\;\\frac{x}{50} {\\text{mm}}$. The value of $x$ is :",
+    "images": [],
+    "options": [
+      "A. 142",
+      "B. 71",
+      "C. 42",
+      "D. 21"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\; {\\text{MSR}}=1 {\\text{mm}}, {\\text{CSR}}=42, \\;\\text{ pitch }\\;=1 {\\text{mm}}$ $\\; {\\text{LC}}=\\;{\\;\\text{ pitch }\\;}/{\\;\\text{ No. of }\\; {\\text{CSD}}}= (\\;\\frac{1}{100}) =0.01 {\\text{mm}}$ $\\;\\;\\text{ Diameter }\\;= {\\text{MSR}}+ {\\text{LC}} × {\\text{CSD}}$ $\\;\\;\\text{ Diameter }\\;=1+(0.01) × 42 {\\text{mm}}$ $\\;\\;\\text{ Diameter }\\;=1.42 {\\text{mm}}=\\;{ {\\text{x}}}/{50}$ $\\; ∴ {\\text{x}}=71$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Choose the correct answer from the options given below : LIST I LIST II A. Torque II. $[ {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-2} {\\text{A}}^{-2}]$ B. Magnetic field II. $[ {\\text{L}}^2 {\\text{A}}^1]$ C. Magnetic moment III. $[ {\\text{M}}^1 {\\text{T}}^{-2} {\\text{A}}^{-1}]$ D. Permeability offree space IV. $[ {\\text{M}}^1 {\\text{L}}^2 {\\text{T}}^{-2}]$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_choose-the-correct-answer-from_img1_20260504_085534.webp"
+      }
+    ],
+    "options": [
+      "A. A-I, B-III, C-II, D-IV",
+      "B. A-IV, B-III, C-II, D-I",
+      "C. A-III, B-I, C-II, D-IV",
+      "D. A-IV, B-II, C-III, D-I"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;{[\\vec{τ}]=[{ {\\text{r}}}↖{→} × { {\\text{F}}}↖{→}]= [ {\\text{ML}}^2 {\\text{T}}^{-2}] }$ $\\;{[ {\\text{F}}]=[ {\\text{qVB}}]}$ $\\;⇒ {\\text{B}}= (\\;{ {\\text{F}}}/{ {\\text{qV}}}) = [\\;{ {\\text{MLT}}^{-2}}/{ {\\text{ATLT}}^{-1}}] = [ {\\text{MA}}^{-1} {\\text{T}}^{-2}]$ $\\;{[ {\\text{M}}]=[ {\\text{I}} × {\\text{A}}]= [ {\\text{AL}}^2] }$ $\\; {\\text{B}}=\\;\\frac{µ_0}{4 π} \\;{ {\\text{Idl}} sin \\;θ}/{ {\\text{r}}^2}$ $\\;⇒[µ]= [\\;{ {\\text{Br}}^2}/{ {\\text{Idl}}}] = [\\;{ {\\text{MT}}^{-2} {\\text{A}}^{-1} × {\\text{L}}^2}/{ {\\text{AL}}}]$ $\\;= [ {\\text{MLT}}^{-2} {\\text{A}}^{-2}]$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "To find the spring constant (k) of a spring experimentally, a student commits $2 \\%$ positive error in the measurement of time and $1 \\%$ negative error in measurement of mass. The percentage error in determining value of ${\\text{k}}$ is :",
+    "images": [],
+    "options": [
+      "A. $3 \\%$",
+      "B. $1 \\%$",
+      "C. $4 \\%$",
+      "D. $5 \\%$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\; {\\text{T}}=2 π \\sqrt{\\;{ {\\text{m}}}/{ {\\text{k}}}}$ $\\; {\\text{T}}^2 ∝ \\;{ {\\text{m}}}/{ {\\text{k}}}$ $\\;\\;{2 ∆ {\\text{T}}}/{ {\\text{T}}} \\%=\\;{∆ {\\text{m}}}/{ {\\text{m}}} \\%-\\;{∆ {\\text{k}}}/{ {\\text{k}}} \\%$ $\\;\\;{∆ {\\text{k}}}/{ {\\text{k}}} \\%=\\;{∆ {\\text{m}}}/{ {\\text{m}}} \\%-\\;{2 ∆ {\\text{T}}}/{ {\\text{T}}} \\%$ $\\;\\;{∆ {\\text{k}}}/{ {\\text{k}}} \\%=(-1) \\%-2(2) \\%=|-5 \\%|=5 \\%$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A vernier callipers has 20 divisions on the vernier scale, which coincides with $19^{\\;\\text{th }\\;}$ division on the main scale. The least count of the instrument is $0.1 {\\text{mm}}$. One main scale division is equal to ______ ${\\text{mm}}$.",
+    "images": [],
+    "options": [
+      "A. 1",
+      "B. 0.5",
+      "C. 2",
+      "D. 5"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;20 {\\text{VSD}}=19 {\\text{MSD}}$ $\\;1 {\\text{VSD}}=\\;\\frac{19}{20} {\\text{MSD}}$L.C. $=1 {\\text{MSD}}-1 {\\text{VSD}}$ $0.1 {\\text{mm}}=1 {\\text{MSD}}-\\;\\frac{19}{20} {\\text{MSD}}$ $\\;0.1=\\;\\frac{1}{20} {\\text{MSD}}$ $\\;1 {\\text{MSD}}=2 {\\text{mm}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "What is the dimensional formula of $a b^{-1}$ in the equation $( {\\text{P}}+\\;{ {\\text{a}}}/{ {\\text{V}}^2}) ( {\\text{V}}- {\\text{b}})= {\\text{RT}}$, where letters have their usual meaning.",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{M}}^0 {\\text{L}}^3 {\\text{T}}^{-2}]$",
+      "B. $[ {\\text{ML}}^2 {\\text{T}}^{-2}]$",
+      "C. $[ {\\text{M}}^{-1} {\\text{L}}^5 {\\text{T}}^3]$",
+      "D. $[ {\\text{M}}^6 {\\text{L}}^7 {\\text{T}}^4]$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$∵ [ {\\text{V}}]=[ {\\text{b}}]$ $∴$ Dimension of $b= [ {\\text{L}}^3]$ $\\&[ {\\text{P}}]= [\\;{ {\\text{a}}}/{ {\\text{V}}^2}]$ $[ {\\text{a}}]= [ {\\text{PV}}^2] = [ {\\text{ML}}^{-1} {\\text{T}}^{-2}] [ {\\text{L}}^6]$Dimension of ${\\text{a}}= [ {\\text{ML}}^5 {\\text{T}}^{-2}]$ $∴ {\\text{ab}}^{-1}=\\;{ [ {\\text{ML}}^5 {\\text{T}}^{-2}] }/{ [ {\\text{L}}^3] }= [ {\\text{ML}}^2 {\\text{T}}^{-2}]$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Time periods of oscillation of the same simple pendulum measured using four different measuring clocks were recorded as $4.62 {\\ s}, 4.632 {\\ s}, 4.6 {\\ s}$ and $4.64 {\\ s}$. The arithmetic mean of these reading in correct significant figure is.",
+    "images": [],
+    "options": [
+      "A. $4.623 {\\ s}$",
+      "B. $4.62 {\\ s}$",
+      "C. $4.6 {\\ s}$",
+      "D. $5 {\\ s}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Sum of number by considering significant digit sum $=4.6+4.6+4.6+4.6=18.4$Arithmetic Mean $=\\;{\\;\\text{ sum }\\;}/{4}=\\;\\frac{18.4}{4}=4.6$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Applying the principle of homogeneity of dimensions, determine which one is correct. where ${\\text{T}}$ is time period, ${\\text{G}}$ is gravitational constant, ${\\text{M}}$ is mass, ${\\text{r}}$ is radius of orbit.",
+    "images": [],
+    "options": [
+      "A. ${\\text{T}}^2=\\;{4 π^2 {\\text{r}}}/{ {\\text{GM}}^2}$",
+      "B. ${\\text{T}}^2=4 π^2 {\\text{r}}^3$",
+      "C. ${\\text{T}}^2=\\;{4 π^2 {\\text{r}}^3}/{ {\\text{GM}}}$",
+      "D. ${\\text{T}}^2=\\;{4 π^2 {\\text{r}}^2}/{ {\\text{GM}}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "According to principle of homogeneity dimension of LHS should be equal to dimensions of RHS so option (3) is correct.$\\; {\\text{T}}^2=\\;{4 π^2 {\\text{r}}^3}/{ {\\text{GM}}}$ $\\;{ [ {\\text{T}}^2] =\\;{ [ {\\text{L}}^3] }/{ [ {\\text{M}}^{-1} {\\text{L}}^3 {\\text{T}}^{-2}] [ {\\text{M}}]}}$(Dimension of ${\\text{G}}$ is $[ {\\text{M}}^{-1} {\\text{L}}^3 {\\text{T}}^{-2}]$ )$[ {\\text{T}}^2] =\\;{ [ {\\text{L}}^3] }/{ [ {\\text{L}}^3 {\\text{T}}^{-2}] }= [ {\\text{T}}^2]$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The equation of stationary wave is :${\\text{y}}=2 {\\text{a}} sin \\; (\\;{2 π {\\text{nt}}}/{λ}) \\cos (\\;{2 π {\\text{x}}}/{λ})$Which of the following is NOT correct",
+    "images": [],
+    "options": [
+      "A. The dimensions of nt is [L]",
+      "B. The dimensions of $n$ is $[ {\\text{LT}}^{-1}]$",
+      "C. The dimensions of $n / λ$ is [T]",
+      "D. The dimensions of $x$ is [L]"
+    ],
+    "correct_answer": "C",
+    "explanation": "Comparing the given equation with standard$\\;\\;\\text{ equation of standing }\\; \\;{2 π {\\text{n}}}/{λ}=ω & \\;\\frac{2 π}{λ}= {\\text{k}}$ $\\;{ [\\;{ {\\text{n}}}/{λ}] =[ω]= {\\text{T}}^{-1}}$ $\\;{[ {\\text{nt}}]=[λ]= {\\text{L}}}$ $\\;{[ {\\text{n}}]=[λ ω]= {\\text{LT}}^{-1}}$ $\\;{[ {\\text{x}}]=[λ]= {\\text{L}}}$Hence option (3)",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Choose the correct answer from the options given below : Match List - I with List - II.List - I (Number)List - II (Significant figure)(A) 1001(I) 3(B) 010.1(II) 4(C) 100.100(III) 5(D) 0.0010010(IV) 6 [1-Feb-2024 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_choose-the-correct-answer-from_img1_20260504_085553.webp"
+      }
+    ],
+    "options": [
+      "A. (A)-(III), (B)-(IV), (C)-(II), (D)-(I)",
+      "B. (A)-(IV), (B)-(III), (C)-(I), (D)-(II)",
+      "C. (A)-(II), (B)-(I), (C)-(IV), (D)-(III)",
+      "D. (A)-(I), (B)-(II), (C)-(III), (D)-(IV)"
+    ],
+    "correct_answer": "C",
+    "explanation": "Theoretical",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "10 divisions on the main scale of a Vernier calliper coincide with 11 divisions on the Vernier scale. If each division on the main scale is of 5 units, the least count of the instrument is : [1-Feb-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{1}{2}$",
+      "B. $\\;\\frac{10}{11}$",
+      "C. $\\;\\frac{50}{11}$",
+      "D. $\\;\\frac{5}{11}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;10 {\\text{MSD}}=11 {\\text{VSD}}$ $\\;1 {\\text{VSD}}=\\;\\frac{10}{11} {\\text{MSD}}$ $\\; {\\text{LC}}=1 {\\text{MSD}}-1 {\\text{VSD}}$ $\\;=1 {\\text{MSD}}-\\;\\frac{10}{11} {\\text{MSD}}$ $\\;=\\;{1 {\\text{MSD}}}/{11}$ $\\;=\\;\\frac{5}{11} \\;\\text{ units }\\;$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The dimensional formula of angular impulse is : [1-Feb-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{M}} {\\text{L}}^{-2} {\\text{T}}^{-1}]$",
+      "B. $[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-2}]$",
+      "C. $[ {\\text{M}} {\\text{L}} {\\text{T}}{ }^{-1}]$",
+      "D. $[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-1}]$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;\\;\\text{ Angular impulse }\\;=\\;\\text{ change in angular momentum. }\\;$ $\\;\\;\\text{ [Angular impulse }\\;]=[\\;\\text{ Angular momentum }\\;]$ $=[ {\\ mvr}]$ $\\;= [ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-1}]$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The radius (r), length $(l)$ and resistance (R) of a metal wire was measured in the laboratory as${\\text{r}}=(0.35 ± 0.05) {\\text{cm}}$ ${\\text{R}}=(100 ± 10) {\\text{ohm}}$ $l=(15 ± 0.2) {\\text{cm}}$The percentage error in resistivity of the material of the wire is : [1-Feb-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $25.6 \\%$",
+      "B. $39.9 \\%$",
+      "C. $37.3 \\%$",
+      "D. $35.6 \\%$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$ρ=\\; {\\text{R}} \\;\\frac{ρ}{ℓ}$ $\\;\\;\\frac{∆ ρ}{ρ}=\\;{∆ {\\text{R}}}/{ {\\text{R}}}+2 \\;{∆ {\\text{r}}}/{ {\\text{r}}}+\\;\\frac{∆ ℓ}{ℓ}$ $\\;=\\;\\frac{10}{100}+2 × \\;\\frac{0.05}{0.35}+\\;\\frac{0.2}{15}$ $\\;=\\;\\frac{1}{10}+\\;\\frac{2}{7}+\\;\\frac{1}{75}$ $\\;\\;\\frac{∆ ρ}{ρ}=39.9 \\%$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The measured value of the length of a simple pendulum is $20 {\\text{cm}}$ with $2 {\\text{mm}}$ accuracy. The time for 50 oscillations was measured to be 40 seconds with 1 second resolution. From these measurements, the accuracy in the measurement of acceleration due to gravity is ${\\text{N}} \\%$. The value of ${\\text{N}}$ is: [31-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [
+      "A. 4",
+      "B. 8",
+      "C. 6",
+      "D. 5"
+    ],
+    "correct_answer": "C",
+    "explanation": "${\\text{T}}\\;=2 π \\sqrt{\\;{ℓ}/{ {\\text{g}}}}$ ${\\text{g}}\\;=\\;{4 π^2 ℓ}/{ {\\text{T}}^2}$ $\\;{∆ {\\text{g}}}/{ {\\text{g}}}\\;=\\;\\frac{∆ ℓ}{ℓ}+\\;{2 ∆ {\\text{T}}}/{ {\\text{T}}}$ $\\;=\\;\\frac{0.2}{20}+2 (\\;\\frac{1}{40})$ $=\\;\\;\\frac{0.3}{20}$Percentage change $=\\;\\frac{0.3}{20} × 100=6 \\%$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Consider two physical quantities ${\\text{A}}$ and ${\\text{B}}$ related to each other as $E=\\;\\frac{B-x^2}{A t}$ where $E, x$ and $t$ have dimensions of energy, length and time respectively. The dimension of ${\\text{AB}}$ is [31-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [
+      "A. ${\\text{L}}^{-2} {\\text{M}}^1 {\\text{T}}^0$",
+      "B. ${\\text{L}}^2 {\\text{M}}^{-1} {\\text{T}}^1$",
+      "C. ${\\text{L}}^{-2} {\\text{M}}^{-1} {\\text{T}}^1$",
+      "D. ${\\text{L}}^0 {\\text{M}}^{-1} {\\text{T}}^1$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;{[ {\\text{B}}]= {\\text{L}}^2}$ $\\; {\\text{A}}=\\;{ {\\text{x}}^2}/{ {\\text{tE}}}=\\;{ {\\text{L}}^2}/{ {\\text{TML}}^2 {\\text{T}}^{-2}}=\\;{1}/{ {\\text{MT}}^{-1}}$ $\\;{[ {\\text{A}}]= {\\text{M}}^{-1} {\\text{T}}}$ $\\;{[ {\\text{AB}}]= [ {\\text{L}}^2 {\\text{M}}^{-1} {\\text{T}}^1] }$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If the percentage errors in measuring the length and the diameter of a wire are $0.1 \\%$ each. The percentage error in measuring its resistance will be: [31-Jan-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $0.2 \\%$",
+      "B. $0.3 \\%$",
+      "C. $0.1 \\%$",
+      "D. $0.144 \\%$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\; {\\text{R}}=\\;{ρ {\\text{L}}}/{π \\;{ {\\text{d}}^2}/{4}}$ $\\;\\;{∆ {\\text{R}}}/{ {\\text{R}}}=\\;{∆ {\\text{L}}}/{ {\\text{L}}}+\\;{2 ∆ {\\text{d}}}/{ {\\text{d}}}$ $\\;\\;{∆ {\\text{L}}}/{ {\\text{L}}}=0.1 \\% \\;\\text{ and }\\; \\;{∆ {\\text{d}}}/{ {\\text{d}}}=0.1 \\%$ $\\;\\;{∆ {\\text{R}}}/{ {\\text{R}}}=0.3 \\%$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A force is represented by $F=a x^2+b t^{1 / 2}$Where ${\\text{x}}=$ distance and ${\\text{t}}=$ time. The dimensions of ${\\text{b}}^2 / {\\text{a}}$ are : [31-Jan-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{ML}}^3 {\\text{T}}^{-3}]$",
+      "B. $[ {\\text{MLT}}^{-2}]$",
+      "C. $[ {\\text{ML}}^{-1} {\\text{T}}^{-1}]$",
+      "D. $[ {\\text{ML}}^2 {\\text{T}}^{-3}]$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\; {\\text{F}}= {\\text{ax}}^2+ {\\text{bt}}^{1 / 2}$ $\\;{[ {\\text{a}}]=\\;{[ {\\text{F}}]}/{ [ {\\text{x}}^2] }= [ {\\text{M}}^1 {\\text{L}}^{-1} {\\text{T}}^{-2}] }$ $\\;{[ {\\text{b}}]=\\;{[ {\\text{F}}]}/{ [ {\\text{t}}^{1 / 2}] }= [ {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-5 / 2}] }$ $\\;{ [\\;{ {\\text{b}}^2}/{ {\\text{a}}}] =\\;{ [ {\\text{M}}^2 {\\text{L}}^2 {\\text{T}}^{-5}] }/{ [ {\\text{M}}^1 {\\text{L}}^{-1} {\\text{T}}^{-2}] }= [ {\\text{M}}^1 {\\text{L}}^3 {\\text{T}}^{-3}] }$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If 50 Vernier divisions are equal to 49 main scale divisions of a travelling microscope and one smallest reading of main scale is $0.5 {\\text{mm}}$, the Vernier constant of travelling microscope is: [30-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [
+      "A. $0.1 {\\text{mm}}$",
+      "B. $0.1 {\\text{cm}}$",
+      "C. $0.01 {\\text{cm}}$",
+      "D. $0.01 {\\text{mm}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;50 {\\text{V}}+ {\\text{S}}=49 {\\text{S}}+ {\\text{S}}$ $\\; {\\text{S}}=50( {\\text{S}}- {\\text{V}})$ $\\;.5=50( {\\text{S}}- {\\text{V}})$ $\\; {\\text{S}}- {\\text{V}}=\\;\\frac{0.5}{50}=\\;\\frac{1}{100}=0.01 {\\text{mm}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If mass is written as ${\\text{m}}= {\\text{k}} {\\text{c}}^{ {\\text{P}}} {\\text{G}}^{-1 / 2} {\\text{h}}^{1 / 2}$ then the value of ${\\text{P}}$ will be : (Constants have their usual meaning with ${\\text{k}}$ a dimensionless constant) [30-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [
+      "A. $1 / 2$",
+      "B. $1 / 3$",
+      "C. 2",
+      "D. -$1 / 3$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\; {\\text{m}}= {\\text{kc}}^{ {\\text{P}}} {\\text{G}}^{-1 / 2} {\\text{h}}^{1 / 2}$ $\\; {\\text{M}}^1 {\\text{L}}^0 {\\text{T}}^0= [ {\\text{LT}}^{-1}] ^{ {\\text{P}}} [ {\\text{M}}^{-1} {\\text{L}}^3 {\\text{T}}^{-2}] ^{-1 / 2}$ $[ {\\text{ML}}^2 {\\text{T}}^{-1}] ^{1 / 2}$By comparing ${\\text{P}}=1 / 2$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List-I with List-II. List-I List-II A. Coefficient of viscosity I. {$[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-2}]$} B. Surface Tension II. {$[ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-1}]$} C. Angular momentum III. {$[ {\\text{M}} {\\text{L}}^{-1} {\\text{T}}^{-1}]$} D. Rotational kinetic energy IV. {$[ {\\text{M}} {\\text{L}}^0 {\\text{T}}^{-2}]$} [30-Jan-2024 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085620.webp"
+      }
+    ],
+    "options": [
+      "A. A-II, B-I, C-IV, D-III",
+      "B. A-I, B-II, C-III, D-IV",
+      "C. A-III, B-IV, C-II, D-I",
+      "D. A-IV B-III C-II. D-I"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;F=η A \\;\\frac{d v}{d y}$ $\\;{ [M L T^{-2}] =η [L^2] [T^{-1}] }$ $\\;η= [M L^{-1} T^{-1}]$ $\\;S . T=\\;\\frac{F}{ℓ}=\\;{ [M L T^{-2}] }/{[L]}$ $= [M L^0 T^{-2}]$ $\\;L=m v r= [M L^2 T^{-1}]$ $\\;K . E=\\;\\frac{1}{2} I ω^2= [M L^2 T^{-2}]$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A physical quantity $Q$ is found to depend on quantities ${\\text{a}}, {\\text{b}}, {\\text{c}}$ by the relation ${\\text{Q}}=\\;{ {\\text{a}}^4 {\\text{b}}^3}/{ {\\text{c}}^2}$. The percentage error in a, b and ${\\text{c}}$ are $3 \\%, 4 \\%$ and $5 \\%$ respectively. Then, the percentage error in ${\\text{Q}}$ is : [29-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [
+      "A. $66 \\%$",
+      "B. $43 \\%$",
+      "C. $34 \\%$",
+      "D. $14 \\%$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;\\;\\text{ Sol. }\\; {\\text{Q}}=\\;{ {\\text{a}}^4 {\\text{b}}^3}/{ {\\text{c}}^2}$ $\\;\\;{∆ {\\text{Q}}}/{ {\\text{Q}}}=4 \\;{∆ {\\text{a}}}/{ {\\text{a}}}+3 \\;{∆ {\\text{b}}}/{ {\\text{b}}}+2 \\;{∆ {\\text{c}}}/{ {\\text{c}}}$ $\\;\\;{∆ {\\text{Q}}}/{ {\\text{Q}}} × 100=4 (\\;{∆ {\\text{a}}}/{ {\\text{a}}} × 100)$ $+3 (\\;{∆ {\\text{b}}}/{ {\\text{b}}} × 100) +2 (\\;{∆ {\\text{c}}}/{ {\\text{c}}} × 100)$ $\\;\\% \\;\\text{ error in }\\; {\\text{Q}}=4 × 3 \\%+3 × 4 \\%$ $+2 × 5 \\%$ $\\;\\; =12 \\%+12 \\%+10 \\%$ $\\;\\; =34 \\%$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The resistance ${\\text{R}}=\\;{ {\\text{V}}}/{ {\\text{I}}}$ where ${\\text{V}}=(200 ± 5) {\\text{V}}$ and ${\\text{I}}=(20 ± 0.2) {\\text{A}}$, the percentage error in the measurement of ${\\text{R}}$ is : [29-Jan-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $3.5 \\%$",
+      "B. $7 \\%$",
+      "C. $3 \\%$",
+      "D. $5.5 \\%$"
+    ],
+    "correct_answer": "A",
+    "explanation": "${\\text{R}}=\\;{ {\\text{V}}}/{ {\\text{l}}}$ According to error analysis $\\;\\;{ {\\text{dR}}}/{ {\\text{R}}}=\\;{ {\\text{dV}}}/{ {\\text{V}}}+\\;{ {\\text{dI}}}/{ {\\text{I}}}$ $\\;\\;{ {\\text{dR}}}/{ {\\text{R}}}=\\;\\frac{5}{200}+\\;\\frac{0.2}{20}$ $\\;\\;{ {\\text{dR}}}/{ {\\text{R}}}=\\;\\frac{7}{200}$ $\\;\\% \\;\\text{ error }\\; \\;{ {\\text{dR}}}/{ {\\text{R}}} × 100=\\;\\frac{7}{200} × 100$ $=3.5 \\%$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Given below are two statements: one is labelled as Assertion(A) and the other is labelled as Reason (R).Assertion (A) : In Vernier calliper if positive zero error exists, then while taking measurements, the reading taken will be more than the actual reading.Reason (R) : The zero error in Vernier Calliper might have happened due to manufacturing defect or due to rough handling.In the light of the above statements, choose the correct answer from the options given below : [27-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [
+      "A. Both (A) and (R) are correct and (R) is the correct explanation of (A)",
+      "B. Both (A) and (R) are correct but (R) is not the correct explanation of (A)",
+      "C. (A) is true but (R) is false",
+      "D. (A) is false but $( {\\text{R}})$ is true"
+    ],
+    "correct_answer": "B",
+    "explanation": "Assertion & Reason both are correct Theory",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Given below are two statements :Statement (I) : Planck's constant and angular momentum have same dimensions.Statement (II) : Linear momentum and moment of force have same dimensions.In the light of the above statements, choose the correct answer from the options given below : [27-Jan-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. Statement I is true but Statement II is false",
+      "B. Both Statement I and Statement II are false",
+      "C. Both Statement I and Statement II are true",
+      "D. Statement I is false but Statement II is true"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;{[ {\\text{h}}]= {\\text{ML}}^2 {\\text{T}}^{-1}}$ $\\;{[ {\\text{L}}]= {\\text{ML}}^2 {\\text{T}}^{-1}}$ $\\;{[ {\\text{P}}]= {\\text{MLT}}^{-1}}$ $\\;{[τ]= {\\text{ML}}^2 {\\text{T}}^{-2}}$(Here ${\\text{h}}$ is Planck's constant, ${\\text{L}}$ is angular momentum, ${\\text{P}}$ is linear momentum and $τ$ is moment of force)",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The speed of a wave produced in water is given by $v=λ^a {\\text{g}}^{ {\\text{b}}} ρ^{ {\\text{c}}}$. Where $λ, {\\text{g}}$ and $ρ$ are wavelength of wave, acceleration due to gravity and density of water respectively. The values of $a, b$ and $c$ respectively, are : [15-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{1}{2}, 0, \\;\\frac{1}{2}$",
+      "B. $1,-1,0$",
+      "C. $\\;\\frac{1}{2}, \\;\\frac{1}{2}, 0$",
+      "D. $1,1,0$"
+    ],
+    "correct_answer": "C",
+    "explanation": "By dimensional analysis,$\\; {\\text{V}}=λ^{ {\\text{a}}} {\\text{g}}^{ {\\text{b}}} ρ^{ {\\text{c}}}$ $\\;{ [ {\\text{L}}^1 {\\text{T}}^{-1}] = [ {\\text{L}}^1] ^{ {\\text{a}}} [ {\\text{L}}^1 {\\text{T}}^{-2}] ^{ {\\text{b}}} [ {\\text{M}}^1 {\\text{L}}^{-3}] ^{ {\\text{c}}}}$ $\\;{ [ {\\text{L}}^{ {\\text{l}}} {\\text{T}}^{-1}] = [ {\\text{M}}^{ {\\text{c}}} {\\text{L}}^{ {\\text{a}}+ {\\text{b}}-3 {\\text{c}}} {\\text{T}}^{-2 {\\text{b}}}] }$On comparing respective powers,$\\; {\\text{c}}=0,-2 {\\text{b}}=-1, {\\text{a}}+ {\\text{b}}-3 {\\text{c}}=1,$ $\\; {\\text{b}}=\\;\\frac{1}{2}, {\\text{a}}=\\;\\frac{1}{2}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In the equation $[ {\\text{x}}+\\;{ {\\text{a}}}/{ {\\text{y}}^2}] [ {\\text{Y}}- {\\text{b}}]= {\\text{RT}}, {\\text{X}}$ is pressure, ${\\text{Y}}$ is volume, ${\\text{R}}$ is universal gas constant ant ${\\text{T}}$ is temperature. The physical quantity equivalent to the ratio $\\;{ {\\text{a}}}/{ {\\text{b}}}$ is : [13-Apr-2023 shift 2]",
+    "images": [],
+    "options": [
+      "A. Coefficient of viscosity",
+      "B. Energy",
+      "C. Impulse",
+      "D. Pressure gradient"
+    ],
+    "correct_answer": "B",
+    "explanation": "$x$ and $\\;\\frac{a}{y^2}$ have same dimensions$y$ and $b$ have same dimensions$\\;{[ {\\text{a}}]= [ {\\text{ML}}^5 {\\text{T}}^{-2}] }$ $\\;{[ {\\text{b}}]= [ {\\text{L}}^3] }$ $\\;\\;{[ {\\text{a}}]}/{[ {\\text{b}}]}= {\\text{ML}}^2 {\\text{T}}^{-2} \\;\\text{ has dimension of energy }\\;$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A body of mass $(5 ± 0.5) {\\text{kg}}$ is moving with a velocity of $(20 ± 0.4) {\\text{m}} / {\\ s}$. Its kinetic energy will be [13-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. $(1000 ± 140) {\\text{J}}$",
+      "B. $(500 ± 140) {\\text{J}}$",
+      "C. $(500 ± 0.14) {\\text{J}}$",
+      "D. $(1000 ± 0.14) {\\text{J}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Kinetic energy, ${\\text{KE}}\\;=\\;\\frac{1}{2} {\\ mv}^2$ ${\\text{KE}}\\;=\\;\\frac{1}{2} × 5 × 20^2$ ${\\text{KE}}=1000 {\\text{J}}$ $\\;\\;{∆ {\\text{K}}}/{ {\\text{K}}}=\\;{∆ {\\text{m}}}/{ {\\text{m}}}+\\;{2 ∆ {\\text{v}}}/{ {\\text{v}}}$ $\\;\\;{∆ {\\text{K}}}/{1000}=\\;\\frac{0.5}{5}+2 × \\;\\frac{0.4}{20}$ $\\;∆ {\\text{K}}=1000(0.1+0.04)$ $\\;∆ {\\text{K}}=1000 × 0.14$ $\\;∆ {\\text{K}}=140 {\\text{J}}$ $\\; {\\text{KE}}=(1000 ± 140) {\\text{J}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "LIST I LIST II A. Spring constant I. $[ {\\text{T}}^{-1}]$ B. Angular speed II. $[ {\\text{MT}}^{-2}]$ C. Angular momentum III. $[ {\\text{ML}}^2]$ D. Moment of Inertia IV. $[ {\\text{ML}}^2 {\\text{T}}^{-1}]$Choose the correct answer from the options given below : [12-Apr-2023 shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_list-i-list-ii-a-spring-consta_img1_20260504_085641.webp"
+      }
+    ],
+    "options": [
+      "A. A-II, B-III, C-I, D-IV",
+      "B. A-IV, B-I, C-III, D-II",
+      "C. A-I, B-III, C-II, D-IV",
+      "D. A-II, B-I, C-IV, D-III"
+    ],
+    "correct_answer": "D",
+    "explanation": "(i) Spring constant $\\; {\\text{F}}= {\\text{Kx}}$ $\\; {\\text{K}}=\\;{ {\\text{F}}}/{ {\\text{x}}}=\\;{ {\\text{kgm}} {\\ sec}}/{ {\\text{m}}}= {\\text{kg}} ⋅ {\\ sec}^{-2}= [ {\\text{ML}}^0 {\\text{T}}^{-2}]$ (ii) Angular speed : (ω)$ω\\;=\\;{2 π}/{ {\\text{T}}}$ $ω\\;= [ {\\text{M}}^0 {\\text{L}}^0 {\\text{T}}^{-1}]$(iii) Angular momentum$\\; {\\text{L}}= {\\text{MVR}} ⇒ {\\text{Kg}} ⋅ {\\text{m}} {\\ sec}{ }^{-1} {\\text{m}}= {\\text{kgm}}^2 {\\ sec}^{-1}$ $\\;= [ {\\text{ML}}^2 {\\text{T}}^{-1}]$ $\\;$(iv) Moment of Inertia${\\text{I}}\\;= {\\text{MR}}^2= {\\text{Kg}} ⋅ {\\text{m}}^2$ $\\;= [ {\\text{ML}}^2 {\\text{T}}^0]$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If force (F), velocity (V) and time (T) are considered as fundamental physical quantity, then dimensional formula of density will be: [11-Apr-2023 shift 2]",
+    "images": [],
+    "options": [
+      "A. ${\\text{FV}}^{-2} {\\text{T}}^2$",
+      "B. ${\\text{FV}}^4 {\\text{T}}^{-6}$",
+      "C. ${\\text{FV}}^{-4} {\\text{T}}^{-2}$",
+      "D. ${\\text{F}}^2 {\\text{V}}^{-2} {\\text{T}}^6$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$ρ=F^x V^y T^z$ ${ [M L^{-3}] = [M L T^{-2}] ^x [{L T^{-1}}^y] ^y[T]^z}$ $1=x\\;\\;\\;\\;\\;\\;\\;x=1$ $-3=x+y\\;\\;\\;\\;\\;\\;\\;y=-4$ $0=-2 x-y+z\\;\\;\\;\\;\\;\\;z=2 x+4=2-4=-2$ $ρ=F V^{-4} T^{-2}\\;\\;\\text{ Ans. (3) }\\;$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Given below are two statements :Statements I : Astronomical unit $( {\\text{Au}})$, Parsec $( {\\text{Pc}})$ and Light year (ly) are units for measuring astronomical distances.Statements II : ${\\text{Au}}<$ Parsec $( {\\text{Pc}})<$ lyIn the light of the above statements, choose the most appropriate answer from the options given below : [11-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. Both Statements I and Statements II are incorrect.",
+      "B. Both Statements I and Statements II are correct.",
+      "C. Statements I is incorrect but Statements II are correct.",
+      "D. Statements I is correct but Statements II are incorrect."
+    ],
+    "correct_answer": "D",
+    "explanation": "A.V., Par sec and light year are the unit of distance Light year $→$ distance travelled by light in one year $1 {\\text{ly}}=9.5 × 10^{15} {\\text{m}}$ parcec $=3.262$ light year A.V. $=1.58 × 10^{-5}$ light year A. V. $< 1 {\\text{y}} <$ Parsec. Statement I correct and statement II incorrect.",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an experiment with vernier calipers of least count $0.1 {\\text{mm}}$, when two jaws are joined together the zero of vernier scale lies right to the zero of the main scale and $6^{\\;\\text{th }\\;}$ division of vernier scale coincides with the main scale division. While measuring the diameter of a spherical bob, the zero of vernier scale lies in between $3.2 {\\text{cm}}$ and $3.3 {\\text{cm}}$ marks, and $4^{\\;\\text{th }\\;}$ division of vernier scale coincides with the main scale division. The diameter of bob is measured as [10-Apr-2023 shift 2]",
+    "images": [],
+    "options": [
+      "A. $3.25 {\\text{cm}}$",
+      "B. $3.22 {\\text{cm}}$",
+      "C. $3.18 {\\text{cm}}$",
+      "D. $3.26 {\\text{cm}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "The zero error in verniel scale is $=6 × 0.1 {\\text{mm}}=0.6 {\\text{mm}}$ (+ve zero error)Note: +ve zero error will have to be subtractedFrom the reading of the object.Now, the diameter measured with the help of Vernier scale isGiven by $→$ M.S.D + V.S.D $×$ L.S$\\;⇒ 3.2 {\\text{cm}}+0.1 {\\text{mm}} × 4$ $\\;=3.24 {\\text{cm}}$The actual diameter is $⇒ 3.24 {\\text{mm}}$ - (zero error) $=3.24-0.6=3.18 {\\text{cm}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A physical quantity $P$ is given as$P=\\;{a^2 b^3}/{c {\\sqrt{d}}}$The percentage error in the measurement of ${\\text{a}}, {\\text{b}}, {\\text{c}}$ and ${\\text{d}}$ are $1 \\%, 2 \\%, 3 \\%$ and $4 \\%$ respectively. The percentage error in the measurement of quantity ${\\text{P}}$ will be [10-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. $14 \\%$",
+      "B. $13 \\%$",
+      "C. $16 \\%$",
+      "D. $12 \\%$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;\\;{ {\\text{dP}}}/{ {\\text{P}}} × 100= (2 \\;{ {\\text{da}}}/{ {\\text{a}}}+3 \\;{ {\\text{db}}}/{ {\\text{b}}}+\\;{ {\\text{dc}}}/{ {\\text{c}}}+\\;\\frac{1}{2} \\;{ {\\text{d}}( {\\text{d}})}/{ {\\text{d}}}) × 100$ $\\;=2 × 1+3 × 2+3+\\;\\frac{1}{2} × 4$ $\\;=2+6+3+2$ $\\;=13 \\%$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List I with List II LIST - I LIST - II A. Torque I. ${\\text{ML}}^{-2} {\\text{T}}^{-2}$ B. Stress II. $\\;\\; {\\text{ML}}^2 {\\text{T}}^{-2}$ C. Pressure gradient III. $\\text{MLL}^{-1} {\\text{t}}^{-1}$ D. Coefficient of viscosity IV. ${\\text{ML}}^{-1} {\\text{T}}^{-2}$Choose the correct answer from the options given below: [8-Apr-2023 shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085655.webp"
+      }
+    ],
+    "options": [
+      "A. A-III, B-IV, C-I, D-II",
+      "B. A-II, B-I, C-IV, D-III",
+      "C. A-IV, B-II, C-III, D-I",
+      "D. A-II, B-IV, C-I, D-III"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;{[\\;\\text{ Torque }\\;]=\\;\\text{ F.L }\\;}$ $\\; {\\text{MLT}}^{-2} ⋅ {\\text{L}}= {\\text{ML}}^2 {\\text{T}}^{-2}$ $\\;{[\\;\\text{ Stress }\\;]=\\;{ {\\text{F}}}/{ {\\text{A}}}}$ $\\;\\;{M L T^{-2}}/{ {\\text{L}}^2}= {\\text{ML}}^{-1} {\\text{T}}^{-2}$ $\\;{[\\;\\text{ Pressure gradient }\\;]=\\;{∆ {\\text{P}}}/{∆ {\\text{L}}}=\\;{ {\\text{F}}}/{ {\\text{A}}^2 . {\\text{L}}}}$ $\\;=\\;{ {\\text{MLT}}^{-2}}/{ {\\text{L}}^3}$ $\\;= {\\text{ML}}^{-2} {\\text{T}}^{-2}$ $\\; {\\text{F}}= {\\text{nA}} \\;{ {\\text{dv}}}/{ {\\text{dy}}}$ $\\;η=\\text{ML}^{-1} {\\text{T}}^{-1}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A cylindrical wire of mass $(0.4 ± 0.01) {\\text{g}}$ has length $(8 ± 0.04) {\\text{cm}}$ and radius $(6 ± 0.03) {\\text{mm}}$. The maximum error in its density will be: [8-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. $4 \\%$",
+      "B. $1 \\%$",
+      "C. $3.5 \\%$",
+      "D. $5 \\%$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Cylindrical wire ${\\text{m}}=(0.4 ± 0.01) {\\text{g}}$ $ℓ=(8 ± 0.04) {\\text{cm}}$ ${\\text{r}}=(6 ± 0.03) {\\text{mm}}$Density $ρ=\\;{ {\\text{m}}}/{π r^2 ℓ} ⇒ ρ r^2 ℓ m^{-1}=\\;\\frac{1}{π}=$ const.Differentiating after taking $\\log$ on both side$\\;\\;{ {\\text{d}} ρ}/{ρ}+\\;{2 {\\text{dr}}}/{ {\\text{r}}}+\\;{ {\\text{d}} ℓ}/{ℓ}-\\;{ {\\text{dm}}}/{ {\\text{m}}}=0$ $\\;\\;\\frac{∆ ρ}{ρ}=\\;{∆ {\\text{m}}}/{ {\\text{m}}}-\\;\\frac{∆ ℓ}{ℓ}-\\;{2 ∆ {\\text{r}}}/{ {\\text{r}}}$ $\\; (\\;\\frac{∆ ρ}{ρ}) _{\\max }= [\\;\\frac{0.01}{0.4}+\\;\\frac{0.04}{8}+2 (\\;\\frac{0.03}{6}) ]$ $\\; (\\;\\frac{∆ ρ}{ρ}) _{\\max }=0.04$ $\\;\\;\\text{ Percentage error }\\;=0.04 × 100=4 \\%$Percentage error $=0.04 × 100=4 \\%$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Dimension of $\\;\\frac{1}{µ_0 ∈_0}$ should be equal to [8-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. ${\\text{T}} / {\\text{L}}$",
+      "B. $T^2 / L^2$",
+      "C. ${\\text{L}} / {\\text{T}}$",
+      "D. ${\\text{L}}^2 / {\\text{T}}^2$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Dimension of $\\;\\frac{1}{µ_0 ε_0}$ $\\; {\\text{C}}=\\;{1}/{{\\sqrt{µ_0 ε_0}}} ⇒ \\;\\frac{1}{µ_0 ε_0}= {\\text{c}}^2$ $\\;{ [\\;\\frac{1}{µ_0 ε_0}] = [ {\\text{c}}^2] }$ $\\;= [\\;{ {\\text{L}}^2}/{ {\\text{T}}^2}]$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Two resistances are given as ${\\text{R}}_1=(10 ± 0.5) Ω$ and ${\\text{R}}_2=(15 ± 0.5) Ω$. The percentage error in the measurement of equivalent resistance when they are connected in parallel is - [6-Apr-2023 shift 1]",
+    "images": [],
+    "options": [
+      "A. 2.33",
+      "B. 4.33",
+      "C. 5.33",
+      "D. 6.33"
+    ],
+    "correct_answer": "B",
+    "explanation": "In parallel combination, $\\;{1}/{R_{e q}}=\\;\\frac{1}{R_1}+\\;\\frac{1}{R_2}$ $⇒ \\;{1}/{R_{e q}}=\\;\\frac{1}{10}+\\;\\frac{1}{15}=\\;\\frac{5}{30}=\\;\\frac{1}{6}$Now, for error calculation,$\\;\\;{d R_{e q}}/{R_{e q}^2}=\\;\\frac{d R_1}{R_1^2}+\\;\\frac{d R_2}{R_2^2}$ $\\;⇒ \\;{d R_{e q}}/{36}=\\;\\frac{0.5}{100}+\\;\\frac{0.5}{225}$ $\\;d R_{e q}=36 × 0.5 × (\\;\\frac{13}{900}) =18 × \\;\\frac{13}{900}=\\;\\frac{26}{100}=0.26$Now, $\\;{d R_{e q}}/{R_{e q}} × 100=\\;\\frac{0.26}{6} × 100=\\;\\frac{26}{6}=4.33$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If the velocity of light $c$, universal gravitational constant ${\\text{G}}$ and planck's constant ${\\text{h}}$ are chosen as fundamental quantities. The dimensions of mass in the new system is: [1-Feb-2023 Shift 2]",
+    "images": [],
+    "options": [
+      "A. $[h^{\\;\\frac{1}{2}} c^{\\;\\frac{1}{2}} G^1]$",
+      "B. $[h^1 c^1 G^{-1}]$",
+      "C. $[h^{\\;\\frac{1}{2}} c^{\\;\\frac{1}{2}} G^{\\;\\frac{1}{2}}]$",
+      "D. $[ {\\text{h}}^{\\;\\frac{1}{2}} {\\text{c}}^{\\;\\frac{1}{2}} {\\text{G}}^{-\\;\\frac{1}{2}}]$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Say dimensional formale of mass is ${\\text{H}}^x C^y G^z$ $\\; {\\text{M}}^1= ( {\\text{ML}}^2 {\\text{T}}^{-1}) ^{ {\\text{x}}} ( {\\text{LT}}^{-1}) ( {\\text{M}}^{-1} {\\text{L}}^3 {\\text{T}}^{-2}) ^z$ $\\; {\\text{M}}^1 {\\text{L}}^0 {\\text{T}}^0= {\\text{M}}^{ {\\text{x}}- {\\text{z}}} {\\text{L}}^{2 {\\text{x}}+ {\\text{y}}+3 z} {\\text{T}}^{- {\\text{x}}- {\\text{y}}-2 z}$on comparing both side$\\;x-z=1$ $\\;2 x+y+3 z=0$ $\\;-x-y-2 z=0$On solving above equations we get$x=\\;\\frac{1}{2} \\;\\; {\\text{y}}=\\;\\frac{1}{2} \\;\\; {\\text{z}}=\\;\\frac{-1}{2}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List-I with List-II. List-I List-II A. Angular momentum I. $[ {\\text{ML}}^2 {\\text{T}}^{-2}].$ B. Torque II. $[ {\\text{ML}}^{-2} {\\text{T}}^{-2}]$ C. Stress III. $[ {\\text{ML}}^2 {\\text{T}}^{-1}]$ D. Pressure gradient IV. $[ {\\text{ML}}^{-1} {\\text{T}}^{-2}].$ Choose the correct answer from the options given below: [31-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085708.webp"
+      }
+    ],
+    "options": [
+      "A. A-I, B-IV, C-III, D-II",
+      "B. A-III, B-I, C-IV, D-II",
+      "C. A-II, B-III, C-IV, D-I",
+      "D. A-IV, B-II, C-I, D-III"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\vec{L}=\\vec{r} × \\vec{p} ⇒[ {\\text{L}}]\\;= [ {\\text{M}}^0 {\\text{L}}^1 {\\text{T}}^0] [ {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-1}]$ $=\\;{ [ {\\text{M}}^1 {\\text{L}}^2 {\\text{T}}^{-1}] }$ $\\vec{τ}=\\vec{r} × \\vec{F} ⇒[τ]\\;= [ {\\text{L}}^1] [ {\\text{MLT}}^{-2}]$ $\\;= [ {\\text{ML}}^2 {\\text{T}}^{-2}]$ $\\;\\text{ Stress }\\; ≡ \\;\\text{ Pressure }\\;=\\;\\frac{F}{A} ⇒[\\;\\text{ Stress }\\;]= [ {\\text{ML}}^{-1} {\\text{T}}^{-2}]$Pressure Gradient $=\\;\\frac{d P}{d x} ⇒[$Pressure Gradient $]= [ {\\text{ML}}^{-2} {\\text{T}}^{-2}]$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List I with List II. List I List II A. Torque I. ${\\text{kg}} {\\text{m}}^{-1} {\\ s}^{-2}$ B. Energy density II. ${\\text{kg}} \\;{ms } ^ { - 1 }$ C. Pressure gradient III. ${\\text{kg}} {\\text{m}}^{-2} {\\ s}^{-2}$ D. Impulse IV. ${\\text{kg}} {\\text{m}}^2 {\\ s}^{-2}$Choose the correct answer from the options given below : [30-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085711.webp"
+      }
+    ],
+    "options": [
+      "A. A-IV, B-III, C-I, D-II",
+      "B. A-I, B-IV, C-III, D-II",
+      "C. A-IV, B-I, C-II, D-III",
+      "D. A-IV, B-I, C-III, D-II"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In a screw gauge, there are 100 divisions on the circular scale and the main scale moves by $0.5 {\\text{mm}}$ on a complete rotation of the circular scale. The zero of circular scale lies 6 divisions below the line of graduation when two studs are brought in contact with each other. When a wire is placed between the studs, 4 linear scale divisions are clearly visible while $46^{\\;\\text{th }\\;}$ division the circular scale coincide with the reference line. The diameter of the wire is _______ $× 10^{-2} {\\text{mm}}$. [30-Jan-2023 Shift 1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "220",
+    "explanation": "$\\;\\;\\text{ Least count }\\;=\\;{\\;\\text{ Pitch }\\;}/{\\;\\text{ No. of circular divisions }\\;}$ $\\;=\\;{0.5 {\\text{mm}}}/{100}$ $\\;\\;\\text{ Least count }\\;=5 × 10^{-3} {\\text{mm}}$ $\\;\\;\\text{ Positive Error }\\;= {\\text{MSR}}+ {\\text{CSR}}( {\\text{LC}})$ $\\;=0 {\\text{mm}}+6 (5 × 10^{-3} {\\text{mm}})$ Reading of Diameter $=$ MSR $+$ CSR $( {\\text{LC}})-$ Positive zero error$\\;=4 × 0.5 {\\text{mm}}+ (46 (5 × 10^{-3}) ) -6 (5 × 10^{-3}) {\\text{mm}}$ $\\;=2 {\\text{mm}}+40 × 5 × 10^{-3} {\\text{mm}}=2.2 {\\text{mm}} \\;\\text{ (Ans.) }\\;$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The equation of a circle is given by $x^2+y^2=a^2$, where a is the radius. If the equation is modified to change the origin other than $(0,0)$, then find out the correct dimensions of ${\\text{A}}$ and ${\\text{B}}$ in a new equation: $(x-A t)^2+ (y-\\;\\frac{t}{B}) ^2=a^2$.The dimensions of $t$ is given as $[ {\\text{T}}^{-1}]$. [29-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [
+      "A. ${\\text{A}}= [ {\\text{L}}^{-1} {\\text{T}}] , {\\text{B}}= [ {\\text{LT}}^{-1}]$",
+      "B. ${\\text{A}}=( {\\text{LT}}], {\\text{B}}= [ {\\text{L}}^{-1} {\\text{T}}^{-1}]$",
+      "C. ${\\text{A}}= [ {\\text{L}}^{-1} {\\text{T}}^{-1}] , {\\text{B}}= [ {\\text{LT}}^{-1}]$",
+      "D. ${\\text{A}}= [ {\\text{L}}^{-1} {\\text{T}}^{-1}] , {\\text{B}}=[ {\\text{LT}}]$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;( {\\text{x}}- {\\text{At}})^2+ ( {\\text{y}}-\\;{ {\\text{t}}}/{ {\\text{B}}}) ^2= {\\text{a}}^2$ $\\;{[ {\\text{At}}]= {\\text{A}} × \\;{1}/{ {\\text{T}}}= {\\text{L}}}$ $\\; ∴ \\;\\; [ {\\text{A}}]= {\\text{T}}^1 {\\text{L}}^1$ $\\; \\;\\; \\;{ {\\text{t}}}/{ {\\text{B}}} \\;\\text{ is in meters }\\;$ $\\; ∴ \\;\\; \\;{1}/{ {\\text{T}}[ {\\text{B}}]}= {\\text{L}}$ $\\; ∴ \\;\\; [ {\\text{B}}]= {\\text{T}}^{-1} {\\text{L}}^{-1}$ $\\; ∴ \\;\\; \\;\\text{ Correct Ans. (2) }\\;$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List I with List II : List-I (PhysicalQuantity) List-II (Dimensional Formula) A Pressure gradient I $[ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-2}]$ B Energy density II $[ {\\text{M}}^1 {\\text{L}}^{-1} {\\text{T}}^{-2}]$ C Electric Field III $[ {\\text{M}}^1 {\\text{L}}^{-2} {\\text{T}}^{-2}]$ D Latent heat IV $[ {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-3} {\\text{A}}^{-1}]$Choose the correct answer from the options given below: [29-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085720.webp"
+      }
+    ],
+    "options": [
+      "A. A-III, B-II, C-I, D-IV",
+      "B. A-II, B-III, C-IV, D-I",
+      "C. A-III, B-II, C-IV, D-I",
+      "D. A-II, B-III, C-I, D-IV"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;\\;\\text{ Pressure gradient }\\;=\\;{ {\\text{dp}}}/{ {\\text{dx}}}=\\;{ [ {\\text{ML}}^{-1} {\\text{T}}^{-2}] }/{[ {\\text{L}}]}$ $\\;= [M^1 {\\text{L}}^{-2} {\\text{T}}^{-2}]$ $\\;\\;\\text{ Energy density }\\;=\\;{\\;\\text{ energy }\\;}/{\\;\\text{ volume }\\;}=\\;{ [ {\\text{ML}}^2 {\\text{T}}^{-2}] }/{ [ {\\text{L}}^3] }$ $\\;= [ {\\text{M}}^1 {\\text{L}}^{-1} {\\text{T}}^{-2}]$ $\\;\\;\\text{ Electric field }\\;=\\;{\\;\\text{ Force }\\;}/{\\;\\text{ charg e }\\;}=\\;{ [ {\\text{MLT}}^{-2}] }/{[ {\\text{A}} ⋅ {\\text{T}}]}$ $\\;= [ {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-3} {\\text{A}}^{-1}]$ $\\;\\;\\text{ Latent heat }\\;=\\;{\\;\\text{ heat }\\;}/{\\;\\text{ mass }\\;}=\\;{ [ {\\text{ML}}^2 {\\text{T}}^{-2}] }/{[ {\\text{M}}]}$ $\\;= [ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-2}]$ $\\;$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List I with List II List List II A. Young's Modulus (Y) I. $\\;\\; [ {\\text{M}} {\\text{L}}^{-1} {\\text{T}}^{-1}]$ B. Co-efficient of Viscosity $(η)$ II. $\\;\\; [ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-1}]$ C. Planck's Constant (h) III. $\\;\\; [ {\\text{M}} {\\text{L}}^{-1} {\\text{T}}^{-2}]$ D. Work Function $(φ)$ IV. $\\;\\; [ {\\text{M}} {\\text{L}}^2 {\\text{T}}^{-2}]$Choose the correct answer from the options given below: [25-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085723.webp"
+      }
+    ],
+    "options": [
+      "A. A-II, B-III, C-IV, D-I",
+      "B. A-III, B-I, C-II, D-IV",
+      "C. A-I, B-III, C-IV, D-II",
+      "D. A-I, B-II, C-III, D-IV"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\; {\\text{Y}}=\\;{\\;\\text{ Stress }\\;}/{\\;\\text{ Strain }\\;}=\\;{ {\\text{F}} / {\\text{A}}}/{∆ ℓ / ℓ}=\\;{ [ {\\text{MLT}}^{-2}] }/{ [ {\\text{L}}^2] }= [ {\\text{ML}}^{-1} {\\text{T}}^{-2}]$ $\\; {\\text{F}}=6 π η {\\text{rv}} ⇒ η=\\;{ {\\text{F}}}/{6 π {\\text{rv}}}$ $\\;{[η]=\\;{ [ {\\text{MLT}}^{-2}] }/{[ {\\text{L}}] [ {\\text{LT}}^{-1}] }= [ {\\text{ML}}^{-1} {\\text{T}}^{-1}] }$ $\\; {\\text{E}}= {\\text{h}} v ⇒ {\\text{h}}=\\;{ {\\text{E}}}/{v}=\\;{ [ {\\text{ML}}^2 {\\text{T}}^{-2}] }/{ [ {\\text{T}}^{-1}] }= [ {\\text{ML}}^2 {\\text{T}}^{-1}]$Work function has same dimension as that of energy, so $[φ]= [ {\\text{ML}}^2 {\\text{T}}^{-2}]$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List I with List II LIST I LIST II A. Planck's constant (h) I. $[ {\\text{M}}^{1} {\\text{L}}^{2} {\\text{T}}^{-2}]$ B. Stopping potential (Vs) II. $[ {\\text{M}}^{1} {\\text{L}}^{1} {\\text{T}}^{-1}]$ C. Work function (Ø) III. $[ {\\text{M}}^{1} {\\text{L}}^{2} {\\text{T}}^{-1}]$ D. Momentum (p) IV. $[ {\\text{M}}^{1} {\\text{L}}^{2} {\\text{T}}^{-3} {\\text{A}}^{-1}]$ [24-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085726.webp"
+      }
+    ],
+    "options": [
+      "A. A-III, B-I, C-II, D-IV",
+      "B. A-III, B-IV, C-I, D-II",
+      "C. A-II, B-IV, C-III, D-I",
+      "D. A-I, B-III, C-IV, D-II"
+    ],
+    "correct_answer": "B",
+    "explanation": "(A) Planck's constant${\\text{h}} v\\;= {\\text{E}}$ ${\\text{h}}\\;=\\;{ {\\text{E}}}/{v}=\\;{ {\\text{M}}^1 {\\text{L}}^2 {\\text{T}}^{-2}}/{ {\\text{T}}^{-1}}= {\\text{M}}^1 {\\text{L}}^2 {\\text{T}}^{-1}$(B) ${\\text{E}}= {\\text{qV}}$ $V=\\;\\frac{E}{q}=\\;{M^1 L^2 T^{-2}}/{A^1 T^1}=M^1 L^2 T^{-3} A^{-1}(I V)$(C) $φ($ work function $)=$ energy$= {\\text{M}}^1 {\\text{L}}^2 {\\text{T}}^{-2}$(D) Momentum (p) = F.t$\\;= {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-2} {\\text{T}}^1$ $\\;= {\\text{M}}^1 {\\text{L}}^1 {\\text{T}}^{-1}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A travelling microscope has 20 divisions per ${\\text{cm}}$ on the main scale while its vernier scale has total 50 divisions and 25 vernier scale divisions are equal to 24 main scale divisions, what is the least count of the travelling microscope? [29-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $0.001 {\\text{cm}}$",
+      "B. $0.002 {\\text{mm}}$",
+      "C. $0.002 {\\text{cm}}$",
+      "D. $0.005 {\\text{cm}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$1 {\\text{MSD}}=\\;\\frac{1}{20} {\\text{cm}}$ $1 {\\text{VSD}}=\\;\\frac{24}{25} {\\text{MSD}}=\\;\\frac{24}{25} × \\;\\frac{1}{20} {\\text{cm}}$ $∴$ Least count $=\\;\\frac{1}{20} (1-\\;\\frac{24}{25}) {\\text{cm}}$ $=\\;\\frac{1}{20} × \\;\\frac{1}{25}=\\;\\frac{1}{500} {\\text{cm}}$ $=0.002 {\\text{cm}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Given below are two statements : One is labelled as Assertion (A) and other is labelled as Reason (R). Assertion (A) : Time period of oscillation of a liquid drop depends on surface tension (S), if density of the liquid is $ρ$ and radius of the drop is $r$ , then ${\\text{T}}= {\\text{K}} \\sqrt{{ρ {\\text{r}}^3 }/ {{\\text{S}}^{3 / 2}}}$ is dimensionally correct, where ${\\text{K}}$ isdimensionless. Reason (R) : Using dimensional analysis we get R.H.S. having different dimension than that of time period. In the light of above statements, choose the correct answer from the options given below. [29-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. Both (A) and (R) are true and (R) is the correct explanation of (A)",
+      "B. Both (A) and (R) are true but (R) is not the correct explanation of (A)",
+      "C. $( {\\text{A}})$ is true but (R) is false",
+      "D. (A) is false but (R) is true"
+    ],
+    "correct_answer": "D",
+    "explanation": "$[\\;{ρ r^3}/{T^{3 / 2}}] =\\;{ [M L^{-3}] [L^3] }/{ [M L^0 T^{-2}] ^{3 / 2}} ≠[T]$As the equation for first statement is wrong dimensionally.$⇒ A$ is false and $R$ is true.",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an experiment to find out the diameter of wire using screw gauge, the following observations were noted : (A) Screw moves $0.5 {\\text{mm}}$ on main scale in one complete rotation (B) Total divisions on circular scale $=50$ (C) Main scale reading is $2.5 {\\text{mm}}$ (D) $45^{\\;\\text{th }\\;}$ division of circular scale is in the pitch line (E) Instrument has $0.03 {\\text{mm}}$ negative error Then the diameter of wire is : [29-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_in-an-experiment-to-find-out-t_img1_20260504_085735.webp"
+      }
+    ],
+    "options": [
+      "A. $2.92 {\\text{mm}}$",
+      "B. $2.54 {\\text{mm}}$",
+      "C. $2.98 {\\text{mm}}$",
+      "D. $3.45 {\\text{mm}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${\\text{MSR}}=2.5 {\\text{mm}}$ ${\\text{CSR}} \\;\\; =45 × \\;\\frac{0.5}{50} {\\text{mm}}$ $=0.45 {\\text{mm}}$ $\\;\\text{ Diameter reading }\\; \\;\\; = {\\text{MSR}}+ {\\text{CSR}}-\\;\\text{ zero error }\\;$ $\\;\\; =2.5+0.45-(-0.03)$ $\\;\\; =2.98 {\\text{mm}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Match List I with List II. List I List II A.Torque l. ${\\text{Nms}}^{-1}$ B.Stress II. $\\;\\; {\\text{J}} {\\text{kg}}^{-1}$ C.Latent Heat III.${\\text{Nm}}$ D.Power IV. ${\\text{Nm}}^{-2}$Choose the correct answer from the options given below : [29-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Units and Measurements/main_match-list-i-with-list-ii-list_img1_20260504_085738.webp"
+      }
+    ],
+    "options": [
+      "A. A-III, B-II, C-I, D-IV",
+      "B. A-III, B-IV, C-II, D-I",
+      "C. A-IV, B-I, C-III, D-II",
+      "D. A-II, B-III, C-I, D-IV"
+    ],
+    "correct_answer": "B",
+    "explanation": "Torque $→ {\\text{Nm}}$Stress $→ N / {\\text{m}}^2$Latent heat $→ {\\text{J}} / {\\text{kg}}$Power $→ {\\text{Nm}} / {\\ s}$A-III, B-IV, C-II, D-I",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The dimensions of $(\\;{ {\\text{B}}^2}/{µ_0})$ will be : (if $µ_0$ : permeability of free space and $B$ : magnetic field) [28-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $⌈ {\\text{ML}}^2 {\\text{T}}^{-2}⌋$",
+      "B. $[ {\\text{MLT}}^{-2}]$",
+      "C. $⌈ {\\text{ML}}^{-1} {\\text{T}}^{-2}⌋$",
+      "D. $⌈ {\\text{ML}}^2 {\\text{T}}^{-2} {\\text{A}}^{-1}⌋$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${[\\;\\frac{B^2}{µ_0}]=}$ [Energy density] $=\\;{M L^2 T^{-2}}/{L^3}=M L^{-1} T^{-2}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In an experiment to find acceleration due to gravity (g) using simple pendulum, time period of $0.5 {\\ s}$ is measured from time of 100 oscillation with a watch of $1 {\\ s}$ resolution. If measured value of length is $10 {\\text{cm}}$ known to $1 {\\text{mm}}$ accuracy, The accuracy in the determination of ${\\text{g}}$ is found to be $x \\%$. The value of $x$ is________. [28-Jul-2022-Shift-2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "5",
+    "explanation": "$T=2 π \\sqrt{\\;\\frac{l}{g}}$ $\\;\\frac{d g}{g} × 100=\\;\\frac{2 d T}{T} × 100+\\;\\frac{d l}{l} × 100$ $=2 × \\;\\frac{1}{50} × 100+\\;\\frac{1}{100} × 100=5 \\%$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Consider the efficiency of carnot's engine is given by $η=\\;\\frac{α β}{\\ sin θ} \\log e \\;\\frac{β x}{k T}$, where $α$ and $β$ are constants. If ${\\text{T}}$ is temperature, ${\\text{k}}$ is Boltzmann constant, $θ$ is angular displacement and ${\\text{x}}$ has the dimensions of length. Then, choose the incorrect option: [28-Jul-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. Dimensions of $β$ is same as that of force.",
+      "B. Dimensions of $α^{-1} x$ is same as that of energy.",
+      "C. Dimensions of $η^{-1} \\sin θ$ is same as that of $α β$",
+      "D. Dimensions of $α$ is same as that of $β$."
+    ],
+    "correct_answer": "D",
+    "explanation": "(A) $[β]=[\\;\\frac{k T}{x}]=[\\;\\frac{E}{x}]=[M L T^{-2}]=[F]$(B) $[α β]=[M^0 L^0 T^0]$ $[α]^{-1}=[β]=[\\;\\frac{k T}{x}]$So $[α]^{-1}[x]=[k T]=[M L^2 T^{-2}]$(C) $η \\ sin θ=α β$So $[η \\ sin θ]=[α β]$ $[η]=[M^0 L^0 T^0]$ it is dimensionless quantity(D) $[α] ≠[β]$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The one division of main scale of Vernier callipers reads $1 {\\text{mm}}$ and 10 divisions of Vernier scale is equal to the 9 divisions on main scale. When the two jaws of the instrument touch each other, the zero of the Vernier lies to the right of zero of the main scale and its fourth division coincides with a main scale division. When a spherical bob is tightly placed between the two jaws, the zero of the Vernier scale lies in between $4.1 {\\text{cm}}$ and $4.2 {\\text{cm}}$ and $6^{\\;\\text{th }\\;}$ Vernier division coincides scale division. The diameter of the bob will be ________ $× 10^{-2} {\\text{cm}}$. [27-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "412",
+    "explanation": "$10 {\\text{VSD}}=9 {\\text{MSD}}$ $1 {\\text{VST}}=.9 {\\text{MSD}}$L.C. $=.1 {\\text{mm}}=.01 {\\text{cm}}$ $+$ ve zero error $=.4 {\\text{mm}}$ $=0.04 {\\text{cm}}$Negative zero error $=4.1 {\\text{cm}}+6 × .01$ $=4.12 {\\text{cm}}$ $=412 × 10^{-2} {\\text{cm}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A torque meter is calibrated to reference standards of mass, length and time each with $5 \\%$ accuracy. After calibration, the measured torque with this torque meter will have net accuracy of : [27-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $15 \\%$",
+      "B. $25 \\%$",
+      "C. $75 \\%$",
+      "D. $5 \\%$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Dimensional formula for Torque$[τ]=[ {\\text{ML}}^2 {\\text{T}}^{-2}]$NowPercentage error in torque $=\\% τ=\\% {\\text{M}}+2 \\% {\\text{L}}$ $2 \\% {\\text{T}}$ $\\% τ=25 \\%$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "An expression of energy density is given by $u=\\;\\frac{α}{β} \\sin (\\;\\frac{α x}{k t})$, where $α, β$ are constants, $x$ is displacement, $k$ is Boltzmann constant and ${\\text{t}}$ is the temperature. The dimensions of $β$ will be : [27-Jul-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{ML}}^2 {\\text{T}}^{-2} θ^{-1}]$",
+      "B. $[ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^{-2}]$",
+      "C. $[ {\\text{M}}^0 {\\text{L}}^0 {\\text{T}}^0]$",
+      "D. $[ {\\text{M}}^0 {\\text{L}}^2 {\\text{T}}^0]$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$u=\\;\\frac{α}{β} \\ sin (\\;\\frac{α x}{k t})$ ${[α]=[\\;\\frac{k t}{x}]=\\;{[\\;\\text{ Energy }\\;]}/{[\\;\\text{ Dis }\\; \\tan c e]} }$ ${[β]=\\;\\frac{[α]}{[u]} }$ $=\\;{[\\;\\text{ Energy }\\;] /[\\;\\text{ Distan }\\; c e]}/{[\\;\\text{ Energy }\\;] / \\;\\text{ Volume }\\;]}$ $=[L^2]$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A screw gauge of pitch $0.5 {\\text{mm}}$ is used to measure the diameter of uniform wire of length $6.8 {\\text{cm}}$, the main scale reading is $1.5 {\\text{mm}}$ and circular scale reading is 7 . The calculated curved surface area of wire to appropriate significant figures is : [Screw gauge has 50 divisions on its circular scale] [26-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $6.8 {\\text{cm}}^2$",
+      "B. $3.4 {\\text{cm}}^2$",
+      "C. $3.9 {\\text{cm}}^2$",
+      "D. $2.4 {\\text{cm}}^2$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Least count $=\\;\\frac{0.5}{50} {\\text{mm}}=0.01 {\\text{mm}}$ $∴$ Diameter, ${\\text{d}}=1.5 {\\text{mm}}+7 × 0.01$ $=1.57 {\\text{mm}}$ $∴$ Surface area $=(2 π r) × l$ $=π d l$ $=3.142 × \\;\\frac{1.57}{10} × 6.8 {\\text{cm}}^2$ $=3.354 {\\text{cm}}^2=3.4 {\\text{cm}}^2$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "In a Vernier Calipers, 10 divisions of Vernier scale is equal to the 9 divisions of main scale. When both jaws of Vernier calipers touch each other, the zero of the Vernier scale is shifted to the left of zero of the main scale and $4^{\\;\\text{th }\\;}$ Vernier scale division exactly coincides with the main scale reading. One main scale division is equal to $1 {\\text{mm}}$. While measuring diameter of a spherical body, the body is held between two jaws. It is now observed that zero of the Vernier scale lies between 30 and 31 divisions of main scale reading and $6^{\\;\\text{th }\\;}$ Vernier scale division exactly coincides with the main scale reading. The diameter of the spherical body will be : [26-Jul-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $3.02 {\\text{cm}}$",
+      "B. $3.06 {\\text{cm}}$",
+      "C. $3.10 {\\text{cm}}$",
+      "D. $3.20 {\\text{cm}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\;\\text{ 1 M.S.D }\\;=1 {\\text{mm}}$ $\\;\\text{ 9 M.S.D }\\;=10 {\\text{V}} . S . D$ $\\;\\text{ 1 V.S.D }\\;=0.9 \\;\\text{ M.S.D }\\;=0.9 {\\text{mm}}$ $\\;\\text{ L.C of vernier caliper }\\;=1-0.9=0.1 {\\text{mm}}=0.01 {\\text{cm}}$ $\\;\\text{ zero error }\\;=(10-4) × 0.1 {\\text{mm}}=-0.6 {\\text{mm}}$ $\\;\\text{ Reading }\\;=\\;\\text{ M.S.R }\\;+\\;\\text{ V.S.R }\\;-\\;\\text{ Zero error }\\;$ $=3 {\\text{cm}}+6 × 0.01-[-0.06]$ $=3+0.06+0.06$ $=3.12 {\\text{cm}}$Nearest given answer in the options is $3.10$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The maximum error in the measurement of resistance, current and time for which current flows in an electrical circuit are $1 \\%, 2 \\%$ and $3 \\%$ respectively. The maximum percentage error in the detection of the dissipated heat will be : [25-Jul-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. 2",
+      "B. 4",
+      "C. 6",
+      "D. 8"
+    ],
+    "correct_answer": "D",
+    "explanation": "$∵ H=i^{2} R t$ $∵ \\%$ error in $H=2 × 2 \\%+1 \\%+3 \\%$ $=8 \\%$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If momentum $[ {P}]$, area $[ {A}]$ and time $[ {T}]$ are taken as fundamental quantities, then the dimensional formula for coefficient of viscosity is: [25-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $[ {PA}^{-1} {T}^{0}]$",
+      "B. $[ {PA} {T}^{-1}]$",
+      "C. $[ {P} {A}^{-1} {T}]$",
+      "D. $[ {PA}^{-1} {T}^{-1}]$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$[η]=[M L^{-1} T^{-1}]$Now if $[η]=[P]^{a}[A]^{b}[T]^{c}$ $⇒[M L^{-1} T^{-1}]=[M L^{1} T^{-1}]^{a}[L^{2}]^{b}[T]^{c}$ $⇒ a=1, a+2 b=-1,-a+c=-1$ $⇒ a=1, b=-1, c=0$ $⇒[η]=[P][A]^{-1}[T]^{0}$ $=[P A^{-1} T^{0}]$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "If $n$ main scale divisions coincide with $(n+1)$ vernier scale divisions. The least count of vernier callipers, when each centimetre on the main scale is divided into five equal parts, will be : [30-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{2}{n+1} {\\text{mm}}$",
+      "B. $\\;\\frac{5}{n+1} {\\text{mm}}$",
+      "C. $\\;\\frac{1}{2 n} {\\text{mm}}$",
+      "D. $\\;\\frac{1}{5 n} {\\text{mm}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "5 parts of main scale division $=1 {\\text{cm}}$ $∴ 1$ part of main scale division $=\\;\\frac{1}{5} {\\text{cm}}$ $∴ 1$ M.S.D. $=\\;\\frac{1}{5} {\\text{cm}}$ $(n+1)$ vernier scale division $=n$ main scale division.$∴ 1 \\;\\text{ V.S.D. }\\;=\\;\\frac{n}{n+1} \\;\\text{ M.S.D. }\\;$ $=\\;\\frac{n}{n+1} × 1 \\;\\text{ M.S.D. }\\;$ $=\\;\\frac{n}{n+1} × \\;\\frac{1}{5} {\\text{cm}}$We know,$\\;\\text{ L.C. }\\;=1 \\;\\text{ M.S.D. }\\;-1 \\;\\text{ V,S.D. }\\;$ $=\\;\\frac{1}{5} {\\text{cm}}-\\;\\frac{n}{5(n+1)} {\\text{cm}}$ $=\\;\\frac{n+1-n}{5(n+1)} {\\text{cm}}$ $=\\;\\frac{1}{5(n+1)} {\\text{cm}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The Vernier constant of Vernier callipers is $0.1 {\\text{mm}}$ and it has zero error of $(-0.05) {\\text{cm}}$. While measuring diameter of a sphere, the main scale reading is $1.7 {\\text{cm}}$ and coinciding vernier division is 5 . The corrected diameter will be ____$× 10^{-2} {\\text{cm}}$ [29-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "180",
+    "explanation": "Since zero error is negative, we will add $0.05 {\\text{cm}}$.$⇒ \\;\\text{ Corrected reading }\\;=1.7 {\\text{cm}}+5 × 0.1 {\\text{mm}}+0.05 {\\text{cm}}$ $=180 × 10^{-2} {\\text{cm}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A student in the laboratory measures thickness of a wire using screw gauge. The readings are $1.22 {\\text{mm}}, 1.23 {\\text{mm}}, 1.19 {\\text{mm}}$ and $1.20 {\\text{mm}}$. The percentage error is $\\;\\frac{x}{121} \\%$. The value of ${\\text{x}}$ is [28-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "150",
+    "explanation": "$I_{\\;\\text{mean }\\;}=\\;\\frac{1.22+1.23+1.19+1.20}{4}=1.21$ $∆ I_{\\;\\text{mean }\\;}=\\;\\frac{0.01+0.02+0.02+0.01}{4}=0.015$So $\\% I=\\;{∆ I_{\\;\\text{mean }\\;}}/{I_{\\;\\text{mean }\\;}} × 100=\\;\\frac{0.015}{1.21} × 100=\\;\\frac{150}{121} \\%$ $x=150$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "Velocity (v) and acceleration (a) in two systems of units 1 and 2 are related as $v_2=\\;\\frac{n}{m^2} v_1$ and $a_2=\\;\\frac{a_1}{m n}$ respectively. Here $m$ and $n$ are constants. The relations for distance and time in two systems respectively are: [28-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{n^3}{m^3} L_1=L_2$ and $\\;\\frac{n^2}{m} T_1=T_2$",
+      "B. $L_1=\\;\\frac{n^4}{m^2} L_2$ and $T_1=\\;\\frac{n^2}{m} T_2$",
+      "C. $L_1=\\;\\frac{n^2}{m} L_2$ and $T_1=\\;\\frac{n^4}{m^2} T_2$",
+      "D. $\\;\\frac{n^2}{m} L_1=L_2$ and $\\;\\frac{n^4}{m^2} T_1=T_2$"
+    ],
+    "correct_answer": "A",
+    "explanation": "${[L]=\\;\\frac{ [v^2] }{[a]}}$ $\\;\\text{ so }\\; \\;\\frac{ [v_2] ^2}{ [a_2] }=\\;{ [\\frac{n}{m^2} v_1] ^2}/{ [\\;\\frac{a_1}{m_n}] }$ $\\;\\frac{ [v_2] ^2}{ [a_2] }=\\;\\frac{n^3}{m^3} \\;\\frac{ [v_1] ^2}{ [a_1] }$ $\\;\\text{ or }\\; [L_2] =\\;\\frac{n^3}{m^3} [L_1]$Similarly,$[T]=\\;\\frac{[v]}{[a]}$So, $[T_2] =\\;\\frac{n^2}{m} [T_1]$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "The SI unit of a physical quantity is pascal-second. The dimensional formula of this quantity will be : [27-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $[ {\\text{ML}}^{-1} {\\text{T}}^{-1}]$",
+      "B. $[ {\\text{ML}}^{-1} {\\text{T}}^{-2}]$",
+      "C. $[ {\\text{ML}}^2 {\\text{T}}^{-1}]$",
+      "D. $[M^{-1} L^3 T^0]$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;\\text{ [pascal-second] }\\;=\\;{M L T^{-2}}/{L^2} × T$ $=M L^{-1} T^{-1}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A silver wire has a mass $(0.6 ± 0.006) {\\text{g}}$, radius $(0.5 ± 0.005) {\\text{mm}}$ and length $(4 ± 0.04) {\\text{cm}}$. The maximum percentage error in the measurement of its density will be : [27-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $4 \\%$",
+      "B. $3 \\%$",
+      "C. $6 \\%$",
+      "D. $7 \\%$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$ρ=\\;\\frac{m}{V}=\\;\\frac{m}{π r^2 × l}$ $∴ \\%$ error in $ρ= (\\;\\frac{0.006}{0.6}+2 × \\;\\frac{0.005}{0.5}+\\;\\frac{0.04}{4}) × 100$ $=4 \\%$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Units and Measurements",
+    "question_text": "A travelling microscope is used to determine the refractive index of a glass slab. If 40 divisions are there in $1 {\\text{cm}}$ on main scale and 50 Vernier scale divisions are equal to 49 main scale divisions, then least count of the travelling microscope is ____$×$ $10^{-6} {\\text{m}}$. [26-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "5",
+    "explanation": "$40 {\\text{M}}=1 {\\text{cm}}$ $⇒ {\\text{M}}=0.025 {\\text{cm}} . . . . . . . . .(1)$Also, $50 {\\text{V}}=49 {\\text{M}}$ $⇒$ Least count $= {\\text{M}}- {\\text{V}}= {\\text{M}}-\\;\\frac{49}{50} {\\text{M}}=\\;\\frac{M}{50}$ $⇒ {\\text{LC}}=\\;\\frac{0.025}{50} {\\text{cm}}$ $=\\;\\frac{250}{50} × 10^{-6} {\\text{m}}$ $⇒ {\\text{LC}}=5 × 10^{-6} {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  }
+]

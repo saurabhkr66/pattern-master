@@ -7,7 +7,7 @@ import {
 import { fmtTimer, type ExamConfig, type SectionConfig } from "@/lib/examConfigs";
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
-
+import { getCloudinaryUrl } from "@/lib/imageUtils";
 /* ─────────────── Types ─────────────── */
 export interface TestQuestion {
   id: string;
@@ -33,6 +33,7 @@ export interface SubmitAnswer {
   marks: number;
   userAnswer: string | null;
   subject: string;
+  timeSpentSecs: number;
 }
 
 type QStatus = "unseen" | "answered" | "skipped" | "review";
@@ -75,8 +76,14 @@ export default function TestEngine({
   const [timeLeft, setTimeLeft] = useState(config.durationSecs);
   const [showPalette, setShowPalette] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
+  const [timeSpent, setTimeSpent] = useState<Record<string, number>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoSubmittedRef = useRef(false);
+  const currentQIdRef = useRef(currentQId);
+
+  useEffect(() => {
+    currentQIdRef.current = currentQId;
+  }, [currentQId]);
 
   const sections = config.sections;
   const multiSection = sections.length > 1;
@@ -94,13 +101,14 @@ export default function TestEngine({
       questionType: q.question_type,
       marks: q.marks,
       subject: q.subject,
+      timeSpentSecs: timeSpent[q.id] || 0,
       userAnswer:
         q.question_type === "MSQ"
           ? (msqSelected[q.id]?.sort().join(";") ?? null) || null
           : q.question_type === "NAT"
           ? natValues[q.id]?.trim() || null
           : mcqSelected[q.id] ?? null,
-    })), [questions, mcqSelected, msqSelected, natValues]);
+    })), [questions, mcqSelected, msqSelected, natValues, timeSpent]);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -116,6 +124,10 @@ export default function TestEngine({
           return 0;
         }
         return prev - 1;
+      });
+      setTimeSpent((prev) => {
+        const id = currentQIdRef.current;
+        return { ...prev, [id]: (prev[id] || 0) + 1 };
       });
     }, 1000);
     return () => clearInterval(timerRef.current!);
@@ -311,7 +323,7 @@ export default function TestEngine({
                 {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
                   <div className="mb-6 flex flex-wrap gap-4">
                     {(currentQ.images as { index: number; filename: string }[]).map((img) => (
-                      <img key={img.index} src={`/images/questions/${img.filename}`} alt="" className="rounded-lg border max-h-[300px]" style={{ borderColor: BE.line }} />
+                      <img key={img.index} src={getCloudinaryUrl(img.filename)} alt="" className="rounded-lg border max-h-[300px]" style={{ borderColor: BE.line }} />
                     ))}
                   </div>
                 )}

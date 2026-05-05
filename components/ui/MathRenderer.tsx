@@ -42,7 +42,10 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\$([^$]*?)∵([^$]*?)\$/g, (_, a, b) => `$${a}\\because ${b}$`)
     .replace(/\$([^$]*?)⇒([^$]*?)\$/g, (_, a, b) => `$${a}\\Rightarrow ${b}$`)
     // JEE scraper: {A}/{B} fake fractions → \frac{A}{B}
-    .replace(/\{([^{}]+)\}\/\{([^{}]+)\}/g, '\\frac{$1}{$2}');
+    .replace(/\{([^{}]+)\}\/\{([^{}]+)\}/g, '\\frac{$1}{$2}')
+    // JEE scraper: unwrapped dimensional formulas [M^...L^...T^...] → $[...]$
+    // Only wraps if not already inside $...$ (negative lookbehind/lookahead for $)
+    .replace(/(?<!\$)\[([^\[\]]+\^[^\[\]]+)\](?!\()(?!\$)/g, '\\$$[$1]\\$$');
 
 
   return (

@@ -1,0 +1,1869 @@
+[
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The distance between Sun and Earth is R. The duration of year if the distance between Sun and Earth becomes 3R will be: [24-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $\\sqrt{3}$ years",
+      "B. 3 years",
+      "C. 9 years",
+      "D. $3 \\sqrt{3}$ years"
+    ],
+    "correct_answer": "D",
+    "explanation": "We know that${\\text{T}}^2 ∝ {\\text{R}}^3$ $⇒(\\;{T^{'}}/{T})^2=(\\;\\frac{3 R}{R})^3$ $⇒ \\;{T^{'}}/{T}=3 \\sqrt{3}$ $⇒ T^{'}=3 \\sqrt{3} \\;\\text{ years }\\;$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The approximate height from the surface of earth at which the weight of the body becomes $\\;\\frac{1}{3}$ of its weight on the surface of earth is :[Radius of earth ${\\text{R}}=6400 {\\text{km}}$ and $\\sqrt{3}=1.732$ ] [24-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $3840 {\\text{km}}$",
+      "B. $4685 {\\text{km}}$",
+      "C. $2133 {\\text{km}}$",
+      "D. $4267 {\\text{km}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$M^{'}=\\;\\frac{M}{3} g$ $g^{'}=\\;\\frac{g}{3}$ $g^{'}=g (\\;{ {\\text{R}}}/{ {\\text{R}}+ {\\text{h}}}) ^2=\\;\\frac{g}{3}$ $\\;{ {\\text{R}}}/{ {\\text{R}}+ {\\text{h}}}=\\;{1}/{{\\sqrt{3}}}$ ${\\text{h}}=({\\sqrt{3}}-1) {\\text{R}}$ $=(1.732-1) 6400$ ${\\text{h}}=4685 {\\text{km}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two satellites revolve around a planet in coplanar circular orbits in anti-clockwise direction. Their period of revolutions are $1 {\\text{h}}$ and $8 {\\text{h}}$, respectively. The radius of the orbit of nearer satellite is $2 ×10^{3} {\\text{km}}$. The angular speed of thefarther satellite as observed from the nearer satellite at the instant when both the satellites are closest is $\\frac{\\π}{\\text{x}} {\\text{rad}} {\\text{h}}^{-1}$, where $\\text{x}$ is",
+    "images": [],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "Given, the time period of the first satellite, $\\text{T}_1$ = 1h The time period of the second satellite, $\\text{T}_2$ = 8 h The radius of the orbit of nearer satellite, $\\text{R}_1$ = 2000 kmApplying the Kepler’s third law, $\\text{T}^{2} \\∝\\text{R}^{3}$ $({\\text{T}_{1}}/{\\text{T}_{2}})^{2}=({\\text{R}_{1}}/{\\text{R}_{2}})^{3}$ ⇒ ${2000}/{\\text{R}_{2}}=(\\frac{1}{8})^{2 / 3}$ ⇒ $\\text{R}_2$ = 8000 km As we know the relation between the angular speed and timeperiod $\\ω=\\frac{\\θ}{\\text{T}}$ So, the angular speed of the nearer satellite to the orbit, $\\ω_{1}=\\frac{2 \\π}{1} {\\text{rad}} / {\\text{h}}$ and the angular speed of the farther satellite to the orbit, $\\ω_{2}=\\frac{2 \\π}{8}=\\frac{\\π}{4} {\\text{rad}} / {\\text{h}}$ The speed of the nearer satellite to orbit, $v_{1}=\\ω_{1} \\text{R}_{1}=(2 \\π) ×2 ×10^{3} {\\text{km}} / {\\text{h}}$ The speed of the farther satellite to the orbit $\\text{V}_{2}=\\ω_{2} \\text{R}_{2}$ $=(\\frac{\\π}{4}) ×8000$ $=\\π\\×2 ×10^{3} {\\text{km}} / {\\text{h}}$ Thus, the relative angular speed of the nearer satellite to the farthersatellite, $\\ω={\\text{V}_{1}-\\text{V}_{2}}/{\\text{R}_{1}-\\text{R}_{2}}$ $={2 \\π×2 ×10^{3}-\\π×2 ×10^{3}}/{8000-2000}$ $={2 \\π×10^{3}}/{6000}=\\frac{\\π}{3} {\\text{rad}} / {\\text{h}}$ Comparing with, $\\ω=\\frac{\\π}{x}$ The value of x = 3.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Four particles each of mass M, move along a circle of radius R under the action of their mutual gravitational attraction as shown in figur. The speed of each particle is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_four-particles-each-of-mass-m-_img1_20260504_231926.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Gravitation/main_four-particles-each-of-mass-m-_img2_20260504_231926.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\frac{1}{2} \\\\sqrt{{\\text{GM}}/{\\text{R}(2 \\\\sqrt{2}+1)}}$",
+      "B. $\\frac{1}{2} \\\\sqrt{\\frac{\\text{GM}}{\\text{R}}(2 \\\\sqrt{2}+1)}$",
+      "C. $\\frac{1}{2} \\\\sqrt{\\frac{\\text{GM}}{\\text{R}}(2 \\\\sqrt{2}-1)}$",
+      "D. $\\\\sqrt{\\frac{\\text{GM}}{\\text{R}}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Let us consider the gravitational force acting on each mass M by adjacent particles be F. and the gravitational force acting on each mass M diagonally be $\\text{F}_1$ The net force, $\\text{F}_{{\\text{net} }}={\\text{Mv}^{2}}/{\\text{R}}$ Along the centre of circle, $\\\\sqrt{2} \\text{F}+\\text{F}_{1}={\\text{Mv}^{2}}/{\\text{R}}$ $\\\\sqrt{2}({\\text{GMM}}/{(\\\\sqrt{2} \\text{R})^{2}})+({\\text{GMM}}/{(2 \\text{R})^{2}})$ $={\\text{Mv}^{2}}/{\\text{R}}$ ⇒ ${\\text{GM}}/{\\text{R}^{2}}({1}/{\\\\sqrt{2}}+\\frac{1}{4})={v^{2}}/{\\text{R}}$ ⇒ $v=\\frac{1}{2} \\\\sqrt{{\\text{GM}(2 \\\\sqrt{2}+1)}/{\\text{R}}}$ Hence, the speed of each particle is $\\frac{1}{2} \\\\sqrt{{\\text{GM}(2 \\\\sqrt{2}+1)}/{\\text{R}}}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If $\\text{R}_{\\text{E}}$ be the radius of Earth, then the ratio between the acceleration due to gravity at a depth r below and a height r above the Earth surface is (Given, $r < \\text{R}_{\\text{E}}$)",
+    "images": [],
+    "options": [
+      "A. $1-{r}/{\\text{R}_{\\text{E}}}-{r^{2}}/{\\text{R}_{\\text{E}}^{2}}-{r^{3}}/{\\text{R}_{\\text{E}}^{3}}$",
+      "B. $1+{r}/{\\text{R}_{\\text{E}}}+{r^{2}}/{\\text{R}_{\\text{E}}^{2}}+{r^{3}}/{\\text{R}_{\\text{E}}^{3}}$",
+      "C. $1+{r}/{\\text{R}_{\\text{E}}}-{r^{2}}/{\\text{R}_{\\text{E}}^{2}}+{r^{3}}/{\\text{R}_{\\text{E}}^{3}}$",
+      "D. $1+{r}/{\\text{R}_{\\text{E}}}-{r^{2}}/{\\text{R}_{\\text{E}}^{2}}-{r^{3}}/{\\text{R}_{\\text{E}}^{3}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given that, radius of Earth $=\\text{R}_{\\text{E}}$ Height above Earth’s surface, h = r Depth below Earth surface, d = r We know that, acceleration due to gravity at height (r) and depth (r) is (for $r < \\text{R}_{\\text{E}}$) $g_{h}=g({\\text{R}_{\\text{E}}}/{\\text{R}_{\\text{E}}+h})^{2}=g({\\text{R}_{\\text{E}}}/{\\text{R}_{\\text{E}}+r})^{2}$ ...(i) and$g_{d}=g({\\text{R}_{\\text{E}}-d}/{\\text{R}_{\\text{E}}})=g({\\text{R}_{\\text{E}}-r}/{\\text{R}_{\\text{E}}})$ ...(ii) $∴ {g_{d}}/{g_{h}}={g({\\text{R}_{\\text{E}}-r}/{\\text{R}_{\\text{E}}})}/{g({\\text{R}_{\\text{E}}}/{\\text{R}_{\\text{E}}+r})^{2}}$ [from Eqs. (i) and (ii)] $⇒ {g_{d}}/{g_{h}}={(\\text{R}_{\\text{E}}-r)(\\text{R}_{\\text{E}}+r)^{2}}/{\\text{R}^{3}}={\\text{R}_{\\text{E}}^{3}+\\text{R}_{\\text{E}}^{2} r-\\text{R}_{\\text{E}} r^{2}-r^{3}}/{\\text{R}_{\\text{E}}^{3}}$ $1+{r}/{\\text{R}_{\\text{E}}}-{r^{2}}/{\\text{R}_{\\text{E}}^{2}}-{r^{3}}/{\\text{R}_{\\text{E}}^{3}}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The masses and radii of the Earth and Moon are $(m_{1}, \\text{R}_{1})$ and $(m_{2}, \\text{R}_{2})$, respectively. Their centres are at a distance r apart. Find the minimum escape velocity for a particle of mass m to be projected from the middle of these two masses.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-masses-and-radii-of-the-ea_img1_20260504_231930.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $v=\\frac{1}{2} \\\\sqrt{{4 \\text{G}(m_{1}+m_{2})}/{r}}$",
+      "B. $v=\\\\sqrt{{4 \\text{G}(m_{1}+m_{2})}/{r}}$",
+      "C. $v=\\frac{1}{2} \\\\sqrt{{2 \\text{G}(m_{1}+m_{2})}/{r}}$",
+      "D. $v={\\\\sqrt{2 \\text{G}}(m_{1}+m_{2})}/{r}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Given, masses and radii of Earth and Moon are $(m_{1}, \\text{R}_{1}),(m_{2}, \\text{R}_{2})$ and separation between their centre of mass = r If v be the minimum escape velocity of particle of mass m, then by using law of conservation of energy, Initial energy = Final energy = 0 $\\frac{1}{2} mv^{2}-{\\text{G} m_{1} m}/{r / 2}-{\\text{G} m_{2} m}/{r / 2}=0$ $⇒ \\frac{1}{2} m v^{2}=\\frac{2 \\text{G} m}{r}(m_{1}+m_{2})$ $⇒ v=\\\\sqrt{\\frac{4 \\text{G}}{r}(m_{1}+m_{2})}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A mass of $50 {\\text{kg}}$ is placed at the centre of a uniform spherical shell of mass $100 {\\text{kg}}$ and radius $50 {\\text{m}}$. If the gravitational potential at a point, $25 {\\text{m}}$ from the centre is$\\text{V} {\\text{kg}} / {\\text{m}}$. The value of V is",
+    "images": [],
+    "options": [
+      "A. -60 G",
+      "B. +2 G",
+      "C. -20 G",
+      "D. -4 G"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Section B : Numerical Type Questions A body of mass 2M splits into four masses $\\{\\text{m}, \\text{M}-\\text{m}, \\text{m}, \\text{M}-\\text{m}\\}$, which are rearranged to form a square as shown in the figure. The ratio of $\\frac{\\text{M}}{m}$ for which, the gravitational potential energy of the system becomes maximum is $x: 1$ . The valueof x is......... .",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_section-b-numerical-type-quest_img1_20260504_231933.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Gravitation/main_section-b-numerical-type-quest_img2_20260504_231933.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "Given, total mass of body is 2M. Potential energy is maximum at $\\text{M} / m=x / 1$ The arrangement of masses to form a square is shown in diagram. The gravitational potential energy of a body is given $\\text{U}=-\\frac{\\text{GMm}}{\\text{r}}$ For the given system, the potential energy will be $\\text{U}_{\\text{T}}=-{{\\text{Gm}}(\\text{M}-\\text{m})}/{d}-{{\\text{Gm}}(\\text{M}-\\text{m})}/{d}-{{\\text{Gm}}(\\text{M}-\\text{m})}/{d} -\\frac{\\text{Gm}(\\text{M}-\\text{m})}{d}-{\\text{Gm}^{2}}/{(\\\\sqrt{2} d)^{2}}-{\\text{G}(\\text{M}-\\text{m})^{2}}/{(\\\\sqrt{2} d)^{2}}$ $\\text{U}_{\\text{T}}=-\\frac{4 \\text{Gm}(\\text{M}-\\text{m})}{d}-{\\text{Gm}^{2}}/{\\\\sqrt{2} d}-{\\text{G}(\\text{M}-\\text{m})^{2}}/{\\\\sqrt{2} d}$ For maximum potential energy, ${\\text{dU}_{\\text{T}}}/{\\text{dm}}=0$ $-\\frac{4 \\text{G}}{d}[\\text{M}-2 \\text{m}]-{\\text{G}}/{\\\\sqrt{2} d}[2 m]$ $-{\\text{G}}/{\\\\sqrt{2} d}[2(\\text{M}-\\text{m}) ×-1]=0$ $⇒ 4 \\text{M}-8 \\text{m}+\\\\sqrt{2} \\text{m}=\\\\sqrt{2}(\\text{M}-\\text{m})$ $(4-\\\\sqrt{2}) \\text{M}=(8-2 \\\\sqrt{2}) \\text{m}$ $\\frac{\\text{M}}{\\text{m}}={2(4-\\\\sqrt{2})}/{4-\\\\sqrt{2}}=2$ Comparing it with the given value, we get x = 2 Thus, potential energy will be maximum when x = 2.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Inside a uniform spherical shell I. the gravitational field is zero. II. the gravitational potential is zero. III. the gravitational field is same everywher IV. the gravitation potential is same everywhere. V. All of the above Choose the most appropriate answer from the options given below.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_inside-a-uniform-spherical-she_img1_20260504_231935.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. I, III and IV",
+      "B. Only V",
+      "C. I, II and III",
+      "D. II, III and IV"
+    ],
+    "correct_answer": "A",
+    "explanation": "The uniform spherical shell is shown in the figure below Inside the shell, there is no mass, so by applying Gauss’s law forgravitation $\\∮{g} .{d} {a}=-4 \\π\\text{GM}_{{\\text{enclosed} }}$ where, g = gravitational field intensity. da = area enclosed G = gravitational constant and $\\text{M}_{{\\text{enclosed} }}=$ mass enclosed . As, $\\text{M}_{{\\text{enclosed} }}=0$ So, gravitational field intensity is zero inside the shell, i.e. g = 0 …(i) We also know that, $g=-\\frac{\\text{dV}}{\\text{dr}}$ where, dV is change in potential due to gravity ⇒ V = constant [using Eq. (i)] So, gravitational field is zero everywhere inside the shell and gravitational potential (V) is constant everywhere.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The planet Mars has two moons, if one of them has a period 7 hours, 30 minutes and an orbital radius of $9.0 \\×10^{3} {km}$. Find the mass of Mars. $\\{ \\text{Given} {4 \\π^{2}}/{{G}}=6 \\× 10^{11} {N}^{-1} {m}^{-2} {kg}^{2}\\}$",
+    "images": [],
+    "options": [
+      "A. $5.96 \\×10^{19} {kg}$",
+      "B. $3.25 \\×10^{21} {kg}$",
+      "C. $7.02 \\×10^{25} {kg}$",
+      "D. $6.00 \\×10^{23} {kg}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Option D is correct ${T}^{2}={4 \\π^{2}}/{{GM}} \\.{r}^{3}$ ${M}={4 \\π^{2}}/{{G}} \\.{{r}^{3}}/{{ T}^{2}}$ by putting values ${M}=6 \\×10^{23}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two identical particles of mass $1 {kg}$ each go round a circle of radius ${R}$, under the action of their mutual gravitational attraction. The angular speed of each particle is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_two-identical-particles-of-mas_img1_20260504_231939.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\\\sqrt{{G}/{2 R^{3}}}$",
+      "B. $\\frac{1}{2} \\\\sqrt{{G}/{R^{3}}}$",
+      "C. $\\frac{1}{2 R} \\\\sqrt{\\frac{1}{G}}$",
+      "D. $\\\\sqrt{{2 G}/{R^{3}}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${F}={{Gm}^{2}}/{(2 {R})^{2}}={m} {R} \\ω^{2}$ $\\ω=\\frac{1}{2} \\\\sqrt{{{G}}/{{R}^{3}}}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Suppose two planets (spherical in shape) of radii R and 2R, but mass M and 9 M respectively have a centre to centre separation 8 R as shown in the figure. A satellite of mass 'm' is projected from the surface of the planet of mass 'M' directly towards the centre of the second planet. The minimum speed 'v' required for the satellite to reach the surface of the second planet is $\\sqrt{a/7 \\text{GM}/ R$ then the value of 'a' is ________. [Given : The two planets are fixed in their position]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_suppose-two-planets-spherical-_img1_20260504_231941.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Gravitation/main_suppose-two-planets-spherical-_img2_20260504_231941.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "4",
+    "explanation": "Assume that at a distance $x$ from the planet of mass $M$ , the net gravitational field becomes zero. $∴ \\;\\;{G M}/{x^{2}}=\\;{G × 9 M}/{(8 R-x)^{2}}$ $⇒ \\;{1}/{x^{2}}=\\;{9}/{(8 R-x)^{2}}$ $⇒ (\\;\\frac{1}{x})=(\\;\\frac{3}{8 R-x})^{2} ⇒ \\;\\frac{1}{x}=\\;\\frac{3}{8 R-x}$ $⇒ 3 x=8 R-x$ $⇒ 4 x=8 R$ $⇒ x=2 R \\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(i)$Now, a satellite should be projected in such a way that its covers a minimum distance of $2 R$ . $∴ \\;\\frac{1}{2} m v^{2} \\;\\; - \\;\\frac{G M m}{R}-\\;\\frac{G(9 M) m}{7 R}$ $\\;\\; =\\;\\frac{-G M m}{2 R}-\\;\\frac{G(9 M) m}{6 R}$where, $m$ is the mass of satellite. $⇒ \\;\\; \\;\\frac{1}{2} v^{2}=\\;\\frac{2 G M}{7 R} ⇒ v=\\sqrt{\\;\\frac{4}{7} \\;\\frac{G M}{R}} \\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(ii)$According to question, the minimum speed $v$ required for the satellite to reach the surface of the second planet is $\\sqrt{\\;\\frac{a G M}{7 R}}$ . So, on comparing it with Eq. (ii), we can write $a=4$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Consider a planet in some solar system which has a mass double the mass of earth and density equal to the average density of earth. If the weight of an object on earth is $W$, the weight of the same object on that planet will be :",
+    "images": [],
+    "options": [
+      "A. $2 {W}$",
+      "B. W",
+      "C. $2^{\\frac{1}{3}} {W}$",
+      "D. $\\\\sqrt{2} {W}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let the mass of planet be $m_{p}$ and that of earth be $m$ .Given, $m_{p}=2 m$Density of planet $(ρ_{p})=$ Density ofearth $(ρ)$As we know that,Weight of object on earth is W $w=m g \\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(i)$where, $g$ is acceleration due to gravity.and $\\;\\; g=\\;{G m}/{R^{2}}$where, $\\;\\; G=$ universal gravitationalconstant, $R \\;\\; =\\;\\text{ radius of earth }\\;$ $\\;\\text{ and }\\; \\;\\; m_{e} \\;\\; =\\;\\text{ mass of earth. }\\;$ $⇒ g \\;\\; =\\;{G ρ \\frac{4}{3} π R^{3}}/{R^{2}}$ $⇒ g \\;\\; =G ρ \\;\\frac{4}{3} π R$Putting this value in Eq. (i), we get $w=m G ρ \\;\\frac{4}{3} π R \\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(ii)$As densities of planets earth is same.i.e., $\\;\\; ρ_{p}=ρ$ $⇒ \\;{m_{p}}/{\\frac{4}{3} π R_{p}^{3}} \\;\\; =\\;{m}/{\\frac{4}{3} π R^{3}}$ $⇒ \\;\\; R_{p} \\;\\; =(\\;{m_{p}}/{m} R^{3})^{1 / 3}$ $\\;\\; =(\\;\\frac{2 m}{m} R^{3})^{1 / 3}$ $⇒ \\;\\; R_{p} \\;\\; =(2)^{1 / 3} R$Weight on planet, $w_{p}=\\;\\frac{4}{3}(2)^{1 / 3} π m G ρ R \\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(iii)$Dividing Eq. (iii) by Eq. (ii), we get $\\;{w_{p}}/{w} \\;\\; =\\;{\\;\\frac{4}{3}(2)^{1 / 3} π m G ρ R}/{m ρ G \\;\\frac{4}{3} π R}$ $⇒ \\;\\; w_{p} \\;\\; =2^{1 / 3} w$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The minimum and maximum distances of a planet revolving around the Sun are $x_{1}$ and $x_{2}$. If the minimum speed of the planet on its trajectory is $\\mathrm{v}_{0}$ then its maximum speed will be :",
+    "images": [],
+    "options": [
+      "A. ${{v}_{0} {x}_{1}^{2}}/{{x}_{2}^{2}}$",
+      "B. ${{v}_{0} {x}_{2}^{2}}/{{x}_{1}^{2}}$",
+      "C. ${{v}_{0} {x}_{1}}/{{x}_{2}}$",
+      "D. ${{v}_{0} {x}_{2}}/{{x}_{1}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Angular momentum conservation equation ${v}_{0} {x}_{2}={v}_{1} {x}_{1}$ ${v}_{1}={{v}_{0} {x}_{2}}/{{x}_{1}}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A body is projected vertically upwards from the surface of earth with a velocity sufficient enough to carry it to infinity. The time taken by it to reach height h is ______ S.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-body-is-projected-vertically_img1_20260504_231947.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\\\sqrt{{{R}_{{e}}}/{2 {g}}}[(1+{{h}}/{{R}_{{e}}})^{3 / 2}-1]$",
+      "B. $\\\\sqrt{{{2R}_{{e}}}/{ {g}}}[(1+{{h}}/{{R}_{{e}}})^{3 / 2}-1]$",
+      "C. $1/3\\\\sqrt{{{R}_{{e}}}/{2 {g}}}[(1+{{h}}/{{R}_{{e}}})^{3 / 2}-1]$",
+      "D. $1/3\\\\sqrt{{{2R}_{{e}}}/{ {g}}}[(1+{{h}}/{{R}_{{e}}})^{3 / 2}-1]$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Applying energy conservation from (1) to (2) $\\frac{1}{2} m \\.({2 G M}/{R_{e}})-{G M m}/{R_{e}}$ $=\\frac{1}{2} m v^{2}-\\frac{G M m}{R+r}$ $⇒ \\frac{1}{2} m v^{2}=\\frac{G M m}{R+r}$ $v=\\\\sqrt{\\frac{2 G M}{R+r}}=\\frac{d r}{d t}$ $\\\\sqrt{2 G M} \\∫↙{0} ↖{t} d t=\\∫↙{R_{e}} ↖{R_{e}+h}(\\\\sqrt{R+r}) d r$ $\\\\sqrt{2 G M} \\.t=\\frac{2}{3}[(R+r)^{3 / 2}]_{R_{e}}^{R_{e}+h}$ $t=\\frac{2}{3} \\\\sqrt{{R_{e}^{3}}/{2 G M}}[(1+{h}/{R_{e}})^{3 / 2}-1]$ ${G M}/{R_{e}^{2}}=g$ $t=1/3\\\\sqrt{{{2R}_{{e}}}/{ {g}}}[(1+{{h}}/{{R}_{{e}}})^{3 / 2}-1]$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Consider a binary star system of star A and star B with masses ${m}_{{A}}$ and ${m}_{{B}}$ revolving in a circular orbit of radii $r_{A}$ and $r_{B}$, respectively. If $T_{A}$ and $T_{B}$ are the time period of star ${A}$ and star ${B}$, respectively, then:",
+    "images": [],
+    "options": [
+      "A. ${{T}_{{A}}}/{{T}_{{B}}}=({{r}_{{A}}}/{{r}_{{B}}})^{\\frac{3}{2}}$",
+      "B. ${T}_{{A}}={T}_{{B}}$",
+      "C. ${T}_{{A}}{T}_{{B}}$ (if ${ m}_{{A}}>{m}_{{B}})$",
+      "D. ${T}_{{A}}>{T}_{{B}}($ if ${r}_{{A}}>{r}_{{B}})$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${T}_{{A}}={T}_{{B}}($ since $\\ω_{{A}}=\\ω_{{B}})$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite is launched into a circular orbit of radius R around earth, while a second satellite is launched into a circular orbit of radius 1.02 R. The percentage difference in the time periods of the two satellites is :",
+    "images": [],
+    "options": [
+      "A. 1.5",
+      "B. 2.0",
+      "C. 0.7",
+      "D. 3.0"
+    ],
+    "correct_answer": "D",
+    "explanation": "${T}^{2} \\∝{R}^{3}$ ${T}={kR}^{3 / 2}$ ${{dT}}/{{T}}=\\frac{3}{2} {{dR}}/{{R}}$ $=\\frac{3}{2} \\×0.02=0.03$ $\\%$ Change $=3 \\%$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A person whose mass is 100 kg travels from Earth to Mars in a spaceship. Neglect all other objects in sky and take acceleration due to gravity on the surface of the Earth and Mars as 10 m/s$^2$ and 4 m/s$^2$ respectively. Identify from the below figures, the curve that fits best for the weight of the passenger as a function of time.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-person-whose-mass-is-100-kg-_img1_20260504_231953.webp"
+      }
+    ],
+    "options": [
+      "A. (c)",
+      "B. (a)",
+      "C. (d)",
+      "D. (b)"
+    ],
+    "correct_answer": "A",
+    "explanation": "At neutral point g = 0 so graph (C) is correct Given,Acceleration due to gravity on Earth, $g_{E}=10 {m} / {s}^{2}$and acceleration due to gravity on Mars, $g_{M}=4 {m} / {s}^{2}$We know that,$g_{E}$ (at height $h)=g_{\\;\\text{Earth }\\;}(1-\\;\\frac{2 h}{R})$ $∴$ Weight at Earth,$m g_{E}=100 × 10=1000 {N}$As the spaceship moves far away from Earth, the value of $g_{E}$ decreases to zero at a point where $g_{E}+g_{M}=0$ and hence weight will also be zero.This point is called neutral point and is shown by graph (c) in the given figure.Then, $g_{E}$ increases $4 {ms}^{-2}$ at Mars surface and weight becomes $400 {N}$ which is also exhibited by graph (c).",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The angular momentum of a planet of mass $M$ moving around the Sun in an elliptical orbit is $L$. The magnitude of the areal velocity of the planet is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-angular-momentum-of-a-plan_img1_20260504_231955.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{4 L}{M}$",
+      "B. $\\;\\frac{L}{M}$",
+      "C. $\\;\\frac{2 L}{M}$",
+      "D. $\\;\\frac{L}{2 M}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "According to the Kepler's second law, $\\frac{d A}{d t}=$ constantArea covered from $P$ to $P^{'}$ is $d A$, then $d A=\\;\\frac{1}{2} r^{2} d θ ⇒ \\;\\frac{d A}{d t}=\\;\\frac{1}{2} r^{2} \\;\\frac{d θ}{d t}$ $⇒ \\;\\frac{d A}{d t}=\\;\\frac{1}{2} r^{2} ω$...(i) Angular momentum, $L=M v r=M(ω r) r=M ω r^{2}$ $⇒ ω=\\;{L}/{m r^{2}}$ $∴$ From Eqs. (i) and (ii), we get $\\;\\frac{d A}{d t}=\\;\\frac{1}{2} r^{2}(\\;{L}/{M r^{2}})$ $⇒ \\;\\frac{d A}{d t}=\\;\\frac{L}{2 M}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If the angular velocity of Earth's spin is increased such that the bodies at the equator start floating, the duration of the day would be approximately (Take $2 {g}=10 {ms}^{-2}$, the radius of Earth, $R=6400 × 10^{3} {m}$, take $π=3.14)$",
+    "images": [],
+    "options": [
+      "A. $60 {min}$",
+      "B. does not change",
+      "C. $1200 {min}$",
+      "D. $84 {min}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Condition of weightlessness, $g_{\\;\\text{equator }\\;}=0$ $g_{\\;\\text{equazar }\\;}=g-ω^{2} R$ The radius of the Earth, $R=6400 {km}=6.4 × 10^{6} {m}$ $⇒$ $ω=\\sqrt{\\;\\frac{g}{R}}$ $ω=\\sqrt{\\;{10}/{6.4 × 10^{6} {m}}} ⇒ ω=\\;\\frac{1}{800} {rad} {/} {s}$ The duration of the day, $T=\\;\\frac{2 π}{ω} ⇒ T=\\;{2 π}/{\\frac{1}{800}}$ $⇒ T=5024 {s} ⇒ T=\\;\\frac{5024}{60} {min}$ $⇒ \\;\\; T=84 {min}$ Hence, the duration of the day would be 84 min.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The time period of a satellite in a circular orbit of radius $R$ is $T$. The period of another satellite in a circular orbit of radius $9 R$ is",
+    "images": [],
+    "options": [
+      "A. $9 {T}$",
+      "B. $27 T$",
+      "C. $12 {T}$",
+      "D. $3 T$"
+    ],
+    "correct_answer": "B",
+    "explanation": "According to Kepler's third law, $T^{2} ∝ R^{3}$ $⇒ \\;\\; \\;{T_{2}}/{T_{1}}=(\\;{R_{2}}/{R_{1}})^{3 {/} 2}$ $⇒ \\;\\; \\;{T_{2}}/{T}=(\\;\\frac{9 R}{R})^{3 {/}2}$ $[∵ R_{1} , =R ; R_{2} , =9 R]$ $⇒$ $T_{2}=27 T$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A geostationary satellite is orbiting around an arbitrary planet $P$ at a height of $11 R$ above the surface of $P, R$ being the radius of $P$. The time period of another satellite in hours at a height of $2 R$ from the surface of $P$ is $P$ has the time period of $24 {h}$.",
+    "images": [],
+    "options": [
+      "A. $6 \\sqrt{2}$",
+      "B. $6 / \\sqrt{2}$",
+      "C. 3",
+      "D. 5"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given Height of satellite from planet's surface, $h=11 R$ So, the total distance from the centre of planet $=11 R+R=12 R$ Time period of planet $=24 {h}$ Similarly, the total distance of second satellite from the centre of planet $=2 R+R=3 R$ Using the Kepler's law $T^{2} ∝ R^{3}$ $⇒ \\;\\; (\\;{T_{1}}/{T_{2}})=(\\;{R_{1}}/{R_{2}})^{3 / 2}$ Substituting the values in the above equation, we get $(\\;\\frac{24}{T})=(\\;\\frac{12 R}{3 R})^{3 / 2}$ $∴$ The time period of another satellite is $3 {h}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The radius in kilometre to which the present radius of Earth $(R=6400 {km})$ to be compressed so that the escape velocity is increased 10 times is",
+    "images": [],
+    "options": [],
+    "correct_answer": "64",
+    "explanation": "We know that, $v_{e}=\\sqrt{\\;{2 {Gm}}/{R_{1}}}$ ...(i) where, $v_{e}=$ escape velocity, $G=$ gravitational constant, $R=$ radius of earth and $m=$ mass of the body. Now, the escape velocity is increased to 10 times, $⇒ \\;\\; 10 v_{e}=\\sqrt{\\;{2 G m}/{R_{2}}}$...(ii) Dividing Eq. (ii) by Eq. (i), we get $⇒$ $10=\\sqrt{\\;{R_{1}}/{R_{2}}} ⇒ 100=\\;{R_{1}}/{R_{2}}$ $⇒ \\;\\; R_{2}=\\;{R_{1}}/{100}=\\;\\frac{6400}{100} ⇒ R_{2}=64 {km}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If one wants to remove all the mass of the earth to infinity in order to break it up completely. The amount of energy that needs to be supplied will be $\\;\\frac{x}{5} \\;{G M^{2}}/{R}$, where $x$ is (Round off to the nearest integer) ( $M$ is the mass of earth, $R$ is the radius of earth and $G$ is the gravitational constant.)",
+    "images": [],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "We know that binding energy of earth, ${BE}=-\\;\\frac{3}{5} \\;{G M^{2}}/{R}$ $∴$ Energy required to break the earth into pieces $=- {BE}=\\;\\frac{3}{5} \\;{G M^{2}}/{R}$ .......(i) According to question, the amount of energy that needs to be supplied is $\\;\\frac{x}{5} \\;{G M^{2}}/{R}$. Comparing it with value in Eq. (i), we get, $x=3$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The maximum and minimum distance of a comet from the Sun are $1.6 × 10^{12} {m}$ and $8.0 × 10^{10} {m}$, respectively. If the speed of the comet at the nearest point is $6 × 10^{4} {ms}^{-1}$, then the speed at the farthest point is",
+    "images": [],
+    "options": [
+      "A. $1.5 × 10^{3} {m} {/} {s}$",
+      "B. $6.0 × 10^{3} {m}{/} {s}$",
+      "C. $3.0 × 10^{3} {m} {/} {s}$",
+      "D. $4.5 × 10^{3} {m} {/} {s}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given, maximum distance of comet from the Sun, $r_{1}=1.6 × 10^{12} {m}$ Minimum distance of comet from the Sun, $r_{2}=8.0 × 10^{10} {m}$ Speed of the comet at nearest point, $v_{2}=6 × 10^{4} {ms}^{-1}$ Applying law of conservation of angular momentum, $m v_{1} r_{1}=m v_{2} r_{2}( ∵$ mass of comet will remain same $)$ $⇒ \\;\\; V_{1}=\\;{V_{2} r_{2}}/{r_{1}}$ $=\\;{6 × 10^{4} × 8 × 10^{10}}/{1.6 × 10^{12}}=\\;{48 × 10^{14}}/{1.6 × 10^{12}}$ $=3 × 10^{3} {m} {/} {s}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "In the reported figure of Earth, the value of acceleration due to gravity is same at point $A$ and $C$ but it is smaller than that of its value at point $B$ (surface of the Earth). The value of $O A: A B$ will be $x: y$. The value of $x$ is .......... .",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_in-the-reported-figure-of-eart_img1_20260504_232007.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "4",
+    "explanation": "Given, $g_{A}=g_{C}$ Radius of Earth, $R=6400 {km}$ Height, $h=3200 {km}=\\;\\frac{R}{2}$ Since, $g=\\;{G M}/{R^{2}}$ where, $G$ is gravitational constant. $∴ \\;\\; g_{A}=\\;{G M(O A)}/{R^{3}}$ . . . (i) and $g_{C} \\;\\; =\\;{G M}/{(O C)^{2}}=\\;\\frac{G M}{R+h}$ $\\;\\; =\\;{G M}/{(R+R / 2)^{2}}=\\;{G M}/{(3 R / 2)^{2}}$ . . . (ii) According to given information from Eqs. (i) and (ii), we get $⇒ \\;\\; O A \\;\\; =\\;\\frac{4}{9} R=\\;\\frac{4}{9} × 6400$ $A B \\;\\; =O B-O A$ $\\;\\text{ and }\\;\\;A B=6400-\\;\\frac{4}{9} × 6400$ $⇒ \\;\\; =6400(1-4 / 9)=6400 × 5 / 9$ $\\;\\text{ Now, }\\; O A: A B=\\;\\frac{6400 × 4 / 9}{5 / 9 × 6400}=\\;\\frac{4}{5}$ $\\;\\text{ Hence, }\\; x=4$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Find the gravitational force of attraction between the ring and sphere as shown in the figure, where the plane of the ring is perpendicular to the line joining the centres. If $\\sqrt{8} R$ is the distance between the centres of a ring (of mass $m$ ) and a sphere (of mass $M$ ), where both have equal radius $R$.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_find-the-gravitational-force-o_img1_20260504_232009.webp"
+      }
+    ],
+    "options": [
+      "A. $\\;{\\sqrt{8}}/{9} ⋅ \\;\\frac{G m M}{R}$",
+      "B. $\\;{2 \\sqrt{2}}/{3} ⋅ \\;{G M m}/{R^{2}}$",
+      "C. $\\;{1}/{3 \\sqrt{8}} ⋅ \\;{G M m}/{R^{2}}$",
+      "D. $\\;{\\sqrt{8}}/{27} ⋅ \\;{G m M}/{R^{2}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given, distance between centre of ring and sphere, $d=\\sqrt{8} R$ Since, gravitational field at the axis of ring, $E=\\;{G m d}/{(d^{2}+R^{2})^{3 / 2}}$ Here, $G$ is the gravitational constant. $⇒ \\;\\; E=\\;{G m R \\sqrt{8}}/{(8 R^{2}+R^{2})^{3 / 2}}=\\;{G m R \\sqrt{8}}/{(3 R)^{3}}$ $⇒ \\;\\; E=\\;{G m R \\sqrt{8}}/{27 R^{3}}=\\;{G m \\sqrt{8}}/{27 R^{2}}$ Force between ring and sphere, $F=M E$ . . . (i) Substituting the value of $E$ in Eq. (i), we get $F=\\;{\\sqrt{8}}/{27} \\;{G m M}/{R^{2}}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A planet revolving in elliptical orbit has I. a constant velocity of revolution II. has the least velocity when it is nearest to the Sun III. its areal velocity is directly proportional to its velocity IV. areal velocity is inversely proportional to its velocity. V. to follow a trajectory such that the areal velocity is constant. Choose the correct answer from the options given below.",
+    "images": [],
+    "options": [
+      "A. Only I",
+      "B. Only IV",
+      "C. Only III",
+      "D. Only V"
+    ],
+    "correct_answer": "D",
+    "explanation": "According to Kepler's second law of planetary motion, areal velocity of every planet moving around the sun should remain constant in elliptical orbit.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The initial velocity $v_{i}$ required to project a body vertically upward from the surface of the Earth to reach a height of $10 R$, where $R$ is the radius of the Earth, may be described in terms of escape velocity $v_{e}$ such that $v_{i}=\\sqrt{\\;\\frac{x}{y}} × v_{e} .$ The value of $x$ will be ........... .",
+    "images": [],
+    "options": [],
+    "correct_answer": "10",
+    "explanation": "By using law of conservation of energy, Energy on the surface of earth $(E_{\\;\\text{surface }\\;})=$ Energy at height $(h=10 R)$ $⇒ \\;\\frac{-G M m}{R}+\\;\\frac{1}{2} m v_{i}^{2}=\\;\\frac{-G M m}{R+10 R}+0=\\;\\frac{-G M m}{11 R}$ $⇒ \\;\\; 1 / 2 m v_{i}^{2}=\\;\\frac{11}{11} \\;\\frac{G M m}{R}-\\;\\frac{G M m}{11 R}$ $⇒ \\;\\; \\;\\frac{1}{2} m v_{i}^{2}=\\;\\frac{10 G M m}{11 R} ⇒ v_{i}^{2}=\\;\\frac{20 G M}{11 R}$ $\\;\\;\\; v_{i}=\\sqrt{\\;\\frac{10}{11}} v_{e} \\;\\; ( ∵ v_{e}=\\sqrt{\\;\\frac{2 G M}{R}}=\\;\\text{ escape velocity) }\\;$ $⇒ \\;\\; x=10$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two satellites $A$ and $B$ of masses $200 {kg}$ and $400 {kg}$ are revolving around the Earth at height of $600 {km}$ and $1600 {km}$, respectively. If $T_{A}$ and $T_{B}$ are the time periods of $A$ and $B$ respectively, then the value of $T_{B}-T_{A}$ is(Given, radius of Earth $=6400 {km}$, mass of Earth $=6 × 10^{24} {kg}$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_two-satellites-a-and-b-of-mass_img1_20260504_232015.webp"
+      }
+    ],
+    "options": [
+      "A. $1.33 × 10^{3} {s}$",
+      "B. $3.33 × 10^{2} {s}$",
+      "C. $4.24 × 10^{3} {s}$",
+      "D. $4.24 × 10^{2} {s}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given, $M_{A}=200 {kg}, M_{B}=400 {kg}, H_{A}=600 {km}, H_{B}=1600 {km}$ and $\\;\\; R_{A}=R_{E}+H_{A}=6400+600=7000 {km}$ $R_{B}=R_{E}+H_{B}=6400+1600=8000 {km}$ Let $T_{A}, T_{B}, ω_{A}, ω_{B}, R_{A}$ and $R_{B}$ be the time period, angular frequencies and radii of satellites $A$ and $B$, respectively. Force on satellite $A, F_{A}=m_{A} ω_{A}^{2} R_{A}=\\;{G M m_{A}}/{R_{A}^{2}}$ $⇒ \\;\\; ω_{A}^{2}=\\;{G M}/{R_{A}^{3}}$ but, $\\;\\; ω_{A}=\\;{2 π}/{T_{A}}$ $∴ \\;\\; (\\;{2 π}/{T_{A}})^{2}=\\;{G M}/{R_{A}^{3}} ⇒ T_{A}=\\sqrt{\\;{4 π^{2} R_{A}^{3}}/{G M}}$ Similarly, $\\;\\; T_{B}=\\sqrt{\\;{4 π^{2} R_{B}^{3}}/{G M}}$ $∴ \\;\\; T_{B}-T_{A} \\;\\; =\\sqrt{\\;{4 π^{2}}/{G M}}(\\sqrt{R_{B}^{3}}-\\sqrt{R_{A}^{3}})$ $\\;\\; =\\;{2 π}/{\\sqrt{G M}}[\\sqrt{(8 × 10^{3})^{3}}-\\sqrt{(7 × 10^{3})^{3}}]$ $=\\;{2 π × 10^{9}}/{\\sqrt{G M}}(8 \\sqrt{8}-7 \\sqrt{7})$ $=\\;{2 π × 10^{9}}/{\\sqrt{6.67 × 10^{-11} × 6 × 10^{24}}}(4.107)$ $=\\;{2 π}/{\\sqrt{4 × 10^{14}}} × 10^{9}(4.107)$ $=π × 10^{2} × 4.107=12.9 × 10^{2} {s}$ $=1.33 × 10^{3} {s}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A solid sphere of radius $R$ gravitationally attracts a particle placed at $3 R$ from its centre with a force $F_{1}$. Now, a spherical cavity of radius $(\\;\\frac{R}{2})$ is made in the sphere (as shown in figure) and the force becomes $F_{2}$. The value of $F_{1}: F_{2}$ is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-solid-sphere-of-radius-r-gra_img1_20260504_232017.webp"
+      }
+    ],
+    "options": [
+      "A. $25: 36$",
+      "B. $36: 25$",
+      "C. $50: 41$",
+      "D. $41: 50$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given, radius of sphere $=R$ Distance of particle from centre of Earth $=3 R$ Force between sphere and particle $=F_{1}$ Radius of cavity $=R / 2$ Let mass of sphere $=M$ Mass of sphere with cavity $=M^{'}$ Mass of particle $=m$ Now, $\\;\\; M^{'}=ρ ⋅ \\;\\frac{4}{3} π(\\;\\frac{R}{2})^{3}=\\;\\frac{M}{8}$ By using concept of gravitational force, $F_{1} \\;\\; =\\;{G M m}/{(3 R)^{2}}=\\;{G M m}/{9 R^{2}}$ . . . (i) and $F_{\\;\\text{cavity }\\;} \\;\\; =\\;{G M^{'} m}/{(A B)^{2}}=\\;{(2}/{25 × 8 R^{2}}$ $\\;\\; =\\;\\frac{4 G M m}{25}$ . . . (ii) $∴ \\;\\; F_{2} \\;\\; =F_{1}-F_{\\;\\text{cavity }\\;}=\\;{G M m}/{9 R^{2}}-\\;\\frac{4}{25 × 8} \\;{G M m}/{R^{2}}$ $\\;\\; =\\;{G M m}/{R^{2}}(\\;\\frac{1}{9}-\\;\\frac{1}{50})=\\;\\frac{41}{50 × 9} \\;{G M m}/{R^{2}}$ $∵ \\;\\; \\;{F_{1}}/{F_{2}} \\;\\; =\\;\\frac{50}{41}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Given below are two statements: one is labelled as Assertion A and the other is labelled as Reason R. Assertion $A$ The escape velocities of planet $A$ and $B$ are same. But $A$ and $B$ are of unequal mass. Reason $R$ The product of their mass and radius must be same, $M_{1} R_{1}=M_{2} R_{2}$ In the light of the above statements, choose the most appropriate answer from the options given below.",
+    "images": [],
+    "options": [
+      "A. Both $A$ and $R$ are correct but $R$ is not the correct explanation of $A$.",
+      "B. ${A}$ is correct but ${R}$ is not correct.",
+      "C. Both $A$ and $R$ are correct and $R$ is the correct explanation of $A$.",
+      "D. $A$ is not correct but $R$ is correct."
+    ],
+    "correct_answer": "B",
+    "explanation": "Let $v_{A}, v_{B}, M_{A}, M_{B}$ and $R_{A}, R_{B}$ be the escape velocities, masses and radii of planet $A$ and $B$, respectively. As we know that, $v=\\sqrt{2 g R}=\\sqrt{\\;{2 G M}/{R^{2}} ⋅ R}=\\sqrt{\\;\\frac{2 G M}{R}}$ where, $G$ is the gravitational constant. $⇒ \\;\\; v ∝ \\sqrt{\\;\\frac{M}{R}}$ Since, $v_{A}=v_{B}$ $∵ \\;\\; \\;{M_{A}}/{R_{A}}=\\;{M_{B}}/{R_{B}} ⇒ M_{A} R_{B}=M_{B} R_{A}$ or $M_{1} R_{2}=M_{2} R_{1}$ Hence, option (b) is the correct.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A body weights $49 {N}$ on a spring balance at the North pole. What will be its weight recorded on the same weighing machine, if it is shifted to the equator ? (Use, $g=\\;{G M}/{R^{2}}=9.8 {ms}^{-2}$ and radius of earth, $R=6400 {km}$ )",
+    "images": [],
+    "options": [
+      "A. $49 {N}$",
+      "B. $48.83 {N}$",
+      "C. $49.83 {N}$",
+      "D. $49.17 {N}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Given, weight of body at North pole, $w_{p}=m g=49 {N}$ Radius of Earth, $R=6400 {km}$ Let weight of body at equator be $w_{e}$. At equator, $g_{e}=g-R ω^{2}$ $∴ \\;\\; w_{e}=m g_{e}=m(g-R ω^{2})$ Since, $w_{p} > w_{e} ⇒ w_{e} < 49 {N}$ Hence, above condition is satisfied by only option (b).",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Consider two satellites $S_{1}$ and $S_{2}$ with periods of revolution $1 {h}$ and $8 {h}$ respectively, revolving around a planet in circular orbits. The ratio of angular velocity of satellite $S_{1}$ to the angular velocity of satellite $S_{2}$ is 24 Feb 2021 Shift1",
+    "images": [],
+    "options": [
+      "A. $8: 1$",
+      "B. $1: 8$",
+      "C. $2: 1$",
+      "D. $1: 4$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given, period of revolution of first satellite, $T_{1}=1 {h}$ Period of revolution of second satellite, $T_{2} \\;\\; =8 {h}$ $\\;{T_{1}}/{T_{2}} \\;\\; =\\;\\frac{1}{8}$ We know that, $ω=\\;\\frac{2 π}{T}$ $⇒$ $ω ∝ \\;\\frac{1}{T}$ $∵ \\;\\; \\;{ω_{1}}/{ω_{2}}=\\;{T_{2}}/{T_{1}} ⇒ \\;{ω_{1}}/{ω_{2}}=\\;\\frac{8}{1}$ or $\\;\\; ω_{1}: ω_{2}=8: 1$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Four identical particles of equal masses $1 {kg}$ made to move along the circumference of a circle of radius $1 {m}$ under the action of their own mutual gravitational attraction. The speed of each particle will be 24 Feb 2021 Shift1",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_four-identical-particles-of-eq_img1_20260504_232024.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt{\\;{(1+2 \\sqrt{2}) G}/{2}}$",
+      "B. $\\sqrt{\\;\\frac{G}{2}(1+2 \\sqrt{2})}$",
+      "C. $1/2\\sqrt{G(1+2 \\sqrt{2})}$",
+      "D. $\\sqrt{\\;\\frac{G}{2}(2 \\sqrt{2}-1)}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given, $m=1 {kg}, R=1 {m}$ We know that, $F \\;\\; =\\;{G m_{1} m_{2}}/{r^{2}}$ $∵ \\;\\; F_{1} \\;\\; =\\;{G m m}/{(2 R)^{2}}=\\;{G m^{2}}/{4 R^{2}}$ $\\;\\text{ and }\\; \\;\\; F_{2} \\;\\; =\\;{G m m}/{(\\sqrt{2} R)^{2}}=\\;{G m^{2}}/{2 R^{2}}$ Net force on one particle, $F_{\\;\\text{net }\\;} \\;\\; =F_{1}+F_{2} \\cos 45^{∘}+F_{2} \\cos 45^{∘}$ $\\;\\; =F_{1}+2 F_{2} \\cos 45^{∘}$ $\\;\\; =\\;{G m^{2}}/{4 R^{2}}+2(\\;{G m^{2}}/{2 R^{2}}) ⋅ \\;{1}/{\\sqrt{2}}$ $\\;\\; =\\;{G m^{2}}/{4 R^{2}}+\\;{G m^{2}}/{\\sqrt{2} R^{2}}$ $\\;\\; =\\;{G m^{2}}/{R^{2}}[\\;\\frac{1}{4}+\\;{1}/{\\sqrt{2}}]$ As the gravitational force provides the necessary centripetal force, so $F_{\\;\\text{net }\\;}=F_{C}=\\;{m v^{2}}/{R}$ Here, $F_{C}=$ centripetal force. $⇒ \\;{G m^{2}}/{R^{2}}[\\;\\frac{1}{4}+\\;{1}/{\\sqrt{2}}] \\;\\; =\\;{m v^{2}}/{R}$ $⇒ \\;\\; v \\;\\; =\\;\\frac{1}{2} \\sqrt{\\;\\frac{G m}{R}(1+2 \\sqrt{2})}$ $⇒ \\;\\; v \\;\\; =\\;\\frac{1}{2} \\sqrt{G(1+2 \\sqrt{2})}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two stars of masses $m$ and $2 m$ at a distance $d$ rotate about their common centre of mass in free space. The period of revolution is 24 Feb 2021 Shift1",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_two-stars-of-masses-m-and-2-m-_img1_20260504_232026.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{1}{2 π} \\sqrt{\\;{3 G m}/{d^{3}}}$",
+      "B. $2 π \\sqrt{\\;{d^{3}}/{3 G m}}$",
+      "C. $2 π \\sqrt{\\;{3 G m}/{d^{3}}}$",
+      "D. $\\;\\frac{1}{2 π} \\sqrt{\\;{d^{3}}/{3 G m}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "The given situation is shown below The gravitational force between these two stars provide the required centripetal force for rotation in a circle about their common centre. Assuming 2 mat origin, the centre of mass of the system lies at $x=\\;\\frac{2 m × 0+m × d}{2 m+m}=\\;\\frac{d}{3}$ Hence, $F_{G}=F_{C}$ where, $F_{C}$ is gravitational force between them and $F_{C}$ is centripetal force. $⇒ \\;\\; \\;{G m_{1} m_{2}}/{r^{2}} \\;\\; =2 m ω^{2} x$ $⇒ \\;\\; \\;{G(2 m)(m)}/{d^{2}} \\;\\; =2 m ω^{2} × \\;\\frac{d}{3} ⇒ ω^{2}=\\;{3 G m}/{d^{3}}$ $ω \\;\\; ω \\;\\; =\\sqrt{\\;{3 G m}/{d^{3}}}$ We know that, $\\;ω=\\;\\frac{2 π}{T}$ $\\;T=\\;\\frac{2 π}{ω}$ $⇒$ $T \\;\\; =\\;{2 π}/{\\sqrt{\\;{3 G m}/{d^{3}}}}$ $\\;\\; =2 π \\sqrt{\\;{d^{3}}/{3 G m}}$ [using Eq. (i)]",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two planets have masses ${M}$ and $16 {M}$ and their radii are a and 2a, respectively. The separation between the centers of the planets is 10a. A body of mass ${m}$ is fired from the surface of the larger planet towards the smaller planet along the line joining their centers. For the body to be able to reach at the surface of smaller planet, the minimum firing speed needed is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_two-planets-have-masses-m-and-_img1_20260504_232028.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt{{{\\text{GM}}^{2}}/{{\\text{ma}}}}$",
+      "B. $3/2\\sqrt{{{\\text{GM}} }/{{\\text{a}}}}$",
+      "C. $4\\sqrt{{{\\text{GM}} }/{{\\text{a}}}}$",
+      "D. $2\\sqrt{{{\\text{GM}} }/{{\\text{a}}}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${{GM}}/{{x}^{2}}={{G}(16 {M})}/{(10 {a}-{x})^{2}}$ $\\frac{1}{x}=\\frac{4}{(10 a-x)}$ $⇒4x=10a-x$ $⇒x=2a$ ....(i) COME $-{{GMm}}/{8 {a}}-{{G}(16 {M}) {m}}/{2 {a}}+{KE}$ $=-{{GMm}}/{2 {a}}-{{G}(16 {M}) {m}}/{8 {a}}$ ${KE}={GMm}[{1}/{8 {a}}+{16}/{2 {a}}-{1}/{2 {a}}-{16}/{8 {a}}]$ ${KE}={GMm}[{1+64-4-16}/{8 {a}}]$ $\\frac{1}{2} {mv}^{2}={GMm}[{45}/{8 {a}}]$ ${\\text{V}}=\\sqrt{{90 {GM}}/{8 {a}}}$ ${\\text{V}}=\\frac{3}{2} \\sqrt{{ {GM}}/{{a}}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "PHYSICS A satellite is in an elliptical orbit around a planet P. It is observed that the velocity of the satellite when it is farthest from the planet is 6 times less than that when it is closest to the planet. The ratio of distances between the satellite and the planet at closest and farthest points is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_physics-a-satellite-is-in-an-e_img1_20260504_232030.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $1:6$",
+      "B. $3:4$",
+      "C. $1:3$",
+      "D. $1:2$"
+    ],
+    "correct_answer": "A",
+    "explanation": "By angular momentum conservation ${\\text{r}}_{\\min } {\\text{V}}_{\\max }={\\text{r}}_{\\max } {\\text{V}}_{\\min }$...(i) Given ${\\text{V}}_{\\min }={{\\text{V}}_{\\max }}/{6}$ from equation (i) ${{r}_{\\min }}/{{r}_{\\max }}={{\\text{V}}_{\\min }}/{{\\text{V}}_{\\max }}=\\frac{1}{6}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The acceleration due to gravity on the earth's surface at the poles is $\\ {g}$ and angular velocity of the earth about the axis passing through the pole is $\\ω.$ An object is weighed at the equator and at a height h above the poles by using a spring balance. If the weights are found to be same, then ${h}$ is $:({h} < < {R},$ where ${R}$ is the radius of the earth)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-acceleration-due-to-gravit_img1_20260504_232032.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${{R}^{2} \\ω^{2}}/{8 { g}}$",
+      "B. ${{R}^{2} \\ω^{2}}/{4 { g}}$",
+      "C. ${{R}^{2} \\ω^{2}}/{ { g}}$",
+      "D. ${{R}^{2} \\ω^{2}}/{2 { g}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "${g}_{ {e}}= {g}- {R} \\ω^{2}$ ${g}_{2}= { g} (1- {2 {h}}/{ {R}} )$ ${g}_{2} ={ g}- {2 {gh}}/{ {R}}$ Now ${R} \\ω^{2}= {2 {gh}}/{ {R}}$ $h={{R}^{2} \\ω^{2}}/{2 { g}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The value of the acceleration due to gravity is ${g}_{1}$ at a height ${h}={{R}}/{2}( {R}=$ radius of the earth $)$ from the surface of the earth. It is again equal to ${g}_{1}$ at a depth ${d}$ below the surface of the earth. The ratio $({{d}}/{ {R}} )$ equals",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-value-of-the-acceleration-_img1_20260504_232034.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\frac{7}{9}$",
+      "B. $\\frac{4}{9}$",
+      "C. $\\frac{1}{3}$",
+      "D. $\\frac{5}{9}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "${g}_{1}= {\\text{ GM}}/{({R}+{{R}}/{2} )^{2}}$ .....(1) ${g}_{2}={{GM}( {R}- {d})}/{ {R}^{3}}$ ......(2) ${ g}_{1}= { g}_{2}$ ${{GM}}/{({3 {R}}/{2} )^{2}}={{GM}( {R}- {d})}/{ {R}^{3}}$ $⇒\\frac{4}{9}={({R}- {d})}/{ {R}}$ $4 {R}=9 {R}-9 {d}$ $5 {R}=9 {d} ⇒{{d}}/{{R}}=\\frac{5}{9}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A body is moving in a low circular orbit about a planet of mass $\\ {M}$ and radius $\\ {R} .$ The radius of the orbit can be taken to be $\\ {R}$ itself. Then the ratio of the speed of this body in the orbit to the escape velocity from the planet is :",
+    "images": [],
+    "options": [
+      "A. 1",
+      "B. 2",
+      "C. ${1}/{\\\\sqrt{2}}$",
+      "D. $\\\\sqrt{2}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\ {V}_{\\text{orbit }}=\\sqrt{{{GM}}/{ {R}}}$ ${V}_{\\text{escape }}=\\sqrt{{2 {GM}}/{\\ {R}}}$ ${{V}_{\\text{orbit}}}/{ {V}_{\\text{escape }}}= {1}/{\\\\sqrt{2}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "On the x-axis and a dsitance $x$ from the origin, the gravitational field due to a mass distribution is given by ${{Ax}}/{({x}^{2}+ {a}^{2} )^{3 / 2}}$ in the $\\ {x}$ -direction. The magnitude of gravitational potential on the $\\ {x}$ -axis at a distance $\\ {x},$ taking its value to be zero at infinity, is :",
+    "images": [],
+    "options": [
+      "A. ${{A}}/{({x}^{2}+ {a}^{2} )^{1 / 2}}$",
+      "B. ${{A}}/{({x}^{2}+ {a}^{2} )^{3 / 2}}$",
+      "C. ${{A}} {({x}^{2}+ {a}^{2} )^{3 / 2}}$",
+      "D. ${{A}} {({x}^{2}+ {a}^{2} )^{1 / 2}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given ${E}_{ {G}}={{Ax}}/{({x}^{2}+ {a}^{2} )^{3 / 2}}, {V}_{\\∞}=0$ $∫↙{{\\ {V}_{\\∞}} } ↖{V_x}{dV}=-∫↙{\\∞}↖ {\\ {x}} {\\vec{E}}_{ {G}}.{\\vec{d}}_{ {x}}$ ${V}_{ {x}}- {V}_{\\∞}=-∫↙{\\∞}↖ {\\ {x}} {{Ax}}/{{{x}^{2}+ {a}^{2} )^{3 / 2}} {d} {x}$ put $x^{2}+a^{2}=z$ $2 x d x=d z$ ${V}_{ {x}}-0=-∫↙{\\∞}↖ {\\ {x}} {{A} {d} {z}}/{2( {z})^{3 / 2}}=[{{A}}/{ {z}^{1 / 2}} ]_{\\∞}^{ {x}}$ $=[{{A}}/{({x}^{2}+ {a}^{2} )^{1 / 2}} ]_{\\∞}^{ {x}}$ ${V}_{ {x}}={{A}}/{({x}^{2}+ {a}^{2} )^{1 / 2}}-0$ $={{A}}/{({x}^{2}+ {a}^{2} )^{1 / 2}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The mass density of a planet of radius $\\ {R}$ varies with the distance $\\ {r}$ from its centre as $\\ρ( {r})=\\ρ_{0} (1-{{r}^{2}}/{ {R}^{2}} ) .$ Then the gravitational fieldis maximum at:",
+    "images": [],
+    "options": [
+      "A. ${r}= {1}/{\\\\sqrt{3}} \\ {R}$",
+      "B. ${r}=\\sqrt{\\frac{5}{9}} {R}$",
+      "C. ${r}=\\sqrt{\\frac{3}{4}} \\ {R}$",
+      "D. $\\ {r}=\\ {R}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${E} 4 \\π{r}^{2}=\\∫\\ρ_{0} 4 \\π{r}^{2} {dr}$ $⇒{Er}^{2}=4 \\π{G} ∫↙ {0} ↖{ {r}} \\ρ_{0} (1-{{r}^{2}}/{ {R}^{2}} ) {r}^{2} {dr}$ $⇒{E}=4 \\π{G} \\ρ_{0} ({{r}^{3}}/{3}-{{r}^{5}}/{5 {R}^{2}})$ ${{dE}}/{ {dr}}=0\\;\\;\\∴ {r}=\\sqrt{\\frac{5}{9}} \\ {R}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite is moving in a low nearly circular orbit around the earth. Its radius is roughly equal to that of the earth's radius $\\ {R}_{ {e}} .$ By firing rockets attached to it, its speed is instantaneously increased in the direction of its motion so thatis become $\\sqrt{\\frac{3}{2}}$ times larger. Due to this the farthest distance from the centre of the earth that the satellite reaches is $\\ {R},$ value of $\\ {R}$ is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-satellite-is-moving-in-a-low_img1_20260504_232041.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $4 \\ {R}_{ {e}}$",
+      "B. $3 \\ {R}_{ {e}}$",
+      "C. $2 \\ {R}_{{e}}$",
+      "D. $2.5 \\ {R}_{ {e}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${V}_{0}=\\sqrt{{{GM}}/{ {R}_{ {e}}}}$ ${-{GMm}}/{ {R}_{ {e}}}+ \\frac{1}{2} {mv}^{2}$ $= {- {GMm}}/{ {R}_{\\max }}+ \\frac{1}{2} {mv'}^{ 2}$ ......(i) ${ {VR}_ {e}}= {V}' {R}_{\\max }$ .....(ii) Solving (i) & (ii) $[{R}_{\\max }=3 {R}_{ {e}}]$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The height 'h' at which the weight of a bodywill be the same as that at the same depth 'h'from the surface of the earth is (Radius of theearth is $\\ {R}$ and effect of the rotation of the earthis neglected):",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-height-h-at-which-the-weig_img1_20260504_232043.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${\\sqrt{5} {R}-\\ {R}}/{2}$",
+      "B. ${\\sqrt{5}}/{2} {R}- {R}$",
+      "C. ${{R}}/{2}$",
+      "D. ${\\sqrt{3} {R}- {R}}/{2}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$◆ {M}=$ mass of earth $\\ {M}_{1}=$ mass of shaded portion $\\ {R}=$ Radius of earth $\\ ◆{M}_{1}={{M}}/{ \\frac{4}{3} \\π{R}^{3}} .\\frac{4}{3} \\π( {R}- {h})^{3}$ $= {M(R-h)^{3}}/{R}$ ◆ Weight of body is same at ${P}$ and ${Q}$ i.e. ${mg}_{ {P}}= {mg}_{ {Q}}$ ${g}_{ {P}}= {g}_{ {Q}}$ ${{GM}_{1}}/{( {R}- {h})^{2}}={{GM}}/{( {R}+ {h})^{2}}$ ${{GM}( {R}- {h})^{3}}/{( {R}- {h})^{2} {R}^{3}}={{GM}}/{( {R}+ {h})^{2}}$ $( {R}-{h})( {R}+ {h})^{2}= {R}^{3}$ ${R}^{3}- {hR}^{2}- {h}^{2} {R}- {h}^{3}$ $+2 {R}^{2} {h}-2 {Rh}^{2}= {R}^{3}$ ${R}^{2}-{Rh}^{2}- {h}^{3}=0$ ${R}^{2}-{Rh}- {h}^{2}=0$ $h^{2}+R h-R^{2}=0$ $⇒ h= {-R ±\\sqrt{R^{2}+4 R^{2}}}/{2}$ ie $h= {-R+\\\\sqrt{5} R}/{2}$ $=({\\\\sqrt{5}-1}/{2} ) R$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The mass density of a spherical galaxy variesas ${{K}}/{ {r}}$ over a large distance 'r' from its centre. In that region, a small star is in a circular orbitof radius $\\ {R}$. Then the period of revolution, $\\ {T}$depends on $\\ {R}$ as :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-mass-density-of-a-spherica_img1_20260504_232044.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\ {T} ∝{R}$",
+      "B. ${T}^{2} ∝{1}/{ {R}^{3}}$",
+      "C. ${T}^{2}∝{R}$",
+      "D. ${T}^{2}∝{R}^{3}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${dm}=\\ρ{d} {v}$ ${dm}=({{k}}/{ {r}} ) (4 \\π{r}^{2} {dr} )$ ${dm}=4 \\text{p}π{krdr}$ ${M}=∫↙{0} ↖{ {R}} {dm}=∫↙{0} ↖{ {R}} 4 \\π{krdr}$ ${M}={ 4 \\π{k} {{r}^{2}}/{2} |}_{0} ^{ {R}}$ ${M}=2 \\π{k}({R}^{2}-0 )$ ${M}=2 \\π{k} {R}^{2}$ for circular motion gravitational force will provide required centripital force or ${{GMm}}/{ {R}^{2}}={{mv}^{2}}/{ {R}}$ ${{G} (2 \\π{kR}^{2} ) {m}}/{ {R}^{2}}={{mv}^{2}}/{ {R}}$ $⇒{v}=\\\\sqrt{2 \\π{GkR}}$ Time period ${T}= {2 \\π{R}}/{ {v}}$ ${T}= {2 \\π{R}}/{\\\\sqrt{2 \\π{GkR}}} ∝\\sqrt{ {R}}$ or ${T}^{2}∝{R}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Planet A has mass M and radius R. Planet B has half the mass and half the radius of Planet A. If the escape velocities from the Planets A and B are $v_A$ and $v_B$, respectively, then $v_A/v_B=n/4$, The value of n is :",
+    "images": [],
+    "options": [
+      "A. 4",
+      "B. 1",
+      "C. 2",
+      "D. 3"
+    ],
+    "correct_answer": "A",
+    "explanation": "$V_e=\\sqrt{{2GM}/R}$ (Escape velocity) $V_A=\\sqrt{{2GM}/R}$ $V_B=\\sqrt{\\frac{2G[M/2]}{R/2}}=\\sqrt{{2GM}/R}$ $V_A/V_B=1=n/4⇒n=4$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A body A of mass m is moving in a circular orbit of radius R about a planet. Another body B of mass $m/2$ collides with A with a velocity which is half $(\\vec{v}/2)$ the instantaneous velocity $\\vec{v}$ of A. The collision is completely inelastic. Then, the com bined body :",
+    "images": [],
+    "options": [
+      "A. starts moving in an elliptical orbit around the planet.",
+      "B. continues to move in a circular orbit",
+      "C. Falls vertically downwards towards the planet",
+      "D. Escapes from the Planet's Gravitational field."
+    ],
+    "correct_answer": "A",
+    "explanation": "Initially, the body of mass m is moving in a circular orbit of radius R. So it must be moving with orbital speed. $v_0=\\sqrt{{GM}/R}$ After collision, let the combined mass moves with speed $v_1$ $mv_0+m/2v_0/2={3m}/2v_1$ $v_1=5/6v_0$ Since after collision, the speed is not equal to orbital speed at that point. So motion cannot be circular. Since velocity will remain tangential, so it cannot fall vertically towards the planet. Their speed after collision is less than escape speed $\\sqrt2v_0$ , so they cannot escape gravitational field. So their motion will be elliptical around the planet.",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "An asteroid is moving directly towards the centre of the earth. When at a distance of 10R (R is the radius of the earth) from the earths centre, it has a speed of 12 km/s. Neglecting the effect of earths atmosphere, what will be the speed of the asteroid when it hits the surface of the earth (escape velocity from the earth is 11.2 km/s) ? Give your answer to the nearest integer in kilometer/s______",
+    "images": [],
+    "options": [],
+    "correct_answer": "16",
+    "explanation": "$U_1+K_1=U_2+K_2$ $-\\frac{GM_em}{10R}+1/2mv^2_0=-{GM_em}/R+1/2mv^2$ $+9/10×{GM_em}/R+1/2mv^2_0=1/2mv^2$ $9/10×1/2M×v_e^2+1/2mv_0^2=1/2mv^2$ $v^2=9/10v_e^2+v_0^2$ $=9/10v_e^2+12^2$ $v^2 = 112.896 + 144$ $v = 16.027$ $v = 16$ km/s",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A ball is dropped from the top of a 100 m high 1 tower on a planet. In the last $1/2$s before hitting the ground, it covers a distance of 19 m. Acceleration due to gravity (in ms$^{-2}$) near the surface on that planet is ______",
+    "images": [],
+    "options": [],
+    "correct_answer": "8",
+    "explanation": "Time to travel 81 m is t secTime to travel 100 m is $t+1/2\\sec.$ $81=1/2×a×t^2$ $⇒ t=9\\sqrt{2/a}$ $100=1/2×a×(t+1/2)^2$ $⇒t+1/2=10\\sqrt{2/a}$ $9\\sqrt{2/a}+1/2=10\\sqrt{2/a}$ $1/2=\\sqrt{2/a}$ $a=8m/s^2$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Consider two solid spheres of radii $R_1 = 1m$, $R_2 = 2m$ and masses $M_1$ and $M_2$, respectively. The gravitational field due to sphere (1) and (2) are shown. The value of $M_1/M_2$ is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_consider-two-solid-spheres-of-_img1_20260504_232054.webp"
+      }
+    ],
+    "options": [
+      "A. $1/2$",
+      "B. $2/3$",
+      "C. $1/3$",
+      "D. $1/6$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Gravitational field on the surface of a solid sphere $I_g={GM}/R^2$By the graph ${GM_1}/1^2=2$ and ${GM_2}/2^2=3$On solving $M_1/M_2=1/6$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A box weighs 196 N on a spring balance at the north pole. Its weight recorded on the same balance if it is shifted to the equator is close to (Take g = 10 ms$^{–2}$ at the north pole and the radius of the earth = 6400 km):",
+    "images": [],
+    "options": [
+      "A. 195.66 N",
+      "B. 194.66 N",
+      "C. 194.32 N",
+      "D. 195.32 N"
+    ],
+    "correct_answer": "D",
+    "explanation": "$W = 196 - m ω^2 R$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The ratio of the weight of a body on the Earth’s surface to that on the surface of a planet is 9 : 4 , the mass of the planet is $1 /9$th of that of the Earth. If ‘R’ is the radius of the Earth, what is the radius of the planet? (Take the planets to have the same mass density)",
+    "images": [],
+    "options": [
+      "A. $R/2$",
+      "B. $R/9$",
+      "C. $R/3$",
+      "D. $R/4$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$w=m s=\\ {G M m}/{R^{2}}$ ${W_{E}}/{W_{P}}$ $=\\ {m_{E}}/{m_{P}} \\×(\\ {R_{P}}/{R_{E}} )^{2}$ ${R_{P}}/{R_{E}}=\\ \\frac{1}{2} \\⇒R_{P}= \\frac{R}{2}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A spaceship orbits around a planet at a height of 20km from its surface. Assuming that only gravitational field of the planet acts on the spaceship, what will be the number of complete revolutions made by the spaceship in 24 hours around the planet?{Given=Mass of planet= $8 \\× 10^{22} \\ {kg}$ ,radius of planet= $2 \\× 10^{6} \\ {kg}$ ,Gravitational constant $G=6.67 \\× 10^{-11} {N m^{2}} / {kg}^{2}$",
+    "images": [],
+    "options": [
+      "A. 13",
+      "B. 17",
+      "C. 11",
+      "D. 9"
+    ],
+    "correct_answer": "C",
+    "explanation": "As $T=2 \\π\\sqrt{\\ {r^{3}}/{G m}}$ $\\⇒ T=2 \\π×\\sqrt{ {\\ (2 \\×10^{6}\\ )^{3}}/{6.67 × 10^{-11} × 8 \\× 10^{22}}}$ ${T}=\\ {2 \\π× 2871 \\× 10^{6}}/{23 \\× 10^{5}}$ $=7840 \\ {sec}$ $\\⇒$ No. of revolutions in 24 hrs $\\ \\frac{24 \\× 60 \\× 60}{7840}=11.02$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The value of acceleration due to gravity at Earth‘s surface is $9.8ms^{-2}$ . The altitude above its surface at which the acceleration due to gravity decreases to $4.9ms^{-2}$ , is close to (Radius of earth $= 6.4× 10 ^ { 6 }$m )",
+    "images": [],
+    "options": [
+      "A. $6.4× 10 ^ { 6 }$m",
+      "B. $1.6× 10 ^ { 6 }$m",
+      "C. $2.6× 10 ^ { 6 }$m",
+      "D. $9.0× 10 ^ { 6 }$m"
+    ],
+    "correct_answer": "C",
+    "explanation": "",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A test particle is moving in a circular orbit in the gravitational field produced by a mass density $ρ(r)=\\ {K}/{r^{2}}$ . Identify the correct relation between the radius R of the particle’s orbit and its period T:",
+    "images": [],
+    "options": [
+      "A. TR is a constant",
+      "B. T/R is constant",
+      "C. T / R$^{2}$ is a constant",
+      "D. T$^{2}$/ R$^{3}$ is a constant"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\ ( \\frac{4 \\π G K}{R}\\)=\\ {m v^{2}}/{R}$ $\\⇒ V=\\\\sqrt{4 \\π G K}$ $w=\\ \\frac{V}{R}=\\ \\frac{1}{R} \\\\sqrt{4 \\π G K}= \\frac{2 \\π}{T}$ $\\⇒ \\frac{T}{R}=\\sqrt{\\ \\frac{H}{G K}}=$constant",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A solid sphere of mass ‘M’ and radius ‘a’ is surrounded by a uniform concentric spherical shell of thickness 2a and mass 2M. The gravitational field at distance ‘3a’ from the centre will be:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-solid-sphere-of-mass-m-and-r_img1_20260504_232105.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${2 G M}/{3 a^{2}}$",
+      "B. ${ G M}/{9 a^{2}}$",
+      "C. ${2 G M}/{9 a^{2}}$",
+      "D. ${ G M}/{3 a^{2}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Field at $P= {G M}/{(3 a)^{2}}+ {G(2 M)}/{(3 a)^{2}}$ Field $= { G M}/{3 a^{2}}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A rocket has to be launched from earth in such a way that it never returns. If E is the minimum energy delivered by the rocket launcher, what should be the mjnimum energy that the launcher should have if the same rocket is to be launched from the surface of the moon ? Assume that the density of the earth and the moon are equal and that the earth's volume is 64 times the volume of the moon.",
+    "images": [],
+    "options": [
+      "A. $E/16$",
+      "B. $E/32$",
+      "C. $E/64$",
+      "D. $E/4$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$E= \\frac{G M m}{R}$ $⇒E= {G \\ρ(\\ \\frac{4}{3} \\π R^{3} ) m}/{R}$ $⇒ E ∝R^{2}$ ${E_{2}}/{E_{1}}= ( {R_{2}}/{R_{1}} )^{2}$ $⇒ E_{2}= ( \\frac{1}{4} )^{2} E ⇒ \\frac{E}{16}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Four identical particles of mass M are located at the corners of a square of side ‘a’. What should be their speed if each of them revolves under the influence of others’ gravitational field in a circular orbit circumscribing the square?",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_four-identical-particles-of-ma_img1_20260504_232109.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Gravitation/main_four-identical-particles-of-ma_img2_20260504_232109.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 1.21$\\sqrt{ \\frac{G M}{a}}$",
+      "B. 1.41$\\sqrt{ \\frac{G M}{a}}$",
+      "C. 1.16$\\sqrt{ \\frac{G M}{a}}$",
+      "D. 1.35$\\sqrt{ \\frac{G M}{a}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$2 {G M^{2}}/{a^{2}} ×{1}/{\\sqrt{2}}+ {G M^{2}}/{(\\sqrt{2} a)^{2}}$ $= {M V^{2}}/{a}×\\sqrt{2}$ V = 1.16$\\sqrt{ \\frac{G M}{a}}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two satellites, A and B, have masses m and 2mrespectively. A is in a circular orbit of radius R, andB is in a circular orbit of radius 2R around the earth.The ratio of their kinetic energies, $T_A/T_B$, is:",
+    "images": [],
+    "options": [
+      "A. 2",
+      "B. $\\sqrt{1/2}$",
+      "C. 1",
+      "D. $1/2$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Orbital velocity V = $\\sqrt{{GMe}/r}$ $T_A$ = $1/2 m_A V_A^2$ $T_B$ = $1/2 m_B V_B^2$ ⇒ $T_A/T_B$ = ${m×{Gm}/R}/{2m×\\frac{Gm}{2R}}$ ⇒ $T_A/T_B$ = 1",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A straight rod of length L extends from x = a to x = L + a. The gravitational force is exerts on a point mass 'm' at x = 0, if the mass per unit length of the rod is A + $Bx^2$, is given by:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-straight-rod-of-length-l-ext_img1_20260504_232112.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. Gm $[A(1/{a+L}-1/a)-BL]$",
+      "B. Gm $[A(1/{a}-1/{a+L})+BL]$",
+      "C. Gm $[A(1/{a+L}-1/a)+BL]$",
+      "D. Gm $[A(1/{a}-1/{a+L})-BL]$"
+    ],
+    "correct_answer": "B",
+    "explanation": "dm = (A + B$x^2$) dx = Gm $[-A/x+Bx]^{a+L}_a$ Gm $[A(1/{a}-1/{a+L})+BL]$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite of mass M is in a circular orbit ofradius R about the centre of the earth. Ameteorite of the same mass, falling towards theearth, collides with the satellite completelyinelastically. The speeds of the satellite and themeteorite are the same, just before the collision.The subsequent motion of the combined bodywill be :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-satellite-of-mass-m-is-in-a-_img1_20260504_232114.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. in a circular orbit of a different radius",
+      "B. in the same circular orbit of radius R",
+      "C. in an elliptical orbit",
+      "D. such that it escapes to infinity"
+    ],
+    "correct_answer": "C",
+    "explanation": "$mvi↖{\\^}+mvj↖{\\^}$ = $2m\\vec{v}$ $\\vec{v}$ = $1/\\sqrt2 × \\sqrt{{GM}/R}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite is revolving in a circular orbit at aheight h from the earth surface, such that h << Rwhere R is the radius of the earth. Assumingthat the effect of earth's atmosphere can beneglected the minimum increase in the speedrequired so that the satellite could escape fromthe gravitational field of earth is :",
+    "images": [],
+    "options": [
+      "A. $\\sqrt{gR} (\\sqrt2-1)$",
+      "B. $\\sqrt{2gR}$",
+      "C. $\\sqrt{gR}$",
+      "D. $\\sqrt{{gR} /2}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$v_0$ = $\\sqrt{g(R+h)}$ ~ $\\sqrt{gR}$ $v_e$ = $\\sqrt{2g(R+h)}$ ~ $\\sqrt{2gR}$ Δv = $v_e-v_0$ = $(\\sqrt2-1)\\sqrt{gR}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two stars of masses 3 × $10^{31}$ kg each, and at distance 2 × $10^{11}$ m rotate in a plane about their common centre of mass O. A meteorite passes through O moving perpendicular to the star's rotation plane. In order to escape from the gravitational field of thisdouble star, the minimum speed that meteorite should have at O is : (Take Gravitational constant G = 6.67 × $10^{–11}$ $Nm^2 kg^{–2}$",
+    "images": [],
+    "options": [
+      "A. 1.4 × $10^5$ m/s",
+      "B. 24 × $10^4$ m/s",
+      "C. 3.8 × $10^4$ m/s",
+      "D. 2.8 × $10^5$ m/s"
+    ],
+    "correct_answer": "D",
+    "explanation": "By energy convervation between 0 & ∞ - ${Gm}/r+{-GMm}/r+1/2 mV^2$ = 0 + 0 [M is mass of star m is mass of meteorite] ⇒ v = $\\sqrt{{4GM}/r}$ = 2.8 × $10^5$ m/s",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite is moving with a constant speed vin circular orbit around the earth. An object ofmass 'm' is ejected from the satellite such thatit just escapes from the gravitational pull of theearth. At the time of ejection, the kinetic energyof the object is :",
+    "images": [],
+    "options": [
+      "A. $3/2 mv^2$",
+      "B. $mv^2$",
+      "C. 2 $mv^2$",
+      "D. $1/2 mv^2$"
+    ],
+    "correct_answer": "B",
+    "explanation": "At height r from center of earth. orbital velocity = $\\sqrt{{GM}/r}$ ∴ By energy conservation HE of 'm' + $(-{GMm}/r)$ = 0 + 0 (At infinity, PE = KE = 0) ⇒ KE of 'm' = ${GMm}/r$ = $(\\sqrt{{GM}/r})^2$ m = $mv^2$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The energy required to take a satellite to a height 'h' above Earth surface (radius of Earth = 6.4 × $10^3$ km) is $E_1$ and kinetic energy required for the satellite to be in a circular orbit at this height is $E_2$. The value of h for which $E_1$ and $E_2$ are equal,is:",
+    "images": [],
+    "options": [
+      "A. 1.28 × $10^4$ km",
+      "B. 6.4 × $10^3$ km",
+      "C. 3.2 × $10^3$km",
+      "D. 1.6 × $10^3$km"
+    ],
+    "correct_answer": "C",
+    "explanation": "$U_{\\text{surface}}$ + $E_1$ = $U_h$ KE of satellite is zero at earth surface & atheight h - ${GM_em}/R_e + E_1$ = - ${GM_e m}/(Re+h)$ $E_1$ = $GM_em$ $(1/R_e - 1/{R_e + h})$ $E_1$ = ${GM_e m}/(R_e +h)$ × $h/R_e$ Gravitational attraction $F_G$ = $ma_c$ = ${mv^2}/(R_e+h)$ $E_2$ ⇒ ${mv^2}/(R_e+h)$ = ${GM_e m}/(R_e+h)^2$ $mv^2$ = $\\frac{GM_e}{2(R_e+h)}$ $E_1$ = $E_2$ $h/R_e$ = $1/2$ ⇒ h = $R_e/2$ = 3200 km",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite of mass m is launched vertically upwards with an initial speed u from the surface of the earth. After it reaches height R (R = radius of the earth), it ejects a rocket of mass $m /10$ so that subsequently the satellite moves in a circular orbit. The kinetic energy of the rocket is (G is the gravitational constant; M is the mass of the earth): [7-Jan-2020 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_a-satellite-of-mass-m-is-launc_img1_20260504_232123.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $m/20(u-\\sqrt{\\frac{2GM}{3R}})^2$",
+      "B. $5m(u^2-119/200{GM}/R)$",
+      "C. ${3m}/8(u+\\sqrt{\\frac{5GM}{6R}})^2$",
+      "D. $m/20(u^2+113/200{GM}/R)$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Applying energy conservation $K_i+U_i=K_f+U_f$ $1/2mu^2+(-{GMm}/R)$ $=1/2mv^2-\\frac{GMm}{2R}$ $v=\\sqrt{u^2-{GM}/R}$ ...(i)By momentum conservation, we have$m/10v_T={9m}/10\\sqrt{\\frac{GM}{2R}}$....(ii)& $m/10v_r=mv$ $⇒m/10v_r=m\\sqrt{u^2-{GM}/R}$....(iii)Kinetic energy of rocket $=1/2m(v_T^2+v_r^2)$ $=m/20(81\\frac{GM}{2R}+100u^2-100{GM}/R)$ $=m/20(100u^2-\\frac{119GM}{2R})$ $=5m(u^2-\\frac{119GM}{200R})$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Suppose that the angular velocity of rotation of earth is increased. Then, as a consequence :[Main 16 April 2018 S1]",
+    "images": [],
+    "options": [
+      "A. Weight of the object, everywhere on the earth, will increase.",
+      "B. Weight of the object, everywhere on the earth, will decrease.",
+      "C. There will be no change in weight any where on the earth.",
+      "D. Except at poles, weight of the object on the earth will decrease."
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A body of mass m is moving in a circular orbit of radius R about a planet of mass M. At some instant, it splits into two equal masses. The first mass moves in a circular orbit of radius $R/2$ , and the other mass, in a circular orbit of radius ${3R}/2$.The difference between the final and initial total energies is[Main 15 April 2018 S1]",
+    "images": [],
+    "options": [
+      "A. $-\\frac{GMm}{2R}$",
+      "B. $+\\frac{GMm}{6R}$",
+      "C. $\\frac{GMm}{2R}$",
+      "D. $-\\frac{GMm}{6R}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Take the mean distance of the moon and the sun from the earth to be $0.4×10^6$km and $150×10^6km$ respectively. Their masses are $8×10^22kg$ and $2×10^30$kg respectively. The radius of the earth is 6400 km. Let $∆F_1$ be the difference in the forces exerted by the moon at the nearest and farthest points on the earth and $∆F_2$ be the difference in the force exerted by the sun at the nearest and farthest points on the earth. Then, the number closest to $\\frac{∆F_1}{∆F_2}$[Main 15 April 2018 S1]",
+    "images": [],
+    "options": [
+      "A. 2",
+      "B. $10^{-2}$",
+      "C. 0.6",
+      "D. 6"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A particle is moving with a uniform speed in a circular orbit of radius R in a central force inversely proportional to the $n^{th}$ power of R. If the period of rotation of the particles is T, then :[Main 8 April 2018]",
+    "images": [],
+    "options": [
+      "A. $TαR^{3/2}$ for any n",
+      "B. $TαR^{n/2+1}$",
+      "C. $TαR^{(n+1)/2}$",
+      "D. $TαR^{n/2}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$F∝1/R^n$ $MR{4π^2}/T^2∝1/R^n$ $T∝R^{{n+1}/2}$",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The mass density of a spherical body is given by $ρ(r)=k/r$ for $r≤R$ and $ρ(r)=0$ for $r > R$,where r is the distance from the centre.The correct graph that describes qualitatively the acceleration, a, of a test particle as a function of r is :[Main 9 April 2017]",
+    "images": [],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "B",
+    "explanation": "",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If the Earth has no rotational motion, the weight of a person on the equator is W.Determine the speed with which the earth would have to rotate about its axis so that the person at the equator will weigh $3/4$ W. Radius of the Earth is 6400 km and $g=10m\\text{/}s^2$.[Main 8 April 2017]",
+    "images": [],
+    "options": [
+      "A. $1.1×10^{−3}$ rad/s",
+      "B. $0.83×10^{−3}$ rad/s",
+      "C. $0.63×10^{−3}$ rad/s",
+      "D. $0.28×10^{−3}$ rad/s"
+    ],
+    "correct_answer": "C",
+    "explanation": "$g'=g-ω^2R\\text{cos}^2θ$ ${3g}/4=g-ω^2R$ $w^2R=g/4$ $w=\\sqrt{g/{4R}}$ $=\\sqrt{10/{4×64ω×10^3}}$ $=1/{2×8×100}$ $=1/1600=1/16×10^{-2}=0.6×10^{-3}$",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The variation of acceleration due to gravity g with distance d from centre of the earth is bestrepresented by (R = Earth's radius):[Main 2017]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_the-variation-of-acceleration-_img1_20260504_232136.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "B",
+    "explanation": "$g={GMx}/R^3$ inside the Earth(straight line)$g={GM}/r^2$ outside the EarthWhere M is Mass of Earth",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "An astronaut of mass $m$ is working on a satellite orbiting the earth at a distance $h$ from the earth’s surface. The radius of the earth is $R$, while its mass is $M$. The gravitational pull $F_G$ on the astronaut is[Main 10 Apr 2016]",
+    "images": [],
+    "options": [
+      "A. Zero since astronaut feels weightless",
+      "B. $0 < F_G < {GMm}/R^2$",
+      "C. ${GMm}/(R+h)^2 < F_G < {GMm}/R^2$",
+      "D. $F_G={GMm}/(R+h)^2$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$F_G={GMm}/(R+h)^2$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Figure shows elliptical path abcd of a planet around the sun S such that the area of triangle csa is $1/4$ he area of the ellipse. (See figure) With db as the semimajor axis, and ca as the semiminor axis. If $t_1$ is the time taken for planet to go over path abc and $t_2$ for path taken over cda then :[Main 9 Apr 2016]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_figure-shows-elliptical-path-a_img1_20260504_232140.webp"
+      }
+    ],
+    "options": [
+      "A. $t_1=t_2$",
+      "B. $t_1=2t_2$",
+      "C. $t_1=3t_2$",
+      "D. $t_1=4t_2$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Total area = AArea of sabc$={3A}/4$Area of sadc $=A/4$ $\\frac{3A}{4t_1}=A/{4t_2}⇒t_1=3t_2$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite is revolving in a circular orbit at a height ‘h’ from the earth’s surface (radius of earth R; h < < R).The minimum increase in its orbital velocity required, so that the satellite could escape from the earth’s gravitational field, is close to : (Neglect the effect of atmosphere.)[Main 2016]",
+    "images": [],
+    "options": [
+      "A. $\\sqrt{gR}$",
+      "B. $\\sqrt{\\text{gR/2}}$",
+      "C. $\\sqrt{gR}(\\sqrt2-1)$",
+      "D. $\\sqrt{2gR}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "At height escape velocity$V_e=\\sqrt{\\frac{2GM}{h+h}}$Orbital velocity $V_0=\\sqrt{\\frac{GM}{R+h}}$∴ Increase in orbital velocity required to escape gravitational field $⇒V_e-V_0$ $⇒\\sqrt{gR}(\\sqrt2-1)$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "From a solid sphere of mass M and radius R, a spherical portion of radius R/2 is removed, as shown in the figure. Taking gravitational potential V = 0 at $r=∞$, the potential at the centre of the cavity thus formed is (G = gravitational constant)[Main 2015]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_from-a-solid-sphere-of-mass-m-_img1_20260504_232143.webp"
+      }
+    ],
+    "options": [
+      "A. $-{GM}/R$",
+      "B. $-\\frac{2GM}{3R}$",
+      "C. $-{2GM}/R$",
+      "D. $-\\frac{GM}{2R}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$V_{\\text{required}}=V_M-V_{M/8}$ $=-\\frac{GM}{2R^3}[3R^2-R^2/4]+{GM}/8/{2(R/2)^3}[3(R/2)^2]$ $=-\\frac{11GM}{8R}+\\frac{3GM}{8R}=-{GM}/R$",
+    "year": 2015,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Four particles,each of mass M and equidistant from each other,move along a circle of radius R under the action of their mutual gravitational attraction.The speed of each particle is:[Main 2014]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_four-particleseach-of-mass-m-a_img1_20260504_232145.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt {{GM}/R(1+2\\sqrt 2)}$",
+      "B. $1/2\\sqrt {{GM}/R(1+2\\sqrt 2)}$",
+      "C. $\\sqrt{{GM}/R}$",
+      "D. $\\sqrt{2\\sqrt2{GM}/R}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Net force on any one particle$={GM^2}/(2R)^2+{GM^2}/(R\\sqrt2)^2cos45°$ $={GM}^2/R^2[1/4+1/\\sqrt2]$This force will be equal to centripetal force so${Mu^2}/R={GM}^2/R^2[{1+2\\sqrt2}/4]$ $u=\\sqrt{\\frac{GM}{4R}[1+2\\sqrt2]}=1/2\\sqrt{{GM}/R(2\\sqrt2+1)}$",
+    "year": 2014,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "What is the minimum energy required to launch a satellite of mass m from the surface of a planet of mass M and radius R in a circular orbit at an altitude of 2R?[Main 2013]",
+    "images": [],
+    "options": [
+      "A. $\\frac{2GmM}{3R}$",
+      "B. $\\frac{GmM}{2R}$",
+      "C. $\\frac{GmM}{3R}$",
+      "D. $\\frac{5GmM}{6R}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$T.E_f=-\\frac{GMm}{6R}$ $T.E_i=-{GMm}/R$ $∆W=T.E_f-T.E_i=\\frac{5GmM}{6R}$",
+    "year": 2013,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The mass of a spaceship is $1000 {\\text{kg}}$. It is to be launched from the earth's surface out into free space. The value of $g$ and $R$ (radius of earth) are $10 {\\text{m}} / {\\ s}^2$ and $6400 {\\text{km}}$ respectively. The required energy for this work will be:",
+    "images": [],
+    "options": [
+      "A. $6.4 × 10^{11}$ Joules",
+      "B. $6.4 × 10^8$ Joules",
+      "C. $6.4 × 10^9$ Joules",
+      "D. $6.4 × 10^{10}$ Joules"
+    ],
+    "correct_answer": "D",
+    "explanation": "Potential energy at earth surface $=-\\;\\frac{G M m}{R}$ and at free space potential energy $=0$Work done for this $=0- (-\\;\\frac{G M m}{R}) =\\;\\frac{G M m}{R}$So the required energy for this work is$\\;=\\;\\frac{G M m}{R}$ $\\;=\\;\\frac{g R^2 m}{R} [\\;\\text{ as }\\; g=\\;\\frac{G M}{R^2}]$ $\\;=m g R$ $\\;=1000 × 10 × 6400 × 10^3$ $\\;=6.4 × 10^{10} \\;\\text{ Joules }\\;$",
+    "year": 2012,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two bodies of masses $m$ and $4 m$ are placed at a distance $r$. The gravitational potential at a point on the line joining them where the gravitational field is zero is:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_two-bodies-of-masses-m-and-4-m_img1_20260504_232151.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $-\\;\\frac{4 G m}{r}$",
+      "B. $-\\;\\frac{6 G m}{r}$",
+      "C. $-\\;\\frac{9 G m}{r}$",
+      "D. zero"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let the gravitational field at $P$, distant $x$ from mass $m$, be zero$\\; ∴ \\;\\frac{G m}{x^2}=\\;\\frac{4 G m}{(r-x)^2}$ $\\;⇒ 4 x^2=(r-x)^2$ $\\;⇒ 2 x=r-x$ $\\;⇒ x=\\;\\frac{r}{3}$Gravitational potential at point $P$,$V=-\\;{G m}/{\\frac{7}{3}}-\\;{4 G m}/{\\frac{2 r}{3}}=-\\;\\frac{9 G m}{r}$",
+    "year": 2011,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The height at which the acceleration due to gravity becomes $\\;\\frac{g}{9}$ (where $g=$ the acceleration due to gravity on the surface of the earth) in terms of $R$, the radius of the earth, is:",
+    "images": [],
+    "options": [
+      "A. $\\;{\\text{R}}/{{\\sqrt{2}}}$",
+      "B. $\\text{R}{/}2$",
+      "C. $\\sqrt2\\text{R}$",
+      "D. $2\\text{R}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given that, at height ${\\text{h}}$ from ground the acceleration due to gravity becomes $\\;\\frac{g}{9}$.We know acceleration at earth surface due to gravity ${\\text{g}}=\\;\\frac{G M}{R^2}$and acceleration at height $h$ due to gravity $g^{'}=\\;\\frac{G M}{(R+h)^2}$ So $\\;\\frac{g}{9}=\\;\\frac{G M}{(R+h)^2}$ $⇒ \\;\\frac{g}{9}=\\;\\frac{G M}{R^2} ⋅ \\;\\frac{R^2}{(R+h)^2}$ $=g ⋅ (\\;\\frac{R}{R+h}) ^2$ $⇒ \\;\\frac{1}{9}= (\\;\\frac{R}{R+h}) ^2$ $⇒ \\;\\frac{R}{R+h}=\\;\\frac{1}{3}$ $⇒ 3 R=R+h$ $∴ h=2 R$",
+    "year": 2009,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "This question contains Statement - 1 and Statement - 2. of the four choices given after the statements, choose the one that best describes the two statements. Statement - 1:For a mass $M$ kept at the center of a cube of side ${ }^{'} a^{'}$, the flux of gravitational field passing through its sides $4 π G M$.Statement - 2:If the direction of a field due to a point source is radial and its dependence on the distance ' $r^{'}$ from the source is given as $\\;\\frac{1}{r^2}$, its flux through a closed surface depends only on the strength of the source enclosed by the surface and not on the size or shape of the surface.",
+    "images": [],
+    "options": [
+      "A. Statement $-1$ is false, Statement - 2 is true",
+      "B. Statement - 1 is true, Statement - 2 is true; Statement - 2 is a correct explanation forStatement - 1",
+      "C. Statement $-1$ is true, Statement $-2$ is true; Statement $-2$ is not a correct explanation for Statement - 1",
+      "D. Statement $-1$ is true, Statement $-2$ is false"
+    ],
+    "correct_answer": "B",
+    "explanation": "Gravitational field $\\vec{g}=-\\;\\frac{G M}{r^2}$where, $M=$ mass enclosed in the closed surfaceGravitational flux through a closed surface is given by$|\\vec{g} ⋅ d \\vec{S}|=4 π r^2 ⋅ \\;\\frac{G M}{r^2}=4 π G M$So Statement - 1 is correct.Statement - 2 is also correct because when the shape of the earth is spherical, area of the Gaussian surface is $4 π r^2$. This proves inverse square law.",
+    "year": 2008,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A planet in a density solar system is 10 times more massive than the earth and its radius is 10 times smaller. Given that the escape velocity from the earth is $11 {\\text{km}} {\\ s}^{-1}$, the escape velocity from the surface of the planet would be",
+    "images": [],
+    "options": [
+      "A. $1.1 {\\text{km}} {\\ s}^{-1}$",
+      "B. $100 {\\text{km}} {\\ s}^{-1}$",
+      "C. $110 {\\text{km}} {\\ s}^{-1}$",
+      "D. $0.11 {\\text{km}} {\\ s}^{-1}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let $M_e$ is mass of earth then mass of planet $M_p=10 M_e$.And let ${\\text{R}}_e$ is radius of earth then radius of planet ${\\text{R}}_{ {\\text{p}}}=\\;\\frac{R_c}{10}$Escape velocity of earth, $v_e=\\sqrt{\\;\\frac{2 G M_e}{R_e}}$Escape velocity of planet, $v_p=\\sqrt{\\;\\frac{2 G M_p}{R_p}}$ $∴ \\;\\frac{v_p}{v_e}=\\;{\\sqrt{\\frac{2 G M_p}{R_p}}}/{\\sqrt{\\;\\frac{2 G M_e}{R_e}}}$ $=\\sqrt{\\;\\frac{M_p}{M_e} × \\;{ {\\text{R}}_e}/{R_p}}$ $=\\sqrt{\\;\\frac{10 M_e}{M_e} × \\;{ {\\text{R}}_e}/{ {\\text{R}}_e / 10}}=10$ $∴ v_p=10 × v_e$ $=10 × 11=110 {\\text{km}} / {\\ s}$",
+    "year": 2008,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If $g_E$ and $g_M$ are the accelerations due to gravity on the surfaces of the earth and the moon respectively and if Millikan's oil drop experiment could be performed on the two surfaces, one will find the ratio$\\;{\\;\\text{ electro charge on the moon }\\;}/{\\;\\text{ electronic charge on the earth }\\;}$ to be",
+    "images": [],
+    "options": [
+      "A. $g_M / g_E$",
+      "B. $1$",
+      "C. $0$",
+      "D. $g_E / g_M$"
+    ],
+    "correct_answer": "B",
+    "explanation": "electronic charge does does not depend on acceleration due to gravity as it is a universal constant.So, electronic charge on earth= electronic charge on moon$∴$ Required ratio $=1$",
+    "year": 2007,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Average density of the earth",
+    "images": [],
+    "options": [
+      "A. is a complex function of $g$",
+      "B. does not depend on $g$",
+      "C. is inversely proportional to ${\\text{g}}$",
+      "D. is directly proportional to ${\\text{g}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;\\;\\text{ Mass of earth }\\;=\\;\\text{ Volume }\\; × \\;\\text{ Density of earth }\\;(ρ)$ $\\; ∴ {\\text{M}}=\\;\\frac{4}{3} π R^3 × ρ$We know, $g=\\;\\frac{G M}{R^2}$ $\\;⇒ g=\\;{G × ρ × \\frac{4}{3} π R^3}/{R^2}$ $\\;⇒ g=\\;\\frac{4}{3} ρ π G R$ $\\; ∴ g ∝ ρ \\;\\text{ or }\\; ρ ∝ g$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The change in the value of $g$ at a height $h$ above the surface of the earth is the same as at a depth $d$ below the surface of earth. When both $d$ and $h$ are much smaller than the radius of earth, then which one of the following is correct?",
+    "images": [],
+    "options": [
+      "A. $d=\\;\\frac{3 h}{2}$",
+      "B. $d=\\;\\frac{ h}{2}$",
+      "C. $d=\\;{ h}$",
+      "D. $d=\\;{ 2h}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "At height $h$ acceleration due to gravity, $g_h=g [1-\\;\\frac{2 h}{R}]$;At depth $d$ acceleration due to gravity, $g_d=g [1-\\;\\frac{d}{R}]$According to the question,$\\;g_h=g_d$ $\\; ∴ g [1-\\;\\frac{2 h}{R}] =g [1-\\;\\frac{d}{R}]$ $\\;⇒ \\;\\frac{2 h g}{R}=\\;\\frac{d g}{R}$ $\\;⇒ d=2 h$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A particle of mass $10 {\\text{g}}$ is kept on the surface of a uniform sphere of mass $100 {\\text{kg}}$ and radius $10 {\\text{cm}}$. Find the work to be done against the gravitational force between them to take the particle far away from the sphere (you may take $G=6.67 × 10^{-11} {\\text{Nm}}^2 / {\\text{kg}}^2$ )",
+    "images": [],
+    "options": [
+      "A. $3.33 × 10^{-10} J$",
+      "B. $13.34 × 10^{-10} {\\text{J}}$",
+      "C. $6.67 × 10^{-10} {\\text{J}}$",
+      "D. $6.67 × 10^{-9} J$"
+    ],
+    "correct_answer": "C",
+    "explanation": "We know, Work done = Difference in potential energy$\\; ∴ W=∆ U=U_f-U_i=0- [\\;\\frac{-G M m}{R}]$ $\\;⇒ W=\\;{6.67 × 10^{-11} × 100}/{0.1} × \\;\\frac{10}{1000}$ $\\;=6.67 × 10^{-10} J$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The time period of an earth satellite in circular orbit is independent of",
+    "images": [],
+    "options": [
+      "A. both the mass and radius of the orbit",
+      "B. radius of its orbit",
+      "C. the mass of the satellite",
+      "D. neither the mass of the satellite nor the radius of its orbit"
+    ],
+    "correct_answer": "C",
+    "explanation": "For satellite, gravitational force = centripetal force $∴ \\;\\frac{m v^2}{R+x}=\\;\\frac{G m M}{(R+x)^2}$ $x=$ height of satellite from earth surface $m=$ mass of satellite $⇒ v^2=\\;\\frac{G M}{(R+x)}$ or $v=\\sqrt{\\;\\frac{G M}{R+x}}$ We know, $T=\\;\\frac{2 π}{ω}$ $T=\\;\\frac{2 π(R+x)}{v}$ [ as $ω=\\;\\frac{v}{r}]$ $=\\;{2 π(R+x)}/{\\sqrt{\\;\\frac{G M}{R+x}}}$ which is independent of mass of satellite",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If $g$ is the acceleration due to gravity on the earth's surface, the gain in the potential energy of an object of mass $m$ raised from the surface of the earth to a height equal to the radius $R$ of the earth is",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{1}{4}\\text{mgR}$",
+      "B. $2 \\text{mgR}$",
+      "C. $1/2 \\text{mgR}$",
+      "D. $\\text{mgR}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Gravitational potential energy on the earth surface of a body ${\\text{U}}=-\\;\\frac{G m M}{R}$ And at the height ${\\text{h}}$ from the earth surface the potential energy $U_h=-\\;\\frac{G m M}{R+h}=-\\;\\frac{G m M}{2 R}$ [as ${\\text{h}}= {\\text{R}}$] So the gain in the potential energy $∆ U=U_h-U$ $\\; ∴ ∆ U=\\;\\frac{-G m M}{2 R}+\\;\\frac{G m M}{R}$ $\\;⇒ ∆ U=\\;\\frac{G m M}{2 R}$Now $\\;\\frac{G M}{R^2}=g ; \\;\\; ∴ \\;\\frac{G M}{R}=g R$ $∴ ∆ U=\\;\\frac{1}{2} m g R$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Suppose the gravitational force varies inversely as the ${\\text{n}}^{\\;\\text{th }\\;}$ power of distance. Then the time period of a planet in circular orbit of radius $R$ around the sun will be proportional to",
+    "images": [],
+    "options": [
+      "A. $R^n$",
+      "B. $R^{ (\\;\\frac{n-1}{2}) }$",
+      "C. $R^{ (\\;\\frac{n+1}{2}) }$",
+      "D. $R^{ (\\;\\frac{n-2}{2}) }$"
+    ],
+    "correct_answer": "C",
+    "explanation": "For moving a planet around the sun in the circular orbit, The necessary centripetal force $=$ Gravitational force exerted on it $∴ \\;\\frac{m v^2}{r}=\\;\\frac{G M m}{R^n}$ $⇒ v=\\sqrt{\\;{G M}/{R^{n-1}}}$We know, $T=\\;\\frac{2 π R}{v}$ $\\;=2 π R × \\sqrt{\\;{R^{n-1}}/{G M}}$ $\\;=2 π × \\sqrt{\\;{R^2 × R^{n-1}}/{G M}}$ $\\;=2 π × \\;{R^{\\frac{n+1}{2}}}/{{\\sqrt{G M}}}$ $\\; ∴ T ∝ R^{\\;\\frac{(n+1)}{2}}$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "A satellite of mass $m$ revolves around the earth of radius $R$ at a height $x$ from its surface. If $g$ is the acceleration due to gravity on the surface of the earth, the orbital speed of the satellite is",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{g R^2}{R+x}$",
+      "B. $\\;\\frac{g R}{R-x}$",
+      "C. $g x$",
+      "D. $(\\;\\frac{g R^2}{R+x}) ^{1 / 2}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Gravitational force applied on the satellite,$=\\;\\frac{G M m}{(R+x)^2}$For satellite, gravitational force $=$ centripetal force$∴ \\;\\frac{m v^2}{(R+x)}=\\;\\frac{G M m}{(R+x)^2}$where $v$ is the orbital speed of satellite.also $g=\\;\\frac{G M}{R^2} ⇒ G M=g R^2$ $\\; ∴ v^2=\\;\\frac{g R^2}{R+x}$ $\\;⇒ v= (\\;\\frac{g R^2}{R+x}) ^{1 / 2}$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Two spherical bodies of mass $M$ and $5 M &$ radii $R & 2 R$ respectively are released in free space with initial separation between their centers equal to $12 R$. If they attract each other due to gravitational force only, then the distance covered by the smaller body just before collision is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Gravitation/main_two-spherical-bodies-of-mass-m_img1_20260504_232212.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $2.5$ R",
+      "B. $4.5$ R",
+      "C. $7.5$ R",
+      "D. $1.5$ R"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let $t$ be the time taken for the two masses to collide and $x_{5 M}, x_M$ be the distance travelled by the mass $5 M$ and $M$ respectively. The gravitational force acting between two sphere when the distance between them ( $12 {\\text{R}}- {\\text{x}})$ where $x$ is a variable, $F=\\;\\frac{G M × 5 M}{(12 R-x)^2}$ Acceleration of mass ${\\text{M}}, a_M=\\;\\frac{G × 5 M}{(12 R-x)^2}$ Acceleration of mass $5 {\\text{M}}, a_{5 M}=\\;\\frac{G M}{(12 R-x)^2}$ For mass $5 M$ $u=0, S=x_{5 M}, t=t, a=a_{5 M}$ $S=u t+\\;\\frac{1}{2} a t^2$ $∴ x_{5 M}=\\;\\frac{1}{2} a_{5 M} t^2$.....(i) For mass $M$ $u=0, s=x_M, t=t, a=a_M$ $∴ s=u t+\\;\\frac{1}{2} a t^2 ⇒$ $x_M=\\;\\frac{1}{2} a_M t^2$....(ii) Dividing $(i i)$ by $(i i i)$ $\\;\\;{x_{5 M}}/{x_M}=\\;{\\;\\frac{1}{2} a_{5 M} t^2}/{\\frac{1}{2} a_M t^2}$ $\\;=\\;{a_{5 M}}/{a_M}=\\;\\frac{1}{5}$ $∴ 5 x_{5 M}=x_M$.......(iii) From the figure,$x_{5 M}+x_M=12 R-2 R-R=9 R$......(iv)From $(i i i)$ and $(i v)$ $\\;\\frac{x_M}{5}+x_M=9 R$ $∴ 6 x_M=45 R$ $∴ x_M=\\;\\frac{45}{6} R=7.5 R$ So two sphere collide when the sphere of mass $M$ covered the distance of $7.5 {\\text{R}}$.",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The time period of satellite of earth is 5 hours. If the separation between the earth and the satellite is increased to 4 times the previous value, the new time period will become",
+    "images": [],
+    "options": [
+      "A. 10 hours",
+      "B. 80 hours",
+      "C. 40 hours",
+      "D. 20 hours"
+    ],
+    "correct_answer": "C",
+    "explanation": "According to kepler's law,$T^2 ∝ R^3$ $∴ \\;\\frac{T_1^2}{T_2^2}=\\;\\frac{R_1^3}{R_2^3}$ $⇒ T_2=T_1 (\\;\\frac{R_2}{R_1}) ^{3 / 2}=5 × [\\;\\frac{4 R}{R}] ^{3 / 2}$ $=5 × 2^3=40$ hour𝜕",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The escape velocity for a body projected vertically upwards from the surface of earth is 11 ${\\text{km}} {/} {\\ s}$. If the body is projected at an angle of $45^{∘}$ with the vertical, the escape velocity will be",
+    "images": [],
+    "options": [
+      "A. $11 {\\sqrt{2}} {\\text{km}} / {\\ s}$",
+      "B. $22 {\\text{km}} {/} {\\ s}$",
+      "C. $11 {\\text{km}} {/} {\\ s}$",
+      "D. $\\;{11}/{{\\sqrt{2}}} {\\text{km}} {/} {\\ s}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "We know, Escape velocity, $v_e={\\sqrt{2 g R}}$ So the escape velocity is independent of the angle at which the body is projected, hence it will remain same as $11 {\\text{km}} {/} {\\ s}$.",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "If suddenly the gravitational force of attraction between Earth and a satellite revolving around it becomes zero, then the satellite will",
+    "images": [],
+    "options": [
+      "A. continue to move in its orbit with same velocity",
+      "B. move tangentially to the original orbit with the same velocity",
+      "C. become stationary in its orbit",
+      "D. move towards the earth"
+    ],
+    "correct_answer": "B",
+    "explanation": "When gravitational force of attraction between Earth and a satellite revolving around it becomes zero, then the centripetal force becomes zero. So the satellite will move tangentially to the original orbit with the same velocity as it has at the instant when gravitational force becomes zero.",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The escape velocity of a body depends upon mass as",
+    "images": [],
+    "options": [
+      "A. $m^0$",
+      "B. $m^1$",
+      "C. $m^2$",
+      "D. $m^3$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Escape velocity, $v_e=\\sqrt{2 g R}=\\sqrt{\\;\\frac{2 G M}{R}} ⇒ V_e ∝ m^0$ Where $M, R$ are the mass and radius of the planet respectively. In this expression the mass of the body $(m)$ is not present. The escape velocity is independent of the mass $m$ or it depends on ${\\text{m}}^0$.",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "The kinetic energy needed to project a body of mass $m$ from the earth surface (radius $R$ ) to infinity is",
+    "images": [],
+    "options": [
+      "A. $m g R {/} 2$",
+      "B. $2mgR$",
+      "C. $mgR$",
+      "D. $m g R {/} 4$"
+    ],
+    "correct_answer": "C",
+    "explanation": "The required velocity is called escape velocity $(v_e)$ to leave the earth surface of a body. $v_e=$ escape velocity $=\\sqrt{2 g R}$ Kinetic Energy $K . E=\\;\\frac{1}{2} m v_e^2$ $∴ K . E=\\;\\frac{1}{2} m × 2 g R=m g R$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Gravitation",
+    "question_text": "Energy required to move a body of mass $m$ from an orbit of radius $2 R$ to $3 R$ is",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{G M m}{12 R^2}$",
+      "B. $\\;\\frac{G M m}{3 R^2}$",
+      "C. $\\;\\frac{G M m}{8 R}$",
+      "D. $\\;\\frac{G M m}{6 R}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Gravitational potential energy ${\\text{E}}=-\\;\\frac{G M m}{r}$ where $M=$ mass of earth $m=$ mass of body $r=$ radius of earth Energy required to move a body of mass $m$ from an orbit of radius $2 R$ to $3 R$ $=($ Potential energy of the Earth-mass system when mass is at distance $3 R)-$ (Potential energy of the Earth-mass system when mass is at distance $2 R$ ) $=\\;\\frac{-G M m}{3 R}-(\\;\\frac{-G M m}{2 R})$ $=\\;\\frac{-G M m}{3 R}+\\;\\frac{G M m}{2 R}$ $=\\;\\frac{-2 G M m+3 G M m}{6 R}=\\;\\frac{G M m}{6 R}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  }
+]

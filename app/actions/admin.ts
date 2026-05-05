@@ -241,7 +241,9 @@ Rules:
 2. Use LaTeX ($, $$) for all math.
 3. Keep the total explanation to 4-6 lines max.
 4. Focus only on the core concept.
-5. No preamble, no markdown code blocks.`;
+5. No preamble, no markdown code blocks.
+6. MANDATORY: End your explanation with the final correct option in this format: [CORRECT_OPTION: X] where X is A, B, C, or D.
+7. DO NOT write "Therefore, the correct option is..." or similar conclusion sentences in natural language. The tag in rule 6 is enough.`;
 
   console.log(`[AI] Debug - Text Length: ${textPrompt.length}, Options Length: ${JSON.stringify(questionData.options).length}`);
   console.log(`[AI] Prompt Snippet: ${textPrompt.substring(0, 150)}...`);
@@ -365,12 +367,26 @@ Rules:
   }
 
   revalidatePath("/admin/reports");
+  // Extract AI's verified answer
+  const aiAnswerMatch = explanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
+  const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
+  const isMismatch = aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase();
+
+  // Clean up the tag and any redundant natural language conclusions
+  const cleanExplanation = explanation
+    .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
+    .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D]\.?/gi, "")
+    .replace(/Correct option is\s*[A-D]\.?/gi, "")
+    .trim();
+
   return { 
-    explanation, 
+    explanation: cleanExplanation, 
     usage: { 
-      input: aiModel === "gpt-4o-mini" ? (openaiUsage?.prompt_tokens || 0) : (geminiUsage?.promptTokenCount || 0),
-      output: aiModel === "gpt-4o-mini" ? (openaiUsage?.completion_tokens || 0) : (geminiUsage?.candidatesTokenCount || 0)
-    }
+      input: (openaiUsage?.prompt_tokens || geminiUsage?.promptTokenCount || 0), 
+      output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0) 
+    },
+    isMismatch,
+    aiDetectedAnswer
   };
 }
 
@@ -461,7 +477,7 @@ Rules:
         let explanation = "";
 
         if (aiModel === "gpt-4o-mini" && openai) {
-          const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
+          const messages: any[] = [{ role: "user", content: [{ type: "text", text: textPrompt }] }];
           // Add images for GPT-4o-mini batch too
           if (images.length > 0) {
             for (const img of images) {
@@ -480,53 +496,51 @@ Rules:
                     const base64 = imageData.toString("base64");
                     const ext = path.extname(filePath).slice(1).toLowerCase();
                     const mimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/webp";
-                    messages[0].content.push({
-                      type: "image_url",
-                      image_url: { 
-                        url: `data:${mimeType};base64,${base64}`,
-                        detail: "low"
-                      }
-                    });
+                    messages[0].content.push({ type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}`, detail: "low" } });
                     break;
                   }
                 } catch { /* skip */ }
               }
             }
           }
-          const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages,
-          });
+          const response = await openai.chat.completions.create({ model: "gpt-4o-mini", messages });
           explanation = response.choices[0].message.content || "";
-          const iTokens = response.usage?.prompt_tokens || 0;
-          const oTokens = response.usage?.completion_tokens || 0;
-          totalInputTokens += iTokens;
-          totalOutputTokens += oTokens;
-          console.log(`[AI] OpenAI Tokens (Batch): Input: ${iTokens}, Output: ${oTokens}`);
+          totalInputTokens += response.usage?.prompt_tokens || 0;
+          totalOutputTokens += response.usage?.completion_tokens || 0;
         } else {
-          const model = genAI!.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-          });
+          const model = genAI!.getGenerativeModel({ model: "gemini-1.5-flash" });
           const result = await model.generateContent(contentParts);
           explanation = result.response.text();
           const usage = result.response.usageMetadata;
-          const iTokens = usage?.promptTokenCount || 0;
-          const oTokens = usage?.candidatesTokenCount || 0;
-          totalInputTokens += iTokens;
-          totalOutputTokens += oTokens;
-          console.log(`[AI] Gemini Tokens (Batch): Input: ${iTokens}, Output: ${oTokens}`);
+          totalInputTokens += usage?.promptTokenCount || 0;
+          totalOutputTokens += usage?.candidatesTokenCount || 0;
         }
-        explanation = explanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
 
-        questions[i] = { ...questions[i], explanation };
+        // Detect Mismatch
+        const aiAnswerMatch = explanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
+        const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
+        const isMismatch = aiDetectedAnswer && aiDetectedAnswer !== q.correct_answer?.toUpperCase();
+        
+        // Clean Explanation
+        const cleanExplanation = explanation
+          .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
+          .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D]\.?/gi, "")
+          .replace(/Correct option is\s*[A-D]\.?/gi, "")
+          .trim();
+
+        questions[i] = { 
+          ...questions[i], 
+          explanation: cleanExplanation,
+          ai_answer_mismatch: isMismatch,
+          ai_detected_answer: aiDetectedAnswer
+        };
+        
         fixed++;
-        console.log(`[AI] ✅ Done (${fixed} fixed so far)`);
-
-        // Save after each successful generation (in case the process is interrupted)
         await prisma.mockTestTemplate.update({
           where: { id: mockTestId },
           data: { questions }
         });
+
 
         // Wait 5 seconds before next request
         if (i < questions.length - 1) {
@@ -544,3 +558,173 @@ Rules:
   revalidatePath("/admin/reports");
   return { total, fixed, failed, totalInputTokens, totalOutputTokens };
 }
+
+/**
+ * Fetches all unique topics available in the Pattern table.
+ * Used to give the AI a list of allowed categories.
+ */
+/**
+ * Fetches unique topic names grouped by exam type AND subject.
+ * Normalizes keys (e.g., "JEE Main" -> "JEE_MAIN", "Physics" -> "PHYSICS").
+ */
+export async function getAllTopics() {
+  const patterns = await prisma.pattern.findMany({
+    select: { topic_name: true, exam_type: true, subject: true },
+    orderBy: { topic_name: "asc" }
+  });
+
+  const topicMap: Record<string, Record<string, string[]>> = {};
+  
+  patterns.forEach(p => {
+    const normalizedExam = p.exam_type.toUpperCase().replace(/\s+/g, '_');
+    const normalizedSubject = (p.subject || "GENERAL").toUpperCase().trim();
+    
+    if (!topicMap[normalizedExam]) topicMap[normalizedExam] = {};
+    if (!topicMap[normalizedExam][normalizedSubject]) {
+      topicMap[normalizedExam][normalizedSubject] = [];
+    }
+    
+    if (!topicMap[normalizedExam][normalizedSubject].includes(p.topic_name)) {
+      topicMap[normalizedExam][normalizedSubject].push(p.topic_name);
+    }
+  });
+
+  return topicMap;
+}
+
+/**
+ * Uses AI to categorize a question into one of the provided topics.
+ */
+export async function generateQuestionTopic(
+  questionText: string,
+  options: string[],
+  allowedTopics: string[],
+  images: any[] = [],
+  aiModel: "gemini" | "gpt-4o-mini" = "gpt-4o-mini"
+) {
+  if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY not set");
+  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY not set");
+
+  // STATIC PART (First): This will be cached by GPT-4o Mini to save tokens
+  const staticContext = `You are an academic expert. Categorize exam questions into EXACTLY ONE topic from this list:
+
+--- ALLOWED TOPICS START ---
+${allowedTopics.join("\n")}
+--- ALLOWED TOPICS END ---
+
+Rules:
+1. Return ONLY the topic name from the list.
+2. If it doesn't fit perfectly, choose the closest match.
+3. No preamble, no markdown, no explanation.`;
+
+  // VARIABLE PART (Last): This changes for every question
+  const variableContext = `
+Question: ${questionText}
+Options: ${JSON.stringify(options)}`;
+
+  const fullPrompt = `${staticContext}\n\n${variableContext}`;
+
+  const contentParts: any[] = [fullPrompt];
+  const gptMessages: any[] = [{ 
+    role: "user", 
+    content: [{ type: "text", text: fullPrompt }] 
+  }];
+
+  // Process Images
+  if (images.length > 0) {
+    const fs = await import("fs");
+    const path = await import("path");
+
+    for (const img of images) {
+      const filename = img.filename || img.url;
+      if (!filename) continue;
+
+      const possiblePaths = [
+        path.join(process.cwd(), "public", "images", "questions", filename),
+        path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+      ];
+
+      for (const filePath of possiblePaths) {
+        try {
+          if (fs.existsSync(filePath)) {
+            const imageData = fs.readFileSync(filePath);
+            const base64 = imageData.toString("base64");
+            const ext = path.extname(filePath).slice(1).toLowerCase();
+            const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
+
+            // For Gemini
+            contentParts.push({
+              inlineData: { data: base64, mimeType }
+            });
+
+            // For GPT
+            (gptMessages[0].content as any[]).push({
+              type: "image_url",
+              image_url: { url: `data:${mimeType};base64,${base64}`, detail: "low" }
+            });
+            break;
+          }
+        } catch { /* skip */ }
+      }
+    }
+  }
+
+  let topic = "Unknown";
+  let usage = { input: 0, output: 0 };
+
+  if (aiModel === "gpt-4o-mini" && openai) {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: gptMessages,
+      temperature: 0,
+    });
+    topic = response.choices[0].message.content?.trim() || "Unknown";
+    usage = { input: response.usage?.prompt_tokens || 0, output: response.usage?.completion_tokens || 0 };
+  } else {
+    const model = genAI!.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(contentParts);
+    topic = result.response.text().trim();
+    const u = result.response.usageMetadata;
+    usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
+  }
+
+  // Final check: Ensure the returned topic is actually in our list (avoid AI hallucinations)
+  const exactMatch = allowedTopics.find(t => t.toLowerCase() === topic.toLowerCase());
+  return { topic: exactMatch || topic, usage };
+}
+
+
+/**
+ * Saves a topic to a specific question inside a MockTestTemplate JSON.
+ */
+export async function updateMockTestQuestionTopic(
+  mockTestId: string,
+  questionId: string,
+  topic: string
+) {
+  const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
+  if (!template) throw new Error("Mock test not found");
+
+  const questions = [...(template.questions as any[])];
+  const idx = questions.findIndex(q => q.id === questionId);
+  if (idx !== -1) {
+    questions[idx] = { ...questions[idx], topic };
+    
+    // Sync the summary 'topics' array
+    const allTopics = questions
+      .map(q => q.topic)
+      .filter(t => t && t !== "Unknown");
+    const uniqueTopics = Array.from(new Set(allTopics));
+
+    await prisma.mockTestTemplate.update({
+      where: { id: mockTestId },
+      data: { 
+        questions,
+        topics: uniqueTopics
+      }
+    });
+  }
+  return { success: true };
+}
+
+

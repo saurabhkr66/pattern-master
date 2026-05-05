@@ -204,13 +204,24 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     testTitle: string;
     currentQ: any;
     currentExplanation: string;
+    currentMismatch?: boolean;
+    currentAIDetectedAnswer?: string | null;
     progress: number;
     total: number;
     fixed: number;
     failed: number;
     totalInputTokens: number;
     totalOutputTokens: number;
-    log: { id: string; text: string; status: "ok" | "fail"; question: any; explanation: string; tokens?: { input: number; output: number } }[];
+    log: { 
+      id: string; 
+      text: string; 
+      status: "ok" | "fail"; 
+      question: any; 
+      explanation: string; 
+      isMismatch?: boolean;
+      aiDetectedAnswer?: string | null;
+      tokens?: { input: number; output: number } 
+    }[];
     done: boolean;
   } | null>(null);
 
@@ -233,6 +244,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       testTitle: test.title,
       currentQ: null,
       currentExplanation: "",
+      currentMismatch: false,
+      currentAIDetectedAnswer: null,
       progress: 0,
       total: missingQs.length,
       fixed: 0,
@@ -259,29 +272,41 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       } : null);
 
       try {
-          const result = await generateAIExplanation(q.id, "MockQuestion", testId, selectedAIModel);
-          const explanation = (result as any).explanation;
-          const usage = (result as any).usage;
-          
-          fixed++;
-          cumulativeInput += usage?.input || 0;
-          cumulativeOutput += usage?.output || 0;
-          
-          setLiveFeed(prev => prev ? {
-            ...prev,
-            currentExplanation: explanation,
-            fixed,
-            totalInputTokens: cumulativeInput,
-            totalOutputTokens: cumulativeOutput,
-            log: [...prev.log, { 
-              id: q.id, 
-              text: (q.question_text || "").substring(0, 80) + "...", 
-              status: "ok",
-              question: q,
-              explanation,
-              tokens: usage
-            }],
-          } : null);
+        // 1. Generate Explanation via AI
+        const result = await generateAIExplanation(q.id, q.question_text || "", (q.options as string[]) || [], q.correct_answer || "", selectedAIModel);
+        
+        const explanation = result.explanation;
+        const usage = result.usage;
+        const isMismatch = result.isMismatch;
+        const aiDetectedAnswer = result.aiDetectedAnswer;
+        
+        // 2. Save Explanation
+        // Assuming resolveReport exists in scope; if report not available, adjust to API call
+        await resolveReport(q.id, q.id, "MockQuestion", { explanation }, testId);
+        
+        fixed++;
+        cumulativeInput += usage.input;
+        cumulativeOutput += usage.output;
+        
+        setLiveFeed(prev => prev ? {
+          ...prev,
+          currentExplanation: explanation,
+          currentMismatch: isMismatch,
+          currentAIDetectedAnswer: aiDetectedAnswer,
+          fixed,
+          totalInputTokens: cumulativeInput,
+          totalOutputTokens: cumulativeOutput,
+          log: [...prev.log, { 
+            id: q.id, 
+            text: (q.question_text || "").substring(0, 80) + "...", 
+            status: "ok",
+            question: q,
+            explanation,
+            isMismatch,
+            aiDetectedAnswer,
+            tokens: usage
+          }],
+        } : null);
       } catch (err) {
         // Retry once after 15 seconds (handles 429 rate limit)
         console.log(`[AI] Retrying question ${q.id} after 15s...`);
@@ -447,22 +472,38 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                   <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10 text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto">
                     <MathRenderer content={liveFeed.currentExplanation} />
                   </div>
+                  {/* MISMATCH WARNING */}
+                  {liveFeed.currentMismatch && (
+                    <div className="mt-2 p-2 rounded-lg bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 flex items-center gap-2">
+                      <span className="text-sm">⚠️</span>
+                      <span className="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">
+                        AI Mismatch: AI thinks the answer is {liveFeed.currentAIDetectedAnswer}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Completed Log */}
               {liveFeed.log.length > 0 && (
                 <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Log ({liveFeed.log.length}) · click to preview</div>
-                  <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Processing Log</div>
+                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
                     {[...liveFeed.log].reverse().map((entry, i) => (
                       <button 
                         key={i} 
                         onClick={() => setLogPreview({ question: entry.question, explanation: entry.explanation })}
                         className="flex items-center gap-2 text-[10px] text-gray-500 py-1.5 px-2 rounded bg-gray-50 dark:bg-black/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors text-left w-full"
                       >
-                        <span>{entry.status === "ok" ? "✅" : "❌"}</span>
+                        <span className="flex-shrink-0">{entry.status === "ok" ? "✅" : "❌"}</span>
                         <span className="truncate flex-1">{entry.text}</span>
+                        {entry.isMismatch && <span className="text-[10px] flex-shrink-0">⚠️</span>}
+                        {entry.tokens && (
+                          <span className="flex-shrink-0 text-[8px] bg-gray-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded flex gap-2">
+                            <span className="text-purple-500">↑{entry.tokens.input}</span>
+                            <span className="text-pink-500">↓{entry.tokens.output}</span>
+                          </span>
+                        )}
                         <span className="text-gray-300">→</span>
                       </button>
                     ))}
@@ -473,13 +514,20 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
               {/* Done Message */}
               {liveFeed.done && (
                 <div className="mt-4 p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-center">
-                  <div className="text-2xl mb-2">🎉</div>
-                  <div className="text-sm font-bold text-green-800 dark:text-green-300">All done!</div>
-                  <div className="text-[10px] text-green-600 dark:text-green-400 mt-1">
-                    {liveFeed.fixed} explanations generated{liveFeed.failed > 0 ? `, ${liveFeed.failed} failed` : ""}
+                  <div className="text-2xl mb-2">🎓</div>
+                  <div className="text-sm font-bold text-green-800 dark:text-green-300">
+                    {liveFeed.fixed} explanations generated and verified.
                   </div>
-                  <div className="mt-2 text-[10px] font-mono text-gray-500 bg-black/5 dark:bg-black/20 p-2 rounded-lg inline-block">
-                    📊 Tokens Used: {liveFeed.totalInputTokens.toLocaleString()} (Input) + {liveFeed.totalOutputTokens.toLocaleString()} (Output) = <span className="font-bold">{(liveFeed.totalInputTokens + liveFeed.totalOutputTokens).toLocaleString()}</span>
+                  {/* Token Summary */}
+                  <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-500/20 flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    <div className="flex flex-col gap-1">
+                      <span>Input Tokens</span>
+                      <span className="text-gray-900 dark:text-white">{liveFeed.totalInputTokens.toLocaleString()}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span>Output Tokens</span>
+                      <span className="text-gray-900 dark:text-white">{liveFeed.totalOutputTokens.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -487,9 +535,14 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
             {/* Footer */}
             {!liveFeed.done && (
-              <div className="p-3 border-t dark:border-zinc-800 text-center">
-                <div className="text-[10px] text-gray-400 animate-pulse">
-                  ⏳ ~{(liveFeed.total - liveFeed.progress) * 8}s remaining · 8s delay (10 RPM limit)
+              <div className="px-4 py-2 bg-gray-50 dark:bg-black/20 border-t dark:border-zinc-800 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                <div className="flex items-center gap-2">
+                  <span className="animate-pulse">⏳</span>
+                  <span>~{(liveFeed.total - liveFeed.progress) * 8}s left</span>
+                </div>
+                <div className="flex gap-4">
+                  <span className="text-purple-500 font-black">In: {liveFeed.totalInputTokens}</span>
+                  <span className="text-pink-500 font-black">Out: {liveFeed.totalOutputTokens}</span>
                 </div>
               </div>
             )}

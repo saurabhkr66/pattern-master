@@ -1,0 +1,1440 @@
+[
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "In case of vertical circular motion of a particle by a thread of length $r$ if the tension in the thread is zero at an angle $30^{∘}$ shown in figure, the velocity at the bottom point $( A)$ of the circular path is ( $g =$ gravitational acceleration)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_in-case-of-vertical-circular-m_img1_20260504_225526.webp"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt{\\;\\frac{7}{2} g r}$",
+      "B. ${\\sqrt{4 g r}}$",
+      "C. $\\sqrt{\\;\\frac{5}{2} g r}$",
+      "D. ${\\sqrt{5 g r}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A large drum having radius $R$ is spinning around its axis with angular velocity $ω$, as shown in figure.The minimum value of $ω$ so that a body of mass $M$ remains stuck to the inner wall of the drum, taking the coefficient of friction between the drum surface and mass $M$ as $µ$, is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-large-drum-having-radius-r-i_img1_20260504_225528.webp"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt{\\;\\frac{2 g}{µ R}}$",
+      "B. $\\sqrt{\\;\\frac{g}{2 µ R}}$",
+      "C. $\\sqrt{\\;\\frac{µ g}{R}}$",
+      "D. $\\sqrt{\\;\\frac{g}{µ R}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "Two cars $A$ and $B$ each of mass $10^3 kg$ are moving on parallel tracks separated by a distance of 10 m , in same direction with speeds $72 km / h$ and $36 km / h$. The magnitude of angular momentum of car $A$ with respect to car $B$ is $\\_\\_\\_\\_$ $J ⋅ s$.",
+    "images": [],
+    "options": [
+      "A. $3.6 × 10^5$",
+      "B. $10^5$",
+      "C. $3 × 10^5$",
+      "D. $2 × 10^5$"
+    ],
+    "correct_answer": "B",
+    "explanation": "",
+    "year": 2026,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle of charge $1.6 µ {\\text{C}}$ and mass $16 µ {\\text{g}}$ is present in a strong magnetic field of 6.28 T . The particle is then fired perpendicular to magnetic field. The time required for the particle to return to original location for the first time is $\\_\\_\\_\\_$ S. $(π=3.14)$",
+    "images": [],
+    "options": [],
+    "correct_answer": "0.01",
+    "explanation": "",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A wheel is rolling on a plane surface. The speed of a particle on the highest point of the rim is $8 {\\text{m}} / {\\ s}$. The speed of the particle on the rim of the wheel at the same level as the centre of wheel, will be",
+    "images": [],
+    "options": [
+      "A. $8 {\\sqrt{2}} {\\text{m}} / {\\ s}$",
+      "B. $4 {\\sqrt{2}} {\\text{m}} / {\\ s}$",
+      "C. $8 {\\text{m}} / {\\ s}$",
+      "D. $4 {\\text{m}} / {\\ s}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A sportsman runs around a circular track of radius $r$ such that he traverses the path $A B A B$. The distance travelled and displacement, respectively, are",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-sportsman-runs-around-a-circ_img1_20260504_225535.webp"
+      }
+    ],
+    "options": [
+      "A. $3 π r, 2 r$",
+      "B. $3 π r, π r$",
+      "C. $2 r, 3 π r$",
+      "D. $π r, 3 r$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;\\;\\text{ Distance }\\;=3 × π r=3 π r$ $\\;\\;\\text{ Displacement }\\;=2 r$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A bob of mass $m$ is suspended at a point $O$ by a light string of length I and left to perform vertical motion (circular) as shown in figure. Initially, by applying horizontal velocity $v_0$ at the point ' $A$ ', the string becomes slack when, the bob reaches at the point ' $D$ '. The ratio of the kinetic energy of the bob at the point $B$ and $C$ is ______",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-bob-of-mass-m-is-suspended-a_img1_20260504_225537.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-bob-of-mass-m-is-suspended-a_img2_20260504_225537.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 1",
+      "B. 3",
+      "C. 4",
+      "D. 2"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;v_B=\\sqrt{v_0^2-2 g (\\;\\frac{I}{2}) }$ $\\;v_B={\\sqrt{4 g l}}$ $\\;v_C={\\sqrt{v_0^2-3 g l}}={\\sqrt{2 g l}}$ $\\;\\;\\frac{K_B}{K_C}=\\;\\frac{v_B^2}{v_C^2}=2$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A body of mass ' $m$ ' connected to a massless and unstretchable string goes in verticle circle of radius ' $R$ ' under gravity $g$. The other end of the string is fixed at the center of circle. If velocity at top of circular path is $n {\\sqrt{g R}}$, where, $n ≥ 1$, then ratio of kinetic energy of the body at bottom to that at top of the circle is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-body-of-mass-m-connected-to-_img1_20260504_225539.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{n^2+4}{n^2}$",
+      "B. $\\;\\frac{n}{n+4}$",
+      "C. $\\;\\frac{n+4}{n}$",
+      "D. $\\;\\frac{n^2}{n^2+4}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$v=n {\\sqrt{g R}}$ $\\;v_0={\\sqrt{v^2+2 g(2 R)}}$ $\\;v_0={\\sqrt{n^2 g R+4 g R}}$ $\\; ∴ \\;\\; \\;{k_{\\;\\text{bottom }\\;}}/{k_{\\;\\text{top }\\;}}=\\;\\frac{v_0^2}{v^2}=\\;\\frac{n^2+4}{n^2}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A car of mass ' $m$ ' moves on a banked road having radius ' $r$ ' and banking angle $θ$. To avoid slipping from banked road, the maximum permissible speed of the car is $v_0$. The coefficient of friction $µ$ between the wheels of the car and the banked road is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-car-of-mass-m-moves-on-a-ban_img1_20260504_225541.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $µ=\\;\\frac{v_0^2+r g \\tan θ}{r g-v_0^2 \\tan θ}$",
+      "B. $µ=\\;\\frac{v_0^2+r g \\tan θ}{r g+v_0^2 \\tan θ}$",
+      "C. $µ=\\;\\frac{v_0^2-r g \\tan θ}{r g+v_0^2 \\tan θ}$",
+      "D. $µ=\\;\\frac{v_0^2-r g \\tan θ}{r g-v_0^2 \\tan θ}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given maximum possible speed $=v_0$For this So, $N=m g \\cos θ+\\;\\frac{m v_0^2}{r} sin \\;θ$ $f_r=µ m g \\cos θ+\\;\\frac{µ m v_0^2}{r} sin \\;θ$And $\\;\\frac{m v_0^2}{r} \\cos θ=m g sin \\;θ+f_r$ $\\;⇒ \\;\\frac{m v_0^2}{r} \\cos θ-m g sin \\;θ=µ (m g \\cos θ+\\;\\frac{m v_0^2}{r} sin \\;θ)$ $\\;⇒ (v_0^2-g r \\tan θ) =µ (v_0^2 \\tan θ+g r)$ $⇒ µ=\\;\\frac{v_0^2-g r \\tan θ}{g r+v_0^2 \\tan θ}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A string of length $L$ is fixed at one end and carries a mass of $M$ at the other end. The mass makes $(\\;\\frac{3}{π})$ rotations per second about the vertical axis passing through end of the string as shown. The tension in the string is ______ ML.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-string-of-length-l-is-fixed-_img1_20260504_225543.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-string-of-length-l-is-fixed-_img2_20260504_225543.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "36",
+    "explanation": "$\\;ω=\\;\\frac{3}{π} × 2 π=6 rad / s$ $\\;R=L sin \\;θ$ $\\;\\;\\text{ and }\\; T=M {\\sqrt{g^2+ω^4 R^2}}$ $\\;\\;\\text{ Also, }\\; T sin \\;θ=M ω^2 ⋅ L sin \\;θ$ $\\;⇒ T=M(36) L$ $\\;⇒ T=36 ML$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A body of mass 100 g is moving in circular path of radius 2 m on vertical plane as shown in figure. The velocity of the body at point $A$ is $10 {\\text{m}} / {\\ s}$. The ratio of its kinetic energies at point $B$ and $C$ is(Take acceleration due to gravity as $10 {\\text{m}} / {\\ s}^2$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-body-of-mass-100-g-is-moving_img1_20260504_225545.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-body-of-mass-100-g-is-moving_img2_20260504_225545.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;{3+{\\sqrt{3}}}/{2}$",
+      "B. $\\;{2+{\\sqrt{2}}}/{3}$",
+      "C. $\\;{2+{\\sqrt{3}}}/{3}$",
+      "D. $\\;{3-{\\sqrt{2}}}/{2}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;V_B=\\sqrt{V_A^2-2 g l (1-\\;{{\\sqrt{3}}}/{2}) }$ $\\;=\\sqrt{60+20 {\\sqrt{3}}}$ $\\;V_C=\\sqrt{V_A^2-2 g (\\;\\frac{3 l}{2}) }$ $\\;={\\sqrt{100-60}}$ $\\;={\\sqrt{40}}$ $\\;\\;\\frac{K_B}{K_C}= (\\;\\frac{V_B}{V_C}) ^2=\\;{3+{\\sqrt{3}}}/{2}$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A tube of length 1 m is filled completely with an ideal liquid of mass 2 M , and closed at both ends. The tube is rotated uniformly in horizontal plane about one of its ends. If the force exerted by the liquid at the other end is $F$ then angular velocity of the tube is $\\sqrt{\\;\\frac{F}{α M}}$ in SI unit. The value of $α$ is_____",
+    "images": [],
+    "options": [],
+    "correct_answer": "1",
+    "explanation": "$\\;F=m ω^2 r_{ {\\text{cm}}}$ $\\;r_{ {\\text{cm}}}=\\;\\frac{1}{2} {\\text{m}}$ $\\;ω=\\sqrt{\\;\\frac{2 F}{m}}$ $\\;m=2 M$ $\\;ω=\\sqrt{\\;\\frac{F}{M}}$ $\\;α=1$",
+    "year": 2025,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A clock has $75 {\\text{cm}}, 60 {\\text{cm}}$ long second hand and minute hand respectively. In 30 minutes duration the tip of second hand will travel ${\\text{x}}$ distance more than the tip of minute hand. The value of $x$ in meter is nearly (Take $π=3.14$ ):",
+    "images": [],
+    "options": [
+      "A. 139.4",
+      "B. 140.5",
+      "C. 220.0",
+      "D. 118.9"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\; {\\text{x}}_{\\min }=π × {\\text{r}}_{\\;\\text{min }\\;}$ $\\;=π × \\;\\frac{60}{100} {\\text{m}} \\;\\text{. }\\;$ $\\; {\\text{x}}_{\\;\\text{second }\\;}=30 × 2 π × {\\text{r}}_{\\;\\text{second }\\;}$ $\\;=30 × 2 π × \\;\\frac{75}{100}$ $\\; {\\text{x}}= {\\text{x}}_{\\;\\text{second }\\;}- {\\text{x}}_{\\min }$ $\\;=139.4 {\\text{m}}$ $\\;$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A car of $800 {\\text{kg}}$ is taking turn on a banked road of radius $300 {\\text{m}}$ and angle of banking $30^{∘}$. If coefficient of static friction is 0.2 then the maximum speed with which car can negotiate the turn safely : $( {\\text{g}}=10 {\\text{m}} / {\\ s}^2, {\\sqrt{3}}=1.73)$",
+    "images": [],
+    "options": [
+      "A. $70.4 {\\text{m}} / {\\ s}$",
+      "B. $51.4 {\\text{m}} / {\\ s}$",
+      "C. $264 {\\text{m}} / {\\ s}$",
+      "D. $102.8 {\\text{m}} / {\\ s}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\; {\\text{m}}=800 {\\text{kg}}$ $\\; {\\text{r}}=300 {\\text{m}}$ $\\;θ=30^{∘}$ $\\;µ_{ {\\ s}}=0.2$ $\\; {\\text{V}}_{\\max }=\\sqrt{{\\text{Rg}} [\\;\\frac{\\tan θ+µ}{1-µ \\tan θ}] }$ $\\;=\\sqrt{300 × {\\text{g}} × [\\;{\\tan 30^{∘}+0.2}/{1-0.2 × \\tan 30^{∘}}] }$ $\\;=\\sqrt{300 × 10 × [\\;\\frac{0.57+0.2}{1-0.2 × 0.57}] }$ $\\; {\\text{V}}_{\\max }=51.4 {\\text{m}} / {\\ s}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A man carrying a monkey on his shoulder does cycling smoothly on a circular track of radius $9 {\\text{m}}$ and completes 120 revolutions in 3 minutes. The magnitude of centripetal acceleration of monkey is (in ${\\text{m}} / {\\ s}^2$ ) :",
+    "images": [],
+    "options": [
+      "A. zero",
+      "B. $16 π^2 {\\text{ms}}^{-2}$",
+      "C. $4 π^2 {\\text{ms}}^{-2}$",
+      "D. $57600 π^2 {\\text{ms}}^{-2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Given : ${\\text{R}}=9 {\\text{m}}$,120 revolution in $3 {\\min}$ $ω=\\;{120 {\\text{Rev}} .}/{3 {\\min} .}=\\;{120 × 2 π {\\text{rad}}}/{3 × 60 {\\ sec}}=\\;\\frac{4 π}{3} {\\text{rad}} / {\\ s}$ ${\\text{a}}_{\\;\\text{centripetal }\\;}=ω^2 {\\text{R}}= (\\;\\frac{4 π}{3}) ^2 × 9=16 π^2 {\\text{m}} / {\\ s}^2$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A cyclist starts from the point $P$ of a circular ground of radius $2 {\\text{km}}$ and travels along its circumference to the point $S$. The displacement of a cyclist is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-cyclist-starts-from-the-poin_img1_20260504_225554.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-cyclist-starts-from-the-poin_img2_20260504_225554.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $6 {\\text{km}}$",
+      "B. ${\\sqrt{8}} {\\text{km}}$",
+      "C. $4 {\\text{km}}$",
+      "D. $8 {\\text{km}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$∴$ Displacement $= {\\text{R}} {\\sqrt{2}}=2 {\\sqrt{2}}={\\sqrt{8}} {\\text{km}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A ball of mass $0.5 {\\text{kg}}$ is attached to a string of length $50 {\\text{cm}}$. The ball is rotated on a horizontal circular path about its vertical axis. The maximum tension that the string can bear is $400 {\\text{N}}$. The maximum possible value of angular velocity of the ball in ${\\text{rad}} / {\\ s}$ is,: [1-Feb-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. 1600",
+      "B. 40",
+      "C. 1000",
+      "D. 20"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\; {\\text{T}}= {\\text{m}} ω^2 ℓ$ $\\;400=0.5 ω^2 × 0.5$ $\\;ω=40 {\\text{rad}} / {\\ s} .$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle moving in a circle of radius $R$ with uniform speed takes time ${\\text{T}}$ to complete one revolution. If this particle is projected with the same speed at an angle $θ$ to the horizontal, the maximum height attained by it is equal to 4R. The angle of projection $θ$ is then given by : [1-Feb-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $sin \\;^{-1} [\\;\\frac{2 g T^2}{π^2 R}] ^{\\;\\frac{1}{2}}$",
+      "B. $sin \\;^{-1} [\\;{π^2 R}/{2 {\\text{gT}}^2}] ^{\\;\\frac{1}{2}}$",
+      "C. $\\cos ^{-1} [\\;{2 g {\\text{T}}^2}/{π^2 {\\text{R}}}] ^{\\;\\frac{1}{2}}$",
+      "D. $\\cos ^{-1} [\\;{π {\\text{R}}}/{2 {\\text{gT}}^2}] ^{\\;\\frac{1}{2}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;{2 π {\\text{R}}}/{ {\\text{T}}}= {\\text{V}}$Maximum height ${\\text{H}}=\\;{ {\\text{v}}^2 sin \\;^2 θ}/{2 {\\text{g}}}$ $\\;4 {\\text{R}}=\\;{4 π^2 {\\text{R}}^2}/{ {\\text{T}}^2 2 {\\text{g}}} sin \\;^2 θ$ $\\; sin \\;θ=\\sqrt{\\;{2 {\\text{gT}}^2}/{π^2 {\\text{R}}}}$ $\\;θ= sin \\;^{-1} (\\;{2 {\\text{gT}}^2}/{π^2 {\\text{R}}}) ^{\\;\\frac{1}{2}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A coin is placed on a disc. The coefficient of friction between the coin and the disc is $µ$. If the distance of the coin from the center of the disc is $r$, the maximum angular velocity which can be given to the disc, so that the coin does not slip away, is : [31-Jan-2024 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-coin-is-placed-on-a-disc-the_img1_20260504_225600.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{µ g}{r}$",
+      "B. $\\sqrt{\\;\\frac{r}{µ g}}$",
+      "C. $\\sqrt{\\;\\frac{µ g}{r}}$",
+      "D. $\\;{µ}/{\\sqrt{ {\\text{rg}}}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$\\; {\\text{N}}= {\\text{mg}}$ $\\; {\\text{f}}= {\\text{m}} ω^2 {\\text{r}}$ $\\; {\\text{f}}=µ {\\text{N}}$ $\\;µ {\\text{mg}}= {\\text{mr}} ω^2$ $\\;ω=\\sqrt{\\;\\frac{µ g}{r}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle is moving in a circle of radius $50 {\\text{cm}}$ in such a way that at any instant the normal and tangential components of its acceleration are equal. If its speed at $t=0$ is $4 {\\text{m}} / {\\ s}$, the time taken to complete the first revolution will be $\\;\\frac{1}{α} [1- {\\text{e}}^{-2 π}] {\\ s}$, where $α=$ [29-Jan-2024 Shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "8",
+    "explanation": "$\\;{| \\vec{a}_c |}={| \\vec{a}_t |}$ $\\;\\;\\frac{v^2}{r}=\\;\\frac{d v}{d t}$ $\\;⇒ ∫↙{4}↖{v} \\;\\frac{d v}{v^2}=∫↙{0}↖{t} \\;\\frac{d t}{r}$ $\\;⇒ [\\;\\frac{-1}{v}] _4^v=\\;\\frac{t}{r}$ $\\;⇒ \\;\\frac{-1}{v}+\\;\\frac{1}{4}=2 t$ $\\;⇒ {\\text{v}}=\\;{4}/{1-8 {\\text{t}}}=\\;{ {ds}}/{ {\\text{dt}}}$ $\\;4 ∫↙{0}↖ { {\\text{t}}} \\;{ {\\text{dt}}}/{1-8 {\\text{t}}}=∫↙{0}↖{ {\\ s}} {ds}$ $\\;( {\\text{r}}=0.5 {\\text{m}}$ $\\; {\\ s}=2 π {\\text{r}}=π)$ $\\;4 × \\;{[\\ln (1-8 {\\text{t}})]_0^{ {\\text{t}}}}/{-8}=π$ $\\;\\ln (1-8 {\\text{t}})=-2 π$ $\\;1-8 {\\text{t}}= {\\text{e}}^{-2 π}$ $\\; {\\text{t}}= (1- {\\text{e}}^{-2 π}) \\;\\frac{1}{8} {\\ s}$So, $α=8$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A stone of mass $900 {\\text{g}}$ is tied to a string and moved in a vertical circle of radius $1 {\\text{m}}$ making $10 {\\text{rpm}}$. The tension in the string, when the stone is at the lowest point is (if $π^2=9.8$ and $g=9.8 {\\text{m}} / {\\ s}^2$ ) [29-Jan-2024 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-stone-of-mass-900-textg-is-t_img1_20260504_225604.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $97 {\\text{N}}$",
+      "B. $9.8 {\\text{N}}$",
+      "C. $8.82 {\\text{N}}$",
+      "D. $17.8 {\\text{N}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Given that $\\; {\\text{m}}=900 {\\text{gm}}=\\;\\frac{900}{1000} {\\text{kg}}=\\;\\frac{9}{10} {\\text{kg}}$ $\\; {\\text{r}}=1 {\\text{m}}$ $\\;ω=\\;{2 π {\\text{N}}}/{60}=\\;\\frac{2 π(10)}{60}=\\;\\frac{π}{3} {\\text{rad}} / {\\ sec}$ $\\; {\\text{T}}- {\\text{mg}}= {\\text{mr}} ω^2$ $\\; {\\text{T}}= {\\text{mg}}+ {\\text{mr}} ω^2$ $\\;=\\;\\frac{9}{10} × 9.8+\\;\\frac{9}{10} × 1 (\\;\\frac{π}{3}) ^2$ $\\;=8.82+\\;\\frac{9}{10} × \\;\\frac{π^2}{9}$ $\\;=8.82+0.98$ $\\;=9.80 {\\text{N}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "If the radius of curvature of the path of two particles of same mass are in the ratio $3: 4$, then in order to have constant centripetal force, their velocities will be in the ratio of: [29-Jan-2024 Shift 1]",
+    "images": [],
+    "options": [
+      "A. ${\\sqrt{3}}: 2$",
+      "B. $1: {\\sqrt{3}}$",
+      "C. ${\\sqrt{3}}: 1$",
+      "D. $2: {\\sqrt{3}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given ${\\text{m}}_1= {\\text{m}}_2$ and $\\;{ {\\text{r}}_1}/{ {\\text{r}}_2}=\\;\\frac{3}{4}$As centripetal force $F=\\;\\frac{m^2}{r}$In order to have constant (same in this question) centripetal force$\\; {\\text{F}}_1= {\\text{F}}_2$ $\\;\\;{ {\\text{m}}_1 {\\text{v}}_1^2}/{ {\\text{r}}_1}=\\;{ {\\text{m}}_2 {\\text{v}}_2^2}/{ {\\text{r}}_2}$ $\\;⇒ \\;{ {\\text{v}}_1}/{ {\\text{v}}_2}=\\sqrt{\\;{ {\\text{r}}_1}/{ {\\text{r}}_2}}=\\;{{\\sqrt{3}}}/{2}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A train is moving with a speed of $12 {\\text{m}} / {\\ s}$ on rails which are $1.5 {\\text{m}}$ apart. To negotiate a curve radius $400 {\\text{m}}$, the height by which the outer rail should be raised with respect to the inner rail is (Given, $g=$ $10 {\\text{m}} / {\\ s}^2$ ): [27-Jan-2024 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-train-is-moving-with-a-speed_img1_20260504_225607.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $6.0 {\\text{cm}}$",
+      "B. $5.4 {\\text{cm}}$",
+      "C. $4.8 {\\text{cm}}$",
+      "D. $4.2 {\\text{cm}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\tan θ=\\;\\frac{v^2}{R g}=\\;\\frac{12 × 12}{10 × 400}$ $\\;\\tan θ=\\;{ {\\text{h}}}/{1.5}$ $\\;⇒ \\;{ {\\text{h}}}/{1.5}=\\;\\frac{144}{4000}$ $\\; {\\text{h}}=5.4 {\\text{cm}}$",
+    "year": 2024,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A vehicle of mass $200 {\\text{kg}}$ is moving along a levelled curved road of radius $70 {\\text{m}}$ with angular velocity of 0.2 ${\\text{rad}} / {\\ s}$. The centripetal force acting on the vehicle is: [13-Apr-2023 shift 2]",
+    "images": [],
+    "options": [
+      "A. $2800 {\\text{N}}$",
+      "B. $560 {\\text{N}}$",
+      "C. $2240 {\\text{N}}$",
+      "D. $14 {\\text{N}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;F_c=m ω^2 r=200 ×(0.2)^2 × 70$ $\\;=560 N$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A coin placed on a rotating table just slips when it is placed at a distance of $1 {\\text{cm}}$ from the center. If the angular velocity of the table in halved, it will just slip when placed at a distance of _______ from the centre : [11-Apr-2023 shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-coin-placed-on-a-rotating-ta_img1_20260504_225611.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $8 {\\text{cm}}$",
+      "B. $4 {\\text{cm}}$",
+      "C. $2 {\\text{cm}}$",
+      "D. $1 {\\text{cm}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${fr}= {\\text{m}ω^2r}$ $\\;µ {\\text{mg}}= {\\text{m}} ω^2 {\\text{r}}= {\\text{const}}$ $\\;ω^2 {\\text{r}}= {\\text{const}}$ $\\;ω_1^2 {\\text{r}}_1=ω_2^2 {\\text{r}}_2$ $\\;ω^2(1)= (\\;\\frac{ω}{2}) ^2 r_2$ $\\;r_2=4 {\\text{cm}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "As shown in the figure, a particle is moving with constant speed $π {\\text{m}} / {\\ s}$. Considering its motion from $A$ to $B$, the magnitude of the average velocity is : [6-Apr-2023 shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_as-shown-in-the-figure-a-parti_img1_20260504_225613.webp"
+      }
+    ],
+    "options": [
+      "A. $π {\\text{m}} / {\\ s}$",
+      "B. $2 {\\sqrt{3}} {\\text{m}} / {\\ s}$",
+      "C. ${\\sqrt{3}} {\\text{m}} / {\\ s}$",
+      "D. $1.5 {\\sqrt{3}} {\\text{m}} / {\\ s}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given speed ${\\text{v}}=π {\\text{m}} / {\\ s}$or $R ω=π$or $ω=\\;\\frac{π}{R} {\\text{rad}} / {\\ s}$angular displacement $θ=120^{∘}$ or $\\;\\frac{2 π}{3}$uising $θ=ω {\\text{t}}$ ${\\text{t}}=\\;\\frac{θ}{ω}=\\;{2 π / 3}/{π / {\\text{R}}}=\\;{2 {\\text{R}}}/{3}$linear displacement $d=2 {\\text{R}} sin \\;(θ / 2)$ ${\\text{d}}=2 {\\text{R}} sin \\; (\\;\\frac{120}{2})$ $=2 {\\text{R}} × sin \\;60=2 {\\text{R}} × \\;{{\\sqrt{3}}}/{2}$ $= {\\text{R}} {\\sqrt{3}}$average velocity $=\\;{ {\\text{d}}}/{ {\\text{t}}}=\\;{ {\\text{R}} {\\sqrt{3}}}/{2 {\\text{R}} / 3}=\\;{3 {\\sqrt{3}}}/{2}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A child of mass $5 {\\text{kg}}$ is going round a merry-go-round that makes 1 rotation in $3.14 {\\ s}$. The radius of the merrygo-round is $2 {\\text{m}}$. The centrifugal force on the child will be [6-Apr-2023 shift 2]",
+    "images": [],
+    "options": [
+      "A. $40 {\\text{N}}$",
+      "B. $100 {\\text{N}}$",
+      "C. $80 {\\text{N}}$",
+      "D. $50 {\\text{N}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given, ${\\text{m}}=5 {\\text{kg}}, {\\text{R}}=2 {\\text{m}}$ time ${\\text{t}}$ for $1 {\\text{rev}}=3.14 {\\ sec}$ or $π {\\ sec}$ $θ$ for $1 {\\text{rev}}=2 π {\\text{rad}}$ Therefore $ω=\\;{θ}/{ {\\text{t}}}=\\;\\frac{2 π}{π}=2 {\\text{rad}} / {\\ s}$ centrifugal force ${\\text{F}}= {\\text{mR}} ω^2$ or ${\\text{F}}=5 × 2 × 2^2=40 {\\text{N}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A small block of mass $100 {\\text{g}}$ is tied to a spring of spring constant $7.5 {\\text{N}} / {\\text{m}}$ and length $20 {\\text{cm}}$. The other end of spring is fixed at a particular point A. If the block moves in a circular path on a smooth horizontal surface with constant angular velocity $5 {\\text{rad}} / {\\ s}$ about point ${\\text{A}}$, then tension in the spring is - [6-Apr-2023 shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-small-block-of-mass-100-text_img1_20260504_225617.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $0.75 {\\text{N}}$",
+      "B. $1.5 {\\text{N}}$",
+      "C. $0.25 {\\text{N}}$",
+      "D. $0.50 {\\text{N}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;k x=m ω^2 r$ $\\;⇒ k x=0.1 × 25 ×(0.2+x)$ $\\;⇒ 7.5 x=2.5(0.2+x)$ $\\;⇒ 3 x=0.2+x$ $\\;⇒ 2 x=0.2$ $\\;⇒ x=0.1 {\\text{m}}$Now, tension in the spring $=k x=7.5 × 0.1 {\\text{N}}=0.75 {\\text{N}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle is moving with constant speed in a circular path. When the particle turns by an angle $90^{∘}$, the ratio of instantaneous velocity to its average velocity is $π: x {\\sqrt{2}}$. The value of $x$ will be - [6-Apr-2023 shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-particle-is-moving-with-cons_img1_20260504_225618.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 7",
+      "B. 2",
+      "C. 1",
+      "D. 5"
+    ],
+    "correct_answer": "B",
+    "explanation": "$V_A=v {𝑗}↖{\\^}$And $V_B=-v {𝑖}↖{\\^}$Time to reach from ${\\text{A}}$ to ${\\text{B}}=\\;\\frac{2 π R}{4} × \\;\\frac{1}{v}=\\;\\frac{π R}{2 v}$Displacement from ${\\text{A}}$ to ${\\text{B}}=R {\\sqrt{2}}$Now, Average velocity from ${\\text{A}}$ to ${\\text{B}}=\\;{\\;\\text{ Displacement }\\;}/{\\;\\text{ Time }\\;}=\\;{R {\\sqrt{2}}}/{\\frac{π R}{2 v}}=\\;{2 {\\sqrt{2}} v}/{π}$Instantaneous velocity at $B$ is $-v {𝑖}↖{\\^}$According to question, $\\;{\\;\\text{ instantaneous velocity }\\;}/{\\;\\text{ average velocity }\\;}=\\;{π}/{x {\\sqrt{2}}}$ $\\;\\;{v}/{{2 {\\sqrt{2}} v}/{π}}=\\;{π}/{x {\\sqrt{2}}}$ $\\;⇒ \\;{π}/{2 {\\sqrt{2}}}=\\;{π}/{x {\\sqrt{2}}}$ $\\;⇒ x=2$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A body is moving with constant speed, in a circle of radius $10 {\\text{m}}$. The body completes one revolution in $4 {\\ s}$. At the end of $3 {\\text{rd}}$ second, the displacement of body (in ${\\text{m}}$ ) from its starting point is: [31-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-body-is-moving-with-constant_img1_20260504_225620.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 30",
+      "B. 15π",
+      "C. 5π",
+      "D. $10 {\\sqrt{2 }}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$ω=\\;{2 π}/{ {\\text{T}}}=\\;\\frac{2 π}{4}=\\;\\frac{π}{2} {\\text{rad}} / {\\ s}$ $θ=ω {\\text{t}}$ $θ=\\;\\frac{π}{2} × 3$ $θ=\\;\\frac{3 π}{2} {\\text{rad}}$ $r=10 {\\text{m}}$ $T=4 {\\ sec}$ $d={\\sqrt{2}}(10) {\\text{m}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A stone of mass $1 {\\text{kg}}$ is tied to end of a massless string of length $1 {\\text{m}}$. If the breaking tension of the string is $400 {\\text{N}}$, then maximum linear velocity, the stone can have without breaking the string, while rotating in horizontal plane, is: [31-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-stone-of-mass-1-textkg-is-ti_img1_20260504_225622.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $20 {\\text{ms}}^{-1}$",
+      "B. $40 {\\text{ms}}^{-1}$",
+      "C. $400 {\\text{ms}}^{-1}$",
+      "D. $10 {\\text{ms}}^{-1}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$T sin \\;θ=\\;\\frac{m v^2}{l sin \\;θ}$ $\\cos θ=\\;\\frac{m g}{T} . . . . . . . . .(i)$ $sin \\;^2 θ=\\;\\frac{m v^2}{T l} . . . . . . . . . (ii)$From (i) and (ii), $1= (\\;\\frac{m g}{T}) ^2+\\;\\frac{m v^2}{T l}$ $⇒ 1= (\\;\\frac{10}{400}) ^2+\\;\\frac{v^2}{400}$ $⇒ v^2=399.78$ $⇒ v=20 {\\text{m}} / {\\ s}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A stone tied to $180 {\\text{cm}}$ long string at its end is making 28 revolutions in horizontal circle in every minute. The magnitude of acceleration of stone is $\\;{1936}/{ {\\text{x}}} {\\text{ms}}^{-2}$. The value of ${\\text{x}}$ ________.$(\\;\\text{ Take }\\; π=\\;\\frac{22}{7})$ [30-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "125",
+    "explanation": "$\\;a=ω^2 {\\text{R}}= (\\;\\frac{28 × 2 π}{60}) ^2 × 1.8$ $\\;= (\\;\\frac{56}{60} × \\;\\frac{22}{7}) ^2 × 1.8$ $\\;=\\;\\frac{(44)^2}{225} × 1.8$ $\\;=\\;\\frac{1936 × 1.8}{225}$ $\\;x=125$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "An object moves at a constant speed along a circular path in a horizontal plane with centre at the origin. When the object is at ${\\text{x}}=+2 {\\text{m}}$, its velocity is $-4 \\;{ {\\text{j}}}↖{\\^} {\\text{m}} / {\\ s}$. The object's velocity (v) and acceleration (a) at ${\\text{x}}=-2 {\\text{m}}$ will be [29-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_an-object-moves-at-a-constant-_img1_20260504_225626.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${\\text{v}}=4 \\;{ {\\text{i}}}↖{∧} {\\text{m}} / {\\ s}, {\\text{a}}=8 \\;{ {\\text{j}}}↖{∧} {\\text{m}} / {\\ s}^2$",
+      "B. ${\\text{v}}=4 \\;{ {\\text{j}}}↖{∧} {\\text{m}} / {\\ s}, {\\text{a}}=8 \\;{ {\\text{i}}}↖{∧} {\\text{m}} / {\\ s}^2$",
+      "C. ${\\text{v}}=-4 \\;{ {\\text{j}}}↖{∧} {\\text{m}} / {\\ s}, {\\text{a}}=8 \\;{ {\\text{i}}}↖{∧} {\\text{m}} / {\\ s}^2$",
+      "D. ${\\text{v}}=-4 \\;{ {\\text{i}}}↖{∧} {\\text{m}} / {\\ s}, {\\text{a}}=-8 \\;{ {\\text{j}}}↖{∧} {\\text{m}} / {\\ s}^2$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\; {\\text{a}}_{ {\\text{c}}}=\\;{ {\\text{V}}^2}/{ {\\text{r}}}=\\;\\frac{4^2}{2}=\\;\\frac{16}{2}=8 {\\text{m}} / {\\ s}^2$ $\\;{ \\vec{\\text{V}}=4 \\;{ {\\text{j}}}↖{\\^}$ $\\;{ {\\text{a}}_{ \\vec{\\text{c}}}=8 \\;{ {\\text{i}}}↖{\\^}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A car is moving on a circular path of radius $600 {\\text{m}}$ such that the magnitudes of the tangential acceleration and centripetal acceleration are equal. The time taken by the car to complete first quarter of revolution, if it is moving with an initial speed of $54 {\\text{km}} / {\\text{hr}}$ is $t (1- {\\text{e}}^{-π / 2}) {\\ s}$. The value of $t$ is _______ . [29-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "40",
+    "explanation": "$\\; {\\text{v}} \\;{ {\\text{dv}}}/{ {\\text{dx}}}=\\;{ {\\text{v}}^2}/{ {\\text{R}}} ⇒ ∫↙{15}↖{ {\\text{v}}} \\;{ {\\text{dv}}}/{ {\\text{v}}}=\\;{1}/{ {\\text{R}}} ∫↙{0^{ {\\text{x}}} {\\text{dx}}$ $\\;v=15 e^{x / R}$ $\\;\\;\\frac{d x}{d t}=15 e^{x / R}$ $∫↙{0^{\\;\\frac{π R}{2}} e}↖{-x / R} \\text{dx}=15 ∫↙{0}↖{t_0} \\text{dt}$ $t_0=40 (1-e^{-π / 2})$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A car is moving on a horizontal curved road with radius $50 {\\text{m}}$. The approximate maximum speed of car will be, if friction between tyres and road is 0.34. $[.$ Take $g=10 {\\text{ms}}^{-2}]$ [29-Jan-2023 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $3.4 {\\text{ms}}^{-1}$",
+      "B. $22.4 {\\text{ms}}^{-1}$",
+      "C. $13 {\\text{ms}}^{-1}$",
+      "D. $17 {\\text{ms}}^{-1}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$f_s=\\;{m v^2}/{ {\\text{r}}}$For maximum speed in safe turning,$\\; {\\text{f}}_5= {\\text{f}}_5 \\max =µ {\\text{mg}}$ $\\; {\\text{v}}_{\\max } \\;\\text{ (for safe turning }\\;=\\sqrt{µ {\\µ g}}$ $\\;={\\sqrt{0.34 × 50 × 10}} ≈ 13 {\\text{m}} / {\\ s}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A car is moving with a constant speed of 20 ${\\text{m}} / {\\ s}$ in a circular horizontal track of radius 40 ${\\text{m}}$. A bob is suspended from the roof of the car by a massless string. The angle made by the string with the vertical will be : (Take $g=10$ ${\\text{m}} / {\\ s}^2)$ [25-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-car-is-moving-with-a-constan_img1_20260504_225632.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{π}{6}$",
+      "B. $\\;\\frac{π}{2}$",
+      "C. $\\;\\frac{π}{4}$",
+      "D. $\\;\\frac{π}{3}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${\\text{T}} \\cos θ= {\\text{mg}}$ ${\\text{T}} sin \\;θ=\\;{ {\\ mv}^2}/{ {\\text{R}}}$ $\\tan θ=\\;{ {\\text{v}}^2}/{ {\\text{Rg}}}$ $\\;\\tan θ=\\;\\frac{20^2}{40 × 10}$ $\\;\\tan θ=1$ $\\;⇒ θ=\\;\\frac{π}{4}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A body of mass $200 {\\text{g}}$ is tied to a spring of spring constant $12.5 {\\text{N}} / {\\text{m}}$, while the other end of spring is fixed at point $O$. If the body moves about $O$ in a circular path on a smooth horizontal surface with constant angular speed $5 {\\text{rad}} / {\\ s}$, then the ratio of extension in the spring to its natural length will be : [24-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-body-of-mass-200-textg-is-ti_img1_20260504_225633.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $1: 2$",
+      "B. $1: 1$",
+      "C. $2: 3$",
+      "D. $2: 5$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Natural length $= {\\text{L}}_0$Extension $=\\text{bo} {x}$ $\\; {\\text{kx}}= {\\text{m}} ( {\\text{L}}_0+ {\\text{x}}) ω^2$ $\\;⇒ 12.5 {\\text{x}}=\\;\\frac{1}{5} ( {\\text{L}}_0+ {\\text{x}}) 25 ⇒ 1.5 {\\text{x}}= {\\text{L}}_0$ $\\;⇒ \\;{ {\\text{x}}}/{ {\\text{L}}_0}=\\;\\frac{2}{3}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A smooth circular groove has a smooth vertical wall as shown in figure. A block of mass ${\\text{m}}$ moves against the wall with a speed $v$. Which of the following curve represents the correct relation between the normal reaction on the block by the wall (N) and speed of the block (v)? [29-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-smooth-circular-groove-has-a_img1_20260504_225635.webp"
+      }
+    ],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "A",
+    "explanation": "$N=\\;\\frac{m v^2}{r}$ $⇒$ The graph given in option A suits the best for the above relation.",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A person moved from $A$ to $B$ on a circular path as shown in figure. If the distance travelled by him is $60 {m}$, then the magnitude of displacement would be:(Given $\\cos 185^{∘}--0.7$ ) [25-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-person-moved-from-a-to-b-on-_img1_20260504_225637.webp"
+      }
+    ],
+    "options": [
+      "A. $42 {m}$",
+      "B. $47 {m}$",
+      "C. $19 {m}$",
+      "D. $40 {m}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Distance travelled $=60 {\\text{m}}$ $⇒$ Angle covered $=135^{∘}$Displacement $=2 R \\sin (\\;{135^{∘}}/{2})$ $=2(\\;\\frac{60}{135} × \\;\\frac{180}{π})[\\;{1-\\cos (135^{∘})}/{2}]^{1 / 2}$ $=2(\\;\\frac{80}{π})(0.85)^{1 / 2}$ $≈ 47 {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A person starts his journey from centre 'O' of the park and comes back to the same position following path OPQO as shown in the figure. The radius of path taken by the person is $200 {\\text{m}}$ and he takes $3 {\\min} 58 {\\sec}$ to complete his journey. The average speed of the person is____ ${\\text{ms}}^{-1}$. (take $.π=3.14)$ [30-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-person-starts-his-journey-fr_img1_20260504_225639.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "$V_{a v}=\\;{S_{\\;\\text{total }\\;}}/{T_{\\;\\text{total }\\;}}=\\;{200+200+\\frac{2 π × 200}{4}}/{238}$ $=\\;\\frac{400+100 π}{238}=\\;\\frac{714}{238}=3 {\\text{m}} / {\\ s}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle of mass $m$ is moving in a circular path of constant radius $r$ such that its centripetal acceleration [28-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. is varying with time ${\\text{t}}$ as ${\\text{a}}= {\\text{k}}^2 {\\text{rt}}^2$, where ${\\text{k}}$ is a constant. The power delivered to the particle by the force acting on it is given as(a) zero",
+      "B. ${\\text{mk}}^2 {\\text{r}}^2 {\\text{t}}^2$",
+      "C. ${\\text{mk}}^2 {\\text{r}}^2 {\\text{t}}$",
+      "D. ${\\text{mk}}^2 {\\text{rt}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$a_r=k^2 r t^2=\\;\\frac{v^2}{r}$ $⇒ v^2=k^2 r^2 t^2$ or $v=k r t$and $\\;\\frac{d|v|}{d t}=k r$ $⇒ a_t=k r$ $⇒|\\overline{F} ⋅ \\overline{v}|=(m k r)(k r t)$ $=m k^2 r^2 t=$ power delivered",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A stone tide to a spring of length $L$ is whirled in a vertical circle with the other end of the spring at the centre. At a certain instant of time, the stone is at its lowest position and has a speed u. The magnitude of change in its velocity, as it reaches a position where the string is horizontal, is $\\sqrt{x(u^2-g L)}$. The value of ${\\text{x}}$ is - [27-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-stone-tide-to-a-spring-of-le_img1_20260504_225643.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 3",
+      "B. 2",
+      "C. 1",
+      "D. 5"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\vec{v}={\\sqrt{u^2-2 g L}} {j}↖{\\^}$ $\\vec{u}=u {i}↖{\\^}$ $∴ |\\vec{v}-\\vec{u}|={\\sqrt{ (u^2-2 g L) +u^2}}$ $={\\sqrt{2 u-2 g L}}$ $∴ x=2$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A pendulum of length $2 {\\text{m}}$ consists of a wooden bob of mass $50 {\\text{g}}$. A bullet of mass $75 {\\text{g}}$ is fired towards the stationary bob with a speed $v$. The bullet emerges out of the bob with a speed $\\;\\frac{v}{3}$ and the bob just completes the vertical circle. The value of $v$ is _____${\\text{ms}}^{-1}$. (if $g=10 {\\text{m}} / {\\text{s}}^2$ ). [27-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "10",
+    "explanation": "$v_{b o b}={\\sqrt{5 g l}}={\\sqrt{5 × 10 × 2}}=10 {\\text{m}} / {\\ s}$Conserving momentum :$75 × v=75 × \\;\\frac{v}{3}+50 × 10$ $⇒ 50 v=50 × 10$ $⇒ v=10 {\\text{m}} / {\\ s}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A ball is released from rest from point ${\\text{P}}$ of a smooth semi-spherical vessel as shown in figure. The ratio of the centripetal force and normal reaction on the ball at point ${\\text{Q}}$ is ${\\text{A}}$ while angular position of point ${\\text{Q}}$ is $α$ with respect to point ${\\text{P}}$. Which of the following graphs represent the correct relation between ${\\text{A}}$ and $α$ when ball goes from ${\\text{Q}}$ to ${\\text{R}}$ ? [26-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-ball-is-released-from-rest-f_img1_20260504_225647.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-ball-is-released-from-rest-f_img2_20260504_225647.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "C",
+    "explanation": "$h=R \\sin α$ $v=\\sqrt{2 g h}=\\sqrt{2 g R \\sin α}$ $a_c=\\;\\frac{v^2}{R}=\\;\\frac{2 g R \\sin α}{R}=2 g \\sin α$Now, at Q;$N-m g \\sin α=m a_c$ $N=m × 2 g \\sin α+m g \\sin α$ $=3 m g \\sin α$ $\\;\\frac{M a_c}{N}=\\;\\frac{2 m g \\sin α}{3 m g \\sin α}=\\;\\frac{2}{3}= {\\text{constant}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A disc with a flat small bottom beaker placed on it at a distance ${\\text{R}}$ from its center is revolving about an axis passing through the center and perpendicular to its plane with an angular velocity $ω$. The coefficient of static friction between the bottom of the beaker and the surface of the disc is $µ$. The beaker will revolve with the disc if : [25-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $R ≤ \\;\\frac{µ g}{2 ω^2}$",
+      "B. $R ≤ \\;\\frac{µ g}{ω^2}$",
+      "C. $R ≥ \\;\\frac{µ g}{2 ω^2}$",
+      "D. $R ≥ \\;\\frac{µ g}{ω^2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "To move together$ω^2 R ≤ µ g$ $⇒ R ≤ \\;\\frac{µ g}{ω^2}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A curved in a level road has a radius $75 {\\text{m}}$. The maximum speed of a car turning this curved road can be $30 {\\text{m}} / {\\text{s}}$ without skidding. If radius of curved road is changed to $48 {\\text{m}}$ and the coefficient of friction between the tyres and the road remains same, then maximum allowed speed would be ____${\\text{m}} / {\\text{s}}$ [25-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "24",
+    "explanation": "$∵ v=\\sqrt{µ g r}$ $⇒ \\;\\frac{v_1}{v_2}=\\sqrt{\\;\\frac{r_1}{r_2}}$ $⇒ \\;\\frac{30}{v_2}=\\sqrt{\\;\\frac{75}{48}}=\\sqrt{\\;\\frac{25}{16}}=\\;\\frac{5}{4}$ $⇒ V_2=24 {\\text{m}} / {\\text{s}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "For a particle in uniform circular motion, the acceleration $\\vec{a}$ at any point $P(R, θ)$ on the circular path of radius ${\\text{R}}$ is (when $θ$ is measured from the positive $x$-axis and $v$ is uniform speed) : [25-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_for-a-particle-in-uniform-circ_img1_20260504_225652.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $-\\;\\frac{v^2}{R} \\sin θ {i}↖{∧}+\\;\\frac{v^2}{R} \\cos θ {j}↖{∧}$",
+      "B. $-\\;\\frac{v^2}{R} \\cos θ {i}↖{∧}+\\;\\frac{v^2}{R} \\sin θ {j}↖{∧}$",
+      "C. $-\\;\\frac{v^2}{R} \\cos θ {i}↖{∧}-\\;\\frac{v^2}{R} \\sin θ {j}↖{∧}$",
+      "D. $-\\;\\frac{v^2}{R} {i}↖{∧}+\\;\\frac{v^2}{R} {j}↖{∧}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "As the particle in uniform circular motion experiences only centripetal acceleration of magnitude $ω^2 {\\text{R}}$ or $\\;\\frac{v^2}{R}$ directed towards centre so from diagram,$\\vec{a}=\\;\\frac{v^2}{R} \\cos θ(-{i}↖{\\^})+\\;\\frac{v^2}{R} \\sin (-{j}↖{\\^})$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A stone of mass ${\\text{m}}$, tied to a string is being whirled in a vertical circle with a uniform speed. The tension in the string is [24-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-stone-of-mass-textm-tied-to-_img1_20260504_225654.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. the same throughout the motion.",
+      "B. minimum at the highest position of the circular path.",
+      "C. minimum at the lowest position of the circular path.",
+      "D. minimum when the rope is in the horizontal position."
+    ],
+    "correct_answer": "B",
+    "explanation": "At any $θ: T-m g \\cos θ=\\;\\frac{m v^2}{R}$ $⇒ T=m g \\cos θ+\\;\\frac{m v^2}{R}$Since $v$ is constant,$⇒ {\\text{T}}$ will be minimum when $\\cos θ$ is minimum.$⇒ θ=180^{∘}$ corresponds to ${\\text{T}}_{\\;\\text{minimum }\\;}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A fly wheel is accelerated uniformly from rest and rotates through 5 rad in the first second. The angle rotated by the fly wheel in the next second, will be: [24-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $7.5 {\\text{rad}}$",
+      "B. $15 {\\text{rad}}$",
+      "C. $20 {\\text{rad}}$",
+      "D. $30 {\\text{rad}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$θ_1=\\;\\frac{1}{2} α(2 × 1-1)=5 {\\text{rad}}$ $⇒ α=10 {\\text{rad}} / {\\sec}^2$So $θ_2=\\;\\frac{1}{2} × α(2 × 2-1)=15 {\\text{rad}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A boy ties a stone of mass $100 {\\text{g}}$ to the end of a $2 {\\text{m}}$ long string and whirls it around in a horizontal plane. The string can withstand the maximum tension of $80 {\\text{N}}$. If the maximum speed with which the stone can revolve is $\\;\\frac{K}{π} {\\text{rev}} . / {\\min}$. The value of ${\\text{K}}$ is :(Assume the string is massless and unstretchable) [24-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. 400",
+      "B. 300",
+      "C. 600",
+      "D. 800"
+    ],
+    "correct_answer": "C",
+    "explanation": "$T=m ω^2 r$ $⇒ 80=0.1 ×(2 π × \\;\\frac{K}{π} × \\;\\frac{1}{60})^2 × 2$ $⇒ \\;\\frac{800}{2}=\\;\\frac{K^2}{900}$ $⇒ K=30 × 20=600$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A huge circular arc of length $4.4$ ly subtends an angle $4 {\\text{s}}$ at the centre of the circle. How long it would take for a body to complete 4 rev if its speed is $8 {\\text{AU}}$ per sec? $[\\text{Given}, 1 {\\text{ly}}=9.46 ×10^{15} {\\text{m}}, 1 {\\text{AU}}$ $=1.5 ×10^{11} {\\text{m}} ]$",
+    "images": [],
+    "options": [
+      "A. $4.1× 10^{8} {\\text{s}}$",
+      "B. $4.5 ×10^{10} {\\text{s}}$",
+      "C. $3.5 ×10^{6} {\\text{s}}$",
+      "D. $7.2 ×10^{8} {\\text{s}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Length of ${\\text{arc}}, \\text{I}=4.4 {\\text{ly}}=4.4 ×9.46 ×10^{15}$ $=4.1624 ×10^{16} {\\text{m}}$ $[∵ 1 \\text{Iy}=9.46 ×10^{15} {\\text{m}}]$ Angle subtended by arc, θ = 4 s Number of revolution, n = 4 Speed of body, $v=8 {\\text{AUs}}^{-1}=1.5 ×10^{11} ×8=1.2 ×10^{12} {\\text{ms}}^{-1} [∵ 1 {\\text{AU}}=1.5 ×10^{11} {\\text{m}}]$ We know that, length of arc subtended by an angle, $\\text{I}=\\text{R} \\θ$ Here, R = radius of arc. Substituting the values in above expression, we get $4.1624 ×10^{16}=\\text{R} ×4 ×(\\frac{1°}{3600}) ×(\\frac{\\π}{180°})$ $(∵1 {\\text{s}}=\\frac{1}{3600} {\\text{degree}})$ $\\text{R}=2.146 ×10^{21} {\\text{m}}$ We know that, time = distance/speed $t=\\frac{n ×2 \\π\\text{R}}{\\text{V}}$ (∵ Distance = n × length of circular path ) Substituting the values in above expression, we get $t={4 ×2 \\π×2.146 ×10^{21}}/{1.2 ×10^{12}}$ $=4.5 ×10^{10} {\\text{s}}$ Thus, the time required is $4.5 ×10^{10} {\\text{s}}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle of mass m is suspended from a ceiling through a string of length L. The particle moves in a horizontal circle of radius r such that $r={\\text{L}}/{\\\\sqrt{2}}$. The speed of particle will be",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-particle-of-mass-m-is-suspen_img1_20260504_225701.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\\\sqrt{r g}$",
+      "B. $\\\\sqrt{2 r g}$",
+      "C. $2 \\\\sqrt{r g}$",
+      "D. $\\\\sqrt{\\frac{r g}{2}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given, radius of horizontal circle, $r=\\text{L} /\\sqrt{2}$ Figure illustrating the particle of mass m moving in a horizontal circle, while suspended from a ceiling is shown In equilibrium condition at point A, $\\text{T} \\cos \\θ=m g$ ...(i) $\\text{T} \\sin \\θ={m v^{2}}/{r}$ ...(ii) Divide Eq. (ii) by Eq. (i), $\\tan \\θ=v^{2} / r g$ $⇒ v=\\\\sqrt{r g \\tan \\θ}$ ...(iii) Now, from figure, we can write $\\sin \\θ={\\text{L} / \\sqrt{2}}/{L}={1}/{\\\\sqrt{2}}$ ⇒ θ = 45° Substituting the value of θ in Eq. (iii), we get $v=\\\\sqrt{r g \\tan 45°}=\\\\sqrt{r g}$ Thus, the value of speed of particle is $v=\\\\sqrt{r g}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "The normal reaction 'N' for a vehicle of $800 {kg}$ mass, negotiating a turn on a $30°$ banked road at maximum possible speed without skidding is _______$\\×10^{3} {kg} {m} / {s}^{2}$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_the-normal-reaction-n-for-a-ve_img1_20260504_225703.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $10.2$",
+      "B. $7.2$",
+      "C. $12.4$",
+      "D. $6.96$"
+    ],
+    "correct_answer": "A",
+    "explanation": "At ${v}_{\\max }, {f}$ will be limiting in nature. $\\∴$ Balancing force in vertical direction, $N \\cos 30°-m g-\\µN \\cos 60°=0$ $\\⇒N[\\cos 30°-\\µ\\cos 60°]={mg}$ $\\∴{N}=\\frac{800 \\×10}{(0.87-0.1)} \\≈10.2 \\×10^{3} {kg} {m} / {s}^{2}$ Hence option 1 .",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle of mass $m$ moves in a circular orbit under the central potential field, $U(r)=\\;\\frac{-C}{r}$, where $C$ is a positive constant. The correct radius-velocity graph of the particle's motion is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-particle-of-mass-m-moves-in-_img1_20260504_225705.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "A",
+    "explanation": "The central potential field when particle moves in circular orbit, $U(r)=-\\;\\frac{C}{r}$ We know that, $F=-\\;\\frac{d U}{d r}$ $⇒ \\;\\; F=-\\;\\frac{d}{d r}(-\\;\\frac{C}{r}) ⇒{|F|}=-\\;{C}/{r^{2}}$ $⇒ \\;\\; \\;{m v^{2}}/{r}=-\\;{C}/{r^{2}} ⇒ v^{2} ∝ \\;\\frac{1}{r}$ The graph between velocity and radius is hyperbolic.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A modern grand-prix racing car of mass $m$ is travelling on a flat track in a circular arc of radius $R$ with a speed $v$. If the coefficient of static friction between the tyres and the track is $µ_{s}$, then the magnitude of negative lift $f_{L}$ acting downwards on the car is (Assume forces on the four tyres are identical and $g=$ acceleration due to gravity)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-modern-grand-prix-racing-car_img1_20260504_225707.webp"
+      }
+    ],
+    "options": [
+      "A. $m(\\;{v^{2}}/{µ_{s} R}+g)$",
+      "B. $m(\\;{v^{2}}/{µ_{s} R}-g)$",
+      "C. $m(g-\\;{v^{2}}/{µ_{s} R})$",
+      "D. $-m(g+\\;{v^{2}}/{µ_{s} R})$"
+    ],
+    "correct_answer": "B",
+    "explanation": "We know that, static friction force, $f_{s}=µ_{s} N$ where, $µ_{s}$ is the coefficient of static friction and $N$ is the normal force acting on the body. As the car is travelling on a circular track, so centripetal force is also acting on it. $⇒ \\;\\; f_{C}=\\;{m v^{2}}/{R}$ In limiting condition, $f_{s}=f_{C} ⇒ µ_{s} N=\\;{m v^{2}}/{R}$ $⇒ \\;\\; N=\\;{m v^{2}}/{µ_{s} R}$....(i) The magnitude of negative lift $f_{L}$ acting downwards on the car is given by $f_{L}=m g-N$ $=m g-\\;{m v^{2}}/{µ_{s} R}$ $⇒ \\;\\; f_{L}=m(g-\\;{v^{2}}/{µ_{s} R}) ⇒ f_{L}=-m(\\;{v^{2}}/{µ_{s} R}-g)$ $⇒ \\;\\; {|f_{L}|}=m(\\;{v^{2}}/{µ_{s} R}-g)$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "Statement I A cyclist is moving on an unbanked road with a speed of $7 {kmh}^{-1}$ and takes a sharp circular turn along a path of radius of $2 {m}$ without reducing the speed. The static friction coefficient is $0.2$. The cyclist will not slip and pass the curve $(g=9.8 {m} {/} {s}^{2})$ Statement II If the road is banked at an angle of $45^{∘}$, cyclist can cross the curve of $2 {m}$ radius with the speed of $18.5 {kmh}^{-1}$ without slipping. In the light of the above statements, choose the correct answer from the options given below.",
+    "images": [],
+    "options": [
+      "A. Statement $I$ is false and statement II is true",
+      "B. Statement $I$ is true and statement II is false.",
+      "C. Both statement I and statement II are false.",
+      "D. Both statement I and statement II are true."
+    ],
+    "correct_answer": "D",
+    "explanation": "The maximum speed of cyclist on turn of unbanked road without slipping is given as $v_{\\max }=\\sqrt{µ g R}=\\sqrt{0.2 × 10 × 2}=2 {ms}^{-1} \\;\\; [ ∵ µ=0.2$ (given) $]$ Given, speed $=7 {km} {/} {h}$ $=\\;\\frac{7000}{3600} {ms}^{-1}=\\;\\frac{70}{36}=1.94 {ms}^{-1}$ As given speed is lesser than $v_{\\max }$, so the cyclist will not slip. Therefore, Statement I is true. As per Statement II, angle of banking, $θ=45^{∘}$ We know that, for banked road, $V_{\\max }=\\sqrt{\\;\\frac{g R(µ+\\tan θ)}{(1-µ \\tan θ)}}$ and $\\;\\; v_{\\min }=\\sqrt{\\;\\frac{g R(\\tan θ-µ)}{1+µ \\tan θ}}$ $⇒ \\;\\; v_{\\max }=\\sqrt{\\;{10 × 2(0.2+\\tan 45^{∘})}/{1-0.2 \\tan 45^{∘}}}$ and $\\;\\; v_{\\min }=\\sqrt{\\;\\frac{10 × 2(1-0.2)}{1+0.2}}$ and $\\;\\; v_{\\min }=\\sqrt{\\;\\frac{10 × 2(1-0.2)}{1+0.2}}$ $⇒ \\;\\; v_{\\max }=5.47 {ms}^{-1}$ and $v_{\\min }=3.65 {ms}^{-1}$ $∵ \\;\\; v=18.5 {km} / {h}=\\;\\frac{18.5 × 1000}{5600}=5.13 {ms}^{-1}$ $[ ∵$ given speed $=18.5 {kmh}^{-1}]$ As, $v_{\\min } < v < v_{\\max }$, so the cyclist will not slip. $∴$ Statement II is also true. Hence, option (d) is the correct.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A block of $200 {g}$ mass moves with a uniform speed in a horizontal circular groove, with vertical side walls of radius $20 {cm}$. If the block takes 40 s to complete one round, the normal force by the side walls of the groove is",
+    "images": [],
+    "options": [
+      "A. $0.0314 {N}$",
+      "B. $9.859 × 10^{-2} {N}$",
+      "C. $6.28 × 10^{-3} {N}$",
+      "D. $9.859 × 10^{-4} {N}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "The normal force by the side walls of the groove will be equal to the centripetal force acting on it. i.e. $N=\\;{m v^{2}}/{r}$.....(i) where, $r \\;\\; =20 {cm}=0.2 {m}$ $m \\;\\; =200 {g}=200 × 10^{-3} {kg}$ and $v=r ω=\\;\\frac{2 π r}{T}=\\;\\frac{2 π × 0.2}{40} {m} {/} {s}$ Substituting the given values in Eq. (i), we get $N \\;\\; =\\;{(200 × 10^{-3}) ×(\\frac{2 π × 0.2}{40})^{2}}/{0.2}$ $\\;\\; ≈ 9.859 × 10^{-4} {N}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle is moving with uniform speed along the circumference of a circle of radius $R$ under the action of a central fictitious force $F$ which is inversely proportional to $R^{3}$. Its time period of revolution will be given by",
+    "images": [],
+    "options": [
+      "A. $T ∝ R^{2}$",
+      "B. $T ∝ R^{3 / 2}$",
+      "C. $T ∝ R^{5 / 2}$",
+      "D. $T ∝ R^{4 / 3}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given, radius of circle $=R$ Central fictitious force is, $F ∝ \\;{1}/{R^{3}}$. Let $T$ be the time period of revolution, $m, ω$ be the mass and angular velocity of Earth. $∵ \\;\\; F=m ω^{2} R ∝ \\;{1}/{R^{3}}$ $⇒ \\;\\; ω^{2} ∝ \\;{1}/{R^{4}} ⇒ ω=\\;\\frac{2 π}{T} ∝ \\;{1}/{R^{2}}$ $⇒ \\;\\; T ∝ R^{2}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A small bob tied at one end of a thin string of length $1 {m}$ is describing a vertical circle, so that the maximum and minimum tension in the string are in the ratio $5: 1$. The velocity of the bob at the highest position is ......... ${m} / {s}$. (Take, $g=10 {m} / {s}^{2}$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-small-bob-tied-at-one-end-of_img1_20260504_225715.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "5",
+    "explanation": "Given, length of string, $l=1 {m}$ $T_{\\max }$ and $T_{\\min }$ be the tension in string and $v_{1}$ and $v_{2}$ be the velocities of bob at bottom and top in vertical circle.$\\;T_{\\max } \\;\\; =m g+m v_{1}^{2} / l$ $\\;\\;\\text{ and }\\;\\;T_{\\min } \\;\\; =m v_{2}^{2} / l-m g$ $\\; ∵ \\;\\;{T_{\\max }}/{T_{\\min }} \\;\\; =\\;{m g+m v_{1}^{2} / l}/{m v_{2}^{2} / l-m g}=\\;\\frac{5}{1}$ $⇒\\;m g+m v_{1}^{2} / l \\;\\; =5 m v_{2}^{2} / l-5 m g$ $\\;\\;\\text{ Here, }\\;\\;v_{1} \\;\\; =\\sqrt{v_{2}^{2}+4 g l}$ $⇒\\;m g+\\;\\frac{m}{l}(v_{2}^{2}+4 g l) \\;\\; =\\;{5 m v_{2}^{2}}/{l}-5 m g$ $⇒\\;g+\\;{v_{2}^{2}+4 g l}/{l} \\;\\; =\\;{5 v_{2}^{2}}/{l}-5 g$ $⇒\\;6 g l \\;\\; =5 v_{2}^{2}-v_{2}^{2}-4 g l ⇒ 10 g l=4 v_{2}^{2}$ $⇒\\;v_{2} \\;\\; =\\sqrt{\\;\\frac{10 g l}{4}}=\\sqrt{\\;\\frac{10 × 10 × 1}{4}}$ $\\; \\;\\; =\\sqrt{25}=5 {m} / {s}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A clock has a continuously moving second's hand of $0.1 {\\text{m}}$ length. The average acceleration of the tip of the hand (in units of ${\\text{ms}}^{-2}$ ) is of the order of:",
+    "images": [],
+    "options": [
+      "A. $10^{-3}$",
+      "B. $10^{-2}$",
+      "C. $10^{-4}$",
+      "D. $10^{-1}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "${\\text{R}}=0.1 {\\text{m}}$ $\\ω={2 \\π}/{{\\text{T}}}=\\frac{2 \\π}{60}=0.105 {\\text{rad}} / {\\sec}$ ${a}=\\ω^{2} {\\text{R}}$ $=(0.105)^{2}(0.1)$ $=0.0011$ $=1.1 × 10^{-3}$ Average acceleration is of the order of $10^{-3}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A bead of mass $\\ {m}$ stays at point $\\ {P}( {a}, {b})$ on a wire bent in the shape of a parabola $y=4 C x^{2}$ and rotating with angular speed $\\ω$ (see figure). The value of $\\ω$ is (neglect friction):",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-bead-of-mass-m-stays-at-poin_img1_20260504_225718.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-bead-of-mass-m-stays-at-poin_img2_20260504_225718.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt{{2 {gC}}/{ {ab}}}$",
+      "B. $2 \\sqrt{2 {gC}}$",
+      "C. $\\sqrt{{2 {g}}/{ {C}}}$",
+      "D. $2 \\sqrt{{gC}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${mx} \\ω^{2} \\cos \\θ= {mg} \\sin \\θ$ ${x} \\ω^{2}= {g} \\tan \\θ$ ${x} \\ω^{2}= {g} .{{dy}}/{ {dx}}$ ${X} \\ω^{2}= {g}.(8 {cx})$ $\\ω^{2}=8 {gc}$ $\\ω=2 \\\\sqrt{2 {gc}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle of mass m is fixed to one end of a light spring having force constant k and unstretched length L The other end is fixed. The system is given an angular speed $ω$ about the fixed end of the spring such that it rotates in a circle in gravity free space. Then the stretch in the spring is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-particle-of-mass-m-is-fixed-_img1_20260504_225720.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\frac{mlω^2}{k+mω^2}$",
+      "B. $\\frac{mlω^2}{k-mω^2}$",
+      "C. $\\frac{mlω^2}{k- ωm}$",
+      "D. $\\frac{mlω^2}{k+ ωm}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$kx=mlω^2+mxω^2$ $x=\\frac{mlω^2}{k-mω^2}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A smooth wire of the length $2πr$ is bent into a circle and kept in a vertical plane. A bead can slide smoothly on the wire. When the circle is rotating with angular speed ω about the vertical diameter AB , as shown in figure, the bead is rest with respect to the circular ring at position P as shown. Then the value of $ω^{ 2}$ is equal to:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-smooth-wire-of-the-length-2π_img1_20260504_225722.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Circular Motion/main_a-smooth-wire-of-the-length-2π_img2_20260504_225722.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${2 g} /(r \\\\sqrt{3})$",
+      "B. $\\frac{\\sqrt3g }{2r}$",
+      "C. $({g\\sqrt3 })/{ r}$",
+      "D. ${2g}/r$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$N \\cos 60^{\\°}=\\ {m r \\ω^{2}}/{2}$ $N \\cos 60^{\\°}=m g \\$ ${Tan} 60^{\\°}= {g}/{\\ \\frac{r}{2} w^{2}}=\\ {2 g}/{r w^{2}}$ $w^{2}=\\ {2 g}/{\\sqrt{3} r}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A particle is moving along a circular path with a constant speed of 10 ms–1. What is the magnitude of the change is velocity of the particle, when it moves through an angle of 60° around the centre of the circle?",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-particle-is-moving-along-a-c_img1_20260504_225724.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. zero",
+      "B. 10 m/s",
+      "C. 10 $\\sqrt3$ m/s",
+      "D. 10 $\\sqrt2$ m/s"
+    ],
+    "correct_answer": "B",
+    "explanation": "$|Δv↖{-}|$ = $\\sqrt{v_1^2+v_2^2+2v_1v_1cos(π-θ)}$ = 2v sin $θ/2$ since $[|v_1↖{-}|=|v_2↖{-}|]$ = (2 × 10) × sin (30°) = 10 m/s",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A body is projected at t = 0 with a velocity 10 $ms^{–1}$ at an angle of 60° with the horizontal. The radius of curvature of its trajectory at t = 1s is R. Neglecting air resistance and taking acceleration due to gravity g = 10 $ms^{–2}$, the value of R is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-body-is-projected-at-t-0-wit_img1_20260504_225726.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 2.5 m",
+      "B. 10.3 m",
+      "C. 2.8 m",
+      "D. 5.1 m"
+    ],
+    "correct_answer": "C",
+    "explanation": "$v_x$ = 10 cos 60° = 5 m/s $v_y$ = 10 cos 30° = $5\\sqrt3$ m/s velocity after t = 1 sec. $x_x$ = 5 m/s $v_y$ = $|(5\\sqrt3-10)|$ m/s = 10 - $5\\sqrt3$ $a_n$ = $v^2/R$ ⇒ R = ${v_x^2+v_y^2}/a_n$ = $\\frac{25+100+75-100\\sqrt3}{10cosθ}$ tan θ = ${10-5\\sqrt3}/5$ = 2 - $\\sqrt3$ ⇒ θ = 15° R = $\\frac{100(2-\\sqrt3)}{10cos15}$ = 2.8 m",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A disc rotates about its axis of symmetry in a horizontal plane at a steady rate of 3.5 revolutions per second. A coin placed at a distance of 1.25 cm from the axis of rotation remains at rest on the disc. The coefficient of friction between the coin and the disc is : $(g=10 m / s ^2)$",
+    "images": [],
+    "options": [
+      "A. 0.7",
+      "B. 0.5",
+      "C. 0.3",
+      "D. 0.6"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A conical pendulum of length 1 m makes an angle θ=45° w.r.t. Z-axis and moves in a circle in the XY plane. The radius of the circle is 0.4 m and its center is vertically below O. The speed of the pendulum, in its circular path, will be :(Take $g=10ms^{-2}$)[Main 9 April 2017]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-conical-pendulum-of-length-1_img1_20260504_225730.webp"
+      }
+    ],
+    "options": [
+      "A. 0.4 m/s",
+      "B. 4 m/s",
+      "C. 0.2 m/s",
+      "D. 2 m/s"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "Two cars of masses $m_1$ and $m_2$ are moving in circles of radii $r_1$ and $r_2$, respectively. Their speeds are such that they make complete circles in the same time t. The ratio of their centripetal acceleration is",
+    "images": [],
+    "options": [
+      "A. $m_1 r_1: m_2 r_2$",
+      "B. $m_1: m_2$",
+      "C. $r_1: r_2$",
+      "D. $1: 1$"
+    ],
+    "correct_answer": "C",
+    "explanation": "We know, $a=r w^2=r × (\\;\\frac{2 π}{T}) ^2$Given, $T_1=T_2=T$ $\\;a_1=r_1 × (\\;\\frac{2 π}{T}) ^2$ $\\;a_2=r_2 × (\\;\\frac{2 π}{T}) ^2$ $\\; ∴ \\;\\frac{a_1}{a_2}=\\;\\frac{r_1}{r_2}$",
+    "year": 2012,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "A point $P$ moves in counter-clockwise direction on a circular path as shown in the figure. The movement of $P$ is such that it sweeps out a length $s=t^3+5$, where $s$ is in metres and $t$ is in seconds. The radius of the path is $20 {\\text{m}}$. The acceleration of ${ }^{'} P^{'}$ when $t=2 {\\ s}$ is nearly.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_a-point-p-moves-in-counter-clo_img1_20260504_225733.webp"
+      }
+    ],
+    "options": [
+      "A. $13 {\\text{m}} {/} {\\ s}_2$",
+      "B. $12 m {/} s^2$",
+      "C. $7.2 m s^2$",
+      "D. $14 m {/} s^2$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given $s=t^3+5$ $⇒$ Speed, $v=\\;\\frac{d s}{d t}=3 t^2$ Tangential acceleration $a_t=\\;\\frac{d v}{d t}=6 t$Radial acceleration $a_c=\\;\\frac{v^2}{R}=\\;\\frac{9 t^4}{R}$ At $t=2 {\\ s}, a_t=6 × 2=12 {\\text{m}} / {\\ s}^2$ $a_c=\\;\\frac{9 × 16}{20}=7.2 {\\text{m}} / {\\ s}^2$ $∴$ Net acceleration$\\;={\\sqrt{a_t^2+a_c^2}}$ $\\;={\\sqrt{(12)^2+(7.2)^2}}$ $\\;={\\sqrt{144+51.84}}$ $\\;={\\sqrt{195.84}}$ $\\;=14 m / s^2$",
+    "year": 2010,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "For a particle in uniform circular motion the acceleration $\\vec{a}$ at a point $P(R, θ)$ on the circle of radius $R$ is (here $θ$ is measured from the $x$-axis)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Circular Motion/main_for-a-particle-in-uniform-circ_img1_20260504_225735.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $-\\;\\frac{v^2}{R} \\cos θ {i}↖{∧}+\\;\\frac{v^2}{R} sin \\;θ {j}↖{∧}$",
+      "B. $-\\;\\frac{v^2}{R} sin \\;θ {i}↖{∧}+\\;\\frac{v^2}{R} \\cos θ {j}↖{∧}$",
+      "C. $-\\;\\frac{v^2}{R} \\cos θ {i}↖{∧}-\\;\\frac{v^2}{R} sin \\;θ {j}↖{∧}$",
+      "D. $\\;\\frac{v^2}{R} {i}↖{∧}+\\;\\frac{v^2}{R} {j}↖{∧}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "For a particle in uniform circular motion,$a_c=\\;\\frac{v^2}{R}$ towards the center of the circleFrom figure, $\\vec{a}=a_c \\cos θ(-{i}↖{∧})+a_c sin \\;θ(-{j}↖{∧})$ $=\\;\\frac{-v^2}{R} \\cos θ {i}↖{∧}-\\;\\frac{v^2}{R} sin \\;θ {j}↖{∧}$",
+    "year": 2010,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "Which of the following statements is FALSE for a particle moving in a circle with a constant angular speed?",
+    "images": [],
+    "options": [
+      "A. The velocity vector is tangent to the circle.",
+      "B. The acceleration vector is tangent to the circle.",
+      "C. The acceleration vector points to the centre of the circle.",
+      "D. The velocity and acceleration vectors are perpendicular to each other."
+    ],
+    "correct_answer": "B",
+    "explanation": "Only option $(b)$ is false since acceleration vector acts along the radius of the circle or towards center of the circle for uniform circular motion and velocity vector always acts along the tangent of the circle.",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Circular Motion",
+    "question_text": "The minimum velocity (in $m s^{-1}$ ) with which a car driver must traverse a flat curve of radius $150 \\mathrm{~m}$ and coefficient of friction $0.6$ to avoid skidding is",
+    "images": [],
+    "options": [
+      "A. 60",
+      "B. 30",
+      "C. 15",
+      "D. 25"
+    ],
+    "correct_answer": "B",
+    "explanation": "For no skidding along curved track, The maximum velocity possible $v_{\\max }=\\sqrt{µ r g}$ Here $µ=0.6, r=150 m, g=9.8$ $∴ v_{\\max }=\\sqrt{0.6 × 150 × 9.8} ≃ 30 {\\text{m}} {/} {\\text{s}}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  }
+]

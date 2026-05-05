@@ -1,0 +1,2151 @@
+[
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of ${\\sqrt{3}} {\\text{kg}}$ is attached to a string whose other end is attached to the wall. An unknown force ${\\text{F}}$ is applied so that the string makes an angle of $30^{∘}$ with the wall. The tension ${\\text{T}}$ is :$(.$ Given ${\\text{g}}=10 {\\text{ms}}^{-2})$ [30-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-sqrt3-textkg-is-att_img1_20260504_224818.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-of-sqrt3-textkg-is-att_img2_20260504_224818.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $20 {\\text{N}}$",
+      "B. $25 {\\text{N}}$",
+      "C. $10 {\\text{N}}$",
+      "D. $15 {\\text{N}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;θ=30^{∘}$ $\\;\\cos θ=\\;{{\\sqrt{3}} {\\text{g}}}/{ {\\text{T}}}$ $\\;⇒ \\;{{\\sqrt{3}}}/{2}=\\;{{\\sqrt{3}} {\\text{g}}}/{ {\\text{T}}}$ $\\;⇒ {\\text{T}}=20 {\\text{N}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "The time taken by an object to slide down $45^{∘}$ rough inclined plane is ${\\text{n}}$ times as it takes to slide down a perfectly smooth $45^{∘}$ incline plane. The coefficient of kinetic friction between the object and the incline plane is [29-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [
+      "A. $\\sqrt{\\;{1}/{1- {\\text{n}}^2}}$",
+      "B. $\\sqrt{1-\\;{1}/{ {\\text{n}}^2}}$",
+      "C. $1+\\;{1}/{ {\\text{n}}^2}$",
+      "D. $1-\\;{1}/{ {\\text{n}}^2}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\; {\\text{a}}_1= {\\text{g}} sin \\;θ= {\\text{g}} / {\\sqrt{2}}$ $\\; {\\text{a}}_2= {\\text{g}} sin \\;θ- {\\text{Kg}} \\cos θ=\\;{ {\\text{g}}}/{{\\sqrt{2}}}-\\;{ {\\text{Kg}}}/{{\\sqrt{2}}}$ $\\; {\\text{t}}_2= {\\text{nt}}_1 & \\;\\; {\\text{a}}_1 {\\text{t}}_1^2= {\\text{a}}_2 {\\text{t}}_2^2$ $\\;\\;{ {\\text{g}}}/{{\\sqrt{2}}} {\\text{t}}_1^2= (\\;{ {\\text{g}}}/{{\\sqrt{2}}}-\\;{ {\\text{kg}}}/{{\\sqrt{2}}}) {\\text{n}}^2 {\\text{t}}_1^2$ $\\; {\\text{K}}=1-\\;{1}/{ {\\text{n}}^2} \\;\\; \\;\\text{ Ans. }\\; 4$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Force acts for $20 {\\ s}$ on a body of mass $20 {\\text{kg}}$, starting from rest, after which the force ceases and then body describes $50 {\\text{m}}$ in the next $10 {\\ s}$. The value of force will be : [29-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_force-acts-for-20-s-on-a-body-_img1_20260504_224822.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $40 {\\text{N}}$",
+      "B. $5 {\\text{N}}$",
+      "C. $20 {\\text{N}}$",
+      "D. $10 {\\text{N}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$\\;50=V × 10$ $\\;V=5 {\\text{m}} / {\\ s}$ $\\; {\\text{V}}=0+ {\\text{a}} × 20$ $\\;5= {\\text{a}} × 20$ $\\; {\\text{a}}=\\;\\frac{1}{4} {\\text{m}} / {\\ s}^2$ $\\; {\\text{F}}= {\\text{ma}}=20 × \\;\\frac{1}{4}=5 {\\text{N}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $m$ slides down the plane inclined at angle $30^{∘}$ with an acceleration $\\;{ {\\text{g}}}/{4}$. The value of coefficient of kinetic friction will be : [29-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-down-_img1_20260504_224824.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;{2 {\\sqrt{3}}+1}/{2}$",
+      "B. $\\;{1}/{2 {\\sqrt{3}}}$",
+      "C. $\\;{{\\sqrt{3}}}/{2}$",
+      "D. $\\;{2 {\\sqrt{3}}-1}/{2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${\\text{Mg}} sin \\;30^{∘}-µ {\\text{mg}} \\cos 30^{∘}= {\\text{ma}}$ $\\;\\frac{g}{2}-\\;{{\\sqrt{3}}}/{2} ⋅ µ g=\\;\\frac{g}{4}$ $\\;\\;{{\\sqrt{3}}}/{2} µ=\\;\\frac{1}{4}$ $\\;µ=\\;{1}/{2 {\\sqrt{3}}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Consider a block kept on an inclined plane (inclined at $45^{∘}$ ) as shown in the figure. If the force required to just push it up the incline is 2 times the force required to just prevent it from sliding down, the coefficient of friction between the block and inclined plane $(µ)$ is equal to : [25-Jan-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_consider-a-block-kept-on-an-in_img1_20260504_224825.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_consider-a-block-kept-on-an-in_img2_20260504_224825.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Laws of Motion/main_consider-a-block-kept-on-an-in_img3_20260504_224826.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $0.33$",
+      "B. $0.60$",
+      "C. $0.25$",
+      "D. $0.50$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\; {\\text{F}}_1= {\\text{mg}} sin \\;45^{∘}+ {\\text{f}}= {\\text{mg}} sin \\;45^{∘}+µ {\\text{N}}$ $\\; {\\text{F}}_1=\\;{ {\\text{mg}}}/{{\\sqrt{2}}}+µ {\\text{mg}} \\cos 45^{∘}$ $\\; {\\text{F}}_1=\\;{ {\\text{mg}}}/{{\\sqrt{2}}}(1+µ)$ $\\;F_2=m g sin \\;45^{∘}- {\\text{f}}= {\\text{mg}} sin \\;45^{∘}-µ {\\text{N}}$ $\\;=\\;{ {\\text{mg}}}/{{\\sqrt{2}}}(1-µ)$ $\\; {\\text{F}}_1=2 {\\text{F}}_2$ $\\;\\;{ {\\text{mg}}}/{{\\sqrt{2}}}(1+µ)=2 \\;{ {\\text{mg}}}/{{\\sqrt{2}}}(1-µ)$ $\\;1+µ=2-2 µ$ $\\;µ=1 / 3=0.33$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Given below are two statements :Statement-I : An elevator can go up or down with uniform speed when its weight is balanced with the tension of its cable.Statement-II : Force exerted by the floor of an elevator on the foot of a person standing on it is more than his/her weight when the elevator goes down with increasing speed.In the light of the above statements, choose the correct answer from the options given below : [24-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_given-below-are-two-statements_img1_20260504_224827.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. Both statement I and statement II are false",
+      "B. Statement I is true but Statement II is false",
+      "C. Both Statement I and Statement II are true",
+      "D. Statement I is false but Statement II is true"
+    ],
+    "correct_answer": "B",
+    "explanation": "Statement-1When elevator is moving with uniform speed ${\\text{T}}= {\\text{F}}_{ {\\text{g}}}$Statement-2When elevator is going down with increasing speed, its acceleration is downward.Hence ${\\text{W}}- {\\text{N}}=\\;{ {\\text{W}}}/{ {\\text{g}}} × {\\text{a}}$ ${\\text{N}}= {\\text{W}} (1-\\;{ {\\text{a}}}/{ {\\text{g}}})$ i.e. less than weight.",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "As per given figure, a weightless pulley $P$ is attached on a double inclined frictionless surface. The tension in the string (massless) will be (if ${\\text{g}}=$ $10 {\\text{m}} / {\\ s}^{2}$ ) [24-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_as-per-given-figure-a-weightle_img1_20260504_224829.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_as-per-given-figure-a-weightle_img2_20260504_224829.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Laws of Motion/main_as-per-given-figure-a-weightle_img3_20260504_224830.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $(4 {\\sqrt{3}}+1) {\\text{N}}$",
+      "B. $4({\\sqrt{3}}+1) {\\text{N}}$",
+      "C. $4({\\sqrt{3}}-1) {\\text{N}}$",
+      "D. $(4 {\\sqrt{3}}-1) {\\text{N}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$4 g sin \\;60^{∘}-T=4 a$ . . . (1) $4 {\\text{g}} sin \\;60^{∘}$ ${\\text{T}}- {\\text{g}} sin \\;30^{∘}= {\\text{a}}$ . . . (2)Solving (1) and (2) we get.$\\;20 {\\sqrt{3}}-T=4 T-20$ $\\;T=4({\\sqrt{3}}+1) N$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two bodies of masses $m_1=5 {\\text{kg}}$ and $m_2=3 {\\text{kg}}$ are connected by a light string going over a smooth light pulley on a smooth inclined plane as shown in the figure. The system is at rest. The force exerted by the inclined plane on the body of mass ${\\text{m}}_1$ will be : $[.$ Take $. {\\text{g}}=10 {\\text{ms}}^{-2}]$ [29-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-bodies-of-masses-m_15-text_img1_20260504_224831.webp"
+      }
+    ],
+    "options": [
+      "A. $30 {\\text{N}}$",
+      "B. $40 {\\text{N}}$",
+      "C. $50 {\\text{N}}$",
+      "D. $60 {\\text{N}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Force on equilibrium, $m_2 g=m_1 g sin \\;θ$Normal force on ${\\text{m}}_1, N=m_1 g \\cos θ$ $⇒ \\;\\frac{N}{m_2 g}=\\cot θ$ $⇒ N=3 × 10 × \\cot θ=3 × 10 × \\;\\frac{4}{3} \\;\\; ( ∵ sin \\;θ=\\;\\frac{3}{5})$ $⇒ N=40 {\\text{N}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A uniform metal chain of mass $m$ and length 'L' passes over a massless and frictionless pulley. It is released from rest with a part of its length 'l' is hanging on one side and rest of its length ' ${\\text{L}}-l$ ' is hanging on the other side of the pully. At a certain point of time, when $l=\\;\\frac{L}{x}$, the acceleration of the chain is $\\;\\frac{g}{2}$. The value of ${\\text{x}}$ is ________. [28-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-uniform-metal-chain-of-mass-_img1_20260504_224833.webp"
+      }
+    ],
+    "options": [
+      "A. 6",
+      "B. 2",
+      "C. 1.5",
+      "D. 4"
+    ],
+    "correct_answer": "D",
+    "explanation": "$a=\\;\\frac{m_2-m_1}{m_1+m} g=\\;\\frac{g}{2}$ $⇒ m_2=3 m_1$ $(L-l)=3 l$ $L=4 l$ $l=\\;\\frac{L}{4}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A bag is gently dropped on a conveyor belt moving at a speed of $2 {\\text{m}} / {\\text{s}}$. The coefficient of friction between the conveyor belt and bag is $0.4$. Initially, the bag slips on the belt before it stops due to friction. The distance travelled by the bag on the belt during slipping motion, is : [Take $g=10 {\\text{m}} / {\\text{s}}^{-2}$ ] [27-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $2 {\\text{m}}$",
+      "B. $0.5 {\\text{m}}$",
+      "C. $3.2 {\\text{m}}$",
+      "D. $0.8 {\\text{ms}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$v=2 {\\text{m}} / {\\text{s}}$ $µ=0.4$ ${\\text{a}}=+(0.4)( {\\text{g}})$ $=+4 {\\text{m}} / {\\text{s}}^2$ ${\\text{v}}^2- {\\text{u}}^2=2$ as$⇒(4)=2 ×(4)( {\\text{s}})$ $s=0.5 {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block 'A' takes $2 {\\text{s}}$ to slide down a frictionless incline of $30^{∘}$ and length 'I', kept inside a lift going up with uniform velocity 'v'. If the incline is changed to $45^{∘}$, the time taken by the block, to slide down the incline, will be approximately : [27-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-a-takes-2-texts-to-sli_img1_20260504_224837.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $2.66 {\\text{s}}$",
+      "B. $0.83 {\\text{s}}$",
+      "C. $1.68 {\\text{s}}$",
+      "D. $0.70 {\\text{s}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${\\text{a}}= {\\text{g}} \\ sin θ$ $ℓ=\\;\\frac{1}{2} {\\text{g}} \\ sin 30^{∘}(2)^2$ $ℓ=\\;\\frac{1}{2} {\\text{g}} \\ sin 45^{∘} {\\text{t}}^2$ $(\\;\\frac{1}{2})(4)=\\;{1}/{\\sqrt{2}} {\\text{t}}^2 ⇒ {\\text{t}}=\\sqrt{2 \\sqrt{2}} ≃ 1.68$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two inclined planes are placed as shown in figure. A block is projected from the Point A of inclined plane $A B$ along its surface with a velocity just sufficient to carry it to the top Point $B$ at a height $10 {\\text{m}}$. After reaching the Point ${\\text{B}}$ the block slides down on inclined plane ${\\text{BC}}$. Time it takes to reach to the point $C$ from point $A$ is $t(\\sqrt{2}+1)$ s. The value of $t$ is _______. (use ${\\text{g}}=10 {\\text{m}} / {\\text{s}}^2$ ) [27-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-inclined-planes-are-placed_img1_20260504_224839.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "From E.C. $=\\;\\frac{1}{2} {\\ mv}_0^2= {\\text{mgh}}$ ${\\text{v}}_0=10 \\sqrt{2}$For ${\\text{A}} → {\\text{B}}$ at ${\\text{B}}, \\;\\; {\\text{v}}=0$ ${\\text{a}}=- {\\text{g}} \\ sin 45^{∘}=\\;{-10}/{\\sqrt{2}}$ ${\\text{v}}= {\\text{u}}+ {\\text{at}}_1 ⇒ 0=10 \\sqrt{2}-\\;{10}/{\\sqrt{2}} {\\text{t}}_1 ⇒ {\\text{t}}_1=2 {\\ sec}$For $B → C$ ${\\ s}=u {\\text{t}}_2+\\;\\frac{1}{2} {\\text{at}}_2^2$ $\\;{10}/{\\ sin 30^{∘}}=\\;\\frac{1}{2}(10 \\ sin 30^{∘}) {\\text{t}}_2^2$ $t_2=2 \\sqrt{2}$So total time${\\text{T}}= {\\text{t}}_1+ {\\text{t}}_2$ ${\\text{T}}= {\\text{t}}_1+ {\\text{t}}_2$ $=2 \\sqrt{2}+2$ $=2(\\sqrt{2}+1) {\\ sec}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $M$ slides down on a rough inclined plane with constant velocity. The angle made by the incline plane with horizontal is $θ$. The magnitude of the contact force will be : [27-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-down-_img1_20260504_224841.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${\\text{Mg}}$",
+      "B. ${\\text{Mg}} \\cos θ$",
+      "C. $\\sqrt{ {\\text{Mg}} \\sin θ+ {\\text{Mg}} \\cos θ}$",
+      "D. ${\\text{Mg}} \\sin θ \\sqrt{1+µ}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "${\\text{N}}= {\\text{Mg}} \\cos θ$ ${\\text{f}}= {\\text{Mg}} \\ sin θ$ ${\\text{R}}=\\sqrt{ {\\text{N}}^2+ {\\text{f}}^2}$ ${\\text{R}}= {\\text{Mg}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A monkey of mass $50 {\\text{kg}}$ climbs on a rope which can withstand the tension (T) of $350 {\\text{N}}$. If monkey initially climbs down with an acceleration of $4 {\\text{m}} / {\\text{s}}^2$ and then climbs up with an acceleration of $5 {\\text{m}} / {\\text{s}}^2$. Choose the correct option $(g=10 {\\text{m}} / {\\text{s}}^2)$. [26-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $T=700 {\\text{N}}$ while climbing upward",
+      "B. $T=350 {\\text{N}}$ while going downward",
+      "C. Rope will break while climbing upward",
+      "D. Rope will break while going downward"
+    ],
+    "correct_answer": "C",
+    "explanation": "$T_{\\;\\text{down }\\;}=50 ×(10-4)$ $=50 × 6$ $=300 {\\text{N}}$ ${\\text{T}}_{\\;\\text{up }\\;}=50 ×(10+5)$ $=50 × 15$ $=750 {\\text{N}}$ $⇒$ Rope will break while climbing up.",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Three masses $M=100 {\\text{kg}}, {\\text{m}}_1=10 {\\text{kg}}$ and ${\\text{m}}_2=20 {\\text{kg}}$ are arranged in a system as shown in figure. All the surfaces are frictionless and strings are inextensible and weightless. The pulleys are also weightless and frictionless. A force ${\\text{F}}$ is applied on the system so that the mass ${\\text{m}}_2$ moves upward with an acceleration of $2 {\\text{ms}}^{-2}$. The value of ${\\text{F}}$ is : $(.$ Take $. {\\text{g}}=10 {\\text{ms}}^{-2})$ [26-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_three-masses-m100-textkg-textm_img1_20260504_224845.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_three-masses-m100-textkg-textm_img2_20260504_224845.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Laws of Motion/main_three-masses-m100-textkg-textm_img3_20260504_224845.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 3360 N",
+      "B. 3380 N",
+      "C. 3120 N",
+      "D. 3240 N"
+    ],
+    "correct_answer": "C",
+    "explanation": "In frame of block of mass M moving with acceleration a $m_1 a-T=2 m_1 ⇒ 10 a-T=20$ $T-m_2 g=m_2 2 ⇒ T-200=40 ⇒ T=240 . . . . . .$ (ii)$⇒$ From equation 1 and $210 {\\text{a}}=260$ or ${\\text{a}}=26 {\\text{m}} / {\\text{s}}^2$ for block$F(M+m_2) a=120 × 26$ $=3120 N$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two masses $M_1$ and $M_2$ are tied together at the two ends of a light inextensible string that passes over a frictionless pulley. When the mass $M_2$ is twice that of $M_1$, the acceleration of the system is $a_1$ When the mass $M_2$ is thrice that of $M_1$, the acceleration of the system is $a_2$. The ratio $\\;\\frac{a_1}{a_2}$ will be : [26-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-masses-m_1-and-m_2-are-tie_img1_20260504_224847.webp"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{1}{3}$",
+      "B. $\\;\\frac{2}{3}$",
+      "C. $\\;\\frac{3}{2}$",
+      "D. $\\;\\frac{1}{2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Case 1 ${\\text{a}}=\\;{ {\\text{m}}_2 {\\text{g}}- {\\text{m}}_1 {\\text{g}}}/{ {\\text{m}}_1+ {\\text{m}}_2}$ ${\\text{M}}_2=2 {\\text{m}}_1$ $a_1=\\;\\frac{2 m_1 g-m_1 g}{3 m_1}$ ${\\text{a}}_1= {\\text{g}} / 3$ Case $-2$ ${\\text{M}}_2=3 {\\text{m}}_1$ ${\\text{a}}_2=\\;{3 {\\text{m}}_1 {\\text{g}}- {\\text{m}}_1 {\\text{g}}}/{4 {\\text{m}}_1}$ ${\\text{a}}_2=\\;{ {\\text{g}}}/{2}$ $\\;{ {\\text{a}}_1}/{ {\\text{a}}_2}=\\;{\\;{ {\\text{g}}}/{3}}/{{ {\\text{g}}}/{2}}=\\;\\frac{2}{3}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "For a free body diagram shown in the figure, the four forces are applied in the ' $x$ ' and ' $y$ ' directions. What additional force must be applied and at what angle with positive $x$-axis so that the net acceleration of body is zero? [25-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_for-a-free-body-diagram-shown-_img1_20260504_224849.webp"
+      }
+    ],
+    "options": [
+      "A. $\\sqrt{2} N, 45^{∘}$",
+      "B. $\\sqrt{2} N, 135^{∘}$",
+      "C. $\\;{2}/{\\sqrt{3}} N, 30^{∘}$",
+      "D. $2 N, 45^{∘}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Resultant of already applied forces $=-{i}↖{\\^}-{j}↖{\\^}$ $⇒$ Force required to balance $={i}↖{\\^}+{j}↖{\\^}$ $⇒$ Force required $=\\sqrt{2} {N}$ in magnitude at angle $45^{∘}$ with +ve $x$-axis",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Four forces are acting at a point ${P}$ in equilibrium as shown in figure. The ratio of force ${F}_{1}$ to ${F}_{2}$ is $1: x$ where $x=$ [25-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_four-forces-are-acting-at-a-po_img1_20260504_224851.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_four-forces-are-acting-at-a-po_img2_20260504_224851.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "$F_{1}=+2 × \\;{1}/{\\sqrt{2}}-\\;{1}/{\\sqrt{2}}=\\;{1}/{\\sqrt{2}}$ $F_{2}=2 × \\;{1}/{\\sqrt{2}}+\\;{1}/{\\sqrt{2}}=\\;{3}/{\\sqrt{2}}$ $\\;{F_{1}}/{F_{2}}=\\;\\frac{1}{3}=\\;\\frac{1}{x} ⇒ x=3$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A $2 {\\text{kg}}$ block is pushed against a vertical wall by applying a horizontal force of $50 {\\text{N}}$. The coefficient of static friction between the block and the wall is $0.5$. A force ${\\text{F}}$ is also applied on the block vertically upward (as shown in figure). The maximum value of $F$ applied, so that the block does not move upward, will be :(Given : ${\\text{g}}=10 {\\text{ms}}^{-2}$ ) [30-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-2-textkg-block-is-pushed-aga_img1_20260504_224853.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-2-textkg-block-is-pushed-aga_img2_20260504_224853.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $10 {\\text{N}}$",
+      "B. $20 {\\text{N}}$",
+      "C. $25 {\\text{N}}$",
+      "D. $45 {\\text{N}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Here $F_{\\max }$ force is trying to move the block upward so friction force will be applied towards downward.Along horizontal direction,$N=50 N$Along vertical diretion,$F_{\\max }=m g+f_{\\max }$ $=2 × 10+µ {\\text{N}}$ $=20+0.5 × 50$ $=20+25$ $=45 {\\text{N}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass M placed inside a box descends vertically with acceleration 'a'. The block exerts a force equal to one-fourth of its weight on the floor of the box. The value of 'a' will be [29-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-placed-insid_img1_20260504_224855.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{g}{4}$",
+      "B. $\\;\\frac{g}{2}$",
+      "C. $\\;\\frac{3 g}{4}$",
+      "D. ${\\text{g}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Using Newton's second law$m g-\\;\\frac{m g}{4}=m a$ $⇒ a=\\;\\frac{3 g}{4}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $40 {\\text{kg}}$ slides over a surface, when a mass of $4 {\\text{kg}}$ is suspended through an inextensible massless string passing over frictionless pulley as shown below.The coefficient of kinetic friction between the surface and block is $0.02$. The acceleration of block is. (Given ${\\text{g}}=10 {\\text{ms}}^{-2}$.) [29-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-40-textkg-slid_img1_20260504_224857.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-of-mass-40-textkg-slid_img2_20260504_224857.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $1 {\\text{ms}}^{-2}$",
+      "B. $1 / 5 {\\text{ms}}^{-2}$",
+      "C. $4 / 5 {\\text{ms}}^{-2}$",
+      "D. $8 / 11 {\\text{ms}}^{-2}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$f_{r_{\\max }}=µ N$ $=0.02 × 400$ $=8 {\\text{N}}$Let the acceleration is a as shown then.$40-T=4 a$ $T-8=40 a$ $⇒ a=\\;\\frac{32}{44}=\\;\\frac{8}{11} {\\text{m}} / {\\ s}^2$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $2 {\\text{kg}}$ moving on a horizontal surface with speed of $4 {\\text{ms}}^{-1}$ enters a rough surface ranging from $x=0.5 {\\text{m}}$ to $x=1.5 {\\text{m}}$. The retarding force in this range of rough surface is related to distance by $F=-k x$ where $k=12 {\\text{Nm}}$. The speed of the block as it just crosses the rough surface will be : [28-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. zero",
+      "B. $1.5 {\\text{ms}}^{-1}$",
+      "C. $2.0 {\\text{ms}}^{-1}$",
+      "D. $2.5 {\\text{ms}}^{-1}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$F=-12 x$ $m v \\;\\frac{d v}{d x}=-12 x$ $∫↙{4}↖{v} v d v=-6 ∫↙{0.5}↖{1.5} x \\text{dx}(m=2 {\\text{kg}})$ $\\;\\frac{v^2-16}{2}=-6 [\\;\\frac{1.5^2-0.5^2}{2}]$ $\\;\\frac{v^2-16}{2}=-6$ $v=2 {\\text{m}} / {\\ sec}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A hanging mass ${\\text{M}}$ is connected to a four times bigger mass by using a string-pulley arrangement, as shown in the figure. The bigger mass is placed on a horizontal ice-slab and being pulled by $2 {\\text{Mg}}$ force. $\\ln$ this situation, tension in the string is $\\;\\frac{x}{5} {\\text{Mg}}$ for $x=$ ____. Neglect mass of the string and friction of the block (bigger mass) with ice slab.(Given ${\\text{g}}=$ acceleration due to gravity) [28-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-hanging-mass-textm-is-connec_img1_20260504_224901.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "6",
+    "explanation": "$a=\\;\\frac{M g}{4 M+M}=\\;\\frac{g}{5}$ (in upward direction)$T=M (g+\\;\\frac{g}{5}) =\\;\\frac{6 M g}{5}$ $⇒ x=6$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A mass of $10 {\\text{kg}}$ is suspended vertically by a rope of length $5 {\\text{m}}$ from the roof. A force of $30 {\\text{N}}$ is applied at the middle point of rope in horizontal direction. The angle made by upper half of the rope with vertical is $θ=\\tan ^{-1}(x × 10^{-1})$. The value of $x$ is____(Given, $g=10 {\\text{m}} / {\\text{s}}^2$ ) [27-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-mass-of-10-textkg-is-suspend_img1_20260504_224903.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "$T \\cos θ=m g$ $T \\cos θ=100 N$ $T sin \\;θ=30$ $⇒ \\;\\frac{T sin \\;θ}{T \\cos θ}=\\;\\frac{30}{100}$ $⇒ \\tan θ=\\;\\frac{3}{10}$ $∴ x=3$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A system of two blocks of masses $m=2 {\\text{kg}}$ and $M=8 {\\text{kg}}$ is placed on a smooth table as shown in figure. The coefficient of static friction between two blocks is $0.5$. The maximum horizontal force ${\\text{F}}$ that can be applied to the block of mass ${\\text{M}}$ so that the blocks move together will be : [27-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-system-of-two-blocks-of-mass_img1_20260504_224905.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-system-of-two-blocks-of-mass_img2_20260504_224905.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $9.8 {\\text{N}}$",
+      "B. $39.2 {\\text{N}}$",
+      "C. $49 {\\text{N}}$",
+      "D. $78.4 {\\text{N}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$∴ a_{\\max }=µ {\\text{g}}$ $=0.5 × 9.8=4.9 {\\text{m}} / {\\ s}^2$ $∴ {\\text{F}}_{\\max }=(8+2) × 4.9=49 {\\text{N}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A system to 10 balls each of mass $2 {\\text{kg}}$ are connected via massless and unstretchable string. The system is allowed to slip over the edge of a smooth table as shown in figure. Tension on the string between the $7^{\\;\\text{th }\\;}$ and $8^{\\;\\text{th }\\;}$ ball is ____${\\text{N}}$ when $6^{\\;\\text{th }\\;}$ ball just leaves the table. [26-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-system-to-10-balls-each-of-m_img1_20260504_224907.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "36",
+    "explanation": "At given instant$a_{\\;\\text{sys }\\;}=\\;\\frac{6 m × g}{10 m}=\\;\\frac{6 g}{10}$ $∴ T_{78}=(3 m) × a_{\\;\\text{sys }\\;}$ $=(3 m) ×(\\;\\frac{6 g}{10})$ $=\\;\\frac{3 × 2 × 6 × 10}{10}=36 {\\text{N}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "In the arrangement shown in figure $a_1, a_2, a_3$ and $a_4$ are the accelerations of masses $m_1, m_2, m_3$ and ${\\text{m}}_4$ respectively. Which of the following relation is true for this arrangement? [26-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_in-the-arrangement-shown-in-fi_img1_20260504_224909.webp"
+      }
+    ],
+    "options": [
+      "A. $4 a_1+2 a_2+a_3+a_4=0$",
+      "B. $a_1+4 a_2+3 a_3+a_4=0$",
+      "C. $a_1+4 a_2+3 a_3+2 a_4=0$",
+      "D. $2 a_1+2 a_2+3 a_3+a_4=0$"
+    ],
+    "correct_answer": "A",
+    "explanation": "From virtual work done method,$4 T × a_1+2 T × a_2+T × a_3+T × a_4=0$ $⇒ 4 a_1+2 a_2+a_3+a_4=0$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A person is standing in an elevator. In which situation, he experiences weight loss? [26-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-person-is-standing-in-an-ele_img1_20260504_224910.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. When the elevator moves upward with constant acceleration",
+      "B. When the elevator moves downward with constant acceleration",
+      "C. When the elevator moves upward with uniform velocity",
+      "D. When the elevator moves downward with uniform velocity"
+    ],
+    "correct_answer": "B",
+    "explanation": "${\\text{N}}_1= {\\text{mg}}$ ${\\text{N}}_2= {\\text{mg}}+ {\\text{ma}}$ ${\\text{N}}_3= {\\text{mg}}- {\\text{ma}}$ ${\\text{N}}_4= {\\text{mg}}$ ${\\text{N}}_5= {\\text{mg}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $200 {\\text{g}}$ is kept stationary on a smooth inclined plane by applying a minimum horizontal force ${\\text{F}}=$ $\\sqrt{x} {\\text{N}}$ as shown in figure.The value of $x=____________$ [25-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-200-textg-is-k_img1_20260504_224912.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-of-mass-200-textg-is-k_img2_20260504_224912.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "12",
+    "explanation": "$F × \\;\\frac{1}{2}=0.2 × 10 × \\;{\\sqrt{3}}/{2}$ $⇒ F=2 \\sqrt{3}$ $⇒ F=\\sqrt{12} {\\text{N}}$ $∴ x=12$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A force on an object of mass $100 {\\text{g}}$ is $(10 {i}↖{\\^}+5 {j}↖{\\^}) {\\text{N}}$. The position of that object at ${\\text{t}}=2 {\\text{s}}$ is $(a {i}↖{\\^}+b {j}↖{\\^}) {\\text{m}}$ after starting from rest. The value of $\\;\\frac{a}{b}$ will be_____ [25-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "$\\vec{F}=m \\vec{a}$ $⇒ \\vec{a}=100 {i}↖{\\^}+50 {j}↖{\\^}$So, $\\vec{S}=\\;\\frac{1}{2} \\vec{a} t^2$ $\\;\\frac{1}{2}(100 {i}↖{\\^}+50 {j}↖{\\^}) 2^2$ $=200 {i}↖{\\^}+100 {j}↖{\\^} {\\text{m}}$so a $=200 {\\text{m}}$ and ${\\text{b}}=100 {\\text{m}}$so $\\;\\frac{a}{b}=2$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "An object of mass $5 {\\text{kg}}$ is thrown vertically upwards from the ground. The air resistance produces a constant retarding force of $10 {\\text{N}}$ throughout the motion. The ratio of time of ascent to the time of descent will be equal to : [Use ${\\text{g}}=10 {\\text{ms}}^{-2}$ ]. [24-Jun-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $1: 1$",
+      "B. $\\sqrt{2}: \\sqrt{3}$",
+      "C. $\\sqrt{3}: \\sqrt{2}$",
+      "D. $2: 3$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Let time taken to ascent is $t_1$ and that to descent is $t_2$. Height will be same so$H=\\;\\frac{1}{2} × 12 t_1^2=\\;\\frac{1}{2} × 8 t_2^2$ $⇒ \\;\\frac{t_1}{t_1}=\\;{\\sqrt{2}}/{\\sqrt{3}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $10 {\\text{kg}}$ starts sliding on a surface with an initial velocity of $9.8 {\\text{ms}}^{-1}$. The coefficient of friction between the surface and block is $0.5$. The distance covered by the block before coming to rest is:[use ${\\text{g}}=9.8 {\\text{ms}}^{-2}$ ] [24-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $4.9 {\\text{m}}$",
+      "B. $9.8 {\\text{m}}$",
+      "C. $12.5 {\\text{m}}$",
+      "D. $19.6 {\\text{m}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$S=\\;\\frac{u^2}{2 a}=\\;\\frac{u^2}{2(µ g)}$ $=\\;\\frac{(9.8)^2}{2 × 0.5 ×(9.8)}$ $=\\;\\frac{9.8}{1}$ $=9.8 {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass m slides on the wooden wedge, which in turn slides backward on the horizontal surfac. The acceleration of the block with respect to the wedge is [Given, $\\text{m}=8 {\\text{kg}}, \\text{M}=16 {\\text{kg}}$ ] Assume all the surfaces shown in the figure to be frictionless.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-on-th_img1_20260504_224921.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-on-th_img2_20260504_224921.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-on-th_img3_20260504_224921.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\frac{4}{3} \\text{g}$",
+      "B. $\\frac{6}{5} \\text{g}$",
+      "C. $\\frac{3}{5} \\text{g}$",
+      "D. $\\frac{2}{3} \\text{g}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Here, both block and wedge are moving. Consider the acceleration of the block with respect to the wedge is $\\text{a}_1$ and the acceleration of the wedge is $\\text{a}_2$. Given, mass of the wedge, M = 16 kg and mass of block, m = 8 kg Let’s draw the free body diagram of the wedge, In the x-directions, N cos60º = $\\text{Ma}_2$ $\\text{N}(0.5)=16 × \\text{a}_{2}$ ⇒ $\\text{N}=32 \\text{a}_{2}$ Now, draw the free body diagram of the block with respect to thewedge. Along the perpendicular to the inclined plane, $\\text{N} = 8\\text{g} \\cos30° - 8\\text{a}2\\sin30º$ $32 \\text{a}_{2}=4 \\\\sqrt{3} \\text{g}-4 \\text{a}_{2}$ $36 \\text{a}_{2}=4 \\\\sqrt{3} \\text{g}$ ⇒ $\\text{a}_{2}={\\\\sqrt{3}}/{9} \\text{g}$ Along the inclined plane, $\\text{m} \\text{g} \\sin 30° +\\text{m}\\text{a}_{2} \\cos 30° =\\text{m} \\text{a}_{1}$ $8 \\text{g} ×\\frac{1}{2}+8 ×{\\\\sqrt{3}}/{9} \\text{g} ×{\\\\sqrt{3}}/{2}=8 \\text{a}_{1}$ ⇒ $\\text{a}_{1}=\\frac{2 \\text{g}}{3}$ ∴ The acceleration of the block with respect to the wedge is ${2\\text{g}}/ {3}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "When a body slides down from rest along a smooth inclined plane making an angle of $30°$ with the horizontal, it takes time T. When the same body slides down from the rest along a rough inclined plane making the same angle and through the same distance, it takes time $\\α\\text{T}$, where α is a constant greater than 1. The coefficient of friction between the body and the rough plane is ${1}/{\\\\sqrt{x}}({\\α^{2}-1}/{\\α^{2}})$, where x is ............. .",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_when-a-body-slides-down-from-r_img1_20260504_224923.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_when-a-body-slides-down-from-r_img2_20260504_224923.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "Let’s draw the free body diagram when body slides down on smooth surface For smooth surface, ma = mg sin30º a = g sin30º a = g / 2 Distance covered by the block on the smooth surface in time T, $\\text{s}=\\text{u} \\text{t}+\\frac{1}{2} \\text{a} \\text{t}^{2}$ $\\text{s}=0+\\frac{1}{2}(\\frac{\\text{g}}{2}) \\text{T}^{2}$ $⇒ \\text{s}=(\\frac{g}{4}) \\text{T}^{2}$ ...(i) Now, let’s draw the free body diagram when body slides down on rough surface For rough surface, ma = mg sin30º - μ mg cos30º a = g sin30º - μ g Distance covered by the block on the rough surface in time α T, $\\text{s}=\\text{u} \\text{t}+\\frac{1}{2} \\text{a} \\text{t}^{2}$ $\\text{s}=0+\\frac{1}{2}(\\text{g} \\sin 30\\º - \\μ \\text{g} \\sin 30\\μ) \\text{t}^{2}$ $\\text{s}=\\frac{\\text{g}}{4}(1-\\\\sqrt{3} \\μ)(\\α\\text{T})^{2}$ ...(ii) Distance covered by the block is same for both the case, $⇒ \\frac{\\text{g}}{4}(1-\\\\sqrt{3} \\μ)(\\α\\text{T})^{2}=\\frac{\\text{g}}{4} \\text{T}^{2}$[from Eq. (i) & Eq. (ii)] $⇒ 1-\\\\sqrt{3} \\μ={1}/{\\α^{2}}$ $⇒ \\μ=({\\α^{2}-1}/{\\α^{2}}) {1}/{\\\\sqrt{3}}$ Comparing with $({\\α^{2}-1}/{\\α^{2}}) {1}/{\\\\sqrt{\\text{x}}}$ The value of the x = 3.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "An object of mass $m$ is being moved with a constant velocity under the action of an applied force of $2 {\\text{N}}$ along a frictionless surface with following surface profile. The correct applied force versus distance graph will be",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_an-object-of-mass-m-is-being-m_img1_20260504_224925.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_an-object-of-mass-m-is-being-m_img2_20260504_224925.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Laws of Motion/main_an-object-of-mass-m-is-being-m_img3_20260504_224925.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 4,
+        "filename": "Laws of Motion/main_an-object-of-mass-m-is-being-m_img4_20260504_224925.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "B",
+    "explanation": "Let’s draw the free body diagram, (During the upward direction) F = 2N = (+ ve) constant (During the downward direction) F = 2N = (- ve) constan During the upward motion, the force is positive constant and duringthe downward motion the force is negative constant. Hence, the correct graph is (b).",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Statement I If three forces ${\\text{F}}_{1} .{\\text{F}}_{2}$ and ${\\text{F}}_{3}$ are represented by three sides of a triangle and ${\\text{F}}_{1}+{\\text{F}}_{2}=-{\\text{F}}_{3}$, then these three forces are concurrent forces and satisfy the condition for equilibrium. Statement II A triangle made up of three forces ${\\text{F}}_{1}, {\\text{F}}_{2}$ and ${\\text{F}}_{3}$ as its sides taken in the same order, satisfy the condition for translatory equilibrium. In the light of the above statements, choose the most appropriate answer from the options given below.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_statement-i-if-three-forces-te_img1_20260504_224927.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. Statement I is false but statement II is true.",
+      "B. Statement I is true but statement II is false.",
+      "C. Both statement I and statement II are false.",
+      "D. Both statement I and statement II are true."
+    ],
+    "correct_answer": "D",
+    "explanation": "Three forces $\\text{F}_{1}, \\text{F}_{2}$ and $\\text{F}_{3}$ are acting on a body and if this body is in equilibrium, then resultant of these three forces must be zero i.e. ${\\text{F}}_{ {\\text{net} }}={\\text{F}}_{1}+{\\text{F}}_{2}+{\\text{F}}_{3}=0$ $⇒ {\\text{F}}_{1}+{\\text{F}}_{2}=-{\\text{F}}_{3}$ This situation can be shown graphically by three concurrent forces at 120° with each others. or, by three forces in the same order along three sides of a triangle. Hence, both statement I and statement II are true.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A car is moving on a plane inclined at $30°$ to the horizontal with an acceleration of $10 {\\text{ms}}^{-2}$ parallel to the plane upward. A bob is suspended by a string from the roof of the car. The angle in degrees which the string makes with the verticalis........ (Take, $g=10 {\\text{ms}}^{-2}$)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-car-is-moving-on-a-plane-inc_img1_20260504_224929.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "30",
+    "explanation": "Given, Angle of inclination, θ = 30º Acceleration, $a=10 {\\text{ms}}^{-2}$ Acceleration due to gravity, $g=10 {\\text{ms}}^{-2}$ According to the question the car and bob is as shown below, Here, F'is the pseudo force acting on the bob when we considered it from car’s frame and T is the tension on the string. In equilibrium, $\\Σ\\text{F}_{x}=0$ and $\\Σ\\text{F}_{y}=0$ $⇒ \\text{F}' \\cos 30°=\\text{T} \\sin \\α$ ${m a \\cos 30°}{\\sin \\α}=\\text{T}$ ...(i) where, m is the mass of the bob. $\\text{F}' \\sin 30°+m g=\\text{T} \\cos \\α$ $⇒ m a \\sin 30°+m g=\\frac{m a \\cos 30°}{\\sin \\α}(\\cos \\α)$ [∵ using Eq. (i)] $⇒ a \\sin 30°+g=\\frac{a \\cos 30°}{\\sin \\α}(\\cos \\α)$ $10 ×\\frac{1}{2}+10={10 ×\\\\sqrt{3}}/{2} . \\α$ $⇒ \\frac{1}{2}+1={\\\\sqrt{3}}/{2} .\\α$ $⇒ \\frac{3}{2}={\\\\sqrt{3}}/{2} . \\α$ or$\\cot \\α=\\\\sqrt{3}$ $⇒ \\α=30°$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "The boxes of masses $2 {\\text{kg}}$ and $8 {\\text{kg}}$ are connected by a massless string passing over smooth pulleys. Calculate the time taken by box of mass $8 {\\text{kg}}$ to strike the ground starting from rest. (Use, $g=10 {\\text{m}} / {\\text{s}}^{2}$)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_the-boxes-of-masses-2-textkg-a_img1_20260504_224931.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_the-boxes-of-masses-2-textkg-a_img2_20260504_224931.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 0.34 s",
+      "B. 0.2 s",
+      "C. 0.25 s",
+      "D. 0.4 s"
+    ],
+    "correct_answer": "D",
+    "explanation": "According to the given figure, and free body diagrammasses of two bodies $m_{1}=2 {kg} m_{2}=8 {kg}$ ,Acceleration of mass $m_{1}=a$Acceleration of mass $m_{2}=\\;\\frac{a}{2}$Tension $=T$Distance between $m_{2}$ and ground $=20 {cm}$ $=0.2 {m}$Initial velocity $u=0$Equation of motion of $2 {kg}$ block, $∴ \\;\\; T-2 g=2 a \\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(i)$Equation of motion of $8 {kg}$ block, and $8 g-2 T=8 \\;\\frac{a}{2} ⇒ 4 g-T=2 a\\;\\;\\;⋅⋅⋅⋅⋅⋅⋅(ii)$From Eqs. (i) and (ii), $⇒ \\;\\; T-2 g=4 g-T$ $\\;\\text{ Substituting the value in Eq. (i) we get }\\;$ $\\;\\; 3 g-2 g=2 a ⇒ g=2 a$ $⇒ \\;\\; a=\\;\\frac{g}{2}=5 {ms}^{-2}$ $∴ \\;\\; a_{1}=5 {ms}^{-2} \\;\\text{ and }\\;_{2}=\\;\\frac{5}{2} {ms}^{-2}$ $\\;\\text{ Since, }\\; s=u t+\\;\\frac{1}{2} a t^{2}$ $∴ \\;\\; \\;\\frac{20}{100}=0+\\;\\frac{1}{2} \\;\\frac{5}{2} × t^{2} ⇒ t^{2}=\\;\\frac{20 × 4}{5 × 100}$ $⇒ \\;\\; t=\\;\\frac{2}{5}=0.4 {s}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "The coefficient of static friction between two blocks is $0.5$ and the table is smooth. The maximum horizontal force that can be applied to move the blocks together is ...... N. (Take, $g=10 {\\text{ms}}^{-2}$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_the-coefficient-of-static-fric_img1_20260504_224933.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_the-coefficient-of-static-fric_img2_20260504_224933.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "15",
+    "explanation": "Given, coefficient of static friction, µ = 0.5 Value of acceleration due to gravity, ${\\text{g}}=10 {\\text{ms}}^{-2}$ For complete system to move together, F = ma Here, m is total mass. F = (1 + 2) a = 3a ...(i) From free body diagram of 1 kg block, Balance forces in horizontal direction, $\\text{F}_{\\text{s}}=\\μ\\text{R}=\\text{m}' a$ ...(ii) Balance forces in vertical direction, R = m′g Put value of R in Eq. (ii), µm′g = m′a ⇒ 0.5 × 1 × 10 = 1 × a $⇒ a=5 {\\text{ms}}^{-2}$ Put the value of a in Eq. (i), we get F = 3 × 5 = 15 N Thus, the maximum horizontal force required to move block together is 15 N.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "The initial mass of a rocket is $1000 {\\text{kg}}$. Calculate at what rate the fuel should be burnt, so that the rocket is given an acceleration of $20 {\\text{ms}}^{-1}$. The gases come out at a relative speed of $500 {\\text{ms}}^{-1}$ with respect to the rocket [Use, $g=10 {\\text{m}} / {\\text{s}}^{2}$ ]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_the-initial-mass-of-a-rocket-i_img1_20260504_224935.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $6.0 ×10^{2} {\\text{kg}} {\\text{s}}^{-1}$",
+      "B. $500 {\\text{kg}} {\\text{s}}^{-1}$",
+      "C. $10 {\\text{kg}} {\\text{s}}^{-1}$",
+      "D. $60 {\\text{kg}} {\\text{s}}^{-1}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given, $\\text{M}=1000 {\\text{kg}}, a=20 {\\text{m}} / {\\text{s}}^{2}$ $v_{{\\text{relative} }}=500 {\\text{m}} / {\\text{s}}, g=10 {\\text{m}} / {\\text{s}}^{2}$ The given situation is shown below $\\text{F}_{{\\text{thrust} }}=\\frac{d}{d t}(\\text{M} v_{{\\text{relative} }})$ $⇒ \\text{F}_{{\\text{thrust} }}=v_{{\\text{relative} }}(\\frac{d \\text{M}}{d t})$ By Newton’s second law of motion, $⇒ \\text{F}_{{\\text{thrust} }}-\\text{M} g=\\text{M} a$ $⇒ v_{{\\text{relative} }}(\\frac{d \\text{M}}{d t})-\\text{M} g=\\text{M} a$ $⇒ 500(\\frac{d \\text{M}}{d t})-1000 ×10=1000 ×20$ $⇒ 500(\\frac{d \\text{M}}{d t})=1000(20+10)$ $⇒ 500(\\frac{d \\text{M}}{d t})=1000 ×30$ $⇒ \\frac{d \\text{M}}{d t}=\\frac{1000 × 30}{500}=60$ $⇒ \\frac{d \\text{M}}{d t}=60 {\\text{kg}} / {\\text{s}}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A particle of mass ${M}$ originally at rest is subjected to a force whose direction is constant but magnitude varies with time according to the relation ${F}={F}_{0}[1-({{t}-{T}}/{{T}})^{2}]$ Where ${F}_{0}$ and ${T}$ are constants. The force acts only for the time interval $2 {T}$. The velocity ${v}$ of the particle after time $2 {T}$ is :",
+    "images": [],
+    "options": [
+      "A. $2 {F}_{0} {T} / {M}$",
+      "B. ${F}_{0} {T} / 2 {M}$",
+      "C. $4 {F}_{0} {T} / 3 {M}$",
+      "D. ${F}_{0} {T} / 3 {M}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${t}=0, {u}=0$ ${a}={{F}_{0}}/{{M}}-{{F}_{{o}}}/{{MT}^{2}}({t}-{T})^{2}={{d} {v}}/{{dt}}$ $\\∫↙{0} ↖{{v}} {d} {v}=\\∫↙{t=0} ↖{2 {T}}({{F}_{{o}}}/{{M}}-{{F}_{{o}}}/{{MT}^{2}}({t}-{T})^{2}) {dt}$ $V=[{F_{o}}/{M} t]_{0}^{2 T}-{F_{0}}/{M T^{2}}[{t^{3}}/{3}-t^{2} T+T^{2} t]_{0}^{2 T}$ $V={4 F_{0} T}/{3 M}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A force ${{F}}↖{→}=(40 {{i}↖{\\^}}+10 {{j}↖{\\^}}) {N}$ acts on a body of mass$5 {kg}$. If the body starts from rest, its position vector ${\\vec{r}}$ at time ${t}=10 {s}$, will be :",
+    "images": [],
+    "options": [
+      "A. $(100 {{i}}↖{\\^}+400 {{j}↖{\\^}}) {m}$",
+      "B. $(100 {{i}}↖{\\^}+100 {{j}↖{\\^}}) {m}$",
+      "C. $(400 {{i}}↖{\\^}+100 {{j}↖{\\^}}) {m}$",
+      "D. $(400 {{i}}↖{\\^}+400 {{j}↖{\\^}}) {m}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${{d} {\\vec{v}}}/{{dt}}={\\vec{a}}={{\\vec{F}}}/{{m}}=(8 {{i}}↖{\\^}+2 {{j}↖{\\^}}) {m} / {s}^{2}$ ${{d} {\\vec{r}}}/{{dt}}={\\vec{v}}=(8 {t} {{i}↖{\\^}}+2 {t} {{j}↖{\\^}}) {m} / {s}$ ${\\vec{r}}=(8 {{i}↖{\\^}}+2 {{j↖{\\^}}}) {{t}^{2}}/{2} {m}$ At ${t}=10 {sec}$ ${\\vec{r}}=[(8 {{i}}↖{\\^}+2 {{j}↖{\\^}}) 50] {m}$ $\\⇒{{r}}↖{→}=(400 {{i}↖{\\^}}+100 {{j}}↖{\\^}) {m}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A body of mass ' $m$ ' is launched up on a rough inclined plane making an angle of $30°$ with the horizontal. The coefficient of friction between the body and plane is ${\\\\sqrt{x}}/{5}$ if the time of ascent is half of the time of descent. The value of $x$ is _______.",
+    "images": [],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "${t}_{{a}}=\\frac{1}{2} {t}_{{d}}$ $\\\\sqrt{{2 {s}}/{{a}_{{a}}}}=\\frac{1}{2} \\\\sqrt{{2 {s}}/{{a}_{{d}}}}$ ......(i) ${a}_{{a}}={g} \\sin \\θ+\\µ{g} \\cos \\θ$ $={{g}}/{2}+{\\\\sqrt{3}}/{2} \\µ{g}$ $a_{{d}}=g \\sin \\θ-\\µg \\cos \\θ$ $={{g}}/{2}-{\\\\sqrt{3}}/{2} \\µ{g}$ using the above values of $a_{a}$ and $a_{d}$ and putting ineqution (i) we will gate $\\µ={\\\\sqrt{3}}/{5}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A steel block of $10 {kg}$ rests on a horizontal floor as shown. When three iron cylinders are placed on it as shown, the block and cylinders go down with an acceleration $0.2 {m} / {s}^{2}$. The normal reaction ${R}'$ by the floor if mass of the iron cylinders are equal and of $20 {kg}$ each, is ______ N. [Take ${g}=10 {m} / {s}^{2}$ and$\\µ_{s}=0.2]$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-steel-block-of-10-kg-rests-o_img1_20260504_224942.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-steel-block-of-10-kg-rests-o_img2_20260504_224943.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 716",
+      "B. 686",
+      "C. 714",
+      "D. 684"
+    ],
+    "correct_answer": "B",
+    "explanation": "Writing force equation in vertical direction ${Mg}-{N}={Ma}$ $\\⇒70 {g}-{N}=70 \\×0.2$ $\\⇒{N}=70[{g}-0.2]=70 \\×9.8$ $\\∴ {N}=686$ Newton Note : Since there is no compressive normal from the sides, hence friction will not act. Hence option 2.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A bullet of mass $0.1 {kg}$ is fired on a wooden block to pierce through it, but it stops after moving a distance of $50 {cm}$ into it. If the velocity of bullet before hitting the wood is $10 {m} / {s}$ and it slows down with uniform deceleration, then the magnitude of effective retarding force on the bullet is $x {N}$. The value of $x$ to the nearest integer is ......... .",
+    "images": [],
+    "options": [],
+    "correct_answer": "10",
+    "explanation": "Given The mass of the bullet, $m=0.1 {kg}$ The initial velocity of the bullet before hitting the wooden, $u=10 {m} / {s}$ The final velocity of the bullet after hitting the wooden, $v=0$ The distance travelled by the bullet before coming to the rest, ${s}=50 {cm}$ Using the equation of the motion, $v^{2}-u^{2}=2 a s$ $⇒ \\;\\; 0^{2}-(10)^{2}=2 a(0.50)$ $⇒ \\;\\; a=-100 {m} / {s}^{2}$ The uniform retardation of the bullet is $100 {m} / {s}^{2}$ The magnitude of the effective retarding force on the bullet, $F=m a$ $F=0.1(-100)$ $F=-10 {N}$ Hence, the value of $x$ to the nearest integer is 10 .",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A body of mass $1 {kg}$ rests on a horizontal floor with which it has a coefficient of static friction $\\;{1}/{\\sqrt{3}}$. It is desired to make the body move by applying the minimum possible force $F$ newton. The value of $F$ will be (Round off to the nearest integer) (Take, $g=10 {ms}^{-2}$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-body-of-mass-1-kg-rests-on-a_img1_20260504_224947.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "5",
+    "explanation": "Given, mass of the body, $m=1 {kg}$ Coefficient of static friction, $µ=1 {/} \\sqrt{3}$ Let's draw the free body diagram of the block Using the condition of the equilibrium In $x$-direction, $F \\cos θ=f=φ=µ N$...(i) In $y$-direction, $F \\sin θ+N=m g$ $⇒ \\;\\; N=m g-F \\sin θ$....(ii) Substituting the value of $N$ in Eq. (i), we get $F=\\;\\frac{µ m g}{\\cos θ+µ \\sin θ} ⇒ F=\\;{µ m g}/{\\sqrt{1+µ^{2}}}$ Substituting the values in the above equation, we get $F=\\;{\\;{1}/{\\sqrt{3}} × 10}/{\\sqrt{1+(\\;{1}/{\\sqrt{3}})^{2}}} ⇒ F=5 {N}$ Hence, the body move by applying minimum possible force of $5 {N}$. So, the value of $F$ will be 5 .",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A boy of mass $4 {kg}$ is standing on a piece of wood having mass $5 {kg}$. If the coefficient of friction between the wood and the floor is $0.5$, the maximum force that the boy can exert on the rope, so that the piece of wood does not move from its place is . N. (Round off to the nearest integer) (Take, $g=10 {ms}^{-2}$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-boy-of-mass-4-kg-is-standing_img1_20260504_224949.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-boy-of-mass-4-kg-is-standing_img2_20260504_224949.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "30",
+    "explanation": "The free body diagram for the wooden block is shown belowUsing the condition of the equilibrium, In the $x$-direction, the summation of all the forces is to be zero. $f-T \\;\\; =0$ $µ R-T \\;\\; =0$ $T \\;\\; =0.5 R$...(i) In the $y$-direction, , the summation of all the forces is to be zero. $T+R-90=0$ $⇒ \\;\\; 0.5 R+R-90=0$ $R=60 {N}$ Hence, the normal force on the wooden block is $60 {N}$ Using the Eq. (i), $T=0.5(60)=30 {N}$ Hence, the maximum value of the tension in the rope, so that wooden block will not move is $30 {N}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two blocks $(m=0.5 {kg}$ and $M=4.5 {kg})$ are arranged on a horizontal frictionless table as shown in figure. The coefficient of static friction between the two blocks is $\\;\\frac{3}{7}$. Then, the maximum horizontal force that can be applied on the larger block so that the blocks move together is ...... ${N}$. (Round off to the nearest integer. Take, $g=9.8 {ms}^{-2}$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-blocks-m05-kg-and-m45-kg-a_img1_20260504_224951.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "21",
+    "explanation": "When both the blocks move together as a system, then acceleration of this system will be given as $a=\\;\\frac{F}{m+M}$...(i) Frictional force on mass, $f=m a$...(ii) From Eqs. (i) and (ii), we get $f=m(\\;\\frac{F}{m+M})$ For no slipping, $f ≤ µ m g \\;\\; [ ∵ µ$ being the coefficient of static friction $⇒ \\;\\; m(\\;\\frac{F}{m+M}) ≤ µ m g ⇒ F ≤ µ(m+M) g$ $∴ \\;\\; F_{\\max }=\\;\\frac{3}{7}(0.5+4.5) × 9.8 ⇒ F_{\\max }=21 {N}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A body of mass $2 {kg}$ moves under a force of $(2 {i↖{∧}+3 {j↖{∧}+5 {k↖{∧}) {N}$. It starts from rest and was at the origin initially. After $4 {s}$, its new coordinates are $(8, b, 20)$. The value of $b$ is (Round off to the nearest integer)",
+    "images": [],
+    "options": [],
+    "correct_answer": "12",
+    "explanation": "Given Force, $F=(2 {i↖{∧}+3 {j↖{∧}+5 {k↖{∧}) {N}$ Mass, $m=2 {kg}$ Time, $t=4 {s}$ We know that Force $=$ mass $×$ acceleration $⇒ \\;\\; F=m × a ⇒ a=\\;\\frac{F}{m}$ $⇒ \\;\\; a=\\;{2 {i↖{∧}+3 {j↖{∧}+5 {k↖{∧}}/{2}$.....(i) From second equation of motion, $s=u t+\\;\\frac{1}{2} a t^{2}$...(ii) From Eqs. (i) and (ii), we get $s=u t+\\;\\frac{1}{2} \\;{(2 {i↖{∧}+3 {j↖{∧}+5 {k↖{∧})}/{2} ⋅ t^{2}$ $=0+\\;\\frac{1}{4}(2 {i↖{∧}+3 {j↖{∧}+5 {k↖{∧}) ⋅(4)^{2} \\;\\; [ ∵ u=0$ and $t=4 {s}]$ $=0+8 {i↖{∧}+12 {j↖{∧}+20 {k↖{∧}=8 {i↖{∧}+12 {j↖{∧}+20 {k↖{∧}$ Let $s=x {i↖{∧}+y {j↖{∧}+z {k↖{∧}$ $⇒ x {i↖{∧}+y {j↖{∧}+z {k↖{∧}=8 {i↖{∧}+12 {j↖{∧}+20 {k↖{∧}$ .....(iii) According to question,new coordinates are $(8, b, 20)$, it means $x {i↖{∧}+y {j↖{∧}+z {k↖{∧}=8 {i↖{∧}+b {j↖{∧}+20 {k↖{∧}$......(iv) Comparing Eqs. (iii) and (iv), we get $b=12$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $m$ slides along a floor, while a force of magnitude $F$ is applied to it at an angle $θ$ as shown in figure. The coefficient of kinetic friction is $µ_{k}$. Then, the block's acceleration $a$ is given by ( $g$ is acceleration due to gravity)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-along_img1_20260504_224954.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-slides-along_img2_20260504_224954.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $-\\;\\frac{F}{m} \\cos θ-µ_{k}(g-\\;\\frac{F}{m} \\sin θ)$",
+      "B. $\\;\\frac{F}{m} \\cos θ-µ_{k}(g-\\;\\frac{F}{m} \\sin θ)$",
+      "C. $\\;\\frac{F}{m} \\cos θ-µ_{k}(g+\\;\\frac{F}{m} \\sin θ)$",
+      "D. $\\;\\frac{F}{m} \\cos θ+µ_{k}(g-\\;\\frac{F}{m} \\sin θ)$"
+    ],
+    "correct_answer": "B",
+    "explanation": "The diagram and the required components of force on given block are shown belowFrom the above diagram, $N=m g-F \\sin θ$...(i) where, $N=\\;\\text{ normal force }\\;$ and $F \\cos θ-f_{k}=m a$ $⇒\\;F \\cos θ-µ_{k} N=m a$ ...(ii) where, $f_{k}=$ kinetic friction force. From Eq. (i) and Eq. (ii), we get $F \\cos θ-µ_{k}(m g-F \\sin θ)=m a$ $⇒ \\;\\; a=\\;\\frac{F}{m} \\cos θ-µ_{k}(g-\\;\\frac{F}{m} \\sin θ)$ This is the required acceleration of the block.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two masses $A$ and $B$, each of mass $M$ are fixed together by a massless spring. A force acts on the mass $B$ as shown in figure. If the mass $A$ starts moving away from mass $B$ with acceleration $a$, then the acceleration of mass $B$ will be",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-masses-a-and-b-each-of-mas_img1_20260504_224956.webp"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{M a-F}{M}$",
+      "B. $\\;\\frac{M F}{F+M a}$",
+      "C. $\\;\\frac{F+M a}{M}$",
+      "D. $\\;\\frac{F-M a}{M}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Let ${a}_{ {CM}}$ be the acceleration of centre of mass of system and $F$ be the applied force on spring. $∴ \\;a_{C M}=\\;{F}/{m_{A}+m_{B}}=\\;{m_{A} a_{A}+m_{B} a_{B}}/{m_{A}+m_{B}}$ $⇒\\;a_{C M}=\\;\\frac{F}{2 M}=\\;{M a_{A}+M a_{B}}/{2 M} \\;\\; ( ∵ m_{A}=m_{B}=M)$ $⇒\\;a_{B}=\\;{F-M a_{A}}/{M}=\\;\\frac{F-M a}{M}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "As shown in the figure, a block of mass $\\sqrt{3} {kg}$ is kept on a horizontal rough surface of coefficient of friction $1 / 3 \\sqrt{3}$. The critical force to be applied on the vertical surface as shown at an angle $60^{∘}$ with horizontal such that it does not move, will be $3 x$. The value of $x$ will be $. . . . . . . . . . .[g=10 {ms}^{-2} ; \\sin 60^{∘}=\\;{\\sqrt{3}}/{2}$ $\\cos 60^{∘}=\\;\\frac{1}{2}]$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_as-shown-in-the-figure-a-block_img1_20260504_224958.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_as-shown-in-the-figure-a-block_img2_20260504_224958.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "3.33",
+    "explanation": "Given, mass of block, $m=\\sqrt{3} {kg}$ Coefficient of friction, $µ=1 / 3 \\sqrt{3}$ According to diagram,Let $F$ be the force applied on the body, $w$ be the weight $(=m g)$, $N$ be the normal reaction. Friction force $f=µ N$ For no movement of body along $X$-axis, net force along $X$-axis should be zero. If, $F_{y}$ be the net force along $y$-axis then it will also be zero because body is not accelerating at all. $∴ \\;N=F \\sin 60^{∘}+m g$ $⇒\\;N=\\;{\\sqrt{3}}/{2} F+10 \\sqrt{3}$ . . . (i) $∴ \\;N=F \\sin 60^{∘}$ $⇒\\;N=\\;{\\sqrt{3}}/{2} F+1$ $\\;\\text{ Similarly, }\\; F_{x}=F \\cos 60^{∘}\\;-µ N=0$ From Eq. (i), we get $⇒\\;\\;\\frac{F}{2}-\\;{1}/{3 \\sqrt{3}}(\\;{\\sqrt{3}}/{2} F+10 \\sqrt{3})=0$ $⇒\\;\\;\\frac{F}{2}=\\;\\frac{F}{6}+\\;\\frac{10}{3} ⇒ \\;\\frac{F}{2}-\\;\\frac{F}{6}=\\;\\frac{10}{3}$ $⇒\\;F=10 {N}$ $\\;\\text{ Given, }\\;\\;F=3 x$ $⇒\\;x=\\;\\frac{10}{3}=3.33$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A boy pushes a box of mass $2 {kg}$ with a force $F=(20 i+10 {j↖{∧}) {N}$ on a frictionless surface. If the box was initially at rest, then ........ ${m}$ is displacement along the $X$-axis after $10 {s}$.",
+    "images": [],
+    "options": [],
+    "correct_answer": "500",
+    "explanation": "Given, mass of box, $m=2 {kg}$ Force, $F=20 {i↖{∧}+10 {j↖{∧} {N}$ Initial speed of box, $u=0 {ms}^{-1}$ Time, $t=10 {s}$ Let acceleration of box is a and displacement along $X$-axis after $10 {s}$ is $S_{x}$. As, $\\;\\; F=m a$ $⇒ \\;\\; a=F / m=\\;{20 {i↖{∧}+10 {j↖{∧}}/{2}=(10 {i↖{∧}+5 {j↖{∧}) {ms}^{-2}$ By second equation of motion along $X$-axis, $\\;s_{x}=u_{x} t+\\;\\frac{1}{2} a_{x} t^{2}$ $\\;s_{x}=0+\\;\\frac{1}{2} × 10 ×(10)^{2}=500 m$ Hence, displacement along $X$-axis after $10 {s}$ is $500 {m}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A person standing on a spring balance inside a stationary lift measures $60 {kg}$. The weight of that person, if the lift descends with uniform downward acceleration of $1.8 {m} / {s}^{2}$ will be ........... N. $[g=10 {m} / {s}^{2}]$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-person-standing-on-a-spring-_img1_20260504_225002.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "492",
+    "explanation": "Given, mass of $man(m)=60 {kg}$ Downward acceleration of lift, $a=1.8 {ms}^{-2}$ Let $T$ be the tension in the rope connected with lift, $g$ be the acceleration due to gravity $(10 {ms}^{-2})$. As, lift is moving in downward direction $∴ \\;\\; m g-T \\;\\; =m a$ $⇒ \\;\\; T \\;\\; =m g-m a=m(g-a)$ $\\;\\; =60(10-1.8)=60 × 8.2$ $\\;\\; =492 {N}$ Hence, the weight of the man during downward acceleration is $492 {N}$.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A particle is projected with velocity $v_{0}$ along $x$-axis. A damping force is acting on the particle which is proportional to the square of the distance from the origin, i.e. $m a=-α x^{2}$. The distance at which the particle stops is",
+    "images": [],
+    "options": [
+      "A. $(\\;{3 m v_{0}^{2}}/{2 α})^{\\;\\frac{1}{2}}$",
+      "B. $(\\;{2 m v_{0}}/{3 α})^{\\;\\frac{1}{3}}$",
+      "C. $(\\;{2 m v_{0}^{2}}/{3 α})^{\\;\\frac{1}{2}}$",
+      "D. $(\\;{3 m v_{0}^{2}}/{2 α})^{\\;\\frac{1}{3}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Given, speed of projection $=v_{0}$ Damping force, $F=m a=-α x^{2}$ $⇒ \\;\\; {a}=-α x^{2} / m$ Also, $⇒ \\;\\; v d v=a d x=-\\;\\frac{α}{m} x^{2} d x$ Integrating both sides, we get $∫↙{v_{0}}^{v} v d v \\;\\; =∫↙{0}↖{x}-\\;\\frac{α}{m} x^{2} d x$ $⇒ \\;\\; (\\;{v^{2}}/{2})_{v_{0}}^{0} \\;\\; =-\\;\\frac{α}{m}(\\;{x^{3}}/{3})_{0}^{x}$ $⇒ \\;\\; 0-v_{0}^{2} / 2 \\;\\; =-\\;\\frac{α}{m} \\;{x^{3}}/{3} ⇒ x=(\\;\\frac{3 m}{2} \\;{v_{0}^{2}}/{α})^{1 / 3}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "The coefficient of static friction between a wooden block of mass $0.5 {kg}$ and a vertical rough wall is $0.2$. The magnitude of horizontal force that should be applied on the block to keep it adhere to the wall will be ....... N. [Take, $g=10 {ms}^{-2}$ ]24 Feb 2021 Shift1",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_the-coefficient-of-static-fric_img1_20260504_225006.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_the-coefficient-of-static-fric_img2_20260504_225006.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "25",
+    "explanation": "Given, coefficient of static friction, $µ_{s}=0.2$Various forces acting on block are shown belowFrictional force $≤ m g$ $⇒ \\;\\; N × 0.2 ≤ 5$ $⇒ \\;\\; N ≤ 25$ $∴ \\;\\;$ Magnitude of horizontal force, $F=N=25 {N}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "An inclined plane is bent in such a way that the vertical cross-section is given by $y=\\;{x^{2}}/{4}$ where, $y$ is in vertical and $x$ in horizontal direction. If the upper surface of this curved plane is rough with coefficient of friction $µ=0.5$, the maximum height in ${cm}$ at which a stationary block will not slip downward is .............. ${cm}$.24 Feb 2021 Shift1",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_an-inclined-plane-is-bent-in-s_img1_20260504_225008.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "25",
+    "explanation": "The graph for given equation is shown belowAt maximum height, the slope of tangent drawn, $\\tan θ\\;=\\;\\frac{d y}{d x}=\\;\\frac{2 x}{4}=\\;\\frac{x}{2}$ $⇒ \\;\\; 0.5\\;=\\;\\frac{x}{2} \\;\\; [ ∴ y=\\;{x^{2}}/{4}]$ $⇒ \\;\\; x\\;=1 {m}$ $∴ \\;\\; y\\;=\\;{x^{2}}/{4}=\\;\\frac{1}{4}=0.25 {m}=25 {cm}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A particle moving in the xy plane experiences a velocity dependent force ${{\\vec{F}}}={k}({v}_{{y}} {{i↖{\\^}}}+{v}_{{x}} {{j↖{\\^}}}),$ where ${v}_{{x}}$ and ${v}_{{y}}$ are the ${x}$ and ${y}$ components of its velocity ${{\\vec{v}}}$. If ${\\vec{a}}$ Ls the acceleration of the particle, then which of the following statements is true for the particle ?",
+    "images": [],
+    "options": [
+      "A. quantity ${{\\vec{v}}} .{\\vec{a}}$ is constant in time.",
+      "B. kinetic energy of particle is constant in time.",
+      "C. quantity ${\\vec{v}}× {\\vec{a}}$ is constant in lime.",
+      "D. ${{\\vec{F}}}$ arises due to a magnetic field."
+    ],
+    "correct_answer": "C",
+    "explanation": "${{d} v_{{x}}}/{{dt}}={{k}}/{{m}} {v}_{{y}}$ ${{d} {v}_{{y}}}/{{dt}}={{k}}/{{m}} {v}_{{x}}$ ${{d} {v}_{{y}}}/{{d} {v}_{{x}}}={{v}_{{x}}}/{{v}_{{y}}}$ $⇒∫{v}_{{y}} {d} {v}_{{y}}=∫{v}_{{x}} {d} {v}_{{x}}$ ${v}_{{y}}^{2}={v}_{{x}}^{2}+{C}$ ${v}_{{y}}^{2}-{v}_{{x}}^{2}={\\text{constant}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "An insect is at the bottom of a hemispherical ditch of radius $1 {\\text{m}}$. It crawls up the ditch but starts slipping after it is at height ${\\text{h}}$ from the bottom. If the coefficient of friction between the ground and the insect is $0.75,$ then ${\\text{h}}$ is : $({\\text{g}}=10 {\\text{ms}}^{-2})$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_an-insect-is-at-the-bottom-of-_img1_20260504_225012.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_an-insect-is-at-the-bottom-of-_img2_20260504_225012.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $0.80 {m}$",
+      "B. $0.60 {m}$",
+      "C. $0.45{m}$",
+      "D. $0.20 {m}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "For balancing ${\\text{mg}} \\sin \\θ={\\text{f}}$ ${\\text{mg}} \\sin \\θ=\\µ{\\text{mg}} \\cos \\θ$ $\\tan \\θ=\\µ$ $\\tan \\θ=\\frac{3}{4}$ ${\\text{h}}={\\text{R}}-{\\text{R}} \\cos \\θ$ $={\\text{R}}-{\\text{R}}(\\frac{4}{5})={{\\text{R}}}/{5}$ ${\\text{h}}={{\\text{R}}}/{5}=0.2 {\\text{m}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A spaceship in space sweeps stationary interplanetary dust. As a result, its mass increases at a rate ${{dM}( {t})}/{ {dt}}= {bv}^{2}( {t}),$ where ${v}( {t})$ is its instantaneous velocity. The instantaneous acceleration of the satellite is:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-spaceship-in-space-sweeps-st_img1_20260504_225014.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $- {2 {bv}^{3}}/{ {M}( {t})}$",
+      "B. $- {b v^{3}}/{2 M(t)}$",
+      "C. $- {bv}^{3}( {t})$",
+      "D. $- { {bv}^{3}}/{ {M}( {t})}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "${{dm}( {t})}/{ {dt}}= {bv}^{2}$ ${F}_{\\text{thast }}= {v}/{{dm}}/{ {dt}}$ Force on statellile $=-{\\vec{v} }{{dm}( {t})}/{ {dt}}$ ${M}( {t}) {a}=- {v}({bv}^{2} )$ $[ {a}= {a} {{bv}^{3}}/{ {M}( {t})}]$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A small ball of mass is thrown upward with velocity u from the ground. The ball experiences a resistive force $\\ {mkv}^{2}$ where $\\ {v}$ is its speed. The maximum height attained by the ball is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-small-ball-of-mass-is-thrown_img1_20260504_225015.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. ${1}/{2 {k}} \\tan ^{-1} {{ku}^{2}}/{ {g}}$",
+      "B. ${1}/{2 {k}} \\ln (1+ { {ku}^{2}}/{ {g}} )$",
+      "C. ${1}/{ {k}} \\tan ^{-1} {{ku}^{2}}/{ {2g}}$",
+      "D. ${1}/{ {k}} \\ln (1+ { {ku}^{2}}/{ {2g}} )$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${ \\vec{F}}= {mkv}^{2}- {mg}$ ${\\vec{a}}= {{\\vec{F}}}/{ {m}}=-[{kv}^{2}+ {g}]$ $⇒$ v. ${{d} v}/{ {dh}}=-[{kv}^{2}+ {g} ]$ $⇒∫↙{ {u}} ↖{0}{{v}.{d} {v}}/{ {kv}^{2}+ {g}}=-∫↙ {0} ↖{ {H}} {dh}$ ${1}/{2 {K}} \\ln [{kv}^{2}+ {g} ]_{ {u}}^{0}=- {H}$ $⇒{1}/{2 {K}} \\ln [{{ku}^{2}+ {g}}/{ {g}} ]= {H}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A mass of 10 kg is suspended by a rope of length 4 m, from the ceiling. A force F is applied horizontally at the mid-point of the rope such that the top half of the rope makes an angle of 45° with the vertical. Then F equals: (Take g = 10 ms$^{– 2}$ and the rope to be massless)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-mass-of-10-kg-is-suspended-b_img1_20260504_225017.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 100 N",
+      "B. 90 N",
+      "C. 75 N",
+      "D. 70 N"
+    ],
+    "correct_answer": "A",
+    "explanation": "For equilibrium,T sin 45° = F ....(1)and T cos 45° = 10g ....(2)equation (1)/(2)we get F = 10g = 100 N",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A spring whose unstretched length is $l$ has a force constant $k.$ The spring is cut into two pieces of unstretched lengths $l _1$and $l_2$ where, $l _1$ $=$ $nl_2$ and $n$ is an integer. The ratio $k_1/ k _2$ of the corresponding force constants, $k_1$ and $k _2$ will be:",
+    "images": [],
+    "options": [
+      "A. $n$",
+      "B. $n ^{2}$",
+      "C. $1 /n^{2}$",
+      "D. $1/n$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$K l=\\cos t$ $\\ {k_{1}}/{k_{2}}=\\ {l_{2}}/{l_{1}}=\\ \\frac{1}{n}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $5\\text{Kg}$ is $( i )$ pushed in case $( A )$ and $( ii )$ pulled in case $( B)$ , by a force $F = 20\\ N$ , making an angle of $30°$ with the horizontal, as shown in the figures. The coefficient of friction between the block and floor is $µ = 0.2$ . The difference between the accelerations of the block, in case $( B )$ and case $( A )$ will be: $(g = 10 ms^{-2} )$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-5textkg-is-i-p_img1_20260504_225021.webp"
+      }
+    ],
+    "options": [
+      "A. $0.8\\ ms ^{-2}$",
+      "B. $0\\ ms^{-2}$",
+      "C. $3.2 \\ ms^{-2}$",
+      "D. $0.4\\ ms^{-2}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\ {CASE} :-(\\ {I})$ $F_{\\ {net}}=F \\cos 30^{\\°}-f_{K_{1}}$ $m a_{1} =20 ×{\\\\sqrt{3}}/{2}-0.2 N_{1}$ $5 a_{1} =10 \\sqrt{3}-0.2 [50+20 \\sin 30^{\\°}\\ ]$ $a_{1}=2 \\\\sqrt{3}-\\ \\frac{12}{5}=1.06 \\ {m} {s}^{-2}$ $\\ {CASE} :- (\\ {II} )$ $F_{\\ {nat}}=F \\cos 30^{\\°}-f_{K_{2}}$ $5 a_{2}=10 \\\\sqrt{3}-0.2\\ [50-20 \\sin 30^{\\°}\\ ]$ $a_{2}-a_{1}=1.86-1.06=0.8 \\ {m} {s}^{-2}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two blocks A and B of mass $m_{A}=1 k g$ and $m_{B}=3 k g$ are kept on the table as shown in figure. The coefficient of friction between A and B is 0.2 and between B and the surface of the table is also $0.2$. The maximum force F that can be applied on B horizontally, so that the block A does not slide over the block B is [Take $g= 10m$ / $s^{2}$]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-blocks-a-and-b-of-mass-m_a_img1_20260504_225023.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_two-blocks-a-and-b-of-mass-m_a_img2_20260504_225023.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 8N",
+      "B. 40N",
+      "C. 12N",
+      "D. 16N"
+    ],
+    "correct_answer": "D",
+    "explanation": "$M_{A}=1 \\ {kg}$ $M_{B}=3 {kg}$Pseudo force on $\\ {A}$ $M_{A} a_{ { system }}=\\µ m_{A} g$ $a=0.2 \\× 1 \\× 10$ $a=2 \\ ×m / {sec}^{2}$Taking $(\\ {A}+\\ {B})$ as system$F-\\µ .\\ (m_{A}+m_{b}\\ ) g= (m_{A}+m_{B}\\ ) a_{s y s t e m}$ $F-(0.2)(1)(10)=4(2)$ $F=16 N$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A bullet of mass 20g has an initial speed of $1ms ^{-1 }$,just before it starts penetrating a mud wall of thickness 20 cm. If the wall offers a mean resistance of $2 .5×10^{-2}N$ , the speed of the bullet after emerging from the other side of the wall is close to:",
+    "images": [],
+    "options": [
+      "A. $0.1ms ^{-1 }$",
+      "B. $0.4ms ^{-1 }$",
+      "C. $0.7ms ^{-1 }$",
+      "D. $0.3ms ^{-1 }$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$V^{2}-U^{2}=2 ×\\frac{F}{m} \\× s$ $⇒ V=0.7 \\ {m} / {s}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A ball is thrown upward with an initial velocity $V_0$ from the surface of the earth. the motion of the ball is affected by a drag force equal to $γV^2$ ( where m is mass of the ball V is its instaneous velocity and $γ$ is a constant) . Time taken by theball to rise to its zenith is :",
+    "images": [],
+    "options": [
+      "A. ${1}/{\\sqrt{\\γ g}} \\sin ^{-1} (\\sqrt{ \\frac{\\γ}{g}} v_{0} )$",
+      "B. ${1}/{\\sqrt{\\γ g}} \\ln (1+\\sqrt{ \\frac{\\γ}{g}} v_{0} )$",
+      "C. ${1}/{\\sqrt{\\γ g}} \\tan ^{-1} (\\sqrt{ \\frac{\\γ}{g}} v_{0} )$",
+      "D. ${1}/{\\sqrt{2\\γ g}} \\tan ^{-1} (\\sqrt{ \\frac{2\\γ}{g}} v_{0} )$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Calculation: Given, Initial velocity of the ball, $u = V _{0}$ Drag force, $F_{d}=m y v^{2}$ Velocity at a maximum height $=0$ Where $m$ is the Mass of the ball, $v$ is its instantaneous velocity and $y$ is a constant We know that acceleration is the change in velocity. Force is given by, $F = ma$ Thus, the net force on the ball: $F _{ net }= mg + myv ^{2}$ $F_{\\;\\text{net }\\;}=m(g+y v^{2})$ Acceleration is given by, $a=\\;\\frac{F}{m}$ $a=\\;{m(g+γ v^{2})}/{m}$ $a=-(g+y v^{2})$ Thus, net acceleration is the change in the velocity, $\\;\\frac{ dv }{ dt }= a$ $\\;\\frac{d v}{d t}=-( g +γ v ^{2})$ $\\;{d v}/{-( g +γ v ^{2})}=d t$ $\\;{- dv }/{ g +γ v ^{2}}=d t$ Integrating both the sides, $∫↙{ v _{0}}^{v} \\;{- dv }/{ g +γ v ^{2}}=∫↙{0}↖{ t } dt$ Let time $t$ required to rise to its zenith $(v=0)$ so, $⇒ \\;\\frac{1}{γ} ∫↙{ v _{0}}^{0} \\;{- dv }/{\\frac{g}{γ}+ v ^{2}}=∫↙{0}↖{t} d t$ We know that, according to integral formula, $∫ \\;{1}/{x^{2}+a^{2}} d x=\\;\\frac{1}{a} \\tan ^{-1}(\\;\\frac{x}{a})+C$ Thus, $⇒ \\;\\frac{1}{γ} ∫↙{ v _{0}}^{0} \\;{- dv }/{(\\sqrt{\\;\\frac{8}{γ}})^{2}+(v)^{2}}=∫↙{0}↖{t} d t$ Here, $x=\\sqrt{\\;\\frac{g}{γ}}, a=v$ $⇒ t=\\;\\frac{1}{γ}\\{[-\\;{1}/{\\sqrt{\\;\\frac{g}{γ}}} \\tan ^{-1}(\\;{v}/{\\sqrt{\\;\\frac{g}{γ}}})]_{V_{0}}^{0}+C\\}$ $[$ for $H_{\\max }, v=0]$ $t=0-\\;\\frac{1}{γ}(-\\sqrt{\\;\\frac{γ}{ g }} \\tan ^{-1}(\\;{\\sqrt{γ} V_{0}}/{\\sqrt{g}}))$ $⇒ t =\\;{1}/{\\sqrt{γ g }} \\tan ^{-1}(\\;{\\sqrt{γ} V_{0}}/{\\sqrt{ g }})$ Therefore, the time taken by the ball to rise to its zenith is $\\;{1}/{\\sqrt{γ g }} \\tan ^{-1}(\\sqrt{\\;\\frac{γ}{g}} V _{0})$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block kept on a rough inclined plane, as shown in the figure, remains at rest upto a maximum force 2 N down the inclined plane. The maximum external force up the inclined plane that does not move the block is 10 N. The coefficient of static frictionbetween the block and the plane is : [Take g = 10 m/$s^2$]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-kept-on-a-rough-inclin_img1_20260504_225029.webp"
+      }
+    ],
+    "options": [
+      "A. $2/3$",
+      "B. $\\sqrt3/2$",
+      "C. $\\sqrt3/4$",
+      "D. $1/2$"
+    ],
+    "correct_answer": "B",
+    "explanation": "2 + mg sin30 = μmg cos30° 10 = mgsin 30 + μ mg cos30° = 2μmg cos30 –2 6 = μmg cos 30 4 = mg sin 30 $3/2$ = µ × $\\sqrt3$ µ = $\\sqrt3/2$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two forces P and Q of magnitude 2F and 3F, respectively, are at an angle θ with each other. If the force Q is doubled, then their resultant also gets doubled. Then, the angle is :",
+    "images": [],
+    "options": [
+      "A. 30°",
+      "B. 60°",
+      "C. 90°",
+      "D. 120°"
+    ],
+    "correct_answer": "D",
+    "explanation": "$4F^2+9F^2+12F^2$ cos θ = $R^2$ $4F^2+36F^2+24F^2$ cos θ = $4R^2$ $4F^2+36F^2+24F^2$ cos θ = 4 ($13F^2+12F^2cosθ$) = 52 $F^2+48F^2$ cos θ cos θ = $-\\frac{12F^2}{24F^2}$ = - $1/2$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A mass of 10 kg is suspended vertically by a rope from the roof. When a horizontal force is applied on the rope at some point, the rope deviated at an angle of 45° at the roof point. If the suspended mass is at equilibrium, the magnitude of the forceapplied is (g = 10 $ms^{–2}$)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-mass-of-10-kg-is-suspended-v_img1_20260504_225032.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 200 N",
+      "B. 100 N",
+      "C. 140 N",
+      "D. 70 N"
+    ],
+    "correct_answer": "B",
+    "explanation": "at equation tan 45° = ${100}/F$ F = 100 N",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A body of mass 2 kg slides down with an acceleration of $3 m / s ^2$ on a rough inclined plane having a slope of $30^{∘}$. The external force required to take the same body up the plane with the same acceleration will be : $(g=10 m / s ^2)$ :",
+    "images": [],
+    "options": [
+      "A. 6 N",
+      "B. 14 N",
+      "C. 4 N",
+      "D. 20 N"
+    ],
+    "correct_answer": "D",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass 10 kg is kept on a rough inclined plane as shown in the figure. A force of 3 N is applied on the block. The coefficient of static friction between the plane and the block is 0.6. What should be the minimum value of force P, such that theblock doesnot move downward ? (take g = 10 $ms^{-2}$) [9-Jan-2019 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-10-kg-is-kept-_img1_20260504_225036.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-of-mass-10-kg-is-kept-_img2_20260504_225036.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Laws of Motion/main_a-block-of-mass-10-kg-is-kept-_img3_20260504_225036.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 32 N",
+      "B. 25 N",
+      "C. 23 N",
+      "D. 18 N"
+    ],
+    "correct_answer": "A",
+    "explanation": "mg sin 45° = 50 $\\sqrt2$ µmg cos θ = 0.6 × mg × $1/\\sqrt2$ = 0.6 × 50 $\\sqrt2$ P = 31.28 = 32 N",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A given object takes n times more time to slide down a 45° rough inclined plane as it takes to slide down a perfectly smooth 45° incline. The coefficient of kinetic friction between the object and the incline is :[Main 15 April 2018 S1]",
+    "images": [],
+    "options": [
+      "A. $1/{2-n^2}$",
+      "B. $1-1/n^2$",
+      "C. $\\sqrt{1-1/n^2}$",
+      "D. $\\sqrt{1/{1-n^2}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two masses $m_1=5kg$ and $m_2=10kg$ , connected by an inextensible string over a frictionless pulley, are moving as shown in the figure. The coefficient of friction of horizontal surface is 0.15. The minimum weight m that should be put on top of $m_2$ to stop the motion is :[Main 8 April 2018]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-masses-m_15kg-and-m_210kg-_img1_20260504_225040.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_two-masses-m_15kg-and-m_210kg-_img2_20260504_225040.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 18.3 kg",
+      "B. 27.3 kg",
+      "C. 43.3 kg",
+      "D. 10.3 kg"
+    ],
+    "correct_answer": "B",
+    "explanation": "$µ(m_2+m)g$For equilibrium $0.15[10+m]10=50$ $10+m=500/15$ $M=23.33$kg",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A particle of mass $m$ is acted upon by a force $F$ given by the empirical law $F=R/t^2υ(t)$.If this law is to be tested experimentally by observing the motion starting from rest, the best way is to plot :[Main 10 Apr 2016]",
+    "images": [],
+    "options": [
+      "A. $v(t)$ against $t^{2}$",
+      "B. $\\text{log}v(t)$ against $1/t^{2}$",
+      "C. $\\text{log}v(t)$ against $t$",
+      "D. $\\text{log}v(t)$ against $1/t$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$m\\frac{dV}{dt}=R/t^2V$ $⇒m{dv}/v=R{dt}/t^2$ $⇒m∫↖{V_2}↙{V_1}{dV}/V=R∫↖{t_2}↙{t_1}{dt}/t^2$ $m\\text{ln}(V_2/V_1)={-R}/t|^{t_2}_{t_1}$ $⇒\\text{ln}(V_2/V_1)={-R}/m(1/t_2-1/t_1)$logV vs $1/t$ will be st. line curve",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A rocket is fired vertically from the earth with an acceleration of 2g, where g is the gravitational acceleration. On an inclined plane inside the rocket, making an angle θ with the horizontal, a point object of mass m is kept. The minimum coefficient of friction $µ_\\text{min}$ between the mass and the inclined surface such that the mass does not move is :[Main 9 Apr 2016]",
+    "images": [],
+    "options": [
+      "A. tanθ",
+      "B. 2 tanθ",
+      "C. 3 tanθ",
+      "D. tan2θ"
+    ],
+    "correct_answer": "A",
+    "explanation": "$g_\\text{left}=3g$ but $µ_{min}=\\text{tan}θ$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Given in the figure are two blocks A and B of weight 20 N and 100 N respectively. These are being pressed against a wall by a force F as shown. If the coefficient of friction between the blocks is 0.1 and between block B and the wall is 0.15, the frictional force applied by the wall on block B is [Main 2015]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_given-in-the-figure-are-two-bl_img1_20260504_225046.webp"
+      }
+    ],
+    "options": [
+      "A. 80 N",
+      "B. 120 N",
+      "C. 150 N",
+      "D. 100 N"
+    ],
+    "correct_answer": "B",
+    "explanation": "Normal force on block A due to B and between B and wall will be F.Friction on A due to B = 20 N∴Friction on B due to wall = 100 + 20 = 120 N",
+    "year": 2015,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass m is places on a surface with a vertical cross section by $y=x^3/6$.If the coefficient of friction is 0.5,the maximum height above the ground at which the block can be placed without slipping is :[Main 2014]",
+    "images": [],
+    "options": [
+      "A. $1/3$ m",
+      "B. $1/2$ m",
+      "C. $1/6$ m",
+      "D. $2/3$ m"
+    ],
+    "correct_answer": "C",
+    "explanation": "mg sin θ = μmg cos θtan θ = μ$\\frac{dy}{dx}=tanθ=μ=1/2$ $x^2/2=1/2,x=±1$ $y=1/6$m.",
+    "year": 2014,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A particle of mass $m$ is at rest at the origin at time $t=0$. It is subjected to a force $F(t)=F_0 e^{-b t}$ in the $x$ direction. Its speed $v(t)$ is depicted by which of the following curves?",
+    "images": [],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "B",
+    "explanation": "Given that $F(t)=F_0 e^{-b t}$ $\\;⇒ m \\;\\frac{d v}{d t}=F_0 e^{-b t}$ $\\;\\;\\frac{d v}{d t}=\\;\\frac{F_0}{m} e^{-b t}$ $\\;⇒ ∫↙{0}↖{v} d v=\\;\\frac{F_0}{m} ∫↙{0}↖{t} e^{-b t} \\text{dt}$ $\\;v=\\;\\frac{F_0}{m} [\\;{e^{-b t}}/{-b}] _0^t=\\;\\frac{F_0}{m b} [- (e^{-b t}-e^{-0}) ]$ $\\;⇒ v=\\;\\frac{F_0}{m b} [1-e^{-b t}]$ $\\;⇒ v_{\\max }=\\;\\frac{F_0}{m b}$",
+    "year": 2012,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two fixed frictionless inclined planes making an angle $30^{∘}$ and $60^{∘}$ with the vertical are shown in the figure. Two blocks $A$ and $B$ are placed on the two planes. What is the relative vertical acceleration of $A$ with respect to $B$ ?",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-fixed-frictionless-incline_img1_20260504_225051.webp"
+      }
+    ],
+    "options": [
+      "A. $4.9 {\\text{ms}}^{-2}$ in horizontal direction",
+      "B. $9.8 {\\text{ms}}^{-2}$ in vertical direction",
+      "C. Zero",
+      "D. $4.9 {\\text{ms}}^{-2}$ in vertical direction"
+    ],
+    "correct_answer": "D",
+    "explanation": "Along inclined plane the equation of motion of the body$m g sin \\;θ=m a \\;\\; ∴ a=g sin \\;θ$where $a$ is along the inclined plane. $∴$ vertical component of acceleration is $(g sin \\;θ) sin \\;θ=g sin \\;^2 θ$ (Along vertical)For block A,$a_{A(\\;\\text{ along vertical }\\;)}=g sin \\;^2 60^{∘}$ For block B,$a_{B(\\;\\text{ along vertical }\\;)}=g sin \\;^2 30^{∘}$ $∴$ relative vertical acceleration of $A$ with respect to $B$ is$\\;g sin \\;^2 60^{∘}-g sin \\;^2 30^{∘}$ $\\;=g ( sin \\;^2 60- sin \\;^2 30]$ $\\;=4.9 {\\text{m}} / {\\ s}^2 \\;\\text{ in vertical direction }\\;$",
+    "year": 2010,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $m$ is connected to another block of mass $M$ by a spring (massless) of spring constant $k$. The block are kept on a smooth horizontal plane. Initially the blocks are at rest and the spring is unstretched. Then a constant force $F$ starts acting on the block of mass $M$ to pull it. Find the force of the block of mass $m$.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-is-connected_img1_20260504_225053.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{M F}{(m+M)}$",
+      "B. $\\;\\frac{m F}{M}$",
+      "C. $\\;\\frac{(M+m) F}{m}$",
+      "D. $\\;\\frac{m F}{(m+M)}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "From free body-diagram of $m$ we get $T=m a$ From free body-diagram of $M$ we get $F-T=M a$where $T$ is force due to spring$\\;⇒ F-m a=M a$ $\\;⇒ F=M a+m a$ $∴ a=\\;\\frac{F}{M+m}$ Now, force acting on the block of mass $m$ is $m a=m (\\;\\frac{F}{M+m}) =\\;\\frac{m F}{m+M}$.",
+    "year": 2007,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block is kept on a frictionless inclined surface with angle of inclination ${ }^{'} α^{'}$. The incline is given an acceleration $a$ to keep the block stationary. Then $a$ is equal to",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-is-kept-on-a-frictionl_img1_20260504_225055.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-block-is-kept-on-a-frictionl_img2_20260504_225055.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $g {\\text{cosec}} α$",
+      "B. $g {/}{\\tan} α$",
+      "C. $g {\\tan} α$",
+      "D. $g$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Acceleration of the block is to the right. Pseudo force acting on the block to the left.From diagram we can say,$\\;m a \\cos α=m g sin \\;α$ $\\;⇒ a=g \\tan α$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A smooth block is released at rest on a $45^{∘}$ incline and then slides a distance ${ }^{'} d^{'}$. The time taken to slide is ${ }^{'} n^{'}$ times as much to slide on rough incline than on a smooth incline. The coefficient of friction is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-smooth-block-is-released-at-_img1_20260504_225057.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-smooth-block-is-released-at-_img2_20260504_225057.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $µ_k=\\sqrt{1-\\;\\frac{1}{n^2}}$",
+      "B. $µ_k=1-\\;\\frac{1}{n^2}$",
+      "C. $µ_k=\\sqrt{1-\\;\\frac{1}{n^2}}$",
+      "D. $µ_s=1-\\;\\frac{1}{n^2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "For smooth surface,$d=\\;\\frac{1}{2}(g sin \\;θ) t_1^2$ $t_1=\\sqrt{\\;\\frac{2 d}{g sin \\;θ}}$When surface is rough$\\;d=\\;\\frac{1}{2}(g sin \\;θ-µ g \\cos θ) t_2^2$ $\\;t_2=\\sqrt{\\;\\frac{2 d}{g sin \\;θ-µ g \\cos θ}}$According to question, $t_2=n t_1$ $\\;n \\sqrt{\\;\\frac{2 d}{g sin \\;θ}}=\\sqrt{\\;\\frac{2 d}{g sin \\;θ-µ g \\cos θ}}$ $\\;n=\\;{1}/{{\\sqrt{1-µ_k}}} (\\;\\text{ as }\\; \\cos 45^{∘}= sin \\;45^{∘}=\\;{1}/{{\\sqrt{2}}})$ $\\;n^2=\\;\\frac{1}{1-µ_k}$ $\\;\\;\\text{ or }\\; 1-µ_k=\\;\\frac{1}{n^2}$ $\\;\\;\\text{ or }\\; µ_k=1-\\;\\frac{1}{n^2}$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Consider a car moving on a straight road with a speed of $100 {\\text{m}} / {\\ s}$. The distance at which car can be stopped is$[µ_k=0.5]$",
+    "images": [],
+    "options": [
+      "A. $1000 m$",
+      "B. $800 m$",
+      "C. $400 m$",
+      "D. $100 m$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Acceleration due to friction $= (-µ_k g)$We know, $v^2=u^2+2 a s$ $\\;⇒ 0^2=u^2+2 (-µ_k g) s$ $\\;⇒ 2 µ_k g s=u^2$ $\\;⇒ s=\\;\\frac{100^2}{2 × 0.5 × 10}$ $\\;⇒ s=1000 {\\text{m}}$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A particle of mass $0.3 {\\text{kg}}$ subjected to a force $F=-k x$ with $k=15 {\\text{N}} / {\\text{m}}$. What will be its initial acceleration if it is released from a point $20 {\\text{cm}}$ away from the origin?",
+    "images": [],
+    "options": [
+      "A. $15 {\\text{m}} {/} {\\ s}^2$",
+      "B. $3 {\\text{m}} {/} {\\ s}^2$",
+      "C. $10 {\\text{m}} {/} {\\ s}^2$",
+      "D. $5 {\\text{m}} {/} {\\ s}^2$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given ${\\text{F}}=- {\\text{kx}}$ $⇒ F=-15 × \\;\\frac{20}{100}=-3 {\\text{N}}$ ${\\text{F}}= {\\text{m}} ⋅ {\\text{a}}=3 {\\text{N}}$ $⇒ {\\text{a}}=\\;\\frac{3}{m}=\\;\\frac{3}{0.3}=10 {\\text{m}} {/} {\\ s}^2$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block rests on a rough inclined plane 'making an angle of $30^{∘}$ with the horizontal. The coefficient of static friction between the block and the plane is $0.8$. If the frictionless force on the block is $10 {\\text{N}}$, the mass of the block (in ${\\text{kg}}$ ) is (take $g=10 {\\text{m}} / {\\ s}^2$ )",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-rests-on-a-rough-incli_img1_20260504_225103.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $1.6$",
+      "B. $4.0$",
+      "C. $2.0$",
+      "D. $2.5$"
+    ],
+    "correct_answer": "C",
+    "explanation": "For equilibrium of block,$m g \\sin \\;θ=f_s$ $⇒ m × 10 × \\sin \\;30^{∘}=10$ $⇒ m × 5=10$ $⇒ m=2.0 {\\text{kg}}$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two masses $m_1=5 {\\text{kg}}$ and $m_2=4.8 {\\text{kg}}$ tied to a string are hanging over a light frictionless pulley. What is the acceleration of the masses when left free to move?$(g=9.8 {\\text{m}} {/} {\\ s}^2)$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-masses-m_15-textkg-and-m_2_img1_20260504_225105.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_two-masses-m_15-textkg-and-m_2_img2_20260504_225105.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $5 m{/}s^2$",
+      "B. $9.8 m{/}s^2$",
+      "C. $0.2m{/}s^2$",
+      "D. $4.8 m{/}s^2$"
+    ],
+    "correct_answer": "C",
+    "explanation": "For ${\\text{m}}_1$ mass: $m_1 g-T=m_1 a$....(1) For ${\\text{m}}_2$ mass :$T-m_2 g=m_2 a$....(2) By solving (1) and (2) we get,Acceleration a $= (\\;\\frac{m_1-m_2}{m_1+m_2}) g$ $=\\;\\frac{(5-4.8) × 9.8}{(5+4.8)} {\\text{m}} {/} {\\ s}^2=0.2 {\\text{m}} {/} {\\ s}^2$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A light spring balance hangs from the hook of the other light spring balance and a block of mass $M {\\text{kg}}$ hangs from the former one. Then the true statement about the scale reading is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-light-spring-balance-hangs-f_img1_20260504_225107.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. Both the scales read $M {\\text{kg}}$ each",
+      "B. The scale of the lower one reads $M {\\text{kg}}$ and of the upper one zero",
+      "C. The reading of the two scales can be anything but the sum of the reading will be $M$ ${\\text{kg}}$",
+      "D. Both the scales read $M {/} 2 {\\text{kg}}$ each"
+    ],
+    "correct_answer": "A",
+    "explanation": "Question says, both spring balance are light that means springs are massless.The Earth pulls the block by a force $M g$. The block in turn exerts a force $M g$ on the spring of spring balance $S_1$ which therefore shows a reading of $M {\\text{kgf}}$. The spring $S_1$ is massless. Therefore it exerts a force of $M g$ on the spring of spring balance $S_2$ which shows the reading of $M k g f$.",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Three forces start acting simultaneously on a particle moving with velocity, $\\vec{v}$. These forces are represented in magnitude and direction by the three sides of a triangle $A B C$. The particle will now move with velocity",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_three-forces-start-acting-simu_img1_20260504_225108.webp"
+      }
+    ],
+    "options": [
+      "A. less than $\\vec{v}$",
+      "B. greater than $\\vec{v}$",
+      "C. $|v|$ in the direction of the largest force $B C$",
+      "D. $\\vec{v}$, remaining unchanged"
+    ],
+    "correct_answer": "D",
+    "explanation": "As shown in the figure, the three forces are represented by the sides of a triangle taken in the same order. So the particle will be in equilibrium under the three forces. Therefore the resultant force is zero. We know, $\\vec{F}_{\\;\\text{net }\\;}=\\vec{m a}$ $∴ 0= \\vec{ma}$ $⇒ \\vec{a}=0$ Therefore acceleration will be zero. Hence the particle velocity remains unchanged.",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A spring balance is attached to the ceiling of a lift. A man hangs his bag on the spring and the spring reads $49 {\\text{N}}$, when the lift is stationary. If the lift moves downward with an acceleration of $5 {\\text{m}} {/} {\\ s}^2$, the reading of the spring balance will be",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-spring-balance-is-attached-t_img1_20260504_225110.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $24 N$",
+      "B. $74 N$",
+      "C. $15 {\\text{N}}$",
+      "D. $49 N$"
+    ],
+    "correct_answer": "A",
+    "explanation": "When lift is stationary then,${\\text{T}}_1=m g=49 {\\text{N}}$ $m=5$For the bag accelerating down$m g-T=m a$ $∴ T=m(g-a)$ $=5(9.8-5)=24 N$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A marble block of mass $2 {\\text{kg}}$ lying on ice when given a velocity of $6 {\\text{m}} {/} {\\ s}$ is stopped by friction in $10 {\\ s}$. Then the coefficient of friction is",
+    "images": [],
+    "options": [
+      "A. $0.02$",
+      "B. $0.03$",
+      "C. $0.04$",
+      "D. $0.06$"
+    ],
+    "correct_answer": "D",
+    "explanation": "The retarding force is created by the frictional force.Given, $u=6 {\\text{m}} {/} {\\ s}, v=0, t=10 {\\ s}$,Retardation $(a)=-\\;\\frac{f}{m}=\\;\\frac{-u m g}{m}=-µ g=-10 µ$ $v=u+a t$ $0=6-10 µ × 10$ $∴ µ=0.06$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A block of mass $M$ is pulled along a horizontal frictionless surface by a rope of mass $m$. If a force $P$ is applied at the free end of the rope, the force exerted by the rope on the block is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-block-of-mass-m-is-pulled-al_img1_20260504_225114.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{P m}{M+m}$",
+      "B. $\\;\\frac{P m}{M-m}$",
+      "C. $P$",
+      "D. $\\;\\frac{P M}{M+m}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Taking the rope and the block as a systemAcceleration of block $(a)=\\;{\\;\\text{ Force applied }\\;}/{\\;\\text{ total mass }\\;}$ $∴ a=\\;\\frac{P}{m+M}$Force on block $(T)=$ Mass of block $× a$ $T=M a$ $∴ T=\\;\\frac{M P}{m+M}$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A horizontal force of $10 N$ is necessary to just hold a block stationary against a wall. The coefficient of friction between the block and the wall is $0.2$. The weight of the block is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-horizontal-force-of-10-n-is-_img1_20260504_225116.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_a-horizontal-force-of-10-n-is-_img2_20260504_225116.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 20 N",
+      "B. 50 N",
+      "C. 100 N",
+      "D. 2 N"
+    ],
+    "correct_answer": "D",
+    "explanation": "Assume weight of the block $=W$ and friction force $=f=µ N$ For the block to remain stationary with the wall, weight of the block should balanced by the force of friction. $∴ f=W$ $⇒ µ N=W$ $⇒ W=0.2 × 10=2 {\\text{N}}$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A rocket with a lift-off mass $3.5 × 10^4 {\\text{kg}}$ is blasted upwards with an initial acceleration of $10 {\\text{m}} {/} {\\ s}^2$. Then the initial thrust of the blast is",
+    "images": [],
+    "options": [
+      "A. $3.5 × 10^5 {\\text{N}}$",
+      "B. $7.0 × 10^5 {\\text{N}}$",
+      "C. $14.0 × 10^5 {\\text{N}}$",
+      "D. $1.75 × 10^5 N$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Here, thrust force is responsible to accelerate the rocket,So initial thrust of the blast$=($ Lift-off mass $) ×$ acceleration$= (3.5 × 10^4) ×(10)$ $=3.5 × 10^5 {\\text{N}}$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A lift is moving down with acceleration $a$. A man in the lift drops a ball inside the lift. The acceleration of the ball as observed by the man in the lift and a man standing stationary on the ground are respectively",
+    "images": [],
+    "options": [
+      "A. $g , g$",
+      "B. $g-a, g-a$",
+      "C. $g-a, g$",
+      "D. $a, g$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let acceleration of ball $=\\vec{a}_b$ and acceleration of man is $=\\vec{a}_m$ With respect to the man standing in the lift, the acceleration of the ball $\\vec{a}_{b m}=\\vec{a}_b-\\vec{a}_m$ $⇒ a_{b m}=g-a$ Where $a$ is the acceleration of the man as the acceleration of the lift is $a$. With respect to the man standing on the ground the acceleration of the ball $\\vec{a}_{b m}=\\vec{a}_b-\\vec{a}_m$ $⇒ a_{b m}=g-0$ $=g$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "A light string passing over a smooth light pulley connects two blocks of masses $m_1$ and $m_2$ (vertically). If the acceleration of the system is $g / 8$, then the ratio of the masses is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_a-light-string-passing-over-a-_img1_20260504_225122.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $8: 1$",
+      "B. $9: 7$",
+      "C. $4: 3$",
+      "D. $5: 3$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Assume that, mass $m_1$ is greater than mass $m_2$, so the heavier mass $m_1$ is accelerating downward and the lighter mass ${\\text{m}}_2$ is accelerating upwards. For mass $m_1$ the equation will be $m_1 g-T=m_1 a$ For mass $m_2$ the equation will be $T-m_2 g=m_2 a$ Adding those equations we get $a=\\;\\frac{(m_1-m_2) g}{m_1+m_2}$ $∴ \\;\\frac{g}{8}=\\;\\frac{(m_1-m_2) g}{m_1+m_2}$ $⟹ \\;\\frac{1}{8}=\\;{\\;\\frac{m_1}{m_2}-1}/{\\frac{m_1}{m_2}+1}$ $⇒ \\;\\frac{m_1}{m_2}+1=8(\\;\\frac{m_1}{m_2}-1)$ $⇒ \\;\\frac{m_1}{m_2}=\\;\\frac{9}{7}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Three identical blocks of masses $m=2 {\\text{kg}}$ are drawn by a force $F=10.2 {\\text{N}}$ with an acceleration of $0.6 {\\text{ms}}^{-2}$ on a frictionless surface, then what is the tension (in $N$ ) in the string between the blocks $B$ and $C$ ?",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_three-identical-blocks-of-mass_img1_20260504_225123.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_three-identical-blocks-of-mass_img2_20260504_225124.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $9.2$",
+      "B. $3.4$",
+      "C. $4$",
+      "D. $7.8$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Assume tension between block $A$ and $B$ is $T_1$ and block $B$ and $C$ is $T_2$. Acceleration $a=0.6 {\\text{m}} / {\\text{s}}^2$. For block A : ${\\text{F}}- {\\text{T}}_1= {\\text{ma}}$ For block B : ${\\text{T}}_1- {\\text{T}}_2= {\\text{ma}}$ By adding both those equation we get, ${\\text{F}}- {\\text{T}}_2=2 {\\text{ma}}$ ${\\text{T}}_2= {\\text{F}}-2 {\\text{ma}}$ $T_2=10.2-2 × 2 × 0.6=10.2-2.4=7.8 {\\text{N}}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "One end of a mass-less rope, which passes over a mass-less and friction-less pulley $P$ is tied to a hook $C$ while the other end is free. Maximum tension that the rope can bear is $360 {\\text{N}}$. With what value of maximum safe acceleration (in ${\\text{ms}}^{-2}$ ) can a man of $60 {\\text{kg}}$ climb on the rope?",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_one-end-of-a-mass-less-rope-wh_img1_20260504_225125.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Laws of Motion/main_one-end-of-a-mass-less-rope-wh_img2_20260504_225126.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 16",
+      "B. 6",
+      "C. 4",
+      "D. 8"
+    ],
+    "correct_answer": "C",
+    "explanation": "Assuming acceleration $a$ of the man is downwards. So the equation will be $m g-T=m a$ $∴ a=g-\\;\\frac{T}{m}=10-\\;\\frac{360}{60}=4 {\\text{m}} {/} {\\text{s}}^2$ So the maximum acceleration of man is $4 {\\text{m}} {/} {\\text{s}}^2$ downwards.",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "When forces $F_1, F_2, F_3$ are acting on a particle of mass $m$ such that $F_2$ and $F_3$ are mutually perpendicular, then the particle remains stationary. If the force $F_1$ is now removed then the acceleration of the particle is",
+    "images": [],
+    "options": [
+      "A. $F_1 / m$",
+      "B. $F_2 F_3 / m F_1$",
+      "C. $(F_2-F_3) / m$",
+      "D. $F_2 / m$"
+    ],
+    "correct_answer": "A",
+    "explanation": "When $F_1, F_2$ and $F_3$ are acting on a particle then the particle remains stationary. This means that the resultant of $F_1, F_2$ and $F_3$ is zero. When $F_1$ is removed then particle will start moving due to the force $F_2$ and $F_3$ in the resultant of $F_2$ and $F_3$ and it should be equal and opposite to $F_1$. i.e. $|\\vec{F_2}+\\vec{F_3}|=|\\vec{F_1}|$ $∴ \\;\\; a=\\;{|\\vec{F_2}+\\vec{F_3}|}/{m} ⇒ a=\\;\\frac{F_1}{m}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Laws of Motion",
+    "question_text": "Two forces are such that the sum of their magnitudes is $18 N$ and their resultant is $12 N$ which is perpendicular to the smaller force. Then the magnitudes of the forces are",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Laws of Motion/main_two-forces-are-such-that-the-s_img1_20260504_225129.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $12 N, 6 N$",
+      "B. $13 N, 5 N$",
+      "C. $10 N, 8 N$",
+      "D. $16 N, 2 N$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Let the two forces be $F_1$ and $F_2$ and let $F_2$ is smaller than $F_1$ and assume $R$ is the resultant force. Given $F_1+F_2=18$ .....(i) From the right angle triangle, $F_2^2+R^2=F_1^2$ or $F_1^2-F_2^2=R^2$ or $(F_1+F_2)(F_1-F_2)=R^2$ or $(18)(F_1-F_2)=(12)^2=144$ or $(F_1-F_2)=8$.....(ii) By solving equation $(i)$ and $(i i)$ we get, $F_1=13 N$ and $F_2=5 {\\text{N}}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  }
+]

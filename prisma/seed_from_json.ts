@@ -15,9 +15,13 @@ const colors = {
   green: '\x1b[32m', yellow: '\x1b[33m', cyan: '\x1b[36m',
 };
 
+// const SCRAPER_OUTPUT_DIR = path.resolve(
+//   __dirname,
+//   '../../practicepaper-scraper/data/output'
+// );
 const SCRAPER_OUTPUT_DIR = path.resolve(
   __dirname,
-  '../../practicepaper-scraper/data/output'
+  '../../exam-scraper/extractor'
 );
 
 const FILE_TOPIC_MAP: Array<{
@@ -25,24 +29,22 @@ const FILE_TOPIC_MAP: Array<{
   topic_name: string;
   exam_type: string;
   branch: string;
+  subject: string;
 }> = [
+ 
   {
-    file: 'gate_ce_Engineering_Hydrology_infiltration_runoff_and_hydrographs.json',
-    topic_name: 'Infiltration Runoff And Hydrographs',
-    exam_type: 'GATE',
-    branch: 'CE',
-  },
-  {
-    file: 'gate_ce_Environmental_Engineering_air_and_noise_pollution.json',
-    topic_name: 'Air And Noise Pollution',
-    exam_type: 'GATE',
-    branch: 'CE',
-  },
+    file: 'jee_gravitation_part_2.json',
+    topic_name: 'Gravitation',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
+  }
+  
 ];
 
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
-  console.log(`${colors.bright}📂 Seeding Analog Circuits PYQs from JSON files${colors.reset}`);
+  console.log(`${colors.bright}📂 Seeding JEE Main PYQs from JSON files${colors.reset}`);
   console.log(`${colors.cyan}Source: ${SCRAPER_OUTPUT_DIR}${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}\n`);
 
@@ -78,87 +80,87 @@ async function main() {
       pattern = await prisma.pattern.create({
         data: {
           topic_name: entry.topic_name,
-          subject: entry.branch === 'EE' ? 'Electric Circuits' : 'Analog Circuits',
+          subject: entry.subject,
           exam_type: entry.exam_type,
           branch: entry.branch,
-          atomic_logic: `Practice problems for ${entry.topic_name} in ${entry.branch === 'EE' ? 'Electric Circuits' : 'Analog Circuits'}.`,
+          atomic_logic: `Practice problems for ${entry.topic_name} in ${entry.subject}.`,
         },
       });
     }
 
     try {
-      let count = 0;
-      for (const pyq of pyqs) {
-        try {
-          const cleanQuestionText = (pyq.question_text ?? '')
-            .replace(/0 reply\s*Please log in or register to add a comment\./gi, '')
-            .replace(/0 reply/gi, '')
-            .replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 "[^"]*"/gi, '')
-            .trim();
+      // Fetch all existing PYQs for this pattern in one query
+      const existingPYQs = await prisma.pYQ.findMany({
+        where: { pattern_id: pattern.id },
+        select: { id: true, question_text: true },
+      });
+      const existingMap = new Map(existingPYQs.map(q => [q.question_text, q.id]));
 
-          let cleanCorrectAnswer: string = pyq.correct_answer ?? '';
-          if ((pyq.question_type === 'MCQ' || pyq.question_type === 'MSQ') && cleanCorrectAnswer.includes('.')) {
-            cleanCorrectAnswer = cleanCorrectAnswer.split('.')[0].trim();
-          }
+      // Clean all questions upfront
+      const cleaned = pyqs.map((pyq: any) => {
+        const question_text = (pyq.question_text ?? '')
+          .replace(/0 reply\s*Please log in or register to add a comment\./gi, '')
+          .replace(/0 reply/gi, '')
+          .replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 "[^"]*"/gi, '')
+          .trim();
 
-          const cleanImages = (pyq.images ?? []).map((img: any) => ({
-            ...img,
-            url: img.filename ? `/${img.filename}` : img.url,
-          }));
-
-          const existingPYQ = await prisma.pYQ.findUnique({
-            where: {
-              pyq_identifier: {
-                pattern_id: pattern.id,
-                question_text: cleanQuestionText,
-              },
-            },
-          });
-
-          if (existingPYQ) {
-            await prisma.pYQ.update({
-              where: { id: existingPYQ.id },
-              data: {
-                question_text_hindi:  pyq.question_text_hindi,
-                options:              pyq.options ?? [],
-                options_hindi:        pyq.options_hindi,
-                correct_answer:       cleanCorrectAnswer,
-                explanation:          pyq.explanation ?? '',
-                explanation_hindi:    pyq.explanation_hindi,
-                year:                 pyq.year || Math.floor(Math.random() * 20) + 2005,
-                exam_type:            entry.exam_type,
-                question_type:        pyq.question_type,
-                images:               cleanImages,
-              },
-            });
-          } else {
-            await prisma.pYQ.create({
-              data: {
-                pattern: { connect: { id: pattern.id } },
-                question_text:       cleanQuestionText,
-                question_text_hindi: pyq.question_text_hindi,
-                options:             pyq.options ?? [],
-                options_hindi:       pyq.options_hindi,
-                correct_answer:      cleanCorrectAnswer,
-                explanation:         pyq.explanation ?? '',
-                explanation_hindi:   pyq.explanation_hindi,
-                year:                pyq.year || Math.floor(Math.random() * 20) + 2005,
-                exam_type:           entry.exam_type,
-                question_type:       pyq.question_type,
-                images:              cleanImages,
-              },
-            });
-          }
-          count++;
-          totalQuestions++;
-        } catch (err: any) {
-          console.log(`${colors.red}  ❌ Error seeding question: ${pyq.question_text?.substring(0, 100)}...${colors.reset}`);
-          console.error(`     Reason: ${err.message}`);
-          console.log(`     Cleaned Text: "${(pyq.question_text ?? '').replace(/0 reply\s*Please log in or register to add a comment\./gi, '').replace(/0 reply/gi, '').replace(/🚩 Edit necessary \| 👮 Rhino \| 💬 "[^"]*"/gi, '').trim()}"`);
-          errors++;
+        let correct_answer: string = pyq.correct_answer ?? '';
+        if ((pyq.question_type === 'MCQ' || pyq.question_type === 'MSQ') && correct_answer.includes('.')) {
+          correct_answer = correct_answer.split('.')[0].trim();
         }
+
+        const images = (pyq.images ?? []).map((img: any) => ({
+          ...img,
+          url: img.filename ? `/${img.filename}` : img.url,
+        }));
+
+        return {
+          question_text,
+          question_text_hindi: pyq.question_text_hindi,
+          options: pyq.options ?? [],
+          options_hindi: pyq.options_hindi,
+          correct_answer,
+          explanation: pyq.explanation ?? '',
+          explanation_hindi: pyq.explanation_hindi,
+          year: pyq.year || Math.floor(Math.random() * 20) + 2005,
+          exam_type: entry.exam_type,
+          question_type: pyq.question_type,
+          images,
+        };
+      });
+
+      const toCreate = cleaned.filter((q: any) => !existingMap.has(q.question_text));
+      const toUpdate = cleaned.filter((q: any) => existingMap.has(q.question_text));
+
+      // Bulk create new records in one DB call
+      if (toCreate.length > 0) {
+        await prisma.pYQ.createMany({
+          data: toCreate.map((q: any) => ({ ...q, pattern_id: pattern.id })),
+          skipDuplicates: true,
+        });
       }
-      console.log(`${colors.green}✅ ${progress} Seeded ${colors.bright}${count}${colors.reset}${colors.green} PYQs for: ${colors.bright}${entry.topic_name}${colors.reset}`);
+
+      // Run updates in parallel batches of 50
+      const BATCH_SIZE = 50;
+      for (let i = 0; i < toUpdate.length; i += BATCH_SIZE) {
+        const batch = toUpdate.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map((q: any) =>
+            prisma.pYQ.update({
+              where: { id: existingMap.get(q.question_text)! },
+              data: q,
+            }).catch((err: any) => {
+              console.log(`${colors.red}  ❌ Error updating question: ${q.question_text?.substring(0, 100)}...${colors.reset}`);
+              console.error(`     Reason: ${err.message}`);
+              errors++;
+            })
+          )
+        );
+      }
+
+      const count = toCreate.length + toUpdate.length - errors;
+      totalQuestions += count;
+      console.log(`${colors.green}✅ ${progress} Seeded ${colors.bright}${count}${colors.reset}${colors.green} PYQs for: ${colors.bright}${entry.topic_name}${colors.reset} (${toCreate.length} new, ${toUpdate.length} updated)`);
     } catch (err: any) {
       console.log(`${colors.red}❌ ${progress} Fatal error seeding topic ${entry.topic_name}${colors.reset}`);
       console.error(err.message);

@@ -11,6 +11,7 @@ import MathRenderer from "@/components/ui/MathRenderer";
 import { trackPageView } from "@/lib/analytics";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { BE } from "@/lib/theme";
+import { getCloudinaryUrl } from "@/lib/imageUtils";
 
 interface PracticeButtonProps {
   patternId: string;
@@ -672,7 +673,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
               <div className="flex flex-col gap-4 mb-8">
                 {question.images.filter((img: any) => img.type !== 'explanation').map((img: any, idx: number) => (
                   <div key={idx} className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden" style={{ background: BE.surface, borderColor: BE.line }}>
-                    <img src={img.url || img.base64} alt="Question figure" className="max-w-full h-auto rounded-lg object-contain" />
+                    <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Question figure" className="max-w-full h-auto rounded-lg object-contain" />
                   </div>
                 ))}
               </div>
@@ -852,7 +853,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                         <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : (generatedExplanation || question.explanation || "No explanation available.")} />
                         {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
                           <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
-                            <img src={img.url || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                            <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
                           </div>
                         ))}
                       </>

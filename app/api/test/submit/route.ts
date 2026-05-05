@@ -9,7 +9,8 @@ interface BreakdownItem {
   questionType: string; marks: number; isOptional: boolean; counted: boolean;
   userAnswer: string | null; correctAnswer: string;
   isCorrect: boolean; isSkipped: boolean; explanation: string;
-  questionText: string; options: string[] | null; subject?: string;
+  questionText: string; options: string[] | null; subject?: string; topic?: string;
+  timeSpentSecs: number;
 }
 interface SectionScore {
   name: string; score: number; maxScore: number;
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     const subjPyqIds = answers.filter((a) => a.source === "subject_pyq").map((a) => a.questionId);
 
     // Also try to get answers from the stored template (avoids N+1 lookups and handles all question types)
-    let templateAnswers: Map<string, { correct_answer: string; explanation: string; question_text: string; options: unknown }> | null = null;
+    let templateAnswers: Map<string, { correct_answer: string; explanation: string; question_text: string; options: unknown; topic?: string }> | null = null;
     if (mockTestId) {
       const template = await prisma.mockTestTemplate.findUnique({
         where: { id: mockTestId },
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest) {
               explanation: q.explanation,
               question_text: q.question_text,
               options: q.options,
+              topic: q.topic || q.topic_name,
             },
           ])
         );
@@ -115,13 +117,13 @@ export async function POST(req: NextRequest) {
       pyqIds.length > 0 && !templateAnswers
         ? prisma.pYQ.findMany({
             where: { id: { in: pyqIds } },
-            select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true },
+            select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true, topic: true },
           })
         : [],
       subjPyqIds.length > 0 && !templateAnswers
         ? prisma.subjectPYQ.findMany({
             where: { id: { in: subjPyqIds } },
-            select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true },
+            select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true, topic: true },
           })
         : [],
     ]);
@@ -210,6 +212,7 @@ export async function POST(req: NextRequest) {
         questionType: ans.questionType,
         marks: ans.marks,
         subject: ans.subject,
+        topic: qData.topic || "General",
         isOptional: ans.isOptional,
         counted: isCounted,
         userAnswer: ans.userAnswer ?? null,
@@ -219,6 +222,7 @@ export async function POST(req: NextRequest) {
         explanation: qData.explanation,
         questionText: qData.question_text,
         options: Array.isArray(qData.options) ? (qData.options as string[]) : null,
+        timeSpentSecs: ans.timeSpentSecs || 0,
       });
     }
 
@@ -277,6 +281,7 @@ export async function POST(req: NextRequest) {
             subject_pyq_id: ans.source === "subject_pyq" ? ans.questionId : null,
             is_correct: isCorrect,
             user_answer: ans.userAnswer,
+            time_spent: ans.timeSpentSecs || null,
           },
         });
       })

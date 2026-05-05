@@ -1,0 +1,1763 @@
+[
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A bullet of mass $0.1 {\\text{kg}}$ moving horizontally with speed $400 {\\text{ms}}^{-1}$ hits a wooden block of mass $3.9 {\\text{kg}}$ kept on a horizontal rough surface. The bullet gets embedded into the block and moves $20 {\\text{m}}$ before coming to rest. The coefficient of friction between the block and the surface is $(.$ Given $g=10 {\\text{m}} / {\\ s}^2)$ [8-Apr-2023 shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-bullet-of-mass-01-textkg-mov_img1_20260504_225849.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 0.90",
+      "B. 0.65",
+      "C. 0.25",
+      "D. 0.50"
+    ],
+    "correct_answer": "C",
+    "explanation": "Apply momentum conservation just before and just after the collision$\\;0.1 × 400=(3.9+.1) {\\text{u}}$ $\\;⇒ {\\text{u}}=10 {\\text{m}} / {\\ s}$ $\\;∆ {\\text{KE}}= {\\text{w}}_{\\;\\text{all FORCE }\\;}$ $\\; ∵ {\\text{f}}=µ {\\text{mg}} \\;\\text{ (kinetic friction) }\\;$ $\\;⇒ 0-\\;\\frac{1}{2}(4)(10)^2=-µ(4) {\\text{g}} × 20$ $\\;⇒ µ=0.25$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $5 {\\text{kg}}$ is moving with a momentum of $10 {\\text{kg}} {\\text{ms}}^{-1}$. Now a force of $2 {\\text{N}}$ acts on the body in the direction of its motion for $5 {\\ s}$. The increase in the Kinetic energy of the body is _______ J. [8-Apr-2023 shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "30",
+    "explanation": "$\\;( {\\text{KE}})=\\;{ {\\text{P}}^2}/{2 {\\text{M}}}$ $\\;⇒ \\;\\frac{1}{2} {\\mu}^2=\\;\\frac{(10)^2}{2 × 5}$ $\\;=\\;\\frac{1}{2} × 5 × {\\text{u}}^2=\\;\\frac{100}{10}$ $\\;\\;\\text{ Initial speed }\\; {\\text{u}}=2 {\\text{m}} / {\\ s}$ $\\;∆ {\\text{KE}}= {\\text{w}}_{\\;\\text{all forces }\\;}$ $\\;={ {\\text{F}}}↖{→} ⋅ { {\\text{S}}}↖{→} \\;\\; (θ=0^{∘})$ $\\;= {\\text{F}} ( {\\text{ut}}+\\;\\frac{1}{2} {\\text{at}}^2)$ $\\;=2 ⋅ [2 × 5+\\;\\frac{1}{2} × \\;\\frac{2}{5} × 5^2]$ $\\;=30 {\\text{J}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body is dropped on ground from a height ' $h_1$ ' and after hitting the ground, it rebounds to a height ' ${\\text{h}}_2$ '. If the ratio of velocities of the body just before and after hitting ground is 4 , then percentage loss in kinetic energy of the body is $\\;\\frac{x}{4}$. The value of $x$ is _______. [6-Apr-2023 shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "375",
+    "explanation": "Let $u$ and $v$ be speeds, just before and after body strikes the ground.Given $\\;{ {\\text{u}}}/{ {\\text{v}}}=\\;\\frac{4}{1}$ $\\;\\;\\text{ loss in }\\; {\\text{KE}}: ∆ {\\text{KE}}=\\;{\\;\\frac{1}{2} {\\mu}^2=\\frac{1}{2} {\\ mv}^2}/{\\frac{1}{2} {\\mu}^2}$ $\\;∆ {\\text{KE}}=1- (\\;{ {\\text{v}}}/{ {\\text{u}}}) ^2=1-\\;\\frac{1}{16}=\\;\\frac{15}{16}$ $\\;\\;\\text{ Percentage loss }\\;=\\;\\frac{15}{16} × 100=375$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle of mass $10 {\\text{g}}$ moves in a straight line with retardation $2 {\\text{x}}$, where ${\\text{x}}$ is the displacement in SI units. Its loss of kinetic energy for above displacement is $(\\;\\frac{10}{x}) ^{-n}$ J. The value of $n$ will be ________ [6-Apr-2023 shift 1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "$\\;\\;\\text{ Given, }\\; a=-2 x$ $\\;⇒ \\;\\frac{v d v}{d x}=-2 x$ $\\;⇒ v d v=-2 x \\text{dx}$ $\\;⇒ ∫↙{v_1}↖{}{v_2} v d v=-2 ∫↙{0}↖{x} x \\text{dx}$ $\\;⇒ \\;\\frac{v_2^2}{2}-\\;\\frac{v_1^2}{2}=-\\;\\frac{2 x^2}{2}$ $\\;⇒ \\;\\frac{m v_1^2}{2}-\\;\\frac{m v_2^2}{2}=m x^2=\\;\\frac{10}{1000} x^2=10^{-2} x^2= (\\;\\frac{10}{x}) ^{-2}$ $\\; {\\text{n}}=2 .$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block is fastened to a horizontal spring. The block is pulled to a distance ${\\text{x}}=10 {\\text{cm}}$ from its equilibrium position (at ${\\text{x}}=0$ ) on a frictionless surface from rest. The energy of the block at $x=5$ ${\\text{cm}}$ is $0.25 {\\text{J}}$. The spring constant of the spring is ______ ${\\text{Nm}}^{-1}$ [1-Feb-2023 Shift 2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-block-is-fastened-to-a-horiz_img1_20260504_225855.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_a-block-is-fastened-to-a-horiz_img2_20260504_225855.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "67",
+    "explanation": "$\\; {\\text{U}}_{ {\\text{i}}}=\\;\\frac{1}{2} {\\text{kx}}_0^2$ $\\; {\\text{K}}_{ {\\text{i}}}=0$ $\\; {\\text{U}}_{ {\\text{f}}}=\\;\\frac{1}{2} {\\text{k}} (\\;{ {\\text{x}}_0}/{2}) ^2$ $\\; {\\text{K}}_{ {\\text{f}}}=0.25 {\\text{J}}$ $\\;\\;\\frac{1}{2} {\\text{kx}} {\\text{x}}_0^2+0=\\;\\frac{1}{2} {\\text{k}} \\;{ {\\text{x}}_0^2}/{4}+0.25$ $\\;\\;\\frac{1}{2} {\\text{kx}} {\\text{x}}_0^2 \\;\\frac{3}{4}=\\;\\frac{1}{4}$ $\\;\\;\\frac{1}{2} {\\text{k}} \\;\\frac{3}{100}=1 ⇒ {\\text{k}}=\\;\\frac{200}{3} {\\text{N}} / {\\text{m}}$ $\\;=67 {\\text{N}} / {\\text{m}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A force $F= (5+3 y^2)$ acts on a particle in the $y$ direction, where ${\\text{F}}$ is newton and ${\\text{y}}$ is in meter. The work done by the force during a displacement from ${\\text{y}}=2 {\\text{m}}$ to ${\\text{y}}=5 {\\text{m}}$ is _______ j. [1-Feb-2023 Shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "132",
+    "explanation": "$\\;F=5+3 y^2$ $\\;W=∫↙{2}↖{5} (5+3 y^2) d y$ $\\;= [5 y+\\;\\frac{3 y^3}{3}] _2^5$ $\\;=132 {\\text{J}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A small particle moves to position $5{i}↖{⋀}-2 {j}↖{⋀}+{k}↖{⋀}$ from its initial position $2 {i}↖{⋀}+3 {j}↖{⋀}-4{k}↖{⋀}$ under the action of force $5 {i}↖{⋀}+2 {j}↖{⋀}+7 {k} ↖{⋀} {\\text{N}}$. The value of work done will be ______ J. [1-Feb-2023 Shift 1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "40",
+    "explanation": "$\\;W=\\vec{F} ⋅ (\\vec{r}_f-\\vec{r}_1)$ $\\;=(5 {i}↖{⋀}+2 {j}↖{⋀}+7 {k}↖{⋀}) ⋅((5 {i}↖{⋀}-2 {j}↖{⋀}+{k}↖{⋀})-(2 {i}↖{⋀}+3 {j}↖{⋀}-4{k}↖{⋀}))$ $\\;W=40 {\\text{J}}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A lift of mass ${\\text{M}}=500 {\\text{kg}}$ is descending with speed of $2 {\\text{ms}}^{-1}$. Its supporting cable begins to slip thus allowing it to fall with a constant acceleration of $2 {\\text{ms}}^{-2}$. The kinetic energy of the lift at the end of fall through to a distance of $6 {\\text{m}}$ will be _______ ${\\text{kJ}}$. [31-Jan-2023 Shift 1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "7",
+    "explanation": "${\\text{v}}^2\\;= {\\text{u}}^2+2 {\\text{as}}$ $\\;=2^2+2(2)(6)$ $\\;=4+24=28$ ${\\text{KE}}\\;=\\;\\frac{1}{2} {\\ mv}^2$ $\\;=\\;\\frac{1}{2}(500) 28$ $\\;=7000 {\\text{J}}$ $\\;=7 {\\text{kJ}}$Ans. 7",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $2 {\\text{kg}}$ is initially at rest. It starts moving unidirectionally under the influence of a source of constant power P. Its displacement in $4 {\\ s}$ is $\\;\\frac{1}{3} α^2 \\sqrt{ {\\text{P}}} {\\text{m}}$. The value of $α$ will be _______ [30-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "4",
+    "explanation": "$\\;\\;\\frac{1}{2} {\\text{mV}}^2= {\\text{Pt}}$ $\\; {\\text{V}}=\\sqrt{\\;{2 {\\text{Pt}}}/{ {\\text{m}}}}$ $\\;\\;{ {\\text{dx}}}/{ {\\text{dt}}}=\\sqrt{\\;{2 {\\text{Pt}}}/{ {\\text{m}}}}$ $\\; {\\text{x}}=\\sqrt{\\;{2 {\\text{P}}}/{ {\\text{m}}} \\;\\frac{2}{3}} [ {\\text{t}}^{3 / 2}] _0^4$ $\\; {\\text{x}}=\\;{16 \\sqrt{ {\\text{P}}}}/{3}=\\;\\frac{1}{3} × 16 \\sqrt{ {\\text{P}}}$ $\\;α=4$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Identify the correct statements from the following:(A) Work done by a man in lifting a bucket out of a well by means of a rope tied to the bucket is negative.(B) Work done by gravitational force in lifting a bucket out of a well by a rope tied to the bucket is negative.(C) Work done by friction on a body sliding down an inclined plane is positive.(D) Work done by an applied force on a body moving on a rough horizontal plane with uniform velocity in zero.(E) Work done by the air resistance on an oscillating pendulum in negative.Choose the correct answer from the options given below: [29-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [
+      "A. B and E only",
+      "B. A and C only",
+      "C. B, D and E only",
+      "D. B and D only"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A stone is projected at angle $30^{∘}$ to the horizontal. The ratio of kinetic energy of the stone at point of projection to its kinetic energy at the highest point of flight will be : [29-Jan-2023 Shift 1]",
+    "images": [],
+    "options": [
+      "A. $1: 2$",
+      "B. $1: 4$",
+      "C. $4: 1$",
+      "D. $4: 3$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;{K E_{\\;\\text{POP }\\;}}/{K E_{\\;\\text{top }\\;}}=\\;{\\;\\frac{1}{2} M(u)^2}/{\\frac{1}{2} M (u \\cos 30^{∘}) ^2}=\\;\\frac{4}{3}$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A $0.4 {\\text{kg}}$ mass takes $8 {\\ s}$ to reach ground when dropped from a certain height ' $P$ ' above surface of earth. The loss of potential energy in the last second of fall is J. [Take ${\\text{g}}=10 {\\text{m}} / {\\ s}^2$ ] [29-Jan-2023 Shift 1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "300",
+    "explanation": "Displacement is $8^{\\;\\text{th }\\;} {\\ sec}$.$\\; {\\text{S}}_8=0+\\;\\frac{1}{2} × 10 ×(2 × 8-1)$ $\\; {\\text{S}}_8=5 × 15$ $\\;∆ {\\text{U}}=0.4 × 10 × 5 × 15$ $\\;∆ {\\text{U}}=20 × 15=300$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "An object of mass ' $m$ ' initially at rest on a smooth horizontal plane starts moving under the action of force ${\\text{F}}=2 {\\text{N}}$. In the process of its linear motion, the angle $θ$ (as shown in figure) between the direction of force and horizontal varies as $θ= {\\text{kx}}$, where ${\\text{k}}$ is a constant and ${\\text{x}}$ is the distance covered by the object from its initial position. The expression of kinetic energy of the object will be ${\\text{E}}=\\;{ {\\text{n}}}/{ {\\text{k}}} sin \\;θ$. The value of ${\\text{n}}$ is _______. [25-Jan-2023 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_an-object-of-mass-m-initially-_img1_20260504_225909.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_an-object-of-mass-m-initially-_img2_20260504_225909.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "${\\text{F}} \\cos θ= {\\text{ma}}$ $\\;2 \\cos ( {\\text{kx}})=\\;{ {\\ mvdv}}/{ {\\text{dx}}}$ $\\;∫↙{0}↖{ {\\text{v}}} {\\text{vdv}}=2 ∫↙{0}↖{ {\\text{x}}} \\cos ( {\\text{kx}}) {\\text{dx}}$ $\\;\\;{ {\\ mv}^2}/{2}=\\;{2}/{ {\\text{k}}} sin \\; {\\text{kx}}$ $\\;\\;\\text{ K.E. }\\;=\\;{2}/{ {\\text{k}}} sin \\;θ$ $\\;n=2$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $1 {\\text{kg}}$ begins to move under the action of a time dependent force $\\vec{F}= (t {i}↖{\\^}+3 t^2 {j}↖{\\^}) N$. where ${ {\\text{i}}↖{\\^}$ and ${ {\\text{j}}↖{\\^}$ are the unit vectors along ${\\text{x}}$ and ${\\text{y}}$ axis. The power developed by above force, at the time $t=2 s$. will be____ W. [24-Jan-2023 Shift 2]",
+    "images": [],
+    "options": [],
+    "correct_answer": "100",
+    "explanation": "${ {\\text{F}}}↖{→}= {\\text{ti}}+3 {\\text{t}}^2 \\;{ {\\text{j}}}↖{\\^}$ $\\;{ {\\text{md}} { {\\text{v}}}↖{→}}/{ {\\text{dt}}}= {\\text{t}} \\;{ {\\text{i}}}↖{\\^}+3 {\\text{t}}^2 \\;{ {\\text{j}}}↖{\\^}$ ${\\text{m}}=1 {\\text{kg}}, ∫↙{0}↖{{ {\\text{v}}}↖{→}} {\\text{dv}}=∫↙{0}↖{ {\\text{t}}} {\\text{tdt}} \\;{˙{i}}↖{\\^}+∫↙{0}↖{ {\\text{t}}} 3 {\\text{t}}^2 {dt \\;{j }↖{\\^}$ ${ {\\text{v}}}↖{→}=\\;{ {\\text{t}}^2}/{2} \\;{ {\\text{i}}}↖{\\^}+ {\\text{t}}^3 \\;{ {\\text{j}}}↖{\\^}$ $\\;\\text{ Power }\\;={ {\\text{F}}}↖{→} ⋅ { {\\text{V}}}↖{→}=\\;{ {\\text{t}}^3}/{2}+3 {\\text{t}}^5$ $\\;\\text{ At }\\; {\\text{t}}=2, \\;\\text{ power }\\;=\\;\\frac{8}{2}+3 × 32$ $=100$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A spherical body of mass $2 {\\text{kg}}$ starting from rest acquires a kinetic energy of $10000 {\\text{J}}$ at the end of $5^{\\;\\text{th }\\;}$ second. The force acted on the body is ___${\\text{N}}$. [24-Jan-2023 Shift 1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "40",
+    "explanation": "$\\;\\;\\frac{1}{2} × 2 × v^2=10000$ $\\;⇒ {\\text{v}}^2=10000$ $\\;⇒ {\\text{v}}=100 {\\text{m}} / {\\ s}$ $\\;⇒ {\\text{v}}= {\\text{at}}= {\\text{a}} × 5=100$ $\\;⇒ {\\text{a}}=20 {\\text{m}} / {\\ s}^2$ $\\; {\\text{F}}= {\\text{ma}}=2 × 20=40 {\\text{N}}$ $\\;$",
+    "year": 2023,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A ball is projected with kinetic energy $E$, at an angle of $60^{∘}$ to the horizontal. The kinetic energy of this ball at the highest point of its flight will become : [29-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-ball-is-projected-with-kinet_img1_20260504_225915.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. Zero",
+      "B. $\\;\\frac{E}{2}$",
+      "C. $\\;\\frac{E}{4}$",
+      "D. ${\\text{E}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${\\text{E}}=\\;\\frac{1}{2} {\\mu}^2$At Highest point, Velocity ${\\text{V}}= {\\text{u}} \\cos 60^{∘}=\\;{ {\\text{u}}}/{2}$ $∴$ K.E at topmost point $=\\;\\frac{1}{2} {\\text{m}} (\\;{ {\\text{u}}}/{2}) ^2=\\;{ {\\text{E}}}/{4}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block of mass 'Im' (as shown in figure) moving with kinetic energy E compresses a spring through a distance $25 {\\text{cm}}$ when, its speed is halved. The value of spring constant of used spring will be ${\\text{nE}} {\\text{Nm}}{ }^{-1}$ for ${\\text{n}}=$ _______. [28-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-block-of-mass-im-as-shown-in_img1_20260504_225916.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "24",
+    "explanation": "Using work - energy theorem${\\text{W}}_{ {\\text{net}}}=( {\\text{K}}_{ {\\text{f}}}- {\\text{K}}_{ {\\text{i}}})$ $⇒-\\;\\frac{1}{2} {\\text{Kx}}^2=\\;\\frac{1}{2} {\\text{m}}(\\;{ {\\text{v}}}/{2})^2-\\;\\frac{1}{2} {\\ mv}^2=\\;{ {\\text{E}}}/{4}- {\\text{E}}$ $⇒ \\;\\frac{1}{2} {\\text{Kx}}^2=\\;{3 {\\text{E}}}/{4} ⇒ {\\text{K}}=\\;{3 {\\text{E}}}/{2 {\\text{x}}^2}$ $⇒ {\\text{K}}=\\;{3 {\\text{E}}}/{2 ×(\\;\\frac{1}{4})^2}=24 {\\text{E}}$ ${\\text{n}}=24$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A bullet of mass $200 {\\text{g}}$ having initial kinetic energy $90 {\\text{J}}$ is shot inside a long swimming pool as shown in the figure. If it's kinetic energy reduces to $40 {\\text{J}}$ within $1 {\\ s}$, the minimum length of the pool, the bullet has to travel so that it completely comes to rest is [28-Jul-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-bullet-of-mass-200-textg-hav_img1_20260504_225918.webp"
+      }
+    ],
+    "options": [
+      "A. 45 m",
+      "B. 90 m",
+      "C. 125 m",
+      "D. 25 m"
+    ],
+    "correct_answer": "A",
+    "explanation": "$\\;\\frac{1}{2} m x^2=90$ $⇒ \\;\\frac{1}{2} × 0.2 × x^2=90$ $x^2=900$ $x=30 {\\text{m}} / {\\ s}$ $\\;\\frac{1}{2} m v^2=40 ⇒ v=\\;\\frac{2}{3} × 30=20 {\\text{m}} / {\\ s}$ $20=30-a × 1 ⇒ a=-10 {\\text{m}} / {\\ s}^2$ $0-x^2=2 a s$ $s=\\;\\frac{x^2}{-2 a}=\\;\\frac{30 × 30}{2 × 10}$ $=45 {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Sand is being dropped from a stationary dropper at a rate of $0.5 {\\text{kgs}}^{-1}$ on a conveyor belt moving with a velocity of $5 {\\text{ms}}^{-1}$. The power needed to keep the belt moving with the same velocity will be : [27-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $1.25 {\\text{W}}$",
+      "B. $2.5 {\\text{W}}$",
+      "C. $6.25 {\\text{W}}$",
+      "D. $12.5 {\\text{W}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$\\;\\frac{d m}{d t}=0.5 {\\text{kg}} / {\\text{s}}$ $v=5 {\\text{m}} / {\\text{s}}$ $F=\\;\\frac{v d m}{d t}=2.5 {\\text{kg}} {\\text{m}} / {\\text{s}}^2$ $P=\\overline{F} ⋅ \\overline{v}=(2.5)(5) {\\text{W}}$ $=12.5 {\\text{W}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "As per the given figure, two blocks each of mass $250 {\\text{g}}$ are connected to a spring of spring constant $2 {\\text{Nm}}^{-1}$. If both are given velocity $v$ in opposite directions, then maximum elongation of the spring is: [26-Jul-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_as-per-the-given-figure-two-bl_img1_20260504_225922.webp"
+      }
+    ],
+    "options": [
+      "A. $\\;{v}/{2 \\sqrt{2}}$",
+      "B. $\\;\\frac{v}{2}$",
+      "C. $\\;\\frac{v}{4}$",
+      "D. $\\;{v}/{\\sqrt{2}}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$∵$ Loss in $K E=$ Gain in spring energy$⇒ \\;\\frac{1}{2} m v^2 × 2=\\;\\frac{1}{2} k x_m^2$ $⇒ 2 × \\;\\frac{1}{4} × v^2=2 × x_m^2$ $⇒ x_m=\\sqrt{\\;\\frac{v^2}{4}}=\\;\\frac{v}{2}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A bag of sand of mass $9.8 {kg}$ is suspended by a rope. A bullet of $200 {g}$ travelling with speed $10 {ms}^{-1}$ gets embedded in it, then loss of kinetic energy will be : [25-Jul-2022-Shift-2]",
+    "images": [],
+    "options": [
+      "A. $4.9 {J}$",
+      "B. $9.8 {J}$",
+      "C. $14.7 {J}$",
+      "D. $19.6 {J}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Loss in $K E=\\;\\frac{1}{2} × \\;{m_{1} m_{2}}/{m_{1}+m_{2}} × v^{2}$ $=\\;\\frac{1}{2} × \\;\\frac{9.8 × 0.2}{10} ×(10)^{2}$ $=9.8 {J}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $0.5 {kg}$ travels on straight line path with velocity $v=(3 x^{2}+4) {m} / {s}$. The net workdone by the force during its displacement from $x=0$ to $x=2 {m}$ is : [25-Jul-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $64 {J}$",
+      "B. $60 {J}$",
+      "C. $120 {J}$",
+      "D. $128 {J}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$v=3 x^{2}+4$at $x=0, v_{1}=4 {m} / {s}$ $x=2, v_{n}-16 {m} / {s}$ $⇒$ Work done $=∆$ kinetic energy$-\\;\\frac{1}{2} × m(v_{2}^{2}-v_{1}^{2})$ $=\\;\\frac{1}{4}(256-16)$ $=60 {J}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "In the given figure, the block of mass $m$ is dropped from the point ' $A$ '. The expression for kinetic energy of block when it reaches point ' $B$ ' is [29-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_in-the-given-figure-the-block-_img1_20260504_225928.webp"
+      }
+    ],
+    "options": [
+      "A. $\\;\\frac{1}{2} m g y_0{ }^2$",
+      "B. $\\;\\frac{1}{2} m g y^2$",
+      "C. $m g(y-y_0)$",
+      "D. $m g y_0$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Loss in potential energy = gain in kinetic energy$- (m g (y-y_0) -m g y) =K E-0$ $⇒ {\\text{KE}}= {\\text{mgy}}_0$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle of mass $500 {\\text{gm}}$ is moving in a straight line with velocity $v=b x^{5 / 2}$. The work done by the net force during its displacement from $x=0$ to $x=4 m$ is : (Take $.b=0.25 m^{-3 / 2} s^{-1})$. [29-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $2 {\\text{J}}$",
+      "B. $4 {\\text{J}}$",
+      "C. $8 {\\text{J}}$",
+      "D. $16 {\\text{J}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$W_{\\;\\text{total }\\;}=∆ K$ $=\\;\\frac{1}{2} (\\;\\frac{1}{2}) [ \\{b(4)^{5 / 2}\\} ^2-0]$ $=\\;\\frac{b^2}{4} × 4^5$ $⇒ W_{\\;\\text{total }\\;}=16 J$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Arrange the four graphs in descending order of total work done; where $W_1, W_2, W_3$ and $W_4$ are the work done corresponding to figure $a, b, c$ and $d$ respectively. [26-Jun-2022-Shift-2]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_arrange-the-four-graphs-in-des_img1_20260504_225931.webp"
+      }
+    ],
+    "options": [
+      "A. ${\\text{W}}_3> {\\text{W}}_2> {\\text{W}}_1> {\\text{W}}_4$",
+      "B. ${\\text{W}}_3> {\\text{W}}_2> {\\text{W}}_4> {\\text{W}}_1$",
+      "C. ${\\text{W}}_2> {\\text{W}}_3> {\\text{W}}_4> {\\text{W}}_1$",
+      "D. ${\\text{W}}_2> {\\text{W}}_3> {\\text{W}}_1> {\\text{W}}_4$"
+    ],
+    "correct_answer": "A",
+    "explanation": "${\\text{W}}_{ {\\text{a}}}=0, {\\text{W}}_{ {\\text{b}}}=+ {\\text{ve}}, {\\text{W}}_{ {\\text{c}}}=+ {\\text{ve}}> {\\text{W}}_{ {\\text{b}}}, {\\text{W}}_{ {\\text{d}}}=- {\\text{ve}}$ $⇒ {\\text{W}}_{ {\\text{c}}}> {\\text{W}}_{ {\\text{b}}}> {\\text{W}}_{ {\\text{a}}}> {\\text{W}}_{ {\\text{d}}}$ $⇒ {\\text{W}}_3> {\\text{W}}_2> {\\text{W}}_1> {\\text{W}}_4$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A uniform chain of $6 {\\text{m}}$ length is placed on a table such that a part of its length is hanging over the edge of the table. The system is at rest. The co-efficient of static friction between the chain and the surface of the table is $0.5$, the maximum length of the chain hanging from the table is_____ m. [25-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "$(x) g λ=µ(6-x) g λ$ where ${\\text{x}}$ is length of hanging part$⇒ x=3-0.5 x$ $⇒ x=2 {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A $0.5 {\\text{kg}}$ block moving at a speed of $12 {\\text{ms}}^{-1}$ compresses a spring through a distance $30 {\\text{cm}}$ when its speed is halved. The spring constant of the spring will be ____${\\text{Nm}}^{-1}$ [25-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [],
+    "correct_answer": "600",
+    "explanation": "$\\;\\frac{1}{2} m V^2=\\;\\frac{1}{2} k x^2+\\;\\frac{1}{2} m(\\;\\frac{v}{2})^2$ $⇒ \\;\\frac{3}{8} m v^2=\\;\\frac{1}{2} k x^2$ $⇒ k=\\;\\frac{3}{4} × \\;\\frac{1}{2} × \\;\\frac{144}{9} × 100$ $=600$ $⇒ 600$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle experiences a variable force $\\vec{F}=(4 x {i}↖{\\^}+3 y^2 {j}↖{\\^})$ in a horizontal $x-y$ plane. Assume distance in meters and force is newton. If the particle moves from point $(1,2)$ to point $(2,3)$ in the $x-y$ plane, then Kinetic Energy changes by : [24-Jun-2022-Shift-1]",
+    "images": [],
+    "options": [
+      "A. $50.0 {\\text{J}}$",
+      "B. $12.5 {\\text{J}}$",
+      "C. $25.0 {\\text{J}}$",
+      "D. $0 {\\text{J}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$W=∫ \\vec{F} ⋅ \\vec{d r}$ $=∫↙1^2 4 x d x+∫↙2^3 3 y^2 d y$ $=[2 x^2]_1^2+[y^3]_2^3$ $=2 × 3+(27-8)$ $=25 {\\text{J}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A ball of mass $100 {\\text{g}}$ is dropped from a height $h=10 {\\text{cm}}$ on a platform fixed at the top of a vertical spring (as shown in figure). The ball stays on the platform and the platform is depressed by a distance$\\;\\frac{h}{2}$. The spring constant is ${\\text{Nm}}^{-1}$. (Use ${\\text{g}}=10 {\\text{ms}}^{-2}$ ) [24-Jun-2022-Shift-1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-ball-of-mass-100-textg-is-dr_img1_20260504_225938.webp"
+      }
+    ],
+    "options": [],
+    "correct_answer": "120",
+    "explanation": "$m g(h+\\;\\frac{h}{2})=\\;\\frac{1}{2} k(\\;\\frac{h}{2})^2$ $⇒ 0.1 × 10 ×(0.15)=\\;\\frac{1}{2} k(0.05)^2$ $⇒ k=120 {\\text{N}} / {\\text{m}}$",
+    "year": 2022,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "An engine is attached to a wagon through a shock absorber of length $1.5 {\\text{m}}$. The system with a total mass of $40000 {\\text{kg}}$ is moving with a speed of $72 {\\text{kmh}}^{-1}$, when the brakes are applied to bring it to rest. In the process of the system beingbrought to rest, the spring of the shock absorber gets compressed by $1.0 {\\text{m}}$. If $90 \\%$ of energy of the wagon is lost due to friction, the spring constant is ............. × $10^{5} {\\text{N}} / {\\text{m}}$.",
+    "images": [],
+    "options": [],
+    "correct_answer": "16",
+    "explanation": "Given, the length of the shock absorber, I = 1.5 m The total mass of the system, M = 40000 kg The speed of the wagon, v = 72 km/h When brakes are applied, the final velocity, $\\text{v}_\\text{f}$ = 0 The compressed spring of the shock absorber, x = 1mApplying the work-energy theorem, Work done by the system = Change in kinetic energy W = Δ KE $\\text{W}_{{\\text{friction} }}+\\text{W}_{{\\text{spring} }}=\\frac{1}{2} \\text{m} \\text{v}_{\\text{f}}^{2}+\\frac{1}{2} \\text{m} \\text{v}_{\\text{i}}^{2}$ $-\\frac{90}{100}(\\frac{1}{2} \\text{m} \\text{v}^{2})+\\text{W}_{{\\text{spring} }}=0-\\frac{1}{2} \\text{m} \\text{v}_{\\text{i}}^{2}$ (∵ 90% energy lost due to friction) $\\text{W}_{{\\text{spring} }}=-\\frac{10}{100} ×\\frac{1}{2} \\text{m} \\text{v}^{2}$ $-\\frac{1}{2} \\text{k} \\text{x}^{2}=\\frac{1}{20} \\text{m} \\text{v}^{2}$ $\\text{k}={\\text{m} \\text{v}^{2}}/{10 ×x^{2}}$ Substituting the values in the above equation, we get $\\text{k}={40000 ×(72 ×\\frac{5}{18})^{2}}/{10(1)^{2}}$ = 16 × $10^5$ N / m Comparing the spring constant, k = x × $10^5$ The value of the x = 16.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass m dropped from a height h reaches the ground with a speed of $0.8 \\\\sqrt{\\text{gh}}$. The value of workdone by the air-friction is",
+    "images": [],
+    "options": [
+      "A. $-0.68 {\\text{mgh}}$",
+      "B. mgh",
+      "C. $1.64 {\\text{mgh}}$",
+      "D. $0.64 {\\text{mgh}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Given, the mass of the body = m The height from which the body dropped = h The speed of the body when reached the ground, $\\text{v}_{\\text{f}}=0.8 \\\\sqrt{\\text{gh}}$ Initial velocity of the body, v = 0 m / s Using the work-energy theorem, Work done by gravity + Work done by air-friction = Final kinetic energy - Initial kinetic energy $\\text{W}_{{\\text{mg} }}+\\text{W}_{{\\text{air}- \\text{friction} }}=\\frac{1}{2} \\text{m} \\text{v}_{\\text{f}}^{2}-\\frac{1}{2} \\text{m} \\text{v}_{\\text{i}}^{2}$ Here, work done by gravity = mgh ⇒ $\\text{m} \\text{g} \\text{h}+\\text{W}_{{\\text{air}-\\text{friction} }}=\\frac{1}{2} \\text{m}(0.8 \\\\sqrt{\\text{g} \\text{h}})^{2}-\\frac{1}{2} \\text{m}(0)^{2}$ ⇒ $\\text{W}_{{\\text{air} - \\text{fricion} }}=\\frac{0.64 \\text{m} \\text{g} \\text{h}}{2}-\\text{m} \\text{g} \\text{h}$ = 0.32 mgh - mgh = -0.68 mgh The value of the work done by the air friction is -0.68 mgh.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block moving horizontally on a smooth surface with a speed of $40 {\\text{m}} / {\\text{s}}$ splits into two parts with masses in the ratio of $1: 2$. If the smaller part moves at $60 {\\text{m}}/ {\\text{s}}$ in the same direction, then the fractional change in kinetic energy is",
+    "images": [],
+    "options": [
+      "A. $1 / 3$",
+      "B. $2 / 3$",
+      "C. $1 / 8$",
+      "D. $1 / 4$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let a block of mass M splits into two masses $m_1$ and $m_2$ in ratio 1: 2. Then, mass of smaller part, $m_{1}=\\frac{\\text{M}}{1+2}=\\frac{\\text{M}}{3}$ Mass of bigger part, $m_{2}=2 \\text{M} / 3$ Given, speed of mass M, v = 40 m/s Speed of mass $m_{1}, v_{1}=60 {m} / {s}$ Let speed of mass $m_{2}, v_{2}=v$ Using conservation of linear momentum, ${p}_{i}={p}_{\\text{f}}$ $\\text{M} {v}=m_{1} {v}_{1}+m_{2} {v}_{2}$ $\\text{M} ×40=\\frac{\\text{M}}{3} ×60+\\frac{2 \\text{M}}{3} ×v$ ⇒ = 30 m/s ∴ The fractional change in kinetic energy, $\\frac{\\Δ\\text{K}}{\\text{K}}={\\text{K}_{\\text{f}}-\\text{K}_{i}}/{\\text{K}_{i}}={\\text{K}_{\\text{f}}}/{\\text{K}_{i}}-1$ $={\\frac{1}{2} m_{1} v_{1}^{2}+\\frac{1}{2} m_{2} v_{2}^{2}}/{\\frac{1}{2} \\text{M} v^{2}}-1$ $={\\frac{1}{2}[\\frac{\\text{M}}{3} ×(60)^{2}+\\frac{2 \\text{M}}{3}×(30)^{2}]}/{\\frac{1}{2} \\text{M} ×(40)^{2}}-1=\\frac{9}{8}-1=\\frac{1}{8}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block moving horizontally on a smooth surface with a speed of $40 {\\text{ms}}^{-1}$ splits into two equal parts. If one of the parts moves at $60 {\\text{ms}}^{-1}$ in the same direction, then the fractional change in the kinetic energy will be x: 4, where x is",
+    "images": [],
+    "options": [],
+    "correct_answer": "5",
+    "explanation": "Given, initial speed of block, $u=40 {\\text{ms}}^{-1}$ Let total mass of block = m ∴ Broken masses, $m_{1}=m_{2}=\\frac{m}{2}$ Final speed of $m_{1}, v_{1}=60 {\\text{ms}}^{-1}$ As we know that, kinetic energy, ${\\text{KE}}=1 / 2 {mv}^{2}$ ∴ Initial kinetic energy ${\\text{KE}}_{i}=\\frac{1}{2} m u^{2}$ $=\\frac{1}{2} m(40)^{2}=800 m$ ...(i) By using law of conservation of momentum, $m u=m_{1} v_{1}+m_{2} v_{2}$ $∴ v_{2}=\\frac{m ×40-m / 2 ×60}{m / 2}$ $=\\frac{10 m}{m / 2}=20 m s^{-1}$ So, final kinetic energy ${\\text{KE}}_{\\text{f}}=\\frac{1}{2} m_{1} v_{1}^{2}+\\frac{1}{2} m_{2} v_{2}^{2}$ $=\\frac{1}{2} \\frac{m}{2}(v_{1}^{2}+v_{2}^{2})=\\frac{m}{4}(60^{2}+20^{2})$ $=m / 4(3600+400)$ $=1000 m$ ...(ii) ∴ Divide Eq (ii) by Eq. (i), we get ${{\\text{KE}}_{\\text{f}}}/{{\\text{KE}}_{i}}={1000 {\\text{m}}}/{800}=\\frac{5}{4} {\\text{m}}$ So, x = 5",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Two persons A and B perform same amount of work in moving a body through a certain distance d with application of forces acting at angle 45° and 60° with the direction of displacement respectively. The ratio of force applied by person A to the force appliedby person B is ${1}/{\\\\sqrt{x}}$. The value of x is ........ .",
+    "images": [],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "Given, work done by both person is same, $\\text{W}_{\\text{A}}=\\text{W}_{\\text{B}}$ Direction of first force with displacement, $\\θ_1$ = 45° Direction of first force with displacement, $\\θ_2$ = 60° Ratio of force applied by person A to force applied by person B is $\\text{F}_{\\text{A}}: \\text{F}_{\\text{B}}=1: \\\\sqrt{x}$. Work done by both person is same, $\\text{W}_{\\text{A}}=\\text{W}_{\\text{B}}=$ $⇒ \\text{F}_{\\text{A}} \\text{d} \\cos \\θ_{1}=\\text{F}_{\\text{B}} \\text{d} \\cos \\θ_{2}$ (∵ distance is same for both = d) ${\\text{F}_{\\text{A}}}/{\\text{F}_{\\text{B}}}={\\cos \\θ_{1}}/{\\cos \\θ_{2}}=\\frac{\\cos 60°}{\\cos 45°}$ $⇒ {\\text{F}_{\\text{A}}}/{\\text{F}_{\\text{B}}}={\\frac{1}{2}}/{{1}/{\\\\sqrt{2}}}={1}/{\\\\sqrt{2}}$ $⇒ {\\text{F}_{\\text{A}}}/{\\text{F}_{\\text{B}}}={1}/{\\\\sqrt{x}}={1}/{\\\\sqrt{2}}$ $⇒ x=2$ Thus, the value of x is 2.",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A uniform chain of length $3 {\\text{m}}$ and mass $3 {\\text{kg}}$ overhangs a smooth table with $2 {\\text{m}}$ laying on the table. If k is the kinetic energy of the chain in joule as it completely slips off the table, then the value of k is ......... . (Take, $g=10 {\\text{m}}/ {\\text{s}}^{2}$)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-uniform-chain-of-length-3-te_img1_20260504_225950.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "40",
+    "explanation": "The given situation is shown below as Applying law of conservation of energy, we get $\\text{K}_{{\\text{initial} }}+\\text{U}_{{\\text{initial} }}=\\text{K}_{{\\text{final} }}+\\text{U}_{{\\text{final} }}$ $\\text{K}_{{\\text{initial} }}=0$ $⇒ \\text{U}_{{\\text{initial} }}=-1 ×10 ×\\frac{1}{2}$ ( $1 {\\text{m}}$ lie below DATUM level, so negative) $\\text{K}_{{\\text{final} }}=?$ $\\text{U}_{{\\text{final} }}=-3 ×10 ×\\frac{3}{2}(3 {\\text{m}}$ lie below DATUMlevel, so negative) $0-1 ×10 ×\\frac{1}{2}=\\text{K}_{ {\\text{final} }}-3 ×10 ×\\frac{3}{2}$ $⇒ -5=\\text{K}_{{\\text{final} }}-45$ $⇒ \\text{K}_{{\\text{final} }}=45-5$ = 40 J",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "An automobile of mass 'm' accelerates starting from origin and initially at rest, while the engine supplies constant power ${P}$. The position is given as a function of time by:",
+    "images": [],
+    "options": [
+      "A. $({9 {P}}/{8 {m}})^{\\frac{1}{2}} {t}^{\\frac{3}{2}}$",
+      "B. $({8 {P}}/{9 {m}})^{\\frac{1}{2}} {t}^{\\frac{2}{3}}$",
+      "C. $({9 {m}}/{8 {P}})^{\\frac{1}{2}} {t}^{\\frac{3}{2}}$",
+      "D. $({8 {P}}/{9 {m}})^{\\frac{1}{2}} {t}^{\\frac{3}{2}}$"
+    ],
+    "correct_answer": "D",
+    "explanation": "$P=$ const. $P=F_{V}={m v^{2} d v}/{d x}$ $\\∫↙{0} ↖{x} \\frac{P}{m} d x=\\∫↙{0} ↖{v} v^{2} d v$ $\\frac{P x}{m}={v^{3}}/{3}$ $(\\frac{3 P x}{m})^{1 / 3}=v=\\frac{d x}{d t}$ $(\\frac{3 P}{m})^{1 / 3} \\∫↙{0} ↖{t} d t=\\∫↙{0} ↖{x} x^{-1 / 3} d x$ $\\⇒x=\\(\\frac{8 P}{9 m})^{1 / 2} t^{3 / 2}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Given below is the plot of a potential energy function $U(x)$ for a system, in which a particle is in one dimensional motion, while a conservative force ${F}({x})$ acts on it. Suppose that ${E}_{\\text{mech }}=8 {J}$, the incorrect statement for this system is:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_given-below-is-the-plot-of-a-p_img1_20260504_225953.webp"
+      }
+    ],
+    "options": [
+      "A. at ${x}>{x}_{4}, {K} . {E}$. is constant throughout the region.",
+      "B. at ${x} < {x}_{1}, {K} . {E}$. is smallest and the particle is moving at the slowest speed.",
+      "C. at ${x}={x}_{2}, {K} . {E} .$ is greatest and the particle is moving at the fastest speed.",
+      "D. at ${x}={x}_{3}, {K} . {E} .=4 {J}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${E}_{\\text{mech }}=8 {J}$ (A) at ${x}>{x}_{4}, \\;\\;\\;{U}=$ constant $=6 {J}$ ${K}={E}_{\\text{mech. }}-{U}=2 {J}=$ constant (B) at ${x} < {x}_{{1}}, \\;\\;\\;{U}=$ constant $=8 {J}$ ${K}={E}_{\\text{mech. }}-{U}=8-8=0 {J}$ Particle is at rest. (C) At ${x}={x}_{2},\\;\\;\\; {U}=0 \\$ $⇒{E}_{\\text{mech. }}={K}=8 {J}$ KE is greatest, and particle is moving at fastest speed. (D) At ${x}={x}_{3}, \\;\\;\\;{U}=4 {J}$ ${U}+{K}=8 {J}$ ${K}=4 {J}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A small block slides down from the top of hemisphere of radius R = 3 m as shown in the figure. The height 'h' at which the block will lose contact with the surface of the sphere is ____m. (Assume there is no friction between the block and the hemisphere)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-small-block-slides-down-from_img1_20260504_225955.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_a-small-block-slides-down-from_img2_20260504_225955.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "2",
+    "explanation": "$m g \\cos \\θ={m v^{2}}/{R}$ .......(1) $\\cos \\θ={{h}}/{{R}}$ Energy conservation ${mg}\\{{R}-{h}\\}=\\frac{1}{2} {mv}^{2}$ .....(2) from (1) & (2) $\\⇒{mg}\\{{{h}}/{{R}}\\}={2 {mg}\\{{R}-{h}\\}}/{{R}}$ ${h}={2 {R}}/{3}=2 {m}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A force of ${F}=(5 {y}+20) {{j}↖{\\^}} {N}$ acts on a particle. The workdone by this force when the particle is moved from ${y}=0 {m}$ to ${y}=10 {m}$ is ______ J.",
+    "images": [],
+    "options": [],
+    "correct_answer": "450",
+    "explanation": "${F}=(5 {y}+20) {{j}↖{\\^}}$ $\\ω=\\∫F d y=\\∫↙{0} ↖{10}(5 y+20) d y$ $=({5 y^{2}}/{2}+20 y)_{0}^{10}$ $=\\frac{5}{2} \\×100+20 \\×10$ $=250+200=450 {J}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A porter lifts a heavy suitcase of mass $80 {kg}$ and at the destination lowers it down by a distance of $80 {cm}$ with a constant velocity. Calculate the workdone by the porter in lowering the suitcase. $($ take $g=9.8 {ms}^{-2})$",
+    "images": [],
+    "options": [
+      "A. $-62720.0 {J}$",
+      "B. $-627.2 {J}$",
+      "C. $+627.2 {J}$",
+      "D. $784.0 {J}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${W}_{\\text{Porter }}+{W}_{{mg}}=\\Δ{K} . {E} .=0$ ${W}_{\\text{Porter }}=-{W}_{{mg}}=-{mgh}$ $=-80 \\×9.8 \\×.8=-627.2 { J}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body at rest is moved along a horizontal straight line by a machine delivering a constant power. The distance moved by the body in time '$t$' is proportional to:",
+    "images": [],
+    "options": [
+      "A. ${t}^{\\frac{3}{2}}$",
+      "B. ${t}^{\\frac{1}{2}}$",
+      "C. ${t}^{\\frac{1}{4}}$",
+      "D. ${t}^{\\frac{3}{4}}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "${P}=$ constant $\\frac{1}{2} {mv}^{2}={Pt}$ $\\⇒ v \\∝\\\\sqrt{t}$ ${{dx}}/{{dt}}={C} \\\\sqrt{{t}}$ C = constant by integration. $x=C {t^{\\frac{1}{2}+1}}/{\\frac{1}{2}+1}$ $x \\∝t^{3 / 2}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "In a spring gun having spring constant $100 {N} / {m}$ a small ball 'B' of mass $100 {g}$ is put in its barrel (as shown in figure) by compressing the spring through $0.05 {m}$. There should be a box placed at a distance 'd' on the ground so that the ball falls in it. If the ball leaves the gun horizontally at a height of $2 {m}$ above the ground. The value of ${d}$ is ${m}$. $({g}=10 {m} / {s}^{2})$",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_in-a-spring-gun-having-spring-_img1_20260504_230002.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_in-a-spring-gun-having-spring-_img2_20260504_230003.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "1",
+    "explanation": "$\\frac{1}{2} {kx}^{2}=\\frac{1}{2} {mv}^{2}$ ${Kx}^{2}={mv}^{2}$ ${v}={x} \\\\sqrt{{{k}}/{{m}}}=0.05 \\\\sqrt{\\frac{100}{0.1}}$ $=0.05 \\×10 \\\\sqrt{10}$ ${v}=0.5 \\\\sqrt{10}$ From ${h}=\\frac{1}{2} {gt}^{2}$ ${t}=\\\\sqrt{{2 {h}}/{{g}}}=\\\\sqrt{\\frac{2 \\×2}{10}}={2}/{\\\\sqrt{10}}$ $\\∴{d}={vt}=0.5 \\\\sqrt{10} \\× {2}/{\\\\sqrt{10}}=1 {m}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A ball of mass $4 {kg}$, moving with a velocity of $10 {ms}^{-1}$, collides with a spring of length $8 {m}$ and force constant $100 {Nm}^{-1}$. The length of the compressed spring is $x {m}$. The value of $x$ to the nearest integer, is",
+    "images": [],
+    "options": [],
+    "correct_answer": "6",
+    "explanation": "Given, mass of the ball, $m=4 {kg}$ Velocity of the ball, $v=10 {m} {/} {s}$ Force constant, $k=100 {N} {/} {m}$ The length of the spring, $x=8 {m}$ Let $x$ is the compressed length of the spring. Using the work-energy theorem, \"It states that kinetic energy of the ball is converted into the stored energy of spring\". $\\;{m v^{2}}/{2}=\\;{k x^{2}}/{2}$ $⇒ \\;\\; \\;{4(10)^{2}}/{2}=\\;{(100) x^{2}}/{2}$ $⇒ x=2 m$ The final length (compressed) of the spring $=8-2=6 {m}$ Hence, the value of $x$ to the nearest integer is 6 .",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "As shown in the figure, a particle of mass $10 {kg}$ is placed at a point $A$. When the particle is slightly displaced to its right, it starts moving and reaches the point $B$. The speed of the particle at $B$ is $x {m} {/} {s}$. (Take, $g=10 {m} {/} {s}^{2}$ ) The value of $x$ to the nearest integer is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_as-shown-in-the-figure-a-parti_img1_20260504_230006.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_as-shown-in-the-figure-a-parti_img2_20260504_230006.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "10",
+    "explanation": "Given, The mass of the particle, $m=10 {kg}$ The speed of the particle at point $A, v_{A}=0 {m} {/} {s}$ The elevation of the point $A$ from the point $B, h_{A}=5+h_{B}$ Let's consider the speed of the particle at point $B=v_{B}$Using the law of conservation of energy. Energy at point $A=$ Energy at point $B$ $\\;\\frac{1}{2} m v_{A}^{2}+m g h_{A}=\\;\\frac{1}{2} m v_{B}^{2}+m g h_{B}$ Substituting the values in the above equations, we get $\\;\\frac{1}{2}(10)(0)^{2}+10 × 10 ×(5+h_{B})=\\;\\frac{1}{2}(10) v_{B}^{2}+10 × 10 × h_{B}$ $v_{B}=10 {m} / {s}=x {m} / {s}$ $∴ \\;\\; x=10$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A constant power delivering machine has towed a box, which was initially at rest, along a horizontal straight line. The distance moved by the box in time $t$ is proportional to",
+    "images": [],
+    "options": [
+      "A. $t^{2 / 3}$",
+      "B. $t^{3 / 2}$",
+      "C. $t$",
+      "D. $t^{1 / 2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "We know that, Power $=$ force $×$ velocity $[ ∵$ Given, power $=$ constant $]$ $∴$ Force $×$ velocity $=$ constant $⇒ \\;\\; m a × v=$ constant $⇒ \\;\\; a × v=$ constant $⇒ \\;\\; (v \\;\\frac{d v}{d x})(\\;\\frac{d x}{d t})=C ⇒ ∫ v d v=∫ C d t$ $⇒ \\;\\; \\;{v^{2}}/{2}=C t ⇒ v=\\sqrt{2 C t}$ $⇒ \\;\\; \\;\\frac{d x}{d t}=\\sqrt{2 C t}$ $[ ∵ v=\\;\\frac{d x}{d t}]$ $⇒ \\;\\; ∫ d x=∫ \\sqrt{2 C t d t} ⇒ x=\\sqrt{2 C}(\\;{t^{3{/ } 2}}/{3 {/ }2})$ $⇒ \\;\\; x ∝ t^{3{/ }2}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "- A boy is rolling a $0.5 {kg}$ ball on the frictionless floor with the speed of $20 {ms}^{-1}$. The ball gets deflected by an obstacle on the way. After deflection it moves with $5 \\%$ of its initial kinetic energy. What is the speed of the ball now ?",
+    "images": [],
+    "options": [
+      "A. $19.0 {ms}^{-1}$",
+      "B. $4.47 {ms}^{-1}$",
+      "C. $14.41 {ms}^{-1}$",
+      "D. $1.00 {ms}^{-1}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Given, mass of rolling ball, $m=0.5 {kg}$ Speed of ball, $u=20 {ms}^{-1}$ Before deflection, Initial kinetic energy, ${KE}_{1}=\\;\\frac{1}{2} m u^{2}$ $=\\;\\frac{1}{2} × 0.5 ×(20)^{2}$ $=\\;\\frac{1}{2} × 0.5 × 400=\\;\\frac{1}{2} × \\;\\frac{1}{2} × 400=100 {J}$ It is given in the question that after deflection the ball moves with $5 \\%$ of its initial kinetic energy ${KE}_{f}=5 \\%$ of ${KE}_{ {i}} ⇒ {KE}_{f}=\\;\\frac{5}{100} × 100=5 {J}$ If the final speed of the ball is $v {ms}^{-1}$, then ${KE}_{f}=\\;\\frac{1}{2} m v^{2}$ $⇒ \\;\\; 5=\\;\\frac{1}{2} × 0.5 × v^{2} ⇒ 10=0.5 × v^{2}$ $⇒ \\;\\; v^{2}=\\;\\frac{10}{0.5}=\\;\\frac{100}{5} ⇒ v^{2}=20$ $⇒ \\;\\; v=\\sqrt{20}=4.47 {ms}^{-1}$ $⇒ \\;\\; v=4.47 {ms}^{-1}$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "The potential energy (U) of a diatomic molecule is a function dependent on $r$ (interatomic distance) as $U=\\;{α}/{r^{10}}-\\;{β}/{r^{5}}-3$ where, $α$ and $β$ are positive constants. The equilibrium distance between two atoms will be $(\\;\\frac{2 α}{β})^{\\;\\frac{a}{b}}$, where $a=. . . . . . . . .$",
+    "images": [],
+    "options": [],
+    "correct_answer": "1",
+    "explanation": "Given, potential energy, $U=\\;{α}/{r^{10}}-\\;{β}/{r^{5}}-3$ As we know for equilibrium, differentiation of potential energy with respect to distance $(\\;\\frac{d u}{d r})=0$ $⇒ \\;\\; \\;\\frac{d}{d r}(\\;{α}/{r^{10}}-\\;{β}/{r^{5}}-3)=0$ $⇒ \\;\\;$ $\\;\\frac{d}{d r}(α r^{-10}-βr^{-5}-3) \\;\\; =0$ $-10 α r^{-11}+5 β r^{-6}-0 \\;\\; =0$ $⇒ \\;\\; 10 α r^{-11} \\;\\; =5 β r^{-6}$ $⇒ \\;\\; 2 α r^{-11} \\;\\; =β r^{-6}$ $⇒ \\;\\; \\;\\frac{2 α}{β}=\\;{r^{-6}}/{r^{-11}}=r^{5} ⇒ r \\;\\; =(\\;\\frac{2 α}{β})^{1 / 5}$ $⇒ \\;\\;\\;a=1$ $\\;⇒\\;\\;\\frac{d}{d r}(\\;{α}/{r^{10}}-\\;{β}/{r^{5}}-3) \\;\\; =0$ $⇒\\;\\;\\frac{d}{d r}(α r^{-10}-β r^{-5}-3) \\;\\; =0$ $⇒\\; \\;\\; -10 α r^{-11}+5 β r^{-6}-0 \\;\\; =0$ $⇒\\;10 α r^{-11} \\;\\; =5 β r^{-6}$ $⇒\\;2 α r^{-11} \\;\\; =βr^{-6}$ $⇒\\;\\;\\frac{2 α}{β}=\\;{r^{-6}}/{r^{-11}}=r^{5} ⇒ r \\;\\; =(\\;\\frac{2 α}{β})^{1 / 5}$ $\\;⇒\\;a \\;\\; =1$",
+    "year": 2021,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "If the potential energy between two molecules is given by ${\\text{U}}=-{{\\text{A}}}/ {{\\text{r}}^{6}}+{{\\text{B}}}/{{\\text{r}}^{12}},$ then at equilibrium, separation between molecules, and the potential energy are :",
+    "images": [],
+    "options": [
+      "A. $({{\\text{B}}}/{{\\text{A}}})^{1 / 6}, 0$",
+      "B. $({{\\text{B}}}/{2 {\\text{A}}})^{1 / 6},-{{\\text{A}}^{2}}/{2 {\\text{B}}}$",
+      "C. $({{2\\text{B}}}/{ {\\text{A}}})^{1 / 6},-{{\\text{A}}^{2}}/{4 {\\text{B}}}$",
+      "D. $({{2\\text{B}}}/{ {\\text{A}}})^{1 / 6},-{{\\text{A}}^{2}}/{2 {\\text{B}}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "${U}=-\\;{A}/{r^{4}}+\\;{B}/{r^{12}}$ ${F}=-\\;\\frac{d U}{d r}$ $\\;\\; =-(A(-6 r^{-7}))+B(-12 r^{-13})$ $\\;\\text{ for equilibrium, }\\; F=0$ $∴ 0=\\;{6 A}/{r^{2}}-\\;{12 B}/{r^{13}}$ $⇒ \\;\\frac{6 A}{12 B}=\\;{1}/{r^{6}}$ $⇒ {r}=(\\;\\frac{2 B}{A})^{\\;\\frac{1}{6}}$ $∴ {U}=-\\;{A}/{\\frac{2 B}{A}}+\\;{B}/{(\\;\\frac{2 B}{A})^{2}}$ $\\;\\; =-\\;{A^{2}}/{2 B}+\\;{A^{2}}/{4 B}$ $\\;\\; =-\\;{A^{2}}/{4 B}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $2{kg}$ is driven by an engine delivering a constant power $1{J} / {s}$ . The body starts from rest and moves in a straight line. After 9 seconds, the body has moved a distance (in m)______.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-body-of-mass-2kg-is-driven-b_img1_20260504_230016.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "18.00",
+    "explanation": "${P}= {mav}$ ${m} {{dv}}/{ {dt}} {v}= {P}$ $\\∫↙{0} ↖{v} v d v= \\frac{P}{m} \\∫↙{0} ↖{t} d t$ ${{v}^{2}}/{2}={{Pt}}/{ {m}}⇒{v}=({2 {Pt}}/{ {m}} )^{1 / 2}$ $\\frac{d x}{d t}=\\\\sqrt{ \\frac{2 P}{m}} t^{1 / 2}$ $∫↙{0} ↖{x} d x=\\sqrt{ \\frac{2 P}{m}} ∫↙{0} ↖{t} t^{1 / 2} d t$ ${x}=\\sqrt{{2 {P}}/{{m}}}{{t}^{3/ 2}}/{3 / 2}$ $=\\sqrt{{2 {P}}/{ {m}}}×\\frac{2}{3} {t}^{3 / 2}$ $=\\sqrt{\\frac{2 \\×1}{2}}×{2}{3} \\×9^{3 / 2}$ $= \\frac{2}{3} \\×27=18$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A person pushes a box on a rough horizontal platform surface. He applies a force of $200 \\ {N}$ over a distance of $15 \\ {m} .$ Thereafter, he getsprogressively tired and his applied force reduces linearly with distance of $100 \\ {N}$. The total distance through which the box has been moved is $30 \\ {m} .$ What is the work done by the person during the total movement of the box?",
+    "images": [],
+    "options": [
+      "A. $5690 \\ {J}$",
+      "B. $5250 \\ {J}$",
+      "C. $3280 \\ {J}$",
+      "D. $2780 \\ {J}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "${F}=200 {N} \\;\\;\\;$ for $0 ≤ {x} \\≤ 15$ $=200- \\frac{100}{15}( {x}-15)\\;\\;\\;$ for $15≤ {x} < 30$ ${W}=∫{Fdx}$ $=∫↙{0} ↖{15} 200 {dx}+∫↙{15} ↖{30} (300-\\frac{100}{15} {x} ) {dx}$ $=200 \\×15+300 \\×15-\\ \\frac{100}{15}$ $×{(30^{2}-15^{2} )}/{2}$ $=3000+4500-2250$ $=5250 \\ {J}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block starts moving up an inclined plane of inclination $30°$ with an initial velocity of $v_{0}$. It comes back to its initial position withvelocity ${v_{0}}/{2} .$ The value of the coefficient ofkinetic friction between the block and theinclined plane is close to ${{I}}/{1000},$ The nearestinteger to I is ________.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-block-starts-moving-up-an-in_img1_20260504_230020.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_a-block-starts-moving-up-an-in_img2_20260504_230020.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 3,
+        "filename": "Work Power and Energy/main_a-block-starts-moving-up-an-in_img3_20260504_230020.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "346",
+    "explanation": "${a}_{1}= {g}(\\sin \\θ+\\µ\\cos \\θ)$ $a_{2}=g(\\sin \\θ+\\µ\\cos \\θ)$ $∴\\frac{1}{2} {v}_{0}{{v}_{0}}/{ {a}_{1}}= \\frac{1}{2}({{v}_{0}}/{2})({{v}_{0}}/{2 {a}_{1}} )$ $\\⇒ 3 \\sin \\θ=5 \\µ\\cos \\θ$ $\\∴ \\µ=\\\\sqrt{3} / 5$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle is moving unidirectionally on a horizontal plane under the action of a constant power supplying energy source. The displacement (s) - time(t) graph that describes the motion of the particle is (graphs are drawn schematically and are not to scale):",
+    "images": [],
+    "options": [
+      "A. ",
+      "B. ",
+      "C. ",
+      "D. "
+    ],
+    "correct_answer": "C",
+    "explanation": "${{d} {K}}/{{dE}}= {P}= {\\cos t}$ $⇒{K}= {Pt}= \\frac{1}{2} \\ {mV}^{2}$ $∴{V}=\\sqrt{{2 {Pt}}/{ {m}}}={{ds}}/{ {dt}}$ $∴ {S}=\\sqrt{{2 {P}}/{ {m}}} \\frac{2}{3} {t}^{ \\frac{3}{2}}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A cricket ball of mass $0.15 \\ {kg}$ is thrownvertically up by a bowling machine so that itrises to a maximum height of $20 \\ {m}$ after leaving the machine. If the part pushing the ball applies a constant force $\\ {F}$ on the ball and moveshorizontally a distance of $0.2 \\ {m}$ whilelaunching the ball, the value of $\\ {F}($ in $\\ {N})$ is $({g}=10 {ms}^{-2}\\ )$ _______.",
+    "images": [],
+    "options": [],
+    "correct_answer": "150",
+    "explanation": "${W}_{ {F}}= \\frac{1}{2} {mv}^{2}= {mgh}$ ${F}( {S})= {mgh}$ ${F}(0.2)=(0.15)(10)(20)$ ${F}=150 \\ {N}$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A small block starts slipping down from a point $\\ {B}$ on an inclined plane $\\ {AB},$ which is making an angle $\\θ$ with the horizontal section $\\ {BC}$ is smooth and the remaining section CA is rough with a coefficient of friction $\\µ .$ It is found that the block comes to rest as it reaches the bottom (point A) of the inclined plane. If $\\ {BC}=2 \\ {AC}$ the coefficient of friction is given by $\\µ=\\ {k} \\tan \\θ$ ). The value of $\\ {k}$ is _______.",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-small-block-starts-slipping-_img1_20260504_230027.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_a-small-block-starts-slipping-_img2_20260504_230027.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "3",
+    "explanation": "Apply work energy theorem ${mg\\sin} \\θ( {AC}+2 {AC})$ $-\\µ{mg} \\cos \\θ {AC}=0$ $\\mu=3 \\tan \\θ$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Consider a force $\\vec{F} = -xi↖{\\^} + yj ↖{\\^}$ . The work done by this force in moving a particle from point A(1, 0) to B(0, 1) along the line segment is : (all quantities are in SI units)",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_consider-a-force-vecf-xi-yj-th_img1_20260504_230029.webp"
+      }
+    ],
+    "options": [
+      "A. $3/2$",
+      "B. 1",
+      "C. 2",
+      "D. $1/2$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$W=∫↖{r↖{ →}_g}↙{r↖{ →}_i}F↖{ →}.dr↖{ →}$ $W=∫↖{0}↙{1}-xdx+∫↖{1}↙{0}ydy$ $W=[-x^2/2]^0_1+[y^2/2]^1_0$ $=1J$",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "An elevator in a building can carry a maximum of 10 persons, with the average mass of each person being 68 kg. The mass of the elevator itself is 920 kg and it moves with a constant speed 3 m/s. The frictional force opposing the motion is 6000 N. If the elevator is moving up with its full capacity, the power delivered by the motor to the elevator (g = 10 m/s$^{ 2}$) must be at least :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_an-elevator-in-a-building-can-_img1_20260504_230030.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 56300 W",
+      "B. 48000 W",
+      "C. 66000 W",
+      "D. 62360 W"
+    ],
+    "correct_answer": "C",
+    "explanation": "elevater moving with constant speed hence T = 6800 + 9200 + 6000T = 22000 Npower = T . v = 22000 × 3 = 66000 W",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A uniform cable of mass ‘M’ and length ‘L’ is placed on a horizontal surface such that its $(1 /n)^{th}$ part is hanging below the edge of the surface. To lift the hanging part of the cable upto the surface, the work done should be:",
+    "images": [],
+    "options": [
+      "A. ${MgL}/n^{2}$",
+      "B. $\\ nMgL$",
+      "C. $\\frac{MgL}{2n}^{2}$",
+      "D. ${2 MgL}/n^{2}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "The resultant is the centre of mass of the part AB is shifter to top i.e.$\\Δ h=\\ \\frac{l}{2 n}$ $U=m g \\ Δ h c m$ $= \\frac{M}{L} ×\\frac{L}{n} \\× g \\×\\frac{L}{2 N}= {M g L}/{2 n^{2}}$ $U= {M g L}/{2 n^{2}}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle moves in one dimension from rest under the influence of a force that varies with the distance travelled by the particle as shown in the figure. The kinetic energy of the particle after it has travelled 3 m is:",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-particle-moves-in-one-dimens_img1_20260504_230034.webp"
+      }
+    ],
+    "options": [
+      "A. 5 J",
+      "B. 6.5 J",
+      "C. 4 J",
+      "D. 2.5 J"
+    ],
+    "correct_answer": "B",
+    "explanation": "$W=(2 ×2)+ \\frac{1}{2}(1)(5)=6.5 J$Final K.E. $=6.5 {J}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle which is experiencing a force, given by $\\vec{F}$ = $3i↖{\\^}$ - 12 $j↖{\\^}$ , undergoes a displacement of $\\vec{d}$ = $4\\vec{i}$ . If the particle had a kinetic energy of 3 J at the beginning of the displacement, what is its kinetic energy at the end of the displacement?",
+    "images": [],
+    "options": [
+      "A. 15 J",
+      "B. 10 J",
+      "C. 12 J",
+      "D. 9 J"
+    ],
+    "correct_answer": "A",
+    "explanation": "Work done = $\\vec{F}.\\vec{d}$ = 12 J work energy theorem $w_{\\text{net}}$ = Δ K.E. 12 = $K_f$ - 3 $K_f$ = 15 J",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block of mass m is kept on a platform which starts from rest with constant acceleration g/2 upward, as shown in fig. Work done bv normal reaction on block in time t is :",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-block-of-mass-m-is-kept-on-a_img1_20260504_230038.webp"
+      }
+    ],
+    "options": [
+      "A. 0",
+      "B. ${3mg^2t^2}/8$",
+      "C. - ${mg^2t^2}/8$",
+      "D. ${mg^2t^2}/8$"
+    ],
+    "correct_answer": "B",
+    "explanation": "N - mg = ${mg}/2$ ⇒ N = ${3mg}/2$ Now, work done W = $\\vec{N}\\vec{S}$ = $({3mg}/2)(1/2 gt^2)$ ⇒ W = ${3mg^2t^2}/8$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A force acts on a 2 kg object so that its position is given as a function of time as x = $3t^2$ + 5. What is the work done by this force in first 5 seconds ?",
+    "images": [],
+    "options": [
+      "A. 850 J",
+      "B. 900 J",
+      "C. 950 J"
+    ],
+    "correct_answer": "B",
+    "explanation": "x = $3t^2$ + 5 v = $\\frac{dx}{dt}$ v = 6t + 0 at t = 0 , v = 0 t = 5 sec , v = 30 m/s W.D. = ΔKE W.D. = $1/2 mv^2$ - 0 = $1/2(2)(30)^2$ = 900 J",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle (m = 1 kg) slides down a frictionless track (AOC) starting from rest at a point A (height 2 m). After reaching C, the particle continues to move freely in air as a projectile. When it reaching its highest point P (height 1 m), the kinetic energy of the particle (in J) is : (Figure drawn is schematic and not to scale; take g=10 ms$^{–2}$)_____ [7-Jan-2020 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-particle-m-1-kg-slides-down-_img1_20260504_230041.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_a-particle-m-1-kg-slides-down-_img2_20260504_230041.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [],
+    "correct_answer": "10",
+    "explanation": "Mechanical energy conservation between A & P",
+    "year": 2020,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "NAT"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A 60 HP electric motor lifts an elevator havinga maximum total load capacity of 2000 kg. If the frictional force on the elevator is 4000 N,the speed of the elevator at full load is close to:(1 HP = 746 W, g = 10 ms$^{–2}$) [7-Jan-2020 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-60-hp-electric-motor-lifts-a_img1_20260504_230043.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 1.7 ms$^{–1 }$",
+      "B. 2.0 ms$^{–1 }$",
+      "C. 1.9 ms$^{–1 }$",
+      "D. 1.5 ms$^{–1 }$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let elevator is moving upward with constant speed V. Tension in cable $T = 2000 g + f_r$ $= 2000 + 4000$T = 24000 NPower P = TV ⇒ 60 × 746 = (24000) V$\\text{V}={60×746}/24000=1.865$ ≈ 1.9 m/s.",
+    "year": 2000,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A block of mass m, lying on a smoothhorizontal surface, is attached to a spring (ofnegligible mass) of spring constant k. The otherend of the spring is fixed, as shown in thefigure. The block is initally at rest in itsequilibrium position. If now the block is pulledwith a constant force F, the maximum speed ofthe block is : [9-Jan-2019 Shift 1]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-block-of-mass-m-lying-on-a-s_img1_20260504_230045.webp"
+      }
+    ],
+    "options": [
+      "A. ${πF}/\\sqrt{mk}$",
+      "B. ${2F}/\\sqrt{mk}$",
+      "C. ${F}/\\sqrt{mk}$",
+      "D. ${πF}/{π\\sqrt{mk}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Maximum speed is at mean position (equilibrium). F = kx x = $F/K$ $W_F$ + $W_{sp}$ = Δ KE F (x) - $1/2 kx^2$ = $1/2 mv^2$ - 0 F $(F/k)$ - $1/2k(F/k)^2$ = $1/2 mv^2$ ⇒ $v_{\\max}$ = $F/\\sqrt{mk}$",
+    "year": 2019,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Two particles of the same mass m are moving in circular orbits because of force,given by $F(r)={-16}/r-r^3$ The first particle is at a distance $r=1$, and the second, at $r=4$. The best estimate for the ratio of kinetic energies of the first and the second particle is closest to :[Main 16 April 2018 S1]",
+    "images": [],
+    "options": [
+      "A. $6×10^{-2}$",
+      "B. $3×10^{-3}$",
+      "C. $10^{-1}$",
+      "D. $6×10^{2}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass m starts moving from rest along x-axis so that its velocity varies as $υ=a\\text{sqrts}$where a is a constant and s is the distance covered by the body. The total work done by all the forces acting on the body in the first t seconds after the start of the motion is :[Main 16 April 2018 S1]",
+    "images": [],
+    "options": [
+      "A. $1/8ma^4t^2$",
+      "B. $8ma^4t^2$",
+      "C. $4ma^4t^2$",
+      "D. $1/4ma^4t^2$"
+    ],
+    "correct_answer": "A",
+    "explanation": "",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle is moving in a circular path of radius a under the action of an attractive potential $U=-k/{2r^2}$. Its total energy is :[Main 8 April 2018]",
+    "images": [],
+    "options": [
+      "A. $-k/{4a^2}$",
+      "B. $k/{2a^2}$",
+      "C. Zero",
+      "D. $-3/2k/a^2$"
+    ],
+    "correct_answer": "C",
+    "explanation": "$F=-\\frac{du}{dr}=k/r^3$ ${mv^2}/a=k/a^3$ $⇒KE=k/{2a^2}$ $PE=\\frac{-k}{2a^2}$TE$=0$",
+    "year": 2018,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "An object is dropped from a height h from the ground. Everytime it hits the ground it loses 50% of its kinetic energy. The total distance covered as $t→∞$ is :[Main 8 April 2017]",
+    "images": [],
+    "options": [
+      "A. 2h",
+      "B. $∞$",
+      "C. $5/3$h",
+      "D. $8/3$h",
+      "E. None of the above"
+    ],
+    "correct_answer": "E",
+    "explanation": "$1/2mv'^2={1/2}1/2mv^2$ $v'=v/\\sqrt2$ $v=eu$ $e=1/\\sqrt2$ $H=λ(\\frac{1+e^2}{1-e^2})$ $=h(\\frac{1+1/2}{1+1/2})=3h$",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $m=10^{–2}$kg is moving in a medium and experiences a frictional force $F=- kv^2$. Its initial speed is $v_0=10ms^{–1}$. If, after 10 s, its energy is $1/8mv^2_0$, the value of k will be:-[Main 2017]",
+    "images": [],
+    "options": [
+      "A. $10^{-4}kgm^{-1}$",
+      "B. $10^{-1}kgm^{-1}s^{-1}$",
+      "C. $10^{-3}kgm^{-1}$",
+      "D. $10^{-3}kgs^{-1}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$1/2mv^2_f=1/8mv_0^2$ $V_f=V_0/2=5 m/s$ $(10^{-2})\\frac{dv}{dt}=-kv^2$ $∫↖{5}↙{10}{dv}/V^2=-100k∫↖{10}↙{0}dt$ $1/5-1/10=100(k)(10)$ $k=10^{-4}$",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A time dependent force F = 6t acts on a particle of mass 1 kg. If the particle starts from rest, the work done by the force during the first 1 sec. will be :[Main 2017]",
+    "images": [],
+    "options": [
+      "A. 9 J",
+      "B. 18 J",
+      "C. 4.5 J",
+      "D. 22 J"
+    ],
+    "correct_answer": "C",
+    "explanation": "F = 6t = ma⇒ a = 6t$⇒\\frac{dv}{dt}=6t$ $∫↖{v}↙{0}dv=∫↖{1}↙{0}$ $v=(3t^2)^1_0=3$m/sFrom work energy theorem$W_F=ΔK.E=1/2m(v^2-u^2)$ $=1/2(1)(9-0)=4.5$J",
+    "year": 2017,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle of mass M is moving in a circle of fixed radius R in such a way that its centripetal acceleration at time t is given by $n^2Rt^2$ where n is a constant. The power delivered to the particle by the force acting on it, is:[Main 10 Apr 2016]",
+    "images": [],
+    "options": [
+      "A. $Mn^2R^2t$",
+      "B. $MnR^2t$",
+      "C. $MnR^2t^2$",
+      "D. $1/2Mn^2R^2t^2$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$V^2/R=n^2Rt^2$ $⇒V^2=n^2R^2t^2$ $⇒V=nRt$ $⇒\\frac{dV}{dt}=nR$ $P=F_tV$ $=\\frac{mdV}{dt}V$ $=mnR.nRT$ $P=n^2R^2tm$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "Velocity-time graph for a body of mass 10 kg is shown in figure. Work-done on the body in first two seconds of the motionis :[Main 10 Apr 2016]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_velocity-time-graph-for-a-body_img1_20260504_230100.webp"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_velocity-time-graph-for-a-body_img2_20260504_230100.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. 12000 J",
+      "B. −12000 J",
+      "C. −4500 J",
+      "D. −9300 J"
+    ],
+    "correct_answer": "C",
+    "explanation": "$8/V=10/50$ $V=40$m/s$W=1/2×10×(1600-2500)$ $=1/2×10×(-900)$ $=-4500J$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A car of weight W is on an inclined road that rises by 100 m over a distance of 1 km and applies a constant frictional force $W/20$ on the car. While moving uphill on the road at a speed of $10 ms^{-1}$, the car needs power P. If it needs power $P/2$ while moving downhill at speed $υ$ then value of $υ$ is :[Main 9 Apr 2016]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-car-of-weight-w-is-on-an-inc_img1_20260504_230102.webp",
+        "type": "explanation"
+      },
+      {
+        "index": 2,
+        "filename": "Work Power and Energy/main_a-car-of-weight-w-is-on-an-inc_img2_20260504_230102.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $20ms^{-1}$",
+      "B. $15ms^{-1}$",
+      "C. $10ms^{-1}$",
+      "D. $5ms^{-1}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "While going up$(\\text{sin}θ=\\text{tan}θ=1/10)$ $W\\text{sin}θ\\;10+{W/20}10=P$ ${3W}/2=P$While going down$W/20v=P/2={3W}/4$ $v=15$m/s",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A point particle of mass m, moves along the uniformly rough track PQR as shown in the figure. The coefficient of friction, between the particle and the rough track equals μ.The particle is released, from rest, from the point P and it comes to rest at a point R. The energies, lost by the ball,over the parts, PQ and QR, of the track, are equal to each other, and no energy is lost when particle changes direction from PQ to QR.The values of the coefficient of friction μ and the distance x(=QR), are, respectively close to[Main 2016]",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-point-particle-of-mass-m-mov_img1_20260504_230104.webp"
+      }
+    ],
+    "options": [
+      "A. 0.2 and 3.5 m",
+      "B. 0.29 and 3.5 m",
+      "C. 0.29 and 6.5 m",
+      "D. 0.2 and 6.5 m"
+    ],
+    "correct_answer": "B",
+    "explanation": "Since work done by friction on parts PQ and QR are equal$-µmg×\\sqrt3/2×4=-µmgx$ (QR = x)$⇒x=2\\sqrt3m≈3.5m$Applying work energy theorem from P to R$\\text{mg}\\;\\sin30°×4-µmgx=0$ $⇒µ=1/{2\\sqrt3} ≈0.29.$",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A person trying to lose weight by burning fat lifts a mass of 10 kg upto a height of 1 m 1000 times. Assume that the potential energy lost each time he lowers the mass is dissipated. How much fat will he use up considering the work done only when the weight is lifted up? Fat supplies $3.8×10^7J$ of energy per kg which is converted to mechanical energy with a 20 % efficiency rate. Take $g= 9.8\\;ms^{-2}$ :[Main 2016]",
+    "images": [],
+    "options": [
+      "A. $6.45×10^{-3}$ kg",
+      "B. $9.89×10^{-3}$ kg",
+      "C. $12.89×10^{-3}$ kg",
+      "D. $2.45×10^{-3}$ kg"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let fat used be ‘x’ kg⇒ Mechanical energy available $=x×3.8×10^7×20/100$ $⇒x×3.8×10^7×20/100=9.8×10^4$ $⇒x≈12.89×10^{-3}$kg",
+    "year": 2016,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "When a rubber-band is stretched by a distance x,it exerts a restoring force of magnitude $F=ax+bx^2$ where a and b constants.The work done in stretching the unstretched rubber band by L is :[Main 2014]",
+    "images": [],
+    "options": [
+      "A. ${aL}^2/2+{bL}^3/3$",
+      "B. $1/2({aL}^2/2+{bL}^3/3)$",
+      "C. ${aL}^2+{bL}^3$",
+      "D. $1/2({aL}^2+{bL}^3)$"
+    ],
+    "correct_answer": "A",
+    "explanation": "$F=ax+bx^2$dw = Fdx$w=∫↖{L}↙{0}(ax+bx^2)dx$ $w={aL}^2/2+{bL}^3/3$",
+    "year": 2014,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "This question has Statement 1 and Statement 2 . Of the four choices given after the Statements, choose the one that best describes the two Statements.If two springs $S_1$ and $S_2$ of force constants $k_1$ and $k_2$, respectively, are stretched by the same force, it is found that more work is done on spring $S_1$ than on spring $S_2$.STATEMENT 1: If stretched by the same amount work done on $S_1$, Work done on $S_1$ is more than $S_2$STATEMENT 2: $k_1< k_2$",
+    "images": [],
+    "options": [
+      "A. Statement 1 is false, Statement 2 is true",
+      "B. Statement 1 is true, Statement 2 is false",
+      "C. Statement 1 is true, Statement 2 is true, Statement 2 is the correct explanation for Statement 1",
+      "D. Statement 1 is true, Statement 2 is true, Statement 2 is not the correct explanation for Statement 1"
+    ],
+    "correct_answer": "A",
+    "explanation": "We know force $(F)=k x$ $\\;W=\\;\\frac{1}{2} k x^2$ $\\;W=\\;\\frac{(k x)^2}{2 k}$ $\\; ∴ W=\\;\\frac{F^2}{2 k}[\\;\\text{ as }\\; F=k x]$When force is same then,$W ∝ \\;\\frac{1}{k}$Given that, $W_1>W_2$ $∴ k_1< k_2$ Statement-2 is true.For the same extension, ${\\text{x}}_1= {\\text{x}}_2= {\\text{x}}$Work done on spring ${\\text{S}}_1$ is ${\\text{W}}_1=\\;\\frac{1}{2} k_1 x_1^2=\\;\\frac{1}{2} k_1 x^2$Work done on spring ${\\text{S}}_2$ is ${\\text{W}}_2=\\;\\frac{1}{2} k_2 x_2^2=\\;\\frac{1}{2} k_2 x^2$ $∴ \\;\\frac{W_1}{W_2}=\\;\\frac{k_1}{k_2}$As $k_1< k_2$ then $W_1< W_2$So, Statement-1 is false.",
+    "year": 2012,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "The potential energy function for the force between two atoms in a diatomic molecule is approximately given by $U(x)=\\;{a}/{x^{12}}-\\;\\frac{b}{x^6}$, where $a$ and $b$ are constants and $x$ is the distance between the atoms. If the dissociation energy of the molecule is $D= [U(x=∞)-U_{\\;\\text{at equilibrium }\\;}] , D$ is",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{b^2}{2 a}$",
+      "B. $\\;\\frac{b^2}{12 a}$",
+      "C. $\\;\\frac{b^2}{4 a}$",
+      "D. $\\;\\frac{b^2}{6a}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given $U(x)=\\;{a}/{x^{12}}-\\;\\frac{b}{x^5}$ $U(x=∞)=0$We know $F=-\\;\\frac{d U}{d x}=- [\\;{12 a}/{x^{13}}+\\;\\frac{6 b}{x^7}]$At equilibrium: $\\;\\frac{d U(x)}{d x}=0$ $\\;⇒ \\;{-12 a}/{x^{13}}=\\;\\frac{-6 b}{x^7}$ $\\;⇒ x= (\\;\\frac{2 a}{h}) ^{\\;\\frac{1}{6}}$ $\\; ∴ U_{a t} \\;\\text{ equilibrium }\\;=\\;{a}/{ (\\;\\frac{2 a}{b}) ^2}-\\;{b}/{ (\\;\\frac{2 a}{b}) }$ $\\;=-\\;\\frac{b^2}{4 a}$ $\\; ∴ D=0- (-\\;\\frac{b^2}{4 a}) =\\;\\frac{b^2}{4 a}$",
+    "year": 2010,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "An athlete in the Olympic games covers a distance of $100 {\\text{m}}$ in $10 {\\ s}$. His kinetic energy can be estimated to be in the range",
+    "images": [],
+    "options": [
+      "A. $200 J-500 J$",
+      "B. $2 × 10^5 J-3 × 10^5 J$",
+      "C. $20,000 J-50,000 J$",
+      "D. $2,000 J-5,000 J$"
+    ],
+    "correct_answer": "D",
+    "explanation": "The average speed of the athlete$v=\\;\\frac{100}{10}=10 m {/} s \\;\\; ∴ K . E .=\\;\\frac{1}{2} m v^2$If mass of athlete is $40 {\\text{kg}}$ then, $K . E .=\\;\\frac{1}{2} × 40 ×(10)^2=2000 J$If mass of athlete is $100 {\\text{kg}}$ then, $K . E .=\\;\\frac{1}{2} × 100 ×(10)^2=5000 J$His kinetic energy can be in the range $=2000 {\\text{J}}$ to $5000 {\\text{J}}$.",
+    "year": 2008,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle is projected at $60^{∘}$ to the horizontal with a kinetic energy ${\\text{K}}$. The kinetic energy at the highest point is",
+    "images": [],
+    "options": [
+      "A. $\\text{K}/2$",
+      "B. K",
+      "C. Zero",
+      "D. $\\text{K}{/}4$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Let $u$ be the velocity with which the particle is thrown and $m$ be the mass of the particle. Then $K E=\\;\\frac{1}{2} m u^2$ .....(1) At the highest point the velocity is $u \\cos 60^{∘}$ (only the horizontal component remains, the vertical component being zero at the top-most point). Therefore kinetic energy at the highest point,$(K E)_H=\\;\\frac{1}{2} m u^2 \\cos ^2 60^{∘}$ $=\\;\\frac{K}{4}$ [From eq (1)]",
+    "year": 2007,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A $2 {\\text{kg}}$ block slides on a horizontal floor with a speed of $4 {\\text{m}} {/} {\\ s}$. It strikes a uncompressed spring, and compress it till the block is motionless. The kinetic friction force is $15 N$ and spring constant is $10,000 {\\text{N}} {/} {\\text{m}}$. The spring compresses by",
+    "images": [],
+    "options": [
+      "A. $8.5$ cm",
+      "B. $5.5$ cm",
+      "C. $2.5$ cm",
+      "D. $11.0$ cm"
+    ],
+    "correct_answer": "B",
+    "explanation": "Let the block compress the spring by $x$ before coming to rest. Initial kinetic energy of the block $=$ (potential energy of compressed spring) $+$ work done due to friction. $\\;\\frac{1}{2} × 2 ×(4)^2=\\;\\frac{1}{2} × 10000 × x^2+15 × x$ $10,000 x^2+30 x-32=0$ $⇒ 5000 x^2+15 x-16=0$ $∴ x=\\;{-15 ± {\\sqrt{(15)^2-4 ×(5000)(-16)}}}/{2 × 5000}$ $=0.055 m=5.5 {\\text{cm}}$",
+    "year": 2007,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A ball of mass $0.2 {\\text{kg}}$ is thrown vertically upwards by applying a force by hand. If the hand moves $0.2 {\\text{m}}$ while applying the force and the ball goes upto $2 {\\text{m}}$ height further, find the magnitude of the force. (consider $g=10 {\\text{m}} / {\\ s}^2$ ).",
+    "images": [],
+    "options": [
+      "A. $4 N$",
+      "B. $16 N$",
+      "C. $20 N$",
+      "D. $22 N$"
+    ],
+    "correct_answer": "D",
+    "explanation": "According to energy conservation law,Work done by the hand and due to gravity = total change in the kinetic energyInitially the the ball is at rest and finally at top its velocity become zero so total change in kinetic energy $∆ K=0$ $W_{\\;\\text{hand }\\;}+W_{\\;\\text{gravity }\\;}=∆ K$[Here distance covered would be $0.2$ meter for force by hand as force is applied while ball is in contact with hand.And gravity will still work while ball is in contact with hand so total distance due to gravity would be $2+0.2=2.2$ meter. $]$ $⇒ F(0.2)-(0.2)(10)(2.2)=0 ⇒ F=22 N$ $∴$ Option (D) is correct.",
+    "year": 2006,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle of mass $100 {\\text{g}}$ is thrown vertically upwards with a speed of $5 {\\text{m}} / {\\ s}$. The work done by the force of gravity during the time the particle goes up is",
+    "images": [],
+    "options": [
+      "A. $-0.5\\text{J}$",
+      "B. $-1.25\\text{J}$",
+      "C. $1.25\\text{J}$",
+      "D. $0.5\\text{J}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Kinetic energy at point of throwing is converted into potential energy of the particle during rise.$\\;K . E=\\;\\frac{1}{2} m v^2=\\;\\frac{1}{2} × 0.1 × 25=1.25 J$ $\\;W=-m g h=- (\\;\\frac{1}{2} m v^2) =-1.25 J$[As we know, $m g h=\\;\\frac{1}{2} m v^2$ by energy conservation ]",
+    "year": 2006,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "The potential energy of a $1 {\\text{kg}}$ particle free to move along the $x$-axis is given by $V(x)= (\\;\\frac{x^4}{4}-\\;\\frac{x^2}{2}) J$The total mechanical energy of the particle is $2 J$. Then, the maximum speed (in ${\\text{m}} / {\\ s}$ ) is",
+    "images": [],
+    "options": [
+      "A. $3/\\sqrt2$",
+      "B. $\\sqrt2$",
+      "C. $1/\\sqrt2$",
+      "D. $2$"
+    ],
+    "correct_answer": "A",
+    "explanation": "Velocity is maximum when kinetic energy is maximum and when kinetic energy is maximum then potential energy should be minimumFor minimum potential energy, For minimum potential energy,$\\;\\;\\frac{d V}{d x}=0$ $\\;⇒ x^3-x=0$ $\\;⇒ x=± 1$⇒ Min. Potential energy (P.E.) $;=\\;\\frac{1}{4}-\\;\\frac{1}{2}=-\\;\\frac{1}{4} J$ $\\;K ⋅ E ⋅(\\max .)+P ⋅ E ⋅(\\min .)=2$ 𝜕(Given) $\\; ∴ K ⋅ E ⋅(\\max .)=2+\\;\\frac{1}{4}=\\;\\frac{9}{4}$ $\\; ∴ \\;\\frac{1}{2} m v_{\\max }^2=\\;\\frac{9}{4}$ $\\;⇒ \\;\\frac{1}{2} × 1 × v^2{ }_{\\max .}=\\;\\frac{9}{4}$ $\\;⇒ v_{\\max }=\\;{3}/{{\\sqrt{2}}} {\\text{m}} {/} {\\ s}$",
+    "year": 2006,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A mass of $M {\\text{kg}}$ is suspended by a weightless string. The horizontal force that is required to displace it until the string makes an angle of $45^{∘}$ with the initial vertical direction is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-mass-of-m-textkg-is-suspende_img1_20260504_230124.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $M g({\\sqrt{2}}+1)$",
+      "B. $M g {\\sqrt{2}}$",
+      "C. $\\;{M g}/{{\\sqrt{2}}}$",
+      "D. $M g({\\sqrt{2}}-1)$"
+    ],
+    "correct_answer": "D",
+    "explanation": "From work energy theorem we can say,Work done by tension + work done by force (applied) + Work done by gravitational force $=$ change in kinetic energy Here Work done by tension is zero$\\;⇒ 0+F × A B-M g × A C=0$ $⇒ F=M g (\\;\\frac{A C}{A B}) =M g [\\;{1-{1}/{{\\sqrt{2}}}}/{\\frac{1}{2}}]$as $A B=ℓ sin \\;45^{∘}=\\;{ℓ}/{{\\sqrt{2}}$ and $A C=O C-O A=ℓ-ℓ \\cos 45^{∘}=ℓ (1-\\;{1}/{{\\sqrt{2}}})$where ℓ= length of the string. $\\;⇒ F=M g({\\sqrt{2}}-1)$",
+    "year": 2006,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A bullet fired into a fixed target loses half of its velocity after penetrating $3 {\\text{cm}}$. How much further it will penetrate before coming to rest assuming that it faces constant resistance to motion?",
+    "images": [],
+    "options": [
+      "A. $2.0 {\\text{cm}}$",
+      "B. $3.0 {\\text{cm}}$",
+      "C. $1.0 {\\text{cm}}$",
+      "D. $1.5 {\\text{cm}}$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Let $K$ be the initial kinetic energy and $F$ be the resistive force. Then according to work energy theorem,$W=∆ K$ i.e., $3 F=\\;\\frac{1}{2} m v^2-\\;\\frac{1}{2} m (\\;\\frac{v}{2}) ^2$......(i) Let the bullet will penetrate ${\\text{x}} {\\text{cm}}$ more before coming to rest. $∴ F x=\\;\\frac{1}{2} m (\\;\\frac{v}{2}) ^2-\\;\\frac{1}{2} m(0)^2$.......(ii) Dividing eq. (i) and (ii) we get,$\\;\\frac{x}{3}=\\;\\frac{1}{3}$ or $x=1 {\\text{cm}}$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "The upper half of an inclined plane with inclination $\\phi$ is perfectly smooth while the lower half is rough. A body starting from rest at the top will again come to rest at the bottom if the coefficient of friction for the lower half is given by",
+    "images": [],
+    "options": [
+      "A. $2 \\cos φ$",
+      "B. $2 \\sin φ$",
+      "C. $\\tan φ$",
+      "D. $2 \\tan φ$"
+    ],
+    "correct_answer": "D",
+    "explanation": "Let the length of the inclined plane is $=l$. So only $\\;\\frac{l}{2}$ part will have friction.According to work-energy theorem, $W=∆ k=0$ (Since initial and final speeds are zero)$∴$ Work done by friction $+$ Work done by gravity $=0$i.e., $-(µ m g \\cos φ) \\;\\frac{ℓ}{2}+m g ℓ sin \\;φ=0$or $\\;\\frac{µ}{2} \\cos φ= sin \\;φ$or $µ=2 \\tan φ$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A spherical ball of mass $20 {\\text{kg}}$ is stationary at the top of a hill of height $100 {\\text{m}}$. It rolls down a smooth surface to the ground, then climbs up another hill of height $30 {\\text{m}}$ and finally rolls down to a horizontal base at a height of $20 {\\text{m}}$ above the ground. The velocity attained by the ball is",
+    "images": [
+      {
+        "index": 1,
+        "filename": "Work Power and Energy/main_a-spherical-ball-of-mass-20-te_img1_20260504_230129.webp",
+        "type": "explanation"
+      }
+    ],
+    "options": [
+      "A. $20$ m/s",
+      "B. $40$ m/s",
+      "C. $10\\sqrt30$ m/s",
+      "D. $10$ m/s"
+    ],
+    "correct_answer": "B",
+    "explanation": "Loss in potential energy $=$ gain in kinetic energy$\\;m × g × 80=\\;\\frac{1}{2} m v^2$ $\\;⇒ 10 × 80=\\;\\frac{1}{2} v^2$ $\\;⇒ v^2=1600 \\;\\text{ or }\\; v=40 {\\text{m}} {/} {\\ s}$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass $m$ is accelerated uniformly from rest to a speed $v$ in a time $T$. The instantaneous power delivered to the body as a function of time is given by",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{m v^2}{T^2} ⋅ t^2$",
+      "B. $\\;\\frac{m v^2}{T^2} ⋅ t$",
+      "C. $1/2\\;\\frac{m v^2}{T^2} ⋅ t^2$",
+      "D. $1/2\\;\\frac{m v^2}{T^2} ⋅ t$"
+    ],
+    "correct_answer": "B",
+    "explanation": "$u=0 ; v=u+a T ; v=a T$Instantaneous power $=F × v=m . a ⋅ a t=m ⋅ a^2 ⋅ t$ $∴$ Instantaneous power $=\\;\\frac{m v^2 t}{T^2}$",
+    "year": 2005,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle is acted upon by a force of constant magnitude which is always perpendicular to the velocity of the particle, the motion of the particles takes place in a plane. It follows that",
+    "images": [],
+    "options": [
+      "A. its kinetic energy is constant",
+      "B. is acceleration is constant",
+      "C. its velocity is constant",
+      "D. it moves in a straight line"
+    ],
+    "correct_answer": "A",
+    "explanation": "Work done by such force is always zero when a force of constant magnitude always at right angle to the velocity of a particle when the motion of the particle takes place in a plane.$∴$ From work-energy theorem, $∆ K=0$ $∴ K$ remains constant.",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A particle moves in a straight line with retardation proportional to its displacement. Its loss of kinetic energy for any displacement $x$ is proportional to",
+    "images": [],
+    "options": [
+      "A. $x$",
+      "B. $e^x$",
+      "C. $x^2$",
+      "D. $\\log_ex$"
+    ],
+    "correct_answer": "C",
+    "explanation": "Given that, retardation $∝$ displacement$⇒ a=-k x$But we know $a=v \\;\\frac{d v}{d x}$ $\\; ∴ \\;\\frac{v d v}{d x}=-k x$ $\\;⇒ ∫↙{v_1}↖{v_2} v d v=-k ∫↙{0}↖{x} x \\text{dx}$ $\\; (v_2^2-v_1^2) =-k \\;\\frac{x^2}{2}$ $\\;⇒ \\;\\frac{1}{2} m (v_2^2-v_1^2) =\\;\\frac{1}{2} m k (\\;\\frac{-x^2}{2})$ $∴$ Loss in kinetic energy is proportional to $x^2$.$∴ ∆ K ∝ x^2$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A uniform chain of length $2 {\\text{m}}$ is kept on a table such that a length of $60 {\\text{cm}}$ hangs freely from the edge of the table. The total mass of the chain is $4 {\\text{kg}}$. What is the work done in pulling the entire chain on the table?",
+    "images": [],
+    "options": [
+      "A. $12$ J",
+      "B. $3.6$ J",
+      "C. $7.2$ J",
+      "D. $1200$ J"
+    ],
+    "correct_answer": "B",
+    "explanation": "Mass of hanging part $(m^{'}) =\\;\\frac{4}{2} ×(0.6) k g=1.2 {\\text{kg}}$Let at the surface $P E=0$Center of mass of hanging part $=0.3 {\\text{m}}$ below the surface of the table$U_i=-m^{'} g x=-1.2 × 10 × 0.30=-3.6 {\\text{J}}$ $∆ U=m^{'} g x=3.6 {\\text{J}}=$ Work done in putting the entire chain on the table.",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A force $\\vec{F}=(\\vec{5 i}+3 \\vec{j}+2 \\vec{k}) N$ is applied over a particle which displaces it from its origin to the point $\\vec{r}=(\\vec{2 i}-\\vec{j}) m$. The work done on the particle in joules is",
+    "images": [],
+    "options": [
+      "A. $+10$",
+      "B. $+7$",
+      "C. $-7$",
+      "D. $+13$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Work done when the particle displaces from the origin, $W=\\vec{F} ⋅ \\vec{x}$ $=(5 {i}↖{∧}+3 {j}↖{∧}+2 {k}↖{∧}) ⋅(2 {i}↖{∧}-{j}↖{∧})$ $=10-3=7 {\\text{J}}$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body of mass ${ }^{'} m^{'}$, acceleration uniformly from rest to ${ }^{'} v_1^{'}$ in time $T$. The instantaneous power delivered to the body as a function of time is given by",
+    "images": [],
+    "options": [
+      "A. $\\;\\frac{m v_1 t^2}{T}$",
+      "B. $\\;\\frac{m v_1^2 t}{T^2}$",
+      "C. $\\;\\frac{m v_1 t}{T}$",
+      "D. $\\;\\frac{m v_1^2 t}{T}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Assume acceleration of body be $a$ $∴ v_1=0+a T ⇒ a=\\;\\frac{v_1}{T}$ $∴ v=a t ⇒ v=\\;\\frac{v_1 t}{T}$ $P_{\\;\\text{inst }\\;}=\\vec{F} ⋅ \\vec{v}=(m \\vec{a}) ⋅ \\vec{v}$ $= (\\;\\frac{m v_1}{T}) (\\;\\frac{v_1 t}{T})$ $=m (\\;\\frac{v_1}{T}) ^2 t$",
+    "year": 2004,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A wire suspended vertically from one of its ends is stretched by attaching a weight of $200 {\\text{N}}$ to the lower end. The weight stretches the wire by $1 {\\text{mm}}$. Then the elastic energy stored in the wire is",
+    "images": [],
+    "options": [
+      "A. $0.2$ J",
+      "B. $10$ J",
+      "C. $20$ J",
+      "D. $0.1$ J"
+    ],
+    "correct_answer": "D",
+    "explanation": "The elastic potential energy$\\;=\\;\\frac{1}{2} × \\;\\text{ Force }\\; × \\;\\text{ extension }\\;$ $\\;=\\;\\frac{1}{2} × 200 × 0.001=0.1 {\\text{J}}$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A body is moved along a straight line by a machine delivering a constant power. The distance moved by the body in time ${ }^{'} t$ ' is proportional to",
+    "images": [],
+    "options": [
+      "A. $t^{3 {/} 4}$",
+      "B. $t^{3 {/} 2}$",
+      "C. $t^{1{/} 4}$",
+      "D. $t^{1{/} 2}$"
+    ],
+    "correct_answer": "B",
+    "explanation": "We know that $F × v=$ Power According to the question, power is constant. $∴ F × v=c \\;\\;$ where $c=$ constant $∴ m \\;\\frac{d v}{d t} × v=c \\;\\; ( ∴ F=m a=\\;\\frac{m d v}{d t})$ $∴ m ∫↙{0}↖{v} v d v=c ∫↙{0}↖{t} \\text{dt} \\;\\; ∴ \\;\\frac{1}{2} m v^2=c t$ $∴ v=\\sqrt{\\;\\frac{2 c}{m}} × t^{1 / 2}$ $\\;\\frac{d x}{d t}=\\sqrt{\\;\\frac{2 c}{m}} × t^{1 / 2} \\;\\;$ where $v=\\;\\frac{d x}{d t}$ $∴ ∫↙{0}↖{x} \\text{dx}=\\sqrt{\\;\\frac{2 c}{m}} × ∫↙{0}↖{t} t^{1 / 2} \\text{dt}$ $x=\\sqrt{\\;\\frac{2 c}{m}} × \\;{2 t^{5 / 2}}/{3} ⇒ x ∝ t^{3 / 2}$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A spring of spring constant $5 × 10^3 {\\text{N}} {/} {\\text{m}}$ is stretched initially by $5 {\\text{cm}}$ from the unstretched position. Then the work required to stretch it further by another $5 {\\text{cm}}$ is",
+    "images": [],
+    "options": [
+      "A. $12.50 {\\text{N}}- {\\text{m}}$",
+      "B. $18.75 {\\text{N}}-m$",
+      "C. $25.00 {\\text{N}}-m$",
+      "D. $625 N-m$"
+    ],
+    "correct_answer": "B",
+    "explanation": "Given $k=5 × 10^3 {\\text{N}} {/} {\\text{m}}$Work done when a spring stretched from ${\\text{x}}_1 {\\text{cm}}$ to ${\\text{x}}_2 {\\text{cm}}$,$\\;W=\\;\\frac{1}{2} k (x_2^2-x_1^2)$ $\\;=\\;\\frac{1}{2} × 5 × 10^3 [(0.1)^2-(0.05)^2]$ $\\;=\\;\\frac{5000}{2} × 0.15 × 0.05=18.75 {\\text{Nm}}$",
+    "year": 2003,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "If a body looses half of its velocity on penetrating $3 {\\text{cm}}$ in a wooden block, then how much will it penetrate more before coming to rest?",
+    "images": [],
+    "options": [
+      "A. $1 {\\text{cm}}$",
+      "B. $2\\text{cm}$",
+      "C. $3\\text{cm}$",
+      "D. $4\\text{cm}$"
+    ],
+    "correct_answer": "A",
+    "explanation": "We know the work energy theorem, $W=∆ K=F S$ For first penetration, by applying work energy theorem we get, $\\;\\frac{1}{2} m v^2-\\;\\frac{1}{2} m(\\;\\frac{v}{2})^2=F × 3 . . .(i)$ For second penetration, by applying work energy theorem we get, $\\;\\frac{1}{2} m(\\;\\frac{v}{2})^2-0=F × S$....(ii) On dividing $(i i)$ by $(i)$ $\\;\\frac{1 / 4}{3 / 4}=S / 3$ $∴ S=1 {\\text{cm}}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A ball whose kinetic energy E, is projected at an angle of $45^{∘}$ to the horizontal. The kinetic energy of the ball at the highest point of its height will be",
+    "images": [],
+    "options": [
+      "A. E",
+      "B. $\\;{E}/{\\sqrt{2}}$",
+      "C. $\\;\\frac{E}{2}$",
+      "D. zero"
+    ],
+    "correct_answer": "C",
+    "explanation": "Assume the ball of mass $m$ is projected with a speed $u$. Then the kinetic energy(E) at the point of projection $=\\;\\frac{1}{2} m u^2$ At highest point of flight only horizontal component of velocity $u \\cos θ$ present as at highest point vertical component of velocity is $=0$. Note : The horizontal component of velocity does not change in entire projectile motion. At highest point the velocity is $=u \\cos θ=u \\cos 45^{∘}=\\;{u}/{\\sqrt{2}}$ $∴$ The kinetic energy at the height point $=\\;\\frac{1}{2} m(\\;{u}/{\\sqrt{2}})^2$ $=\\;\\frac{1}{2} m u^2 × \\;\\frac{1}{2}=\\;\\frac{E}{2}$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  },
+  {
+    "topic_name": "Work Power and Energy",
+    "question_text": "A spring of force constant $800 {\\text{N}} {/} {\\text{m}}$ has an extension of $5 {\\text{cm}}$. The work done in extending it from 5 ${\\text{cm}}$ to $15 {\\text{cm}}$ is",
+    "images": [],
+    "options": [
+      "A. 16J",
+      "B. 8J",
+      "C. 32J",
+      "D. 24J"
+    ],
+    "correct_answer": "B",
+    "explanation": "When we extend the spring by $d x$ then the work done $d W=k x d x$ Applying integration both sides we get, $∴ W=k ∫↙{0.05}↖{0.15} x d x$ $=\\;\\frac{800}{2}[(0.15)^2-(0.05)^2]$ $=8 J$",
+    "year": 2002,
+    "marks": 4,
+    "exam_type": "JEE Main",
+    "question_type": "MCQ"
+  }
+]

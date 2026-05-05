@@ -11,6 +11,7 @@ import MathRenderer from "@/components/ui/MathRenderer";
 
 /* ─────────────── Types ─────────────── */
 export interface ResultData {
+  examType?: string;
   score: number;
   maxScore: number;
   accuracy: number; // 0-100
@@ -19,11 +20,32 @@ export interface ResultData {
   correct: number;
   incorrect: number;
   unattempted: number;
+  sectionBreakdown?: {
+    name: string;
+    score: number;
+    max: number;
+    correct: number;
+    total: number;
+    accuracy: number;
+    timeSpentSecs: number;
+    topics: {
+      topic: string;
+      score: number;
+      max: number;
+      correct: number;
+      total: number;
+      accuracy: number;
+      timeSpentSecs: number;
+    }[];
+  }[];
   subjectBreakdown: {
     subject: string;
     score: number;
     max: number;
+    correct: number;
+    total: number;
     accuracy: number;
+    timeSpentSecs: number;
   }[];
   questions: {
     id: string;
@@ -36,6 +58,7 @@ export interface ResultData {
     marks: number;
     subject: string;
     explanation?: string;
+    timeSpentSecs: number;
   }[];
 }
 
@@ -62,10 +85,27 @@ function resolveAnswer(answer: string | null, options: string[] | null, type: st
   return answer;
 }
 
+function resolveShortAnswer(answer: string | null, type: string): string {
+  if (!answer) return '—';
+  if (type === 'MCQ') return answer.trim().toUpperCase();
+  if (type === 'MSQ') return answer.split(';').map(l => l.trim().toUpperCase()).join(',');
+  return answer;
+}
+
+function fmtShortTimer(secs: number): string {
+  if (secs == null) return "0s";
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
 export default function TestAnalysis({ result, onRestart }: Props) {
   const [filter, setFilter] = useState<"all" | "correct" | "incorrect" | "unattempted">("all");
   const [search, setSearch] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
+  const [expandedQId, setExpandedQId] = useState<string | null>(null);
+  const [expandedSec, setExpandedSec] = useState<string | null>(null);
 
   const filteredQs = useMemo(() => {
     return result.questions.filter((q) => {
@@ -84,6 +124,72 @@ export default function TestAnalysis({ result, onRestart }: Props) {
   const circleColor = scorePercent >= 66 ? BE.good : scorePercent >= 33 ? BE.warn : BE.bad;
 
   const subjects = ["All Subjects", ...result.subjectBreakdown.map(s => s.subject)];
+
+  const renderBarList = (title: string, sections: any[]) => {
+    if (!sections || sections.length === 0) return null;
+    return (
+      <div className="mb-10 last:mb-0">
+        <div style={{ fontSize: 11, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+          {title}
+        </div>
+        <div className="space-y-6">
+          {sections.map((sec, i) => {
+            const accColor = sec.accuracy > 70 ? BE.good : sec.accuracy > 40 ? BE.warn : BE.bad;
+            const isExpanded = expandedSec === sec.name;
+            return (
+              <div key={i} className="group">
+                <div 
+                  className="cursor-pointer transition-colors p-2 -mx-2 rounded-lg hover:bg-white/5"
+                  onClick={() => setExpandedSec(isExpanded ? null : sec.name)}
+                >
+                  <div className="flex justify-between items-end mb-2">
+                    <div style={{ fontSize: 15, fontWeight: 600, color: BE.text }} className="flex items-center gap-2">
+                      {sec.name}
+                      <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} style={{ color: BE.textMute }} />
+                    </div>
+                    <div className="flex items-center gap-4" style={{ fontFamily: BE.mono, fontSize: 13, fontWeight: 600 }}>
+                      <div style={{ color: BE.text }}>{sec.score.toFixed(1).replace(/\.0$/, '')} <span style={{ color: BE.textMute }}>/ {sec.max}</span></div>
+                      <div style={{ color: BE.textMute }}>{sec.correct}/{sec.total} Q</div>
+                      <div style={{ color: BE.textMute }}>{fmtShortTimer(sec.timeSpentSecs)}</div>
+                      <div style={{ color: accColor, fontWeight: 700 }}>{sec.accuracy.toFixed(0)}%</div>
+                    </div>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${sec.accuracy}%`, background: accColor }} />
+                  </div>
+                </div>
+                
+                {/* Expandable Topics */}
+                {isExpanded && sec.topics && sec.topics.length > 0 && (
+                  <div className="mt-4 pl-4 border-l-2 space-y-4" style={{ borderColor: BE.line }}>
+                    {sec.topics.map((t: any, j: number) => {
+                      const tAccColor = t.accuracy > 70 ? BE.good : t.accuracy > 40 ? BE.warn : BE.bad;
+                      return (
+                        <div key={j}>
+                          <div className="flex justify-between items-end mb-1">
+                            <div style={{ fontSize: 13, fontWeight: 600, color: BE.textMute }}>{t.topic}</div>
+                            <div className="flex items-center gap-4" style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 600 }}>
+                              <div style={{ color: BE.textMute }}>{t.score.toFixed(1).replace(/\.0$/, '')} <span style={{ color: BE.textDim }}>/ {t.max}</span></div>
+                              <div style={{ color: BE.textDim }}>{t.correct}/{t.total} Q</div>
+                              <div style={{ color: BE.textDim }}>{fmtShortTimer(t.timeSpentSecs)}</div>
+                              <div style={{ color: tAccColor, fontWeight: 700 }}>{t.accuracy.toFixed(0)}%</div>
+                            </div>
+                          </div>
+                          <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${t.accuracy}%`, background: tAccColor }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="be-screen flex flex-col h-full overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
@@ -156,49 +262,33 @@ export default function TestAnalysis({ result, onRestart }: Props) {
           </div>
         </section>
 
-        {/* ── SUBJECT BREAKDOWN ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <BarChart3 size={20} style={{ color: BE.accent }} />
-            <h2 style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, color: BE.text }}>Subject Analytics</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {result.subjectBreakdown.map((s, i) => (
-              <div key={i} className="be-card p-5 border" style={{ borderColor: BE.line }}>
-                <div className="flex justify-between items-start mb-4">
-                  <div style={{ fontSize: 14, fontWeight: 700, color: BE.text }}>{s.subject}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: s.accuracy > 70 ? BE.good : s.accuracy > 40 ? BE.warn : BE.bad }}>{s.accuracy.toFixed(0)}%</div>
-                </div>
-                <div className="w-full h-1.5 rounded-full overflow-hidden mb-3" style={{ background: BE.line }}>
-                  <div className="h-full transition-all duration-500" style={{ width: `${s.accuracy}%`, background: s.accuracy > 70 ? BE.good : s.accuracy > 40 ? BE.warn : BE.bad }} />
-                </div>
-                <div className="flex justify-between" style={{ fontSize: 11, color: BE.textMute, fontWeight: 600 }}>
-                  <span>{s.score.toFixed(1)} / {s.max} Marks</span>
-                  <span>{s.accuracy > 70 ? 'Proficient' : 'Needs Focus'}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* ── BREAKDOWNS ── */}
+        <section className="be-card p-6 md:p-10 border" style={{ borderColor: BE.line }}>
+          {renderBarList("Paper Sections", result.sectionBreakdown || [])}
         </section>
 
-        {/* ── QUESTION REVIEW ── */}
-        <section className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* ── QUESTION-WISE BREAKDOWN ── */}
+        <section className="be-card overflow-hidden border" style={{ borderColor: BE.line }}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:px-6 md:py-4 border-b" style={{ borderColor: BE.line, background: 'rgba(255,255,255,0.02)' }}>
             <div className="flex items-center gap-3">
-              <Search size={20} style={{ color: BE.accent }} />
-              <h2 style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, color: BE.text }}>Question Review</h2>
+              <h2 style={{ fontFamily: BE.serif, fontSize: 16, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                QUESTION-WISE BREAKDOWN · {filteredQs.length}
+              </h2>
             </div>
-
+            
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex bg-surface rounded-lg p-1 border" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div className="text-[12px] font-bold" style={{ color: BE.warn }}>
+                {result.incorrect} wrong <span style={{ color: BE.textMute }}>·</span>
+              </div>
+              <div className="flex bg-surface rounded-lg p-1 border" style={{ borderColor: BE.line, background: 'rgba(255,255,255,0.02)' }}>
                 {['all', 'correct', 'incorrect', 'unattempted'].map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f as any)}
                     className="px-3 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all"
-                    style={{ background: filter === f ? BE.accent : 'transparent', color: filter === f ? '#fff' : BE.textMute }}
+                    style={{ background: filter === f ? BE.surface : 'transparent', color: filter === f ? '#fff' : BE.textMute }}
                   >
-                    {f}
+                    {f === 'unattempted' ? 'Skipped' : f === 'incorrect' ? 'Wrong' : f}
                   </button>
                 ))}
               </div>
@@ -213,57 +303,92 @@ export default function TestAnalysis({ result, onRestart }: Props) {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {filteredQs.map((q, i) => {
-              const status = q.user_answer === null ? 'skipped' : q.is_correct ? 'correct' : 'incorrect';
-              const statusColor = status === 'correct' ? BE.good : status === 'incorrect' ? BE.bad : BE.warn;
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[800px]">
+              {/* Table Header */}
+              <div className="grid grid-cols-[3rem_6rem_1fr_6rem_8rem_5rem_4rem] gap-4 px-6 py-3 border-b text-[10px] font-bold tracking-wider" style={{ borderColor: BE.line, color: BE.textMute, textTransform: 'uppercase', background: 'rgba(0,0,0,0.1)' }}>
+                <div>Q#</div>
+                <div>SECTION</div>
+                <div>QUESTION</div>
+                <div>RESULT</div>
+                <div>YOUR → ANS</div>
+                <div>TIME</div>
+                <div>MARKS</div>
+              </div>
+              
+              {/* Table Body */}
+              <div className="flex flex-col">
+                {filteredQs.map((q, i) => {
+                  const status = q.user_answer === null ? 'skipped' : q.is_correct ? 'correct' : 'incorrect';
+                  const statusColor = status === 'correct' ? BE.good : status === 'incorrect' ? BE.bad : BE.textMute;
+                  const isExpanded = expandedQId === q.id;
+                  
+                  const shortUserAns = resolveShortAnswer(q.user_answer, q.question_type);
+                  const shortCorrAns = resolveShortAnswer(q.correct_answer, q.question_type);
+                  
+                  return (
+                    <div key={q.id} className="border-b transition-colors hover:bg-white/5" style={{ borderColor: BE.line, background: isExpanded ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                      <div 
+                        className="grid grid-cols-[3rem_6rem_1fr_6rem_8rem_5rem_4rem] gap-4 px-6 py-4 cursor-pointer items-center text-[13px]"
+                        onClick={() => setExpandedQId(isExpanded ? null : q.id)}
+                      >
+                        <div style={{ color: BE.textMute, fontFamily: BE.mono, fontWeight: 600 }}>#{i + 1}</div>
+                        <div style={{ color: BE.textMute, fontWeight: 700, fontSize: 11, textTransform: 'uppercase' }}>{q.subject.slice(0,12)}</div>
+                        <div className="font-medium text-white" style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', whiteSpace: 'normal', overflow: 'hidden' }}>
+                          {q.question_text.replace(/<[^>]+>/g, '').slice(0, 100)}...
+                        </div>
+                        <div style={{ color: statusColor, fontWeight: 700, fontSize: 11, textTransform: 'uppercase' }}>{status === 'incorrect' ? 'WRONG' : status}</div>
+                        <div style={{ color: BE.textMute, fontFamily: BE.mono, fontSize: 12 }}>
+                          {shortUserAns} <span style={{ opacity: 0.5, margin: '0 4px' }}>→</span> {shortCorrAns}
+                        </div>
+                        <div style={{ color: BE.textMute, fontFamily: BE.mono, fontSize: 12 }}>{fmtShortTimer(q.timeSpentSecs)}</div>
+                        <div style={{ color: status === 'correct' ? BE.good : status === 'incorrect' ? BE.bad : BE.textMute, fontWeight: 700, fontFamily: BE.mono }}>
+                          {status === 'correct' ? `+${q.marks}` : status === 'incorrect' && q.question_type === 'MCQ' ? `-${(q.marks / 3).toFixed(2).replace(/\.00$/, '')}` : '0'}
+                        </div>
+                      </div>
+                      
+                      {/* Expanded View */}
+                      {isExpanded && (
+                        <div className="px-6 pb-6 pt-2 border-t bg-black/20" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                          <div className="p-6 space-y-6 rounded-xl border mt-4" style={{ borderColor: BE.line, background: BE.surface }}>
+                            <div style={{ fontSize: 15, lineHeight: 1.6, color: BE.text }}><MathRenderer content={q.question_text} /></div>
 
-              return (
-                <div key={q.id} className="be-card overflow-hidden border" style={{ borderColor: BE.line }}>
-                  <div className="flex items-center justify-between px-6 py-3 border-b" style={{ borderColor: BE.line, background: 'rgba(255,255,255,0.02)' }}>
-                    <div className="flex items-center gap-3">
-                      <span style={{ fontSize: 12, fontWeight: 700, color: BE.textMute }}>Q{i + 1}</span>
-                      <div className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: statusColor + '22', color: statusColor }}>{status}</div>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: BE.textMute }}>{q.subject}</span>
-                    </div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: BE.textMute }}>{q.marks} MARKS</div>
-                  </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-base)', borderColor: BE.line }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', marginBottom: 8 }}>Your Answer</div>
+                                <div className="flex items-start gap-3">
+                                  <div className="w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5" style={{ background: statusColor, color: status === 'skipped' ? BE.text : '#fff' }}>
+                                    {status === 'correct' ? <CheckCircle2 size={14} /> : status === 'incorrect' ? <XCircle size={14} /> : <AlertCircle size={14} />}
+                                  </div>
+                                  <div style={{ fontSize: 14, fontWeight: 600, color: BE.text }}>{resolveAnswer(q.user_answer, q.options, q.question_type)}</div>
+                                </div>
+                              </div>
 
-                  <div className="p-6 space-y-6">
-                    <div style={{ fontSize: 15, lineHeight: 1.6, color: BE.text }}><MathRenderer content={q.question_text} /></div>
+                              <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-base)', borderColor: BE.line }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', marginBottom: 8 }}>Correct Answer</div>
+                                <div className="flex items-start gap-3">
+                                  <div className="w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5" style={{ background: BE.good, color: '#fff' }}><CheckCircle2 size={14} /></div>
+                                  <div style={{ fontSize: 14, fontWeight: 600, color: BE.text }}>{resolveAnswer(q.correct_answer, q.options, q.question_type)}</div>
+                                </div>
+                              </div>
+                            </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded-xl border" style={{ background: BE.surface, borderColor: BE.line }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', marginBottom: 8 }}>Your Answer</div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5" style={{ background: statusColor, color: '#fff' }}>
-                            {status === 'correct' ? <CheckCircle2 size={14} /> : status === 'incorrect' ? <XCircle size={14} /> : <AlertCircle size={14} />}
+                            {q.explanation && (
+                              <div className="p-5 rounded-xl border-l-4" style={{ background: BE.accentSoft, borderColor: BE.accent }}>
+                                <div className="flex items-center gap-2 mb-2" style={{ fontSize: 12, fontWeight: 700, color: BE.accent }}>
+                                  <Brain size={14} /> Solution Explanation
+                                </div>
+                                <div style={{ fontSize: 13, lineHeight: 1.6, color: BE.textDim }}><MathRenderer content={q.explanation} /></div>
+                              </div>
+                            )}
                           </div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: BE.text }}>{resolveAnswer(q.user_answer, q.options, q.question_type)}</div>
                         </div>
-                      </div>
-
-                      <div className="p-4 rounded-xl border" style={{ background: BE.surface, borderColor: BE.line }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', marginBottom: 8 }}>Correct Answer</div>
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5" style={{ background: BE.good, color: '#fff' }}><CheckCircle2 size={14} /></div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: BE.text }}>{resolveAnswer(q.correct_answer, q.options, q.question_type)}</div>
-                        </div>
-                      </div>
+                      )}
                     </div>
-
-                    {q.explanation && (
-                      <div className="p-5 rounded-xl border-l-4" style={{ background: BE.accentSoft, borderColor: BE.accent }}>
-                        <div className="flex items-center gap-2 mb-2" style={{ fontSize: 12, fontWeight: 700, color: BE.accent }}>
-                          <Brain size={14} /> Solution Explanation
-                        </div>
-                        <div style={{ fontSize: 13, lineHeight: 1.6, color: BE.textDim }}><MathRenderer content={q.explanation} /></div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </section>
 

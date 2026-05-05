@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Maximize2 } from "lucide-react";
 import katex from "katex";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getCloudinaryUrl } from "@/lib/imageUtils";
 
 // ------------------- Math rendering helper -----------------------------------
 function renderMath(text: string): string {
@@ -137,7 +138,7 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
         {q.images && q.images.filter(img => img.type !== "explanation").length > 0 && (
           <div className="mt-4 flex flex-col gap-3">
             {q.images.filter(img => img.type !== "explanation").map((img) => (
-              <QuestionImage key={img.index} src={`/${img.filename}`} alt={`Figure ${img.index}`} />
+              <QuestionImage key={img.index} src={getCloudinaryUrl(img.filename)} alt={`Figure ${img.index}`} />
             ))}
           </div>
         )}
@@ -237,7 +238,7 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
             {q.images && q.images.filter(img => img.type === "explanation").length > 0 && (
               <div className="mt-4 flex flex-col gap-3">
                 {q.images.filter(img => img.type === "explanation").map((img) => (
-                  <QuestionImage key={img.index} src={`/${img.filename}`} alt={`Explanation Figure ${img.index}`} />
+                  <QuestionImage key={img.index} src={getCloudinaryUrl(img.filename)} alt={`Explanation Figure ${img.index}`} />
                 ))}
               </div>
             )}
