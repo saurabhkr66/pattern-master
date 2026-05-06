@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Format prompt
     const prompt = `
-You are an expert educator. Your task is to provide a clear, step-by-step explanation for the following multiple-choice or numerical question. 
+You are an expert educator. Your task is to provide a DETAILED, COMPREHENSIVE and thorough step-by-step explanation for the following multiple-choice or numerical question. 
 
 Question: ${questionData.question_text}
 
@@ -57,7 +57,7 @@ Provide ONLY the explanation in a professional, academic tone. Format any mathem
 
     // Initialize the model
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Using a fast, standard model
-    
+
     const result = await model.generateContent(prompt);
     let generatedExplanation = result.response.text();
 

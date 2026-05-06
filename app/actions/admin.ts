@@ -194,7 +194,7 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPE
 async function getImageBase64(filename: string) {
   const fs = await import("fs");
   const path = await import("path");
-  
+
   // 1. Try local paths first
   const possiblePaths = [
     path.join(process.cwd(), "public", "images", "questions", filename),
@@ -208,7 +208,7 @@ async function getImageBase64(filename: string) {
         const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
         return { data: data.toString("base64"), mimeType };
       }
-    } catch {}
+    } catch { }
   }
 
   // 2. Fallback to Cloudinary URL
@@ -270,7 +270,7 @@ export async function generateAIExplanation(
   // Strip massive base64 strings from text if they exist (they eat tokens)
   cleanQuestionText = cleanQuestionText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
-  const textPrompt = `You are an expert educator. Your task is to provide a SHORT and PRECISE explanation for this question.
+  const textPrompt = `You are an expert educator. Your task is to provide a DETAILED and COMPREHENSIVE explanation for this question.
 
 Question: ${cleanQuestionText}
 Options: ${JSON.stringify(questionData.options)}
@@ -279,8 +279,8 @@ Target Answer: ${questionData.correct_answer}
 Rules:
 1. Be objective. If the 'Target Answer' provided above is mathematically or logically incorrect, state so clearly and provide the correct derivation.
 2. Use LaTeX ($, $$) for all math.
-3. Keep the total explanation to 4-6 lines max.
-4. Focus only on the core concept.
+3. Provide a thorough step-by-step breakdown (10-12 lines max).
+4. Focus on clarity and depth.
 5. No preamble, no markdown code blocks.
 6. MANDATORY: End your explanation with the final correct option in this format: [CORRECT_OPTION: X] where X is A, B, C, or D.
 7. DO NOT write "Therefore, the correct option is..." or similar conclusion sentences in natural language. The tag in rule 6 is enough.`;
@@ -313,7 +313,7 @@ Rules:
 
   if (aiModel === "gpt-4o-mini" && openai) {
     const messages: any[] = [{ role: "user", content: [{ type: "text", text: textPrompt }] }];
-    
+
     // Add images if any
     if (images.length > 0) {
       for (const img of images) {
@@ -323,7 +323,7 @@ Rules:
         if (imgResult) {
           messages[0].content.push({
             type: "image_url",
-            image_url: { 
+            image_url: {
               url: `data:${imgResult.mimeType};base64,${imgResult.data}`,
               detail: "low"
             }
@@ -340,7 +340,7 @@ Rules:
     openaiUsage = response.usage;
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
   } else {
-    const model = genAI!.getGenerativeModel({ 
+    const model = genAI!.getGenerativeModel({
       model: "gemini-2.5-flash",
     });
     const result = await model.generateContent(contentParts);
@@ -387,11 +387,11 @@ Rules:
     .replace(/Correct option is\s*[A-D]\.?/gi, "")
     .trim();
 
-  return { 
-    explanation: cleanExplanation, 
-    usage: { 
-      input: (openaiUsage?.prompt_tokens || geminiUsage?.promptTokenCount || 0), 
-      output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0) 
+  return {
+    explanation: cleanExplanation,
+    usage: {
+      input: (openaiUsage?.prompt_tokens || geminiUsage?.promptTokenCount || 0),
+      output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0)
     },
     isMismatch,
     aiDetectedAnswer
@@ -434,7 +434,7 @@ export async function processMockTestExplanations(mockTestId: string, aiModel: "
         let cleanQText = q.question_text || "";
         cleanQText = cleanQText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
-        const prompt = `You are an expert educator. Your task is to provide a SHORT and PRECISE explanation for this question.
+        const prompt = `You are an expert educator. Your task is to provide a DETAILED and COMPREHENSIVE explanation for this question.
 
 Question: ${cleanQText}
 Options: ${JSON.stringify(q.options)}
@@ -443,8 +443,8 @@ Target Answer: ${q.correct_answer}
 Rules:
 1. Be objective. If the 'Target Answer' provided above is mathematically or logically incorrect, state so clearly and provide the correct derivation.
 2. Use LaTeX ($, $$) for all math.
-3. Keep the total explanation to 4-6 lines max.
-4. Focus only on the core concept.
+3. Provide a thorough step-by-step breakdown.
+4. Focus on clarity and depth.
 5. No preamble, no markdown code blocks.`;
 
         const contentParts: any[] = [prompt];
@@ -475,9 +475,9 @@ Rules:
               if (!filename) continue;
               const imgRes = await getImageBase64(filename);
               if (imgRes) {
-                messages[0].content.push({ 
-                  type: "image_url", 
-                  image_url: { url: `data:${imgRes.mimeType};base64,${imgRes.data}`, detail: "low" } 
+                messages[0].content.push({
+                  type: "image_url",
+                  image_url: { url: `data:${imgRes.mimeType};base64,${imgRes.data}`, detail: "low" }
                 });
               }
             }
@@ -499,7 +499,7 @@ Rules:
         const aiAnswerMatch = explanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
         const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
         const isMismatch = aiDetectedAnswer && aiDetectedAnswer !== q.correct_answer?.toUpperCase();
-        
+
         // Clean Explanation
         const cleanExplanation = explanation
           .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
@@ -507,13 +507,13 @@ Rules:
           .replace(/Correct option is\s*[A-D]\.?/gi, "")
           .trim();
 
-        questions[i] = { 
-          ...questions[i], 
+        questions[i] = {
+          ...questions[i],
           explanation: cleanExplanation,
           ai_answer_mismatch: isMismatch,
           ai_detected_answer: aiDetectedAnswer
         };
-        
+
         fixed++;
         await prisma.mockTestTemplate.update({
           where: { id: mockTestId },
@@ -521,10 +521,7 @@ Rules:
         });
 
 
-        // Wait 5 seconds before next request
-        if (i < questions.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
+
       } catch (err) {
         console.error(`[AI] ❌ Failed for question ${q.id}:`, err);
         failed++;
@@ -553,16 +550,16 @@ export async function getAllTopics() {
   });
 
   const topicMap: Record<string, Record<string, string[]>> = {};
-  
+
   patterns.forEach(p => {
     const normalizedExam = p.exam_type.toUpperCase().replace(/\s+/g, '_');
     const normalizedSubject = (p.subject || "GENERAL").toUpperCase().trim();
-    
+
     if (!topicMap[normalizedExam]) topicMap[normalizedExam] = {};
     if (!topicMap[normalizedExam][normalizedSubject]) {
       topicMap[normalizedExam][normalizedSubject] = [];
     }
-    
+
     if (!topicMap[normalizedExam][normalizedSubject].includes(p.topic_name)) {
       topicMap[normalizedExam][normalizedSubject].push(p.topic_name);
     }
@@ -604,9 +601,9 @@ Options: ${JSON.stringify(options)}`;
   const fullPrompt = `${staticContext}\n\n${variableContext}`;
 
   const contentParts: any[] = [fullPrompt];
-  const gptMessages: any[] = [{ 
-    role: "user", 
-    content: [{ type: "text", text: fullPrompt }] 
+  const gptMessages: any[] = [{
+    role: "user",
+    content: [{ type: "text", text: fullPrompt }]
   }];
 
   // Process Images
@@ -666,7 +663,7 @@ export async function updateMockTestQuestionTopic(
   const idx = questions.findIndex(q => q.id === questionId);
   if (idx !== -1) {
     questions[idx] = { ...questions[idx], topic };
-    
+
     // Sync the summary 'topics' array
     const allTopics = questions
       .map(q => q.topic)
@@ -675,7 +672,7 @@ export async function updateMockTestQuestionTopic(
 
     await prisma.mockTestTemplate.update({
       where: { id: mockTestId },
-      data: { 
+      data: {
         questions,
         topics: uniqueTopics
       }

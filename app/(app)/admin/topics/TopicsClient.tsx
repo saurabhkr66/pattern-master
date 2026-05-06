@@ -145,10 +145,7 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
         } : null);
       }
 
-      // Small delay to prevent hitting rate limits too fast
-      if (i < missingQs.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      }
+
     }
 
     setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);

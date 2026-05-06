@@ -342,51 +342,18 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
           }],
         } : null);
       } catch (err) {
-        // Retry once after 15 seconds (handles 429 rate limit)
-        console.log(`[AI] Retrying question ${q.id} after 15s...`);
-        await new Promise(resolve => setTimeout(resolve, 15000));
-        try {
-          const result = await generateAIExplanation(q.id, "MockQuestion", testId, selectedAIModel);
-          const explanation = (result as any).explanation;
-          const usage = (result as any).usage;
-          fixed++;
-          cumulativeInput += usage?.input || 0;
-          cumulativeOutput += usage?.output || 0;
-
-          setLiveFeed(prev => prev ? {
-            ...prev,
-            currentExplanation: explanation,
-            fixed,
-            totalInputTokens: cumulativeInput,
-            totalOutputTokens: cumulativeOutput,
-            log: [...prev.log, { 
-              id: q.id, 
-              text: (q.question_text || "").substring(0, 80) + "... (retry ✓)", 
-              status: "ok",
-              question: q,
-              explanation,
-              tokens: usage
-            }],
-          } : null);
-        } catch {
-          failed++;
-          setLiveFeed(prev => prev ? {
-            ...prev,
-            failed,
-            log: [...prev.log, { 
-              id: q.id, 
-              text: (q.question_text || "").substring(0, 80) + "...", 
-              status: "fail",
-              question: q,
-              explanation: "",
-            }],
-          } : null);
-        }
-      }
-
-      // Wait 7 seconds after each completed question before starting next
-      if (i < missingQs.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 8000));
+        failed++;
+        setLiveFeed(prev => prev ? {
+          ...prev,
+          failed,
+          log: [...prev.log, { 
+            id: q.id, 
+            text: (q.question_text || "").substring(0, 80) + "...", 
+            status: "fail",
+            question: q,
+            explanation: "",
+          }],
+        } : null);
       }
     }
 
@@ -587,7 +554,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
               <div className="px-4 py-2 bg-gray-50 dark:bg-black/20 border-t dark:border-zinc-800 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-gray-400">
                 <div className="flex items-center gap-2">
                   <span className="animate-pulse">⏳</span>
-                  <span>~{(liveFeed.total - liveFeed.progress) * 8}s left</span>
+                  <span>Processing...</span>
                 </div>
                 <div className="flex gap-4">
                   <span className="text-purple-500 font-black">In: {liveFeed.totalInputTokens}</span>
@@ -612,7 +579,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
           {showBatchPanel && (
             <div className="p-5 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm mb-6">
-              <p className="text-xs text-gray-500 mb-4">Select a mock test below to auto-generate explanations for all questions missing them. Each request has a 5-second delay to stay within API limits.</p>
+              <p className="text-xs text-gray-500 mb-4">Select a mock test below to auto-generate explanations for all questions missing them.</p>
               <div className="flex flex-col gap-3">
                 {mockTests.map((test: any) => {
                   const questions = (test.questions as any[]) || [];
