@@ -8,7 +8,7 @@ if (!process.env.GEMINI_API_KEY) {
 // Initialize the SDK
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// We use 1.5-flash as planned for speed and cost-efficiency
+// We use 2.5-flash for speed and cost-efficiency
 export const geminiModel = genAI.getGenerativeModel({
     model: 'gemini-2.5-flash',
     // Force JSON response to prevent parsing errors

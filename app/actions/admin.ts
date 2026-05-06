@@ -341,7 +341,7 @@ Rules:
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
   } else {
     const model = genAI!.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
     });
     const result = await model.generateContent(contentParts);
     explanation = result.response.text();
@@ -487,7 +487,7 @@ Rules:
           totalInputTokens += response.usage?.prompt_tokens || 0;
           totalOutputTokens += response.usage?.completion_tokens || 0;
         } else {
-          const model = genAI!.getGenerativeModel({ model: "gemini-1.5-flash" });
+          const model = genAI!.getGenerativeModel({ model: "gemini-2.5-flash" });
           const result = await model.generateContent(contentParts);
           explanation = result.response.text();
           const usage = result.response.usageMetadata;
@@ -638,7 +638,7 @@ Options: ${JSON.stringify(options)}`;
     topic = response.choices[0].message.content?.trim() || "Unknown";
     usage = { input: response.usage?.prompt_tokens || 0, output: response.usage?.completion_tokens || 0 };
   } else {
-    const model = genAI!.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI!.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(contentParts);
     topic = result.response.text().trim();
     const u = result.response.usageMetadata;
