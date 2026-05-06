@@ -6,6 +6,7 @@ import MathRenderer from "@/components/ui/MathRenderer";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
 
 export default function ReportsClient({ reports, mockTests }: { reports: any[], mockTests?: any[] }) {
+  const [localReports, setLocalReports] = useState(reports);
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [filterExam, setFilterExam] = useState<string>("all");
   const [filterSubject, setFilterSubject] = useState<string>("all");
@@ -38,7 +39,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
   // Process reports to extract exam, subject, and type for easier filtering and display
   const processedReports = useMemo(() => {
-    return reports.map(r => {
+    return localReports.map(r => {
       const q = r.q || r.question || r.pyq || r.subject_pyq;
       let exam = "Other";
       let subject = "Other";
@@ -183,7 +184,9 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         }
       );
       
-      // If this was a diagnostic report, remove it from the local list immediately
+      // Remove from the local list immediately
+      setLocalReports(prev => prev.filter(r => r.id !== editingReport.id));
+      
       if (editingReport.id.startsWith("auto-latex-")) {
         setLatexReports(prev => prev.filter(r => r.id !== editingReport.id));
       }
@@ -257,6 +260,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     failed: number;
     totalInputTokens: number;
     totalOutputTokens: number;
+    totalThoughtsTokens: number;
     log: { 
       id: string; 
       text: string; 
@@ -265,7 +269,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       explanation: string; 
       isMismatch?: boolean;
       aiDetectedAnswer?: string | null;
-      tokens?: { input: number; output: number } 
+      tokens?: { input: number; output: number };
+      thoughts?: number;
     }[];
     done: boolean;
   } | null>(null);
@@ -298,6 +303,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       failed: 0,
       totalInputTokens: 0,
       totalOutputTokens: 0,
+      totalThoughtsTokens: 0,
       log: [],
       done: false,
     });
@@ -306,6 +312,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     let failed = 0;
     let cumulativeInput = 0;
     let cumulativeOutput = 0;
+    let cumulativeThoughts = 0;
 
     for (let i = 0; i < missingQs.length; i++) {
       const q = missingQs[i];
@@ -318,20 +325,31 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       } : null);
 
       try {
-        // 1. Generate Explanation via AI
-        const result = await generateAIExplanation(q.id, "MockQuestion", testId, selectedAIModel);
+        // 1. Generate Explanation via API (More stable for long-running thinking tasks)
+        const response = await fetch("/api/questions/generate-explanation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            questionId: q.id,
+            questionType: "MockQuestion",
+            mockTestId: testId,
+            aiModel: selectedAIModel
+          })
+        });
+
+        if (!response.ok) throw new Error("API request failed");
+        const result = await response.json();
         
-        const explanation = (result as any).explanation;
-        const usage = (result as any).usage;
-        const isMismatch = (result as any).isMismatch;
-        const aiDetectedAnswer = (result as any).aiDetectedAnswer;
+        const explanation = result.explanation;
+        const usage = result.usage;
+        const isMismatch = result.isMismatch;
+        const aiDetectedAnswer = result.aiDetectedAnswer;
         
-        // 2. Save Explanation
-        await resolveReport("auto-" + q.id, q.id, "MockQuestion", { explanation, mockTestId: testId });
-        
+        // 2. Already saved in the API route, so we just update the UI
         fixed++;
         cumulativeInput += usage.input;
         cumulativeOutput += usage.output;
+        cumulativeThoughts += (usage.thoughts || 0);
         
         setLiveFeed(prev => prev ? {
           ...prev,
@@ -341,6 +359,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
           fixed,
           totalInputTokens: cumulativeInput,
           totalOutputTokens: cumulativeOutput,
+          totalThoughtsTokens: cumulativeThoughts,
           log: [...prev.log, { 
             id: q.id, 
             text: (q.question_text || "").substring(0, 80) + "...", 
@@ -349,9 +368,13 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
             explanation,
             isMismatch,
             aiDetectedAnswer,
-            tokens: usage
+            tokens: usage,
+            thoughts: usage.thoughts
           }],
         } : null);
+
+        // Add a small 500ms delay to let the connection "breathe"
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (err) {
         failed++;
         setLiveFeed(prev => prev ? {
@@ -367,6 +390,13 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         } : null);
       }
     }
+
+    // 3. Remove processed questions from the local reports list
+    const processedIds = missingQs.map(q => q.id);
+    setLocalReports(prev => prev.filter(r => {
+      const qId = r.questionId || r.pyq_id || r.subject_pyq_id || r.mock_question_id;
+      return !processedIds.includes(qId);
+    }));
 
     setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);
     setBatchProcessing(null);
@@ -425,6 +455,20 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                   <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/10 text-xs"><MathRenderer content={logPreview.explanation} /></div>
                 </div>
               )}
+              
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  onClick={async () => {
+                    const testId = liveFeed?.mock_test_id;
+                    if (!testId) return;
+                    await toggleManualFlag(logPreview.question.id, "MockQuestion", testId, true);
+                    alert("Question flagged as mismatch!");
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                >
+                  🚩 Flag as Incorrect
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -547,6 +591,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                           <span className="flex-shrink-0 text-[8px] bg-gray-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded flex gap-2">
                             <span className="text-purple-500">↑{entry.tokens.input}</span>
                             <span className="text-pink-500">↓{entry.tokens.output}</span>
+                            {(entry.thoughts ?? 0) > 0 && <span className="text-amber-500">🧠{entry.thoughts}</span>}
                           </span>
                         )}
                         <span className="text-gray-300">→</span>
@@ -572,6 +617,10 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                     <div className="flex flex-col gap-1">
                       <span>Output Tokens</span>
                       <span className="text-gray-900 dark:text-white">{liveFeed.totalOutputTokens.toLocaleString()}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span>Thoughts</span>
+                      <span className="text-amber-500">{liveFeed.totalThoughtsTokens.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

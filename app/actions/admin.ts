@@ -64,7 +64,7 @@ export async function resolveReport(
   } else {
     // For standard questions, we only update fields that exist in the schema
     const { ai_answer_mismatch, ai_detected_answer, mockTestId, ...validUpdates } = updates;
-    
+
     if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
       await prisma.subjectPYQ.update({
         where: { id: questionId },
@@ -85,7 +85,7 @@ export async function resolveReport(
 
   // Mark report as resolved ONLY if it's a real report, not a virtual one
   if (!reportId.startsWith("auto-")) {
-    await prisma.questionReport.update({
+    await prisma.questionReport.updateMany({
       where: { id: reportId },
       data: { status: "resolved" }
     });
@@ -188,10 +188,10 @@ export async function toggleManualFlag(
       const questions = [...(template.questions as any[])];
       const idx = questions.findIndex(q => q.id === questionId);
       if (idx !== -1) {
-        questions[idx] = { 
-          ...questions[idx], 
+        questions[idx] = {
+          ...questions[idx],
           ai_answer_mismatch: flagStatus,
-          manual_flag: flagStatus 
+          manual_flag: flagStatus
         };
         await prisma.mockTestTemplate.update({
           where: { id: mockTestId },
@@ -320,12 +320,12 @@ Options: ${JSON.stringify(questionData.options)}
 Target Answer: ${questionData.correct_answer}
 
 Rules:
-1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer. Do not suggest other answers.
-2. Use LaTeX ($, $$) for all math.
-3. Keep it concise: 5-7 lines max. Only the key steps.
-4. No preamble, no markdown code blocks.
-5. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.
-6. DO NOT write "Therefore, the correct option is..." — the tag in rule 5 is enough.`;
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
+2. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
+3. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
+4. Keep it concise: 5-7 lines max. Only the key steps.
+5. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
+6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
 
   console.log(`[AI] Debug - Text Length: ${textPrompt.length}, Options Length: ${JSON.stringify(questionData.options).length}`);
   console.log(`[AI] Prompt Snippet: ${textPrompt.substring(0, 150)}...`);
@@ -383,7 +383,7 @@ Rules:
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
   } else {
     const model = genAI!.getGenerativeModel({
-      model: "gemini-3.1-flash-lite",
+      model: "gemini-3.1-flash-lite-preview",
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
@@ -439,7 +439,8 @@ Rules:
     explanation: cleanExplanation,
     usage: {
       input: (openaiUsage?.prompt_tokens || geminiUsage?.promptTokenCount || 0),
-      output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0)
+      output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0),
+      thoughts: (geminiUsage as any)?.thoughtsTokenCount || 0
     },
     isMismatch,
     aiDetectedAnswer
@@ -489,11 +490,12 @@ Options: ${JSON.stringify(q.options)}
 Target Answer: ${q.correct_answer}
 
 Rules:
-1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer. Do not suggest other answers.
-2. Use LaTeX ($, $$) for all math.
-3. Keep it concise: 6-8 lines max. Only the key steps.
-4. No preamble, no markdown code blocks.
-5. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
+2. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
+3. Use proper KaTeX for limits: e.g., \Big|_0^1. NEVER use $_0^1$.
+4. Keep it concise: 6-8 lines max. Only the key steps.
+5. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
+6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
 
         const contentParts: any[] = [prompt];
 
@@ -535,8 +537,8 @@ Rules:
           totalInputTokens += response.usage?.prompt_tokens || 0;
           totalOutputTokens += response.usage?.completion_tokens || 0;
         } else {
-          const model = genAI!.getGenerativeModel({ 
-            model: "gemini-3.1-flash-lite", 
+          const model = genAI!.getGenerativeModel({
+            model: "gemini-3.1-flash-lite-preview",
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
@@ -691,11 +693,11 @@ Options: ${JSON.stringify(options)}`;
     topic = response.choices[0].message.content?.trim() || "Unknown";
     usage = { input: response.usage?.prompt_tokens || 0, output: response.usage?.completion_tokens || 0 };
   } else {
-    const model = genAI!.getGenerativeModel({ 
+    const model = genAI!.getGenerativeModel({
       model: "gemini-2.0-flash",
-      tools: [], 
+      tools: [],
       generationConfig: {
-        maxOutputTokens: 20, 
+        maxOutputTokens: 20,
         temperature: 0,
       }
     });

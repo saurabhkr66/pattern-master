@@ -7,7 +7,7 @@ const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export async function POST(req: NextRequest) {
   try {
-    const { questionId, isSubjectPyq, isPyq } = await req.json();
+    const { questionId, questionType, mockTestId, isSubjectPyq, isPyq } = await req.json();
 
     if (!questionId) {
       return NextResponse.json({ error: "Missing questionId" }, { status: 400 });
@@ -17,19 +17,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 500 });
     }
 
-    // Determine which model to query based on the flags
     let questionData;
-    let modelName;
-
-    if (isSubjectPyq) {
+    if (questionType === "MockQuestion") {
+      if (!mockTestId) return NextResponse.json({ error: "mockTestId required" }, { status: 400 });
+      const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
+      if (template) {
+        const questions = template.questions as any[];
+        questionData = questions.find(q => q.id === questionId);
+      }
+    } else if (isSubjectPyq) {
       questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId } });
-      modelName = "SubjectPYQ";
     } else if (isPyq) {
       questionData = await prisma.pYQ.findUnique({ where: { id: questionId } });
-      modelName = "PYQ";
     } else {
       questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId } });
-      modelName = "GeneratedQuestion";
     }
 
     if (!questionData) {
@@ -43,19 +44,18 @@ export async function POST(req: NextRequest) {
 
     // Format prompt
     const prompt = `You are an expert educator. Provide a concise and precise explanation for this question.
-
+    
 Question: ${questionData.question_text}
-
-Options:
-${Array.isArray(questionData.options) ? questionData.options.join("\n") : JSON.stringify(questionData.options)}
-
-Correct Answer: ${questionData.correct_answer}
+Options: ${JSON.stringify(questionData.options)}
+Target Answer: ${questionData.correct_answer}
 
 Rules:
-1. Use LaTeX ($, $$) for all math.
-2. Keep it concise: 5-7 lines max. Only the key steps and logic.
-3. No preamble, no markdown code blocks.
-4. Do not repeat the question or options.
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
+2. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
+3. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
+4. Keep it concise: 5-7 lines max. Only the key steps and logic.
+5. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
+6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.
 `;
 
     // 1. Fetch images as base64
@@ -87,7 +87,7 @@ Rules:
               imgResult = { data: data.toString("base64"), mimeType };
               break;
             }
-          } catch {}
+          } catch { }
         }
 
         // Try Cloudinary
@@ -100,7 +100,7 @@ Rules:
                 const buffer = Buffer.from(await response.arrayBuffer());
                 imgResult = { data: buffer.toString("base64"), mimeType: response.headers.get("content-type") || "image/jpeg" };
               }
-            } catch {}
+            } catch { }
           }
         }
 
@@ -113,8 +113,8 @@ Rules:
     }
 
     // Initialize the model
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.1-flash-lite",
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.1-flash-lite-preview",
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
@@ -122,23 +122,56 @@ Rules:
         thinkingConfig: { thinkingLevel: "MEDIUM" },
       }
     });
-    
-    const result = await model.generateContent(contentParts);
-    let generatedExplanation = result.response.text();
 
-    // Clean up potential markdown formatting from Gemini
-    generatedExplanation = generatedExplanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
+    const result = await model.generateContent(contentParts);
+    const usage = result.response.usageMetadata;
+    const generatedExplanation = result.response.text();
+    const aiAnswerMatch = generatedExplanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
+    const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
+
+    // Clean up the tag
+    const cleanExplanation = generatedExplanation
+      .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
+      .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D]\.?/gi, "")
+      .trim();
 
     // Save back to database
-    if (isSubjectPyq) {
-      await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation: generatedExplanation } });
+    if (questionType === "MockQuestion" && mockTestId) {
+      const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
+      if (template) {
+        const questions = [...(template.questions as any[])];
+        const idx = questions.findIndex(q => q.id === questionId);
+        if (idx !== -1) {
+          questions[idx] = {
+            ...questions[idx],
+            explanation: cleanExplanation,
+            ai_answer_mismatch: !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase()),
+            ai_detected_answer: aiDetectedAnswer
+          };
+          await prisma.mockTestTemplate.update({
+            where: { id: mockTestId },
+            data: { questions }
+          });
+        }
+      }
+    } else if (isSubjectPyq) {
+      await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
     } else if (isPyq) {
-      await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: generatedExplanation } });
+      await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
     } else {
-      await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation: generatedExplanation } });
+      await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
     }
 
-    return NextResponse.json({ explanation: generatedExplanation, explanationHindi: null });
+    return NextResponse.json({
+      explanation: cleanExplanation,
+      isMismatch: !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase()),
+      aiDetectedAnswer,
+      usage: {
+        input: usage?.promptTokenCount || 0,
+        output: usage?.candidatesTokenCount || 0,
+        thoughts: (usage as any)?.thoughtsTokenCount || 0
+      }
+    });
 
   } catch (error) {
     console.error("[GENERATE_EXPLANATION] Error:", error);
