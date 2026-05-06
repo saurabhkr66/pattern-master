@@ -345,8 +345,8 @@ Rules:
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Allow moderate thinking for JEE-level explanations
-        thinkingConfig: { thinkingBudget: 1024 },
+        // @ts-ignore - Disable thinking to save output tokens (answer is already provided)
+        thinkingConfig: { thinkingBudget: 0 },
       }
     });
     const result = await model.generateContent(contentParts);
@@ -498,8 +498,8 @@ Rules:
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
-              // @ts-ignore - Allow moderate thinking for JEE-level explanations
-              thinkingConfig: { thinkingBudget: 1024 },
+              // @ts-ignore - Disable thinking to save output tokens
+              thinkingConfig: { thinkingBudget: 0 },
             }
           });
           const result = await model.generateContent(contentParts);
