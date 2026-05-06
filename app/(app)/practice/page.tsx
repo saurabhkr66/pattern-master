@@ -1,7 +1,9 @@
 // app/(app)/practice/page.tsx
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { cleanTextForMeta, toSlug } from "@/lib/seo";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { cleanTextForMeta } from "@/lib/seo";
 import PatternTable from "@/components/patterns/PatternTable";
 import ExamSwitcher from "@/components/patterns/ExamSwitcher";
 import PracticeHydrator from "@/components/patterns/PracticeHydrator";
@@ -87,8 +89,8 @@ const getSubjectStats = (examType: string, branch: string | null) => {
         stats[entry.subject] = entry._count._all;
       });
 
-      // Subject-level patterns only apply to CSE — skip entirely for other branches
-      if (!branch || branch === "CSE") {
+      // Subject-level patterns only apply to GATE CSE — skip for all other exams/branches
+      if (branch === "CSE") {
         const subjectPatternStats = await prisma.subjectPattern.findMany({
           select: { subject_name: true },
         });
@@ -110,8 +112,8 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
     async () => {
       const isAll = !subject || subject === "All";
 
-      // Subject-level patterns only apply to CSE — skip entirely for other branches
-      const subjectPatterns = (!branch || branch === "CSE")
+      // Subject-level patterns only apply to GATE CSE — skip entirely for other exams/branches
+      const subjectPatterns = (branch === "CSE")
         ? await prisma.subjectPattern.findMany({
             where: !isAll ? { subject_name: subject } : {},
             select: {
@@ -232,17 +234,23 @@ export default async function PracticePage({
       activeBranch = availableBranches[Math.floor(Math.random() * availableBranches.length)];
     }
 
-    let activeSubject = subjectParam || "All";
-    
+    // Always stamp the resolved branch into the URL so client-side keys are consistent
+    if (activeBranch && !branchParam) {
+      const p = new URLSearchParams();
+      p.set("exam", activeExamType);
+      p.set("branch", activeBranch);
+      if (subjectParam) p.set("subject", subjectParam);
+      if (patternId) p.set("patternId", patternId);
+      if (questionId) p.set("questionId", questionId);
+      redirect(`/practice?${p.toString()}`);
+    }
+
+    const cookieStore = await cookies();
+    const cookieSubject = cookieStore.get(`pref_subject_${activeExamType}_${activeBranch}`)?.value;
+    let activeSubject = subjectParam || cookieSubject || "All";
+
     // Fetch stats for the active exam/branch
     subjectStats = await getSubjectStats(activeExamType, activeBranch);
-    
-    // SMART DEFAULT: If subject is "All" and we have subjects, pick a random one for first-time engagement
-    // But ONLY if the user didn't explicitly ask for "All" in the URL
-    if (activeSubject === "All" && !subjectParam && Object.keys(subjectStats).length > 0) {
-      const subjectKeys = Object.keys(subjectStats);
-      activeSubject = subjectKeys[Math.floor(Math.random() * subjectKeys.length)];
-    }
 
     // If we have a patternId but no subject, resolve the subject so topics are fetched correctly
     if (patternId && (activeSubject === "All" || !subjectParam)) {
@@ -316,12 +324,15 @@ export default async function PracticePage({
                 </p>
               </div>
             ) : (
-              <PatternTable 
-                patterns={topics} 
-                highlightPatternId={patternId} 
+              <PatternTable
+                key={`${activeExamType}-${activeBranch ?? ""}`}
+                patterns={topics}
+                highlightPatternId={patternId}
                 directQuestionId={questionId}
                 subjectStats={subjectStats}
                 activeSubject={activeSubject}
+                resolvedExam={activeExamType}
+                resolvedBranch={activeBranch ?? ""}
               />
             )}
           </div>
@@ -333,7 +344,8 @@ export default async function PracticePage({
         </div>
       </div>
     );
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.digest?.startsWith("NEXT_REDIRECT")) throw err;
     console.error("Practice Page Error:", err);
     return (
       <div className="max-w-4xl mx-auto py-12 px-4">

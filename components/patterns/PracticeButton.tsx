@@ -86,7 +86,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     const currentInitialId = initialQuestion?.id || null;
     
     if (initialQuestion) {
-      if (currentInitialId !== lastInitialIdRef.current) {
+      if (currentInitialId !== lastInitialIdRef.current && currentInitialId !== question?.id) {
         setQuestion(initialQuestion);
         setQuestionQueue(initialQueue || []);
         setIsRevealed(false);
@@ -100,8 +100,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         setGeneratedExplanation(null);
         setHasReported(false);
         setShowReportModal(false);
-        lastInitialIdRef.current = currentInitialId;
       }
+      lastInitialIdRef.current = currentInitialId;
     } else {
       // Transition back to AI Mode
       if (lastInitialIdRef.current !== null) {

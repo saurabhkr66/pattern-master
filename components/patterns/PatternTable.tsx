@@ -30,19 +30,23 @@ export default function PatternTable({
   directQuestionId,
   subjectStats,
   activeSubject: initialSubject,
+  resolvedExam,
+  resolvedBranch,
 }: {
   patterns: any[];
   highlightPatternId?: string;
   directQuestionId?: string;
   subjectStats: Record<string, number>;
   activeSubject: string;
+  resolvedExam: string;
+  resolvedBranch: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const exam = searchParams.get("exam") || "GATE";
-  const branch = searchParams.get("branch") || "";
+  const exam = searchParams.get("exam") || resolvedExam;
+  const branch = searchParams.get("branch") || resolvedBranch;
   // Read live from URL so it reacts to client-side navigation (e.g. "Solve again")
   const urlQuestionId = searchParams.get("questionId") ?? searchParams.get("q") ?? directQuestionId;
   const urlPatternId = searchParams.get("patternId") ?? highlightPatternId;
@@ -53,6 +57,12 @@ export default function PatternTable({
   const [sortMode, setSortMode] = useState<"default" | "practiced">("default");
   const tableRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Keep pref_branch in sync so PracticeHydrator builds the right subject key on return visits
+  useEffect(() => {
+    if (resolvedBranch) localStorage.setItem("pref_branch", resolvedBranch);
+    if (resolvedExam) localStorage.setItem("pref_exam", resolvedExam);
+  }, [resolvedExam, resolvedBranch]);
 
   // React to client-side URL changes (e.g. "Solve again" from dashboard)
   useEffect(() => {
@@ -109,9 +119,12 @@ export default function PatternTable({
   const subjects = [{ id: 'All', name: 'All subjects', n: Object.values(subjectStats).reduce((a, b) => a + b, 0) }, 
                     ...Object.keys(subjectStats).sort().map(s => ({ id: s, name: s, n: subjectStats[s] }))];
 
+  const subjectKey = `pref_subject_${exam}_${branch}`;
+
   const handleFilterClick = (subjectId: string) => {
     startTransition(() => {
-      localStorage.setItem("pref_subject", subjectId);
+      localStorage.setItem(subjectKey, subjectId);
+      document.cookie = `${subjectKey}=${encodeURIComponent(subjectId)}; path=/; max-age=31536000; SameSite=Lax`;
       setLocalSubject(subjectId);
       setOpenPatternId(null);
       const url = new URL(window.location.href);
@@ -120,10 +133,6 @@ export default function PatternTable({
       trackPageView();
     });
   };
-
-  useEffect(() => {
-    if (localSubject) localStorage.setItem("pref_subject", localSubject);
-  }, [localSubject]);
 
   const handleTopicToggle = (id: string) => {
     const isOpening = openPatternId !== id;

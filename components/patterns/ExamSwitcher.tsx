@@ -30,7 +30,7 @@ export default function ExamSwitcher({
   const handleExamSwitch = (id: string) => {
     startTransition(() => {
       localStorage.setItem("pref_exam", id);
-      localStorage.removeItem("pref_branch"); // Reset branch when exam changes
+      localStorage.removeItem("pref_branch");
       const params = new URLSearchParams(searchParams.toString());
       params.set("exam", id);
       params.delete("branch");
