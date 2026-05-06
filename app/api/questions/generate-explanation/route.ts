@@ -117,7 +117,7 @@ Rules:
       model: "gemini-2.5-flash",
       tools: [],
       generationConfig: {
-        maxOutputTokens: 1200,
+        maxOutputTokens: 2500,
         // @ts-ignore - Disable thinking to save output tokens
         thinkingConfig: { thinkingBudget: 0 },
       }

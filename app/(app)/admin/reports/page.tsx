@@ -98,8 +98,33 @@ export default async function AdminReportsPage() {
     }
   }
 
+  // Scan for AI-flagged mismatch questions (AI disagrees with stored answer)
+  const flaggedMockQuestions: any[] = [];
+  for (const template of mockTemplates) {
+    const questions = (template.questions as any[]) || [];
+    for (const q of questions) {
+      if (q.ai_answer_mismatch) {
+        flaggedMockQuestions.push({
+          id: `flag-mock-${template.id}-${q.id}`,
+          reason: "⚠️ AI Answer Mismatch",
+          status: "pending",
+          created_at: new Date(),
+          user: { email: "AI Verifier" },
+          isMock: true,
+          mock_test_id: template.id,
+          mock_question_id: q.id,
+          exam_type: template.exam_type,
+          subject: q.subject || q.sectionName || q.topic_name || template.title,
+          q: q,
+          details: `AI thinks correct answer is "${q.ai_detected_answer}" but stored answer is "${q.correct_answer}". Test: "${template.title}"`
+        });
+      }
+    }
+  }
+
   // Convert them into "virtual reports" so they show up in the UI
   const autoReports = [
+    ...flaggedMockQuestions,
     ...missingSubjectPYQs.map(q => ({
       id: `auto-empty-s-${q.id}`,
       reason: "Missing Explanation (Auto)",
