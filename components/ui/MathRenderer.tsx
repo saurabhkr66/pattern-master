@@ -45,7 +45,22 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\{([^{}]+)\}\/\{([^{}]+)\}/g, '\\frac{$1}{$2}')
     // JEE scraper: unwrapped dimensional formulas [M^...L^...T^...] → $[...]$
     // Only wraps if not already inside $...$ (negative lookbehind/lookahead for $)
-    .replace(/(?<!\$)\[([^\[\]]+\^[^\[\]]+)\](?!\()(?!\$)/g, '\\$$[$1]\\$$');
+    .replace(/(?<!\$)\[([^\[\]]+\^[^\[\]]+)\](?!\()(?!\$)/g, '\\$$[$1]\\$$')
+    
+    // AI DEFECT CLEANERS (Defensive Fixes)
+    // 1. Fix the "Square Bracket Link" conflict: Replace [ with a version that won't trigger Markdown links
+    // but KaTeX will still understand inside math blocks.
+    .replace(/\\left\s*\[/g, '\\left[')
+    .replace(/\\right\s*\]/g, '\\right]')
+    
+    // 2. Fix broken limits and hallucinated dollars (The root cause of red text)
+    .replace(/([\]\}])\s*\\?\$([_^])/g, '$1$2')
+    .replace(/([\[\(\{])\s*\\?\$([\\]?(frac|sum|int|sqrt|left|right|\[|{|text))/g, '$1$2')
+    .replace(/(\\left|\\right)\s*\\?\$([\[\(\{])/g, '$1$2')
+    
+    // 3. Fix character-level spacing (e.g., G i v e n -> Given)
+    .replace(/\b([A-Z])\s+([a-z])\s+([a-z])\s+([a-z])\s+([a-z])\b/g, (m) => m.replace(/\s+/g, ''))
+    .replace(/\b([A-Z])\s+([a-z])\s+([a-z])\s+([a-z])\b/g, (m) => m.replace(/\s+/g, ''));
 
 
   return (

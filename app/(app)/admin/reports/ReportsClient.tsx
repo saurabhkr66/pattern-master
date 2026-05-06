@@ -11,6 +11,9 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
   const [filterExam, setFilterExam] = useState<string>("all");
   const [filterSubject, setFilterSubject] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterMockId, setFilterMockId] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMissingOnly, setShowMissingOnly] = useState(false);
 
   // Reset subject filter when exam filter changes
   const handleExamChange = (newExam: string) => {
@@ -90,9 +93,42 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       return { ...lr, exam, subject, type, q };
     });
 
-    // Put LaTeX issues at the top, followed by existing reports
-    return [...latexProcessed, ...processedReports];
-  }, [processedReports, latexReports]);
+    // 3. Inject all missing questions from a specific mock test if selected
+    let mockMissingReports: any[] = [];
+    if (filterMockId !== "all" && mockTests) {
+      const selectedTest = mockTests.find(t => t.id === filterMockId);
+      if (selectedTest) {
+        const questions = (selectedTest.questions as any[]) || [];
+        questions.forEach(q => {
+          if (!q.explanation || q.explanation.trim() === "") {
+            // Check if we already have a report for this question to avoid duplicates
+            const exists = [...latexProcessed, ...processedReports].some(r => r.mock_question_id === q.id && r.mock_test_id === selectedTest.id);
+            if (!exists) {
+              mockMissingReports.push({
+                id: `auto-mock-filter-${selectedTest.id}-${q.id}`,
+                reason: "Missing Explanation (Filter)",
+                status: "pending",
+                created_at: new Date(),
+                user: { email: "Mock Filter" },
+                isMock: true,
+                mock_test_id: selectedTest.id,
+                mock_question_id: q.id,
+                exam_type: selectedTest.exam_type,
+                exam: selectedTest.exam_type,
+                subject: q.subject || q.sectionName || q.topic_name || selectedTest.title,
+                type: "Mock",
+                q: q,
+                details: `Question in "${selectedTest.title}" has no explanation.`
+              });
+            }
+          }
+        });
+      }
+    }
+
+    // Put Mock Filter issues, then LaTeX issues at the top, followed by existing reports
+    return [...mockMissingReports, ...latexProcessed, ...processedReports];
+  }, [processedReports, latexReports, filterMockId, mockTests]);
 
   // Unique values for filters
   const exams = useMemo(() => {
@@ -734,49 +770,97 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       </div>
 
       {/* FILTER BAR */}
-      <div className="mb-8 p-4 bg-gray-50 dark:bg-zinc-900/50 border dark:border-zinc-800 rounded-2xl flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[150px]">
-          <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Exam</label>
-          <select 
-            value={filterExam} 
-            onChange={(e) => handleExamChange(e.target.value)}
-            className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+      <div className="mb-8 p-6 bg-gray-50 dark:bg-zinc-900/50 border dark:border-zinc-800 rounded-3xl flex flex-col gap-6">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Search Question / Details</label>
+            <div className="relative">
+              <input 
+                type="text"
+                placeholder="Type to search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full p-2.5 pl-10 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
+              />
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 opacity-50">🔍</span>
+            </div>
+          </div>
+
+          <div className="min-w-[140px]">
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Exam</label>
+            <select 
+              value={filterExam} 
+              onChange={(e) => handleExamChange(e.target.value)}
+              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+            >
+              <option value="all">All Exams</option>
+              {exams.map(e => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </div>
+
+          <div className="min-w-[140px]">
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Subject</label>
+            <select 
+              value={filterSubject} 
+              onChange={(e) => setFilterSubject(e.target.value)}
+              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+            >
+              <option value="all">All Subjects</option>
+              {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div className="min-w-[140px]">
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Type</label>
+            <select 
+              value={filterType} 
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+            >
+              <option value="all">All Types</option>
+              {types.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
+          <button 
+            onClick={() => { 
+              setFilterExam("all"); 
+              setFilterSubject("all"); 
+              setFilterType("all"); 
+              setFilterMockId("all");
+              setSearchQuery(""); 
+              setShowMissingOnly(false); 
+            }}
+            className="p-2.5 px-4 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            <option value="all">All Exams</option>
-            {exams.map(e => <option key={e} value={e}>{e}</option>)}
-          </select>
+            Reset
+          </button>
         </div>
 
-        <div className="flex-1 min-w-[150px]">
-          <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Subject</label>
-          <select 
-            value={filterSubject} 
-            onChange={(e) => setFilterSubject(e.target.value)}
-            className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
-          >
-            <option value="all">All Subjects</option>
-            {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
+        <div className="flex flex-wrap gap-4 pt-4 border-t dark:border-zinc-800 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Target Mock Paper (Find Missing Qs)</label>
+            <select 
+              value={filterMockId} 
+              onChange={(e) => setFilterMockId(e.target.value)}
+              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+            >
+              <option value="all">-- Select Mock Test --</option>
+              {mockTests?.map(t => <option key={t.id} value={t.id}>{t.title} ({t.exam_type})</option>)}
+            </select>
+          </div>
 
-        <div className="flex-1 min-w-[150px]">
-          <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Type</label>
-          <select 
-            value={filterType} 
-            onChange={(e) => setFilterType(e.target.value)}
-            className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
+          <button 
+            onClick={() => setShowMissingOnly(!showMissingOnly)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+              showMissingOnly 
+                ? "bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20" 
+                : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 hover:border-red-500/50"
+            }`}
           >
-            <option value="all">All Types</option>
-            {types.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
+            {showMissingOnly ? "✅" : "⭕"} Show Only Missing
+          </button>
         </div>
-
-        <button 
-          onClick={() => { setFilterExam("all"); setFilterSubject("all"); setFilterType("all"); }}
-          className="p-2.5 px-4 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-        >
-          Reset
-        </button>
       </div>
 
       {filteredReports.length === 0 ? (
