@@ -270,20 +270,19 @@ export async function generateAIExplanation(
   // Strip massive base64 strings from text if they exist (they eat tokens)
   cleanQuestionText = cleanQuestionText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
-  const textPrompt = `You are an expert educator. Your task is to provide a DETAILED and COMPREHENSIVE explanation for this question.
+  const textPrompt = `You are an expert educator. Provide a concise and precise explanation for this question.
 
 Question: ${cleanQuestionText}
 Options: ${JSON.stringify(questionData.options)}
 Target Answer: ${questionData.correct_answer}
 
 Rules:
-1. Be objective. If the 'Target Answer' provided above is mathematically or logically incorrect, state so clearly and provide the correct derivation.
+1. If the 'Target Answer' is incorrect, state so and provide the correct derivation.
 2. Use LaTeX ($, $$) for all math.
-3. Provide a thorough step-by-step breakdown (10-12 lines max).
-4. Focus on clarity and depth.
-5. No preamble, no markdown code blocks.
-6. MANDATORY: End your explanation with the final correct option in this format: [CORRECT_OPTION: X] where X is A, B, C, or D.
-7. DO NOT write "Therefore, the correct option is..." or similar conclusion sentences in natural language. The tag in rule 6 is enough.`;
+3. Keep it concise: 5-7 lines max. Only the key steps.
+4. No preamble, no markdown code blocks.
+5. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.
+6. DO NOT write "Therefore, the correct option is..." — the tag in rule 5 is enough.`;
 
   console.log(`[AI] Debug - Text Length: ${textPrompt.length}, Options Length: ${JSON.stringify(questionData.options).length}`);
   console.log(`[AI] Prompt Snippet: ${textPrompt.substring(0, 150)}...`);
@@ -344,7 +343,7 @@ Rules:
       model: "gemini-2.5-flash",
       tools: [],
       generationConfig: {
-        maxOutputTokens: 2500,
+        maxOutputTokens: 1200,
         // @ts-ignore - Disable thinking to save output tokens (answer is already provided)
         thinkingConfig: { thinkingBudget: 0 },
       }
@@ -440,18 +439,17 @@ export async function processMockTestExplanations(mockTestId: string, aiModel: "
         let cleanQText = q.question_text || "";
         cleanQText = cleanQText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
-        const prompt = `You are an expert educator. Your task is to provide a DETAILED and COMPREHENSIVE explanation for this question.
+        const prompt = `You are an expert educator. Provide a concise  and precise explanation for this question.
 
 Question: ${cleanQText}
 Options: ${JSON.stringify(q.options)}
 Target Answer: ${q.correct_answer}
 
 Rules:
-1. Be objective. If the 'Target Answer' provided above is mathematically or logically incorrect, state so clearly and provide the correct derivation.
+1. If the 'Target Answer' is incorrect, state so and provide the correct derivation.
 2. Use LaTeX ($, $$) for all math.
-3. Provide a thorough step-by-step breakdown.
-4. Focus on clarity and depth.
-5. No preamble, no markdown code blocks.`;
+3. Keep it concise: 6-8 lines max. Only the key steps.
+4. No preamble, no markdown code blocks.`;
 
         const contentParts: any[] = [prompt];
 
@@ -497,7 +495,7 @@ Rules:
             model: "gemini-2.5-flash", 
             tools: [],
             generationConfig: {
-              maxOutputTokens: 2500,
+              maxOutputTokens: 1200,
               // @ts-ignore - Disable thinking to save output tokens
               thinkingConfig: { thinkingBudget: 0 },
             }

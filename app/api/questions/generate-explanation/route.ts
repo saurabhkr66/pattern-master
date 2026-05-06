@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Format prompt
-    const prompt = `
-You are an expert educator. Your task is to provide a DETAILED, COMPREHENSIVE and thorough step-by-step explanation for the following multiple-choice or numerical question. 
+    const prompt = `You are an expert educator. Provide a concise and precise explanation for this question.
 
 Question: ${questionData.question_text}
 
@@ -52,7 +51,11 @@ ${Array.isArray(questionData.options) ? questionData.options.join("\n") : JSON.s
 
 Correct Answer: ${questionData.correct_answer}
 
-Provide ONLY the explanation in a professional, academic tone. Format any mathematical equations using LaTeX inside $ for inline math or $$ for block math. Do not wrap the entire response in a markdown code block. Do not include the options or the question text again, just the logic. Explain why the correct answer is correct, and briefly why the other options (if applicable) are incorrect.
+Rules:
+1. Use LaTeX ($, $$) for all math.
+2. Keep it concise: 5-7 lines max. Only the key steps and logic.
+3. No preamble, no markdown code blocks.
+4. Do not repeat the question or options.
 `;
 
     // 1. Fetch images as base64
@@ -114,7 +117,7 @@ Provide ONLY the explanation in a professional, academic tone. Format any mathem
       model: "gemini-2.5-flash",
       tools: [],
       generationConfig: {
-        maxOutputTokens: 2500,
+        maxOutputTokens: 1200,
         // @ts-ignore - Disable thinking to save output tokens
         thinkingConfig: { thinkingBudget: 0 },
       }
