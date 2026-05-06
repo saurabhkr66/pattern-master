@@ -55,10 +55,70 @@ Correct Answer: ${questionData.correct_answer}
 Provide ONLY the explanation in a professional, academic tone. Format any mathematical equations using LaTeX inside $ for inline math or $$ for block math. Do not wrap the entire response in a markdown code block. Do not include the options or the question text again, just the logic. Explain why the correct answer is correct, and briefly why the other options (if applicable) are incorrect.
 `;
 
-    // Initialize the model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Using a fast, standard model
+    // 1. Fetch images as base64
+    const images = (questionData.images as any[]) || [];
+    const contentParts: any[] = [prompt];
 
-    const result = await model.generateContent(prompt);
+    if (images.length > 0) {
+      const fs = await import("fs");
+      const path = await import("path");
+      const { getCloudinaryUrl } = await import("@/lib/imageUtils");
+
+      for (const img of images) {
+        const filename = img.filename || img.url;
+        if (!filename) continue;
+
+        // Try local
+        let imgResult = null;
+        const possiblePaths = [
+          path.join(process.cwd(), "public", "images", "questions", filename),
+          path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+        ];
+
+        for (const filePath of possiblePaths) {
+          try {
+            if (fs.existsSync(filePath)) {
+              const data = fs.readFileSync(filePath);
+              const ext = path.extname(filePath).slice(1).toLowerCase();
+              const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
+              imgResult = { data: data.toString("base64"), mimeType };
+              break;
+            }
+          } catch {}
+        }
+
+        // Try Cloudinary
+        if (!imgResult) {
+          const cloudinaryUrl = getCloudinaryUrl(filename);
+          if (cloudinaryUrl.startsWith("http")) {
+            try {
+              const response = await fetch(cloudinaryUrl);
+              if (response.ok) {
+                const buffer = Buffer.from(await response.arrayBuffer());
+                imgResult = { data: buffer.toString("base64"), mimeType: response.headers.get("content-type") || "image/jpeg" };
+              }
+            } catch {}
+          }
+        }
+
+        if (imgResult) {
+          contentParts.push({
+            inlineData: { data: imgResult.data, mimeType: imgResult.mimeType }
+          });
+        }
+      }
+    }
+
+    // Initialize the model
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      tools: [],
+      generationConfig: {
+        maxOutputTokens: 2500,
+      }
+    });
+    
+    const result = await model.generateContent(contentParts);
     let generatedExplanation = result.response.text();
 
     // Clean up potential markdown formatting from Gemini
