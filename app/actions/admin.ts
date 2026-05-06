@@ -167,6 +167,43 @@ export async function quickEditExplanation(
   }
 }
 
+export async function toggleManualFlag(
+  questionId: string,
+  questionType: string,
+  mockTestId?: string,
+  flagStatus: boolean = true
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  const userEmail = dbUser?.email?.toLowerCase();
+  if (!checkIsAdmin(userEmail)) {
+    throw new Error("Forbidden: You are not an admin.");
+  }
+
+  if (questionType === "MockQuestion" && mockTestId) {
+    const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
+    if (template) {
+      const questions = [...(template.questions as any[])];
+      const idx = questions.findIndex(q => q.id === questionId);
+      if (idx !== -1) {
+        questions[idx] = { 
+          ...questions[idx], 
+          ai_answer_mismatch: flagStatus,
+          manual_flag: flagStatus 
+        };
+        await prisma.mockTestTemplate.update({
+          where: { id: mockTestId },
+          data: { questions }
+        });
+      }
+    }
+  }
+
+  revalidatePath("/admin/reports");
+}
+
 export async function deleteMockTest(mockTestId: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -283,7 +320,7 @@ Options: ${JSON.stringify(questionData.options)}
 Target Answer: ${questionData.correct_answer}
 
 Rules:
-1. If the 'Target Answer' is incorrect, state so and provide the correct derivation.
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer. Do not suggest other answers.
 2. Use LaTeX ($, $$) for all math.
 3. Keep it concise: 5-7 lines max. Only the key steps.
 4. No preamble, no markdown code blocks.
@@ -452,10 +489,11 @@ Options: ${JSON.stringify(q.options)}
 Target Answer: ${q.correct_answer}
 
 Rules:
-1. If the 'Target Answer' is incorrect, state so and provide the correct derivation.
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer. Do not suggest other answers.
 2. Use LaTeX ($, $$) for all math.
 3. Keep it concise: 6-8 lines max. Only the key steps.
-4. No preamble, no markdown code blocks.`;
+4. No preamble, no markdown code blocks.
+5. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
 
         const contentParts: any[] = [prompt];
 

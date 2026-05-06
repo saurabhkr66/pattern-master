@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react"; // AI Model selection enabled 2026-05-03
-import { resolveReport, deleteQuestion, generateAIExplanation, processMockTestExplanations } from "@/app/actions/admin";
+import { resolveReport, deleteQuestion, generateAIExplanation, processMockTestExplanations, toggleManualFlag } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
 
@@ -250,6 +250,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     currentExplanation: string;
     currentMismatch?: boolean;
     currentAIDetectedAnswer?: string | null;
+    mock_test_id?: string;
     progress: number;
     total: number;
     fixed: number;
@@ -290,6 +291,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       currentExplanation: "",
       currentMismatch: false,
       currentAIDetectedAnswer: null,
+      mock_test_id: testId,
       progress: 0,
       total: missingQs.length,
       fixed: 0,
@@ -481,8 +483,26 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                         {String.fromCharCode(65 + i)}. {opt}
                       </div>
                     ))}
-                    <div className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-1">
-                      ✓ Answer: {liveFeed.currentQ.correct_answer}
+                    <div className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-1 flex items-center justify-between">
+                      <span>✓ Answer: {liveFeed.currentQ.correct_answer}</span>
+                      <button
+                        onClick={async () => {
+                          const testId = liveFeed.mock_test_id;
+                          if (!testId) return;
+                          await toggleManualFlag(liveFeed.currentQ.id, "MockQuestion", testId, true);
+                          // Optionally update local log to show it's flagged
+                          setLiveFeed(prev => {
+                            if (!prev) return null;
+                            const newLog = [...prev.log];
+                            const lastIdx = newLog.length - 1;
+                            if (lastIdx >= 0) newLog[lastIdx] = { ...newLog[lastIdx], isMismatch: true };
+                            return { ...prev, log: newLog, currentMismatch: true };
+                          });
+                        }}
+                        className="px-2 py-0.5 rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-[8px] font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/30 transition-colors"
+                      >
+                        🚩 Flag Incorrect
+                      </button>
                     </div>
                   </div>
                 </div>
