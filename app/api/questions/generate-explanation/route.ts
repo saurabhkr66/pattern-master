@@ -118,8 +118,8 @@ Rules:
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Disable thinking to save output tokens
-        thinkingConfig: { thinkingBudget: 0 },
+        // @ts-ignore - Allow moderate thinking for JEE math/physics accuracy
+        thinkingConfig: { thinkingBudget: 1024 },
       }
     });
     

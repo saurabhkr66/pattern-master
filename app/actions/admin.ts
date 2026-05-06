@@ -11,14 +11,16 @@ import { getCloudinaryUrl } from "@/lib/imageUtils";
 export async function resolveReport(
   reportId: string,
   questionId: string,
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion",
+  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" | "subject_pyq" | "pyq",
   updates: {
     question_text?: string,
     correct_answer?: string,
     explanation?: string,
     options?: any,
     images?: any,
-    mockTestId?: string // Required if questionType is MockQuestion
+    mockTestId?: string, // Required if questionType is MockQuestion
+    ai_answer_mismatch?: boolean,
+    ai_detected_answer?: string | null
   }
 ) {
   const { userId } = await auth();
@@ -34,19 +36,8 @@ export async function resolveReport(
 
 
   // Update the actual question
-  if (questionType === "SubjectPYQ") {
-    await prisma.subjectPYQ.update({
-      where: { id: questionId },
-      data: updates
-    });
-  } else if (questionType === "PYQ") {
-    await prisma.pYQ.update({
-      where: { id: questionId },
-      data: updates
-    });
-  } else if (questionType === "MockQuestion") {
+  if (questionType === "MockQuestion") {
     if (!updates.mockTestId) throw new Error("Mock Test ID is required for MockQuestion updates");
-
     const mockTest = await prisma.mockTestTemplate.findUnique({
       where: { id: updates.mockTestId }
     });
@@ -58,7 +49,7 @@ export async function resolveReport(
 
     if (qIndex === -1) throw new Error("Question not found in Mock Test");
 
-    // Merge updates
+    // Merge updates (including mismatch flags for mock questions)
     questions[qIndex] = {
       ...questions[qIndex],
       ...updates
@@ -71,10 +62,25 @@ export async function resolveReport(
       data: { questions }
     });
   } else {
-    await prisma.generatedQuestion.update({
-      where: { id: questionId },
-      data: updates
-    });
+    // For standard questions, we only update fields that exist in the schema
+    const { ai_answer_mismatch, ai_detected_answer, mockTestId, ...validUpdates } = updates;
+    
+    if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
+      await prisma.subjectPYQ.update({
+        where: { id: questionId },
+        data: validUpdates as any
+      });
+    } else if (questionType === "PYQ" || questionType === "pyq") {
+      await prisma.pYQ.update({
+        where: { id: questionId },
+        data: validUpdates as any
+      });
+    } else {
+      await prisma.generatedQuestion.update({
+        where: { id: questionId },
+        data: validUpdates as any
+      });
+    }
   }
 
   // Mark report as resolved ONLY if it's a real report, not a virtual one
@@ -344,8 +350,8 @@ Rules:
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Disable thinking to save output tokens (answer is already provided)
-        thinkingConfig: { thinkingBudget: 0 },
+        // @ts-ignore - Allow moderate thinking for JEE math/physics accuracy
+        thinkingConfig: { thinkingBudget: 1024 },
       }
     });
     const result = await model.generateContent(contentParts);
@@ -496,8 +502,8 @@ Rules:
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
-              // @ts-ignore - Disable thinking to save output tokens
-              thinkingConfig: { thinkingBudget: 0 },
+              // @ts-ignore - Allow moderate thinking for JEE math/physics accuracy
+              thinkingConfig: { thinkingBudget: 1024 },
             }
           });
           const result = await model.generateContent(contentParts);

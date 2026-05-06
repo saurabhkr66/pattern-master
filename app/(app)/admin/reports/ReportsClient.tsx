@@ -22,7 +22,9 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     correct_answer: "",
     explanation: "",
     options: [] as string[],
-    images: [] as any[]
+    images: [] as any[],
+    ai_answer_mismatch: false,
+    ai_detected_answer: null as string | null
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -161,7 +163,9 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       correct_answer: questionData?.correct_answer || "",
       explanation: questionData?.explanation || "",
       options: (questionData?.options as string[]) || [],
-      images: (questionData?.images as any[]) || []
+      images: (questionData?.images as any[]) || [],
+      ai_answer_mismatch: questionData?.ai_answer_mismatch || false,
+      ai_detected_answer: questionData?.ai_detected_answer || null
     });
   };
 
@@ -225,7 +229,12 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         editingReport.mock_test_id,
         selectedAIModel
       );
-      setFormData({ ...formData, explanation: (result as any).explanation });
+      setFormData({ 
+        ...formData, 
+        explanation: (result as any).explanation,
+        ai_answer_mismatch: (result as any).isMismatch || false,
+        ai_detected_answer: (result as any).aiDetectedAnswer || null
+      });
     } catch (error) {
       console.error("AI generation failed", error);
       alert("Failed to generate explanation. Check console for details.");
@@ -910,7 +919,29 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Explanation (Supports LaTeX)</label>
+                  <div className="flex items-center gap-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Explanation (Supports LaTeX)</label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, ai_answer_mismatch: !formData.ai_answer_mismatch })}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${
+                        formData.ai_answer_mismatch 
+                          ? "bg-red-500 text-white" 
+                          : "bg-gray-100 dark:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                        <line x1="4" x2="4" y1="22" y2="15"></line>
+                      </svg>
+                      {formData.ai_answer_mismatch ? "Flagged" : "Flag Issue"}
+                    </button>
+                    {formData.ai_answer_mismatch && formData.ai_detected_answer && (
+                      <span className="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg border border-red-200 dark:border-red-500/20">
+                        AI Detected: {formData.ai_detected_answer}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <select
                       value={selectedAIModel}
