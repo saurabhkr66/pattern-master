@@ -114,12 +114,12 @@ Rules:
 
     // Initialize the model
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash-lite",
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Allow moderate thinking for JEE math/physics accuracy
-        thinkingConfig: { thinkingBudget: 1024 },
+        // @ts-ignore - Gemini 3.1 uses thinkingLevel instead of budget
+        thinkingLevel: "MEDIUM",
       }
     });
     

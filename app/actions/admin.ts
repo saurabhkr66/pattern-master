@@ -383,12 +383,12 @@ Rules:
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
   } else {
     const model = genAI!.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash-lite",
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Allow moderate thinking for JEE math/physics accuracy
-        thinkingConfig: { thinkingBudget: 1024 },
+        // @ts-ignore - Gemini 3.1 uses thinkingLevel instead of budget
+        thinkingLevel: "MEDIUM",
       }
     });
     const result = await model.generateContent(contentParts);
@@ -536,12 +536,12 @@ Rules:
           totalOutputTokens += response.usage?.completion_tokens || 0;
         } else {
           const model = genAI!.getGenerativeModel({ 
-            model: "gemini-2.5-flash", 
+            model: "gemini-3.1-flash-lite", 
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
-              // @ts-ignore - Allow moderate thinking for JEE math/physics accuracy
-              thinkingConfig: { thinkingBudget: 1024 },
+              // @ts-ignore - Gemini 3.1 uses thinkingLevel instead of budget
+              thinkingLevel: "MEDIUM",
             }
           });
           const result = await model.generateContent(contentParts);
