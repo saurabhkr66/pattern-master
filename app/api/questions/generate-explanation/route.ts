@@ -115,6 +115,8 @@ Provide ONLY the explanation in a professional, academic tone. Format any mathem
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
+        // @ts-ignore - Allow moderate thinking for JEE-level explanations
+        thinkingConfig: { thinkingBudget: 1024 },
       }
     });
     

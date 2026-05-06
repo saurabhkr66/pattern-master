@@ -341,16 +341,18 @@ Rules:
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
   } else {
     const model = genAI!.getGenerativeModel({
-      model: "gemini-2.5-flash", // Using 2.5 for high-quality explanations
+      model: "gemini-2.5-flash",
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
+        // @ts-ignore - Allow moderate thinking for JEE-level explanations
+        thinkingConfig: { thinkingBudget: 1024 },
       }
     });
     const result = await model.generateContent(contentParts);
     explanation = result.response.text();
     geminiUsage = result.response.usageMetadata;
-    console.log(`[AI] Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}, Total: ${geminiUsage?.totalTokenCount}`);
+    console.log(`[AI] Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}, Thoughts: ${(geminiUsage as any)?.thoughtsTokenCount || 0}, Total: ${geminiUsage?.totalTokenCount}`);
   }
 
   // Clean markdown artifacts
@@ -496,6 +498,8 @@ Rules:
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
+              // @ts-ignore - Allow moderate thinking for JEE-level explanations
+              thinkingConfig: { thinkingBudget: 1024 },
             }
           });
           const result = await model.generateContent(contentParts);
@@ -646,7 +650,7 @@ Options: ${JSON.stringify(options)}`;
     usage = { input: response.usage?.prompt_tokens || 0, output: response.usage?.completion_tokens || 0 };
   } else {
     const model = genAI!.getGenerativeModel({ 
-      model: "gemini-2.0-flash", // Using 2.0 for cost-effective topic mapping
+      model: "gemini-2.0-flash",
       tools: [], 
       generationConfig: {
         maxOutputTokens: 20, 
