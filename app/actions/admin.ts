@@ -387,8 +387,8 @@ Rules:
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Gemini 3.1 uses thinkingLevel instead of budget
-        thinkingLevel: "MEDIUM",
+        // @ts-ignore - Gemini 3.1 uses thinkingLevel inside thinkingConfig
+        thinkingConfig: { thinkingLevel: "MEDIUM" },
       }
     });
     const result = await model.generateContent(contentParts);
@@ -540,8 +540,8 @@ Rules:
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
-              // @ts-ignore - Gemini 3.1 uses thinkingLevel instead of budget
-              thinkingLevel: "MEDIUM",
+              // @ts-ignore - Gemini 3.1 uses thinkingLevel inside thinkingConfig
+              thinkingConfig: { thinkingLevel: "MEDIUM" },
             }
           });
           const result = await model.generateContent(contentParts);
