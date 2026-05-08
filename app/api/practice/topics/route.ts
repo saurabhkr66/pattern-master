@@ -9,17 +9,36 @@ const getTopicsBase = unstable_cache(
   async (examType: string, branch: string, subject: string) => {
     const isAll = !subject || subject === "All";
 
-    const subjectPatterns = await prisma.subjectPattern.findMany({
-      where: {
-        branch: branch || "CSE",
-        ...(!isAll ? { subject_name: subject } : {}),
-      },
-      select: {
-        id: true,
-        subject_name: true,
-        _count: { select: { pyqs: true } },
-      },
-    });
+    const [subjectPatterns, topicPatterns] = await Promise.all([
+      prisma.subjectPattern.findMany({
+        where: {
+          branch: branch || "CSE",
+          ...(!isAll ? { subject_name: subject } : {}),
+        },
+        select: {
+          id: true,
+          subject_name: true,
+          _count: { select: { pyqs: true } },
+        },
+      }),
+      isAll
+        ? Promise.resolve([])
+        : prisma.pattern.findMany({
+            where: {
+              exam_type: examType,
+              ...(branch && branch !== "null" ? { branch } : {}),
+              subject,
+            },
+            select: {
+              id: true,
+              topic_name: true,
+              subject: true,
+              atomic_logic: true,
+              _count: { select: { questions: true, pyqs: true } },
+            },
+            orderBy: { topic_name: "asc" },
+          }),
+    ]);
 
     const mappedSubjectsBase = subjectPatterns.map((sp) => ({
       id: `subject-${sp.id}`,
@@ -37,24 +56,6 @@ const getTopicsBase = unstable_cache(
     }));
 
     if (isAll) return { subjects: mappedSubjectsBase, topics: [] };
-
-    const topicPatterns = await prisma.pattern.findMany({
-      where: {
-        exam_type: examType,
-        ...(branch && branch !== "null" ? { branch } : {}),
-        subject,
-      },
-      select: {
-        id: true,
-        topic_name: true,
-        subject: true,
-        atomic_logic: true,
-        short_notes: true,
-        short_notes_hindi: true,
-        _count: { select: { questions: true, pyqs: true } },
-      },
-      orderBy: { topic_name: "asc" },
-    });
 
     const mappedTopicsBase = topicPatterns.map((p) => ({
       ...p,

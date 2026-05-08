@@ -24,19 +24,8 @@ function parseExamType(examTypeSlug: string) {
   return examTypeSlug.split("-")[0].toUpperCase();
 }
 
-// Pre-render all topic pages at build time
-export async function generateStaticParams() {
-  const patterns = await prisma.pattern.findMany({
-    select: { exam_type: true, subject: true, topic_name: true },
-  });
-  return patterns.map((p) => ({
-    examType: `${toSlug(p.exam_type)}-cse`,
-    subject: toSlug(p.subject),
-    topic: toSlug(p.topic_name),
-  }));
-}
-
 export const revalidate = 86400; // revalidate daily
+export const dynamicParams = true; // generate pages on first visit, then cache
 
 async function fetchPattern(examLabel: string, subjectLabel: string, topicSlug: string) {
   // Fetch all patterns for this subject+exam, then find by slug match

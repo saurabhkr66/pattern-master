@@ -3,6 +3,8 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { toSlug } from "@/lib/seo";
 
+export const dynamic = 'force-dynamic';
+
 const BASE = "https://battleexam.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -20,11 +22,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ---------- Mock Test SEO Pages ---------------------------------------------
   const mockTemplates = await prisma.mockTestTemplate.findMany({
     select: { id: true, exam_type: true, branch: true, created_at: true },
-  });
+  }).catch(() => []);
 
   const mockPages: MetadataRoute.Sitemap = [];
-  
-  // Unique Exams and Branches for hubs
+
   const uniqueExams = Array.from(new Set(mockTemplates.map(t => t.exam_type)));
   uniqueExams.forEach(exam => {
     mockPages.push({
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.85
     });
-    
+
     const branches = Array.from(new Set(mockTemplates.filter(t => t.exam_type === exam).map(t => t.branch || "All Subjects")));
     branches.forEach(branch => {
       mockPages.push({
@@ -45,7 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   });
 
-  // Individual Mock Test Pages
   mockTemplates.forEach(test => {
     mockPages.push({
       url: `${BASE}/mock-tests/${toSlug(test.exam_type)}/${toSlug(test.branch || "All Subjects")}/${test.id}`,
@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const subjectRows = await prisma.pattern.findMany({
     select: { exam_type: true, branch: true, subject: true },
     distinct: ["exam_type", "branch", "subject"],
-  });
+  }).catch(() => []);
 
   const subjectPages: MetadataRoute.Sitemap = subjectRows.map((r) => ({
     url: `${BASE}/${toSlug(r.exam_type)}-${toSlug(r.branch)}/${toSlug(r.subject)}`,
@@ -71,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ---------- Topic hub pages  /[examType]/[subject]/[topic] ----------------
   const topicRows = await prisma.pattern.findMany({
     select: { exam_type: true, branch: true, subject: true, topic_name: true },
-  });
+  }).catch(() => []);
 
   const topicPages: MetadataRoute.Sitemap = topicRows.map((r) => ({
     url: `${BASE}/${toSlug(r.exam_type)}-${toSlug(r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`,
@@ -87,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       created_at: true,
       pattern: { select: { exam_type: true, branch: true, subject: true, topic_name: true } },
     },
-  });
+  }).catch(() => []);
 
   const pyqPages: MetadataRoute.Sitemap = pyqs.map((q) => ({
     url: `${BASE}/${toSlug(q.pattern.exam_type)}-${toSlug(q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/pyq-${q.id}`,
@@ -103,7 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       created_at: true,
       subject_pattern: { select: { subject_name: true, branch: true } },
     },
-  });
+  }).catch(() => []);
 
   const subjectPYQPages: MetadataRoute.Sitemap = subjectPYQs.map((q) => ({
     url: `${BASE}/gate-${toSlug(q.subject_pattern.branch)}/${toSlug(q.subject_pattern.subject_name)}/${toSlug(q.subject_pattern.subject_name)}/spyq-${q.id}`,
@@ -119,7 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       created_at: true,
       pattern: { select: { exam_type: true, branch: true, subject: true, topic_name: true } },
     },
-  });
+  }).catch(() => []);
 
   const generatedPages: MetadataRoute.Sitemap = generatedQuestions.map((q) => ({
     url: `${BASE}/${toSlug(q.pattern.exam_type)}-${toSlug(q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}/gq-${q.id}`,

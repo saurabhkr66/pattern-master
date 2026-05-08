@@ -44,20 +44,51 @@ export default async function ReviewPage() {
     </div>
   );
 
-  const wrongAttempts = await prisma.attempt.findMany({
-    where: { id: { in: ids } },
-    include: {
-      question: { include: { pattern: true } },
-      pyq: { include: { pattern: true } },
-      subject_pyq: { include: { subject_pattern: true } },
-    },
-    orderBy: { created_at: "desc" },
-  });
-
-  // Fetch all SRS states for this user
-  const srsStates = await prisma.flashcard.findMany({
-    where: { user_id: userId },
-  });
+  const [wrongAttempts, srsStates] = await Promise.all([
+    prisma.attempt.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        question_id: true,
+        pyq_id: true,
+        subject_pyq_id: true,
+        created_at: true,
+        question: {
+          select: {
+            question_text: true,
+            options: true,
+            correct_answer: true,
+            explanation: true,
+            pattern: { select: { id: true, topic_name: true, subject: true } },
+          },
+        },
+        pyq: {
+          select: {
+            question_text: true,
+            options: true,
+            correct_answer: true,
+            explanation: true,
+            year: true,
+            pattern: { select: { id: true, topic_name: true, subject: true } },
+          },
+        },
+        subject_pyq: {
+          select: {
+            question_text: true,
+            options: true,
+            correct_answer: true,
+            explanation: true,
+            year: true,
+            subject_pattern: { select: { id: true, subject_name: true } },
+          },
+        },
+      },
+      orderBy: { created_at: "desc" },
+    }),
+    prisma.flashcard.findMany({
+      where: { user_id: userId },
+    }),
+  ]);
 
   // Map SRS states by question/pyq/subject_pyq id for quick lookup
   const srsMap = new Map<string, (typeof srsStates)[0]>();
@@ -67,15 +98,7 @@ export default async function ReviewPage() {
     if (s.subject_pyq_id) srsMap.set(s.subject_pyq_id, s);
   });
 
-  // De-duplicate
-  const seen = new Set<string>();
   const cards = wrongAttempts
-    .filter(a => {
-      const key = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
     .map(a => {
       const q = a.question ?? a.pyq ?? a.subject_pyq;
       const sp = a.subject_pyq?.subject_pattern;

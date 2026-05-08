@@ -98,6 +98,8 @@ const getStaticQuestions = unstable_cache(
     const pattern = await prisma.pattern.findUnique({
       where: { id },
       select: {
+        short_notes: true,
+        short_notes_hindi: true,
         questions: {
           select: {
             id: true,
@@ -140,6 +142,8 @@ const getStaticQuestions = unstable_cache(
 
     return {
       data: {
+        short_notes: pattern.short_notes ?? null,
+        short_notes_hindi: pattern.short_notes_hindi ?? null,
         questions: pattern.questions.map(q => ({
           ...q,
           marks: resolveMarks(q.question_type, q.marks),

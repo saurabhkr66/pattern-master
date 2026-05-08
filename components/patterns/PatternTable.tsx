@@ -129,6 +129,7 @@ export default function PatternTable({
       setOpenPatternId(null);
       const url = new URL(window.location.href);
       url.searchParams.set("subject", subjectId);
+      url.searchParams.delete("patternId");
       window.history.replaceState(null, "", url.toString());
       trackPageView();
     });
@@ -282,7 +283,6 @@ export default function PatternTable({
                 isHighlighted={pattern.id === urlPatternId}
                 isOpen={openPatternId === pattern.id}
                 onToggle={() => isNavRow ? handleFilterClick(pattern.topic_name) : handleTopicToggle(pattern.id)}
-                disablePrefetch={isNavRow}
                 directQuestionId={pattern.id === urlPatternId ? urlQuestionId : undefined}
               />
             );

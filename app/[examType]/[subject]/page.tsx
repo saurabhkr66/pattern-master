@@ -24,19 +24,8 @@ function parseExamType(examTypeSlug: string) {
   return examTypeSlug.split("-")[0].toUpperCase();
 }
 
-// Pre-render all subject pages at build time
-export async function generateStaticParams() {
-  const rows = await prisma.pattern.findMany({
-    select: { exam_type: true, subject: true },
-    distinct: ["exam_type", "subject"],
-  });
-  return rows.map((r) => ({
-    examType: `${toSlug(r.exam_type)}-cse`,
-    subject: toSlug(r.subject),
-  }));
-}
-
 export const revalidate = 86400; // revalidate daily
+export const dynamicParams = true; // generate pages on first visit, then cache
 
 export async function generateMetadata({
   params,

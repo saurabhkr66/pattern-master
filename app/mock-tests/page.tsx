@@ -3,17 +3,18 @@ import Link from "next/link";
 import { toSlug } from "@/lib/seo";
 import type { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Online Mock Tests – GATE, JEE Main, ISRO & BARC | BattleExam",
   description: "Free online mock tests with real exam interfaces for GATE CSE, JEE Main, ISRO, and more. Instant scoring, performance analysis, and detailed explanations.",
 };
 
 export default async function MockTestsPage() {
-  // Get all unique exam types that have mock templates
   const exams = await prisma.mockTestTemplate.groupBy({
     by: ['exam_type'],
     _count: { _all: true }
-  });
+  }).catch(() => []);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
