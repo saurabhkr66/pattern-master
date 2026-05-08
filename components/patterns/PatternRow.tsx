@@ -22,7 +22,6 @@ interface PatternRowProps {
   disablePrefetch?: boolean;
 }
 
-const SUBJECT_PAGE_SIZE = 9;
 
 const fetchPatternQuestions = async (patternId: string, skip = 0, take = 0) => {
   const params = new URLSearchParams();
@@ -106,72 +105,26 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     }
   }, [isOpen]);
 
-  // ── Pagination state for subject-level rows ──
-  // Map<id, question> — duplicate inserts are idempotent, which prevents the
-  // classic race where the effect fires with stale page data when subjectSkip changes.
-  const [subjectSkip, setSubjectSkip] = useState(0);
-  const [subjectPyqMap, setSubjectPyqMap] = useState<Map<string, any>>(new Map());
-  const [subjectTotal, setSubjectTotal] = useState(0);
-
-  // Reset when the row is freshly opened
-  useEffect(() => {
-    if (isOpen && pattern.isSubjectLevel) {
-      setSubjectSkip(0);
-      setSubjectPyqMap(new Map());
-      setSubjectTotal(0);
-    }
-  }, [isOpen, pattern.isSubjectLevel]);
-
   const handlePrefetch = useCallback(() => {
-    if (pattern.isSubjectLevel) {
-      queryClient.prefetchQuery({
-        queryKey: ["patternQuestions", pattern.id, 0, SUBJECT_PAGE_SIZE],
-        queryFn: () => fetchPatternQuestions(pattern.id, 0, SUBJECT_PAGE_SIZE),
-        staleTime: 5 * 60 * 1000,
-      });
-    } else {
-      queryClient.prefetchQuery({
-        queryKey: ["patternQuestions", pattern.id],
-        queryFn: () => fetchPatternQuestions(pattern.id),
-        staleTime: 5 * 60 * 1000,
-      });
-    }
-  }, [queryClient, pattern.id, pattern.isSubjectLevel]);
-
-  // Subject-level: paginated fetch
-  const { data: subjectPage, isLoading: isLoadingSubject } = useQuery({
-    queryKey: ["patternQuestions", pattern.id, subjectSkip, SUBJECT_PAGE_SIZE],
-    queryFn: () => fetchPatternQuestions(pattern.id, subjectSkip, SUBJECT_PAGE_SIZE),
-    enabled: isOpen && Boolean(pattern.isSubjectLevel),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  // Only depends on subjectPage — Map.set is idempotent so stale-skip fires are harmless
-  useEffect(() => {
-    if (!subjectPage?.pyqs?.length) return;
-    setSubjectPyqMap(prev => {
-      const next = new Map(prev);
-      subjectPage.pyqs.forEach((q: any) => next.set(q.id, q));
-      return next;
+    queryClient.prefetchQuery({
+      queryKey: ["patternQuestions", pattern.id],
+      queryFn: () => fetchPatternQuestions(pattern.id),
+      staleTime: 5 * 60 * 1000,
     });
-    if (subjectPage.total) setSubjectTotal(subjectPage.total);
-  }, [subjectPage]);
+  }, [queryClient, pattern.id]);
 
-  // Topic / mock patterns: fetch all at once
+  // Fetch all questions at once for all pattern types (topic, subject-level, mock)
   const { data, isLoading: isLoadingAll } = useQuery({
     queryKey: ["patternQuestions", pattern.id],
     queryFn: () => fetchPatternQuestions(pattern.id),
-    enabled: isOpen && !pattern.isSubjectLevel,
+    enabled: isOpen,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const subjectPyqs = useMemo(() => Array.from(subjectPyqMap.values()), [subjectPyqMap]);
-  const isLoadingQuestions = pattern.isSubjectLevel ? isLoadingSubject : isLoadingAll;
-  const questions = pattern.isSubjectLevel ? [] : (data?.questions || []);
-  const pyqs = pattern.isSubjectLevel ? subjectPyqs : (data?.pyqs || []);
-  const subjectHasMore = pattern.isSubjectLevel && subjectPyqs.length < subjectTotal;
+  const isLoadingQuestions = isLoadingAll;
+  const questions = data?.questions || [];
+  const pyqs = data?.pyqs || [];
 
   useEffect(() => {
     if (directQuestionId && (questions.length > 0 || pyqs.length > 0)) {
@@ -417,20 +370,8 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                         <QuestionCard key={q.id} q={q} i={q._originalIndex} pattern={pattern} onSelect={setSelectedQuestion} language={language} isPyqOverride={activeTab === 'pyq'} />
                       ))}
                     </div>
-                    {/* Subject-level: fetch next page from server */}
-                    {pattern.isSubjectLevel && subjectHasMore && (
-                      <div style={{ textAlign: 'center', marginTop: 20 }}>
-                        <button
-                          onClick={() => setSubjectSkip(s => s + SUBJECT_PAGE_SIZE)}
-                          disabled={isLoadingSubject}
-                          style={{ fontSize: 11, fontWeight: 700, color: BE.accent, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1, opacity: isLoadingSubject ? 0.5 : 1 }}
-                        >
-                          {isLoadingSubject ? 'Loading…' : 'Load more'}
-                        </button>
-                      </div>
-                    )}
-                    {/* Topic / mock patterns: client-side show more */}
-                    {!pattern.isSubjectLevel && (activeTab === 'bank' ? displayedBank : displayedPyqs).length > (activeTab === 'bank' ? visibleBank : visiblePyqs) && (
+                    {/* Client-side load more — works for all pattern types */}
+                    {(activeTab === 'bank' ? displayedBank : displayedPyqs).length > (activeTab === 'bank' ? visibleBank : visiblePyqs) && (
                       <div style={{ textAlign: 'center', marginTop: 20 }}>
                         <button onClick={() => activeTab === 'bank' ? setVisibleBank(v => v+12) : setVisiblePyqs(v => v+12)} style={{ fontSize: 11, fontWeight: 700, color: BE.accent, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1 }}>Load more</button>
                       </div>

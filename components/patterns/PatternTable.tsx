@@ -58,10 +58,16 @@ export default function PatternTable({
   const tableRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Keep pref_branch in sync so PracticeHydrator builds the right subject key on return visits
+  // Keep pref_branch in sync and stamp resolved exam/branch into URL (replaces server-side redirect)
   useEffect(() => {
     if (resolvedBranch) localStorage.setItem("pref_branch", resolvedBranch);
     if (resolvedExam) localStorage.setItem("pref_exam", resolvedExam);
+
+    const url = new URL(window.location.href);
+    let changed = false;
+    if (!url.searchParams.has("exam") && resolvedExam) { url.searchParams.set("exam", resolvedExam); changed = true; }
+    if (!url.searchParams.has("branch") && resolvedBranch) { url.searchParams.set("branch", resolvedBranch); changed = true; }
+    if (changed) window.history.replaceState(null, "", url.toString());
   }, [resolvedExam, resolvedBranch]);
 
   // React to client-side URL changes (e.g. "Solve again" from dashboard)
