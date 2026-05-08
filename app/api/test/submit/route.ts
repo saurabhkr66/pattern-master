@@ -278,10 +278,10 @@ export async function POST(req: NextRequest) {
     }
 
     await revalidatePath("/dashboard", "page");
-    await revalidateTag("dashboard");
-    await revalidateTag("history");
-    await revalidateTag("mocks");
-    await revalidateTag("leaderboard");
+    await revalidateTag("dashboard", "max");
+    await revalidateTag("history", "max");
+    await revalidateTag("mocks", "max");
+    await revalidateTag("leaderboard", "max");
 
     return NextResponse.json(
       {
