@@ -97,7 +97,7 @@ function getCachedMistakes(userId: string) {
       return cards;
     },
     [`mistakes-v2-${userId}`],
-    { revalidate: 60, tags: ["dashboard"] }
+    { revalidate: 60, tags: [`dashboard-${userId}`] }
   )();
 }
 

@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { VertexAI } from '@google-cloud/vertexai';
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+// Vertex AI Initialization (ADC)
+const vertexAI = new VertexAI({
+  project: 'project-27ed127f-554a-419a-b39',
+  location: 'us-central1',
+});
+
+const GEMINI_MODEL = "gemini-2.5-pro"; // Change this one line to switch Gemini models
 
 export async function POST(req: NextRequest) {
   try {
@@ -112,20 +121,51 @@ Rules:
       }
     }
 
-    // Initialize the model
+    /* --- ORIGINAL API KEY METHOD (Commented Out) ---
+    if (!genAI) {
+      return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 500 });
+    }
     const model = genAI.getGenerativeModel({
-      model: "gemini-3.1-flash-lite-preview",
+      model: GEMINI_MODEL,
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Gemini 3.1 uses thinkingLevel inside thinkingConfig
         thinkingConfig: { thinkingLevel: "MEDIUM" },
       }
     });
-
     const result = await model.generateContent(contentParts);
     const usage = result.response.usageMetadata;
     const generatedExplanation = result.response.text();
+    */
+
+    // --- VERTEX AI METHOD (ADC) ---
+    console.log(`[AI] 🚀 Using Vertex AI (ADC) - Model: ${GEMINI_MODEL}`);
+    const model = vertexAI.getGenerativeModel({
+      model: GEMINI_MODEL,
+      /*
+      generationConfig: {
+        maxOutputTokens: 2500,
+        // @ts-ignore
+        // thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" }
+      }
+      */
+    });
+
+    // Vertex AI expectation for content parts is slightly different
+    const vertexContent = {
+      contents: [{
+        role: 'user',
+        parts: contentParts.map(p => {
+          if (typeof p === 'string') return { text: p };
+          return p; // inlineData structure is compatible
+        })
+      }]
+    };
+
+    const result = await model.generateContent(vertexContent);
+    const usage = result.response.usageMetadata;
+    const generatedExplanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
     const aiAnswerMatch = generatedExplanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
     const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
 

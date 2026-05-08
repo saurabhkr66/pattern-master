@@ -17,8 +17,6 @@ export interface SectionConfig {
   markDistribution: MarkBand[];
   // negative marking fraction applied per mark value (MCQ only)
   negativePerMark: number;
-  // Section B style: show `poolSize` questions, count best `countSize`
-  optional?: { poolSize: number; countSize: number };
 }
 
 export interface ExamConfig {
@@ -68,14 +66,13 @@ const JEE_SUBJECT_SECTION = (name: string, subjects: string[]): SectionConfig =>
   name,
   subjects,
   totalQuestions: 30,
-  maxScore: 100,
+  maxScore: 120,
   questionTypes: ["MCQ", "NAT"],
   markDistribution: [
-    { marks: 4, count: 20, type: "MCQ" }, // Section A: mandatory
-    { marks: 4, count: 10, type: "NAT" }, // Section B: attempt any 5
+    { marks: 4, count: 20, type: "MCQ" },
+    { marks: 4, count: 10, type: "NAT" },
   ],
-  negativePerMark: 0.25, // -1 on 4-mark MCQ
-  optional: { poolSize: 10, countSize: 5 }, // Section B NAT
+  negativePerMark: 0.25, // -1 on 4-mark MCQ; NAT has no negative
 });
 
 const ADV_SUBJECT_SECTION = (name: string, subjects: string[]): SectionConfig => ({
@@ -96,14 +93,13 @@ const NEET_SUBJECT_SECTION = (name: string, subjects: string[]): SectionConfig =
   name,
   subjects,
   totalQuestions: 50,
-  maxScore: 180,
+  maxScore: 200,
   questionTypes: ["MCQ"],
   markDistribution: [
-    { marks: 4, count: 35 }, // Section A: mandatory
-    { marks: 4, count: 15 }, // Section B: attempt any 10
+    { marks: 4, count: 35 },
+    { marks: 4, count: 15 },
   ],
   negativePerMark: 0.25,
-  optional: { poolSize: 15, countSize: 10 },
 });
 
 export const GATE_BRANCHES = [
@@ -146,7 +142,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     hasBranches: false,
     durationSecs: 10800,
     totalQuestions: 90,
-    maxScore: 300,
+    maxScore: 360,
     sections: [
       JEE_SUBJECT_SECTION("Physics", ["Physics"]),
       JEE_SUBJECT_SECTION("Chemistry", ["Chemistry"]),
@@ -191,7 +187,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     hasBranches: false,
     durationSecs: 12000, // 3h 20min
     totalQuestions: 200,
-    maxScore: 720,
+    maxScore: 800,
     sections: [
       NEET_SUBJECT_SECTION("Physics", ["Physics"]),
       NEET_SUBJECT_SECTION("Chemistry", ["Chemistry"]),
@@ -200,14 +196,13 @@ export const EXAM_CONFIGS: ExamConfig[] = [
         name: "Biology",
         subjects: ["Biology", "Botany", "Zoology"],
         totalQuestions: 100,
-        maxScore: 360,
+        maxScore: 400,
         questionTypes: ["MCQ"],
         markDistribution: [
-          { marks: 4, count: 70 }, // Section A: mandatory (35 botany + 35 zoology)
-          { marks: 4, count: 30 }, // Section B: attempt any 20 (15+15)
+          { marks: 4, count: 70 },
+          { marks: 4, count: 30 },
         ],
         negativePerMark: 0.25,
-        optional: { poolSize: 30, countSize: 20 },
       },
     ],
     themeColor: "#22c55e",

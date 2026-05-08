@@ -1,80 +1,79 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 
 /**
- * Lightweight endpoint that returns ONLY the user's solved counts
- * for a set of pattern IDs. Called client-side after the static
- * topic list has already rendered.
+ * Returns all solved counts for the user across an entire exam/branch.
+ * Keyed on exam+branch (not per-subject IDs) so the client can cache it
+ * once and reuse it across all subject tab switches.
  *
- * Query params:
- *   ids=comma,separated,pattern,ids
- *   spIds=comma,separated,subject_pattern,ids  (raw IDs, not "subject-" prefixed)
+ * Query params: exam, branch
  */
 export async function GET(request: Request) {
   try {
     const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ progress: {} });
-    }
+    if (!userId) return NextResponse.json({ progress: {} });
 
     const { searchParams } = new URL(request.url);
-    const rawIds = searchParams.get("ids") || "";
-    const rawSpIds = searchParams.get("spIds") || "";
+    const exam = searchParams.get("exam") || "GATE";
+    const branch = searchParams.get("branch") || "";
 
-    const patternIds = rawIds.split(",").map(s => s.trim()).filter(Boolean);
-    const spIds = rawSpIds.split(",").map(s => s.trim()).filter(Boolean);
+    const branchClause = branch
+      ? Prisma.sql`AND p.branch = ${branch}`
+      : Prisma.empty;
+    const spBranchClause = branch
+      ? Prisma.sql`AND sub.branch = ${branch}`
+      : Prisma.empty;
+
+    const rows = await prisma.$queryRaw<{ pid: string; solved: bigint; is_subject: boolean }[]>(
+      Prisma.sql`
+        SELECT q.pattern_id::text AS pid,
+               COUNT(DISTINCT a.question_id)::bigint AS solved,
+               false::boolean AS is_subject
+        FROM "Attempt" a
+        JOIN "GeneratedQuestion" q ON q.id = a.question_id
+        JOIN "Pattern" p ON p.id = q.pattern_id
+        WHERE a.user_id = ${userId}
+          AND a.is_correct = true
+          AND p.exam_type = ${exam}
+          ${branchClause}
+        GROUP BY q.pattern_id
+
+        UNION ALL
+
+        SELECT pyq.pattern_id::text AS pid,
+               COUNT(DISTINCT a.pyq_id)::bigint AS solved,
+               false::boolean AS is_subject
+        FROM "Attempt" a
+        JOIN "PYQ" pyq ON pyq.id = a.pyq_id
+        JOIN "Pattern" p ON p.id = pyq.pattern_id
+        WHERE a.user_id = ${userId}
+          AND a.is_correct = true
+          AND p.exam_type = ${exam}
+          ${branchClause}
+        GROUP BY pyq.pattern_id
+
+        UNION ALL
+
+        SELECT sp.subject_pattern_id::text AS pid,
+               COUNT(DISTINCT a.subject_pyq_id)::bigint AS solved,
+               true::boolean AS is_subject
+        FROM "Attempt" a
+        JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
+        JOIN "SubjectPattern" sub ON sub.id = sp.subject_pattern_id
+        WHERE a.user_id = ${userId}
+          AND a.is_correct = true
+          ${spBranchClause}
+        GROUP BY sp.subject_pattern_id
+      `
+    );
 
     const progress: Record<string, number> = {};
-
-    const promises: Promise<void>[] = [];
-
-    // Solved counts for topic patterns (GeneratedQuestion + PYQ)
-    if (patternIds.length > 0) {
-      promises.push(
-        Promise.all([
-          prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
-            SELECT q.pattern_id as pid, COUNT(DISTINCT a.question_id)::bigint as solved
-            FROM "Attempt" a
-            JOIN "GeneratedQuestion" q ON q.id = a.question_id
-            WHERE a.user_id = ${userId} AND a.is_correct = true AND q.pattern_id = ANY(${patternIds})
-            GROUP BY q.pattern_id
-          `,
-          prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
-            SELECT p.pattern_id as pid, COUNT(DISTINCT a.pyq_id)::bigint as solved
-            FROM "Attempt" a
-            JOIN "PYQ" p ON p.id = a.pyq_id
-            WHERE a.user_id = ${userId} AND a.is_correct = true AND p.pattern_id = ANY(${patternIds})
-            GROUP BY p.pattern_id
-          `,
-        ]).then(([qSolved, pSolved]) => {
-          qSolved.forEach(r => { progress[r.pid] = (progress[r.pid] ?? 0) + Number(r.solved); });
-          pSolved.forEach(r => { progress[r.pid] = (progress[r.pid] ?? 0) + Number(r.solved); });
-        })
-      );
+    for (const r of rows) {
+      const key = r.is_subject ? `subject-${r.pid}` : r.pid;
+      progress[key] = (progress[key] ?? 0) + Number(r.solved);
     }
-
-    // Solved counts for subject-level patterns (SubjectPYQ)
-    if (spIds.length > 0) {
-      promises.push(
-        prisma.$queryRaw<{ sp_id: string; solved: bigint }[]>`
-          SELECT sp.subject_pattern_id as sp_id, COUNT(DISTINCT a.subject_pyq_id)::bigint as solved
-          FROM "Attempt" a
-          JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
-          WHERE a.user_id = ${userId}
-            AND a.is_correct = true
-            AND sp.subject_pattern_id = ANY(${spIds})
-          GROUP BY sp.subject_pattern_id
-        `.then((rows) => {
-          rows.forEach(r => {
-            // Key uses "subject-" prefix to match the client-side pattern IDs
-            progress[`subject-${r.sp_id}`] = Number(r.solved);
-          });
-        })
-      );
-    }
-
-    await Promise.all(promises);
 
     return NextResponse.json({ progress });
   } catch (err) {

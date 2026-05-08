@@ -99,6 +99,23 @@ const getSubjectStats = (examType: string, branch: string | null) => {
         });
       }
 
+      // Add "Full Papers" if any mock tests exist for this exam/branch
+      // Normalize examType to handle both JEE_MAIN and "JEE Main" formats
+      const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main" 
+        ? ["JEE_MAIN", "JEE Main"] 
+        : [examType];
+
+      const mockCount = await prisma.mockTestTemplate.count({
+        where: { 
+          exam_type: { in: normalizedExamTypes }, 
+          ...(branch && branch !== "null" && branch !== "Common" ? { branch } : {}), 
+          mode: 'seeded' 
+        }
+      });
+      if (mockCount > 0) {
+        stats["Full Papers"] = mockCount;
+      }
+
       return stats;
     },
     [`subject-stats-${examType}-${branch || "all"}-v3`],
@@ -169,6 +186,42 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
         pyqs: [],
       }));
 
+      if (subject === "Full Papers") {
+        const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main" 
+          ? ["JEE_MAIN", "JEE Main"] 
+          : [examType];
+
+        const mocks = await prisma.mockTestTemplate.findMany({
+          where: {
+            exam_type: { in: normalizedExamTypes },
+            ...(branch && branch !== "null" && branch !== "Common" ? { branch } : {}),
+            mode: 'seeded'
+          },
+          select: {
+            id: true,
+            title: true,
+            mock_number: true,
+            total_questions: true,
+            subjects: true,
+          },
+          orderBy: { mock_number: 'desc' }
+        });
+
+        return mocks.map(m => ({
+          id: `mock-${m.id}`,
+          topic_name: m.title,
+          subject: "Full Papers",
+          atomic_logic: `Full paper practice for ${m.title}.`,
+          totalQuestions: m.total_questions,
+          questionsCount: m.total_questions,
+          pyqsCount: 0,
+          solvedQuestions: 0,
+          questions: [],
+          pyqs: [],
+          isMock: true
+        }));
+      }
+
       return [...mappedSubjects, ...mappedTopics];
     },
     [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v1`],
@@ -211,19 +264,21 @@ export default async function PracticePage({
   let baseBranch: string | null = null;
 
   try {
-    const examMeta = await getCachedExamMeta();
-
-    // Fetch user preferences for defaults
-    const dbUser = userId ? await prisma.user.findUnique({
-      where: { id: userId },
-      select: { preferred_exam: true, preferred_branch: true }
-    }) : null;
+    // Round 1: examMeta + dbUser in parallel
+    const [examMeta, dbUser, cookieStore] = await Promise.all([
+      getCachedExamMeta(),
+      userId ? prisma.user.findUnique({
+        where: { id: userId },
+        select: { preferred_exam: true, preferred_branch: true }
+      }) : Promise.resolve(null),
+      cookies(),
+    ]);
 
     const activeExamType = exam || dbUser?.preferred_exam || baseExamType;
     let activeBranch = branchParam ?? dbUser?.preferred_branch ?? baseBranch;
 
     const availableBranches = examMeta.branchesByExam[activeExamType] ?? [];
-    
+
     // VALIDATION: If the saved/param branch doesn't exist for THIS exam, reset it
     if (activeBranch && !availableBranches.includes(activeBranch)) {
       activeBranch = null;
@@ -245,14 +300,10 @@ export default async function PracticePage({
       redirect(`/practice?${p.toString()}`);
     }
 
-    const cookieStore = await cookies();
     const cookieSubject = cookieStore.get(`pref_subject_${activeExamType}_${activeBranch}`)?.value;
     let activeSubject = subjectParam || cookieSubject || "All";
 
-    // Fetch stats for the active exam/branch
-    subjectStats = await getSubjectStats(activeExamType, activeBranch);
-
-    // If we have a patternId but no subject, resolve the subject so topics are fetched correctly
+    // If we have a patternId but no subject, resolve the subject first (rare path)
     if (patternId && (activeSubject === "All" || !subjectParam)) {
       if (patternId.startsWith("subject-")) {
         const spId = patternId.replace("subject-", "");
@@ -264,7 +315,11 @@ export default async function PracticePage({
       }
     }
 
-    topics = await getTopicsForSubject(activeExamType, activeBranch, activeSubject);
+    // Round 2: subjectStats + topics in parallel
+    [subjectStats, topics] = await Promise.all([
+      getSubjectStats(activeExamType, activeBranch),
+      getTopicsForSubject(activeExamType, activeBranch, activeSubject),
+    ]);
 
 
     return (

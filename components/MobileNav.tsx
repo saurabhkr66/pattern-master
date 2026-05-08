@@ -5,7 +5,9 @@ import { BE } from "@/lib/theme";
 
 export default function MobileNav() {
   const pathname = usePathname();
-  
+
+  if (pathname === "/test") return null;
+
   const tabs = [
     { id: 'Practice', href: '/practice', icon: 'book' },
     { id: 'Mock', href: '/test', icon: 'timer', disabled: true },

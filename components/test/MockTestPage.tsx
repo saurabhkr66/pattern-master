@@ -14,7 +14,7 @@ import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
 import { trackPageView } from "@/lib/analytics";
 import { BE } from "@/lib/theme";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import React from "react";
 
 /* ─────────────── Types ─────────────── */
@@ -116,7 +116,8 @@ export default function MockTestPage() {
   const searchParams = useSearchParams();
   const urlTestId = searchParams.get("id");
 
-  const [phase, setPhase] = useState<Phase>("setup");
+  // Start in "loading" so we can check for an active draft before showing setup
+  const [phase, setPhase] = useState<Phase>("loading");
   const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<"seeded" | "random" | null>(null);
@@ -137,34 +138,108 @@ export default function MockTestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Session persistence
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [serverExpiresAt, setServerExpiresAt] = useState<string | null>(null);
+  const [initialDraftState, setInitialDraftState] = useState<Record<string, any> | null>(null);
+
   const hasAttemptedHydration = useRef(false);
 
-  /* Deep-linking: Load test by ID if present in URL */
+  const router = useRouter();
+  const pathname = usePathname();
+  // Tracks the phase we programmatically set, so the URL-sync effect can distinguish
+  // a forward navigation push from an actual browser back press.
+  const targetPhaseRef = useRef<Phase>("loading");
+
+  const goTo = useCallback((p: Phase, replace = false, mockId?: string) => {
+    const stepMap: Partial<Record<Phase, number>> = { setup: 1, brief: 2, test: 3, results: 4 };
+    const step = stepMap[p];
+    targetPhaseRef.current = p;
+    const params = new URLSearchParams();
+    if (step && step > 1) params.set("step", String(step));
+    if (mockId) params.set("id", mockId);
+    const query = params.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
+    if (replace) router.replace(url, { scroll: false });
+    else router.push(url, { scroll: false });
+    setPhase(p);
+  }, [router, pathname]);
+
+  // Handle browser back/forward: sync URL step → phase
   useEffect(() => {
-    if (urlTestId && phase === "setup" && !hasAttemptedHydration.current) {
-      hasAttemptedHydration.current = true;
-      setPhase("loading");
-      fetch(`/api/test/mocks?id=${urlTestId}`)
-        .then(r => r.json())
-        .then(data => {
+    // Never fire during initial hydration — init() hasn't run yet and there is
+    // no "step" param on a fresh deep-link (?id=...), which would wrongly look
+    // like a back-navigation to step 1 and force the phase to "setup".
+    if (targetPhaseRef.current === "loading") return;
+
+    const step = parseInt(searchParams.get("step") ?? "1", 10) || 1;
+    const phaseStepMap: Partial<Record<Phase, number>> = {
+      setup: 1, brief: 2, loading: 2, test: 3, submitting: 3, results: 4,
+    };
+    const targetStep = phaseStepMap[targetPhaseRef.current] ?? 1;
+
+    // Only act on backward navigation (URL step went below current phase step)
+    if (step >= targetStep) return;
+
+    // Determine which phase to restore; going back from test → brief is allowed
+    const newPhase: Phase = step === 2 && targetPhaseRef.current === "test" ? "brief" : "setup";
+    targetPhaseRef.current = newPhase;
+    setPhase(newPhase);
+  }, [searchParams]);
+
+  /* On mount: check for active draft (resume) or deep-link */
+  useEffect(() => {
+    if (hasAttemptedHydration.current) return;
+    hasAttemptedHydration.current = true;
+
+    const init = async () => {
+      // 1. Check for active in-progress draft (user refreshed during a test)
+      try {
+        const r = await fetch("/api/test/session/resume");
+        const { draft } = await r.json();
+        if (draft?.mockTestId) {
+          // Re-fetch questions for this template
+          const qRes = await fetch(
+            `/api/test/generate?templateId=${draft.mockTestId}&exam_type=${draft.examType}`
+          );
+          const qData = await qRes.json();
+          if (qRes.ok && qData.questions?.length > 0) {
+            setDraftId(draft.draftId);
+            setServerExpiresAt(draft.expiresAt);
+            setInitialDraftState(draft.state ?? null);
+            setSelectedExam(draft.examType as ExamType);
+            setSelectedBranch(draft.branch ?? null);
+            setQuestions(qData.questions);
+            setMockTestId(qData.mockTestId ?? draft.mockTestId);
+            setMockTestTitle(qData.title ?? "Mock Test");
+            goTo("test", true);
+            return;
+          }
+        }
+      } catch {}
+
+      // 2. Deep-link: ?id=<mockTestId> in URL
+      if (urlTestId) {
+        try {
+          const r = await fetch(`/api/test/mocks?id=${urlTestId}`);
+          const data = await r.json();
           if (data.mock) {
             const m = data.mock;
             setSelectedExam(m.exam_type as ExamType);
             setSelectedBranch(m.branch);
             setSelectedMode("seeded");
             setSelectedMock(m);
-            setPhase("brief");
-          } else {
-            console.error("Mock test not found for ID:", urlTestId);
-            setPhase("setup");
+            goTo("brief", true);
+            return;
           }
-        })
-        .catch((err) => {
-          console.error("Deep-linking fetch error:", err);
-          setPhase("setup");
-        });
-    }
-  }, [urlTestId, phase]);
+        } catch {}
+      }
+
+      setPhase("setup");
+    };
+
+    init();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const config: ExamConfig | null = selectedExam
     ? getExamConfig(selectedExam, selectedBranch ?? undefined)
@@ -207,7 +282,7 @@ export default function MockTestPage() {
 
   /* start test */
   const startTest = useCallback(async () => {
-    if (!selectedExam || !selectedMode) return;
+    if (!selectedExam || !selectedMode || !config) return;
     setPhase("loading");
     setError(null);
     const params = new URLSearchParams({ exam_type: selectedExam, mode: selectedMode });
@@ -220,16 +295,46 @@ export default function MockTestPage() {
       const res = await fetch(`/api/test/generate?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to load questions");
+
+      const newMockTestId = data.mockTestId ?? null;
       setQuestions(data.questions);
-      setMockTestId(data.mockTestId ?? null);
-      setMockTestTitle(data.title ?? config?.label ?? "Mock Test");
-      setPhase("test");
+      setMockTestId(newMockTestId);
+      setMockTestTitle(data.title ?? config.label ?? "Mock Test");
+
+      // Create or resume a server-side draft (handles persistence + server timer)
+      if (newMockTestId) {
+        try {
+          const sRes = await fetch("/api/test/session/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mockTestId: newMockTestId,
+              examType: selectedExam,
+              branch: selectedBranch,
+              durationSecs: selectedMode === "seeded" && selectedMock?.duration_secs
+                ? selectedMock.duration_secs
+                : config.durationSecs,
+            }),
+          });
+          const sData = await sRes.json();
+          setDraftId(sData.draftId ?? null);
+          setServerExpiresAt(sData.expiresAt ?? null);
+          setInitialDraftState(sData.resumed ? (sData.state ?? null) : null);
+        } catch {
+          // Non-fatal — test still works, just no server-side persistence
+          setDraftId(null);
+          setServerExpiresAt(null);
+          setInitialDraftState(null);
+        }
+      }
+
+      goTo("test", false, selectedMock?.id);
       trackPageView();
     } catch (e: any) {
       setError(e.message);
-      setPhase("brief");
+      setPhase("brief"); // error recovery — URL is already at ?step=2
     }
-  }, [selectedExam, selectedBranch, selectedMode, selectedMock, selectedSubjects, config]);
+  }, [selectedExam, selectedBranch, selectedMode, selectedMock, selectedSubjects, config, goTo]);
 
   /* submit */
   const handleSubmit = useCallback(async (answers: SubmitAnswer[], timeTakenSecs: number) => {
@@ -299,23 +404,24 @@ export default function MockTestPage() {
           id: q.questionId, question_text: q.questionText, options: q.options,
           question_type: q.questionType, correct_answer: q.correctAnswer,
           user_answer: q.userAnswer, is_correct: q.isCorrect,
-          marks: q.marks, subject: q.subject || "General", explanation: q.explanation,
+          marks: q.marks, subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
           timeSpentSecs: q.timeSpentSecs || 0,
         })),
       });
-      setPhase("results");
+      goTo("results", false, mockTestId ?? undefined);
     } catch (err: any) {
       setSubmitError(err.message);
     } finally {
       setSubmitting(false);
     }
-  }, [mockTestId, selectedExam, selectedBranch]);
+  }, [mockTestId, selectedExam, selectedBranch, goTo]);
 
   const handleRetake = () => {
-    setPhase("setup");
+    goTo("setup");
     setSelectedMode(null); setSelectedMock(null); setBriefAgreed(false);
     setQuestions([]); setResult(null); setMockTestId(null);
     setSubmitError(null); setError(null);
+    setDraftId(null); setServerExpiresAt(null); setInitialDraftState(null);
   };
 
   const loadAnalysis = useCallback(async (mock: SeededMock) => {
@@ -381,16 +487,16 @@ export default function MockTestPage() {
           id: q.questionId, question_text: q.questionText, options: q.options,
           question_type: q.questionType, correct_answer: q.correctAnswer,
           user_answer: q.userAnswer, is_correct: q.isCorrect,
-          marks: q.marks, subject: q.subject || "General", explanation: q.explanation,
+          marks: q.marks, subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
           timeSpentSecs: q.timeSpentSecs || 0,
         })),
       });
-      setPhase("results");
+      goTo("results", false, mock.id);
     } catch (e: any) {
       setError(e.message);
-      setPhase("setup");
+      goTo("setup", true);
     }
-  }, []);
+  }, [goTo]);
 
   const handleDeleteTest = async (mockId: string, title: string) => {
     if (!confirm(`Delete "${title}"? All sessions will be lost.`)) return;
@@ -543,7 +649,7 @@ export default function MockTestPage() {
                   return (
                     <div
                       key={m.mock_number}
-                      onClick={() => setSelectedMock(m)}
+                      onClick={() => { setSelectedMock(m); router.replace(`${pathname}?id=${m.id}`, { scroll: false }); }}
                       className="border rounded-xl p-3 cursor-pointer relative hover:shadow-sm transition-all group"
                       style={{ borderColor: isSel ? BE.accent : BE.line, borderWidth: isSel ? 2 : 1, background: isSel ? `${BE.accent}10` : BE.surface }}
                     >
@@ -644,7 +750,7 @@ export default function MockTestPage() {
           <button
             className="be-btn be-btn-primary"
             disabled={!canContinue}
-            onClick={() => { setBriefAgreed(false); setPhase("brief"); }}
+            onClick={() => { setBriefAgreed(false); goTo("brief", false, selectedMock?.id); }}
             style={{ padding: '10px 24px', opacity: canContinue ? 1 : 0.4 }}
           >
             Continue →
@@ -705,7 +811,7 @@ export default function MockTestPage() {
                 'Mark for review to revisit later.',
                 'Type numeric answers for NAT questions.',
                 'A virtual calculator is available (Ctrl+K).',
-                'Auto-saves every 8 seconds.',
+                'Auto-saves every 15 seconds. Refresh is safe.',
                 'You can change answers before final submit.',
               ].map((t, i) => (
                 <li key={i} className="flex gap-2.5">
@@ -736,7 +842,7 @@ export default function MockTestPage() {
         {error && <div className="mb-4 p-3 rounded-lg border text-sm text-red-500 bg-red-500/10" style={{ borderColor: BE.bad + '33' }}>{error}</div>}
 
         <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => { setError(null); setPhase("setup"); }}>← Back</button>
+          <button className="be-btn" onClick={() => { setError(null); router.back(); }}>← Back</button>
           <button className="be-btn be-btn-primary" disabled={!briefAgreed} onClick={startTest} style={{ padding: '11px 26px', fontSize: 14 }}>Begin Test →</button>
         </div>
       </MTPage>
@@ -750,7 +856,13 @@ export default function MockTestPage() {
     return (
       <div className="be-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg-base)' }}>
         <Loader2 size={36} className="animate-spin" style={{ color: BE.accent }} />
-        <p style={{ fontSize: 14, color: BE.textDim }}>{phase === "loading" ? "Preparing your paper…" : "Evaluating your answers…"}</p>
+        <p style={{ fontSize: 14, color: BE.textDim }}>
+          {phase === "submitting"
+            ? "Evaluating your answers…"
+            : !hasAttemptedHydration.current || questions.length === 0
+            ? "Checking for active session…"
+            : "Preparing your paper…"}
+        </p>
       </div>
     );
   }
@@ -768,21 +880,28 @@ export default function MockTestPage() {
               <div style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 600, color: BE.text, marginBottom: 8 }}>No questions were loaded.</div>
               <div style={{ fontSize: 14, color: BE.textDim }}>The paper couldn't be generated. Try a different configuration.</div>
             </div>
-            <button className="be-btn" onClick={() => { setPhase("setup"); setError(null); setQuestions([]); }}>← Back to Setup</button>
+            <button className="be-btn" onClick={() => { goTo("setup", true); setError(null); setQuestions([]); }}>← Back to Setup</button>
           </div>
         </MTPage>
       );
     }
+    const effectiveConfig = selectedMode === "seeded" && selectedMock?.duration_secs
+      ? { ...config, durationSecs: selectedMock.duration_secs }
+      : config;
     return (
       <TestEngine
         questions={questions}
-        config={config}
+        config={effectiveConfig}
         branch={selectedBranch ?? undefined}
         mockTestId={mockTestId}
         mockTestTitle={mockTestTitle}
         onSubmit={handleSubmit}
         submitting={submitting}
         submitError={submitError}
+        draftId={draftId}
+        serverExpiresAt={serverExpiresAt}
+        initialState={initialDraftState}
+        userName={user?.fullName ?? user?.firstName ?? undefined}
       />
     );
   }

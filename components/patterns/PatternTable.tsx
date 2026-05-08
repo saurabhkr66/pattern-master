@@ -86,23 +86,17 @@ export default function PatternTable({
   const rawPatterns = data?.topics ?? initialPatterns;
 
   // ── Client-side progress hydration ──
-  // Fetch user's solved counts separately so the topic list can be CDN-cached globally.
-  const patternIds = React.useMemo(() => rawPatterns.map((p: any) => p.id).filter(Boolean), [rawPatterns]);
-  const topicIds = React.useMemo(() => patternIds.filter((id: string) => !id.startsWith("subject-")), [patternIds]);
-  const subjectRawIds = React.useMemo(() => rawPatterns.filter((p: any) => p._rawId).map((p: any) => p._rawId), [rawPatterns]);
-
+  // Keyed on exam+branch only — stable across subject tab switches so the result
+  // is fetched once and reused for the full session (staleTime: 6 h).
   const { data: progressData } = useQuery({
-    queryKey: ["practiceProgress", topicIds.join(","), subjectRawIds.join(",")],
+    queryKey: ["practiceProgress", exam, branch],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (topicIds.length > 0) params.set("ids", topicIds.join(","));
-      if (subjectRawIds.length > 0) params.set("spIds", subjectRawIds.join(","));
+      const params = new URLSearchParams({ exam, branch });
       const res = await fetch(`/api/practice/progress?${params.toString()}`);
       return res.json();
     },
-    enabled: patternIds.length > 0,
-    staleTime: 60 * 1000, // user progress is mildly dynamic — refresh every 60s
-    gcTime: 5 * 60 * 1000,
+    staleTime: 6 * 60 * 60 * 1000,  // 6 hours
+    gcTime:    6 * 60 * 60 * 1000,
   });
 
   const progress: Record<string, number> = progressData?.progress ?? {};
@@ -271,16 +265,22 @@ export default function PatternTable({
         {isLoading ? (
            <div className="py-12 text-center text-sm text-gray-400">Loading subtopics...</div>
         ) : sortedPatterns.length > 0 ? (
-          sortedPatterns.map((pattern: any) => (
-            <PatternRow
-              key={pattern.id}
-              pattern={pattern}
-              isHighlighted={pattern.id === urlPatternId}
-              isOpen={openPatternId === pattern.id}
-              onToggle={() => handleTopicToggle(pattern.id)}
-              directQuestionId={pattern.id === urlPatternId ? urlQuestionId : undefined}
-            />
-          ))
+          sortedPatterns.map((pattern: any) => {
+            // Subject-level rows on the "All" view act as navigation (drill into subject).
+            // Subject-level rows on a specific-subject view act as expandable question lists.
+            const isNavRow = pattern.isSubjectLevel && localSubject === "All";
+            return (
+              <PatternRow
+                key={pattern.id}
+                pattern={pattern}
+                isHighlighted={pattern.id === urlPatternId}
+                isOpen={openPatternId === pattern.id}
+                onToggle={() => isNavRow ? handleFilterClick(pattern.topic_name) : handleTopicToggle(pattern.id)}
+                disablePrefetch={isNavRow}
+                directQuestionId={pattern.id === urlPatternId ? urlQuestionId : undefined}
+              />
+            );
+          })
         ) : (
           <div className="py-20 text-center">
             <p style={{ color: BE.textMute, fontSize: 14 }}>No topics in this subject yet.</p>

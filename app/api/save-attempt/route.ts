@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { revalidateTag, revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 
 export async function POST(req: NextRequest) {
@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { questionId, pyqId, subjectPyqId, isCorrect, userAnswer, timeSpent } = body;
+        const { questionId, pyqId, subjectPyqId, mockQuestionId, isCorrect, userAnswer, timeSpent } = body;
 
-        if ((!questionId && !pyqId && !subjectPyqId) || isCorrect === undefined) {
+        if ((!questionId && !pyqId && !subjectPyqId && !mockQuestionId) || isCorrect === undefined) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
                 question_id: questionId || null,
                 pyq_id: pyqId || null,
                 subject_pyq_id: subjectPyqId || null,
+                mock_question_id: mockQuestionId || null,
                 is_correct: isCorrect,
                 user_answer: userAnswer ? String(userAnswer) : null,
                 user_id: userId,
@@ -32,10 +33,10 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // Revalidate caches so progress and mistakes update instantly
-        revalidateTag("dashboard", "max");
-        revalidateTag("patterns", "max");
-        revalidatePath("/mistakes");
+        // Only bust this user's personal caches — topic/pattern structure is static
+        // and must NOT be invalidated here (would bust it for all users on every submit).
+        revalidateTag(`dashboard-${userId}`, "page");
+        revalidateTag(`mistakes-${userId}`, "page");
 
         return NextResponse.json({ success: true, attempt }, { status: 201 });
     } catch (error) {

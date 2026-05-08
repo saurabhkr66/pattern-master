@@ -28,7 +28,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     options: [] as string[],
     images: [] as any[],
     ai_answer_mismatch: false,
-    ai_detected_answer: null as string | null
+    ai_detected_answer: null as string | null,
+    question_type: "MCQ"
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -202,7 +203,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       options: (questionData?.options as string[]) || [],
       images: (questionData?.images as any[]) || [],
       ai_answer_mismatch: questionData?.ai_answer_mismatch || false,
-      ai_detected_answer: questionData?.ai_detected_answer || null
+      ai_detected_answer: questionData?.ai_detected_answer || null,
+      question_type: questionData?.question_type || "MCQ"
     });
   };
 
@@ -964,6 +966,19 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                     <MathRenderer content={formData.question_text} />
                   </div>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Question Type</label>
+                <select 
+                  value={formData.question_type}
+                  onChange={(e) => setFormData({...formData, question_type: e.target.value})}
+                  className="w-full p-3 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
+                >
+                  <option value="MCQ">MCQ (Multiple Choice)</option>
+                  <option value="MSQ">MSQ (Multiple Select)</option>
+                  <option value="NAT">NAT (Numerical Answer)</option>
+                </select>
               </div>
 
               {/* IMAGES SECTION */}

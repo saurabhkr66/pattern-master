@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { unstable_cache } from "next/cache";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,30 +13,29 @@ export async function GET(req: NextRequest) {
     const branch = searchParams.get("branch");
 
     try {
-      const sessions = await prisma.testSession.findMany({
-        where: {
-          user_id: userId,
-          ...(examType ? { exam_type: examType } : {}),
-          ...(branch ? { branch } : {}),
-        },
-        orderBy: { created_at: "desc" },
-        take: 20,
-        select: {
-          id: true,
-          exam_type: true,
-          branch: true,
-          score: true,
-          max_score: true,
-          total_questions: true,
-          correct_count: true,
-          wrong_count: true,
-          skipped_count: true,
-          time_taken_secs: true,
-          created_at: true,
-          mock_test: { select: { title: true } },
-        },
-      });
+      const getHistory = unstable_cache(
+        async (uid: string, et: string | null, br: string | null) =>
+          prisma.testSession.findMany({
+            where: {
+              user_id: uid,
+              ...(et ? { exam_type: et } : {}),
+              ...(br ? { branch: br } : {}),
+            },
+            orderBy: { created_at: "desc" },
+            take: 20,
+            select: {
+              id: true, exam_type: true, branch: true,
+              score: true, max_score: true, total_questions: true,
+              correct_count: true, wrong_count: true, skipped_count: true,
+              time_taken_secs: true, created_at: true,
+              mock_test: { select: { title: true } },
+            },
+          }),
+        [`test-history-${userId}-${examType ?? "all"}-${branch ?? "all"}`],
+        { revalidate: 30, tags: ["history"] }
+      );
 
+      const sessions = await getHistory(userId, examType, branch);
       return NextResponse.json({ sessions });
     } catch (dbErr: any) {
       if (dbErr?.code === "P2021" || dbErr?.message?.includes("does not exist")) {

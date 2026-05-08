@@ -47,18 +47,51 @@ async function fetchSectionQuestions(
   // Named sections like "General Aptitude", "Physics", "Chemistry" are cross-branch.
   const branchFilter = section.subjects === null && branch ? { branch } : {};
 
+  // Resolve which subjects to filter by for each table:
+  //   section.subjects !== null → fixed list; intersect with user filters if any
+  //   section.subjects === null → GATE subject section; apply user filters if any, else no filter
+  const pyqSubjectFilter =
+    section.subjects !== null
+      ? { subject: { in: usedSubjectFilter ? subjects : section.subjects } }
+      : usedSubjectFilter
+      ? { subject: { in: subjects } }
+      : {};
+
+  const subjPyqSubjectFilter =
+    section.subjects !== null
+      ? { subject_name: { in: usedSubjectFilter ? subjects : section.subjects } }
+      : usedSubjectFilter
+      ? { subject_name: { in: subjects } }
+      : {};
+
+  // Push marks + type filters into DB to avoid loading the full question bank.
+  // Compute from markDistribution; fall back to no filter if section has no distribution.
+  const neededMarks = section.markDistribution.length > 0
+    ? [...new Set(section.markDistribution.map((b) => b.marks))]
+    : null;
+  const neededTypes = section.markDistribution.length > 0
+    ? [...new Set(section.markDistribution.map((b) => b.type).filter(Boolean))] as string[]
+    : null;
+
+  const marksFilter = neededMarks ? { marks: { in: neededMarks } } : {};
+  const typeFilter = neededTypes && neededTypes.length > 0 ? { question_type: { in: neededTypes } } : {};
+
+  // Load 4× the needed count so shuffle has variety, but don't pull the whole table.
+  const totalNeeded = section.markDistribution.length > 0
+    ? section.markDistribution.reduce((sum, b) => sum + b.count, 0)
+    : section.totalQuestions;
+  const takeLimit = Math.max(totalNeeded * 4, 50);
+
   const [pyqs, subjectPyqs] = await Promise.all([
     // PYQ table: linked through Pattern (has exam_type + branch)
     prisma.pYQ.findMany({
       where: {
+        ...marksFilter,
+        ...typeFilter,
         pattern: {
           exam_type: examType,
           ...branchFilter,
-          ...(usedSubjectFilter && section.subjects !== null
-            ? { subject: { in: subjects } }
-            : section.subjects !== null
-            ? { subject: { in: section.subjects } }
-            : {}),
+          ...pyqSubjectFilter,
         },
       },
       select: {
@@ -73,19 +106,18 @@ async function fetchSectionQuestions(
         images: true,
         pattern: { select: { subject: true } },
       },
+      take: takeLimit,
     }),
 
     // SubjectPYQ table: linked through SubjectPattern (has exam_type + branch)
     prisma.subjectPYQ.findMany({
       where: {
+        ...marksFilter,
+        ...typeFilter,
         subject_pattern: {
           exam_type: examType,
           ...branchFilter,
-          ...(usedSubjectFilter && section.subjects !== null
-            ? { subject_name: { in: subjects } }
-            : section.subjects !== null
-            ? { subject_name: { in: section.subjects } }
-            : {}),
+          ...subjPyqSubjectFilter,
         },
       },
       select: {
@@ -100,6 +132,7 @@ async function fetchSectionQuestions(
         images: true,
         subject_pattern: { select: { subject_name: true } },
       },
+      take: takeLimit,
     }),
   ]);
 
@@ -136,62 +169,24 @@ async function fetchSectionQuestions(
 }
 
 /* ── Pick questions for a section respecting type + mark distribution ── */
-function pickSectionQuestions(
-  pool: RawQuestion[],
-  section: SectionConfig
-): { mandatory: RawQuestion[]; optional: RawQuestion[] } {
-  // Separate by question type
-  const byType: Record<string, RawQuestion[]> = {};
-  for (const q of pool) {
-    byType[q.question_type] = byType[q.question_type] ?? [];
-    byType[q.question_type].push(q);
-  }
-
-  const mandatory: RawQuestion[] = [];
-  const optional: RawQuestion[] = [];
-
-  const totalMandatory = section.optional
-    ? section.totalQuestions - section.optional.poolSize
-    : section.totalQuestions;
+function pickSectionQuestions(pool: RawQuestion[], section: SectionConfig): RawQuestion[] {
+  const picked: RawQuestion[] = [];
 
   if (section.markDistribution.length > 0) {
     for (const band of section.markDistribution) {
-      const typeKey = band.type ?? null;
-      const count = band.count;
-
-      // Determine if this band is for the optional pool
-      const isOptionalBand =
-        section.optional &&
-        optional.length < section.optional.poolSize &&
-        mandatory.length >= totalMandatory;
-
       const candidates = pool.filter(
         (q) =>
           q.marks === band.marks &&
-          (!typeKey || q.question_type === (typeKey as string)) &&
-          !mandatory.includes(q) &&
-          !optional.includes(q)
+          (!band.type || q.question_type === (band.type as string)) &&
+          !picked.includes(q)
       );
-
-      const taken = candidates.slice(0, count);
-
-      if (isOptionalBand) {
-        optional.push(...taken);
-      } else if (optional.length < (section.optional?.poolSize ?? 0) && mandatory.length >= totalMandatory) {
-        optional.push(...taken);
-      } else {
-        mandatory.push(...taken);
-      }
+      picked.push(...candidates.slice(0, band.count));
     }
   } else {
-    // Fallback: just take first N
-    mandatory.push(...pool.slice(0, totalMandatory));
-    if (section.optional) {
-      optional.push(...pool.slice(totalMandatory, totalMandatory + section.optional.poolSize));
-    }
+    picked.push(...pool.slice(0, section.totalQuestions));
   }
 
-  return { mandatory, optional };
+  return picked;
 }
 
 /* ── Convert raw questions to TestQuestion shape ── */
@@ -199,14 +194,13 @@ function toTestQuestion(
   raw: RawQuestion,
   sectionIdx: number,
   sectionName: string,
-  isOptional: boolean
 ): Omit<TestQuestion, "correct_answer" | "explanation"> & { correct_answer: string; explanation: string } {
   return {
     id: raw.id,
     source: raw.source,
     sectionIndex: sectionIdx,
     sectionName,
-    isOptional,
+    isOptional: false,
     question_text: raw.question_text,
     options: Array.isArray(raw.options) ? (raw.options as string[]) : null,
     question_type: raw.question_type as "MCQ" | "MSQ" | "NAT",
@@ -232,6 +226,24 @@ export async function GET(req: NextRequest) {
     const subjectFilters = searchParams.getAll("subject").flatMap((s) => s.split(",")).map((s) => s.trim()).filter(Boolean);
 
     const config = getExamConfig(examType, branch ?? undefined);
+
+    // ── DIRECT template lookup (used for session resume) ──
+    const templateId = searchParams.get("templateId");
+    if (templateId) {
+      const template = await prisma.mockTestTemplate.findUnique({ where: { id: templateId } });
+      if (template) {
+        const safeQs = (template.questions as any[]).map(
+          ({ correct_answer, explanation, ...safe }: any) => safe
+        );
+        return NextResponse.json({
+          mockTestId: template.id,
+          title: template.title,
+          questions: safeQs,
+          totalQuestions: template.total_questions,
+          maxScore: template.max_score,
+        });
+      }
+    }
 
     // ── SEEDED: look for an existing frozen template ──
     if (mode === "seeded" && mockNumber > 0) {
@@ -290,22 +302,18 @@ export async function GET(req: NextRequest) {
     const allSectionQuestions: Array<{
       sectionIdx: number;
       sectionName: string;
-      mandatory: RawQuestion[];
-      optional: RawQuestion[];
+      questions: RawQuestion[];
     }> = [];
 
     for (let si = 0; si < config.sections.length; si++) {
       const sec = config.sections[si];
       const pool = await fetchSectionQuestions(sec, examType, branch, subjectFilters);
-      const { mandatory, optional } = pickSectionQuestions(pool, sec);
-      allSectionQuestions.push({ sectionIdx: si, sectionName: sec.name, mandatory, optional });
+      const picked = pickSectionQuestions(pool, sec);
+      allSectionQuestions.push({ sectionIdx: si, sectionName: sec.name, questions: picked });
     }
 
     // Check we have at least some questions
-    const totalGenerated = allSectionQuestions.reduce(
-      (sum, s) => sum + s.mandatory.length + s.optional.length,
-      0
-    );
+    const totalGenerated = allSectionQuestions.reduce((sum, s) => sum + s.questions.length, 0);
     if (totalGenerated === 0) {
       return NextResponse.json(
         { error: "No questions found for this exam/branch. Please try a different exam or check if questions have been seeded." },
@@ -317,15 +325,9 @@ export async function GET(req: NextRequest) {
     const clientQuestions: TestQuestion[] = [];
     const fullQuestions: Array<TestQuestion & { correct_answer: string; explanation: string }> = [];
 
-    for (const { sectionIdx, sectionName, mandatory, optional } of allSectionQuestions) {
-      for (const raw of mandatory) {
-        const full = toTestQuestion(raw, sectionIdx, sectionName, false);
-        fullQuestions.push(full);
-        const { correct_answer, explanation, ...safe } = full;
-        clientQuestions.push(safe);
-      }
-      for (const raw of optional) {
-        const full = toTestQuestion(raw, sectionIdx, sectionName, true);
+    for (const { sectionIdx, sectionName, questions } of allSectionQuestions) {
+      for (const raw of questions) {
+        const full = toTestQuestion(raw, sectionIdx, sectionName);
         fullQuestions.push(full);
         const { correct_answer, explanation, ...safe } = full;
         clientQuestions.push(safe);

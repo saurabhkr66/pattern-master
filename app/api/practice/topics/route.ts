@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { unstable_cache } from "next/cache";
 
@@ -66,10 +67,119 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
         pyqs: [],
       }));
 
+      if (subject === "Full Papers") {
+        const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main" 
+          ? ["JEE_MAIN", "JEE Main"] 
+          : [examType];
+
+        const mocks = await prisma.mockTestTemplate.findMany({
+          where: {
+            exam_type: { in: normalizedExamTypes },
+            ...(branch && branch !== "null" && branch !== "Common" ? { branch } : {}),
+            mode: 'seeded'
+          },
+          select: {
+            id: true,
+            title: true,
+            total_questions: true,
+            subjects: true,
+          },
+          orderBy: { mock_number: 'desc' }
+        });
+
+        const mappedMocks = mocks.map(m => ({
+          id: `mock-${m.id}`,
+          topic_name: m.title,
+          subject: "Full Papers",
+          atomic_logic: `Full paper practice for ${m.title}.`,
+          totalQuestions: m.total_questions,
+          questionsCount: m.total_questions,
+          pyqsCount: 0,
+          solvedQuestions: 0,
+          questions: [],
+          pyqs: [],
+          isMock: true
+        }));
+
+        return { subjects: [], topics: mappedMocks };
+      }
+
       return { subjects: mappedSubjectsBase, topics: mappedTopicsBase };
     },
     [`topics-base-${examType}-${branch || "all"}-${subject || "all"}-v2`],
     { revalidate: 600, tags: ["patterns"] }
+  )();
+
+// Module-level factory so unstable_cache deduplicates across concurrent requests.
+// Uses a single UNION ALL query — 1 connection instead of 3 parallel ones.
+const getSolvedCounts = (
+  userId: string,
+  examType: string,
+  branch: string,
+  subject: string,
+  spIds: string[],
+  patternIds: string[],
+) =>
+  unstable_cache(
+    async () => {
+      const results = {
+        bySubjectPattern: {} as Record<string, number>,
+        byQPattern: {} as Record<string, number>,
+        byPPattern: {} as Record<string, number>,
+      };
+
+      if (spIds.length === 0 && patternIds.length === 0) return results;
+
+      const parts: Prisma.Sql[] = [];
+
+      if (spIds.length > 0) {
+        parts.push(Prisma.sql`
+          SELECT 'subject'::text as type, sp.subject_pattern_id::text as id,
+                 COUNT(DISTINCT a.subject_pyq_id)::bigint as solved
+          FROM "Attempt" a
+          JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
+          WHERE a.user_id = ${userId} AND a.is_correct = true
+            AND sp.subject_pattern_id = ANY(${spIds})
+          GROUP BY sp.subject_pattern_id
+        `);
+      }
+
+      if (patternIds.length > 0) {
+        parts.push(Prisma.sql`
+          SELECT 'gq'::text as type, q.pattern_id::text as id,
+                 COUNT(DISTINCT a.question_id)::bigint as solved
+          FROM "Attempt" a
+          JOIN "GeneratedQuestion" q ON q.id = a.question_id
+          WHERE a.user_id = ${userId} AND a.is_correct = true
+            AND q.pattern_id = ANY(${patternIds})
+          GROUP BY q.pattern_id
+        `);
+        parts.push(Prisma.sql`
+          SELECT 'pyq'::text as type, p.pattern_id::text as id,
+                 COUNT(DISTINCT a.pyq_id)::bigint as solved
+          FROM "Attempt" a
+          JOIN "PYQ" p ON p.id = a.pyq_id
+          WHERE a.user_id = ${userId} AND a.is_correct = true
+            AND p.pattern_id = ANY(${patternIds})
+          GROUP BY p.pattern_id
+        `);
+      }
+
+      const rows = await prisma.$queryRaw<{ type: string; id: string; solved: bigint }[]>(
+        Prisma.sql`${Prisma.join(parts, " UNION ALL ")}`
+      );
+
+      for (const r of rows) {
+        const n = Number(r.solved);
+        if (r.type === "subject") results.bySubjectPattern[r.id] = n;
+        else if (r.type === "gq") results.byQPattern[r.id] = n;
+        else results.byPPattern[r.id] = n;
+      }
+
+      return results;
+    },
+    [`practice-solved-${userId}-${examType}-${branch || "all"}-${subject || "all"}`],
+    { revalidate: 60, tags: [`dashboard-${userId}`] }
   )();
 
 export async function GET(request: Request) {
@@ -86,56 +196,17 @@ export async function GET(request: Request) {
 
     // 2. Merge user-specific solved counts (fast single queries)
     const spIds = subjects.map((s: any) => s._rawId).filter(Boolean);
-    const patternIds = topics.map((t: any) => t.id).filter(Boolean);
+    const patternIds = topics.filter((t: any) => !t.isMock).map((t: any) => t.id).filter(Boolean);
 
     let solvedBySubjectPattern: Record<string, number> = {};
     let solvedQByPattern: Record<string, number> = {};
     let solvedPByPattern: Record<string, number> = {};
 
     if (userId) {
-      const promises: Promise<any>[] = [];
-
-      if (spIds.length > 0) {
-        promises.push(
-          prisma.$queryRaw<{ sp_id: string; solved: bigint }[]>`
-            SELECT sp.subject_pattern_id as sp_id, COUNT(DISTINCT a.subject_pyq_id)::bigint as solved
-            FROM "Attempt" a
-            JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
-            WHERE a.user_id = ${userId}
-              AND a.is_correct = true
-              AND sp.subject_pattern_id = ANY(${spIds})
-            GROUP BY sp.subject_pattern_id
-          `.then((rows) => {
-            rows.forEach((r) => { solvedBySubjectPattern[r.sp_id] = Number(r.solved); });
-          })
-        );
-      }
-
-      if (patternIds.length > 0) {
-        promises.push(
-          Promise.all([
-            prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
-              SELECT q.pattern_id as pid, COUNT(DISTINCT a.question_id)::bigint as solved
-              FROM "Attempt" a
-              JOIN "GeneratedQuestion" q ON q.id = a.question_id
-              WHERE a.user_id = ${userId} AND a.is_correct = true AND q.pattern_id = ANY(${patternIds})
-              GROUP BY q.pattern_id
-            `,
-            prisma.$queryRaw<{ pid: string; solved: bigint }[]>`
-              SELECT p.pattern_id as pid, COUNT(DISTINCT a.pyq_id)::bigint as solved
-              FROM "Attempt" a
-              JOIN "PYQ" p ON p.id = a.pyq_id
-              WHERE a.user_id = ${userId} AND a.is_correct = true AND p.pattern_id = ANY(${patternIds})
-              GROUP BY p.pattern_id
-            `,
-          ]).then(([qSolved, pSolved]) => {
-            qSolved.forEach((r) => { solvedQByPattern[r.pid] = Number(r.solved); });
-            pSolved.forEach((r) => { solvedPByPattern[r.pid] = Number(r.solved); });
-          })
-        );
-      }
-
-      await Promise.all(promises);
+      const counts = await getSolvedCounts(userId, examType, branch, subject, spIds, patternIds);
+      solvedBySubjectPattern = counts.bySubjectPattern;
+      solvedQByPattern = counts.byQPattern;
+      solvedPByPattern = counts.byPPattern;
     }
 
     // 3. Merge solved counts into the base data

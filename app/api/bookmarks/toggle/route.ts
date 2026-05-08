@@ -13,9 +13,9 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { questionId, pyqId, subjectPyqId } = body;
+        const { questionId, pyqId, subjectPyqId, mockQuestionId } = body;
 
-        if (!questionId && !pyqId && !subjectPyqId) {
+        if (!questionId && !pyqId && !subjectPyqId && !mockQuestionId) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
                 question_id: questionId || null,
                 pyq_id: pyqId || null,
                 subject_pyq_id: subjectPyqId || null,
+                mock_question_id: mockQuestionId || null,
             }
         });
 
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
                     question_id: questionId || null,
                     pyq_id: pyqId || null,
                     subject_pyq_id: subjectPyqId || null,
+                    mock_question_id: mockQuestionId || null,
                 }
             });
             revalidateTag("bookmarks", "page");

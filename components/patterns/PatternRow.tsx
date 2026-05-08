@@ -9,8 +9,9 @@ import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { BE } from "@/lib/theme";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Loader2 } from "lucide-react";
 import MasteryNotes from "../MasteryNotes";
+import LoadingLogo from "@/components/ui/LoadingLogo";
 
 interface PatternRowProps {
   pattern: any;
@@ -18,10 +19,17 @@ interface PatternRowProps {
   isOpen: boolean;
   onToggle: () => void;
   directQuestionId?: string;
+  disablePrefetch?: boolean;
 }
 
-const fetchPatternQuestions = async (patternId: string) => {
-  const res = await fetch(`/api/patterns/${patternId}/questions`);
+const SUBJECT_PAGE_SIZE = 9;
+
+const fetchPatternQuestions = async (patternId: string, skip = 0, take = 0) => {
+  const params = new URLSearchParams();
+  if (skip > 0) params.set("skip", String(skip));
+  if (take > 0) params.set("take", String(take));
+  const qs = params.toString();
+  const res = await fetch(`/api/patterns/${patternId}/questions${qs ? `?${qs}` : ""}`);
   if (!res.ok) throw new Error("Failed to fetch questions");
   return res.json();
 };
@@ -74,13 +82,15 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride, language }:
 
 QuestionCard.displayName = "QuestionCard";
 
-export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, directQuestionId }: PatternRowProps) {
+export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, directQuestionId, disablePrefetch }: PatternRowProps) {
+  const router = useRouter();
   const rowRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { language } = useLanguage();
 
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [activeTab, setActiveTab] = useState<"bank" | "pyq" | "notes" | "review-notes">("pyq");
   const [visibleBank, setVisibleBank] = useState(12);
   const [visiblePyqs, setVisiblePyqs] = useState(12);
@@ -96,24 +106,72 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     }
   }, [isOpen]);
 
-  const handlePrefetch = useCallback(() => {
-    queryClient.prefetchQuery({
-      queryKey: ["patternQuestions", pattern.id],
-      queryFn: () => fetchPatternQuestions(pattern.id),
-      staleTime: 5 * 60 * 1000,
-    });
-  }, [queryClient, pattern.id]);
+  // ── Pagination state for subject-level rows ──
+  // Map<id, question> — duplicate inserts are idempotent, which prevents the
+  // classic race where the effect fires with stale page data when subjectSkip changes.
+  const [subjectSkip, setSubjectSkip] = useState(0);
+  const [subjectPyqMap, setSubjectPyqMap] = useState<Map<string, any>>(new Map());
+  const [subjectTotal, setSubjectTotal] = useState(0);
 
-  const { data, isLoading: isLoadingQuestions } = useQuery({
-    queryKey: ["patternQuestions", pattern.id],
-    queryFn: () => fetchPatternQuestions(pattern.id),
-    enabled: isOpen,
+  // Reset when the row is freshly opened
+  useEffect(() => {
+    if (isOpen && pattern.isSubjectLevel) {
+      setSubjectSkip(0);
+      setSubjectPyqMap(new Map());
+      setSubjectTotal(0);
+    }
+  }, [isOpen, pattern.isSubjectLevel]);
+
+  const handlePrefetch = useCallback(() => {
+    if (pattern.isSubjectLevel) {
+      queryClient.prefetchQuery({
+        queryKey: ["patternQuestions", pattern.id, 0, SUBJECT_PAGE_SIZE],
+        queryFn: () => fetchPatternQuestions(pattern.id, 0, SUBJECT_PAGE_SIZE),
+        staleTime: 5 * 60 * 1000,
+      });
+    } else {
+      queryClient.prefetchQuery({
+        queryKey: ["patternQuestions", pattern.id],
+        queryFn: () => fetchPatternQuestions(pattern.id),
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+  }, [queryClient, pattern.id, pattern.isSubjectLevel]);
+
+  // Subject-level: paginated fetch
+  const { data: subjectPage, isLoading: isLoadingSubject } = useQuery({
+    queryKey: ["patternQuestions", pattern.id, subjectSkip, SUBJECT_PAGE_SIZE],
+    queryFn: () => fetchPatternQuestions(pattern.id, subjectSkip, SUBJECT_PAGE_SIZE),
+    enabled: isOpen && Boolean(pattern.isSubjectLevel),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const questions = data?.questions || [];
-  const pyqs = data?.pyqs || [];
+  // Only depends on subjectPage — Map.set is idempotent so stale-skip fires are harmless
+  useEffect(() => {
+    if (!subjectPage?.pyqs?.length) return;
+    setSubjectPyqMap(prev => {
+      const next = new Map(prev);
+      subjectPage.pyqs.forEach((q: any) => next.set(q.id, q));
+      return next;
+    });
+    if (subjectPage.total) setSubjectTotal(subjectPage.total);
+  }, [subjectPage]);
+
+  // Topic / mock patterns: fetch all at once
+  const { data, isLoading: isLoadingAll } = useQuery({
+    queryKey: ["patternQuestions", pattern.id],
+    queryFn: () => fetchPatternQuestions(pattern.id),
+    enabled: isOpen && !pattern.isSubjectLevel,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const subjectPyqs = useMemo(() => Array.from(subjectPyqMap.values()), [subjectPyqMap]);
+  const isLoadingQuestions = pattern.isSubjectLevel ? isLoadingSubject : isLoadingAll;
+  const questions = pattern.isSubjectLevel ? [] : (data?.questions || []);
+  const pyqs = pattern.isSubjectLevel ? subjectPyqs : (data?.pyqs || []);
+  const subjectHasMore = pattern.isSubjectLevel && subjectPyqs.length < subjectTotal;
 
   useEffect(() => {
     if (directQuestionId && (questions.length > 0 || pyqs.length > 0)) {
@@ -172,7 +230,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   };
 
   const displayedBank = useMemo(() => applyFilters(questions.map((q: any, i: number) => ({ ...q, _originalIndex: i }))), [questions, questionStatusFilter]);
-  const displayedPyqs = useMemo(() => applyFilters(pyqs.map((p: any, i: number) => ({ ...p, _isPyq: true, _originalIndex: i }))), [pyqs, questionStatusFilter]);
+  const displayedPyqs = useMemo(() => applyFilters(pyqs.map((p: any, i: number) => ({ ...p, _isPyq: true, _isSubjectPyq: pattern.isSubjectLevel, _originalIndex: i }))), [pyqs, questionStatusFilter]);
 
   const queue = useMemo(() => {
     if (!selectedQuestion) return [];
@@ -191,10 +249,11 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
 
   return (
     <div ref={rowRef} id={`pattern-${pattern.id}`} style={{ borderBottom: `1px solid ${BE.line}` }}>
+      {isNavigating && <LoadingLogo />}
       {/* Row Header */}
       <div 
         onClick={onToggle}
-        onMouseEnter={handlePrefetch}
+        onMouseEnter={disablePrefetch ? undefined : handlePrefetch}
         style={{
           padding: '14px 4px', cursor: 'pointer',
           background: isOpen ? 'rgba(255,255,255,0.02)' : 'transparent',
@@ -208,17 +267,26 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
               <div style={{ fontSize: 14.5, fontWeight: 500, color: isOpen ? BE.accent : BE.text }}>{pattern.topic_name}</div>
-              {/* <span className="hidden md:inline-block" style={{ 
-                fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, 
-                background: 'rgba(255,255,255,0.05)', color: BE.textMute,
-                textTransform: 'uppercase', letterSpacing: 0.5
-              }}>{pattern.questionsCount} bank</span> */}
               {pattern.pyqsCount > 0 && (
                 <span className="hidden md:inline-block" style={{ 
                   fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, 
                   background: BE.warnSoft, color: BE.warn,
                   textTransform: 'uppercase', letterSpacing: 0.5
                 }}>{pattern.pyqsCount} PYQ</span>
+              )}
+              {pattern.questionsCount > 0 && (
+                <span className="hidden md:inline-block" style={{ 
+                  fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, 
+                  background: 'rgba(255,255,255,0.05)', color: BE.textDim,
+                  textTransform: 'uppercase', letterSpacing: 0.5
+                }}>{pattern.questionsCount} Bank</span>
+              )}
+              {pattern.isMock && (
+                <span className="hidden md:inline-block" style={{ 
+                  fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, 
+                  background: BE.accentSoft, color: BE.accent,
+                  textTransform: 'uppercase', letterSpacing: 0.5
+                }}>Full Paper</span>
               )}
             </div>
           </div>
@@ -270,12 +338,14 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
         <div style={{ padding: '0 4px 20px' }}>
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 2, marginTop: 4, marginBottom: 16, borderBottom: `1px solid ${BE.line}`, overflowX: 'auto' }}>
-            {[
+            {(pattern.isMock ? [
+               { id: 'bank', label: 'Questions', n: pattern.questionsCount, icon: 'bank' }
+            ] : [
               { id: 'bank', label: 'Question bank', n: pattern.questionsCount, icon: 'bank' },
               { id: 'pyq',  label: 'Previous year', n: pattern.pyqsCount, icon: 'pyq' },
               { id: 'notes', label: 'Mastery notes', icon: 'notes' },
               { id: 'review-notes', label: 'My notes', icon: 'pencil', dot: true },
-            ].map(t => {
+            ]).map(t => {
               const active = t.id === activeTab;
               return (
                 <div key={t.id} onClick={() => { setActiveTab(t.id as any); setSelectedQuestion(null); setIsGenerating(false); }}
@@ -328,17 +398,39 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                         ))}
                       </div>
                       <div style={{ flex: 1 }} />
-                      {/* <button onClick={() => setIsGenerating(true)} style={{ 
-                        padding: '6px 12px', fontSize: 12, borderRadius: 8, border: `1px solid ${BE.line}`, 
-                        background: BE.accent, color: '#fff', fontWeight: 600, cursor: 'pointer' 
-                      }}>+ Generate new set</button> */}
+                      {pattern.isMock && (
+                        <button
+                          onMouseEnter={() => router.prefetch('/test')}
+                          onClick={() => {
+                            setIsNavigating(true);
+                            router.push(`/test?id=${pattern.id.replace('mock-', '')}`);
+                          }}
+                          style={{
+                            padding: '6px 14px', fontSize: 11, borderRadius: 8, border: `1px solid ${BE.accent}`,
+                            background: BE.accentSoft, color: BE.accent, fontWeight: 700, cursor: 'pointer',
+                            textTransform: 'uppercase', letterSpacing: 0.5
+                          }}>Start Full Mock Test</button>
+                      )}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
                       {(activeTab === 'bank' ? displayedBank : displayedPyqs).slice(0, activeTab === 'bank' ? visibleBank : visiblePyqs).map((q: any) => (
                         <QuestionCard key={q.id} q={q} i={q._originalIndex} pattern={pattern} onSelect={setSelectedQuestion} language={language} isPyqOverride={activeTab === 'pyq'} />
                       ))}
                     </div>
-                    {(activeTab === 'bank' ? displayedBank : displayedPyqs).length > (activeTab === 'bank' ? visibleBank : visiblePyqs) && (
+                    {/* Subject-level: fetch next page from server */}
+                    {pattern.isSubjectLevel && subjectHasMore && (
+                      <div style={{ textAlign: 'center', marginTop: 20 }}>
+                        <button
+                          onClick={() => setSubjectSkip(s => s + SUBJECT_PAGE_SIZE)}
+                          disabled={isLoadingSubject}
+                          style={{ fontSize: 11, fontWeight: 700, color: BE.accent, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1, opacity: isLoadingSubject ? 0.5 : 1 }}
+                        >
+                          {isLoadingSubject ? 'Loading…' : 'Load more'}
+                        </button>
+                      </div>
+                    )}
+                    {/* Topic / mock patterns: client-side show more */}
+                    {!pattern.isSubjectLevel && (activeTab === 'bank' ? displayedBank : displayedPyqs).length > (activeTab === 'bank' ? visibleBank : visiblePyqs) && (
                       <div style={{ textAlign: 'center', marginTop: 20 }}>
                         <button onClick={() => activeTab === 'bank' ? setVisibleBank(v => v+12) : setVisiblePyqs(v => v+12)} style={{ fontSize: 11, fontWeight: 700, color: BE.accent, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1 }}>Load more</button>
                       </div>

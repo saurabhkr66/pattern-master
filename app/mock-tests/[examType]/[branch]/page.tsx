@@ -66,7 +66,7 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {finalTests.map((test) => (
-          <Link 
+          <Link
             key={test.id}
             href={`/mock-tests/${examType}/${branch}/${test.id}`}
             className="group flex items-center justify-between p-6 rounded-2xl border hover:border-indigo-500/40 transition-all"

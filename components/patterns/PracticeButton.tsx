@@ -53,6 +53,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   // AI Auto-Fill State
   const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
   const [generatedExplanation, setGeneratedExplanation] = useState<string | null>(null);
+  const [aiUsage, setAiUsage] = useState<{ input: number, output: number, thoughts: number } | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -142,34 +143,36 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     }
   }, [question?.id, !!question]);
 
-  // AI Explanation Generator
-  useEffect(() => {
-    if (isRevealed && question && !question.explanation && !generatedExplanation && !isGeneratingExplanation) {
-      const generateExplanation = async () => {
-        setIsGeneratingExplanation(true);
-        try {
-          const res = await fetch("/api/questions/generate-explanation", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              questionId: question.id,
-              isSubjectPyq: question._isSubjectPyq,
-              isPyq: question._isPyq
-            })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setGeneratedExplanation(data.explanation);
-          }
-        } catch (e) {
-          console.error("Failed to generate explanation", e);
-        } finally {
-          setIsGeneratingExplanation(false);
-        }
-      };
-      generateExplanation();
+  const handleGenerateExplanation = async () => {
+    if (!question || isGeneratingExplanation) return;
+    setIsGeneratingExplanation(true);
+
+    const isMock = question.isMock || patternId?.startsWith('mock-');
+    const mockTestId = isMock ? patternId.replace('mock-', '') : undefined;
+
+    try {
+      const res = await fetch("/api/questions/generate-explanation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: question.id,
+          questionType: isMock ? "MockQuestion" : undefined,
+          mockTestId,
+          isSubjectPyq: question._isSubjectPyq,
+          isPyq: question._isPyq,
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGeneratedExplanation(data.explanation);
+        if (data.usage) setAiUsage(data.usage);
+      }
+    } catch (e) {
+      console.error("Failed to generate explanation", e);
+    } finally {
+      setIsGeneratingExplanation(false);
     }
-  }, [isRevealed, question, generatedExplanation, isGeneratingExplanation]);
+  };
 
   // Auto-dismiss fullscreen hint after 5s;
   // Also show it whenever a new question first appears (AI generated)
@@ -236,6 +239,9 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     setMsqSelections([]);
     setNatValue("");
     setIsRevealed(false);
+    setHasReported(false);
+    setGeneratedExplanation(null);
+    setAiUsage(null);
     try {
       const response = await fetch("/api/generate-question", {
         method: "POST",
@@ -265,6 +271,9 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       setNatValue("");
       setIsRevealed(false);
       setSeconds(0);
+      setHasReported(false);
+      setGeneratedExplanation(null);
+      setAiUsage(null);
     } else {
       if (isPyqMode) {
         setIsFullscreen(false);
@@ -286,6 +295,9 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     setMsqSelections([]);
     setNatValue("");
     setIsRevealed(false);
+    setHasReported(false);
+    setGeneratedExplanation(null);
+    setAiUsage(null);
   };
 
   const toggleMsqSelection = (letter: string) => {
@@ -386,9 +398,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: (question._isPyq || question._isSubjectPyq) ? undefined : question.id,
+          questionId: (question._isPyq || question._isSubjectPyq || question.isMock) ? undefined : question.id,
           pyqId: (question._isPyq && !question._isSubjectPyq) ? question.id : undefined,
           subjectPyqId: question._isSubjectPyq ? question.id : undefined,
+          mockQuestionId: question.isMock ? question.id : undefined,
           isCorrect,
           userAnswer: finalAnswer,
           timeSpent: seconds,
@@ -404,8 +417,19 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     if (!isAdmin || !question) return;
     setIsSavingExplanation(true);
     try {
-      const type = question._isSubjectPyq ? "SubjectPYQ" : (question._isPyq ? "PYQ" : "GeneratedQuestion");
-      await quickEditExplanation(question.id, type, editedExplanation);
+      let type: string = "GeneratedQuestion";
+      let mockTestId: string | undefined = undefined;
+
+      if (question.isMock) {
+        type = "MockQuestion";
+        mockTestId = patternId.replace('mock-', '');
+      } else if (question._isSubjectPyq) {
+        type = "SubjectPYQ";
+      } else if (question._isPyq) {
+        type = "PYQ";
+      }
+
+      await quickEditExplanation(question.id, type, editedExplanation, mockTestId);
       
       // Update local state
       setQuestion({ ...question, explanation: editedExplanation });
@@ -432,9 +456,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: (question._isPyq || question._isSubjectPyq) ? undefined : question.id,
+          questionId: (question._isPyq || question._isSubjectPyq || question.isMock) ? undefined : question.id,
           pyqId: (question._isPyq && !question._isSubjectPyq) ? question.id : undefined,
           subjectPyqId: question._isSubjectPyq ? question.id : undefined,
+          mockQuestionId: question.isMock ? question.id : undefined,
         }),
       });
       const data = await res.json();
@@ -817,6 +842,20 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                     </div>
                     <span style={{ fontSize: 11, color: BE.textDim, fontWeight: 500 }}>Explanation & Logic</span>
                     <div style={{ flex: 1 }}></div>
+                    {isAdmin && aiUsage && (
+                      <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-[9px] font-mono text-zinc-500 uppercase tracking-tight">
+                        <span className="opacity-50">Usage:</span>
+                        <span>{aiUsage.input} in</span>
+                        <span className="w-px h-2 bg-zinc-300 dark:bg-zinc-700" />
+                        <span>{aiUsage.output} out</span>
+                        {aiUsage.thoughts > 0 && (
+                          <>
+                            <span className="w-px h-2 bg-zinc-300 dark:bg-zinc-700" />
+                            <span className="text-amber-500 font-bold">{aiUsage.thoughts} thk</span>
+                          </>
+                        )}
+                      </div>
+                    )}
                     {isAdmin && (
                       <button 
                         onClick={() => {
@@ -863,12 +902,26 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                       </div>
                     ) : (
                       <>
-                        <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : (generatedExplanation || question.explanation || "No explanation available.")} />
-                        {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
-                          <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
-                            <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                        {(!question.explanation && !generatedExplanation) ? (
+                          <div className="flex flex-col items-center justify-center py-6 gap-3">
+                            <p className="text-xs text-gray-500 font-medium">No explanation is available for this question yet.</p>
+                            <button
+                              onClick={handleGenerateExplanation}
+                              className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2"
+                            >
+                              ✨ Generate AI Logic
+                            </button>
                           </div>
-                        ))}
+                        ) : (
+                          <>
+                            <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : (generatedExplanation || question.explanation || "No explanation available.")} />
+                            {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
+                              <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
+                                <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                              </div>
+                            ))}
+                          </>
+                        )}
                       </>
                     )}
                   </div>

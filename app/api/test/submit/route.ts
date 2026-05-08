@@ -136,24 +136,6 @@ export async function POST(req: NextRequest) {
       return ans.source === "pyq" ? pyqMap.get(ans.questionId) ?? null : subjPyqMap.get(ans.questionId) ?? null;
     }
 
-    // ── Handle Section B optional questions ──
-    // For each section with optional config, count only the first `countSize` answered optional questions.
-    const sectionOptionalCounts: Map<number, number> = new Map();
-    const countedOptionalIds: Set<string> = new Set();
-
-    for (const ans of answers) {
-      if (!ans.isOptional) continue;
-      const sec = config.sections[ans.sectionIndex];
-      if (!sec?.optional) continue;
-
-      const soFar = sectionOptionalCounts.get(ans.sectionIndex) ?? 0;
-      const isAnswered = ans.userAnswer && ans.userAnswer.trim() !== "";
-      if (isAnswered && soFar < sec.optional.countSize) {
-        countedOptionalIds.add(ans.questionId);
-        sectionOptionalCounts.set(ans.sectionIndex, soFar + 1);
-      }
-    }
-
     // ── Grade all answers ──
     let score = 0;
     let maxScore = 0;
@@ -177,7 +159,7 @@ export async function POST(req: NextRequest) {
       const sec = config.sections[ans.sectionIndex];
       const negPerMark = negativePerMarkBySec[ans.sectionIndex] ?? 1 / 3;
       const isSkipped = !ans.userAnswer || ans.userAnswer.trim() === "";
-      const isCounted = !ans.isOptional || countedOptionalIds.has(ans.questionId);
+      const isCounted = true;
 
       let isCorrect = false;
       if (!isSkipped) {
@@ -266,29 +248,40 @@ export async function POST(req: NextRequest) {
       if (!(dbErr?.code === "P2021" || dbErr?.message?.includes("does not exist"))) throw dbErr;
     }
 
-    // Save individual attempts for dashboard tracking (all answered questions — correct and wrong)
-    await Promise.allSettled(
-      answers.map(async (ans) => {
+    // Delete the in-progress draft now that the test is submitted
+    if (mockTestId) {
+      await prisma.testSessionDraft.deleteMany({
+        where: { user_id: userId, mock_test_id: mockTestId },
+      }).catch(() => {});
+    }
+
+    // Save attempts for dashboard tracking (bulk insert for performance)
+    const attemptData = answers
+      .filter(ans => {
         const qData = getQData(ans);
-        if (!qData || !ans.userAnswer || ans.userAnswer.trim() === "") return;
-
-        const isCorrect = isAnswerCorrect(ans.questionType, ans.userAnswer, qData.correct_answer);
-
-        await prisma.attempt.create({
-          data: {
-            user_id: userId,
-            pyq_id: ans.source === "pyq" ? ans.questionId : null,
-            subject_pyq_id: ans.source === "subject_pyq" ? ans.questionId : null,
-            is_correct: isCorrect,
-            user_answer: ans.userAnswer,
-            time_spent: ans.timeSpentSecs || null,
-          },
-        });
+        return qData && ans.userAnswer && ans.userAnswer.trim() !== "";
       })
-    );
+      .map(ans => {
+        const qData = getQData(ans)!;
+        return {
+          user_id: userId,
+          pyq_id: ans.source === "pyq" ? ans.questionId : null,
+          subject_pyq_id: ans.source === "subject_pyq" ? ans.questionId : null,
+          is_correct: isAnswerCorrect(ans.questionType, ans.userAnswer!, qData.correct_answer),
+          user_answer: ans.userAnswer,
+          time_spent: ans.timeSpentSecs || null,
+        };
+      });
+
+    if (attemptData.length > 0) {
+      await prisma.attempt.createMany({ data: attemptData, skipDuplicates: true });
+    }
 
     await revalidatePath("/dashboard", "page");
-    await revalidateTag("dashboard", "page");
+    await revalidateTag("dashboard");
+    await revalidateTag("history");
+    await revalidateTag("mocks");
+    await revalidateTag("leaderboard");
 
     return NextResponse.json(
       {
