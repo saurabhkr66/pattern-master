@@ -2,11 +2,46 @@
 
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { VertexAI } from '@google-cloud/vertexai';
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
+
+// Surgically update one question inside the MockTestTemplate.questions JSONB array.
+// Uses Postgres || (object merge) instead of reading/writing the full array.
+async function patchMockQuestion(mockTestId: string, questionId: string, patch: Record<string, unknown>) {
+  const patchJson = JSON.stringify(patch);
+  await prisma.$executeRaw`
+    UPDATE "MockTestTemplate"
+    SET questions = (
+      SELECT jsonb_agg(
+        CASE WHEN elem->>'id' = ${questionId}
+        THEN elem || ${patchJson}::jsonb
+        ELSE elem
+        END
+      )
+      FROM jsonb_array_elements(questions) AS elem
+    )
+    WHERE id = ${mockTestId}
+  `;
+}
+
+// Remove one question from the JSONB array and decrement total_questions.
+async function removeMockQuestion(mockTestId: string, questionId: string) {
+  await prisma.$executeRaw`
+    UPDATE "MockTestTemplate"
+    SET
+      questions = (
+        SELECT jsonb_agg(elem)
+        FROM jsonb_array_elements(questions) AS elem
+        WHERE elem->>'id' != ${questionId}
+      ),
+      total_questions = total_questions - 1
+    WHERE id = ${mockTestId}
+  `;
+}
 
 export async function resolveReport(
   reportId: string,
@@ -20,7 +55,8 @@ export async function resolveReport(
     images?: any,
     mockTestId?: string, // Required if questionType is MockQuestion
     ai_answer_mismatch?: boolean,
-    ai_detected_answer?: string | null
+    ai_detected_answer?: string | null,
+    question_type?: string
   }
 ) {
   const { userId } = await auth();
@@ -38,29 +74,8 @@ export async function resolveReport(
   // Update the actual question
   if (questionType === "MockQuestion") {
     if (!updates.mockTestId) throw new Error("Mock Test ID is required for MockQuestion updates");
-    const mockTest = await prisma.mockTestTemplate.findUnique({
-      where: { id: updates.mockTestId }
-    });
-
-    if (!mockTest) throw new Error("Mock Test not found");
-
-    const questions = [...(mockTest.questions as any[])];
-    const qIndex = questions.findIndex(q => q.id === questionId);
-
-    if (qIndex === -1) throw new Error("Question not found in Mock Test");
-
-    // Merge updates (including mismatch flags for mock questions)
-    questions[qIndex] = {
-      ...questions[qIndex],
-      ...updates
-    };
-    // Don't save mockTestId back into the question JSON
-    delete questions[qIndex].mockTestId;
-
-    await prisma.mockTestTemplate.update({
-      where: { id: updates.mockTestId },
-      data: { questions }
-    });
+    const { mockTestId: _mockTestId, ...patch } = updates;
+    await patchMockQuestion(updates.mockTestId, questionId, patch);
   } else {
     // For standard questions, we only update fields that exist in the schema
     const { ai_answer_mismatch, ai_detected_answer, mockTestId, ...validUpdates } = updates;
@@ -115,19 +130,7 @@ export async function deleteQuestion(
     await prisma.pYQ.delete({ where: { id: questionId } });
   } else if (questionType === "MockQuestion") {
     if (!mockTestId) throw new Error("Mock Test ID is required for MockQuestion deletion");
-
-    const mockTest = await prisma.mockTestTemplate.findUnique({
-      where: { id: mockTestId }
-    });
-
-    if (!mockTest) throw new Error("Mock Test not found");
-
-    const questions = (mockTest.questions as any[]).filter(q => q.id !== questionId);
-
-    await prisma.mockTestTemplate.update({
-      where: { id: mockTestId },
-      data: { questions }
-    });
+    await removeMockQuestion(mockTestId, questionId);
   } else {
     await prisma.generatedQuestion.delete({ where: { id: questionId } });
   }
@@ -137,8 +140,9 @@ export async function deleteQuestion(
 
 export async function quickEditExplanation(
   questionId: string,
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | string,
-  explanation: string
+  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" | string,
+  explanation: string,
+  mockTestId?: string
 ) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
@@ -149,7 +153,9 @@ export async function quickEditExplanation(
     throw new Error("Forbidden: You are not an admin.");
   }
 
-  if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
+  if (questionType === "MockQuestion" && mockTestId) {
+    await patchMockQuestion(mockTestId, questionId, { explanation });
+  } else if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
     await prisma.subjectPYQ.update({
       where: { id: questionId },
       data: { explanation }
@@ -183,22 +189,7 @@ export async function toggleManualFlag(
   }
 
   if (questionType === "MockQuestion" && mockTestId) {
-    const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-    if (template) {
-      const questions = [...(template.questions as any[])];
-      const idx = questions.findIndex(q => q.id === questionId);
-      if (idx !== -1) {
-        questions[idx] = {
-          ...questions[idx],
-          ai_answer_mismatch: flagStatus,
-          manual_flag: flagStatus
-        };
-        await prisma.mockTestTemplate.update({
-          where: { id: mockTestId },
-          data: { questions }
-        });
-      }
-    }
+    await patchMockQuestion(mockTestId, questionId, { ai_answer_mismatch: flagStatus, manual_flag: flagStatus });
   }
 
   revalidatePath("/admin/reports");
@@ -228,8 +219,16 @@ export async function deleteMockTest(mockTestId: string) {
 }
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+const GEMINI_MODEL = "gemini-2.5-pro"; // Change this one line to switch Gemini models
+const GEMINI_TOPIC_MODEL = "gemini-2.5-flash"; // Specific model for faster topic classification
 import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+
+// Vertex AI Initialization (ADC)
+const vertexAI = new VertexAI({
+  project: 'project-27ed127f-554a-419a-b39',
+  location: 'us-central1',
+});
 
 /**
  * Helper to fetch image as base64 from local or Cloudinary
@@ -382,19 +381,44 @@ Rules:
     openaiUsage = response.usage;
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
   } else {
+    /* --- ORIGINAL API KEY METHOD (Commented) ---
     const model = genAI!.getGenerativeModel({
-      model: "gemini-3.1-flash-lite-preview",
+      model: GEMINI_MODEL,
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
-        // @ts-ignore - Gemini 3.1 uses thinkingLevel inside thinkingConfig
         thinkingConfig: { thinkingLevel: "MEDIUM" },
       }
     });
     const result = await model.generateContent(contentParts);
     explanation = result.response.text();
     geminiUsage = result.response.usageMetadata;
-    console.log(`[AI] Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}, Thoughts: ${(geminiUsage as any)?.thoughtsTokenCount || 0}, Total: ${geminiUsage?.totalTokenCount}`);
+    */
+
+    // --- VERTEX AI METHOD (ADC) ---
+    console.log(`[AI] 🚀 Using Vertex AI (ADC) - Model: ${GEMINI_MODEL}`);
+    const model = vertexAI.getGenerativeModel({
+      model: GEMINI_MODEL,
+      /*
+      generationConfig: { 
+        maxOutputTokens: 2500,
+        // @ts-ignore
+        // thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" }
+      }
+      */
+    });
+
+    const vertexContent = {
+      contents: [{
+        role: 'user',
+        parts: contentParts.map(p => typeof p === 'string' ? { text: p } : p)
+      }]
+    };
+
+    const result = await model.generateContent(vertexContent);
+    explanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    geminiUsage = result.response.usageMetadata;
+    console.log(`[AI] Vertex Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}`);
   }
 
   // Clean markdown artifacts
@@ -408,18 +432,7 @@ Rules:
   } else if (questionType === "GeneratedQuestion") {
     await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation } });
   } else if (questionType === "MockQuestion" && mockTestId) {
-    const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-    if (template) {
-      const questions = [...(template.questions as any[])];
-      const idx = questions.findIndex(q => q.id === questionId);
-      if (idx !== -1) {
-        questions[idx] = { ...questions[idx], explanation };
-        await prisma.mockTestTemplate.update({
-          where: { id: mockTestId },
-          data: { questions }
-        });
-      }
-    }
+    await patchMockQuestion(mockTestId, questionId, { explanation });
   }
 
   revalidatePath("/admin/reports");
@@ -537,17 +550,44 @@ Rules:
           totalInputTokens += response.usage?.prompt_tokens || 0;
           totalOutputTokens += response.usage?.completion_tokens || 0;
         } else {
+          /* --- ORIGINAL API KEY METHOD (Commented) ---
           const model = genAI!.getGenerativeModel({
-            model: "gemini-3.1-flash-lite-preview",
+            model: GEMINI_MODEL,
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
-              // @ts-ignore - Gemini 3.1 uses thinkingLevel inside thinkingConfig
               thinkingConfig: { thinkingLevel: "MEDIUM" },
             }
           });
           const result = await model.generateContent(contentParts);
           explanation = result.response.text();
+          const usage = result.response.usageMetadata;
+          totalInputTokens += usage?.promptTokenCount || 0;
+          totalOutputTokens += usage?.candidatesTokenCount || 0;
+          */
+
+          // --- VERTEX AI METHOD (ADC) ---
+          console.log(`[AI] 🚀 Using Vertex AI (ADC) for Batch - Model: ${GEMINI_MODEL}`);
+          const model = vertexAI.getGenerativeModel({
+            model: GEMINI_MODEL,
+            /*
+            generationConfig: { 
+              maxOutputTokens: 2500,
+              // @ts-ignore
+              // thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" }
+            }
+            */
+          });
+
+          const vertexContent = {
+            contents: [{
+              role: 'user',
+              parts: contentParts.map(p => typeof p === 'string' ? { text: p } : p)
+            }]
+          };
+
+          const result = await model.generateContent(vertexContent);
+          explanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
           const usage = result.response.usageMetadata;
           totalInputTokens += usage?.promptTokenCount || 0;
           totalOutputTokens += usage?.candidatesTokenCount || 0;
@@ -565,17 +605,11 @@ Rules:
           .replace(/Correct option is\s*[A-D]\.?/gi, "")
           .trim();
 
-        questions[i] = {
-          ...questions[i],
+        fixed++;
+        await patchMockQuestion(mockTestId, q.id, {
           explanation: cleanExplanation,
           ai_answer_mismatch: isMismatch,
-          ai_detected_answer: aiDetectedAnswer
-        };
-
-        fixed++;
-        await prisma.mockTestTemplate.update({
-          where: { id: mockTestId },
-          data: { questions }
+          ai_detected_answer: aiDetectedAnswer,
         });
 
 
@@ -602,28 +636,28 @@ Rules:
  * Normalizes keys (e.g., "JEE Main" -> "JEE_MAIN", "Physics" -> "PHYSICS").
  */
 export async function getAllTopics() {
-  const patterns = await prisma.pattern.findMany({
-    select: { topic_name: true, exam_type: true, subject: true },
-    orderBy: { topic_name: "asc" }
-  });
+  return unstable_cache(
+    async () => {
+      const patterns = await prisma.pattern.findMany({
+        select: { topic_name: true, exam_type: true, subject: true },
+        orderBy: { topic_name: "asc" },
+      });
 
-  const topicMap: Record<string, Record<string, string[]>> = {};
-
-  patterns.forEach(p => {
-    const normalizedExam = p.exam_type.toUpperCase().replace(/\s+/g, '_');
-    const normalizedSubject = (p.subject || "GENERAL").toUpperCase().trim();
-
-    if (!topicMap[normalizedExam]) topicMap[normalizedExam] = {};
-    if (!topicMap[normalizedExam][normalizedSubject]) {
-      topicMap[normalizedExam][normalizedSubject] = [];
-    }
-
-    if (!topicMap[normalizedExam][normalizedSubject].includes(p.topic_name)) {
-      topicMap[normalizedExam][normalizedSubject].push(p.topic_name);
-    }
-  });
-
-  return topicMap;
+      const topicMap: Record<string, Record<string, string[]>> = {};
+      patterns.forEach((p) => {
+        const normalizedExam = p.exam_type.toUpperCase().replace(/\s+/g, "_");
+        const normalizedSubject = (p.subject || "GENERAL").toUpperCase().trim();
+        if (!topicMap[normalizedExam]) topicMap[normalizedExam] = {};
+        if (!topicMap[normalizedExam][normalizedSubject]) topicMap[normalizedExam][normalizedSubject] = [];
+        if (!topicMap[normalizedExam][normalizedSubject].includes(p.topic_name)) {
+          topicMap[normalizedExam][normalizedSubject].push(p.topic_name);
+        }
+      });
+      return topicMap;
+    },
+    ["admin-all-topics"],
+    { revalidate: 3600, tags: ["patterns"] }
+  )();
 }
 
 /**
@@ -693,6 +727,7 @@ Options: ${JSON.stringify(options)}`;
     topic = response.choices[0].message.content?.trim() || "Unknown";
     usage = { input: response.usage?.prompt_tokens || 0, output: response.usage?.completion_tokens || 0 };
   } else {
+    /* --- ORIGINAL API KEY METHOD (Commented) ---
     const model = genAI!.getGenerativeModel({
       model: "gemini-2.0-flash",
       tools: [],
@@ -703,6 +738,29 @@ Options: ${JSON.stringify(options)}`;
     });
     const result = await model.generateContent(contentParts);
     topic = result.response.text().trim();
+    const u = result.response.usageMetadata;
+    usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
+    */
+
+    // --- VERTEX AI METHOD (ADC) ---
+    console.log(`[AI] 🚀 Topic Gen using Vertex AI (ADC) - Model: ${GEMINI_TOPIC_MODEL}`);
+    const model = vertexAI.getGenerativeModel({
+      model: GEMINI_TOPIC_MODEL,
+      generationConfig: {
+        maxOutputTokens: 500,
+        temperature: 0.1, // Keep it precise for topic matching
+      }
+    });
+
+    const vertexContent = {
+      contents: [{
+        role: 'user',
+        parts: contentParts.map(p => typeof p === 'string' ? { text: p } : p)
+      }]
+    };
+
+    const result = await model.generateContent(vertexContent);
+    topic = result.response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Unknown";
     const u = result.response.usageMetadata;
     usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
   }
@@ -721,28 +779,19 @@ export async function updateMockTestQuestionTopic(
   questionId: string,
   topic: string
 ) {
-  const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-  if (!template) throw new Error("Mock test not found");
+  // Patch the question topic in place, then rebuild the summary topics array from the updated questions.
+  await patchMockQuestion(mockTestId, questionId, { topic });
 
-  const questions = [...(template.questions as any[])];
-  const idx = questions.findIndex(q => q.id === questionId);
-  if (idx !== -1) {
-    questions[idx] = { ...questions[idx], topic };
+  await prisma.$executeRaw`
+    UPDATE "MockTestTemplate"
+    SET topics = (
+      SELECT array_agg(DISTINCT elem->>'topic')
+      FROM jsonb_array_elements(questions) AS elem
+      WHERE elem->>'topic' IS NOT NULL AND elem->>'topic' != 'Unknown'
+    )
+    WHERE id = ${mockTestId}
+  `;
 
-    // Sync the summary 'topics' array
-    const allTopics = questions
-      .map(q => q.topic)
-      .filter(t => t && t !== "Unknown");
-    const uniqueTopics = Array.from(new Set(allTopics));
-
-    await prisma.mockTestTemplate.update({
-      where: { id: mockTestId },
-      data: {
-        questions,
-        topics: uniqueTopics
-      }
-    });
-  }
   return { success: true };
 }
 

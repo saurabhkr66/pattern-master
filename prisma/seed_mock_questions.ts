@@ -1260,50 +1260,15 @@ const c = {
  *  - Otherwise the first `mandatoryCount` questions are mandatory and the
  *    remaining are optional (covers the 200-question case).
  */
-function isOptionalQuestion(
-  sectionConfig: ReturnType<typeof getExamConfig>['sections'][number],
-  idx: number,
-  totalInSection: number,
-): boolean {
-  if (!sectionConfig.optional) return false;
-  const mandatoryCount = sectionConfig.totalQuestions - sectionConfig.optional.poolSize;
-  // Not enough questions to have an optional pool → treat all as mandatory
-  if (totalInSection <= mandatoryCount) return false;
-  return idx >= mandatoryCount;
+function isOptionalQuestion(): boolean {
+  return false;
 }
 
-/**
- * Compute the max achievable score for a section given the actual questions seeded.
- *
- * - Mandatory questions always contribute their full marks.
- * - Optional questions contribute marks × countSize (the max a student can score).
- * - If fewer questions than the mandatory threshold → all count as mandatory.
- */
 function sectionMaxScore(
-  sectionConfig: ReturnType<typeof getExamConfig>['sections'][number],
+  _sectionConfig: ReturnType<typeof getExamConfig>['sections'][number],
   questions: RawQuestion[],
 ): number {
-  if (!sectionConfig.optional) {
-    return questions.reduce((s, q) => s + q.marks, 0);
-  }
-
-  const mandatoryCount = sectionConfig.totalQuestions - sectionConfig.optional.poolSize;
-  const allMandatory = questions.length <= mandatoryCount;
-
-  if (allMandatory) {
-    return questions.reduce((s, q) => s + q.marks, 0);
-  }
-
-  const mandatoryQs = questions.slice(0, mandatoryCount);
-  const optionalQs = questions.slice(mandatoryCount);
-  const avgOptMark = optionalQs.length > 0
-    ? optionalQs.reduce((s, q) => s + q.marks, 0) / optionalQs.length
-    : 0;
-
-  return (
-    mandatoryQs.reduce((s, q) => s + q.marks, 0) +
-    Math.round(avgOptMark * sectionConfig.optional.countSize)
-  );
+  return questions.reduce((s, q) => s + q.marks, 0);
 }
 
 async function main() {
@@ -1361,7 +1326,7 @@ async function main() {
 
       for (let qi = 0; qi < sec.questions.length; qi++) {
         const q = sec.questions[qi];
-        const optional = secConfig ? isOptionalQuestion(secConfig, qi, sec.questions.length) : false;
+        const optional = isOptionalQuestion();
 
         allQuestions.push({
           id: randomUUID(),
