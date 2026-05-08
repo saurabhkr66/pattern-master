@@ -380,6 +380,9 @@ Rules:
     explanation = response.choices[0].message.content || "";
     openaiUsage = response.usage;
     console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
+    if (!explanation.trim()) {
+      throw new Error(`GPT-4o-mini returned empty explanation for ${questionId}`);
+    }
   } else {
     /* --- ORIGINAL API KEY METHOD (Commented) ---
     const model = genAI!.getGenerativeModel({
@@ -419,23 +422,14 @@ Rules:
     explanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
     geminiUsage = result.response.usageMetadata;
     console.log(`[AI] Vertex Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}`);
+    if (!explanation.trim()) {
+      throw new Error(`AI returned empty explanation for ${questionId} — candidates: ${result.response.candidates?.length ?? 0}`);
+    }
   }
 
   // Clean markdown artifacts
   explanation = explanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
 
-  // Save back to DB
-  if (questionType === "SubjectPYQ") {
-    await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation } });
-  } else if (questionType === "PYQ") {
-    await prisma.pYQ.update({ where: { id: questionId }, data: { explanation } });
-  } else if (questionType === "GeneratedQuestion") {
-    await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation } });
-  } else if (questionType === "MockQuestion" && mockTestId) {
-    await patchMockQuestion(mockTestId, questionId, { explanation });
-  }
-
-  revalidatePath("/admin/reports");
   // Extract AI's verified answer
   const aiAnswerMatch = explanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
   const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
@@ -448,12 +442,35 @@ Rules:
     .replace(/Correct option is\s*[A-D]\.?/gi, "")
     .trim();
 
+  const thoughtsTokens = (geminiUsage as any)?.thoughtsTokenCount || 0;
+  const highThinkingFlag = thoughtsTokens > 8000;
+  if (highThinkingFlag) {
+    console.warn(`[AI] ⚠️ High thinking tokens: ${thoughtsTokens} for ${questionId}`);
+  }
+
+  // Save back to DB
+  if (questionType === "SubjectPYQ") {
+    await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
+  } else if (questionType === "PYQ") {
+    await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
+  } else if (questionType === "GeneratedQuestion") {
+    await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
+  } else if (questionType === "MockQuestion" && mockTestId) {
+    await patchMockQuestion(mockTestId, questionId, {
+      explanation: cleanExplanation,
+      high_thinking_flag: highThinkingFlag,
+    });
+  }
+
+  revalidatePath("/admin/reports");
+
   return {
     explanation: cleanExplanation,
+    highThinkingFlag,
     usage: {
       input: (openaiUsage?.prompt_tokens || geminiUsage?.promptTokenCount || 0),
       output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0),
-      thoughts: (geminiUsage as any)?.thoughtsTokenCount || 0
+      thoughts: thoughtsTokens,
     },
     isMismatch,
     aiDetectedAnswer
@@ -528,6 +545,7 @@ Rules:
         }
 
         let explanation = "";
+        let questionThoughts = 0;
 
         if (aiModel === "gpt-4o-mini" && openai) {
           const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
@@ -549,6 +567,9 @@ Rules:
           explanation = response.choices[0].message.content || "";
           totalInputTokens += response.usage?.prompt_tokens || 0;
           totalOutputTokens += response.usage?.completion_tokens || 0;
+          if (!explanation.trim()) {
+            throw new Error(`GPT-4o-mini returned empty explanation for question ${q.id}`);
+          }
         } else {
           /* --- ORIGINAL API KEY METHOD (Commented) ---
           const model = genAI!.getGenerativeModel({
@@ -591,6 +612,13 @@ Rules:
           const usage = result.response.usageMetadata;
           totalInputTokens += usage?.promptTokenCount || 0;
           totalOutputTokens += usage?.candidatesTokenCount || 0;
+          if (!explanation.trim()) {
+            throw new Error(`AI returned empty explanation for question ${q.id} — candidates: ${result.response.candidates?.length ?? 0}`);
+          }
+          questionThoughts = (usage as any)?.thoughtsTokenCount || 0;
+          if (questionThoughts > 8000) {
+            console.warn(`[AI] ⚠️ High thinking tokens: ${questionThoughts} for question ${q.id}`);
+          }
         }
 
         // Detect Mismatch
@@ -610,6 +638,7 @@ Rules:
           explanation: cleanExplanation,
           ai_answer_mismatch: isMismatch,
           ai_detected_answer: aiDetectedAnswer,
+          high_thinking_flag: questionThoughts > 8000,
         });
 
 

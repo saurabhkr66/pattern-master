@@ -29,139 +29,135 @@ const PYQ_SELECT = {
 // Question text, options, correct answers, explanations are static data.
 // This cache is shared across ALL users hitting the same pattern.
 // skip/take only applies to subject patterns (pagination); 0 = fetch all.
-const getStaticQuestions = (id: string, skip = 0, take = 0) =>
-  unstable_cache(
-    async () => {
-      if (id.startsWith("subject-")) {
-        const actualId = id.replace("subject-", "");
-        const paginate = take > 0;
+const getStaticQuestions = unstable_cache(
+  async (id: string, skip = 0, take = 0) => {
+    if (id.startsWith("subject-")) {
+      const actualId = id.replace("subject-", "");
+      const paginate = take > 0;
 
-        const [subjectPattern, total] = await Promise.all([
-          prisma.subjectPattern.findUnique({
-            where: { id: actualId },
-            select: {
-              id: true,
-              subject_name: true,
-              pyqs: {
-                select: PYQ_SELECT,
-                orderBy: { year: "desc" },
-                ...(paginate ? { skip, take } : {}),
-              },
-            },
-          }),
-          paginate
-            ? prisma.subjectPYQ.count({ where: { subject_pattern_id: actualId } })
-            : Promise.resolve(0),
-        ]);
-
-        if (!subjectPattern) return { error: "Subject Pattern not found", status: 404 };
-
-        return {
-          data: {
-            questions: [],
-            pyqs: subjectPattern.pyqs.map(pyq => ({
-              ...pyq,
-              marks: resolveMarks(pyq.question_type, pyq.marks),
-              _isSubjectPyq: true,
-              attempts: [],
-              isBookmarked: false,
-            })),
-            total,
-          }
-        };
-      }
-
-      if (id.startsWith("mock-")) {
-        const actualId = id.replace("mock-", "");
-        const mock = await prisma.mockTestTemplate.findUnique({
+      const [subjectPattern, total] = await Promise.all([
+        prisma.subjectPattern.findUnique({
           where: { id: actualId },
-          select: { questions: true }
-        });
-
-        if (!mock) return { error: "Mock Test not found", status: 404 };
-
-        const mockQuestions = (mock.questions as any[]) || [];
-
-        return {
-          data: {
-            questions: mockQuestions.map(q => ({
-              ...q,
-              marks: q.marks || 1,
-              // defaults — hydrated on client
-              attempts: [],
-              isBookmarked: false,
-            })),
-            pyqs: [],
-          }
-        };
-      }
-
-      // Regular Topic Pattern
-      const pattern = await prisma.pattern.findUnique({
-        where: { id },
-        select: {
-          questions: {
-            select: {
-              id: true,
-              question_text: true,
-              question_text_hindi: true,
-              options: true,
-              options_hindi: true,
-              correct_answer: true,
-              explanation: true,
-              explanation_hindi: true,
-              difficulty_level: true,
-              question_type: true,
-              marks: true,
-              images: true,
+          select: {
+            id: true,
+            subject_name: true,
+            pyqs: {
+              select: PYQ_SELECT,
+              orderBy: { year: "desc" },
+              ...(paginate ? { skip, take } : {}),
             },
-            orderBy: { created_at: "desc" },
           },
-          pyqs: {
-            select: {
-              id: true,
-              question_text: true,
-              question_text_hindi: true,
-              options: true,
-              options_hindi: true,
-              correct_answer: true,
-              explanation: true,
-              explanation_hindi: true,
-              year: true,
-              exam_type: true,
-              question_type: true,
-              marks: true,
-              images: true,
-            },
-            orderBy: { year: "desc" },
-          },
-        },
-      });
+        }),
+        paginate
+          ? prisma.subjectPYQ.count({ where: { subject_pattern_id: actualId } })
+          : Promise.resolve(0),
+      ]);
 
-      if (!pattern) return { error: "Topic Pattern not found", status: 404 };
+      if (!subjectPattern) return { error: "Subject Pattern not found", status: 404 };
 
       return {
         data: {
-          questions: pattern.questions.map(q => ({
-            ...q,
-            marks: resolveMarks(q.question_type, q.marks),
-            // defaults — hydrated on client
+          questions: [],
+          pyqs: subjectPattern.pyqs.map(pyq => ({
+            ...pyq,
+            marks: resolveMarks(pyq.question_type, pyq.marks),
+            _isSubjectPyq: true,
             attempts: [],
             isBookmarked: false,
           })),
-          pyqs: pattern.pyqs.map(q => ({
-            ...q,
-            marks: resolveMarks(q.question_type, q.marks),
-            // defaults — hydrated on client
-            attempts: [],
-            isBookmarked: false,
-          })),
+          total,
         }
       };
-    },
-    [`pattern-questions-static-${id}-s${skip}-t${take}-v1`],
-    { revalidate: 600, tags: ["patterns"] }
-  )();
+    }
+
+    if (id.startsWith("mock-")) {
+      const actualId = id.replace("mock-", "");
+      const mock = await prisma.mockTestTemplate.findUnique({
+        where: { id: actualId },
+        select: { questions: true }
+      });
+
+      if (!mock) return { error: "Mock Test not found", status: 404 };
+
+      const mockQuestions = (mock.questions as any[]) || [];
+
+      return {
+        data: {
+          questions: mockQuestions.map(q => ({
+            ...q,
+            marks: q.marks || 1,
+            attempts: [],
+            isBookmarked: false,
+          })),
+          pyqs: [],
+        }
+      };
+    }
+
+    // Regular Topic Pattern
+    const pattern = await prisma.pattern.findUnique({
+      where: { id },
+      select: {
+        questions: {
+          select: {
+            id: true,
+            question_text: true,
+            question_text_hindi: true,
+            options: true,
+            options_hindi: true,
+            correct_answer: true,
+            explanation: true,
+            explanation_hindi: true,
+            difficulty_level: true,
+            question_type: true,
+            marks: true,
+            images: true,
+          },
+          orderBy: { created_at: "desc" },
+        },
+        pyqs: {
+          select: {
+            id: true,
+            question_text: true,
+            question_text_hindi: true,
+            options: true,
+            options_hindi: true,
+            correct_answer: true,
+            explanation: true,
+            explanation_hindi: true,
+            year: true,
+            exam_type: true,
+            question_type: true,
+            marks: true,
+            images: true,
+          },
+          orderBy: { year: "desc" },
+        },
+      },
+    });
+
+    if (!pattern) return { error: "Topic Pattern not found", status: 404 };
+
+    return {
+      data: {
+        questions: pattern.questions.map(q => ({
+          ...q,
+          marks: resolveMarks(q.question_type, q.marks),
+          attempts: [],
+          isBookmarked: false,
+        })),
+        pyqs: pattern.pyqs.map(q => ({
+          ...q,
+          marks: resolveMarks(q.question_type, q.marks),
+          attempts: [],
+          isBookmarked: false,
+        })),
+      }
+    };
+  },
+  ["pattern-questions-static"],
+  { revalidate: 3600, tags: ["patterns"] }
+);
 
 // ── Per-user state: attempts + bookmarks ─────────────────────────────────────
 // Single UNION ALL query — 1 DB connection instead of 2 concurrent ones.

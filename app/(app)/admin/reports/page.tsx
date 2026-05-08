@@ -24,50 +24,59 @@ export default async function AdminReportsPage() {
     redirect("/");
   }
 
-  // Fetch all pending manual reports
-  const manualReports = await prisma.questionReport.findMany({
-    where: { status: "pending" },
-    orderBy: { created_at: "desc" },
-    include: {
-      user: { select: { email: true } },
-      question: { include: { pattern: true } },
-      pyq: { include: { pattern: true } },
-      subject_pyq: { include: { subject_pattern: true } },
-    }
-  });
-
-  // Automatically fetch some questions that are missing explanations for ALL exams
   const EXAMS = ["GATE", "JEE_MAIN", "JEE_ADVANCED", "NEET"];
-  
-  const missingSubjectPYQs: any[] = [];
-  const missingPYQs: any[] = [];
-  const missingMockQuestions: any[] = [];
 
-  for (const exam of EXAMS) {
-    // Fetch SubjectPYQs for this exam
-    const sPyqs = await prisma.subjectPYQ.findMany({
-      where: { 
-        explanation: "",
-        subject_pattern: { exam_type: exam }
-      },
-      take: 20,
+  // Run all independent queries in parallel instead of sequentially
+  const [manualReports, missingSubjectPYQs, missingPYQs, mockTemplatesRaw] = await Promise.all([
+    prisma.questionReport.findMany({
+      where: { status: "pending" },
+      orderBy: { created_at: "desc" },
+      include: {
+        user: { select: { email: true } },
+        question: { include: { pattern: true } },
+        pyq: { include: { pattern: true } },
+        subject_pyq: { include: { subject_pattern: true } },
+      }
+    }),
+    // Single query for all exams instead of 4 sequential ones
+    prisma.subjectPYQ.findMany({
+      where: { explanation: "", subject_pattern: { exam_type: { in: EXAMS } } },
+      take: 80,
       include: { subject_pattern: true }
-    });
-    missingSubjectPYQs.push(...sPyqs);
-
-    // Fetch PYQs for this exam
-    const pyqs = await prisma.pYQ.findMany({
-      where: { 
-        explanation: "",
-        exam_type: exam 
-      },
-      take: 20,
+    }),
+    prisma.pYQ.findMany({
+      where: { explanation: "", exam_type: { in: EXAMS } },
+      take: 80,
       include: { pattern: true }
-    });
-    missingPYQs.push(...pyqs);
-  }
+    }),
+    // Only fetch the fields we actually need — skip heavy fields like sections/topics
+    prisma.mockTestTemplate.findMany({
+      select: {
+        id: true,
+        title: true,
+        exam_type: true,
+        branch: true,
+        mock_number: true,
+        subjects: true,
+        total_questions: true,
+        questions: true,
+      }
+    }),
+  ]);
 
-  const mockTemplates = await prisma.mockTestTemplate.findMany();
+  // Strip explanation *content* from mock questions before sending to client.
+  // The client only checks whether explanation is empty or not — it never reads
+  // the stored text from this prop. Keeping full LaTeX explanations here balloons
+  // the page payload by hundreds of KB and slows serialisation significantly.
+  const mockTemplates = mockTemplatesRaw.map(t => ({
+    ...t,
+    questions: (t.questions as any[]).map(({ explanation, ...q }: any) => ({
+      ...q,
+      explanation: explanation ? "__EXISTS__" : "",
+    })),
+  }));
+
+  const missingMockQuestions: any[] = [];
   
   for (const exam of EXAMS) {
     const examTemplates = mockTemplates.filter(t => t.exam_type === exam);

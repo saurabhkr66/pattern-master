@@ -291,6 +291,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     currentExplanation: string;
     currentMismatch?: boolean;
     currentAIDetectedAnswer?: string | null;
+    currentHighThinkingFlag?: boolean;
     mock_test_id?: string;
     progress: number;
     total: number;
@@ -299,16 +300,17 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     totalInputTokens: number;
     totalOutputTokens: number;
     totalThoughtsTokens: number;
-    log: { 
-      id: string; 
-      text: string; 
-      status: "ok" | "fail"; 
-      question: any; 
-      explanation: string; 
+    log: {
+      id: string;
+      text: string;
+      status: "ok" | "fail";
+      question: any;
+      explanation: string;
       isMismatch?: boolean;
       aiDetectedAnswer?: string | null;
       tokens?: { input: number; output: number };
       thoughts?: number;
+      highThinkingFlag?: boolean;
     }[];
     done: boolean;
   } | null>(null);
@@ -334,6 +336,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       currentExplanation: "",
       currentMismatch: false,
       currentAIDetectedAnswer: null,
+      currentHighThinkingFlag: false,
       mock_test_id: testId,
       progress: 0,
       total: missingQs.length,
@@ -382,6 +385,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         const usage = result.usage;
         const isMismatch = result.isMismatch;
         const aiDetectedAnswer = result.aiDetectedAnswer;
+        const highThinkingFlag = result.highThinkingFlag ?? false;
         
         // 2. Already saved in the API route, so we just update the UI
         fixed++;
@@ -394,20 +398,22 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
           currentExplanation: explanation,
           currentMismatch: isMismatch,
           currentAIDetectedAnswer: aiDetectedAnswer,
+          currentHighThinkingFlag: highThinkingFlag,
           fixed,
           totalInputTokens: cumulativeInput,
           totalOutputTokens: cumulativeOutput,
           totalThoughtsTokens: cumulativeThoughts,
-          log: [...prev.log, { 
-            id: q.id, 
-            text: (q.question_text || "").substring(0, 80) + "...", 
+          log: [...prev.log, {
+            id: q.id,
+            text: (q.question_text || "").substring(0, 80) + "...",
             status: "ok",
             question: q,
             explanation,
             isMismatch,
             aiDetectedAnswer,
             tokens: usage,
-            thoughts: usage.thoughts
+            thoughts: usage.thoughts,
+            highThinkingFlag,
           }],
         } : null);
 
@@ -608,6 +614,15 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                       </span>
                     </div>
                   )}
+                  {/* HIGH THINKING TOKEN WARNING */}
+                  {liveFeed.currentHighThinkingFlag && (
+                    <div className="mt-2 p-2 rounded-lg bg-orange-100 dark:bg-orange-500/20 border border-orange-200 dark:border-orange-500/30 flex items-center gap-2">
+                      <span className="text-sm">🔴</span>
+                      <span className="text-[10px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-wider">
+                        High Thinking Tokens (&gt;8000) — flagged for review
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -624,7 +639,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                       >
                         <span className="flex-shrink-0">{entry.status === "ok" ? "✅" : "❌"}</span>
                         <span className="truncate flex-1">{entry.text}</span>
-                        {entry.isMismatch && <span className="text-[10px] flex-shrink-0">⚠️</span>}
+                        {entry.isMismatch && <span className="text-[10px] flex-shrink-0" title="AI answer mismatch">⚠️</span>}
+                        {entry.highThinkingFlag && <span className="text-[10px] flex-shrink-0" title="High thinking tokens (>8000)">🔴</span>}
                         {entry.tokens && (
                           <span className="flex-shrink-0 text-[8px] bg-gray-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded flex gap-2">
                             <span className="text-purple-500">↑{entry.tokens.input}</span>

@@ -166,6 +166,17 @@ Rules:
     const usage = result.response.usageMetadata;
     const generatedExplanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
+    if (!generatedExplanation.trim()) {
+      console.error("[GENERATE_EXPLANATION] AI returned empty explanation — candidates:", JSON.stringify(result.response.candidates?.length));
+      return NextResponse.json({ error: "AI returned empty explanation" }, { status: 500 });
+    }
+
+    const thoughtsTokens = (usage as any)?.thoughtsTokenCount || 0;
+    const highThinkingFlag = thoughtsTokens > 8000;
+    if (highThinkingFlag) {
+      console.warn(`[GENERATE_EXPLANATION] ⚠️ High thinking tokens: ${thoughtsTokens} for question ${questionId}`);
+    }
+
     const aiAnswerMatch = generatedExplanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
     const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
 
@@ -186,7 +197,8 @@ Rules:
             ...questions[idx],
             explanation: cleanExplanation,
             ai_answer_mismatch: !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase()),
-            ai_detected_answer: aiDetectedAnswer
+            ai_detected_answer: aiDetectedAnswer,
+            high_thinking_flag: highThinkingFlag,
           };
           await prisma.mockTestTemplate.update({
             where: { id: mockTestId },
@@ -206,10 +218,11 @@ Rules:
       explanation: cleanExplanation,
       isMismatch: !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase()),
       aiDetectedAnswer,
+      highThinkingFlag,
       usage: {
         input: usage?.promptTokenCount || 0,
         output: usage?.candidatesTokenCount || 0,
-        thoughts: (usage as any)?.thoughtsTokenCount || 0
+        thoughts: thoughtsTokens,
       }
     });
 
