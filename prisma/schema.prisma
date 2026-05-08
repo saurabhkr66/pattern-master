@@ -134,6 +134,7 @@ model Attempt {
   pyq_id         String?
   user_answer    String?
   subject_pyq_id String?
+  mock_question_id String?
   time_spent     Int?
   pyq            PYQ?               @relation(fields: [pyq_id], references: [id])
   question       GeneratedQuestion? @relation(fields: [question_id], references: [id])
@@ -211,6 +212,7 @@ model Flashcard {
   question_id    String?
   pyq_id         String?
   subject_pyq_id String?
+  mock_question_id String?
 
   // SM-2 fields
   interval    Int      @default(0) // Days until next review
@@ -228,6 +230,7 @@ model Flashcard {
   @@unique([user_id, question_id])
   @@unique([user_id, pyq_id])
   @@unique([user_id, subject_pyq_id])
+  @@unique([user_id, mock_question_id])
   @@index([user_id, next_review])
   @@index([user_id, status])
 }
@@ -239,6 +242,7 @@ model Bookmark {
   question_id    String?
   pyq_id         String?
   subject_pyq_id String?
+  mock_question_id String?
 
   created_at DateTime @default(now())
 
@@ -250,7 +254,26 @@ model Bookmark {
   @@unique([user_id, question_id])
   @@unique([user_id, pyq_id])
   @@unique([user_id, subject_pyq_id])
+  @@unique([user_id, mock_question_id])
   @@index([user_id])
+}
+
+model TestSessionDraft {
+  id           String   @id @default(uuid())
+  user_id      String
+  mock_test_id String?
+  exam_type    String
+  branch       String?
+  started_at   DateTime @default(now())
+  expires_at   DateTime
+  state        Json     @default("{}")
+
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([user_id, mock_test_id])
+  @@index([expires_at])
 }
 
 model QuestionReport {
@@ -261,6 +284,7 @@ model QuestionReport {
   question_id    String?
   pyq_id         String?
   subject_pyq_id String?
+  mock_question_id String?
 
   reason  String // e.g., "wrong_answer", "typo", "bad_explanation", "other"
   details String? @db.Text
