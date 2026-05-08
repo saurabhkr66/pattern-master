@@ -43,3 +43,7 @@ next-env.d.ts
 /app/generated/prisma
 /graphify-out
 /graphify
+
+# local dev tooling
+package-lock.json
+.claude/
