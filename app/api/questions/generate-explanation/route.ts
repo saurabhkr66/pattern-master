@@ -12,7 +12,7 @@ const vertexAI = new VertexAI({
   location: 'us-central1',
 });
 
-const GEMINI_MODEL = "gemini-2.5-pro"; // Change this one line to switch Gemini models
+const GEMINI_MODEL = "gemini-2.5-flash"; // Change this one line to switch Gemini models
 
 export async function POST(req: NextRequest) {
   try {

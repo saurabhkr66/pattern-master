@@ -219,7 +219,7 @@ export async function deleteMockTest(mockTestId: string) {
 }
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-const GEMINI_MODEL = "gemini-2.5-pro"; // Change this one line to switch Gemini models
+const GEMINI_MODEL = "gemini-2.5-flash"; // Change this one line to switch Gemini models
 const GEMINI_TOPIC_MODEL = "gemini-2.5-flash"; // Specific model for faster topic classification
 import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;

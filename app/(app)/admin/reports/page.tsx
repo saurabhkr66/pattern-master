@@ -64,16 +64,22 @@ export default async function AdminReportsPage() {
     }),
   ]);
 
-  // Strip explanation *content* from mock questions before sending to client.
-  // The client only checks whether explanation is empty or not — it never reads
-  // the stored text from this prop. Keeping full LaTeX explanations here balloons
-  // the page payload by hundreds of KB and slows serialisation significantly.
+  // Strip explanation *content* from mock questions before sending to client,
+  // EXCEPT for questions that are actually being reported or have AI mismatches.
+  // This keeps payload size small while allowing admins to see the explanation for flagged items.
+  const reportedMockQuestionIds = new Set(
+    manualReports.map(r => r.mock_question_id).filter(Boolean)
+  );
+
   const mockTemplates = mockTemplatesRaw.map(t => ({
     ...t,
-    questions: (t.questions as any[]).map(({ explanation, ...q }: any) => ({
-      ...q,
-      explanation: explanation ? "__EXISTS__" : "",
-    })),
+    questions: (t.questions as any[]).map(({ explanation, ...q }: any) => {
+      const shouldKeepExplanation = reportedMockQuestionIds.has(q.id) || q.ai_answer_mismatch;
+      return {
+        ...q,
+        explanation: shouldKeepExplanation ? explanation : (explanation ? "__EXISTS__" : ""),
+      };
+    }),
   }));
 
   const missingMockQuestions: any[] = [];

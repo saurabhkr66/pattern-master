@@ -97,39 +97,39 @@ const papers: Paper[] = [
      Zoology   : 35 mandatory MCQ + 15 optional MCQ = 50 Qs
      Total     : 200 Qs, 720 marks, 3h 20min
   ────────────────────────────────────────────────────────── */
-  {
-    title: 'NEET 2025',
-    exam_type: 'NEET',
-    branch: null,
-    sections: [
-      {
-        name: 'Physics',
-        questions: []
-      },
-      {
-        name: 'Chemistry',
-        questions: []
-      },
-      {
-        name: 'Biology',
-        questions: []
-      },
-    ],
-  },
+  // {
+  //   title: 'NEET 2025',
+  //   exam_type: 'NEET',
+  //   branch: null,
+  //   sections: [
+  //     {
+  //       name: 'Physics',
+  //       questions: []
+  //     },
+  //     {
+  //       name: 'Chemistry',
+  //       questions: []
+  //     },
+  //     {
+  //       name: 'Biology',
+  //       questions: []
+  //     },
+  //   ],
+  // },
 
   /* ──────────────────────────────────────────────────────────
      NEET 2024
   ────────────────────────────────────────────────────────── */
-  {
-    title: 'NEET 2024',
-    exam_type: 'NEET',
-    branch: null,
-    sections: [
-      { name: 'Physics', questions: [ /* paste here */] },
-      { name: 'Chemistry', questions: [ /* paste here */] },
-      { name: 'Biology', questions: [ /* paste here */] },
-    ],
-  },
+  // {
+  //   title: 'NEET 2024',
+  //   exam_type: 'NEET',
+  //   branch: null,
+  //   sections: [
+  //     { name: 'Physics', questions: [ /* paste here */] },
+  //     { name: 'Chemistry', questions: [ /* paste here */] },
+  //     { name: 'Biology', questions: [ /* paste here */] },
+  //   ],
+  // },
 
   /* ──────────────────────────────────────────────────────────
      JEE MAIN 2025 (Jan)
@@ -139,25 +139,25 @@ const papers: Paper[] = [
   ────────────────────────────────────────────────────────── */
 
  
-  {
-    title: 'JEE Main 2025 April 8 shift 2',
-    exam_type: 'JEE_MAIN',
-    branch: null,
-    sections: [
-      {
-        name: 'Physics',
-        questions: []
-      },
-      {
-        name: 'Chemistry',
-        questions:[]
-      },
-      {
-        name: 'Mathematics',
-        questions: []
-      },
-    ],
-  },
+  // {
+  //   title: 'JEE Main 2025 April 8 shift 2',
+  //   exam_type: 'JEE_MAIN',
+  //   branch: null,
+  //   sections: [
+  //     {
+  //       name: 'Physics',
+  //       questions: []
+  //     },
+  //     {
+  //       name: 'Chemistry',
+  //       questions:[]
+  //     },
+  //     {
+  //       name: 'Mathematics',
+  //       questions: []
+  //     },
+  //   ],
+  // },
 
   /* ──────────────────────────────────────────────────────────
      JEE ADVANCED 2025 Paper 1
@@ -183,22 +183,55 @@ const papers: Paper[] = [
      Total: 65 Qs, 100 marks, 3h
   ────────────────────────────────────────────────────────── */
   {
-    title: 'GATE CSE 2019',
+    title: 'GATE CSE 2010 ',
     exam_type: 'GATE',
     branch: 'CSE',
     sections: [
       {
         name: 'General Aptitude',
-        questions:[
+        questions: [{
+          "topic_name": "General Aptitude",
+          "question_text": "Choose the most appropriate word from the options given below to complete the following sentence: His rather casual remarks on politics ________ his lack of seriousness about the subject.",
+          "images": [],
+          "options": [
+            "A. masked",
+            "B. belied",
+            "C. betrayed",
+            "D. suppressed"
+          ],
+          "correct_answer": "C",
+          "explanation": "",
+          "year": 0,
+          "marks": 1,
+          "exam_type": "GATE CSE",
+          "question_type": "MCQ"
+        },
           {
             "topic_name": "General Aptitude",
-            "question_text": "The expenditure on the project __________ as follows: equipment Rs.20 lakhs, salaries Rs.12 lakhs, and contingency Rs.3 lakhs.",
+            "question_text": "Which of the following options is the closest in meaning to the word given below: Circuitous",
             "images": [],
             "options": [
-              "A. break down",
-              "B. break",
-              "C. breaks down",
-              "D. breaks"
+              "A. cyclic",
+              "B. indirect",
+              "C. confusing",
+              "D. crooked"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "General Aptitude",
+            "question_text": "Choose the most appropriate word from the options given below to complete the following sentence: His rather casual remarks on politics ________ his lack of seriousness about the subject.",
+            "images": [],
+            "options": [
+              "A. masked",
+              "B. belied",
+              "C. betrayed",
+              "D. suppressed"
             ],
             "correct_answer": "C",
             "explanation": "",
@@ -209,13 +242,30 @@ const papers: Paper[] = [
           },
           {
             "topic_name": "General Aptitude",
-            "question_text": "The search engine's business model ____ around the fulcrum of trust.",
+            "question_text": "25 persons are in a room. 15 of them play hockey, 17 of them play football and 10 of them play both hockey and football. Then the number of persons playing neither hockey nor football is:",
             "images": [],
             "options": [
-              "A. revolves",
-              "B. plays",
-              "C. sinks",
-              "D. bursts"
+              "A. 2",
+              "B. 17",
+              "C. 13",
+              "D. 3"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "General Aptitude",
+            "question_text": "The question below consists of a pair of related words followed by four pairs of words. Select the pair that best expresses the relation in the original pair. Unemployed : Worker",
+            "images": [],
+            "options": [
+              "A. fallow : land",
+              "B. unaware : sleeper",
+              "C. wit : jester",
+              "D. renovated : house"
             ],
             "correct_answer": "A",
             "explanation": "",
@@ -226,559 +276,1046 @@ const papers: Paper[] = [
           },
           {
             "topic_name": "General Aptitude",
-            "question_text": "Two cars at the same time from the same location and go in the same direction. The speed of the first car is 50 km/h and the speed of the second car is 60 km/h. The number of hours it takes for the distance between the two cars to be 20 km is _____.",
+            "question_text": "If 137+276=435 how much is 731+672?",
+            "images": [],
+            "options": [
+              "A. 534",
+              "B. 1403",
+              "C. 1623",
+              "D. 1513"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "General Aptitude",
+            "question_text": "Hari(H), Gita(G), Irfan(I) and Saira(S) are siblings (i.e., brothers and sisters). All were born on 1st January. The age difference between any two successive siblings (that is born one after another) is less than three years. Given the following facts: i. Hari's age + Gita's age > Irfan's age + Saira's age ii. The age difference between Gita and Saira is one year. However Gita is not the oldest and Saira is not the youngest. iii. There are no twins. In what order they were born (oldest first)?",
+            "images": [],
+            "options": [
+              "A. HSIG",
+              "B. SGHI",
+              "C. IGSH",
+              "D. IHSG"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "General Aptitude",
+            "question_text": "Modern warfare has changed from large scale clashes of armies to suppression of civilian populations. Chemical agents that do their work silently appear to be suited to such warfare; and regretfully, there exist people in military establishments who think that chemical agents are useful tools for their cause. Which of the following statements best sums up the meaning of the above passage:",
+            "images": [],
+            "options": [
+              "A. Modern warfare has resulted in civil strife.",
+              "B. Chemical agents are useful in modern warfare.",
+              "C. Use of chemical agents in warfare would be undesirable.",
+              "D. People in military establishments like to use chemical agents in war."
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "General Aptitude",
+            "question_text": "5 skilled workers can build a wall in 20 days; 8 semi-skilled workers can build a wall in 25 days; 10 unskilled workers can build a wall in 30 days. If a team has 2 skilled, 6 semi-skilled and 5 unskilled workers, how long it will take to build the wall?",
+            "images": [],
+            "options": [
+              "A. 20 days",
+              "B. 18 days",
+              "C. 16 days",
+              "D. 15 days"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "General Aptitude",
+            "question_text": "Given digits 2, 2, 3, 3, 3, 4, 4, 4, 4 how many distinct 4 digit numbers greater than 3000 can be formed?",
+            "images": [],
+            "options": [
+              "A. 50",
+              "B. 51",
+              "C. 52",
+              "D. 54"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          }]
+      },
+      {
+        name: 'CSE',
+        questions: [{
+          "topic_name": "Discrete Mathematics",
+          "question_text": "Let G=(V, E) be a graph. Define $\\xi (G)=\\sum_{d}i_{d}*d$ , where $i_{d}$ is the number of vertices of degree d in G. If S and T are two different trees with $\\xi (S)=\\xi (T)$ , then",
+          "images": [],
+          "options": [
+            "A. |S|= 2|T|",
+            "B. |S|=|T|-1",
+            "C. |S|=|T|",
+            "D. |S|=|T|+1"
+          ],
+          "correct_answer": "C",
+          "explanation": "",
+          "year": 0,
+          "marks": 1,
+          "exam_type": "GATE CSE",
+          "question_type": "MCQ"
+        },
+          {
+            "topic_name": "Engineering Mathematics",
+            "question_text": "Newton-Raphson method is used to compute a root of the equation $x^{2} -13=0$ with 3.5 as the initial value. The approximation after one iteration is",
+            "images": [],
+            "options": [
+              "A. 3.575",
+              "B. 3.676",
+              "C. 3.667",
+              "D. 3.607"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Discrete Mathematics",
+            "question_text": "What is the possible number of reflexive relations on a set of 5 elements?",
+            "images": [],
+            "options": [
+              "A. $2^{10}$",
+              "B. $2^{15}$",
+              "C. $2^{20}$",
+              "D. $2^{25}$"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          
+          {
+            "topic_name": "Computer Organization",
+            "question_text": "The following are some events that occur after a device controller issues an interrupt while process L is under execution. (P) The processor pushes the process status of L onto the control stack. (Q) The processor finishes the execution of the current instruction. (R) The processor executes the interrupt service routine. (S) The processor pops the process status of L from the control stack. (T) The processor loads the new PC value based on the interrupt. Which one of the following is the correct order in which the events above occur?",
+            "images": [],
+            "options": [
+              "A. QPTRS",
+              "B. PTRSQ",
+              "C. TRPQS",
+              "D. QTPRS"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Operating System",
+            "question_text": "Consider a process executing on an operating system that uses demand paging. The average time for a memory access in the system is M units if the corresponding memory page is available in memory, and D units if the memory access causes a page fault. It has been experimentally measured that the average time taken for a memory access in the process is X units. Which one of the following is the correct expression for the page fault rate experienced by the process?",
+            "images": [],
+            "options": [
+              "A. (D - M) / (X - M)",
+              "B. (X - M) / (D - M)",
+              "C. (D - X) / (D - M)",
+              "D. (X - M) / (D - X)"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Database Management System",
+            "question_text": "In an Entity-Relationship (ER) model, suppose R is a many-to-one relationship from entity set E1 to entity set E2. Assume that E1 and E2 participate totally in R and that the cardinality of E1 is greater than the cardinality of E2. Which one of the following is true about R?",
+            "images": [],
+            "options": [
+              "A. Every entity in E1 is associated with exactly one entity in E2.",
+              "B. Some entity in E1 is associated with more than one entity in E2.",
+              "C. Every entity in E2 is associated with exactly one entity in E1.",
+              "D. Every entity in E2 is associated with at most one entity in E1."
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Database Management System",
+            "question_text": "Consider the following two tables and four queries in SQL. Which one of the queries above is certain to have an output that is a superset of the outputs of the other three queries?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_consider-the-following-two-tables-a_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. Query 1",
+              "B. Query 2",
+              "C. Query 3",
+              "D. Query 4"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Discrete Mathematics",
+            "question_text": "Consider the set S = {1, $\\omega ,\\omega ^{2}$ }, where $\\omega$ and $\\omega ^{2}$ are cube roots of unity. If * denotes the multiplication operation, the structure (S, *) forms",
+            "images": [],
+            "options": [
+              "A. A group",
+              "B. A ring",
+              "C. An integral domain",
+              "D. A field"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Engineering Mathematics",
+            "question_text": "What is the value of $\\lim_{n\\rightarrow \\infty }(1-\\frac{1}{n})^{2n}$ ?",
+            "images": [],
+            "options": [
+              "A. 0",
+              "B. $e^{-2}$",
+              "C. $e^{-1/2}$",
+              "D. 1"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Digital Logic",
+            "question_text": "The minterm expansion of f(P,Q,R)=PQ+QR'+PR' is",
+            "images": [],
+            "options": [
+              "A. $m_{2}+m_{4}+m_{6}+m_{7}$",
+              "B. $m_{0}+m_{1}+m_{3}+m_{5}$",
+              "C. $m_{0}+m_{1}+m_{6}+m_{7}$",
+              "D. $m_{2}+m_{3}+m_{4}+m_{5}$"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Computer Organization",
+            "question_text": "A main memory unit with a capacity of 4 megabytes is built using 1Mx1-bit DRAM chips. Each DRAM chip has 1K rows of cells with 1K cells in each row. The time taken for a single refresh operation is 100 nanoseconds. The time required to perform one refresh operation on all the cells in the memory unit is",
+            "images": [],
+            "options": [
+              "A. 100 nanoseconds",
+              "B. 100 * $2^{10}$ nanoseconds",
+              "C. 100* $2^{20}$ nanoseconds",
+              "D. 3200* $2^{20}$ nanoseconds"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Digital Logic",
+            "question_text": "P is a 16-bit signed integer. The 2's complement representation of P is $(F87B)_{16}$ . The 2's complement representation of 8*P is",
+            "images": [],
+            "options": [
+              "A. $(C3D8)_{16}$",
+              "B. $(187B)_{16}$",
+              "C. $(F878)_{16}$",
+              "D. $(987B)_{16}$"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Digital Logic",
+            "question_text": "The Boolean expression for the output f of the multiplexer shown below is",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_the-boolean-expression-for-the-outp_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. $\\overline{P\\bigoplus Q\\bigoplus R}$",
+              "B. $P\\bigoplus Q\\bigoplus R$",
+              "C. P+Q+R",
+              "D. $\\overline{P+Q+R}$"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Data Structure",
+            "question_text": "In a binary tree with n nodes, every node has an odd number of descendants. Every node is considered to be its own descendant. What is the number of nodes in the tree that have exactly one child?",
+            "images": [],
+            "options": [
+              "A. 0",
+              "B. 1",
+              "C. (n-1)/2",
+              "D. n-1"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "C Programming",
+            "question_text": "What does the following program print? #include < stdio.h > void f (int *p, int * q) { p=q; *p=2; } int i= 0, j= 1; int main ( ){ f(&i, & j); printf( \"%d%d \\ n\", i,j); return 0; }",
+            "images": [],
+            "options": [
+              "A. 2 2",
+              "B. 2 1",
+              "C. 0 1",
+              "D. 0 2"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Algorithm",
+            "question_text": "Two alternative packages A and B are available for processing a database having $10^{k}$ records. Package A requires 0.0001 $n^{2}$ time units and package B requires $10n \\log _{{10}} n$ time units to process n records. What is the smallest value of k for which package B will be preferred over A?",
+            "images": [],
+            "options": [
+              "A. 12",
+              "B. 10",
+              "C. 6",
+              "D. 5"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Compiler Design",
+            "question_text": "Which data structure in a compiler is used for managing information about variables and their attributes?",
+            "images": [],
+            "options": [
+              "A. Abstract syntax tree",
+              "B. Symbol table",
+              "C. Semantic stack",
+              "D. Parse table"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Compiler Design",
+            "question_text": "Which languages necessarily need heap allocation in the runtime environment?",
+            "images": [],
+            "options": [
+              "A. Those that support recursion",
+              "B. Those that use dynamic scoping",
+              "C. Those that allow dynamic data structures",
+              "D. Those that use global variables"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Computer Network",
+            "question_text": "One of the header fields in an IP datagram is the Time to Live (TTL) field. Which of the following statements best explains the need for this field?",
+            "images": [],
+            "options": [
+              "A. It can be used to prioritize packets",
+              "B. It can be used to reduce delays",
+              "C. It can be used to optimize throughput",
+              "D. It can be used to prevent packet looping"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Computer Network",
+            "question_text": "Which one of the following is not a client server application?",
+            "images": [],
+            "options": [
+              "A. Internet chat",
+              "B. Web browsing",
+              "C. E-mail",
+              "D. Ping"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Theory of Computation",
+            "question_text": "Let L1 be a recursive language. Let L2 and L3 be languages that are recursively enumerable but not recursive. Which of the following statements is not necessarily true?",
+            "images": [],
+            "options": [
+              "A. L2 - L1 is recursively enumerable",
+              "B. L1 - L3 is recursively enumerable",
+              "C. L2 $\\cup$ L1 is recursively enumerable",
+              "D. L2 $\\cap$ L1 is recursively enumerable"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Data Structure",
+            "question_text": "Consider a B+-tree in which the maximum number of keys in a node is 5. What is the minimum number of keys in any non-root node?",
             "images": [],
             "options": [
               "A. 1",
               "B. 2",
               "C. 3",
+              "D. 4"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Database Management System",
+            "question_text": "A relational schema for a train reservation database is given below What pids are returned by the following SQL query for the above instance of the tables? SELECT pid FROM Re servation WHERE class = 'AC' AND EXISTS (SELECT * FROM Passenger WHERE age > 65 AND Passenger.pid = Reservation.pid)",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_a-relational-schema-for-a-train-res_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. 1,0",
+              "B. 1,2",
+              "C. 1,3",
+              "D. 1,5"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Database Management System",
+            "question_text": "Which of the following concurrency control protocols ensure both conflict serializability and freedom from deadlock? I. 2-phase locking II. Time-stamp ordering",
+            "images": [],
+            "options": [
+              "A. I only",
+              "B. II only",
+              "C. Both I and II",
+              "D. Neither I nor II"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Software Engg",
+            "question_text": "The cyclomatic complexity of each of the modules A and B shown below is 10. What is the cyclomatic complexity of the sequential integration shown on the right hand side?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_the-cyclomatic-complexity-of-each-o_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. 19",
+              "B. 21",
+              "C. 20",
+              "D. 10"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Software Engg",
+            "question_text": "What is the appropriate pairing of items in the two columns listing various activities encountered in a software life cycle?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_what-is-the-appropriate-pairing-of_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. P-3, Q-2,R-4,S-1",
+              "B. P-2, Q-3,R-1,S-4",
+              "C. P-3, Q-2,R-1,S-4",
+              "D. P-2, Q-3,R-4,S-1"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Operating System",
+            "question_text": "Consider the methods used by processes P1 and P2 for accessing their critical sections whenever needed, as given below. The initial values of shared boolean variables S1 and S2 are randomly assigned. Which one of the following statements describes the properties achieved?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_consider-the-methods-used-by-proces_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. Mutual exclusion but not progress",
+              "B. Progress but not mutual exclusion",
+              "C. Neither mutual exclusion nor progress",
+              "D. Both mutual exclusion and progress"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Operating System",
+            "question_text": "A system uses FIFO policy for page replacement. It has 4 page frames with no pages loaded to begin with. The system first accesses 100 distinct pages in some order and then accesses the same 100 pages but now in the reverse order. How many page faults will occur?",
+            "images": [],
+            "options": [
+              "A. 196",
+              "B. 192",
+              "C. 197",
+              "D. 195"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Operating System",
+            "question_text": "Which of the following statements are true? I. Shortest remaining time first scheduling may cause starvation II. Preemptive scheduling may cause starvation III. Round robin is better than FCFS in terms of response time",
+            "images": [],
+            "options": [
+              "A. I only",
+              "B. I and III only",
+              "C. II and III only",
+              "D. I, II and III"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 1,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Discrete Mathematics",
+            "question_text": "Consider a company that assembles computers. The probability of a faulty assembly of any computer is p. The company therefore subjects each computer to a testing process. This testing process gives the correct result for any computer with a probability of q. What is the probability of a computer being declared faulty?",
+            "images": [],
+            "options": [
+              "A. pq + (1 - p) (1 - q)",
+              "B. (1 - q)p",
+              "C. (1 - p) q",
+              "D. pq"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Discrete Mathematics",
+            "question_text": "What is the probability that divisor of $10^{99}$ is a multiple of $10^{96}$ ?",
+            "images": [],
+            "options": [
+              "A. $1/625$",
+              "B. $4/625$",
+              "C. $12/625$",
+              "D. $16/625$"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Discrete Mathematics",
+            "question_text": "The degree sequence of a simple graph is the sequence of the degrees of the nodes in the graph in decreasing order. Which of the following sequences can not be the degree sequence of any graph? I. 7, 6, 5, 4, 4, 3, 2, 1 II. 6, 6, 6, 6, 3, 3, 2, 2 III. 7, 6, 6, 4, 4, 3, 2, 2 IV. 8, 7, 7, 6, 4, 2, 1, 1",
+            "images": [],
+            "options": [
+              "A. I and II",
+              "B. III and IV",
+              "C. IV only",
+              "D. II and IV"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Engineering Mathematics",
+            "question_text": "Consider the following matrix $A=\\begin{bmatrix} 2 & 3\\\\ X&Y \\end{bmatrix}$ If the eigenvalues of A are 4 and 8, then",
+            "images": [],
+            "options": [
+              "A. x = 4, y = 10",
+              "B. x = 5, y = 8",
+              "C. x = -3,y = 9",
+              "D. x = -4, y = 10"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Discrete Mathematics",
+            "question_text": "Suppose the predicate F(x,y,t) is used to represent the statement that person x can fool person y at time t. which one of the statements below expresses best the meaning of the formula $\\forall x \\exists y \\exists t(\\neg F (x, y, t))$ ?",
+            "images": [],
+            "options": [
+              "A. Everyone can fool some person at some time",
+              "B. No one can fool everyone all the time",
+              "C. Everyone cannot fool some person all the time",
+              "D. No one can fool some person at some time"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Digital Logic",
+            "question_text": "What is the Boolean Algebra for the output f of the combinational logic circuit of NOR gates given below?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_what-is-the-boolean-algebra-for-the_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. $\\overline{Q+R}$",
+              "B. $\\overline{P+Q}$",
+              "C. $\\overline{P+R}$",
+              "D. $\\overline{P+Q+R}$"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Digital Logic",
+            "question_text": "In the sequential circuit shown below, if the initial value of the output $Q_{1}Q_{0}$ is 00, what are the next four values of $Q_{1}Q_{0}$ ?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_in-the-sequential-circuit-shown-bel_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. 11,10,01,00",
+              "B. 10,11,01,00",
+              "C. 10,00,01,11",
+              "D. 11,10,00,01"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Computer Organization",
+            "question_text": "A 5-stage pipelined processor has Instruction Fetch (IF), Instruction Decode (ID), Operand Fetch (OF), Perform Operation (PO) and Write Operand (WO) stages. The IF, ID, OF and WO stages take 1 clock cycle each for any instruction. The PO stage takes 1 clock cycle for ADD and SUB instructions, 3 clock cycles for MUL instruction, and 6 clock cycles for DIV instruction respectively. Operand forwarding is used in the pipeline. What is the number of clock cycles needed to execute the following sequence of instructions?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_a-5stage-pipelined-processor-has-in_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. 13",
+              "B. 15",
+              "C. 17",
+              "D. 19"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Engineering Mathematics",
+            "question_text": "The weight of a sequence $a_{0},a_{1},...,a_{n-1}$ of real numbers is defined as $a_{0}+a_{1}/2+...+a_{n-1}/2^{n-1}$ A subsequence of a sequence is obtained by deleting some elements from the sequence, keeping the order of the remaining elements the same. Let X denote the maximum possible weight of a subsequence of $a_{0},a_{1},...,a_{n-1}$ and Y the maximum possible weight of a subsequence of $a_{0},a_{1},...,a_{n-1}$ . Then X is equal to",
+            "images": [],
+            "options": [
+              "A. max(Y, $a_{0}$ +Y)",
+              "B. max(Y, $a_{0}$ +Y/2)",
+              "C. max(Y, $a_{0}$ +2Y)",
+              "D. $a_{0}$ +Y/2"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "C Programming",
+            "question_text": "What is the value printed by the following C program? #include < stdio.h > int f(int * a, int n) { if(n<=0)return 0; else if(*a% 2 ==0) return *a+f(a+1,n-1); else return *a-f(a+1,n-1); } int main ( ) { int a[ ] {12, 7, 13, 4, 11, 6}; printf (\"%d\", f(a,6)); return 0; }",
+            "images": [],
+            "options": [
+              "A. -9",
+              "B. 5",
+              "C. 15",
+              "D. 19"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Data Structure",
+            "question_text": "The following C function takes a simply-linked list as input argument. It modifies the list by moving the last element to the front of the list and returns the modified list. Some part of the code is left blank. typedef struct node { int value; struct node *next; } Node; Node *move_to_front(Node *head) { Node *p, *q; if ((head = = NULL: || (head->next = = NULL)) return head; q = NULL; p = head; while (p-> next !=NULL) { q=P; p=p->next; } _______________________________ return head; } Choose the correct alternative to replace the blank line.",
+            "images": [],
+            "options": [
+              "A. q = NULL; p $\\rightarrow$ next = head; head = p;",
+              "B. q $\\rightarrow$ next = NULL; head = p; p $\\rightarrow$ next = head;",
+              "C. head = p; p $\\rightarrow$ next = q; q $\\rightarrow$ next = NULL;",
+              "D. q $\\rightarrow$ next = NULL; p $\\rightarrow$ next = head; head = p;"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Compiler Design",
+            "question_text": "The program below uses six temporary variables a, b, c, d, e, f. a =1 b= 10 c =20 d= a +b e= c +d f =c +e b= c+ e e =b +f d =5 +e return d +f Assuming that all operations take their operands from registers, what is the minimum number of registers needed to execute this program without spilling?",
+            "images": [],
+            "options": [
+              "A. 2",
+              "B. 3",
+              "C. 4",
               "D. 6"
             ],
             "correct_answer": "B",
             "explanation": "",
             "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "Ten friends planned to share equally the cost of buying a gift for their teacher. When two of them decided not to contribute, each of the other friends had to pay Rs. 150 more. The cost of the gift was Rs. ___",
-            "images": [],
-            "options": [
-              "A. 666",
-              "B. 3000",
-              "C. 6000",
-              "D. 12000"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "A court is to a judge as _________ is to a teacher.",
-            "images": [],
-            "options": [
-              "A. a student",
-              "B. a punishment",
-              "C. a syllabus",
-              "D. a school"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "The police arrested four criminals - P, Q, R and S. The criminals knew each other. They made the following statements: P says \"Q committed the crime.\" Q says \"S committed the crime.\" R says \" I did not do it.\" S says \"What Q said about me is false\". Assume only one of the arrested four committed the crime and only one of the statements made above is true. Who committed the crime?",
-            "images": [],
-            "options": [
-              "A. P",
-              "B. R",
-              "C. S",
-              "D. Q"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
             "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "In the given diagram, teachers are represented in the triangle, researchers in the circle and administrators in the rectangle. Out of the total number of the people, the percentage of administrators shall be in the range of _______",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_in-the-given-diagram-teachers-are-r_img1.jpg"
-              }
-            ],
-            "options": [
-              "A. 0 to 15",
-              "B. 16 to 30",
-              "C. 31 to 45",
-              "D. 46 to 60"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "\"A recent High Court judgement has sought to dispel the idea of begging as a disease - which leads to its stigmatization and criminalization - and to regard it as a symptom. The underlying disease is the failure of the state to protect citizens who fall through the social security net.\" Which one of the following statements can be inferred from the given passage?",
-            "images": [],
-            "options": [
-              "A. Beggars are lazy people who beg because they are unwilling to work",
-              "B. Beggars are created because of the lack of social welfare schemes",
-              "C. Begging is an offence that has to be dealt with firmly",
-              "D. Begging has to be banned because it adversely affects the welfare of the state"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "In a college, there are three student clubs, 60 students are only in the Drama club, 80 students are only in the Dance club, 30 students are only in Maths club, 40 students are in both Drama and Dance clubs, 12 students are in both Dance and Maths clubs, 7 students are in both Drama and Maths clubs, and 2 students are in all clubs. If 75% of the students in the college are not in any of these clubs, then the total number of students in the college is _____.",
-            "images": [],
-            "options": [
-              "A. 1000",
-              "B. 975",
-              "C. 900",
-              "D. 225"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "General Aptitude",
-            "question_text": "Three of the five students are allocated to a hostel put in special requests to the warden, Given the floor plan of the vacant rooms, select the allocation plan that will accommodate all their requests. Request by X: Due to pollen allergy, I want to avoid a wing next to the garden. Request by Y: I want to live as far from the washrooms as possible, since I am very mich sensitive to smell. Request by Z: I believe in Vaastu and so I want to stay in South-West wing. The shaded rooms are already occupied. WR is washroom",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_three-of-the-five-students-are-allo_img1.jpg"
-              }
-            ],
-            "options": [
-              "A. A",
-              "B. B",
-              "C. C",
-              "D. D"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          }
-        ]
-      },
-      {
-        name: 'CSE',
-        questions:[
-          {
-            "topic_name": "Computer Organization",
-            "question_text": "A certain processor uses a fully associative cache of size 16 kB, The cache block size is 16 bytes. Assume that the main memory is byte addressable and uses a 32-bit address. How many bits are required for the Tag and the Index fields respectively in the addresses generated by the processor?",
-            "images": [],
-            "options": [
-              "A. 24 bits and 0 bits",
-              "B. 28 bits and 4 bits",
-              "C. 24 bits and 4 bits",
-              "D. 28 bits and 0 bits"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Computer Organization",
-            "question_text": "The chip select logic for a certain DRAM chip in a memory system design is shown below. Assume that the memory system has 16 address lines denoted by $A_{15} \\; to \\; A_0$ . What is the range of address (in hexadecimal) of the memory system that can get enabled by the chip select (CS) signal?",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_the-chip-select-logic-for-a-certain_img1.jpg"
-              }
-            ],
-            "options": [
-              "A. C800 to CFFF",
-              "B. CA00 to CAFF",
-              "C. C800 to C8FF",
-              "D. DA00 to DFFF"
-            ],
-            "correct_answer": "A",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
             "exam_type": "GATE CSE",
             "question_type": "MCQ"
           },
           {
             "topic_name": "Compiler Design",
-            "question_text": "Which one of the following kinds of derivation is used by LR parsers?",
+            "question_text": "The grammar S $\\rightarrow$ aSa|bS|c is",
             "images": [],
             "options": [
-              "A. Leftmost",
-              "B. Leftmost in reverse",
-              "C. Rightmost",
-              "D. Rightmost in reverse"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Digital Logic",
-            "question_text": "In 16-bit 2's complement representation, the decimal number -28 is:",
-            "images": [],
-            "options": [
-              "A. 1111 1111 0001 1100",
-              "B. 0000 0000 1110 0100",
-              "C. 1111 1111 1110 0100",
-              "D. 1000 0000 1110 0100"
+              "A. LL(1) but not LR(1)",
+              "B. LR(1) but not LR(1)",
+              "C. Both LL(1) and LR(1)",
+              "D. Neither LL(1) nor LR(1)"
             ],
             "correct_answer": "C",
             "explanation": "",
             "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Discrete Mathematics",
-            "question_text": "Let $U=\\{1,2,,...n\\}$ . Let $A=\\{(x,X)|x\\in X,X\\subseteq U\\}$ . Consider the following two statements on |A|. I. $|A|=n2^{n-1}$ II. $|A|=\\sum_{k=1}^{n}k\\binom{n}{k}$ Which of the above statements is/are TRUE?",
-            "images": [],
-            "options": [
-              "A. Only I",
-              "B. Only II",
-              "C. Both I and II",
-              "D. Neither I nor II"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Digital Logic",
-            "question_text": "Which one of the following is NOT a valid identity?",
-            "images": [],
-            "options": [
-              "A. $(x\\oplus y)\\oplus z=x\\oplus (y\\oplus z)$",
-              "B. $(x+ y)\\oplus z=x\\oplus (y+z)$",
-              "C. $x\\oplus y=x+y, \\; if \\; xy=0$",
-              "D. $x\\oplus y=(xy+x'y')'$"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
+            "marks": 2,
             "exam_type": "GATE CSE",
             "question_type": "MCQ"
           },
           {
             "topic_name": "Theory of Computation",
-            "question_text": "If L is a regular language over $\\Sigma =\\{a,b\\}$ , which one of the following languages is NOT regular ?",
+            "question_text": "Let L = {w $\\in$ (0 + 1)*|w has even number of 1s}, i.e. L is the set of all bit strings with even number of 1s. Which one of the regular expressions below represents L?",
             "images": [],
             "options": [
-              "A. $L\\cdot L^R=\\{xy|x \\in L,y^R \\in L\\}$",
-              "B. $\\{ww^R|w \\in L\\}$",
-              "C. Prifix(L)={ $x \\in \\Sigma ^*|\\exists y \\in \\Sigma ^*$ such that $xy \\in L$ }",
-              "D. Suffix(L)={ $y \\in \\Sigma ^*|\\exists x \\in \\Sigma ^*$ such that $xy \\in L$ }"
+              "A. (0 *10 *1) *",
+              "B. 0 * (10 *10 *) *",
+              "C. 0 * (10 *1) * 0 *",
+              "D. 0 *1(10 *1) *10 *"
             ],
             "correct_answer": "B",
             "explanation": "",
             "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Digital Logic",
-            "question_text": "Consider Z = X - Y where X, Y and Z are all in sign-magnitude form. X and Y are each represented in n bits. To avoid overflow, the representation of Z would require a minimum of:",
-            "images": [],
-            "options": [
-              "A. n bits",
-              "B. n-1 bits",
-              "C. n+1 bits",
-              "D. n+2 bits"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Engineering Mathematics",
-            "question_text": "Let X be a square matrix. Consider the following two statements on X. I. X is invertible II. Determinant of X is non-zero Which one of the following is TRUE?",
-            "images": [],
-            "options": [
-              "A. I implies II; II does not imply I",
-              "B. II implies I; I does not imply II",
-              "C. I does not imply II; II does not imply I",
-              "D. I and II are equivalent statements"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Discrete Mathematics",
-            "question_text": "Let G be an arbitrary group. Consider the following relations on G: R1: $\\forall a,b \\in G, aR_1b$ if and only if $\\exists g \\in G$ such that $a=g^{-1}bg$ R2: $\\forall a,b \\in G, aR_2b$ if and only if $a=b^{-1}$ Which of the above is/are equivalence relation/relations?",
-            "images": [],
-            "options": [
-              "A. R1 and R2",
-              "B. R1 only",
-              "C. R2 only",
-              "D. Neither R1 nor R2"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Database Management System",
-            "question_text": "Consider the following two statements about database transaction schedules: I. Strict two-phase locking protocol generates conflict serializable schedules that are also recoverable. II. Timestamp-ordering concurrency control protocol with Thomas' Write Rule can generate view serializable schedules that are not conflict serializable. Which of the above statements is/are TRUE?",
-            "images": [],
-            "options": [
-              "A. I only",
-              "B. II only",
-              "C. Both I and II",
-              "D. Neither I nor II"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Discrete Mathematics",
-            "question_text": "Let G be an undirected complete graph on n vertices, where n $\\gt$ 2. Then, the number of different Hamiltonian cycles in G is equal to",
-            "images": [],
-            "options": [
-              "A. n!",
-              "B. (n-1)!",
-              "C. 1",
-              "D. $\\frac{(n-1)!}{2}$"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Engineering Mathematics",
-            "question_text": "Compute $\\lim_{x \\to 3}\\frac{x^4-81}{2x^2-5x-3}$",
-            "images": [],
-            "options": [
-              "A. 1",
-              "B. 53/12",
-              "C. 108/7",
-              "D. Limit does not exist"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Database Management System",
-            "question_text": "Which one of the following statements is NOT correct about the $B^+$ tree data structure used for creating an index of a relational database table?",
-            "images": [],
-            "options": [
-              "A. $B^+$ Tree is a height-balanced tree",
-              "B. Non-leaf nodes have pointers to data records",
-              "C. Key values in each node are kept in sorted order",
-              "D. Each leaf node has a pointer to the next leaf node"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
+            "marks": 2,
             "exam_type": "GATE CSE",
             "question_type": "MCQ"
           },
           {
             "topic_name": "Theory of Computation",
-            "question_text": "For $\\Sigma =\\{a,b\\}$ , let us consider the regular language $L=\\{x|x=a^{2+3k} \\; or \\; x=b^{10+12k}, k\\geq 0\\}$ . Which one of the following can be a pumping length (the constant guaranteed by the pumping lemma) for L?",
+            "question_text": "Consider the languages $L1=\\{0^{i}1^{j}\\;| \\; i\\neq j\\}$ . $L2=\\{0^{i}1^{j}\\;| \\; i=j\\}$ . $L3=\\{0^{i}1^{j}\\;| \\; i=2j+1\\}$ . $L4=\\{0^{i}1^{j}\\;| \\; i \\neq 2j\\}$ Which one of the following statements is true?",
             "images": [],
             "options": [
-              "A. 3",
-              "B. 5",
+              "A. Only L2 is context free",
+              "B. Only L2 and L3 are context free",
+              "C. Only L1 and L3 are context free",
+              "D. All are context free"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Theory of Computation",
+            "question_text": "Let w be any string of length n in {0, 1}*. Let L be the set of all substrings of w. What is the minimum number of states in a non-deterministic finite automaton that accepts L?",
+            "images": [],
+            "options": [
+              "A. n-1",
+              "B. n",
+              "C. n+1",
+              "D. $2^{n-1}$"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Database Management System",
+            "question_text": "Consider the following schedule for transactions T1, T2 and T3: Which one of the schedules below is the correct serialization of the above?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_consider-the-following-schedule-for_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. T1 $\\rightarrow$ T3 $\\rightarrow$ T2",
+              "B. T2 $\\rightarrow$ T1 $\\rightarrow$ T3",
+              "C. T2 $\\rightarrow$ T3 $\\rightarrow$ T1",
+              "D. T3 $\\rightarrow$ T1 $\\rightarrow$ T2"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Database Management System",
+            "question_text": "The following functional dependencies hold for relations R(A, B, C) and S(B, D, E) B $\\rightarrow$ A, A $\\rightarrow$ C The relation R contains 200tuples and the relation S contains 100tuples. What is the maximum number of tuples possible in the natural join R $\\Join$ S?",
+            "images": [],
+            "options": [
+              "A. 100",
+              "B. 200",
+              "C. 300",
+              "D. 2000"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Software Engg",
+            "question_text": "The following program is to be tested for statement coverage: begin if (a ==b) {S1; exit;} else if (c ==d) {S2;} else {S3; exit;} S4; end The test cases T1, T2, T3 and T4 given below are expressed in terms of the properties satisfied by the values of variables a, b, c and d. The exact values are not given. T1 : a, b, c and d are all equal T2 : a, b, c and d are all distinct T3 : a=b and c !=d T4 : a !=b and c=d Which of the test suites given below ensures coverage of statements S1, S2, S3 and S4?",
+            "images": [],
+            "options": [
+              "A. T1, T2, T3",
+              "B. T2, T4",
+              "C. T3, T4",
+              "D. T1, T2, T4"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Operating System",
+            "question_text": "The following program consists of 3 concurrent processes and 3 binary semaphores. The semaphores are initialized as S0=1, S1=0, S2=0. How many times will process P0 print '0'? How many times will process P0 print '0'?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_the-following-program-consists-of-3_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. At least twice",
+              "B. Exactly twice",
+              "C. Exactly thrice",
+              "D. Exactly once"
+            ],
+            "correct_answer": "A",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Operating System",
+            "question_text": "A system has n resources $R_{0},...R_{n-1}$ , and k processes $P_{0},...P_{k-1}$ . The implementation of the resource request logic of each process $P_{i}$ is as follows: if (i%2= = 0) { if (i < n) request [latex]R_{i}[/latex] ; if (i+2 < n)request [latex]R_{i+2}[/latex]; } else { if (i < n) request [latex]R_{n-i}[/latex]; if (i+2 < n)request [latex]R_{n-i-2}[/latex] ; } In which one of the following situations is a deadlock possible?",
+            "images": [],
+            "options": [
+              "A. n = 40,k = 26",
+              "B. n = 21,k = 12",
+              "C. n = 20,k = 10",
+              "D. n = 41,k = 19"
+            ],
+            "correct_answer": "B",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Computer Network",
+            "question_text": "Suppose computers A and B have IP addresses 10.105.1.113 and 10.105.1.91 respectively and they both use the same net mask N. Which of the values of N given below should not be used if A and B should belong to the same network?",
+            "images": [],
+            "options": [
+              "A. 255.255.255.0",
+              "B. 255.255.255.128",
+              "C. 255.255.255.192",
+              "D. 255.255.255.224"
+            ],
+            "correct_answer": "D",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Computer Organization",
+            "question_text": "A computer system has an L1 cache, an L2 cache, and a main memory unit connected as shown below. The block size in L1 cache is 4 words. The block size in L2 cache is 16 words. The memory access times are 2 nanoseconds. 20 nanoseconds and 200 nanoseconds for L1 cache, L2 cache and main memory unit respectively. When there is a miss in L1 cache and a hit in L2 cache, a block is transferred from L2 cache to L1 cache. What is the time taken for this transfer?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_a-computer-system-has-an-l1-cache-a_img1.jpg"
+              }
+            ],
+            "options": [
+              "A. 2 nanoseconds",
+              "B. 20 nanoseconds",
+              "C. 22 nanoseconds",
+              "D. 88 nanoseconds"
+            ],
+            "correct_answer": "C",
+            "explanation": "",
+            "year": 0,
+            "marks": 2,
+            "exam_type": "GATE CSE",
+            "question_type": "MCQ"
+          },
+          {
+            "topic_name": "Algorithm",
+            "question_text": "Consider a complete undirected graph with vertex set {0, 1, 2, 3, 4}. Entry $W_{ij}$ in the matrix W below is the weight of the edge {i, j}. $\\begin{pmatrix} 0&1 & 8 & 1 &4 \\\\ 1& 0 & 12 & 4 & 9\\\\ 8 & 12 & 0 & 7 & 3\\\\ 1& 4& 7 & 0 &2 \\\\ 4& 9 & 3& 2 &0 \\end{pmatrix}$ What is the minimum possible weight of a spanning tree T in this graph such that vertex 0 is a leaf node in the tree T?",
+            "images": [],
+            "options": [
+              "A. 7",
+              "B. 8",
               "C. 9",
-              "D. 24"
-            ],
-            "correct_answer": "D",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Computer Network",
-            "question_text": "Which of the following protocol pairs can be used to send and retrieve e-mails (in that order)?",
-            "images": [],
-            "options": [
-              "A. IMAP POP3",
-              "B. SMTP, POP3",
-              "C. SMTP, MIME",
-              "D. IMAP, SMTP"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Operating System",
-            "question_text": "The following C program is executed on a Unix / Linux system: #include < unistd.h > int main() { int i; for (i = 0; i < 10; i++) if (i % 2 == 0) fork(); return 0; } The total number of child process created is __________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "31",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "C Programming",
-            "question_text": "Consider the following C program: #include int jumble(int x, int y) { x = 2 * x + y; return x; } int main() { int x = 2, y = 5; y = jumble(y, x); x = jumble(y, x); printf(\"%dn\", x); return 0; } The value printed by program is __________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "26",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Compiler Design",
-            "question_text": "Consider the following given grammar: S -> Aa A -> BD B -> b| ε D -> d| ε Let a, b, d and $ be indexed as follows: Compute the FOLLOW set of the non-terminal B and write the index values for the symbols in the FOLLOW set in the descending order. (For example, if the FOLLOW set is {a, b, d, $}, then the answer should be 3210). Answer:_____",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_consider-the-following-given-gramma_img1.jpg"
-              }
-            ],
-            "options": [],
-            "correct_answer": "31",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Algorithm",
-            "question_text": "An array of 25 distinct elements is to be sorted using quicksort. Assume that the pivot element is chosen uniformly at random. The probability that the pivot element gets placed in the worst possible location in the first round of partitioning (rounded off to 2 decimal places) is _________.",
-            "images": [],
-            "options": [],
-            "correct_answer": "0.08",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Engineering Mathematics",
-            "question_text": "The value of $3^{51} \\;mod \\;5$ is _____",
-            "images": [],
-            "options": [],
-            "correct_answer": "2",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Discrete Mathematics",
-            "question_text": "Two numbers are chosen independently and uniformly at random from the set {1, 2, ..., 13}. The probability (rounded off to 3 decimal places) that their 4-bit (unsigned) binary representations have the same most significant bit is ___________",
-            "images": [],
-            "options": [],
-            "correct_answer": "0.502 to 0.504",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Operating System",
-            "question_text": "Consider three concurrent processes P1, P2 and P3 as shown below, which access a shared variable D that has been initialized to 100. The process are executed on a uniprocessor system running a time-shared operating system. If the minimum and maximum possible values of D after the three processes have completed execution are X and Y respectively, then the value of Y-X is __________.",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_consider-three-concurrent-processes_img1.jpg"
-              }
-            ],
-            "options": [],
-            "correct_answer": "80",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "C Programming",
-            "question_text": "Consider the following C program: #include < stdio.h > int main(){ int arr[] = {1,2,3,4,5,6,7,8,9,0,1,2,5}, *ip = arr + 4; printf(\"%dn\", ip[1]); return 0; } The number that will be displayed on execution of the program is _________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "6",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Algorithm",
-            "question_text": "Consider a sequence of 14 elements: A = [-5, -10, 6, 3, -1, -2, 13, 4, -9, -1, 4, 12, -3, 0]. The sequence sum $S(i,j)=\\sum_{k=i}^{j}A[k]$ . Determine the maximum of S(i,j), where $0 \\leq i \\leq j \\lt 14$ . (Divide and conquer approach may be used). Answer:______",
-            "images": [],
-            "options": [],
-            "correct_answer": "29",
-            "explanation": "",
-            "year": 0,
-            "marks": 1,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "C Programming",
-            "question_text": "Consider the following C program: void convert(int n) { if (n<0) printf(\"%d\",n); else { convert(n/2); printf(\"%d\",n%2); } } Which one of the following will happen when the function convert is called with any positive integer n as argument?",
-            "images": [],
-            "options": [
-              "A. It will print the binary representation of n and terminate.",
-              "B. It will print the binary representation of n in the reverse order and terminate.",
-              "C. It will print the binary representation of n but will not terminate.",
-              "D. It will not print anything and will not terminate."
+              "D. 10"
             ],
             "correct_answer": "D",
             "explanation": "",
@@ -788,247 +1325,21 @@ const papers: Paper[] = [
             "question_type": "MCQ"
           },
           {
-            "topic_name": "C Programming",
-            "question_text": "Consider the following C program: #include < stdio.h > int r(){ int static num=7; return num--; } int main() { for(r();r();r()) { printf(\"%d \",r()); }; return 0; } Which one of the following values will be displayed on execution of the programs?",
-            "images": [],
-            "options": [
-              "A. 41",
-              "B. 52",
-              "C. 63",
-              "D. 630"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Computer Network",
-            "question_text": "Consider three machines M, N and P with IP addresses 100.10.5.2, 100.10.5.5 and 100.10.5.6 respectively. The subnet mask is set to 255.255.255.252 for all the three machines. Which one of the following is true?",
-            "images": [],
-            "options": [
-              "A. M, N and P all belong to the same subnet",
-              "B. Only M and N belong to the same subnet",
-              "C. Only N and P belong to the same subnet",
-              "D. M, N, and P belong to three different subnets"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Computer Network",
-            "question_text": "Suppose that in an IP-over-Ethernet network, a machine X wishes to find the MAC address of another machine Y in its subnet. Which one of the following techniques can be used for this?",
-            "images": [],
-            "options": [
-              "A. X sends an ARP request packet to the local gateway's IP address which then finds the MAC address of Y and sends to X",
-              "B. X sends an ARP request packet to the local gateway's MAC address which then finds the MAC address of Y and sends to X",
-              "C. X sends an ARP request packet with broadcast MAC address in its local subnet",
-              "D. X sends an ARP request packet with broadcast IP address in its local subnet"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Digital Logic",
-            "question_text": "Consider three 4-variable functions $f_1,f_2 \\; and \\; f_3$ , which are expressed in sum-of-minterms $f_1=\\Sigma (0,2,5,8,14)$ $f_2=\\Sigma (2,3,6,8,14,15)$ $f_3=\\Sigma (2,7,11,14)$ For the following circuit with one AND gate and one XOR gate, the output function f can be expressed as:",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_consider-three-4variable-functions_img1.jpg"
-              }
-            ],
-            "options": [
-              "A. $\\Sigma (7,8,11)$",
-              "B. $\\Sigma (2,7,8,11,14)$",
-              "C. $\\Sigma (2,14)$",
-              "D. $\\Sigma (0,2,3,5,6,7,8,11,14,15)$"
-            ],
-            "correct_answer": "A",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Theory of Computation",
-            "question_text": "Which one of the following languages over $\\Sigma =\\{a,b\\}$ is NOT context-free?",
-            "images": [],
-            "options": [
-              "A. $\\{ww^R|w \\in \\{a,b\\}^*\\}$",
-              "B. $\\{wa^nb^nw^R|w \\in \\{a,b\\}^*,n\\geq 0\\}$",
-              "C. $\\{wa^nw^Rb^n|w \\in \\{a,b\\}^*,n\\geq 0\\}$",
-              "D. $\\{a^nb^i|i \\in \\{n,3n,5n\\},n\\geq 0\\}$"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Database Management System",
-            "question_text": "Let the set of functional dependencies $F=\\{QR\\rightarrow S,R\\rightarrow P,S\\rightarrow Q\\}$ hold on a relation schema X = (PQRS). X is not in BCNF. Suppose X is decomposed into two schemas Y and Z where Y = (PR) and Z = (QRS). Consider the two statements given below: I. Both Y and Z are in BCNF II. Decomposition of X into Y and Z is dependency preserving and lossless. Which of the above statements is/are correct?",
-            "images": [],
-            "options": [
-              "A. Both I and II",
-              "B. I only",
-              "C. II only",
-              "D. Neither I nor II"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Operating System",
-            "question_text": "Assume that in a certain computer, the virtual addresses are 64 bits long and the physical addresses are 48 bits long. The memory is word addressable. The page size is 8kB and the word size is 4 bytes. The Translation Look-aside Buffer (TLB) in the address translation path has 128 valid entries. At most how many distinct virtual addresses can be translated without any TLB miss?",
-            "images": [],
-            "options": [
-              "A. $16 \\times 2^{10}$",
-              "B. $256 \\times 2^{10}$",
-              "C. $4 \\times 2^{20}$",
-              "D. $8 \\times 2^{20}$"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Theory of Computation",
-            "question_text": "Consider the following sets: S1: Set of all recursively enumerable languages over the alphabet {0, 1}. S2: Set of all syntactically valid C programs. S3: Set of all languages over the alphabet {0, 1}. S4: Set of all non-regular languages over the alphabet {0, 1}. Which of the above sets are uncountable?",
-            "images": [],
-            "options": [
-              "A. S1 and S2",
-              "B. S3 and S4",
-              "C. S2 and S3",
-              "D. S1 and S4"
-            ],
-            "correct_answer": "B",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Discrete Mathematics",
-            "question_text": "Consider the first order predicate formula: $\\forall x[\\forall z\\; z|x\\Rightarrow ((z=x)\\vee (z=1))\\Rightarrow$ $\\exists w(w> x)\\wedge (\\forall z \\; z|w\\Rightarrow ((w=z)\\vee (z=1)))]$ Here 'a|b' denotes that 'a divides b', where a and b are integers. Consider the following sets: S1: {1, 2, 3, ..., 100} S2: Set of all positive integers S3: Set of all integers Which of the above sets satisfy $\\varphi$ ?",
-            "images": [],
-            "options": [
-              "A. S1 and S2",
-              "B. S1 and S3",
-              "C. S2 and S3",
-              "D. S1,S2 and S3"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Compiler Design",
-            "question_text": "Consider the following grammar and the semantic actions to support the inherited type declaration attributes. Let $X_1,X_2,X_3,X_4,X_5 \\; and \\; X_6$ be the placeholders for the non-terminals D, T, L or $L_1$ in the following table: Which one of the following are the appropriate choices for $X_1,X_2,X_3 \\; and \\; X_4$ ?",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_consider-the-following-grammar-and_img1.jpg"
-              }
-            ],
-            "options": [
-              "A. $X_1=L,X_2=T,X_3=L_1,X_4=L$",
-              "B. $X_1=T,X_2=L,X_3=L_1,X_4=T$",
-              "C. $X_1=L,X_2=L,X_3=L_1,X_4=T$",
-              "D. $X_1=T,X_2=L,X_3=T,X_4=L_1$"
-            ],
-            "correct_answer": "A",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Algorithm",
-            "question_text": "There are n unsorted arrays: $A_1,A_2,...,A_n$ . Assume that n is odd. Each of $A_1,A_2,...,A_n$ contains n distinct elements. There are no common elements between any two arrays. The worst-case Asymptotic Notation of computing the median of the medians of $A_1,A_2,...,A_n$ is ________ .",
-            "images": [],
-            "options": [
-              "A. $O(n)$",
-              "B. $O(n \\log n)$",
-              "C. $O(n^2)$",
-              "D. $\\Omega(n^2 \\log n)$"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Algorithm",
-            "question_text": "Let G be any connection, weighted, undirected graph: I. G has a unique minimum spanning tree if no two edges of G have the same weight. II. G has a unique minimum spanning tree if, for every cut of G, there is a unique minimum weight edge crossing the cut. Which of the above two statements is/are TRUE?",
-            "images": [],
-            "options": [
-              "A. I only",
-              "B. II only",
-              "C. Both I and II",
-              "D. Neither I nor II"
-            ],
-            "correct_answer": "C",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
-            "topic_name": "Operating System",
-            "question_text": "Consider the following snapshot of a system running n concurrent processes. Process $i$ is holding $X_i$ instances of a resource R, $1\\leq i\\leq n$ . Assume that all instances of R are currently in use. Further, for all $i$ , process $i$ can place a request for at most $Y_i$ additional instances of R while holding the $X_i$ instances it already has. Of the n processes, there are exactly two processes p and q such that $Y_p=Y_q=0$ . Which one of the following conditions guarantees that no other process apart from p and q can complete execution?",
-            "images": [],
-            "options": [
-              "A. $X_p+X_q \\lt Min \\{Y_k|1\\leq k\\leq n,k\\neq p,k\\neq q\\}$",
-              "B. $X_p+X_q \\lt Max \\{Y_k|1\\leq k\\leq n,k\\neq p,k\\neq q\\}$",
-              "C. $Min(X_p,X_q)\\geq Min \\{Y_k|1\\leq k\\leq n,k\\neq p,k\\neq q\\}$",
-              "D. $Min(X_p,X_q)\\leq Max \\{Y_k|1\\leq k\\leq n,k\\neq p,k\\neq q\\}$"
-            ],
-            "correct_answer": "A",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "MCQ"
-          },
-          {
             "topic_name": "Data Structure",
-            "question_text": "Consider the following statements: I. The smallest element in a max-heap is always at a leaf node. II. The second largest element in a max-heap is always a child of the root node. III. A max-heap can be constructed from a binary search tree in $\\Theta (n)$ time. IV. A binary search tree can be constructed from a max-heap in $\\Theta (n)$ time. Which of the above statements is/are TRUE?",
-            "images": [],
-            "options": [
-              "A. I, II and III",
-              "B. I, II and IV",
-              "C. I, III and IV",
-              "D. II, III and IV"
+            "question_text": "A hash table of length 10 uses open addressing with hash function h(k)=k mod 10, and linear probing. After inserting 6 values into an empty hash table, the table is as shown below Which one of the following choices gives a possible order in which the key values could have been inserted in the table?",
+            "images": [
+              {
+                "index": 1,
+                "filename": "gate-2018/cse_a-hash-table-of-length-10-uses-open_img1.jpg"
+              }
             ],
-            "correct_answer": "A",
+            "options": [
+              "A. 46, 42, 34, 52, 23, 33",
+              "B. 34, 42, 23, 52, 33, 46",
+              "C. 46, 34, 42, 23, 52, 33",
+              "D. 42, 46, 33, 23, 34, 52"
+            ],
+            "correct_answer": "C",
             "explanation": "",
             "year": 0,
             "marks": 2,
@@ -1036,205 +1347,27 @@ const papers: Paper[] = [
             "question_type": "MCQ"
           },
           {
-            "topic_name": "Operating System",
-            "question_text": "Consider the following four processes with arrival times (in milliseconds) and their length of CPU burst (in milliseconds) as shown below: These processes are run on a single processor using preemptive Shortest Remaining Time First scheduling algorithm. If the average waiting time of the processes is 1 millisecond, then the value of Z is __________.",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_consider-the-following-four-process_img1.jpg"
-              }
-            ],
-            "options": [],
-            "correct_answer": "2",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Operating System",
-            "question_text": "The index node (inode) of a Unix-like file system has 12 direct, one single-indirect and one double-indirect pointer The disk block size is 4 kB and the disk block addresses 32-bits long. The maximum possible file size is (rounded off to 1 decimal place) __________ GB.",
-            "images": [],
-            "options": [],
-            "correct_answer": "4 to 4.1",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Compiler Design",
-            "question_text": "Consider the augmented grammar given below: $S'\\rightarrow S$ $S \\rightarrow \\lt L \\gt |id$ $L \\rightarrow L,S|S$ Let $I_0=CLOSURE(\\{[S'\\rightarrow \\cdot S]\\})$ . The number of items in the set $GOTO(I_0,\\lt)$ is __________.",
-            "images": [],
-            "options": [],
-            "correct_answer": "5",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Engineering Mathematics",
-            "question_text": "Consider the following matrix: $\\begin{bmatrix} 1 & 2 & 4 & 8\\\\ 1& 3 & 9 &27 \\\\ 1 & 4 & 16 &64 \\\\ 1 & 5 & 25 &125 \\end{bmatrix}$ The absolute value of the product of Eigenvalues of R is _________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "12",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Computer Organization",
-            "question_text": "A certain processor deploys a single-level cache. The cache block size is 8 words and the word size is 4 bytes. The memory system uses a 60-MHz clock. To service a cache-miss, the memory controller first takes 1 cycle to accept the starting address of the block, it then takes 3 cycles to fetch all the eight words of the block, and finally transmits the words of the requested block at the rate of 1 word per cycle. The maximum bandwidth for the memory system when the program running on the processor issues a series of read operations is _________ $\\times 10^6$ bytes/sec.",
-            "images": [],
-            "options": [],
-            "correct_answer": "160",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Data Structure",
-            "question_text": "Let T be a full binary tree with 8 leaves. (A full binary tree has every level full.) Suppose two leaves a and b of T are chosen uniformly and independently at random. The expected value of the distance between a and b in T (i.e., the number of edges in the unique path between a and b) is (rounded off to 2 decimal places) ___________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "4.25",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Discrete Mathematics",
-            "question_text": "Suppose Y is distributed uniformly in the open interval (1,6). The probability that the polynomial $3x^2+6xY+3Y+6$ has only real roots is (rounded off to 1 decimal place) _________.",
-            "images": [],
-            "options": [],
-            "correct_answer": "0.8",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Theory of Computation",
-            "question_text": "Let $\\Sigma$ be the set of all bijections from {1,...,5} to {1,...,5}, where $id$ denotes the identity function, i.e. $id(j)=j,\\forall j$ . Let $\\circ$ denote composition on functions. For a string $x = x_1x_2 ... x_n \\in \\Sigma ^n, n \\geq 0$ , let $\\pi(x) = x_1\\circ x_2\\circ ... \\circ x_n$ . Consider the language $L = \\{x \\in \\Sigma ^* | \\pi(x) = id\\}$ . The minimum number of states in any DFA accepting L is _________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "120",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
             "topic_name": "Computer Network",
-            "question_text": "Consider that 15 machines need to be connected in a LAN using 8-port Ethernet switches. Assume that these switches do not have any separate up link ports. The minimum number of switches needed is ___________.",
-            "images": [],
-            "options": [],
-            "correct_answer": "3",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Digital Logic",
-            "question_text": "What is the minimum number of 2-input NOR gates required to implement 4-variable function expressed in sum-of-minterms from as $f = \\Sigma (0, 2, 5, 7, 8, 10, 13, 15)$ ? Assume that all the inputs and their complements are available. Answer ________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "3",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Database Management System",
-            "question_text": "A relational database contains two tables Student and Performance as shown below: The primary key of the Student table is Roll_no. For the Performance table, the columns Roll_no. and Subject_code together from the primary key. Consider the SQL query given below: SELECT S.Student_name, sum(P.Marks) FROM Student S, Performance P WHERE P.Marks > 84 GROUP BY S.Student_name; The number of rows returned by the above SQL query is _________ .",
+            "question_text": "Consider a network with 6 routers R1 to R6 connected with links having weights as shown in the following diagram All the routers use the distance vector based routing algorithm to update their routing tables. Each router starts with its routing table initialized to contain an entry for each neighbour with the weight of the respective connecting link. After all the routing tables stabilize, how many links in the network will never be used for carrying any data?",
             "images": [
               {
                 "index": 1,
-                "filename": "gate-cse/cse_a-relational-database-contains-two_img1.jpg"
+                "filename": "gate-2018/cse_consider-a-network-with-6-routers-r_img1.jpg"
               }
             ],
-            "options": [],
-            "correct_answer": "5",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "C programming",
-            "question_text": "Consider the following C program: #include < stdio.h > int main() { float sum = 0.0, j = 1.0, i = 2.0; while (i / j > 0.0625) { j = j + j; sum = sum + i/j; printf(\"%f \\n\", sum); } return 0; } The number of times variable sum will be printed When the above program is executed is _________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "5",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "C programming",
-            "question_text": "Consider the following C program: #include < stdio.h > int main() { int a[] = {2, 4, 6, 8, 10}; int i, sum = 0, *b = a + 4; for (i = 0; i < 5; i++ ) sum = sum + (*b - i) - *(b - i); printf(\"%dn\", sum); return 0; } The output of above C program is __________ . Note: This was Numerical Type question.",
-            "images": [],
-            "options": [],
-            "correct_answer": "10",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Computer Network",
-            "question_text": "In an RSA cryptosystem, the value of the public modulus parameter n is 3007. If it is also is known that $\\phi(n)=2880$ , where $\\phi()$ denotes Euler's Totient Function, then the prime factors of n which is greater than 50 is _________ .",
-            "images": [],
-            "options": [],
-            "correct_answer": "97",
-            "explanation": "",
-            "year": 0,
-            "marks": 2,
-            "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-          {
-            "topic_name": "Database Management System",
-            "question_text": "Consider the following relation P(X, Y, Z), Q(X, Y, T) and R(Y, V): How many tuples will be returned by the following relational algebra query? Answer:______",
-            "images": [
-              {
-                "index": 1,
-                "filename": "gate-cse/cse_consider-the-following-relation-px_img1.jpg"
-              },
-              {
-                "index": 2,
-                "filename": "gate-cse/cse_consider-the-following-relation-px_img2.jpg"
-              }
+            "options": [
+              "A. 4",
+              "B. 3",
+              "C. 2",
+              "D. 1"
             ],
-            "options": [],
-            "correct_answer": "1",
+            "correct_answer": "C",
             "explanation": "",
             "year": 0,
             "marks": 2,
             "exam_type": "GATE CSE",
-            "question_type": "NAT"
-          },
-        ]
+            "question_type": "MCQ"
+          },]
       },
     ],
   },

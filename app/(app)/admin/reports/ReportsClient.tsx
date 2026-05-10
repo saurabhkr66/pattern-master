@@ -41,6 +41,171 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
   const [latexReports, setLatexReports] = useState<any[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<"gemini" | "gpt-4o-mini">("gemini");
 
+  // ── PDF Solution Generator state ─────────────────────────────────────────
+  const [showPdfPanel, setShowPdfPanel] = useState(false);
+  const [pdfMockTestId, setPdfMockTestId] = useState<string>("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfProcessing, setPdfProcessing] = useState(false);
+  const [pdfLogPreview, setPdfLogPreview] = useState<{ question: any; explanation: string } | null>(null);
+  const [pdfLiveFeed, setPdfLiveFeed] = useState<{
+    testTitle: string;
+    mock_test_id?: string;
+    currentQ: any;
+    currentExplanation: string;
+    currentMismatch?: boolean;
+    currentAIDetectedAnswer?: string | null;
+    currentHighThinkingFlag?: boolean;
+    currentPdfSourced?: boolean | null;
+    progress: number;
+    total: number;
+    fixed: number;
+    failed: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalThoughtsTokens: number;
+    log: {
+      id: string;
+      text: string;
+      status: "ok" | "fail";
+      question: any;
+      explanation: string;
+      isMismatch?: boolean;
+      aiDetectedAnswer?: string | null;
+      pdfSourced?: boolean | null;
+      tokens?: { input: number; output: number };
+      thoughts?: number;
+      highThinkingFlag?: boolean;
+    }[];
+    done: boolean;
+  } | null>(null);
+
+  const handlePdfGenerate = async () => {
+    if (!pdfMockTestId || !pdfFile) return;
+    const test = mockTests?.find((t) => t.id === pdfMockTestId);
+    if (!test) return;
+
+    const confirmed = confirm(
+      `This will read the uploaded PDF and generate explanations for all missing questions in "${test.title}". Continue?`
+    );
+    if (!confirmed) return;
+
+    setPdfProcessing(true);
+    setPdfLiveFeed({
+      testTitle: test.title,
+      mock_test_id: pdfMockTestId,
+      currentQ: null,
+      currentExplanation: "",
+      currentMismatch: false,
+      currentAIDetectedAnswer: null,
+      currentHighThinkingFlag: false,
+      progress: 0,
+      total: 0,
+      fixed: 0,
+      failed: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalThoughtsTokens: 0,
+      log: [],
+      done: false,
+    });
+
+    const fd = new FormData();
+    fd.append("mockTestId", pdfMockTestId);
+    fd.append("pdf", pdfFile);
+
+    let cumInput = 0, cumOutput = 0, cumThoughts = 0;
+
+    try {
+      const response = await fetch("/api/admin/generate-solution-from-pdf", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!response.ok || !response.body) {
+        const errData = await response.json().catch(() => ({}));
+        alert(`Error: ${errData.error || response.statusText}`);
+        setPdfProcessing(false);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+            if (event.type === "start") {
+              setPdfLiveFeed(prev => prev ? { ...prev, total: event.total } : null);
+            } else if (event.type === "progress") {
+              const qData = (mockTests?.find(t => t.id === pdfMockTestId)?.questions as any[] || [])
+                .find((q: any) => q.id === event.questionId);
+              setPdfLiveFeed(prev => prev ? { ...prev, currentQ: qData || { question_text: event.questionText, id: event.questionId }, currentExplanation: "", progress: event.index } : null);
+            } else if (event.type === "batch_tokens") {
+              // Single batch call returned — update cumulative totals once
+              cumInput = event.tokens?.input || 0;
+              cumOutput = event.tokens?.output || 0;
+              cumThoughts = event.tokens?.thoughts || 0;
+              setPdfLiveFeed(prev => prev ? {
+                ...prev,
+                totalInputTokens: cumInput,
+                totalOutputTokens: cumOutput,
+                totalThoughtsTokens: cumThoughts,
+              } : null);
+            } else if (event.type === "result") {
+              const thoughts = event.tokens?.thoughts || 0;
+              const isHighThinking = thoughts > 8000;
+              cumInput += event.tokens?.input || 0;
+              cumOutput += event.tokens?.output || 0;
+              cumThoughts += thoughts;
+              const qData = (mockTests?.find(t => t.id === pdfMockTestId)?.questions as any[] || [])
+                .find((q: any) => q.id === event.questionId);
+              setPdfLiveFeed(prev => prev ? {
+                ...prev,
+                fixed: event.fixed,
+                failed: event.failed,
+                currentExplanation: event.explanation || "",
+                currentMismatch: event.isMismatch,
+                currentAIDetectedAnswer: event.aiDetectedAnswer,
+                currentHighThinkingFlag: isHighThinking,
+                currentPdfSourced: typeof event.pdfSourced === "boolean" ? event.pdfSourced : null,
+                totalInputTokens: cumInput,
+                totalOutputTokens: cumOutput,
+                totalThoughtsTokens: cumThoughts,
+                log: [...prev.log, {
+                  id: event.questionId,
+                  text: event.status === "ok" ? (event.explanation || "").substring(0, 80) + "..." : `Failed: ${event.error || ""}`,
+                  status: event.status,
+                  question: qData || { question_text: "", id: event.questionId },
+                  explanation: event.explanation || "",
+                  isMismatch: event.isMismatch,
+                  aiDetectedAnswer: event.aiDetectedAnswer,
+                  pdfSourced: typeof event.pdfSourced === "boolean" ? event.pdfSourced : null,
+                  tokens: event.tokens ? { input: event.tokens.input, output: event.tokens.output } : undefined,
+                  thoughts,
+                  highThinkingFlag: isHighThinking,
+                }],
+              } : null);
+            } else if (event.type === "done") {
+              setPdfLiveFeed(prev => prev ? { ...prev, done: true, fixed: event.fixed, failed: event.failed, progress: event.total } : null);
+            }
+          } catch {}
+        }
+      }
+    } catch (err: any) {
+      alert(`Failed: ${err.message}`);
+    } finally {
+      setPdfProcessing(false);
+    }
+  };
+
   // Process reports to extract exam, subject, and type for easier filtering and display
   const processedReports = useMemo(() => {
     return localReports.map(r => {
@@ -695,6 +860,273 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* PDF LOG PREVIEW POPUP */}
+      {pdfLogPreview && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 max-h-[80vh] overflow-y-auto">
+            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
+              <span className="text-sm font-black">Question Preview</span>
+              <button onClick={() => setPdfLogPreview(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+              <div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Question</div>
+                <div className="p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-xs"><MathRenderer content={pdfLogPreview.question.question_text || ""} /></div>
+              </div>
+              {pdfLogPreview.question.options && (
+                <div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Options</div>
+                  <div className="flex flex-col gap-1">
+                    {(pdfLogPreview.question.options as string[]).map((opt: string, i: number) => (
+                      <div key={i} className={`p-2 rounded-lg text-xs border ${opt === pdfLogPreview.question.correct_answer ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 font-bold" : "bg-gray-50 dark:bg-black/20 dark:border-zinc-800"}`}>
+                        <span className="font-bold text-gray-400 mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <div className="text-[10px] font-bold text-green-500 uppercase mb-1">Correct Answer</div>
+                <div className="p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-xs font-bold">{pdfLogPreview.question.correct_answer}</div>
+              </div>
+              {pdfLogPreview.explanation && (
+                <div>
+                  <div className="text-[10px] font-bold text-indigo-500 uppercase mb-1">📄 PDF-Informed Explanation</div>
+                  <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 text-xs"><MathRenderer content={pdfLogPreview.explanation} /></div>
+                </div>
+              )}
+              <div className="pt-2">
+                <button
+                  onClick={async () => {
+                    if (!pdfLiveFeed?.mock_test_id) return;
+                    await toggleManualFlag(pdfLogPreview.question.id, "MockQuestion", pdfLiveFeed.mock_test_id, true);
+                    alert("Question flagged as mismatch!");
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                >🚩 Flag as Incorrect</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF LIVE FEED MODAL */}
+      {pdfLiveFeed && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-black flex items-center gap-2">{pdfLiveFeed.done ? "✅" : "⚡"} 📄 PDF Solution Generator</h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">{pdfLiveFeed.testTitle}</p>
+              </div>
+              {pdfLiveFeed.done && (
+                <button onClick={() => setPdfLiveFeed(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
+              )}
+            </div>
+
+            <div className="px-4 pt-3">
+              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                <span>{pdfLiveFeed.progress} / {pdfLiveFeed.total}</span>
+                <span className="flex gap-3">
+                  <span className="text-green-500">✅ {pdfLiveFeed.fixed}</span>
+                  {pdfLiveFeed.failed > 0 && <span className="text-red-500">❌ {pdfLiveFeed.failed}</span>}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                  style={{ width: `${pdfLiveFeed.total ? (pdfLiveFeed.progress / pdfLiveFeed.total) * 100 : 0}%` }} />
+              </div>
+            </div>
+
+            <div className="p-4 flex-1 overflow-y-auto">
+              {pdfLiveFeed.currentQ && !pdfLiveFeed.done && (
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Currently Processing</div>
+                  <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 text-xs text-gray-700 dark:text-gray-300">
+                    <MathRenderer content={pdfLiveFeed.currentQ.question_text || ""} />
+                  </div>
+                  <div className="mt-2 flex flex-col gap-1">
+                    {(pdfLiveFeed.currentQ.options as string[] || []).map((opt: string, i: number) => (
+                      <div key={i} className={`px-2 py-1 rounded text-[10px] ${opt === pdfLiveFeed.currentQ.correct_answer ? "bg-green-100 dark:bg-green-500/10 font-bold text-green-700 dark:text-green-400" : "text-gray-500"}`}>
+                        {String.fromCharCode(65 + i)}. {opt}
+                      </div>
+                    ))}
+                    <div className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-1 flex items-center justify-between">
+                      <span>✓ Answer: {pdfLiveFeed.currentQ.correct_answer}</span>
+                      <button
+                        onClick={async () => {
+                          if (!pdfLiveFeed.mock_test_id) return;
+                          await toggleManualFlag(pdfLiveFeed.currentQ.id, "MockQuestion", pdfLiveFeed.mock_test_id, true);
+                          setPdfLiveFeed(prev => { if (!prev) return null; const l = [...prev.log]; if (l.length) l[l.length-1] = {...l[l.length-1], isMismatch: true}; return {...prev, log: l, currentMismatch: true}; });
+                        }}
+                        className="px-2 py-0.5 rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-[8px] font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/30 transition-colors"
+                      >🚩 Flag Incorrect</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {pdfLiveFeed.currentExplanation && (
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5 flex items-center gap-2">
+                    <span>{pdfLiveFeed.done ? "Last Generated" : "Generated Explanation"}</span>
+                    {pdfLiveFeed.currentPdfSourced === true && (
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[9px] font-black tracking-wider" title="Explanation derived from the uploaded PDF">📄 PDF</span>
+                    )}
+                    {pdfLiveFeed.currentPdfSourced === false && (
+                      <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[9px] font-black tracking-wider" title="Solution not in PDF — generated from general knowledge">💭 FALLBACK</span>
+                    )}
+                  </div>
+                  <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10 text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto">
+                    <MathRenderer content={pdfLiveFeed.currentExplanation} />
+                  </div>
+                  {pdfLiveFeed.currentMismatch && (
+                    <div className="mt-2 p-2 rounded-lg bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 flex items-center gap-2">
+                      <span className="text-sm">⚠️</span>
+                      <span className="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">AI Mismatch: AI thinks the answer is {pdfLiveFeed.currentAIDetectedAnswer}</span>
+                    </div>
+                  )}
+                  {pdfLiveFeed.currentHighThinkingFlag && (
+                    <div className="mt-2 p-2 rounded-lg bg-orange-100 dark:bg-orange-500/20 border border-orange-200 dark:border-orange-500/30 flex items-center gap-2">
+                      <span className="text-sm">🔴</span>
+                      <span className="text-[10px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-wider">High Thinking Tokens (&gt;8000) — flagged for review</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {pdfLiveFeed.log.length > 0 && (
+                <div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Processing Log</div>
+                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+                    {[...pdfLiveFeed.log].reverse().map((entry, i) => (
+                      <button key={i} onClick={() => setPdfLogPreview({ question: entry.question, explanation: entry.explanation })}
+                        className="flex items-center gap-2 text-[10px] text-gray-500 py-1.5 px-2 rounded bg-gray-50 dark:bg-black/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors text-left w-full">
+                        <span className="flex-shrink-0">{entry.status === "ok" ? "✅" : "❌"}</span>
+                        {entry.pdfSourced === true && <span className="flex-shrink-0" title="Sourced from PDF">📄</span>}
+                        {entry.pdfSourced === false && <span className="flex-shrink-0" title="Fallback: not in PDF, used general knowledge">💭</span>}
+                        <span className="truncate flex-1">{entry.text}</span>
+                        {entry.isMismatch && <span className="text-[10px] flex-shrink-0" title="AI answer mismatch">⚠️</span>}
+                        {entry.highThinkingFlag && <span className="text-[10px] flex-shrink-0" title="High thinking tokens">🔴</span>}
+                        {entry.tokens && (
+                          <span className="flex-shrink-0 text-[8px] bg-gray-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded flex gap-2">
+                            <span className="text-purple-500">↑{entry.tokens.input}</span>
+                            <span className="text-pink-500">↓{entry.tokens.output}</span>
+                            {(entry.thoughts ?? 0) > 0 && <span className="text-amber-500">🧠{entry.thoughts}</span>}
+                          </span>
+                        )}
+                        <span className="text-gray-300">→</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {pdfLiveFeed.done && (
+                <div className="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-center">
+                  <div className="text-2xl mb-2">🎓</div>
+                  <div className="text-sm font-bold text-indigo-800 dark:text-indigo-300">{pdfLiveFeed.fixed} explanations generated & saved to DB.</div>
+                  <div className="mt-4 pt-4 border-t border-indigo-200 dark:border-indigo-500/20 flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    <div className="flex flex-col gap-1"><span>Input Tokens</span><span className="text-gray-900 dark:text-white">{pdfLiveFeed.totalInputTokens.toLocaleString()}</span></div>
+                    <div className="flex flex-col gap-1"><span>Output Tokens</span><span className="text-gray-900 dark:text-white">{pdfLiveFeed.totalOutputTokens.toLocaleString()}</span></div>
+                    <div className="flex flex-col gap-1"><span>Thoughts</span><span className="text-amber-500">{pdfLiveFeed.totalThoughtsTokens.toLocaleString()}</span></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {!pdfLiveFeed.done && (
+              <div className="px-4 py-2 bg-gray-50 dark:bg-black/20 border-t dark:border-zinc-800 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                <div className="flex items-center gap-2"><span className="animate-pulse">⏳</span><span>Processing PDF...</span></div>
+                <div className="flex gap-4">
+                  <span className="text-purple-500 font-black">In: {pdfLiveFeed.totalInputTokens}</span>
+                  <span className="text-pink-500 font-black">Out: {pdfLiveFeed.totalOutputTokens}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── PDF SOLUTION GENERATOR PANEL ───────────────────────────────── */}
+      {mockTests && mockTests.length > 0 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowPdfPanel(!showPdfPanel)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-500/20 transition-colors mb-4"
+          >
+            📄 Generate from Reference PDF
+            <span className="text-xs opacity-60">{showPdfPanel ? '▲' : '▼'}</span>
+          </button>
+
+          {showPdfPanel && (
+            <div className="p-5 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm mb-6">
+              <p className="text-xs text-gray-500 mb-4">
+                Upload an official reference solution PDF (e.g. GATE answer key PDF). Gemini will read it and generate
+                its own detailed explanations for all questions in the selected paper that are missing explanations in the DB.
+              </p>
+
+              <div className="flex flex-col gap-4">
+                {/* Paper selector */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5">Select Paper</label>
+                  <select
+                    value={pdfMockTestId}
+                    onChange={(e) => setPdfMockTestId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-700 text-sm outline-none"
+                  >
+                    <option value="">-- Choose a mock test / paper --</option>
+                    {mockTests.map((t: any) => {
+                      const qs = (t.questions as any[]) || [];
+                      const missing = qs.filter((q: any) => !q.explanation || q.explanation.trim() === "").length;
+                      return (
+                        <option key={t.id} value={t.id}>
+                          {t.title} ({t.exam_type}) — {missing} missing
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* PDF upload */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5">Reference Solution PDF</label>
+                  <input
+                    id="pdf-solution-upload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                    className="block w-full text-sm text-gray-500 dark:text-gray-400
+                      file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+                      file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700
+                      dark:file:bg-indigo-500/10 dark:file:text-indigo-400
+                      hover:file:bg-indigo-200 dark:hover:file:bg-indigo-500/20 cursor-pointer"
+                  />
+                  {pdfFile && (
+                    <p className="text-[10px] text-green-500 font-bold mt-1">📎 {pdfFile.name} ({(pdfFile.size / 1024).toFixed(0)} KB)</p>
+                  )}
+                </div>
+
+                {/* Submit */}
+                <button
+                  onClick={handlePdfGenerate}
+                  disabled={pdfProcessing || !pdfMockTestId || !pdfFile}
+                  className={`self-start px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    pdfProcessing
+                      ? "bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-wait animate-pulse"
+                      : !pdfMockTestId || !pdfFile
+                      ? "bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-not-allowed"
+                      : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+                  }`}
+                >
+                  {pdfProcessing ? "⏳ Generating..." : "🚀 Generate Explanations from PDF"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

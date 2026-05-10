@@ -94,11 +94,6 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   const [questionStatusFilter, setQuestionStatusFilter] = useState<"all" | "unsolved" | "wrong" | "correct">("all");
 
   const isSubjectLevel = !!pattern.isSubjectLevel;
-  const PAGE_SIZE = 12;
-  const [subjectPyqs, setSubjectPyqs] = useState<any[]>([]);
-  const [subjectSkip, setSubjectSkip] = useState(0);
-  const [subjectTotal, setSubjectTotal] = useState<number | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     if (isOpen && rowRef.current) {
@@ -116,52 +111,18 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     }
   }, [isOpen, pattern.id, pattern.topic_name]);
 
-  // Reset subject pagination when row closes
-  useEffect(() => {
-    if (!isOpen) {
-      setSubjectPyqs([]);
-      setSubjectSkip(0);
-      setSubjectTotal(null);
-    }
-  }, [isOpen]);
-
-  // For subject patterns: fetch first page when opened
-  useEffect(() => {
-    if (isOpen && isSubjectLevel && subjectTotal === null && !isLoadingMore) {
-      setIsLoadingMore(true);
-      fetchPatternQuestions(pattern.id, 0, PAGE_SIZE)
-        .then(res => {
-          setSubjectPyqs(res.pyqs || []);
-          setSubjectTotal(res.total ?? null);
-          setSubjectSkip(PAGE_SIZE);
-        })
-        .finally(() => setIsLoadingMore(false));
-    }
-  }, [isOpen, isSubjectLevel, pattern.id]);
-
-  const handleLoadMore = async () => {
-    setIsLoadingMore(true);
-    fetchPatternQuestions(pattern.id, subjectSkip, PAGE_SIZE)
-      .then(res => {
-        setSubjectPyqs(prev => [...prev, ...(res.pyqs || [])]);
-        setSubjectSkip(prev => prev + PAGE_SIZE);
-        setVisiblePyqs(prev => prev + PAGE_SIZE);
-      })
-      .finally(() => setIsLoadingMore(false));
-  };
-
-  // For regular/mock patterns: use React Query (fetch all at once — small data)
+  // Fetch all questions at once for both subject and regular patterns
   const { data, isLoading: isLoadingAll } = useQuery({
     queryKey: ["patternQuestions", pattern.id],
     queryFn: () => fetchPatternQuestions(pattern.id),
-    enabled: isOpen && !isSubjectLevel,
+    enabled: isOpen,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const isLoadingQuestions = isSubjectLevel ? (isLoadingMore && subjectPyqs.length === 0) : isLoadingAll;
+  const isLoadingQuestions = isLoadingAll;
   const questions = useMemo(() => data?.questions || [], [data?.questions]);
-  const pyqs = useMemo(() => isSubjectLevel ? subjectPyqs : (data?.pyqs || []), [isSubjectLevel, subjectPyqs, data?.pyqs]);
+  const pyqs = useMemo(() => data?.pyqs || [], [data?.pyqs]);
   const shortNotes = data?.short_notes ?? pattern.short_notes ?? null;
 
   useEffect(() => {
@@ -407,16 +368,8 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                         <QuestionCard key={q.id} q={q} i={q._originalIndex} pattern={pattern} onSelect={setSelectedQuestion} language={language} isPyqOverride={activeTab === 'pyq'} />
                       ))}
                     </div>
-                    {/* Server-side load more for subject patterns */}
-                    {isSubjectLevel && activeTab === 'pyq' && subjectTotal !== null && subjectPyqs.length < subjectTotal && (
-                      <div style={{ textAlign: 'center', marginTop: 20 }}>
-                        <button onClick={handleLoadMore} disabled={isLoadingMore} style={{ fontSize: 11, fontWeight: 700, color: BE.accent, cursor: isLoadingMore ? 'default' : 'pointer', textTransform: 'uppercase', letterSpacing: 1, opacity: isLoadingMore ? 0.5 : 1 }}>
-                          {isLoadingMore ? 'Loading...' : `Load more (${subjectPyqs.length} / ${subjectTotal})`}
-                        </button>
-                      </div>
-                    )}
-                    {/* Client-side load more for regular/mock patterns */}
-                    {!isSubjectLevel && (activeTab === 'bank' ? displayedBank : displayedPyqs).length > (activeTab === 'bank' ? visibleBank : visiblePyqs) && (
+                    {/* Client-side load more */}
+                    {(activeTab === 'bank' ? displayedBank : displayedPyqs).length > (activeTab === 'bank' ? visibleBank : visiblePyqs) && (
                       <div style={{ textAlign: 'center', marginTop: 20 }}>
                         <button onClick={() => activeTab === 'bank' ? setVisibleBank(v => v+12) : setVisiblePyqs(v => v+12)} style={{ fontSize: 11, fontWeight: 700, color: BE.accent, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 1 }}>Load more</button>
                       </div>

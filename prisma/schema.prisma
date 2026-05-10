@@ -72,6 +72,8 @@ model SubjectPYQ {
 
   topic               String?          // AI assigned topic
   @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
+  @@index([subject_pattern_id])
+  @@index([explanation])
 }
 
 model PYQ {
