@@ -12,6 +12,7 @@ const getTopicsBase = unstable_cache(
     const [subjectPatterns, topicPatterns] = await Promise.all([
       prisma.subjectPattern.findMany({
         where: {
+          exam_type: examType,
           branch: branch || "CSE",
           ...(!isAll ? { subject_name: subject } : {}),
         },

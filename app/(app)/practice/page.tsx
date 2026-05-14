@@ -84,14 +84,13 @@ const getSubjectStats = (examType: string, branch: string | null) => {
         stats[entry.subject] = entry._count._all;
       });
 
-      if (branch === "CSE") {
-        const subjectPatternStats = await prisma.subjectPattern.findMany({
-          select: { subject_name: true },
-        });
-        subjectPatternStats.forEach(sp => {
-          stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
-        });
-      }
+      const subjectPatternStats = await prisma.subjectPattern.findMany({
+        where: { ...(branch ? { branch } : {}) },
+        select: { subject_name: true },
+      });
+      subjectPatternStats.forEach(sp => {
+        stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
+      });
 
       const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main"
         ? ["JEE_MAIN", "JEE Main"]
@@ -120,27 +119,45 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
     async () => {
       const isAll = !subject || subject === "All";
 
-      const subjectPatterns = (branch === "CSE")
-        ? await prisma.subjectPattern.findMany({
-            where: !isAll ? { subject_name: subject } : {},
-            select: {
-              id: true,
-              subject_name: true,
-              _count: { select: { pyqs: true } },
-            },
-          })
-        : [];
+      const subjectPatterns = await prisma.subjectPattern.findMany({
+        where: {
+          exam_type: examType,
+          ...(branch ? { branch } : {}),
+          ...(!isAll ? { subject_name: subject } : {}),
+        },
+        select: {
+          id: true,
+          subject_name: true,
+          branch: true,
+          exam_type: true,
+        },
+      });
 
-      const mappedSubjects = subjectPatterns.map((sp) => ({
+      const subjectsWithCounts = await Promise.all(
+        subjectPatterns.map(async (sp) => {
+          const pyqCount = await prisma.pYQ.count({
+            where: {
+              pattern: {
+                subject: sp.subject_name,
+                branch: sp.branch,
+                exam_type: sp.exam_type,
+              }
+            }
+          });
+          return { ...sp, pyqCount };
+        })
+      );
+
+      const mappedSubjects = subjectsWithCounts.map((sp) => ({
         id: `subject-${sp.id}`,
         _rawId: sp.id,
         subject: sp.subject_name,
         topic_name: sp.subject_name,
         atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
         isSubjectLevel: true,
-        totalQuestions: sp._count.pyqs,
+        totalQuestions: sp.pyqCount,
         questionsCount: 0,
-        pyqsCount: sp._count.pyqs,
+        pyqsCount: sp.pyqCount,
         solvedQuestions: 0,
         questions: [],
         pyqs: [],

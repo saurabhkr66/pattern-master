@@ -288,7 +288,11 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     // construct \left\{ \begin{matrix}...\end{matrix} \right. that the scraper
     // emits instead of a real \begin{cases}; remark-math's inline $ chokes on
     // its embedded newlines, which leaves \left\{ and \right. as raw prose.
-    .replace(/\$(?!\$)((?:[^$]|\\\$)*\\begin\{(bmatrix|vmatrix|pmatrix|matrix|array)\}[\s\S]*?\\end\{\2\}(?:[^$]|\\\$)*)\$/g,
+    // (?<!\$) / (?!\$) on each delimiter prevent the regex from treating
+    // the inner $ of a $$...$$ pair as an inline opener — that would emit
+    // $$$ boundaries and break legitimate display math like
+    // `$$ \begin{array}...\end{array} $$`.
+    .replace(/(?<!\$)\$(?!\$)((?:[^$]|\\\$)*\\begin\{(bmatrix|vmatrix|pmatrix|matrix|array)\}[\s\S]*?\\end\{\2\}(?:[^$]|\\\$)*)\$(?!\$)/g,
       (_m, body) => `$$\n${body}\n$$`)
     // Fix 3-column cases (scraper writes: expr & \text{if} & cond) → 2-column
     // KaTeX cases only allows 2 columns; merge the extra & into the condition
