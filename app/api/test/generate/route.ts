@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { getExamConfig, type ExamType, type SectionConfig } from "@/lib/examConfigs";
 import type { TestQuestion } from "@/components/test/TestEngine";
+import {
+  getCachedTemplateById,
+  getCachedSeededTemplateId,
+  cacheTemplate,
+} from "@/lib/mockTemplate";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -227,18 +232,32 @@ export async function GET(req: NextRequest) {
 
     const config = getExamConfig(examType, branch ?? undefined);
 
+    // Strip server-only fields from a stored template's questions JSON.
+    // We select only the scalar columns (no `questions`) and then re-fetch
+    // questions in a second lightweight query only when needed.
+    const TEMPLATE_META_SELECT = {
+      id: true,
+      title: true,
+      total_questions: true,
+      max_score: true,
+      questions: true,
+    } as const;
+
+    function safeQuestions(template: { questions: unknown }) {
+      return (template.questions as any[]).map(
+        ({ correct_answer, explanation, ...safe }: any) => safe
+      );
+    }
+
     // ── DIRECT template lookup (used for session resume) ──
     const templateId = searchParams.get("templateId");
     if (templateId) {
-      const template = await prisma.mockTestTemplate.findUnique({ where: { id: templateId } });
+      const template = await getCachedTemplateById(templateId);
       if (template) {
-        const safeQs = (template.questions as any[]).map(
-          ({ correct_answer, explanation, ...safe }: any) => safe
-        );
         return NextResponse.json({
           mockTestId: template.id,
           title: template.title,
-          questions: safeQs,
+          questions: safeQuestions(template),
           totalQuestions: template.total_questions,
           maxScore: template.max_score,
         });
@@ -247,23 +266,17 @@ export async function GET(req: NextRequest) {
 
     // ── SEEDED: look for an existing frozen template ──
     if (mode === "seeded" && mockNumber > 0) {
-      const template = await prisma.mockTestTemplate.findFirst({
-        where: {
-          exam_type: examType,
-          branch: branch ?? null,
-          mode: "seeded",
-          mock_number: mockNumber,
-        },
-      });
-
+      const cachedId = await getCachedSeededTemplateId(
+        examType,
+        branch ?? null,
+        mockNumber
+      );
+      const template = cachedId ? await getCachedTemplateById(cachedId) : null;
       if (template) {
-        const safeQs = (template.questions as any[]).map(
-          ({ correct_answer, explanation, ...safe }: any) => safe
-        );
         return NextResponse.json({
           mockTestId: template.id,
           title: template.title,
-          questions: safeQs,
+          questions: safeQuestions(template),
           totalQuestions: template.total_questions,
           maxScore: template.max_score,
         });
@@ -282,16 +295,13 @@ export async function GET(req: NextRequest) {
           sessions: { none: { user_id: userId } },
         },
         orderBy: { created_at: "asc" },
+        select: TEMPLATE_META_SELECT,
       });
-
       if (unusedTemplate) {
-        const safeQs = (unusedTemplate.questions as any[]).map(
-          ({ correct_answer, explanation, ...safe }: any) => safe
-        );
         return NextResponse.json({
           mockTestId: unusedTemplate.id,
           title: unusedTemplate.title,
-          questions: safeQs,
+          questions: safeQuestions(unusedTemplate),
           totalQuestions: unusedTemplate.total_questions,
           maxScore: unusedTemplate.max_score,
         });
@@ -364,6 +374,9 @@ export async function GET(req: NextRequest) {
         questions: fullQuestions as any,
       },
     });
+
+    // Pre-warm cache so subsequent takers skip the DB entirely.
+    cacheTemplate(template).catch(() => {});
 
     return NextResponse.json({
       mockTestId: template.id,

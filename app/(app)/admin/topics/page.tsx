@@ -25,10 +25,24 @@ export default async function AdminTopicsPage() {
     redirect("/");
   }
 
-  // Fetch all mock tests to show in the list
-  const mockTests = await prisma.mockTestTemplate.findMany({
-    orderBy: { created_at: "desc" }
-  });
+  // Only fetch tests that have at least one uncategorized question
+  const mockTests = await prisma.$queryRaw<{
+    id: string; title: string; exam_type: string; branch: string | null;
+    mock_number: number | null; mode: string | null; total_questions: number; uncategorized_count: number;
+  }[]>`
+    SELECT
+      t.id, t.title, t.exam_type, t.branch, t.mock_number, t.mode, t.total_questions,
+      COUNT(*) FILTER (
+        WHERE elem->>'topic' IS NULL OR trim(elem->>'topic') = '' OR elem->>'topic' = 'Unknown' OR elem->>'topic' = 'Uncategorized'
+      )::int AS uncategorized_count
+    FROM "MockTestTemplate" t,
+    jsonb_array_elements(t.questions) AS elem
+    GROUP BY t.id, t.title, t.exam_type, t.branch, t.mock_number, t.mode, t.total_questions
+    HAVING COUNT(*) FILTER (
+      WHERE elem->>'topic' IS NULL OR trim(elem->>'topic') = '' OR elem->>'topic' = 'Unknown' OR elem->>'topic' = 'Uncategorized'
+    ) > 0
+    ORDER BY t.created_at DESC
+  `;
 
   // Fetch all allowed topics (from the Pattern table) to give to the AI
   const availableTopics = await getAllTopics();

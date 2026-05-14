@@ -170,19 +170,24 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     if (questionStatusFilter === "unsolved") filtered = filtered.filter(q => !q.attempts?.length);
     if (questionStatusFilter === "wrong") filtered = filtered.filter(q => q.attempts?.length && !q.attempts[0].is_correct);
     if (questionStatusFilter === "correct") filtered = filtered.filter(q => q.attempts?.length && q.attempts[0].is_correct);
-    
-    // Sort: Wrong (0) -> Unsolved (1) -> Correct (2)
-    return [...filtered].sort((a, b) => {
-      const getRank = (q: any) => {
-        if (!q.attempts?.length) return 1;
-        return q.attempts[0].is_correct ? 2 : 0;
-      };
-      return getRank(a) - getRank(b);
-    });
+
+    const shuffle = (arr: any[]) => {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+
+    const wrong   = shuffle(filtered.filter(q => q.attempts?.length && !q.attempts[0].is_correct));
+    const unseen  = shuffle(filtered.filter(q => !q.attempts?.length));
+    const correct = shuffle(filtered.filter(q => q.attempts?.length &&  q.attempts[0].is_correct));
+    return [...wrong, ...unseen, ...correct];
   };
 
   const displayedBank = useMemo(() => applyFilters(questions.map((q: any, i: number) => ({ ...q, _originalIndex: i }))), [questions, questionStatusFilter]);
-  const displayedPyqs = useMemo(() => applyFilters(pyqs.map((p: any, i: number) => ({ ...p, _isPyq: true, _isSubjectPyq: pattern.isSubjectLevel, _originalIndex: i }))), [pyqs, questionStatusFilter]);
+  const displayedPyqs = useMemo(() => applyFilters(pyqs.map((p: any, i: number) => ({ ...p, _isPyq: true, _isSubjectPyq: false, _originalIndex: i }))), [pyqs, questionStatusFilter]);
 
   const queue = useMemo(() => {
     if (!selectedQuestion) return [];

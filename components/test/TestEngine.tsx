@@ -196,7 +196,12 @@ export default function TestEngine({
     return () => clearInterval(timerRef.current!);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Autosave every 15s ──
+  // ── Autosave every 20 minutes ──
+  // The interval is intentionally long: each save is one Upstash command, and
+  // at scale these add up fast. Crash safety is provided by the safety-net
+  // effect below (saves on tab close / visibility hidden), so the worst case
+  // a user can lose is whatever they entered since the last *event*, not the
+  // last interval tick — typically only seconds in real-world failure modes.
   useEffect(() => {
     if (!draftId) return;
     const id = setInterval(async () => {
@@ -208,15 +213,39 @@ export default function TestEngine({
           body: JSON.stringify({ draftId, state: buildDraftState() }),
         });
         const data = await res.json();
-        if (data.ok) {
-          setSaveStatus("saved");
-          if (data.timeLeftSecs !== undefined) {
-            setTimeLeft((prev) => Math.abs(prev - data.timeLeftSecs) > 10 ? data.timeLeftSecs : prev);
-          }
-        } else setSaveStatus("error");
+        setSaveStatus(data.ok ? "saved" : "error");
       } catch { setSaveStatus("error"); }
-    }, 15_000);
+    }, 1_200_000);
     return () => clearInterval(id);
+  }, [draftId, buildDraftState]);
+
+  // ── Safety net: flush state on tab close / app background ──
+  // Catches the common failure modes (user closes tab, switches apps on
+  // mobile, OS reclaims the page) without burning interval-based saves.
+  // Uses fetch keepalive so the request survives page unload.
+  useEffect(() => {
+    if (!draftId) return;
+    const flush = () => {
+      try {
+        fetch("/api/test/session/save", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ draftId, state: buildDraftState() }),
+          keepalive: true,
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("beforeunload", flush);
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("beforeunload", flush);
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [draftId, buildDraftState]);
 
   const goTo = (q: TestQuestion) => {

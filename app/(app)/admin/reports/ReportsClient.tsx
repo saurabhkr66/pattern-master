@@ -3,7 +3,14 @@
 import { useState, useMemo } from "react"; // AI Model selection enabled 2026-05-03
 import { resolveReport, deleteQuestion, generateAIExplanation, processMockTestExplanations, toggleManualFlag } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { getCloudinaryUrl } from "@/lib/imageUtils";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
+
+const isMissingExplanation = (q: any) => {
+  const hasText = q.explanation && q.explanation.trim() !== "";
+  const hasImages = q.images && (q.images as any[]).some((img: any) => img.type === "explanation");
+  return !hasText && !hasImages;
+};
 
 export default function ReportsClient({ reports, mockTests }: { reports: any[], mockTests?: any[] }) {
   const [localReports, setLocalReports] = useState(reports);
@@ -251,6 +258,10 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE";
         subject = lr.pyq.pattern?.subject || "Unknown";
         type = "PYQ";
+      } else if (lr.isMock) {
+        exam = lr.exam_type || "JEE_MAIN";
+        subject = lr.subject || "Unknown";
+        type = "Mock";
       } else if (lr.question) {
         exam = lr.question.pattern?.exam_type || "GATE";
         subject = lr.question.pattern?.subject || "Unknown";
@@ -266,7 +277,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       if (selectedTest) {
         const questions = (selectedTest.questions as any[]) || [];
         questions.forEach(q => {
-          if (!q.explanation || q.explanation.trim() === "") {
+          if (isMissingExplanation(q)) {
             // Check if we already have a report for this question to avoid duplicates
             const exists = [...latexProcessed, ...processedReports].some(r => r.mock_question_id === q.id && r.mock_test_id === selectedTest.id);
             if (!exists) {
@@ -342,9 +353,13 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       if (filterExam !== "all" && r.exam !== filterExam) return false;
       if (filterSubject !== "all" && r.subject !== filterSubject) return false;
       if (filterType !== "all" && r.type !== filterType) return false;
+      
+      // Filter by missing explanations if requested
+      if (showMissingOnly && !isMissingExplanation(r.q)) return false;
+      
       return true;
     });
-  }, [allProcessedReports, filterExam, filterSubject, filterType]);
+  }, [allProcessedReports, filterExam, filterSubject, filterType, showMissingOnly]);
 
   const openEditor = (report: any) => {
     const questionData = report.q;
@@ -489,10 +504,14 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     const confirmed = confirm(`This will generate AI explanations for all missing questions in "${test.title}". Continue?`);
     if (!confirmed) return;
 
-    const questions = (test.questions as any[]) || [];
-    const missingQs = questions.filter(q => !q.explanation || q.explanation.trim() === "");
+    const missingQs = reports
+      .filter((r: any) => r.isMock && r.mock_test_id === testId && r.status === "pending" && isMissingExplanation(r.q))
+      .map((r: any) => r.q);
 
-    if (missingQs.length === 0) return;
+    if (missingQs.length === 0) {
+      alert("No missing questions found for this test in the current reports list.");
+      return;
+    }
 
     setBatchProcessing(testId);
     setLiveFeed({
@@ -609,7 +628,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
 
     setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);
     setBatchProcessing(null);
-    setBatchResult({ total: questions.length, fixed, failed });
+    setBatchResult({ total: missingQs.length, fixed, failed });
   };
 
   const handleScanLatex = async () => {
@@ -1080,8 +1099,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                   >
                     <option value="">-- Choose a mock test / paper --</option>
                     {mockTests.map((t: any) => {
-                      const qs = (t.questions as any[]) || [];
-                      const missing = qs.filter((q: any) => !q.explanation || q.explanation.trim() === "").length;
+                      const missing = reports.filter((r: any) => r.isMock && r.mock_test_id === t.id && r.status === "pending" && isMissingExplanation(r.q)).length;
+                      if (missing === 0) return null;
                       return (
                         <option key={t.id} value={t.id}>
                           {t.title} ({t.exam_type}) — {missing} missing
@@ -1146,15 +1165,15 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
               <p className="text-xs text-gray-500 mb-4">Select a mock test below to auto-generate explanations for all questions missing them.</p>
               <div className="flex flex-col gap-3">
                 {mockTests.map((test: any) => {
-                  const questions = (test.questions as any[]) || [];
-                  const missing = questions.filter(q => !q.explanation || q.explanation.trim() === "").length;
+                  const missing = reports.filter((r: any) => r.isMock && r.mock_test_id === test.id && r.status === "pending" && isMissingExplanation(r.q)).length;
+                  if (missing === 0) return null;
                   const isProcessing = batchProcessing === test.id;
                   return (
                     <div key={test.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800">
                       <div>
                         <div className="font-bold text-sm">{test.title}</div>
                         <div className="text-[10px] text-gray-500">
-                          {test.exam_type} · {questions.length} Qs · <span className={missing > 0 ? "text-red-500 font-bold" : "text-green-500"}>{missing} missing</span>
+                          {test.exam_type} · <span className={missing > 0 ? "text-red-500 font-bold" : "text-green-500"}>{missing} missing</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1583,10 +1602,15 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
                   className="w-full p-4 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
                   rows={4}
                 />
-                {formData.explanation && (
+                {(formData.explanation || formData.images.some((img: any) => img.type === "explanation")) && (
                   <div className="mt-2 p-3 border dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 text-sm">
                     <span className="text-[10px] uppercase font-bold text-amber-500 mb-2 block">Live Preview</span>
-                    <MathRenderer content={formData.explanation} />
+                    {formData.explanation && <MathRenderer content={formData.explanation} />}
+                    {formData.images.filter((img: any) => img.type === "explanation").map((img: any, idx: number) => (
+                      <div key={idx} className="mt-2">
+                        <img src={getCloudinaryUrl(img.filename)} alt={`Explanation image ${idx + 1}`} className="max-w-full h-auto rounded-lg" />
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

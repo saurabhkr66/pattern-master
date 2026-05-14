@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { generateQuestionTopic, updateMockTestQuestionTopic } from "@/app/actions/admin";
+import { generateQuestionTopic, updateMockTestQuestionTopic, getMockTestQuestions } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
 
 interface TopicsClientProps {
@@ -10,10 +10,14 @@ interface TopicsClientProps {
 }
 
 export default function TopicsClient({ mockTests, availableTopics }: TopicsClientProps) {
-  const [showBatchPanel, setShowBatchPanel] = useState(true);
   const [batchProcessing, setBatchProcessing] = useState<string | null>(null);
   const [selectedAIModel, setSelectedAIModel] = useState<"gemini" | "gpt-4o-mini">("gpt-4o-mini");
-  const [batchResult, setBatchResult] = useState<{ total: number; fixed: number; failed: number } | null>(null);
+  const [autoAdvance, setAutoAdvance] = useState(false);
+  // Track uncategorized counts locally so they update after a run without a page reload
+  const [uncategorizedCounts, setUncategorizedCounts] = useState<Record<string, number>>(
+    Object.fromEntries(mockTests.map(t => [t.id, t.uncategorized_count ?? 0]))
+  );
+  const [filterMode, setFilterMode] = useState<"all" | "actual">("all");
 
   // Live feed state
   const [liveFeed, setLiveFeed] = useState<{
@@ -32,16 +36,23 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
 
   const [logPreview, setLogPreview] = useState<{ question: any; topic: string } | null>(null);
 
-  const handleBatchProcess = async (testId: string) => {
+  // Filtered tests based on mode
+  const filteredTests = useMemo(() => {
+    return mockTests.filter(test => {
+      if (filterMode === "actual") {
+        return test.mode !== "random";
+      }
+      return true;
+    });
+  }, [mockTests, filterMode]);
+
+  const handleBatchProcess = async (testId: string, isAuto = false) => {
     const test = mockTests.find(t => t.id === testId);
     if (!test) return;
 
-    const questions = (test.questions as any[]) || [];
-    // We categorize questions that don't have a topic or where topic is "Unknown"
-    const missingQs = questions.filter(q => !q.topic || q.topic === "Unknown");
-
-    if (missingQs.length === 0) {
-      alert("All questions in this test already have topics assigned.");
+    const currentMissing = uncategorizedCounts[testId] ?? 0;
+    if (currentMissing === 0) {
+      if (!isAuto) alert("All questions in this test already have topics assigned.");
       return;
     }
 
@@ -50,15 +61,27 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
     const examMap = availableTopics[normalizedExam];
 
     if (!examMap) {
-      alert(`No topics found in the database for exam type: ${test.exam_type}. Please seed topics for this exam first.`);
+      if (!isAuto) alert(`No topics found in the database for exam type: ${test.exam_type}. Please seed topics for this exam first.`);
       return;
     }
 
-    // Get a flat list of all topics for this exam (as a fallback)
-    const allExamTopics = Object.values(examMap).flat();
+    if (!isAuto) {
+      const confirmed = confirm(`Categorize ${currentMissing} questions in "${test.title}" using AI? (Stricter Subject-Level filtering enabled)`);
+      if (!confirmed) return;
+    }
 
-    const confirmed = confirm(`Categorize ${missingQs.length} questions in "${test.title}" using AI? (Stricter Subject-Level filtering enabled)`);
-    if (!confirmed) return;
+    // Fetch questions lazily — only when the user actually starts categorization
+    let questions: any[];
+    try {
+      questions = await getMockTestQuestions(testId);
+    } catch (err) {
+      console.error("Failed to fetch questions", err);
+      alert("Failed to load questions for this test.");
+      return;
+    }
+
+    const missingQs = questions; // already filtered server-side in getMockTestQuestions
+    const allExamTopics = Object.values(examMap).flat();
 
     setBatchProcessing(testId);
     setLiveFeed({
@@ -74,7 +97,7 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
       log: [],
       done: false,
     });
-    
+
     let fixed = 0;
     let failed = 0;
     let cumulativeInput = 0;
@@ -82,20 +105,13 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
 
     for (let i = 0; i < missingQs.length; i++) {
       const q = missingQs[i];
-      
-      // Determine subject-specific topics
-      const qSubject = (q.subject || q.sectionName || "").toUpperCase().trim();
-      let targetedTopics = examMap[qSubject] || allExamTopics;
 
-      setLiveFeed(prev => prev ? {
-        ...prev,
-        currentQ: q,
-        currentTopic: "",
-        progress: i,
-      } : null);
+      const qSubject = (q.subject || q.sectionName || "").toUpperCase().trim();
+      const targetedTopics = examMap[qSubject] || allExamTopics;
+
+      setLiveFeed(prev => prev ? { ...prev, currentQ: q, currentTopic: "", progress: i } : null);
 
       try {
-        // 1. Generate Topic via AI (Using targeted topics for this specific subject)
         const result = await generateQuestionTopic(
           q.question_text || "",
           (q.options as string[]) || [],
@@ -103,26 +119,25 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
           (q.images as any[]) || [],
           selectedAIModel
         );
-        
+
         const topic = result.topic;
         const usage = result.usage;
-        
-        // 2. Save to MockTest JSON
+
         await updateMockTestQuestionTopic(testId, q.id, topic);
-        
+
         fixed++;
         cumulativeInput += usage.input;
         cumulativeOutput += usage.output;
-        
+
         setLiveFeed(prev => prev ? {
           ...prev,
           currentTopic: topic,
           fixed,
           totalInputTokens: cumulativeInput,
           totalOutputTokens: cumulativeOutput,
-          log: [...prev.log, { 
-            id: q.id, 
-            text: (q.question_text || "").substring(0, 80) + "...", 
+          log: [...prev.log, {
+            id: q.id,
+            text: (q.question_text || "").substring(0, 80) + "...",
             status: "ok",
             question: q,
             topic,
@@ -135,22 +150,30 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
         setLiveFeed(prev => prev ? {
           ...prev,
           failed,
-          log: [...prev.log, { 
-            id: q.id, 
-            text: (q.question_text || "").substring(0, 80) + "...", 
+          log: [...prev.log, {
+            id: q.id,
+            text: (q.question_text || "").substring(0, 80) + "...",
             status: "fail",
             question: q,
             topic: "Error",
           }],
         } : null);
       }
-
-
     }
 
     setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);
     setBatchProcessing(null);
-    setBatchResult({ total: questions.length, fixed, failed });
+    // Update count locally so the button reflects the new state without a page reload
+    setUncategorizedCounts(prev => ({ ...prev, [testId]: Math.max(0, (prev[testId] ?? 0) - fixed) }));
+
+    // Auto-advance to the next test that still has uncategorized questions
+    if (autoAdvance) {
+      const currentIdx = filteredTests.findIndex(t => t.id === testId);
+      const nextTest = filteredTests.slice(currentIdx + 1).find(t => (uncategorizedCounts[t.id] ?? 0) > 0);
+      if (nextTest) {
+        setTimeout(() => handleBatchProcess(nextTest.id, true), 2000);
+      }
+    }
   };
 
   return (
@@ -273,7 +296,7 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
                   {/* Token Stats Summary */}
                   <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-500/20 flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                     <div className="flex flex-col gap-1">
-                      <span>Input Tokens</span>
+                       <span>Input Tokens</span>
                       <span className="text-gray-900 dark:text-white">{liveFeed.totalInputTokens.toLocaleString()}</span>
                     </div>
                     <div className="flex flex-col gap-1">
@@ -299,21 +322,53 @@ export default function TopicsClient({ mockTests, availableTopics }: TopicsClien
         </div>
       )}
 
+      {/* FILTER AND AUTO ADVANCE BAR */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-xl border dark:border-zinc-700">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="autoAdvance"
+            checked={autoAdvance}
+            onChange={(e) => setAutoAdvance(e.target.checked)}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          />
+          <label htmlFor="autoAdvance" className="text-xs font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+            Auto-Advance
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-gray-500">Filter:</span>
+          <select
+            value={filterMode}
+            onChange={(e) => setFilterMode(e.target.value as "all" | "actual")}
+            className="px-2 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-900 border dark:border-zinc-700 outline-none"
+          >
+            <option value="all">All Papers</option>
+            <option value="actual">Actual Mocks Only</option>
+          </select>
+        </div>
+      </div>
+
       {/* SELECTION PANEL */}
       <div className="grid grid-cols-1 gap-4">
-        {mockTests.map((test) => {
-          const questions = (test.questions as any[]) || [];
-          const missing = questions.filter(q => !q.topic || q.topic === "Unknown").length;
+        {filteredTests.map((test) => {
+          const missing = uncategorizedCounts[test.id] ?? 0;
           const isProcessing = batchProcessing === test.id;
           
           return (
             <div key={test.id} className="p-5 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-sm">{test.title}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm">{test.title}</h3>
+                  {test.mode !== "random" && (
+                    <span className="text-[8px] font-black uppercase bg-indigo-500 text-white px-1.5 py-0.5 rounded">Actual Mock</span>
+                  )}
+                </div>
                 <div className="text-[10px] text-gray-500 flex gap-2 items-center mt-1">
                   <span>{test.exam_type}</span>
                   <span>•</span>
-                  <span>{questions.length} Questions</span>
+                  <span>{test.total_questions} Questions</span>
                   <span>•</span>
                   <span className={missing > 0 ? "text-amber-500 font-bold" : "text-green-500"}>
                     {missing > 0 ? `${missing} uncategorized` : "All Categorized"}

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import { CheckCircle2, XCircle, AlertCircle, ChevronDown, RotateCcw, Target, Brain, TrendingUp, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, ChevronDown, RotateCcw, Target, Brain, TrendingUp, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
@@ -8,6 +8,7 @@ import MathRenderer from "@/components/ui/MathRenderer";
 /* ─────────────── Types ─────────────── */
 export interface ResultData {
   examType?: string;
+  mockTestId?: string | null;
   score: number;
   maxScore: number;
   accuracy: number;
@@ -205,6 +206,18 @@ export default function TestAnalysis({ result, onRestart }: Props) {
                     </p>
                   </div>
                 </div>
+                {result.mockTestId && (
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: BE.accentSoft, color: BE.accent }}><Trophy size={20} /></div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: BE.text }}>Live Leaderboard</div>
+                      <p style={{ fontSize: 12, color: BE.textDim }}>
+                        See how you rank against everyone on this mock —{" "}
+                        <Link href={`/mock/${result.mockTestId}/dashboard`} style={{ color: BE.accent, textDecoration: "underline" }}>view live</Link>.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <button onClick={onRestart} className="be-btn w-full flex items-center justify-center gap-2 mt-8">

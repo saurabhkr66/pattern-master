@@ -18,7 +18,8 @@ const getTopicsBase = unstable_cache(
         select: {
           id: true,
           subject_name: true,
-          _count: { select: { pyqs: true } },
+          branch: true,
+          exam_type: true,
         },
       }),
       isAll
@@ -40,16 +41,31 @@ const getTopicsBase = unstable_cache(
           }),
     ]);
 
-    const mappedSubjectsBase = subjectPatterns.map((sp) => ({
+    const subjectsWithCounts = await Promise.all(
+      subjectPatterns.map(async (sp) => {
+        const pyqCount = await prisma.pYQ.count({
+          where: {
+            pattern: {
+              subject: sp.subject_name,
+              branch: sp.branch,
+              exam_type: sp.exam_type,
+            }
+          }
+        });
+        return { ...sp, pyqCount };
+      })
+    );
+
+    const mappedSubjectsBase = subjectsWithCounts.map((sp) => ({
       id: `subject-${sp.id}`,
       _rawId: sp.id,
       subject: sp.subject_name,
       topic_name: sp.subject_name,
       atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
       isSubjectLevel: true,
-      totalQuestions: sp._count.pyqs,
+      totalQuestions: sp.pyqCount,
       questionsCount: 0,
-      pyqsCount: sp._count.pyqs,
+      pyqsCount: sp.pyqCount,
       solvedQuestions: 0,
       questions: [],
       pyqs: [],
@@ -134,13 +150,15 @@ const getSolvedCounts = (
 
       if (spIds.length > 0) {
         parts.push(Prisma.sql`
-          SELECT 'subject'::text as type, sp.subject_pattern_id::text as id,
-                 COUNT(DISTINCT a.subject_pyq_id)::bigint as solved
+          SELECT 'subject'::text as type, sp.id::text as id,
+                 COUNT(DISTINCT a.pyq_id)::bigint as solved
           FROM "Attempt" a
-          JOIN "SubjectPYQ" sp ON sp.id = a.subject_pyq_id
+          JOIN "PYQ" p ON p.id = a.pyq_id
+          JOIN "Pattern" pat ON pat.id = p.pattern_id
+          JOIN "SubjectPattern" sp ON sp.subject_name = pat.subject AND sp.branch = pat.branch AND sp.exam_type = pat.exam_type
           WHERE a.user_id = ${userId} AND a.is_correct = true
-            AND sp.subject_pattern_id = ANY(${spIds})
-          GROUP BY sp.subject_pattern_id
+            AND sp.id = ANY(${spIds})
+          GROUP BY sp.id
         `);
       }
 
@@ -220,9 +238,10 @@ export async function GET(request: Request) {
       solvedQuestions: (solvedQByPattern[t.id] ?? 0) + (solvedPByPattern[t.id] ?? 0),
     }));
 
-    return NextResponse.json({
-      topics: subject === "All" ? mergedSubjects : [...mergedSubjects, ...mergedTopics],
-    });
+    return NextResponse.json(
+      { topics: subject === "All" ? mergedSubjects : [...mergedSubjects, ...mergedTopics] },
+      { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
+    );
   } catch (err) {
     console.error("[GET /api/practice/topics]", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

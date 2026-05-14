@@ -349,16 +349,33 @@ export default function MockTestPage() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      const breakdown = data.breakdown || [];
-      const accuracy = (data.correctCount + data.wrongCount) > 0
-        ? (data.correctCount / (data.correctCount + data.wrongCount)) * 100 : 0;
+      // Fetch breakdown from saved session (avoids sending ~300KB in the submit response).
+      // Fall back to inline breakdown only when DB save failed (local- session id).
+      let breakdown: any[] = data.breakdown || [];
+      let sessionScore = data;
+      if (!data.breakdown && data.sessionId && !data.sessionId.startsWith("local-")) {
+        const histRes = await fetch(`/api/test/history/${data.sessionId}`);
+        const histData = await histRes.json();
+        if (histRes.ok && histData.session) {
+          const s = histData.session;
+          breakdown = Array.isArray(s.answers) ? s.answers : [];
+          sessionScore = {
+            score: s.score, maxScore: s.max_score,
+            correctCount: s.correct_count, wrongCount: s.wrong_count, skippedCount: s.skipped_count,
+            timeTakenSecs: s.time_taken_secs,
+          };
+        }
+      }
 
-      const sectionMap: Record<string, { 
+      const accuracy = (sessionScore.correctCount + sessionScore.wrongCount) > 0
+        ? (sessionScore.correctCount / (sessionScore.correctCount + sessionScore.wrongCount)) * 100 : 0;
+
+      const sectionMap: Record<string, {
         name: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number;
         topics: Record<string, { topic: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number; }>
       }> = {};
       const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number }> = {};
-      
+
       breakdown.forEach((q: any) => {
         const secName = q.sectionName || "Section";
         if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0, topics: {} };
@@ -376,18 +393,19 @@ export default function MockTestPage() {
 
         const subName = q.subject || "General";
         if (!subjectMap[subName]) subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0 };
-        const s = subjectMap[subName];
-        s.max += q.marks; s.total += 1;
-        s.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { s.score += q.marks; s.correct += 1; }
+        const sub = subjectMap[subName];
+        sub.max += q.marks; sub.total += 1;
+        sub.timeSpentSecs += (q.timeSpentSecs || 0);
+        if (q.isCorrect) { sub.score += q.marks; sub.correct += 1; }
       });
 
       setResult({
         examType: selectedExam ?? undefined,
-        score: data.score, maxScore: data.maxScore, accuracy,
-        timeTakenSecs: data.timeTakenSecs,
-        attempted: data.correctCount + data.wrongCount,
-        correct: data.correctCount, incorrect: data.wrongCount, unattempted: data.skippedCount,
+        mockTestId: mockTestId ?? null,
+        score: sessionScore.score, maxScore: sessionScore.maxScore, accuracy,
+        timeTakenSecs: sessionScore.timeTakenSecs,
+        attempted: sessionScore.correctCount + sessionScore.wrongCount,
+        correct: sessionScore.correctCount, incorrect: sessionScore.wrongCount, unattempted: sessionScore.skippedCount,
         sectionBreakdown: Object.values(sectionMap).map(s => ({
           name: s.name, score: s.score, max: s.max, correct: s.correct, total: s.total, timeSpentSecs: s.timeSpentSecs,
           accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0,
@@ -396,9 +414,9 @@ export default function MockTestPage() {
             accuracy: t.total > 0 ? (t.correct / t.total) * 100 : 0,
           }))
         })),
-        subjectBreakdown: Object.values(subjectMap).map(s => ({
-          subject: s.subject, score: s.score, max: s.max, correct: s.correct, total: s.total, timeSpentSecs: s.timeSpentSecs,
-          accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0,
+        subjectBreakdown: Object.values(subjectMap).map(sub => ({
+          subject: sub.subject, score: sub.score, max: sub.max, correct: sub.correct, total: sub.total, timeSpentSecs: sub.timeSpentSecs,
+          accuracy: sub.total > 0 ? (sub.correct / sub.total) * 100 : 0,
         })),
         questions: breakdown.map((q: any) => ({
           id: q.questionId, question_text: q.questionText, options: q.options,
@@ -467,6 +485,7 @@ export default function MockTestPage() {
       setMockTestTitle(s.mock_test?.title ?? mock.title);
       setResult({
         examType: s.exam_type,
+        mockTestId: s.mock_test_id ?? mock.id ?? null,
         score: s.score, maxScore: s.max_score, accuracy,
         timeTakenSecs: s.time_taken_secs,
         attempted: s.correct_count + s.wrong_count,

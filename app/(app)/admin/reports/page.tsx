@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ReportsClient from "./ReportsClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export default async function AdminReportsPage() {
   const { userId } = await auth();
-  
+
   if (!userId) {
     redirect("/sign-in");
   }
@@ -18,124 +18,171 @@ export default async function AdminReportsPage() {
 
   // SECURE ADMIN CHECK
   const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-  
+
   if (!userEmail || (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com")) {
-    // If they are not an admin, kick them out to the homepage
     redirect("/");
   }
 
   const EXAMS = ["GATE", "JEE_MAIN", "JEE_ADVANCED", "NEET"];
 
-  // Run all independent queries in parallel instead of sequentially
-  const [manualReports, missingSubjectPYQs, missingPYQs, mockTemplatesRaw] = await Promise.all([
-    prisma.questionReport.findMany({
-      where: { status: "pending" },
-      orderBy: { created_at: "desc" },
-      include: {
-        user: { select: { email: true } },
-        question: { include: { pattern: true } },
-        pyq: { include: { pattern: true } },
-        subject_pyq: { include: { subject_pattern: true } },
-      }
-    }),
-    // Single query for all exams instead of 4 sequential ones
+  // Fetch manual reports first so we know which mock question IDs are reported.
+  // Bounded `take:` + selective `include:` to cap egress per page load —
+  // unbounded queries with full nested includes were the main culprit driving
+  // Supabase egress past the free tier.
+  const manualReports = await prisma.questionReport.findMany({
+    where: { status: "pending" },
+    orderBy: { created_at: "desc" },
+    take: 100,
+    include: {
+      user: { select: { email: true } },
+      question: {
+        select: {
+          id: true, question_text: true, options: true, correct_answer: true,
+          explanation: true, question_type: true, images: true,
+          pattern: { select: { id: true, topic_name: true, subject: true, exam_type: true } },
+        },
+      },
+      pyq: {
+        select: {
+          id: true, question_text: true, options: true, correct_answer: true,
+          explanation: true, question_type: true, year: true, images: true,
+          pattern: { select: { id: true, topic_name: true, subject: true, exam_type: true } },
+        },
+      },
+      subject_pyq: {
+        select: {
+          id: true, question_text: true, options: true, correct_answer: true,
+          explanation: true, question_type: true, year: true, images: true,
+          subject_pattern: { select: { id: true, subject_name: true, exam_type: true } },
+        },
+      },
+    }
+  });
+
+  const reportedMockQuestionIds = manualReports
+    .map(r => r.mock_question_id)
+    .filter((id): id is string => Boolean(id));
+
+  // All remaining queries run in parallel
+  const [
+    missingSubjectPYQs,
+    missingPYQs,
+    mockTemplatesMeta,
+    missingMockRows,
+    flaggedMockRows,
+    reportedMockRows,
+  ] = await Promise.all([
     prisma.subjectPYQ.findMany({
       where: { explanation: "", subject_pattern: { exam_type: { in: EXAMS } } },
-      take: 80,
-      include: { subject_pattern: true }
+      take: 15,
+      select: {
+        id: true, question_text: true, options: true, correct_answer: true,
+        explanation: true, question_type: true, images: true,
+        subject_pattern: { select: { exam_type: true, subject_name: true } },
+      },
     }),
     prisma.pYQ.findMany({
       where: { explanation: "", exam_type: { in: EXAMS } },
-      take: 80,
-      include: { pattern: true }
-    }),
-    // Only fetch the fields we actually need — skip heavy fields like sections/topics
-    prisma.mockTestTemplate.findMany({
+      take: 15,
       select: {
-        id: true,
-        title: true,
-        exam_type: true,
-        branch: true,
-        mock_number: true,
-        subjects: true,
-        total_questions: true,
-        questions: true,
-      }
+        id: true, question_text: true, options: true, correct_answer: true,
+        explanation: true, question_type: true, exam_type: true, images: true,
+        pattern: { select: { exam_type: true, subject: true } },
+      },
     }),
+    // Only id + title needed for the PDF panel dropdown — no questions JSONB
+    prisma.mockTestTemplate.findMany({
+      where: { mode: 'seeded' },
+      select: { id: true, title: true, exam_type: true },
+    }),
+    // Missing explanations: filter entirely in Postgres, 10 per exam (was 30).
+    // Each `question` row carries the full question JSONB (~5-20KB), so
+    // reducing the per-exam limit is the highest-leverage egress fix here.
+    prisma.$queryRaw<{ template_id: string; title: string; exam_type: string; question: any }[]>`
+      WITH ranked AS (
+        SELECT
+          t.id   AS template_id,
+          t.title,
+          t.exam_type,
+          elem   AS question,
+          ROW_NUMBER() OVER (PARTITION BY t.exam_type ORDER BY t.id) AS rn
+        FROM "MockTestTemplate" t,
+        jsonb_array_elements(t.questions) AS elem
+        WHERE t.exam_type = ANY(${EXAMS}::text[])
+          AND t.mode = 'seeded'
+          AND (elem->>'explanation' IS NULL OR trim(elem->>'explanation') = '')
+          AND NOT (COALESCE(elem->'images', '[]'::jsonb) @> '[{"type":"explanation"}]'::jsonb)
+      )
+      SELECT template_id, title, exam_type, question
+      FROM ranked
+      WHERE rn <= 10
+    `,
+    // AI mismatches: hard LIMIT to bound worst case.
+    prisma.$queryRaw<{ template_id: string; title: string; exam_type: string; question: any }[]>`
+      SELECT
+        t.id   AS template_id,
+        t.title,
+        t.exam_type,
+        elem   AS question
+      FROM "MockTestTemplate" t,
+      jsonb_array_elements(t.questions) AS elem
+      WHERE t.mode = 'seeded'
+        AND (elem->>'ai_answer_mismatch')::boolean = true
+      LIMIT 50
+    `,
+    // Fetch only the specific questions that are manually reported
+    reportedMockQuestionIds.length > 0
+      ? prisma.$queryRaw<{ template_id: string; question: any }[]>`
+          SELECT t.id AS template_id, elem AS question
+          FROM "MockTestTemplate" t,
+          jsonb_array_elements(t.questions) AS elem
+          WHERE elem->>'id' = ANY(${reportedMockQuestionIds}::text[])
+        `
+      : Promise.resolve([]),
   ]);
 
-  // Strip explanation *content* from mock questions before sending to client,
-  // EXCEPT for questions that are actually being reported or have AI mismatches.
-  // This keeps payload size small while allowing admins to see the explanation for flagged items.
-  const reportedMockQuestionIds = new Set(
-    manualReports.map(r => r.mock_question_id).filter(Boolean)
+  // Build a lookup for reported mock questions so manual reports can reference them
+  const reportedMockQMap = Object.fromEntries(
+    reportedMockRows.map(r => [r.question.id, { templateId: r.template_id, q: r.question }])
   );
 
-  const mockTemplates = mockTemplatesRaw.map(t => ({
-    ...t,
-    questions: (t.questions as any[]).map(({ explanation, ...q }: any) => {
-      const shouldKeepExplanation = reportedMockQuestionIds.has(q.id) || q.ai_answer_mismatch;
-      return {
-        ...q,
-        explanation: shouldKeepExplanation ? explanation : (explanation ? "__EXISTS__" : ""),
-      };
-    }),
+  // Attach question data to manual reports that reference mock questions
+  const enrichedManualReports = manualReports.map(r => {
+    if (r.mock_question_id && reportedMockQMap[r.mock_question_id]) {
+      return { ...r, q: reportedMockQMap[r.mock_question_id].q };
+    }
+    return r;
+  });
+
+  const missingMockQuestions = missingMockRows.map(row => ({
+    id: `auto-mock-${row.template_id}-${row.question.id}`,
+    reason: "Missing Explanation (Mock)",
+    status: "pending",
+    created_at: new Date(),
+    user: { email: "System Scanner" },
+    isMock: true,
+    mock_test_id: row.template_id,
+    mock_question_id: row.question.id,
+    exam_type: row.exam_type,
+    subject: row.question.subject || row.question.sectionName || row.question.topic_name || row.title,
+    q: row.question,
+    details: `Question in "${row.title}" has no explanation.`
   }));
 
-  const missingMockQuestions: any[] = [];
-  
-  for (const exam of EXAMS) {
-    const examTemplates = mockTemplates.filter(t => t.exam_type === exam);
-    let count = 0;
-    for (const template of examTemplates) {
-      if (count >= 30) break;
-      const questions = (template.questions as any[]) || [];
-      for (const q of questions) {
-        if (!q.explanation || q.explanation.trim() === "") {
-          missingMockQuestions.push({
-            id: `auto-mock-${template.id}-${q.id}`,
-            reason: "Missing Explanation (Mock)",
-            status: "pending",
-            created_at: new Date(),
-            user: { email: "System Scanner" },
-            isMock: true,
-            mock_test_id: template.id,
-            mock_question_id: q.id,
-            exam_type: template.exam_type,
-            subject: q.subject || q.sectionName || q.topic_name || template.title,
-            q: q,
-            details: `Question in "${template.title}" has no explanation.`
-          });
-          count++;
-          if (count >= 30) break;
-        }
-      }
-    }
-  }
-
-  // Scan for AI-flagged mismatch questions (AI disagrees with stored answer)
-  const flaggedMockQuestions: any[] = [];
-  for (const template of mockTemplates) {
-    const questions = (template.questions as any[]) || [];
-    for (const q of questions) {
-      if (q.ai_answer_mismatch) {
-        flaggedMockQuestions.push({
-          id: `flag-mock-${template.id}-${q.id}`,
-          reason: "⚠️ AI Answer Mismatch",
-          status: "pending",
-          created_at: new Date(),
-          user: { email: "AI Verifier" },
-          isMock: true,
-          mock_test_id: template.id,
-          mock_question_id: q.id,
-          exam_type: template.exam_type,
-          subject: q.subject || q.sectionName || q.topic_name || template.title,
-          q: q,
-          details: `AI thinks correct answer is "${q.ai_detected_answer}" but stored answer is "${q.correct_answer}". Test: "${template.title}"`
-        });
-      }
-    }
-  }
+  const flaggedMockQuestions = flaggedMockRows.map(row => ({
+    id: `flag-mock-${row.template_id}-${row.question.id}`,
+    reason: "⚠️ AI Answer Mismatch",
+    status: "pending",
+    created_at: new Date(),
+    user: { email: "AI Verifier" },
+    isMock: true,
+    mock_test_id: row.template_id,
+    mock_question_id: row.question.id,
+    exam_type: row.exam_type,
+    subject: row.question.subject || row.question.sectionName || row.question.topic_name || row.title,
+    q: row.question,
+    details: `AI thinks correct answer is "${row.question.ai_detected_answer}" but stored answer is "${row.question.correct_answer}". Test: "${row.title}"`
+  }));
 
   // Convert them into "virtual reports" so they show up in the UI
   const autoReports = [
@@ -163,7 +210,7 @@ export default async function AdminReportsPage() {
     ...missingMockQuestions
   ];
 
-  const allReports = [...manualReports, ...autoReports];
+  const allReports = [...enrichedManualReports, ...autoReports];
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8">
@@ -177,7 +224,7 @@ export default async function AdminReportsPage() {
         </div>
       </div>
 
-      <ReportsClient reports={allReports} mockTests={mockTemplates} />
+      <ReportsClient reports={allReports} mockTests={mockTemplatesMeta} />
     </div>
   );
 }

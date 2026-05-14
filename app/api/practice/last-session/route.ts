@@ -48,14 +48,17 @@ export async function GET() {
   const correct = sessionAttempts.filter(a => a.is_correct).length;
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-  return NextResponse.json({
-    session: {
-      patternId: pattern.id,
-      topicName: pattern.topic_name,
-      subject: pattern.subject,
-      questions: total,
-      accuracy,
-      lastAt: lastAttempt.created_at,
+  return NextResponse.json(
+    {
+      session: {
+        patternId: pattern.id,
+        topicName: pattern.topic_name,
+        subject: pattern.subject,
+        questions: total,
+        accuracy,
+        lastAt: lastAttempt.created_at,
+      },
     },
-  });
+    { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
+  );
 }

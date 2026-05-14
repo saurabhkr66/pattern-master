@@ -4,6 +4,9 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getExamConfig, type ExamType } from "@/lib/examConfigs";
 import type { SubmitAnswer } from "@/components/test/TestEngine";
+import { recordSubmission } from "@/lib/leaderboard";
+import { getCachedTemplateById } from "@/lib/mockTemplate";
+import { clearDraft } from "@/lib/draft";
 interface BreakdownItem {
   questionId: string; source: string; sectionIndex: number; sectionName: string;
   questionType: string; marks: number; isOptional: boolean; counted: boolean;
@@ -91,10 +94,7 @@ export async function POST(req: NextRequest) {
     // Also try to get answers from the stored template (avoids N+1 lookups and handles all question types)
     let templateAnswers: Map<string, { correct_answer: string; explanation: string; question_text: string; options: unknown; topic?: string }> | null = null;
     if (mockTestId) {
-      const template = await prisma.mockTestTemplate.findUnique({
-        where: { id: mockTestId },
-        select: { questions: true, sections: true },
-      });
+      const template = await getCachedTemplateById(mockTestId);
       if (template?.questions) {
         const qs = template.questions as any[];
         templateAnswers = new Map(
@@ -225,6 +225,7 @@ export async function POST(req: NextRequest) {
 
     // Save TestSession
     let sessionId = `local-${Date.now()}`;
+    let savedToDb = false;
     try {
       const session = await prisma.testSession.create({
         data: {
@@ -244,15 +245,26 @@ export async function POST(req: NextRequest) {
         },
       });
       sessionId = session.id;
+      savedToDb = true;
     } catch (dbErr: any) {
       if (!(dbErr?.code === "P2021" || dbErr?.message?.includes("does not exist"))) throw dbErr;
     }
 
-    // Delete the in-progress draft now that the test is submitted
+    // Delete the in-progress draft now that the test is submitted.
+    // Look up IDs first so we can also drop their Redis state keys.
     if (mockTestId) {
-      await prisma.testSessionDraft.deleteMany({
-        where: { user_id: userId, mock_test_id: mockTestId },
-      }).catch(() => {});
+      const drafts = await prisma.testSessionDraft
+        .findMany({
+          where: { user_id: userId, mock_test_id: mockTestId },
+          select: { id: true },
+        })
+        .catch(() => []);
+      for (const d of drafts) {
+        clearDraft(userId, d.id).catch(() => {});
+      }
+      await prisma.testSessionDraft
+        .deleteMany({ where: { user_id: userId, mock_test_id: mockTestId } })
+        .catch(() => {});
     }
 
     // Save attempts for dashboard tracking (bulk insert for performance)
@@ -277,6 +289,24 @@ export async function POST(req: NextRequest) {
       await prisma.attempt.createMany({ data: attemptData, skipDuplicates: true });
     }
 
+    // Real-time leaderboard: push to Redis + trigger Pusher event.
+    // Fire-and-forget so the submit response isn't blocked.
+    if (savedToDb && mockTestId) {
+      const userRow = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      }).catch(() => null);
+      recordSubmission({
+        mockId: mockTestId,
+        sessionId,
+        userId,
+        email: userRow?.email ?? null,
+        score: finalScore,
+        maxScore,
+        timeTakenSecs: timeTakenSecs ?? null,
+      }).catch((e) => console.warn("[leaderboard] recordSubmission failed", e));
+    }
+
     await revalidatePath("/dashboard", "page");
     await revalidateTag("dashboard", "max");
     await revalidateTag("history", "max");
@@ -293,7 +323,9 @@ export async function POST(req: NextRequest) {
         skippedCount,
         timeTakenSecs,
         sectionScores,
-        breakdown,
+        // Only include breakdown when not saved to DB (fallback for DB failures)
+        // so the client can still show the analysis without a history fetch
+        ...(savedToDb ? {} : { breakdown }),
       },
       { status: 201 }
     );

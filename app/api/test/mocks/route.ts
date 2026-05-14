@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       const mock = await getMock(id, userId);
       if (!mock) return NextResponse.json({ error: "Mock test not found" }, { status: 404 });
 
-      return NextResponse.json({ mock: { ...mock, session: mock.sessions[0] ?? null } });
+      return NextResponse.json({ mock: { ...mock, session: mock.sessions[0] ?? null } }, { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } });
     }
 
     if (!examType) return NextResponse.json({ error: "exam_type or id required" }, { status: 400 });
@@ -62,13 +62,16 @@ export async function GET(req: NextRequest) {
 
     const mocks = await getMocks(examType, branch, userId);
 
-    return NextResponse.json({
-      mocks: mocks.map((m) => ({
-        id: m.id, mock_number: m.mock_number, title: m.title,
-        total_questions: m.total_questions, max_score: m.max_score,
-        duration_secs: m.duration_secs, session: m.sessions[0] ?? null,
-      })),
-    });
+    return NextResponse.json(
+      {
+        mocks: mocks.map((m) => ({
+          id: m.id, mock_number: m.mock_number, title: m.title,
+          total_questions: m.total_questions, max_score: m.max_score,
+          duration_secs: m.duration_secs, session: m.sessions[0] ?? null,
+        })),
+      },
+      { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
+    );
   } catch (err) {
     console.error("Mocks list error:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

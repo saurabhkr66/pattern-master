@@ -8,7 +8,12 @@ const nextConfig: NextConfig = {
   // (Switching to 'export' requires refactoring all Server Components to Client Components)
 
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
   },
 
   experimental: {

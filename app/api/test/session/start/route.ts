@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { addActiveParticipant } from "@/lib/leaderboard";
+import { initDraft, readDraftState } from "@/lib/draft";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -18,12 +20,18 @@ export async function POST(req: NextRequest) {
         0,
         Math.floor((existing.expires_at.getTime() - Date.now()) / 1000)
       );
+      addActiveParticipant(mockTestId, userId, existing.expires_at.getTime()).catch(
+        (e) => console.warn("[leaderboard] addActiveParticipant failed", e)
+      );
+      // Prefer Redis state (current); fall back to DB.state (last persisted).
+      const redisState = await readDraftState(userId, existing.id);
+      const state = redisState ?? existing.state;
       return NextResponse.json({
         draftId: existing.id,
         startedAt: existing.started_at.toISOString(),
         expiresAt: existing.expires_at.toISOString(),
         timeLeftSecs,
-        state: existing.state,
+        state,
         resumed: true,
       });
     }
@@ -45,6 +53,17 @@ export async function POST(req: NextRequest) {
       state: {},
     },
   });
+
+  if (mockTestId) {
+    addActiveParticipant(mockTestId, userId, expiresAt.getTime()).catch((e) =>
+      console.warn("[leaderboard] addActiveParticipant failed", e)
+    );
+  }
+
+  // Seed Redis with empty state so subsequent saves don't touch the DB.
+  initDraft(userId, draft.id, {}).catch((e) =>
+    console.warn("[draft] initDraft failed", e)
+  );
 
   return NextResponse.json({
     draftId: draft.id,

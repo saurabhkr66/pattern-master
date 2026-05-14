@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       );
 
       const sessions = await getHistory(userId, examType, branch);
-      return NextResponse.json({ sessions });
+      return NextResponse.json({ sessions }, { headers: { "Cache-Control": "private, s-maxage=30, max-age=0" } });
     } catch (dbErr: any) {
       if (dbErr?.code === "P2021" || dbErr?.message?.includes("does not exist")) {
         return NextResponse.json({ sessions: [] });

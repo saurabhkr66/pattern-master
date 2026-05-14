@@ -231,7 +231,7 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
       </div>
 
       {/* Explanation – only visible after Show Answer */}
-      {showAnswer && q.explanation && (
+      {showAnswer && (q.explanation || (q.images && q.images.some(img => img.type === "explanation"))) && (
         <div
           className="px-6 md:px-8 pb-8"
         >

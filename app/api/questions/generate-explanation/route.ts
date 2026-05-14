@@ -12,7 +12,7 @@ const vertexAI = new VertexAI({
   location: 'us-central1',
 });
 
-const GEMINI_MODEL = "gemini-2.5-flash"; // Change this one line to switch Gemini models
+const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch Gemini models
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,91 +67,36 @@ Rules:
 6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.
 `;
 
-    // 1. Fetch images as base64
-    const images = (questionData.images as any[]) || [];
+    // Send text-only to Gemini — skips downloading images from Cloudinary,
+    // which was the primary source of egress on this endpoint.
+    // Questions with images still get accurate explanations because the
+    // question_text already encodes the diagram description in most cases.
     const contentParts: any[] = [prompt];
 
-    if (images.length > 0) {
-      const fs = await import("fs");
-      const path = await import("path");
-      const { getCloudinaryUrl } = await import("@/lib/imageUtils");
-
-      for (const img of images) {
-        const filename = img.filename || img.url;
-        if (!filename) continue;
-
-        // Try local
-        let imgResult = null;
-        const possiblePaths = [
-          path.join(process.cwd(), "public", "images", "questions", filename),
-          path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-        ];
-
-        for (const filePath of possiblePaths) {
-          try {
-            if (fs.existsSync(filePath)) {
-              const data = fs.readFileSync(filePath);
-              const ext = path.extname(filePath).slice(1).toLowerCase();
-              const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
-              imgResult = { data: data.toString("base64"), mimeType };
-              break;
-            }
-          } catch { }
-        }
-
-        // Try Cloudinary
-        if (!imgResult) {
-          const cloudinaryUrl = getCloudinaryUrl(filename);
-          if (cloudinaryUrl.startsWith("http")) {
-            try {
-              const response = await fetch(cloudinaryUrl);
-              if (response.ok) {
-                const buffer = Buffer.from(await response.arrayBuffer());
-                imgResult = { data: buffer.toString("base64"), mimeType: response.headers.get("content-type") || "image/jpeg" };
-              }
-            } catch { }
-          }
-        }
-
-        if (imgResult) {
-          contentParts.push({
-            inlineData: { data: imgResult.data, mimeType: imgResult.mimeType }
-          });
-        }
-      }
-    }
-
-    /* --- ORIGINAL API KEY METHOD (Commented Out) ---
+    // --- ORIGINAL API KEY METHOD ---
     if (!genAI) {
       return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 500 });
     }
+    console.log(`[AI] 🚀 Using Gemini API - Model: ${GEMINI_MODEL}`);
     const model = genAI.getGenerativeModel({
       model: GEMINI_MODEL,
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
+        // @ts-ignore
         thinkingConfig: { thinkingLevel: "MEDIUM" },
       }
     });
     const result = await model.generateContent(contentParts);
     const usage = result.response.usageMetadata;
     const generatedExplanation = result.response.text();
-    */
 
-    // --- VERTEX AI METHOD (ADC) ---
+    /* --- VERTEX AI METHOD (ADC) (Commented) ---
     console.log(`[AI] 🚀 Using Vertex AI (ADC) - Model: ${GEMINI_MODEL}`);
     const model = vertexAI.getGenerativeModel({
       model: GEMINI_MODEL,
-      /*
-      generationConfig: {
-        maxOutputTokens: 2500,
-        // @ts-ignore
-        // thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" }
-      }
-      */
     });
 
-    // Vertex AI expectation for content parts is slightly different
     const vertexContent = {
       contents: [{
         role: 'user',
@@ -170,6 +115,7 @@ Rules:
       console.error("[GENERATE_EXPLANATION] AI returned empty explanation — candidates:", JSON.stringify(result.response.candidates?.length));
       return NextResponse.json({ error: "AI returned empty explanation" }, { status: 500 });
     }
+    */
 
     const thoughtsTokens = (usage as any)?.thoughtsTokenCount || 0;
     const highThinkingFlag = thoughtsTokens > 8000;

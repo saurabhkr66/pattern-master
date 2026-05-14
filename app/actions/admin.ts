@@ -219,8 +219,8 @@ export async function deleteMockTest(mockTestId: string) {
 }
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-const GEMINI_MODEL = "gemini-2.5-flash"; // Change this one line to switch Gemini models
-const GEMINI_TOPIC_MODEL = "gemini-2.5-flash"; // Specific model for faster topic classification
+const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch Gemini models
+const GEMINI_TOPIC_MODEL = "gemini-3.1-flash-lite"; // Specific model for faster topic classification
 import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
@@ -298,11 +298,15 @@ export async function generateAIExplanation(
     questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId } });
   } else if (questionType === "MockQuestion") {
     if (!mockTestId) throw new Error("mockTestId required for MockQuestion");
-    const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-    if (template) {
-      const questions = template.questions as any[];
-      questionData = questions.find(q => q.id === questionId);
-    }
+    // Pull only the single matching question via JSONB, not the entire
+    // template's questions array. Cuts ~500KB-1MB per call to ~5-20KB.
+    const rows = await prisma.$queryRaw<{ question: any }[]>`
+      SELECT elem AS question
+      FROM "MockTestTemplate", jsonb_array_elements(questions) AS elem
+      WHERE id = ${mockTestId} AND elem->>'id' = ${questionId}
+      LIMIT 1
+    `;
+    questionData = rows[0]?.question ?? null;
   }
 
   if (!questionData) throw new Error("Question not found");
@@ -320,10 +324,10 @@ Target Answer: ${questionData.correct_answer}
 
 Rules:
 1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
-2. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
+2. Use LaTeX ($, $$) for all math and chemical formulas. Wrap ALL math symbols, variables, equations, and chemical formulas (like $KMnO_4$) in $ for inline math or $$ for block math.
 3. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
 4. Keep it concise: 5-7 lines max. Only the key steps.
-5. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
+5. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words. Do NOT write with character-level spacing (e.g., do NOT write "G i v e n").
 6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
 
   console.log(`[AI] Debug - Text Length: ${textPrompt.length}, Options Length: ${JSON.stringify(questionData.options).length}`);
@@ -384,31 +388,25 @@ Rules:
       throw new Error(`GPT-4o-mini returned empty explanation for ${questionId}`);
     }
   } else {
-    /* --- ORIGINAL API KEY METHOD (Commented) ---
+    // --- ORIGINAL API KEY METHOD ---
+    console.log(`[AI] 🚀 Using Gemini API - Model: ${GEMINI_MODEL}`);
     const model = genAI!.getGenerativeModel({
       model: GEMINI_MODEL,
       tools: [],
       generationConfig: {
         maxOutputTokens: 2500,
+        // @ts-ignore
         thinkingConfig: { thinkingLevel: "MEDIUM" },
       }
     });
     const result = await model.generateContent(contentParts);
     explanation = result.response.text();
     geminiUsage = result.response.usageMetadata;
-    */
 
-    // --- VERTEX AI METHOD (ADC) ---
+    /* --- VERTEX AI METHOD (ADC) (Commented) ---
     console.log(`[AI] 🚀 Using Vertex AI (ADC) - Model: ${GEMINI_MODEL}`);
     const model = vertexAI.getGenerativeModel({
       model: GEMINI_MODEL,
-      /*
-      generationConfig: { 
-        maxOutputTokens: 2500,
-        // @ts-ignore
-        // thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" }
-      }
-      */
     });
 
     const vertexContent = {
@@ -425,6 +423,7 @@ Rules:
     if (!explanation.trim()) {
       throw new Error(`AI returned empty explanation for ${questionId} — candidates: ${result.response.candidates?.length ?? 0}`);
     }
+    */
   }
 
   // Clean markdown artifacts
@@ -493,11 +492,26 @@ export async function processMockTestExplanations(mockTestId: string, aiModel: "
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
   if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
 
-  const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-  if (!template) throw new Error("Mock test not found");
-
-  const questions = [...(template.questions as any[])];
-  const total = questions.length;
+  // Pull only questions that actually need fixing (empty explanation) instead
+  // of the entire questions JSONB array. For a 65-question template where 5
+  // need fixes, this drops egress from ~500KB to ~50KB.
+  const rows = await prisma.$queryRaw<{ title: string; total_questions: number; question: any }[]>`
+    SELECT t.title, t.total_questions, elem AS question
+    FROM "MockTestTemplate" t, jsonb_array_elements(t.questions) AS elem
+    WHERE t.id = ${mockTestId}
+      AND (elem->>'explanation' IS NULL OR trim(elem->>'explanation') = '')
+  `;
+  if (rows.length === 0) {
+    const titleRow = await prisma.mockTestTemplate.findUnique({
+      where: { id: mockTestId },
+      select: { title: true, total_questions: true },
+    });
+    if (!titleRow) throw new Error("Mock test not found");
+    return { total: titleRow.total_questions, fixed: 0, failed: 0, totalInputTokens: 0, totalOutputTokens: 0 };
+  }
+  const template = { title: rows[0].title } as { title: string };
+  const questions = rows.map((r) => r.question);
+  const total = rows[0].total_questions;
   let fixed = 0;
   let failed = 0;
   let totalInputTokens = 0;
@@ -521,10 +535,10 @@ Target Answer: ${q.correct_answer}
 
 Rules:
 1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
-2. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
+2. Use LaTeX ($, $$) for all math and chemical formulas. Wrap ALL math symbols, variables, equations, and chemical formulas (like $KMnO_4$) in $ for inline math or $$ for block math.
 3. Use proper KaTeX for limits: e.g., \Big|_0^1. NEVER use $_0^1$.
 4. Keep it concise: 6-8 lines max. Only the key steps.
-5. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
+5. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words. Do NOT write with character-level spacing (e.g., do NOT write "G i v e n").
 6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
 
         const contentParts: any[] = [prompt];
@@ -571,12 +585,13 @@ Rules:
             throw new Error(`GPT-4o-mini returned empty explanation for question ${q.id}`);
           }
         } else {
-          /* --- ORIGINAL API KEY METHOD (Commented) ---
+          // --- ORIGINAL API KEY METHOD ---
           const model = genAI!.getGenerativeModel({
             model: GEMINI_MODEL,
             tools: [],
             generationConfig: {
               maxOutputTokens: 2500,
+              // @ts-ignore
               thinkingConfig: { thinkingLevel: "MEDIUM" },
             }
           });
@@ -585,19 +600,11 @@ Rules:
           const usage = result.response.usageMetadata;
           totalInputTokens += usage?.promptTokenCount || 0;
           totalOutputTokens += usage?.candidatesTokenCount || 0;
-          */
 
-          // --- VERTEX AI METHOD (ADC) ---
+          /* --- VERTEX AI METHOD (ADC) (Commented) ---
           console.log(`[AI] 🚀 Using Vertex AI (ADC) for Batch - Model: ${GEMINI_MODEL}`);
           const model = vertexAI.getGenerativeModel({
             model: GEMINI_MODEL,
-            /*
-            generationConfig: { 
-              maxOutputTokens: 2500,
-              // @ts-ignore
-              // thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" }
-            }
-            */
           });
 
           const vertexContent = {
@@ -609,12 +616,13 @@ Rules:
 
           const result = await model.generateContent(vertexContent);
           explanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          const usage = result.response.usageMetadata;
-          totalInputTokens += usage?.promptTokenCount || 0;
-          totalOutputTokens += usage?.candidatesTokenCount || 0;
+          const u = result.response.usageMetadata;
+          totalInputTokens += u?.promptTokenCount || 0;
+          totalOutputTokens += u?.candidatesTokenCount || 0;
           if (!explanation.trim()) {
             throw new Error(`AI returned empty explanation for question ${q.id} — candidates: ${result.response.candidates?.length ?? 0}`);
           }
+          */
           questionThoughts = (usage as any)?.thoughtsTokenCount || 0;
           if (questionThoughts > 8000) {
             console.warn(`[AI] ⚠️ High thinking tokens: ${questionThoughts} for question ${q.id}`);
@@ -756,9 +764,9 @@ Options: ${JSON.stringify(options)}`;
     topic = response.choices[0].message.content?.trim() || "Unknown";
     usage = { input: response.usage?.prompt_tokens || 0, output: response.usage?.completion_tokens || 0 };
   } else {
-    /* --- ORIGINAL API KEY METHOD (Commented) ---
+    // --- ORIGINAL API KEY METHOD ---
     const model = genAI!.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: GEMINI_TOPIC_MODEL, // Use the constant
       tools: [],
       generationConfig: {
         maxOutputTokens: 20,
@@ -769,9 +777,8 @@ Options: ${JSON.stringify(options)}`;
     topic = result.response.text().trim();
     const u = result.response.usageMetadata;
     usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
-    */
 
-    // --- VERTEX AI METHOD (ADC) ---
+    /* --- VERTEX AI METHOD (ADC) (Commented) ---
     console.log(`[AI] 🚀 Topic Gen using Vertex AI (ADC) - Model: ${GEMINI_TOPIC_MODEL}`);
     const model = vertexAI.getGenerativeModel({
       model: GEMINI_TOPIC_MODEL,
@@ -792,6 +799,7 @@ Options: ${JSON.stringify(options)}`;
     topic = result.response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Unknown";
     const u = result.response.usageMetadata;
     usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
+    */
   }
 
   // Final check: Ensure the returned topic is actually in our list (avoid AI hallucinations)
@@ -824,4 +832,21 @@ export async function updateMockTestQuestionTopic(
   return { success: true };
 }
 
+export async function getMockTestQuestions(mockTestId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
+
+  // Only fetch questions that still need categorization — filter in Postgres, not JS
+  const rows = await prisma.$queryRaw<{ question: any }[]>`
+    SELECT elem AS question
+    FROM "MockTestTemplate",
+    jsonb_array_elements(questions) AS elem
+    WHERE id = ${mockTestId}
+      AND (elem->>'topic' IS NULL OR trim(elem->>'topic') = '' OR elem->>'topic' = 'Unknown' OR elem->>'topic' = 'Uncategorized')
+  `;
+
+  return rows.map(({ question: { explanation, correct_answer, ai_answer_mismatch, ai_detected_answer, ...q } }) => q);
+}
 

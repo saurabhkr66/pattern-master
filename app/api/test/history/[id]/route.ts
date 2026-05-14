@@ -13,32 +13,58 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 
         const session = await prisma.testSession.findUnique({
             where: { id: params.id, user_id: userId },
-            include: { mock_test: { select: { title: true } } }
+            select: {
+                id: true,
+                exam_type: true,
+                score: true,
+                max_score: true,
+                total_questions: true,
+                correct_count: true,
+                wrong_count: true,
+                skipped_count: true,
+                time_taken_secs: true,
+                section_scores: true,
+                answers: true,
+                mock_test_id: true,
+                created_at: true,
+                mock_test: { select: { title: true } },
+            },
         });
 
         if (!session) {
             return NextResponse.json({ error: "Test session not found" }, { status: 404 });
         }
 
-        // Dynamically inject topics from the MockTestTemplate if the old session snapshot lacks them
+        // Hydrate missing topics from the MockTestTemplate ONLY when the session
+        // snapshot is actually missing them. Modern sessions store topics inline
+        // at submit time, so the common case skips the template fetch entirely.
+        // When we do need it, pull just {id, topic} pairs via JSONB extract
+        // instead of the full questions array (~500KB-1MB → ~5KB).
         if (session.mock_test_id && Array.isArray(session.answers)) {
-            const template = await prisma.mockTestTemplate.findUnique({
-                where: { id: session.mock_test_id },
-                select: { questions: true },
-            });
+            const needsHydration = (session.answers as any[]).some((ans) =>
+                !ans.topic || ans.topic === "Uncategorized" || ans.topic === "General" || ans.topic === ""
+            );
 
-            if (template && Array.isArray(template.questions)) {
+            if (needsHydration) {
+                const topicRows = await prisma.$queryRaw<{ qid: string | null; qtext: string | null; topic: string | null }[]>`
+                    SELECT
+                        elem->>'id' AS qid,
+                        elem->>'question_text' AS qtext,
+                        COALESCE(elem->>'topic', elem->>'topic_name') AS topic
+                    FROM "MockTestTemplate", jsonb_array_elements(questions) AS elem
+                    WHERE id = ${session.mock_test_id}
+                      AND (elem->>'topic' IS NOT NULL OR elem->>'topic_name' IS NOT NULL)
+                `;
+
                 const topicMap = new Map<string, string>();
-                template.questions.forEach((q: any) => {
-                    if (q.id && (q.topic || q.topic_name)) {
-                        topicMap.set(q.id, q.topic || q.topic_name);
-                    }
-                    if (q.question_text && (q.topic || q.topic_name)) {
-                        topicMap.set(q.question_text, q.topic || q.topic_name);
+                topicRows.forEach((r) => {
+                    if (r.topic) {
+                        if (r.qid) topicMap.set(r.qid, r.topic);
+                        if (r.qtext) topicMap.set(r.qtext, r.topic);
                     }
                 });
 
-                session.answers = session.answers.map((ans: any) => {
+                session.answers = (session.answers as any[]).map((ans) => {
                     if (!ans.topic || ans.topic === "Uncategorized" || ans.topic === "General" || ans.topic === "") {
                         const liveTopic = topicMap.get(ans.questionId) || (ans.questionText && topicMap.get(ans.questionText));
                         if (liveTopic) {

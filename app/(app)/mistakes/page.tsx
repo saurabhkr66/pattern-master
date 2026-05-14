@@ -13,13 +13,14 @@ export const metadata: Metadata = {
 function getCachedMistakes(userId: string) {
   return unstable_cache(
     async () => {
-      // 1. Find only the LATEST attempt for each question that is WRONG.
-      // If the latest attempt is correct, the question is removed from the mistake log.
+      // Find only the LATEST attempt for each question that is WRONG.
+      // Capped at 100 (was 200). Selective `select:` below drops `options`
+      // and `explanation` since MistakeLog never displays them.
       const latestWrongRows = await prisma.$queryRaw<{ id: string }[]>`
         SELECT id FROM (
           SELECT id, is_correct, created_at,
                  ROW_NUMBER() OVER (
-                   PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id) 
+                   PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id)
                    ORDER BY created_at DESC
                  ) as rn
           FROM "Attempt"
@@ -27,7 +28,7 @@ function getCachedMistakes(userId: string) {
         ) t
         WHERE rn = 1 AND is_correct = false
         ORDER BY created_at DESC
-        LIMIT 200
+        LIMIT 100
       `;
 
       const ids = latestWrongRows.map((r) => r.id);
@@ -35,19 +36,38 @@ function getCachedMistakes(userId: string) {
 
       const wrongAttempts = await prisma.attempt.findMany({
         where: { id: { in: ids } },
-        include: {
+        select: {
+          id: true,
+          user_answer: true,
+          created_at: true,
+          question_id: true,
+          pyq_id: true,
+          subject_pyq_id: true,
           question: {
-            include: {
+            select: {
+              id: true,
+              question_text: true,
+              correct_answer: true,
               pattern: { select: { id: true, topic_name: true, subject: true, exam_type: true } },
             },
           },
           pyq: {
-            include: {
+            select: {
+              id: true,
+              question_text: true,
+              correct_answer: true,
+              year: true,
               pattern: { select: { id: true, topic_name: true, subject: true, exam_type: true } },
             },
           },
           subject_pyq: {
-            include: { subject_pattern: { select: { id: true, subject_name: true } } },
+            select: {
+              id: true,
+              question_text: true,
+              correct_answer: true,
+              year: true,
+              subject_pattern: { select: { id: true, subject_name: true } },
+            },
           },
         },
         orderBy: { created_at: "desc" },
@@ -79,10 +99,8 @@ function getCachedMistakes(userId: string) {
             id: qId,
             attemptId: a.id,
             question_text: q.question_text,
-            options: (q.options as string[]) ?? [],
             correct_answer: q.correct_answer,
             user_answer: a.user_answer ?? null,
-            explanation: q.explanation,
             topic_name: pattern.topic_name,
             subject: pattern.subject,
             patternId: pattern.id,

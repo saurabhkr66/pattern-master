@@ -18,11 +18,14 @@ export default async function ReviewPage() {
 
   // 1. Find only the LATEST attempt for each question that is WRONG.
   // If the latest attempt is correct, the question is removed from the review deck.
+  // Capped at 100 (was 500) — each row carries options+explanation JSON, so
+  // 500 cards = ~1.5MB egress per page load. Users rarely review more than
+  // a few dozen in one sitting; the next 100 surface on next reload.
   const latestWrongRows = await prisma.$queryRaw<{ id: string }[]>`
     SELECT id FROM (
       SELECT id, is_correct, created_at,
              ROW_NUMBER() OVER (
-               PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id) 
+               PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id)
                ORDER BY created_at DESC
              ) as rn
       FROM "Attempt"
@@ -30,7 +33,7 @@ export default async function ReviewPage() {
     ) t
     WHERE rn = 1 AND is_correct = false
     ORDER BY created_at DESC
-    LIMIT 500
+    LIMIT 100
   `;
 
   const ids = latestWrongRows.map((r) => r.id);
@@ -87,6 +90,7 @@ export default async function ReviewPage() {
     }),
     prisma.flashcard.findMany({
       where: { user_id: userId },
+      take: 1000,
     }),
   ]);
 

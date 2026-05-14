@@ -20,6 +20,7 @@ const PYQ_SELECT = {
   explanation: true,
   explanation_hindi: true,
   year: true,
+  exam_type: true,
   question_type: true,
   marks: true,
   images: true,
@@ -35,33 +36,39 @@ const getStaticQuestions = unstable_cache(
       const actualId = id.replace("subject-", "");
       const paginate = take > 0;
 
-      const [subjectPattern, total] = await Promise.all([
-        prisma.subjectPattern.findUnique({
-          where: { id: actualId },
-          select: {
-            id: true,
-            subject_name: true,
-            pyqs: {
-              select: PYQ_SELECT,
-              orderBy: { year: "desc" },
-              ...(paginate ? { skip, take } : {}),
-            },
-          },
-        }),
-        paginate
-          ? prisma.subjectPYQ.count({ where: { subject_pattern_id: actualId } })
-          : Promise.resolve(0),
-      ]);
+      const subjectPattern = await prisma.subjectPattern.findUnique({
+        where: { id: actualId },
+        select: { id: true, subject_name: true, branch: true, exam_type: true },
+      });
 
       if (!subjectPattern) return { error: "Subject Pattern not found", status: 404 };
+
+      const pyqWhere = {
+        pattern: {
+          subject: subjectPattern.subject_name,
+          branch: subjectPattern.branch,
+          exam_type: subjectPattern.exam_type,
+        },
+      };
+
+      const [pyqs, total] = await Promise.all([
+        prisma.pYQ.findMany({
+          where: pyqWhere,
+          select: PYQ_SELECT,
+          orderBy: { year: "desc" },
+          ...(paginate ? { skip, take } : {}),
+        }),
+        paginate
+          ? prisma.pYQ.count({ where: pyqWhere })
+          : Promise.resolve(0),
+      ]);
 
       return {
         data: {
           questions: [],
-          pyqs: subjectPattern.pyqs.map(pyq => ({
+          pyqs: pyqs.map(pyq => ({
             ...pyq,
             marks: resolveMarks(pyq.question_type, pyq.marks),
-            _isSubjectPyq: true,
             attempts: [],
             isBookmarked: false,
           })),
@@ -234,8 +241,9 @@ export async function GET(
           const isSubjectLevel = id.startsWith("subject-");
           const isMock = id.startsWith("mock-");
           const questionIds = (isSubjectLevel || isMock) ? [] : questions.map((q: any) => q.id);
-          const pyqIds = (isSubjectLevel || isMock) ? [] : pyqs.map((q: any) => q.id);
-          const subjectPyqIds = isSubjectLevel ? pyqs.map((q: any) => q.id) : [];
+          // Subject-level patterns now return regular PYQ IDs (SubjectPYQ table is unused)
+          const pyqIds = isMock ? [] : pyqs.map((q: any) => q.id);
+          const subjectPyqIds: string[] = [];
 
           const { attemptMap, bookmarkSet } = await getUserState(userId, questionIds, pyqIds, subjectPyqIds);
 
@@ -245,15 +253,17 @@ export async function GET(
             isBookmarked: bookmarkSet.has(q.id),
           });
 
-          return NextResponse.json({
-            questions: questions.map(hydrate),
-            pyqs: pyqs.map(hydrate),
-            total,
-          });
+          return NextResponse.json(
+            { questions: questions.map(hydrate), pyqs: pyqs.map(hydrate), total },
+            { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
+          );
         }
 
         // 3. Guest — return static data as-is
-        return NextResponse.json({ questions, pyqs, total });
+        return NextResponse.json(
+          { questions, pyqs, total },
+          { headers: { "Cache-Control": "public, s-maxage=3600, max-age=0" } }
+        );
 
     } catch (error) {
         console.error("[GET_PATTERN_QUESTIONS]", error);

@@ -129,12 +129,40 @@ function getCachedWeakTopic(userId: string) {
 function getCachedRecentAttempts(userId: string) {
   return unstable_cache(
     async () => {
+      // Selective `select:` drops the heavy fields (options, explanation,
+      // images) the dashboard never renders. Keeps egress to ~3-5KB per row
+      // instead of ~2KB pre-trim + nested-include bloat.
       const recentAttempts = await prisma.attempt.findMany({
         where: { user_id: userId },
-        include: {
-          question: { include: { pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } } } },
-          pyq: { include: { pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } } } },
-          subject_pyq: { include: { subject_pattern: { select: { subject_name: true, id: true } } } },
+        select: {
+          id: true,
+          is_correct: true,
+          created_at: true,
+          question_id: true,
+          pyq_id: true,
+          subject_pyq_id: true,
+          question: {
+            select: {
+              id: true,
+              question_text: true,
+              pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } },
+            },
+          },
+          pyq: {
+            select: {
+              id: true,
+              question_text: true,
+              pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } },
+            },
+          },
+          subject_pyq: {
+            select: {
+              id: true,
+              question_text: true,
+              topic: true,
+              subject_pattern: { select: { subject_name: true, id: true } },
+            },
+          },
         },
         orderBy: { created_at: "desc" },
         take: 20,

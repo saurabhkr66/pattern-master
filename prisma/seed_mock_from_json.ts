@@ -118,7 +118,17 @@ async function main() {
 
       const examKey = `${config.exam_type}::${config.branch ?? '-'}`;
       const mockNumber = (numberTracker.get(examKey) ?? 0) + 1;
-      const examConfig = getExamConfig(config.exam_type, config.branch ?? undefined);
+      const examConfig = getExamConfig(config.exam_type as ExamType, config.branch ?? undefined);
+
+      const existing = await prisma.mockTestTemplate.findFirst({
+        where: {
+          title: config.title,
+          exam_type: config.exam_type,
+          branch: config.branch,
+          mode: 'seeded',
+        },
+        select: { id: true, mock_number: true, questions: true },
+      });
 
       const allQuestions: any[] = [];
       for (let si = 0; si < paperData.sections.length; si++) {
@@ -127,6 +137,16 @@ async function main() {
         for (let qi = 0; qi < sec.questions.length; qi++) {
           const q = sec.questions[qi];
           const optional = isOptionalQuestion();
+
+          let topic = q.topic_name || "";
+          if (existing && Array.isArray(existing.questions)) {
+            const eq = (existing.questions as any[]).find((e: any) =>
+              e.question_text === q.question_text
+            );
+            if (eq && eq.topic) {
+              topic = eq.topic;
+            }
+          }
 
           allQuestions.push({
             id: randomUUID(),
@@ -140,7 +160,7 @@ async function main() {
             marks: q.marks || 0,
             year: q.year || 0,
             subject: sec.name,
-            topic: q.topic_name || "",
+            topic: topic,
             images: q.images ?? [],
             correct_answer: q.correct_answer,
             explanation: q.explanation || "",
@@ -152,16 +172,6 @@ async function main() {
         const secConfig = examConfig.sections.find(s => s.name.toLowerCase() === sec.name.toLowerCase());
         return sum + (secConfig ? sectionMaxScore(secConfig, sec.questions) : sec.questions.reduce((s, q) => s + (q.marks || 0), 0));
       }, 0);
-
-      const existing = await prisma.mockTestTemplate.findFirst({
-        where: {
-          title: config.title,
-          exam_type: config.exam_type,
-          branch: config.branch,
-          mode: 'seeded',
-        },
-        select: { id: true, mock_number: true },
-      });
 
       if (existing) {
         await prisma.mockTestTemplate.update({

@@ -30,8 +30,8 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  return NextResponse.json({
-    subjects: subjectResults,
-    topics: topicResults,
-  });
+  return NextResponse.json(
+    { subjects: subjectResults, topics: topicResults },
+    { headers: { "Cache-Control": "public, s-maxage=60, max-age=0" } }
+  );
 }

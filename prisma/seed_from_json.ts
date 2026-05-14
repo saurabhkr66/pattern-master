@@ -15,14 +15,7 @@ const colors = {
   green: '\x1b[32m', yellow: '\x1b[33m', cyan: '\x1b[36m',
 };
 
-// const SCRAPER_OUTPUT_DIR = path.resolve(
-//   __dirname,
-//   '../../practicepaper-scraper/data/output'
-// );
-const SCRAPER_OUTPUT_DIR = path.resolve(
-  __dirname,
-  '../../exam-scraper/extractor'
-);
+const SCRAPER_OUTPUT_DIR = '';
 
 const FILE_TOPIC_MAP: Array<{
   file: string;
@@ -31,15 +24,119 @@ const FILE_TOPIC_MAP: Array<{
   branch: string;
   subject: string;
 }> = [
- 
+
   {
-    file: 'jee_gravitation_part_2.json',
-    topic_name: 'Gravitation',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_array.json',
+    topic_name: 'Array',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_linked_list.json',
+    topic_name: 'Linked List',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_stack.json',
+    topic_name: 'Stack',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_queue.json',
+    topic_name: 'Queue',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_binary_tree.json',
+    topic_name: 'Binary Tree',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_binary_search_tree.json',
+    topic_name: 'Binary Search Tree',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_avl_tree.json',
+    topic_name: 'AVL Tree',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_b_tree.json',
+    topic_name: 'B Tree',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_b_plus_tree.json',
+    topic_name: 'B Plus Tree',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_heap.json',
+    topic_name: 'Heap',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_hashing.json',
+    topic_name: 'Hashing',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_arithmetic_operation.json',
+    topic_name: 'Arithmetic Operation',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_conditional_statement.json',
+    topic_name: 'Conditional Statement',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_loops.json',
+    topic_name: 'Loops',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_array_and_pointer.json',
+    topic_name: 'Array and Pointer',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
+  },
+  {
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_function.json',
+    topic_name: 'Function',
+    exam_type: 'GATE',
+    branch: 'CSE',
+    subject: 'Programming in C'
   }
-  
 ];
 
 async function main() {

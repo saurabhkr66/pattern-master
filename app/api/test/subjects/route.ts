@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       ])
     ).sort();
 
-    return NextResponse.json({ subjects: merged });
+    return NextResponse.json({ subjects: merged }, { headers: { "Cache-Control": "private, s-maxage=3600, max-age=0" } });
   } catch (err) {
     console.error("Subjects fetch error:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
