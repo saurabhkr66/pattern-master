@@ -6,26 +6,32 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { toSlug } from "@/lib/seo";
+import { toSlug, parseExamSlug, buildExamSlug } from "@/lib/seo";
 
 const BASE = "https://battleexam.com";
 
 interface PageParams {
-  examType: string; // e.g. "gate-cse"
-  subject: string;  // e.g. "algorithms"
+  examType: string; // e.g. "gate-cse", "jee-main", "neet"
+  subject: string;  // e.g. "algorithms", "physics"
 }
 
 function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-/** "gate-cse" → "GATE",  "isro-cse" → "ISRO" */
-function parseExamType(examTypeSlug: string) {
-  return examTypeSlug.split("-")[0].toUpperCase();
-}
-
 export const revalidate = 86400; // revalidate daily
 export const dynamicParams = true; // generate pages on first visit, then cache
+
+export async function generateStaticParams(): Promise<PageParams[]> {
+  const rows = await prisma.pattern.findMany({
+    select: { exam_type: true, branch: true, subject: true },
+    distinct: ["exam_type", "branch", "subject"],
+  }).catch(() => []);
+  return rows.map((r) => ({
+    examType: buildExamSlug(r.exam_type, r.branch),
+    subject: toSlug(r.subject),
+  }));
+}
 
 export async function generateMetadata({
   params,
@@ -33,29 +39,33 @@ export async function generateMetadata({
   params: Promise<PageParams>;
 }): Promise<Metadata> {
   const { examType, subject } = await params;
-  const examLabel = parseExamType(examType);
+  const exam = parseExamSlug(examType);
+  if (!exam) return { title: "Not Found | BattleExam" };
+
   const subjectLabel = unslug(subject);
   const canonical = `${BASE}/${examType}/${subject}`;
   const year = new Date().getFullYear() + 1;
 
-  const title = `${examLabel} ${subjectLabel} Practice Questions – Topics & PYQs | BattleExam`;
-  const description = `Practise all ${examLabel} CSE ${subjectLabel} topics with AI-generated questions and previous year questions (PYQs). Master every ${subjectLabel} pattern tested in ${examLabel} ${year}. Free to start.`;
+  const title = `${exam.fullLabel} ${subjectLabel} Practice Questions – Topics & PYQs | BattleExam`;
+  const description = `Practise all ${exam.fullLabel} ${subjectLabel} topics with AI-generated questions and previous year questions (PYQs). Master every ${subjectLabel} pattern tested in ${exam.fullLabel} ${year}. Free to start.`;
+
+  const keywords = [
+    `${exam.fullLabel} ${subjectLabel}`,
+    `${exam.fullLabel} ${subjectLabel} practice questions`,
+    `${exam.fullLabel} ${subjectLabel} PYQ`,
+    `${exam.fullLabel} ${subjectLabel} previous year questions`,
+    `${subjectLabel} ${exam.fullLabel}`,
+    `${exam.examLabel} ${subjectLabel} topics`,
+    `${subjectLabel} questions for ${exam.examLabel}`,
+    `${exam.fullLabel} ${subjectLabel} ${year}`,
+    `${exam.fullLabel} ${subjectLabel} preparation`,
+    `${subjectLabel} pattern based questions`,
+  ];
 
   return {
     title,
     description,
-    keywords: [
-      `GATE ${subjectLabel}`,
-      `GATE ${subjectLabel} practice questions`,
-      `GATE ${subjectLabel} PYQ`,
-      `GATE ${subjectLabel} previous year questions`,
-      `${subjectLabel} GATE CSE`,
-      `${examLabel} ${subjectLabel} topics`,
-      `${subjectLabel} questions for GATE`,
-      `GATE ${subjectLabel} ${year}`,
-      `${examLabel} CSE ${subjectLabel} preparation`,
-      `${subjectLabel} pattern based questions`,
-    ],
+    keywords,
     alternates: { canonical },
     openGraph: {
       title,
@@ -69,7 +79,7 @@ export async function generateMetadata({
           url: "https://battleexam.com/opengraph-image",
           width: 1200,
           height: 630,
-          alt: `${examLabel} ${subjectLabel} Practice Questions – BattleExam`,
+          alt: `${exam.fullLabel} ${subjectLabel} Practice Questions – BattleExam`,
         },
       ],
     },
@@ -88,12 +98,15 @@ export default async function SubjectPage({
   params: Promise<PageParams>;
 }) {
   const { examType, subject } = await params;
-  const examLabel = parseExamType(examType);
+  const exam = parseExamSlug(examType);
+  if (!exam) notFound();
+
   const subjectLabel = unslug(subject);
 
   const patterns = await prisma.pattern.findMany({
     where: {
-      exam_type: examLabel,
+      exam_type: exam.examType,
+      ...(exam.branch ? { branch: { equals: exam.branch, mode: "insensitive" } } : {}),
       subject: { equals: subjectLabel, mode: "insensitive" },
     },
     select: {
@@ -113,8 +126,8 @@ export default async function SubjectPage({
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `GATE ${subjectLabel} Topics`,
-    description: `All GATE CSE ${subjectLabel} topics with practice questions`,
+    name: `${exam.fullLabel} ${subjectLabel} Topics`,
+    description: `All ${exam.fullLabel} ${subjectLabel} topics with practice questions`,
     url: canonical,
     numberOfItems: patterns.length,
     itemListElement: patterns.map((p, i) => ({
@@ -134,7 +147,7 @@ export default async function SubjectPage({
       {
         "@type": "ListItem",
         position: 2,
-        name: `${examLabel} CSE ${subjectLabel}`,
+        name: `${exam.fullLabel} ${subjectLabel}`,
         item: canonical,
       },
     ],
@@ -172,7 +185,7 @@ export default async function SubjectPage({
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2">
-            {examLabel} CSE
+            {exam.fullLabel}
           </p>
           <h1
             className="text-3xl md:text-4xl font-black mb-3"
@@ -182,7 +195,7 @@ export default async function SubjectPage({
           </h1>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             {patterns.length} topics · {totalQuestions} questions · AI‑generated
-            &amp; Previous Year Questions for GATE {year}
+            &amp; Previous Year Questions for {exam.fullLabel} {year}
           </p>
         </div>
 

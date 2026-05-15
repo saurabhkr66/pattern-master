@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-import { buildOrganizationSchema } from "@/lib/seo";
+import { buildOrganizationSchema, joinExamLabels } from "@/lib/seo";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 export const viewport: Viewport = {
@@ -31,22 +31,23 @@ export const viewport: Viewport = {
 };
 
 const globalSchema = buildOrganizationSchema();
+const EXAM_COPY = joinExamLabels();
+const ROOT_TITLE = `BattleExam – AI-Powered ${EXAM_COPY} Preparation`;
+const ROOT_DESC = `Master ${EXAM_COPY} with AI-generated pattern-based practice questions, previous year questions (PYQs), and full-length mock tests. Adaptive difficulty, instant explanations, progress tracking. Free to start.`;
 
 export const metadata: Metadata = {
   title: {
-    default: "BattleExam – AI-Powered GATE CSE Preparation",
+    default: ROOT_TITLE,
     template: "%s | BattleExam",
   },
-  description:
-    "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Adaptive difficulty, instant explanations, progress tracking. Free to start.",
+  description: ROOT_DESC,
   metadataBase: new URL("https://battleexam.com"),
   alternates: {
     canonical: "https://battleexam.com",
   },
   openGraph: {
-    title: "BattleExam – AI-Powered GATE CSE Preparation",
-    description:
-      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice. Adaptive difficulty, instant explanations, PYQs. Free to start.",
+    title: ROOT_TITLE,
+    description: ROOT_DESC,
     url: "https://battleexam.com",
     siteName: "BattleExam",
     locale: "en_IN",
@@ -56,15 +57,14 @@ export const metadata: Metadata = {
         url: "https://battleexam.com/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "BattleExam – Pattern-Based GATE CSE Preparation Platform",
+        alt: `BattleExam – Pattern-Based ${EXAM_COPY} Preparation Platform`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "BattleExam – AI-Powered GATE CSE Preparation",
-    description:
-      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice. Free to start.",
+    title: ROOT_TITLE,
+    description: `Master ${EXAM_COPY} with AI-generated pattern-based practice, PYQs and full-length mocks. Free to start.`,
     creator: "@battleexam",
     images: ["https://battleexam.com/opengraph-image"],
   },
@@ -84,22 +84,32 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   keywords: [
+    "GATE preparation",
     "GATE CSE preparation",
+    "GATE ECE preparation",
+    "GATE EE preparation",
+    "GATE ME preparation",
     "GATE practice questions",
     "GATE previous year questions",
+    "GATE PYQ",
     "GATE 2026",
     "GATE 2027",
-    "ISRO CSE preparation",
-    "BARC preparation",
-    "ESE preparation",
+    "JEE Main preparation",
+    "JEE Main practice questions",
+    "JEE Main PYQ",
+    "JEE Advanced preparation",
+    "JEE Advanced PYQ",
+    "NEET UG preparation",
+    "NEET practice questions",
+    "NEET PYQ",
+    "UGC NET Paper 1 preparation",
+    "UGC NET Paper 2 preparation",
+    "UGC NET practice questions",
     "pattern based learning",
     "AI generated questions",
-    "GATE algorithms",
-    "GATE data structures",
-    "GATE operating systems",
-    "GATE DBMS",
-    "GATE computer networks",
-    "competitive exam preparation India",
+    "online mock tests India",
+    "engineering entrance exam preparation India",
+    "medical entrance exam preparation India",
   ],
 };
 

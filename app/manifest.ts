@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
+import { joinExamLabels } from "@/lib/seo";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "BattleExam – GATE CSE Prep",
+    name: `BattleExam – ${joinExamLabels()} Practice`,
     short_name: "BattleExam",
-    description:
-      "Master GATE CSE, ISRO, BARC & ESE with AI-generated pattern-based practice questions. Free to start.",
+    description: `Master ${joinExamLabels()} with AI-generated pattern-based practice questions and full-length mock tests. Free to start.`,
     start_url: "/",
     scope: "/",
     display: "standalone",

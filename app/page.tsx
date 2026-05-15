@@ -23,36 +23,56 @@ import {
   Brain,
 } from "lucide-react";
 
+import { joinExamLabels, listExamLabels } from "@/lib/seo";
+
+const HOME_EXAM_COPY = joinExamLabels();
+const HOME_TITLE = `BattleExam – Pattern-Based ${HOME_EXAM_COPY} Practice & Mock Tests`;
+const HOME_DESC = `Master ${HOME_EXAM_COPY} with AI-generated pattern-based questions, previous year questions (PYQs) and full-length mock tests. Adaptive difficulty, instant explanations. Free to start.`;
+const HOME_OG_DESC = `Practice ${HOME_EXAM_COPY} with AI questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, PYQs included. Free.`;
+
 export const metadata: Metadata = {
-  title: "BattleExam – Pattern-Based GATE CSE Preparation | Practice Questions",
-  description:
-    "Master GATE CSE 2026/2027, ISRO, BARC & ESE with AI-generated pattern-based questions. Practice algorithms, data structures, OS, DBMS, and networks. Free to start.",
+  title: HOME_TITLE,
+  description: HOME_DESC,
   keywords: [
+    // GATE
+    "GATE preparation",
     "GATE CSE preparation",
-    "GATE CSE practice questions",
+    "GATE ECE preparation",
+    "GATE EE preparation",
+    "GATE ME preparation",
+    "GATE CE preparation",
+    "GATE practice questions",
+    "GATE PYQ",
+    "GATE previous year questions",
     "GATE 2026 preparation",
     "GATE 2027 preparation",
-    "GATE algorithms practice",
-    "GATE data structures",
-    "GATE operating systems",
-    "GATE DBMS",
-    "GATE computer networks",
-    "GATE previous year questions",
-    "GATE PYQ",
-    "ISRO CSE preparation",
-    "ISRO CS exam",
-    "BARC preparation",
-    "ESE preparation",
-    "pattern based learning GATE",
-    "AI generated GATE questions",
-    "GATE CSE mock test",
-    "computer science competitive exam",
+    "GATE mock test",
+    // JEE
+    "JEE Main preparation",
+    "JEE Main practice questions",
+    "JEE Main PYQ",
+    "JEE Main mock test",
+    "JEE Advanced preparation",
+    "JEE Advanced PYQ",
+    // NEET
+    "NEET UG preparation",
+    "NEET practice questions",
+    "NEET PYQ",
+    "NEET mock test",
+    // UGC NET
+    "UGC NET Paper 1 preparation",
+    "UGC NET Paper 2 preparation",
+    "UGC NET PYQ",
+    // generic
+    "pattern based learning",
+    "AI generated questions",
+    "online mock tests India",
     "engineering entrance exam preparation India",
+    "medical entrance exam preparation India",
   ],
   openGraph: {
-    title: "BattleExam – Pattern-Based GATE CSE Preparation",
-    description:
-      "Practice GATE CSE, ISRO & BARC with AI questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, PYQs included. Free.",
+    title: HOME_TITLE,
+    description: HOME_OG_DESC,
     type: "website",
     locale: "en_IN",
     images: [
@@ -60,15 +80,14 @@ export const metadata: Metadata = {
         url: "https://battleexam.com/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "BattleExam – Pattern-Based GATE CSE Preparation",
+        alt: `BattleExam – Pattern-Based ${HOME_EXAM_COPY} Preparation`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "BattleExam – Pattern-Based GATE CSE Preparation",
-    description:
-      "Practice GATE CSE, ISRO & BARC with AI questions tailored to each topic's core logic. Free.",
+    title: HOME_TITLE,
+    description: `Practice ${HOME_EXAM_COPY} with AI questions tailored to each topic's core logic. Free.`,
     images: ["https://battleexam.com/opengraph-image"],
   },
   alternates: { canonical: "https://battleexam.com" },
@@ -78,55 +97,67 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 
+const HOME_EXAM_LIST = listExamLabels();
+const PROVIDER = { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" };
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   name: "BattleExam",
-  description: "Pattern-based exam preparation platform for GATE CSE, ISRO, BARC, and ESE",
+  description: `Pattern-based exam preparation platform for ${HOME_EXAM_COPY}`,
   url: "https://battleexam.com",
+  knowsAbout: HOME_EXAM_LIST,
   hasOfferCatalog: {
     "@type": "OfferCatalog",
-    name: "GATE CSE Study Topics",
+    name: "Exam Preparation Programs",
     itemListElement: [
       {
         "@type": "Course",
-        name: "GATE Algorithms",
-        courseCode: "GATE-ALGO",
-        url: "https://battleexam.com/gate-cse/algorithms",
-        description: "Master sorting, graph algorithms, dynamic programming, divide-and-conquer recurrences for GATE CSE.",
-        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+        name: "GATE CSE Preparation",
+        courseCode: "GATE-CSE",
+        url: "https://battleexam.com/gate-cse",
+        description: "Pattern-based GATE Computer Science preparation: algorithms, data structures, OS, DBMS, networks, theory of computation and more.",
+        provider: PROVIDER,
       },
       {
         "@type": "Course",
-        name: "GATE Data Structures",
-        courseCode: "GATE-DS",
-        url: "https://battleexam.com/gate-cse/data-structures",
-        description: "Practice trees, heaps, hashing, and linked lists with GATE-pattern questions.",
-        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+        name: "JEE Main Preparation",
+        courseCode: "JEE-MAIN",
+        url: "https://battleexam.com/jee-main",
+        description: "Physics, Chemistry and Mathematics practice for JEE Main with AI-generated questions and full-length mock tests.",
+        provider: PROVIDER,
       },
       {
         "@type": "Course",
-        name: "GATE Operating Systems",
-        courseCode: "GATE-OS",
-        url: "https://battleexam.com/gate-cse/operating-systems",
-        description: "Process scheduling, memory management, deadlocks, and file systems for GATE.",
-        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+        name: "JEE Advanced Preparation",
+        courseCode: "JEE-ADVANCED",
+        url: "https://battleexam.com/jee-advanced",
+        description: "Pattern-based JEE Advanced practice covering MCQ, MSQ and Integer-type questions across Physics, Chemistry, Mathematics.",
+        provider: PROVIDER,
       },
       {
         "@type": "Course",
-        name: "GATE Computer Networks",
-        courseCode: "GATE-CN",
-        url: "https://battleexam.com/gate-cse/computer-networks",
-        description: "TCP/IP, routing protocols, subnetting, and OSI model questions for GATE.",
-        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+        name: "NEET UG Preparation",
+        courseCode: "NEET-UG",
+        url: "https://battleexam.com/neet",
+        description: "NEET UG Physics, Chemistry and Biology practice with previous year questions and full-length mocks.",
+        provider: PROVIDER,
       },
       {
         "@type": "Course",
-        name: "GATE DBMS",
-        courseCode: "GATE-DBMS",
-        url: "https://battleexam.com/gate-cse/dbms",
-        description: "Normalization, SQL, relational algebra, and transaction management for GATE.",
-        provider: { "@type": "Organization", name: "BattleExam", url: "https://battleexam.com" },
+        name: "UGC NET Paper 1 Preparation",
+        courseCode: "UGC-NET-P1",
+        url: "https://battleexam.com/ugc-net-p1",
+        description: "General Paper on Teaching and Research Aptitude practice for UGC NET Paper 1.",
+        provider: PROVIDER,
+      },
+      {
+        "@type": "Course",
+        name: "UGC NET Paper 2 Preparation",
+        courseCode: "UGC-NET-P2",
+        url: "https://battleexam.com/ugc-net-p2",
+        description: "Subject-specific UGC NET Paper 2 practice across supported subjects.",
+        provider: PROVIDER,
       },
     ],
   },
@@ -140,8 +171,7 @@ const softwareAppSchema = {
   applicationCategory: "EducationApplication",
   applicationSubCategory: "Exam Preparation",
   url: "https://battleexam.com",
-  description:
-    "AI-powered pattern-based exam preparation platform for GATE CSE, ISRO, BARC, and ESE. Practice with adaptive-difficulty questions, access previous year papers, and track your progress.",
+  description: `AI-powered pattern-based exam preparation platform for ${HOME_EXAM_COPY}. Practice with adaptive-difficulty questions, access previous year papers, and track your progress.`,
   offers: {
     "@type": "Offer",
     price: "0",
@@ -151,19 +181,20 @@ const softwareAppSchema = {
   },
   featureList: [
     "AI-generated pattern-based questions",
-    "Previous Year Questions (PYQs) for GATE, ISRO, BARC, ESE",
+    `Previous Year Questions (PYQs) for ${HOME_EXAM_COPY}`,
+    "Full-length mock tests with real exam interface",
     "Adaptive difficulty: Easy, Medium, Hard",
     "Instant explanations and step-by-step solutions",
     "Progress tracking and accuracy analytics",
     "Mistake review and flashcard mode",
-    "Covers GATE CSE, ISRO CS, BARC CS, ESE subjects",
+    `Covers ${HOME_EXAM_COPY}`,
   ],
   screenshot: "https://battleexam.com/opengraph-image",
   inLanguage: "en-IN",
   audience: {
     "@type": "EducationalAudience",
     educationalRole: "student",
-    audienceType: "Engineering students preparing for GATE, ISRO, BARC, ESE",
+    audienceType: `Students preparing for ${HOME_EXAM_COPY}`,
   },
 };
 
@@ -184,7 +215,7 @@ const faqStructuredData = {
       name: "Which exams and subjects does BattleExam cover?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "BattleExam covers GATE CSE, ISRO CS, BARC CS, and ESE (Engineering Services Examination) with subjects including Algorithms, Data Structures, Operating Systems, DBMS, Computer Networks, Theory of Computation, Compiler Design, and more.",
+        text: `BattleExam covers ${HOME_EXAM_COPY}. GATE preparation is supported across all branches (CSE, ECE, EE, ME, CE, IN, CH, BT). JEE Main and JEE Advanced cover Physics, Chemistry and Mathematics; NEET UG adds Biology. UGC NET Paper 1 (general aptitude) and Paper 2 (subject-specific) are also supported.`,
       },
     },
     {
@@ -197,10 +228,10 @@ const faqStructuredData = {
     },
     {
       "@type": "Question",
-      name: "Does BattleExam have GATE previous year questions (PYQs)?",
+      name: "Does BattleExam have previous year questions (PYQs)?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. BattleExam includes a complete PYQ bank for GATE CSE, organized by topic and year. Every previous year question is tagged to the exact pattern it tests, so you can study PYQs in context rather than in isolation.",
+        text: `Yes. BattleExam includes PYQ banks for ${HOME_EXAM_COPY}, organised by subject, topic and year. Every previous year question is tagged to the exact pattern it tests, so you can study PYQs in context rather than in isolation.`,
       },
     },
     {
@@ -221,10 +252,10 @@ const faqStructuredData = {
     },
     {
       "@type": "Question",
-      name: "Can BattleExam help me prepare for ISRO or BARC?",
+      name: "Does BattleExam have full-length mock tests?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. ISRO CS and BARC CS share roughly 80% of their syllabus with GATE CSE. BattleExam's question bank and topic-level practice are directly applicable to both exams, and subject-specific ISRO and BARC question sets are available.",
+        text: `Yes. BattleExam provides full-length mock tests with the real exam interface, timing, and marking schemes for ${HOME_EXAM_COPY}. Mocks include instant scoring, detailed performance analysis and per-question explanations.`,
       },
     },
     {
@@ -961,7 +992,7 @@ export default async function HomePage() {
                 "Free forever",
                 "No spam",
                 "Instant access",
-                "GATE + ISRO + BARC + ESE",
+                "GATE · JEE · NEET · UGC NET",
               ].map((t) => (
                 <span
                   key={t}
@@ -1001,7 +1032,7 @@ export default async function HomePage() {
                 </span>
               </div>
               <p className="text-[11px] text-center" style={{ color: "var(--text-faint)" }}>
-                Pattern-based GATE CSE, ISRO, BARC &amp; ESE preparation.
+                Pattern-based {HOME_EXAM_COPY} preparation.
               </p>
               <div className="flex items-center gap-5 text-xs" style={{ color: "var(--text-muted)" }}>
                 <Link href="/sign-in" className="hover:text-indigo-400 transition-colors">Sign in</Link>

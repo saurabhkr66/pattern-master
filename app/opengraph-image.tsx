@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "BattleExam – Pattern-Based GATE CSE Preparation";
+export const alt = "BattleExam – Pattern-Based GATE, JEE, NEET & UGC NET Preparation";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -75,7 +75,7 @@ export default function Image() {
             marginBottom: "36px",
           }}
         >
-          {"Pattern-Based GATE CSE Preparation"}
+          {"Pattern-Based Exam Preparation"}
         </div>
 
         {/* Exam pills */}
@@ -86,7 +86,7 @@ export default function Image() {
             marginBottom: "36px",
           }}
         >
-          {["GATE", "ISRO", "BARC", "ESE"].map((exam) => (
+          {["GATE", "JEE", "NEET", "UGC NET"].map((exam) => (
             <div
               key={exam}
               style={{

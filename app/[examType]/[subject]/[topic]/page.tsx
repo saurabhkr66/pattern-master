@@ -6,13 +6,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { toSlug, cleanTextForMeta } from "@/lib/seo";
+import { toSlug, cleanTextForMeta, parseExamSlug, buildExamSlug, type ExamSeoInfo } from "@/lib/seo";
 
 const BASE = "https://battleexam.com";
 
 interface PageParams {
-  examType: string; // e.g. "gate-cse"
-  subject: string;  // e.g. "algorithms"
+  examType: string; // e.g. "gate-cse", "jee-main", "neet"
+  subject: string;  // e.g. "algorithms", "physics"
   topic: string;    // e.g. "divide-and-conquer"
 }
 
@@ -20,18 +20,26 @@ function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function parseExamType(examTypeSlug: string) {
-  return examTypeSlug.split("-")[0].toUpperCase();
-}
-
 export const revalidate = 86400; // revalidate daily
 export const dynamicParams = true; // generate pages on first visit, then cache
 
-async function fetchPattern(examLabel: string, subjectLabel: string, topicSlug: string) {
-  // Fetch all patterns for this subject+exam, then find by slug match
+export async function generateStaticParams(): Promise<PageParams[]> {
+  const rows = await prisma.pattern.findMany({
+    select: { exam_type: true, branch: true, subject: true, topic_name: true },
+  }).catch(() => []);
+  return rows.map((r) => ({
+    examType: buildExamSlug(r.exam_type, r.branch),
+    subject: toSlug(r.subject),
+    topic: toSlug(r.topic_name),
+  }));
+}
+
+async function fetchPattern(exam: ExamSeoInfo, subjectLabel: string, topicSlug: string) {
+  // Fetch all patterns for this subject+exam (+ branch), then find by slug match
   const candidates = await prisma.pattern.findMany({
     where: {
-      exam_type: examLabel,
+      exam_type: exam.examType,
+      ...(exam.branch ? { branch: { equals: exam.branch, mode: "insensitive" } } : {}),
       subject: { equals: subjectLabel, mode: "insensitive" },
     },
     include: {
@@ -67,30 +75,34 @@ export async function generateMetadata({
   params: Promise<PageParams>;
 }): Promise<Metadata> {
   const { examType, subject, topic } = await params;
-  const examLabel = parseExamType(examType);
+  const exam = parseExamSlug(examType);
+  if (!exam) return { title: "Not Found | BattleExam" };
+
   const subjectLabel = unslug(subject);
   const topicLabel = unslug(topic);
   const canonical = `${BASE}/${examType}/${subject}/${topic}`;
   const year = new Date().getFullYear() + 1;
 
-  const title = `${topicLabel} – ${examLabel} ${subjectLabel} Practice Questions & PYQs | BattleExam`;
-  const description = `Practise ${topicLabel} for ${examLabel} CSE ${year} with AI-generated questions and previous year questions (PYQs). Understand the exact pattern ${examLabel} examiners test on ${topicLabel}. Free on BattleExam.`;
+  const title = `${topicLabel} – ${exam.fullLabel} ${subjectLabel} Practice Questions & PYQs | BattleExam`;
+  const description = `Practise ${topicLabel} for ${exam.fullLabel} ${year} with AI-generated questions and previous year questions (PYQs). Understand the exact pattern ${exam.examLabel} examiners test on ${topicLabel}. Free on BattleExam.`;
+
+  const keywords = [
+    `${topicLabel} ${exam.examLabel}`,
+    `${topicLabel} practice questions`,
+    `${exam.fullLabel} ${subjectLabel} ${topicLabel}`,
+    `${topicLabel} previous year questions`,
+    `${topicLabel} PYQ ${exam.examLabel}`,
+    `${exam.examLabel} ${topicLabel} questions`,
+    `${topicLabel} ${exam.fullLabel} ${year}`,
+    `${topicLabel} questions and answers`,
+    `${topicLabel} ${exam.examLabel} pattern`,
+    `${exam.fullLabel} ${subjectLabel} ${topicLabel} MCQ`,
+  ];
 
   return {
     title,
     description,
-    keywords: [
-      `${topicLabel} GATE`,
-      `${topicLabel} practice questions`,
-      `GATE ${subjectLabel} ${topicLabel}`,
-      `${topicLabel} previous year questions`,
-      `${topicLabel} PYQ GATE`,
-      `${examLabel} ${topicLabel} questions`,
-      `${topicLabel} GATE CSE ${year}`,
-      `${topicLabel} questions and answers`,
-      `${topicLabel} GATE pattern`,
-      `${examLabel} ${subjectLabel} ${topicLabel} MCQ`,
-    ],
+    keywords,
     alternates: { canonical },
     openGraph: {
       title,
@@ -104,7 +116,7 @@ export async function generateMetadata({
           url: "https://battleexam.com/opengraph-image",
           width: 1200,
           height: 630,
-          alt: `${topicLabel} – ${examLabel} Practice Questions | BattleExam`,
+          alt: `${topicLabel} – ${exam.fullLabel} Practice Questions | BattleExam`,
         },
       ],
     },
@@ -123,14 +135,17 @@ export default async function TopicPage({
   params: Promise<PageParams>;
 }) {
   const { examType, subject, topic } = await params;
-  const examLabel = parseExamType(examType);
+  const exam = parseExamSlug(examType);
+  if (!exam) notFound();
+
   const subjectLabel = unslug(subject);
   const topicLabel = unslug(topic);
 
-  const pattern = await fetchPattern(examLabel, subjectLabel, topic);
+  const pattern = await fetchPattern(exam, subjectLabel, topic);
   if (!pattern) notFound();
 
-  const canonical = `${BASE}/practice?patternId=${pattern.id}`;
+  // Canonical points at the indexable SEO URL, not at the gated /practice route.
+  const canonical = `${BASE}/${examType}/${subject}/${topic}`;
   const year = new Date().getFullYear() + 1;
   const totalQ = pattern.pyqs.length + pattern.questions.length;
 
@@ -138,7 +153,7 @@ export default async function TopicPage({
   const pyqListItems = pattern.pyqs.map((q, i) => ({
     "@type": "ListItem",
     position: i + 1,
-    name: `${topicLabel} – GATE ${q.year} ${q.question_type} Question`,
+    name: `${topicLabel} – ${exam.fullLabel} ${q.year} ${q.question_type} Question`,
     url: `${BASE}/${examType}/${subject}/${topic}/pyq-${q.id}`,
     description: cleanTextForMeta(q.question_text, 120),
   }));
@@ -154,10 +169,10 @@ export default async function TopicPage({
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${topicLabel} GATE Practice Questions`,
+    name: `${topicLabel} ${exam.fullLabel} Practice Questions`,
     description:
       pattern.atomic_logic ||
-      `Practice questions for ${topicLabel} in GATE CSE`,
+      `Practice questions for ${topicLabel} in ${exam.fullLabel}`,
     url: canonical,
     numberOfItems: totalQ,
     itemListElement: [...pyqListItems, ...gqListItems],
@@ -166,16 +181,16 @@ export default async function TopicPage({
   const courseSchema = {
     "@context": "https://schema.org",
     "@type": "Course",
-    name: `${topicLabel} – GATE CSE`,
+    name: `${topicLabel} – ${exam.fullLabel}`,
     description:
       pattern.atomic_logic ||
-      `Master ${topicLabel} for GATE CSE with pattern-based practice`,
+      `Master ${topicLabel} for ${exam.fullLabel} with pattern-based practice`,
     provider: {
       "@type": "Organization",
       name: "BattleExam",
       url: BASE,
     },
-    educationalLevel: "Graduate",
+    educationalLevel: exam.level,
     hasCourseInstance: {
       "@type": "CourseInstance",
       courseMode: "Online",
@@ -241,7 +256,7 @@ export default async function TopicPage({
         {/* Header */}
         <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2">
-            {examLabel} CSE · {subjectLabel}
+            {exam.fullLabel} · {subjectLabel}
           </p>
           <h1
             className="text-3xl md:text-4xl font-black mb-3"
@@ -258,7 +273,7 @@ export default async function TopicPage({
             </p>
           )}
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            {totalQ} questions · AI-generated &amp; Previous Year Questions for GATE {year}
+            {totalQ} questions · AI-generated &amp; Previous Year Questions for {exam.fullLabel} {year}
           </p>
         </div>
 
@@ -292,7 +307,7 @@ export default async function TopicPage({
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                       {q.year > 2000 && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
-                          GATE {q.year}
+                          {exam.examLabel} {q.year}
                         </span>
                       )}
                       <span

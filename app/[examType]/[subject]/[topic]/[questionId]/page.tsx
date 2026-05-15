@@ -5,7 +5,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { cleanTextForMeta, buildQuestionSchema, toSlug, buildBreadcrumbSchema } from "@/lib/seo";
+import {
+  cleanTextForMeta,
+  buildQuestionSchema,
+  toSlug,
+  buildBreadcrumbSchema,
+  buildExamSlug,
+  getExamSeoInfo,
+} from "@/lib/seo";
 import QuestionViewer from "@/components/question/QuestionViewer";
 
 interface PageParams {
@@ -23,7 +30,7 @@ async function fetchQuestion(questionId: string) {
     const id = questionId.slice(4);
     const q = await prisma.pYQ.findUnique({
       where: { id },
-      include: { pattern: { select: { subject: true, topic_name: true, exam_type: true } } },
+      include: { pattern: { select: { subject: true, topic_name: true, exam_type: true, branch: true } } },
     });
     if (!q) return null;
     return {
@@ -39,6 +46,7 @@ async function fetchQuestion(questionId: string) {
       subject: q.pattern.subject,
       topicName: q.pattern.topic_name,
       examType: q.pattern.exam_type,
+      branch: q.pattern.branch as string | null,
     };
   }
 
@@ -46,7 +54,7 @@ async function fetchQuestion(questionId: string) {
     const id = questionId.slice(5);
     const q = await prisma.subjectPYQ.findUnique({
       where: { id },
-      include: { subject_pattern: { select: { subject_name: true } } },
+      include: { subject_pattern: { select: { subject_name: true, exam_type: true, branch: true } } },
     });
     if (!q) return null;
     return {
@@ -61,7 +69,8 @@ async function fetchQuestion(questionId: string) {
       images: (q.images as any[]) ?? [],
       subject: q.subject_pattern.subject_name,
       topicName: q.subject_pattern.subject_name,
-      examType: "GATE",
+      examType: q.subject_pattern.exam_type,
+      branch: q.subject_pattern.branch as string | null,
     };
   }
 
@@ -69,7 +78,7 @@ async function fetchQuestion(questionId: string) {
   const id = questionId.startsWith("gq-") ? questionId.slice(3) : questionId;
   const q = await prisma.generatedQuestion.findUnique({
     where: { id },
-    include: { pattern: { select: { subject: true, topic_name: true, exam_type: true } } },
+    include: { pattern: { select: { subject: true, topic_name: true, exam_type: true, branch: true } } },
   });
   if (!q) return null;
   return {
@@ -85,40 +94,33 @@ async function fetchQuestion(questionId: string) {
     subject: q.pattern.subject,
     topicName: q.pattern.topic_name,
     examType: q.pattern.exam_type,
+    branch: q.pattern.branch as string | null,
   };
 }
 
 // ------ Metadata -------------------------------------------------------------
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
-  const { questionId, subject, topic } = await params;
+  const { questionId } = await params;
   const q = await fetchQuestion(questionId);
   if (!q) return { title: "Question Not Found | BattleExam" };
 
-  const examLabel = q.examType;
+  const exam = getExamSeoInfo(q.examType, q.branch);
   const subjectLabel = q.subject;
   const topicLabel = q.topicName;
-  
-  const title = `${examLabel} ${subjectLabel} ${q.year > 2000 ? q.year : ""} – ${topicLabel} | BattleExam`;
+  const yearLabel = q.year > 2000 ? ` ${q.year}` : "";
+
+  const title = `${exam.fullLabel} ${subjectLabel}${yearLabel} – ${topicLabel} | BattleExam`;
 
   // "Answer-First" description for GEO: start with the direct context
   const rawDesc = cleanTextForMeta(q.questionText, 150);
-  const description = `Solve this ${examLabel} ${q.year} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
+  const description = `Solve this ${exam.fullLabel}${yearLabel} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
 
-  // POINT CANONICAL TO PRACTICE PAGE
-  // We need the pattern ID to open the right topic in the dashboard
-  let patternId = "";
-  if (q.prefix === "pyq" || q.prefix === "gq") {
-     const dbQ = q.prefix === "pyq" 
-        ? await prisma.pYQ.findUnique({ where: { id: q.id }, select: { pattern_id: true } })
-        : await prisma.generatedQuestion.findUnique({ where: { id: q.id }, select: { pattern_id: true } });
-     patternId = dbQ?.pattern_id || "";
-  } else if (q.prefix === "spyq") {
-     const dbQ = await prisma.subjectPYQ.findUnique({ where: { id: q.id }, select: { subject_pattern_id: true } });
-     patternId = dbQ?.subject_pattern_id ? `subject-${dbQ.subject_pattern_id}` : "";
-  }
-
-  const canonical = `https://battleexam.com/practice?q=${questionId}${patternId ? `&patternId=${patternId}` : ""}`;
+  // Canonical points at the indexable SEO URL itself.
+  const examSlug = buildExamSlug(q.examType, q.branch);
+  const subjectSlug = toSlug(subjectLabel);
+  const topicSlug = toSlug(topicLabel);
+  const canonical = `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}/${questionId}`;
 
   return {
     title,
@@ -156,7 +158,11 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
   const q = await fetchQuestion(questionId);
   if (!q) notFound();
 
-  const url = `https://battleexam.com/${toSlug(q.examType)}-cse/${toSlug(q.subject)}/${toSlug(q.topicName)}/${questionId}`;
+  const exam = getExamSeoInfo(q.examType, q.branch);
+  const examSlug = buildExamSlug(q.examType, q.branch);
+  const subjectSlug = toSlug(q.subject);
+  const topicSlug = toSlug(q.topicName);
+  const url = `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}/${questionId}`;
 
   const questionSchema = buildQuestionSchema({
     questionText: q.questionText,
@@ -164,20 +170,20 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
     correctAnswer: q.correctAnswer,
     explanation: q.explanation,
     subject: q.subject,
+    topicName: q.topicName,
     year: q.year,
     questionType: q.questionType,
     url,
+    exam,
   });
-
-  const examSlug = `${toSlug(q.examType)}-cse`;
-  const subjectSlug = toSlug(q.subject);
-  const topicSlug = toSlug(q.topicName);
 
   const breadcrumbSchema = buildBreadcrumbSchema([
     { name: "Home", item: "https://battleexam.com" },
-    { name: `${q.examType} CSE`, item: `https://battleexam.com/${examSlug}/${subjectSlug}` },
+    { name: exam.fullLabel, item: `https://battleexam.com/${examSlug}` },
     { name: q.subject, item: `https://battleexam.com/${examSlug}/${subjectSlug}` },
-    { name: q.topicName, item: `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}` },
+    ...(q.topicName !== q.subject
+      ? [{ name: q.topicName, item: `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}` }]
+      : []),
   ]);
 
   return (
@@ -209,7 +215,7 @@ export default async function QuestionPage({ params }: { params: Promise<PagePar
         {/* Meta pills */}
         <div className="flex items-center gap-2 flex-wrap mb-4">
           <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-600 text-white">
-            {q.examType}
+            {exam.fullLabel}
           </span>
           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}>
             {q.subject}
