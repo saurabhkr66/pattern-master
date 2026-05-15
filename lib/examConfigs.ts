@@ -1,4 +1,4 @@
-export type ExamType = "GATE" | "JEE_MAIN" | "JEE_ADVANCED" | "NEET";
+export type ExamType = "GATE" | "JEE_MAIN" | "JEE_ADVANCED" | "NEET" | "UGC_NET_P1" | "UGC_NET_P2";
 export type QType = "MCQ" | "MSQ" | "NAT";
 
 export interface MarkBand {
@@ -212,6 +212,64 @@ export const EXAM_CONFIGS: ExamConfig[] = [
       "Section B: attempt any 10 per subject (20 for Biology)",
       "All MCQ: +4 correct, −1 wrong",
       "Duration: 3 hours 20 minutes",
+    ],
+  },
+  {
+    examType: "UGC_NET_P1",
+    label: "UGC NET Paper 1",
+    description: "General Paper on Teaching and Research Aptitude",
+    emoji: "📚",
+    hasBranches: false,
+    durationSecs: 3600, // 1 hour
+    totalQuestions: 50,
+    maxScore: 100,
+    sections: [
+      {
+        name: "General Paper",
+        subjects: ["General Paper"],
+        totalQuestions: 50,
+        maxScore: 100,
+        questionTypes: ["MCQ"],
+        markDistribution: [{ marks: 2, count: 50 }],
+        negativePerMark: 0,
+      },
+    ],
+    themeColor: "#0284c7",
+    instructions: [
+      "50 questions",
+      "All questions are compulsory",
+      "Correct Answer: +2 marks",
+      "No negative marking",
+      "Duration: 1 hour",
+    ],
+  },
+  {
+    examType: "UGC_NET_P2",
+    label: "UGC NET Paper 2",
+    description: "Subject Specific Paper",
+    emoji: "📖",
+    hasBranches: false,
+    durationSecs: 7200, // 2 hours
+    totalQuestions: 100,
+    maxScore: 200,
+    sections: [
+      {
+        name: "Subject Paper",
+        subjects: ["English", "Economics", "History"], // Add more as needed
+        totalQuestions: 100,
+        maxScore: 200,
+        questionTypes: ["MCQ"],
+        markDistribution: [{ marks: 2, count: 100 }],
+        negativePerMark: 0,
+      },
+    ],
+    themeColor: "#0f766e",
+    instructions: [
+      "100 questions",
+      "All questions are compulsory",
+      "Correct Answer: +2 marks",
+      "No negative marking",
+      "Duration: 2 hours",
     ],
   },
 ];

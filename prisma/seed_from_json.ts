@@ -25,117 +25,90 @@ const FILE_TOPIC_MAP: Array<{
   subject: string;
 }> = [
 
+
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_array.json',
-    topic_name: 'Array',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_oscillations_1.json',
+    topic_name: 'Oscillations',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_linked_list.json',
-    topic_name: 'Linked List',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_oscillations_2.json',
+    topic_name: 'Oscillations',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_stack.json',
-    topic_name: 'Stack',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_waves.json',
+    topic_name: 'Waves',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_queue.json',
-    topic_name: 'Queue',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_waves1.json',
+    topic_name: 'Waves',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_binary_tree.json',
-    topic_name: 'Binary Tree',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_vector_algebra.json',
+    topic_name: 'Vector Algebra',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_binary_search_tree.json',
-    topic_name: 'Binary Search Tree',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics.json',
+    topic_name: 'Thermodynamics',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_avl_tree.json',
-    topic_name: 'AVL Tree',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics_2.json',
+    topic_name: 'Thermodynamics',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_b_tree.json',
-    topic_name: 'B Tree',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics_3.json',
+    topic_name: 'Thermodynamics',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_b_plus_tree.json',
-    topic_name: 'B Plus Tree',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics_4.json',
+    topic_name: 'Thermodynamics',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_heap.json',
-    topic_name: 'Heap',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_properties_of_matter.json',
+    topic_name: 'Properties of Matter',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_hashing.json',
-    topic_name: 'Hashing',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_properties_of_matter_part2.json',
+    topic_name: 'Properties of Matter',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   },
   {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_arithmetic_operation.json',
-    topic_name: 'Arithmetic Operation',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_conditional_statement.json',
-    topic_name: 'Conditional Statement',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_loops.json',
-    topic_name: 'Loops',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_array_and_pointer.json',
-    topic_name: 'Array and Pointer',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/practicepaper-scraper/data/output/gate_cse_function.json',
-    topic_name: 'Function',
-    exam_type: 'GATE',
-    branch: 'CSE',
-    subject: 'Programming in C'
+    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_properties_of_matter_part3.json',
+    topic_name: 'Properties of Matter',
+    exam_type: 'JEE Main',
+    branch: 'Common',
+    subject: 'Physics'
   }
 ];
 

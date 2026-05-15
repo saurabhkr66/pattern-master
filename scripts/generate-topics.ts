@@ -221,43 +221,123 @@ async function processMock(mockId: string, isDry: boolean) {
   let fixed = 0, failed = 0;
   const updatedQuestions = [...questions];
 
-  for (const q of missing) {
-    process.stdout.write(`  Q ${(q.id || "?").slice(-8)} [${q.question_type || "MCQ"}] ... `);
-    
-    // We need subject-level topics for this specific question
+  // Group missing questions by subject
+  const subjectGroups: Record<string, any[]> = {};
+  missing.forEach(q => {
     const subject = (q.subject || "GENERAL").toUpperCase().trim();
+    if (!subjectGroups[subject]) subjectGroups[subject] = [];
+    subjectGroups[subject].push(q);
+  });
+
+  for (const [subject, group] of Object.entries(subjectGroups)) {
     const allowedTopics = examTopics[subject] || [];
-    
     if (allowedTopics.length === 0) {
-      console.log(`✗ failed (No topics defined for subject: ${subject})`);
-      failed++;
+      console.log(`  Skipping subject ${subject} (No topics defined)`);
+      failed += group.length;
       continue;
     }
 
-    const topic = await generateTopic(q, allowedTopics);
+    console.log(`  Processing ${group.length} questions for subject ${subject} at once...`);
 
-    if (topic && topic !== "Unknown") {
-      const idx = updatedQuestions.findIndex(x => x.id === q.id);
-      if (idx !== -1) updatedQuestions[idx] = { ...updatedQuestions[idx], topic };
+    const parts: any[] = [];
+    let promptText = `You are an academic expert. Categorize these exam questions into EXACTLY ONE topic from this list:
+
+--- ALLOWED TOPICS START ---
+${allowedTopics.join("\n")}
+--- ALLOWED TOPICS END ---
+
+Rules:
+1. Return a JSON object with a "topics" array containing objects with "index" and "topic".
+2. The "index" must match the index of the question in the list below.
+3. Choose the closest match if not perfect.
+
+Questions:
+`;
+
+    let imageCounter = 1;
+    for (let i = 0; i < group.length; i++) {
+      const q = group[i];
+      promptText += `[Index: ${i}] Question: ${q.question_text}\n`;
+      promptText += `Options: ${JSON.stringify(q.options)}\n`;
       
-      console.log(`✓ Topic assigned`);
-      console.log(`\n    --- QUESTION ---`);
-      console.log(`    ${q.question_text.substring(0, 150)}...`);
-      console.log(`    Subject: ${subject}`);
-      console.log(`    Topic:   ${topic}\n`);
-      fixed++;
-
-      // PERIODIC SAVE: Every 5 fixed questions, save so we don't lose progress on crash
-      if (!isDry && fixed % 5 === 0) {
-        console.log(`  [Periodic Save] Saving progress to DB (${fixed} fixed)...`);
-        await saveMockTestWithRetry(mockId, updatedQuestions);
+      const images = (q.images as any[]) || [];
+      for (const img of images.filter((i) => i.type !== "explanation")) {
+        const filename = img.filename || img.url;
+        if (!filename) continue;
+        const imageData = await fetchImageAsBase64(filename);
+        if (imageData) {
+          parts.push({ inlineData: imageData });
+          promptText += `(Refer to Image ${imageCounter} for this question)\n`;
+          imageCounter++;
+        }
       }
-    } else {
-      console.log("✗ failed (AI couldn't categorize or returned Unknown)");
-      failed++;
+      promptText += "\n";
     }
 
-    await new Promise(r => setTimeout(r, DELAY_MS));
+    parts.unshift(promptText);
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: parts.map((p) =>
+          typeof p === "string" ? p : p.inlineData ? { inlineData: p.inlineData } : p
+        ),
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              topics: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    index: { type: "INTEGER" },
+                    topic: { type: "STRING" }
+                  },
+                  required: ["index", "topic"]
+                }
+              }
+            },
+            required: ["topics"]
+          }
+        }
+      });
+
+      const result = JSON.parse(response.text || "{}");
+      const topics = result.topics || [];
+
+      let fixedInGroup = 0;
+      topics.forEach((t: any) => {
+        const idx = t.index;
+        const topic = t.topic;
+        if (idx >= 0 && idx < group.length && topic) {
+          const cleaned = cleanTopic(topic, allowedTopics);
+          if (cleaned !== "Unknown") {
+            const q = group[idx];
+            const uIdx = updatedQuestions.findIndex(x => x.id === q.id);
+            if (uIdx !== -1) updatedQuestions[uIdx] = { ...updatedQuestions[uIdx], topic: cleaned };
+            console.log(`    Q: "${q.question_text.substring(0, 50)}..." -> ${cleaned}`);
+            fixedInGroup++;
+            fixed++;
+          } else {
+             failed++;
+          }
+        }
+      });
+
+      console.log(`  ✓ Fixed ${fixedInGroup}/${group.length} topics for subject ${subject}.`);
+
+      // Save after each subject group
+      if (!isDry && fixedInGroup > 0) {
+        console.log(`  [Periodic Save] Saving progress to DB...`);
+        await saveMockTestWithRetry(mockId, updatedQuestions);
+      }
+
+    } catch (err: any) {
+      console.error(`  Gemini error for subject ${subject}:`, err.message);
+      failed += group.length;
+    }
   }
 
   console.log(`\n[Mock] Done: ${fixed} fixed, ${failed} failed`);

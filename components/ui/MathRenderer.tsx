@@ -121,6 +121,98 @@ function splitTopLevelCommas(s: string): string[] {
 const cleanCells = (cells: string[]): string[] =>
   cells.map((c) => c.trim()).filter((c) => c.length > 0 && c !== '{,}');
 
+// Wrap bare \begin{ENV}...\end{ENV} blocks that live in prose so KaTeX sees
+// them as math. Hand-written because the previous regex used non-greedy
+// `[\s\S]*?` which couldn't pair an outer \begin{array} with its outer
+// \end{array} when other arrays were nested inside — it grabbed the first
+// inner \end and left the outer mismatched, which then rendered as red.
+// This version skips over $...$ and $$...$$ regions (so it never re-wraps
+// content that is already math), then for each top-level \begin{ENV} finds
+// the depth-balanced \end{ENV}. Also absorbs an adjacent \left<delim> before
+// and \right<delim> after, so cases-like \left\{ \begin{matrix}...\end{matrix} \right.
+// constructs end up entirely inside one math span.
+const WRAP_ENV_SET = new Set([
+  'cases', 'bmatrix', 'vmatrix', 'pmatrix', 'matrix',
+  'aligned', 'align', 'align*', 'array',
+]);
+
+function findBalancedEnvEnd(s: string, fromIdx: number, env: string): number {
+  const beginTok = `\\begin{${env}}`;
+  const endTok = `\\end{${env}}`;
+  let depth = 1;
+  let i = fromIdx;
+  while (i < s.length) {
+    if (s.startsWith(beginTok, i)) {
+      depth++;
+      i += beginTok.length;
+    } else if (s.startsWith(endTok, i)) {
+      depth--;
+      i += endTok.length;
+      if (depth === 0) return i;
+    } else {
+      i++;
+    }
+  }
+  return -1;
+}
+
+function wrapBareMathEnvs(s: string): string {
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    // Pass through $$...$$ display blocks unchanged.
+    if (s.startsWith('$$', i)) {
+      const close = s.indexOf('$$', i + 2);
+      if (close === -1) { out += s.slice(i); return out; }
+      out += s.slice(i, close + 2);
+      i = close + 2;
+      continue;
+    }
+    // Pass through single-line $...$ inline math unchanged.
+    if (s[i] === '$') {
+      const nextDollar = s.indexOf('$', i + 1);
+      if (nextDollar === -1) {
+        out += s.slice(i);
+        return out;
+      }
+      const between = s.slice(i + 1, nextDollar);
+      if (!between.includes('\n')) {
+        out += s.slice(i, nextDollar + 1);
+        i = nextDollar + 1;
+        continue;
+      }
+      // Newline inside $...$ — not real inline math, fall through and emit the $
+    }
+    // Look for \begin{ENV} at the current position.
+    if (s.startsWith('\\begin{', i)) {
+      const braceEnd = s.indexOf('}', i + 7);
+      if (braceEnd !== -1) {
+        const env = s.slice(i + 7, braceEnd);
+        if (WRAP_ENV_SET.has(env)) {
+          const endIdx = findBalancedEnvEnd(s, braceEnd + 1, env);
+          if (endIdx !== -1) {
+            let blockStart = i;
+            let blockEnd = endIdx;
+            const beforeMatch = /\\left(?:\\.|[^\s])\s*$/.exec(out);
+            if (beforeMatch) {
+              out = out.slice(0, out.length - beforeMatch[0].length);
+              blockStart -= beforeMatch[0].length;
+            }
+            const afterMatch = /^\s*\\right(?:\\.|[^\s])/.exec(s.slice(endIdx));
+            if (afterMatch) blockEnd += afterMatch[0].length;
+            out += `\n$$\n${s.slice(blockStart, blockEnd)}\n$$\n`;
+            i = blockEnd;
+            continue;
+          }
+        }
+      }
+    }
+    out += s[i];
+    i++;
+  }
+  return out;
+}
+
 // Scraper-invented "\text{table}" → real KaTeX environments
 const expandTextTable = (s: string): string =>
   s
@@ -316,16 +408,6 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     // JEE scraper: unwrapped dimensional formulas [M^...L^...T^...] → $[...]$
     // Only wraps if not already inside $...$ (negative lookbehind/lookahead for $)
     .replace(/(?<!\$)\[([^\[\]]+\^[^\[\]]+)\](?!\()(?!\$)/g, '\\$$[$1]\\$$')
-    // Wrap bare \begin{env}...\end{env} blocks not already inside $ delimiters.
-    // Matches: not preceded by $, captures the whole block, not followed by $.
-    // Also captures adjacent \left<delim> / \right<delim> so cases-like
-    // constructs (\left\{ \begin{matrix}...\end{matrix} \right.) end up
-    // entirely inside the math block instead of leaking as red prose.
-    .replace(
-      /(?<!\$)((?:\\left(?:\\.|[^\s]))?\s*\\begin\{(cases|bmatrix|vmatrix|pmatrix|matrix|align\*?|aligned|array)\}[\s\S]*?\\end\{\2\}(?:\s*\\right(?:\\.|[^\s]))?)(?!\$)/g,
-      '\n$$\n$1\n$$\n'
-    )
-
     // AI DEFECT CLEANERS (Defensive Fixes)
     // 1. Fix the "Square Bracket Link" conflict: Replace [ with a version that won't trigger Markdown links
     // but KaTeX will still understand inside math blocks.
@@ -341,8 +423,14 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\b([A-Z])\s+([a-z])\s+([a-z])\s+([a-z])\s+([a-z])\b/g, (m) => m.replace(/\s+/g, ''))
     .replace(/\b([A-Z])\s+([a-z])\s+([a-z])\s+([a-z])\b/g, (m) => m.replace(/\s+/g, ''));
 
+  // Wrap bare \begin{env}...\end{env} blocks (those living outside any $...$
+  // or $$...$$) in display math. Uses depth-balanced matching so nested
+  // arrays (e.g. \begin{array}{|l|l|}...\begin{array}{l}...\end{array}...\end{array})
+  // pair correctly instead of stopping at the first inner \end{array}.
+  const envWrapped = wrapBareMathEnvs(baseContent);
+
   // Convert scraper-invented \text{table} matrix/cases blocks before the math-scoped pass.
-  const tableExpanded = expandTextTable(baseContent);
+  const tableExpanded = expandTextTable(envWrapped);
 
   // Math-scoped fixes: apply only inside $$...$$ and $...$ so English prose stays untouched.
   const processedContent = tableExpanded

@@ -3,199 +3,308 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database with Mathematics topics...');
+  console.log('🌱 Seeding database with NEET Physics and Chemistry topics...');
+
+  // Remove previous NEET data from DB (removes Biology as requested)
+ 
 
   const patterns = [
-    // --- Class 12 Mathematics ---
+    // --- Physics ---
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Limits, Continuity and Differentiability",
-      "atomic_logic": "Generate JEE Main level questions on Limits, Continuity and Differentiability. Focus on L'Hopital's rule and derivability."
+      "subject": "Physics",
+      "topic_name": "Physical World, Units and Measurements",
+      "atomic_logic": "Generate NEET level questions on Physical World, Units and Measurements. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Inverse Trigonometric Functions",
-      "atomic_logic": "Generate JEE Main level questions on Inverse Trigonometric Functions. Focus on Principal values and Properties."
+      "subject": "Physics",
+      "topic_name": "Motion in a Straight Line",
+      "atomic_logic": "Generate NEET level questions on Motion in a Straight Line. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Matrices and Determinants",
-      "atomic_logic": "Generate JEE Main level questions on Matrices and Determinants. Focus on Adjoint, Inverse, and Cramer's Rule."
+      "subject": "Physics",
+      "topic_name": "Motion in a Plane",
+      "atomic_logic": "Generate NEET level questions on Motion in a Plane. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Differentiation",
-      "atomic_logic": "Generate JEE Main level questions on Differentiation. Focus on Chain rule, Implicit functions, and Parametric differentiation."
+      "subject": "Physics",
+      "topic_name": "Laws of Motion",
+      "atomic_logic": "Generate NEET level questions on Laws of Motion. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Application of Derivatives",
-      "atomic_logic": "Generate JEE Main level questions on Application of Derivatives. Focus on Tangents, Normals, and Maxima/Minima."
+      "subject": "Physics",
+      "topic_name": "Work, Energy and Power",
+      "atomic_logic": "Generate NEET level questions on Work, Energy and Power. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Indefinite Integrals",
-      "atomic_logic": "Generate JEE Main level questions on Indefinite Integrals. Focus on Substitution, Parts, and Partial fractions."
+      "subject": "Physics",
+      "topic_name": "System of Particles and Rotational Motion",
+      "atomic_logic": "Generate NEET level questions on System of Particles and Rotational Motion. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Definite Integrals",
-      "atomic_logic": "Generate JEE Main level questions on Definite Integrals. Focus on Properties of definite integrals and Leibniz rule."
+      "subject": "Physics",
+      "topic_name": "Gravitation",
+      "atomic_logic": "Generate NEET level questions on Gravitation. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Area Under The Curves",
-      "atomic_logic": "Generate JEE Main level questions on Area Under The Curves. Focus on Integration between curves."
+      "subject": "Physics",
+      "topic_name": "Properties of Matter",
+      "atomic_logic": "Generate NEET level questions on Properties of Matter. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Differential Equations",
-      "atomic_logic": "Generate JEE Main level questions on Differential Equations. Focus on Variable separable and Linear differential equations."
+      "subject": "Physics",
+      "topic_name": "Thermodynamics and Kinetic Theory",
+      "atomic_logic": "Generate NEET level questions on Thermodynamics and Kinetic Theory. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Vector Algebra",
-      "atomic_logic": "Generate JEE Main level questions on Vector Algebra. Focus on Scalar/Vector Triple Product and Direction cosines."
+      "subject": "Physics",
+      "topic_name": "Oscillations",
+      "atomic_logic": "Generate NEET level questions on Oscillations. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Three Dimensional Geometry",
-      "atomic_logic": "Generate JEE Main level questions on Three Dimensional Geometry. Focus on Lines and Planes in space."
+      "subject": "Physics",
+      "topic_name": "Waves",
+      "atomic_logic": "Generate NEET level questions on Waves. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Probability",
-      "atomic_logic": "Generate JEE Main level questions on Probability. Focus on Bayes' theorem and Binomial distribution."
+      "subject": "Physics",
+      "topic_name": "Electrostatics",
+      "atomic_logic": "Generate NEET level questions on Electrostatics. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Statistics",
-      "atomic_logic": "Generate JEE Main level questions on Statistics. Focus on Mean, Variance, and Standard Deviation."
-    },
-    // --- Class 11 Mathematics ---
-    {
-      "exam_type": "JEE Main",
-      "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Sets and Relations",
-      "atomic_logic": "Generate JEE Main level questions on Sets and Relations. Focus on Equivalence relations and Venn diagrams."
+      "subject": "Physics",
+      "topic_name": "Current Electricity",
+      "atomic_logic": "Generate NEET level questions on Current Electricity. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Functions",
-      "atomic_logic": "Generate JEE Main level questions on Functions. Focus on Domain, Range, and One-to-one/Onto functions."
+      "subject": "Physics",
+      "topic_name": "Moving Charges and Magnetism",
+      "atomic_logic": "Generate NEET level questions on Moving Charges and Magnetism. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Complex Numbers",
-      "atomic_logic": "Generate JEE Main level questions on Complex Numbers. Focus on De Moivre's theorem and Cube roots of unity."
+      "subject": "Physics",
+      "topic_name": "Magnetism and Matter",
+      "atomic_logic": "Generate NEET level questions on Magnetism and Matter. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Quadratic Equation and Inequalities",
-      "atomic_logic": "Generate JEE Main level questions on Quadratic Equation and Inequalities. Focus on Nature of roots and Location of roots."
+      "subject": "Physics",
+      "topic_name": "Electromagnetic Induction and Alternating Currents",
+      "atomic_logic": "Generate NEET level questions on Electromagnetic Induction and Alternating Currents. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Permutations and Combinations",
-      "atomic_logic": "Generate JEE Main level questions on Permutations and Combinations. Focus on Circular permutations and Distribution problems."
+      "subject": "Physics",
+      "topic_name": "Electromagnetic Waves",
+      "atomic_logic": "Generate NEET level questions on Electromagnetic Waves. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Binomial Theorem",
-      "atomic_logic": "Generate JEE Main level questions on Binomial Theorem. Focus on General term and Binomial coefficients properties."
+      "subject": "Physics",
+      "topic_name": "Optics",
+      "atomic_logic": "Generate NEET level questions on Optics. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Sequences and Series",
-      "atomic_logic": "Generate JEE Main level questions on Sequences and Series. Focus on Arithmetic and Geometric progressions (AP/GP)."
+      "subject": "Physics",
+      "topic_name": "Dual Nature of Matter and Radiation",
+      "atomic_logic": "Generate NEET level questions on Dual Nature of Matter and Radiation. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Straight Lines and Pair of Straight Lines",
-      "atomic_logic": "Generate JEE Main level questions on Straight Lines. Focus on Slope forms and Angle between lines."
+      "subject": "Physics",
+      "topic_name": "Atoms and Nuclei",
+      "atomic_logic": "Generate NEET level questions on Atoms and Nuclei. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Circles",
-      "atomic_logic": "Generate JEE Main level questions on Circles. Focus on Tangents, Normals, and Orthogonality."
+      "subject": "Physics",
+      "topic_name": "Semiconductor Electronics",
+      "atomic_logic": "Generate NEET level questions on Semiconductor Electronics. Focus on NCERT concepts."
+    },
+
+    // --- Chemistry ---
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Some Basic Concepts of Chemistry",
+      "atomic_logic": "Generate NEET level questions on Some Basic Concepts of Chemistry. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Parabola",
-      "atomic_logic": "Generate JEE Main level questions on Parabola. Focus on Standard equations and Focal chords."
+      "subject": "Chemistry",
+      "topic_name": "Structure of Atom",
+      "atomic_logic": "Generate NEET level questions on Structure of Atom. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Ellipse",
-      "atomic_logic": "Generate JEE Main level questions on Ellipse. Focus on Eccentricity and Tangents."
+      "subject": "Chemistry",
+      "topic_name": "Classification of Elements and Periodicity in Properties",
+      "atomic_logic": "Generate NEET level questions on Classification of Elements and Periodicity in Properties. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Hyperbola",
-      "atomic_logic": "Generate JEE Main level questions on Hyperbola. Focus on Asymptotes and Rectangular hyperbola."
+      "subject": "Chemistry",
+      "topic_name": "Chemical Bonding and Molecular Structure",
+      "atomic_logic": "Generate NEET level questions on Chemical Bonding and Molecular Structure. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Trigonometric Ratios and Identities",
-      "atomic_logic": "Generate JEE Main level questions on Trigonometric Ratios and Identities. Focus on Multiple angles and Sum-to-product."
+      "subject": "Chemistry",
+      "topic_name": "Chemical Thermodynamics",
+      "atomic_logic": "Generate NEET level questions on Chemical Thermodynamics. Focus on NCERT concepts."
     },
     {
-      "exam_type": "JEE Main",
+      "exam_type": "NEET",
       "branch": "Common",
-      "subject": "Mathematics",
-      "topic_name": "Logarithms",
-      "atomic_logic": "Generate JEE Main level questions on Logarithms. Focus on Log properties and Logarithmic equations."
+      "subject": "Chemistry",
+      "topic_name": "Equilibrium",
+      "atomic_logic": "Generate NEET level questions on Equilibrium. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Redox Reactions",
+      "atomic_logic": "Generate NEET level questions on Redox Reactions. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Some P-block Elements",
+      "atomic_logic": "Generate NEET level questions on Some P-block Elements. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Organic Chemistry: Some Basic Principles and Techniques",
+      "atomic_logic": "Generate NEET level questions on Organic Chemistry: Some Basic Principles and Techniques. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Hydrocarbons",
+      "atomic_logic": "Generate NEET level questions on Hydrocarbons. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Solutions",
+      "atomic_logic": "Generate NEET level questions on Solutions. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Electrochemistry",
+      "atomic_logic": "Generate NEET level questions on Electrochemistry. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Chemical Kinetics",
+      "atomic_logic": "Generate NEET level questions on Chemical Kinetics. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "P Block Elements",
+      "atomic_logic": "Generate NEET level questions on P Block Elements. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "D and F Block Elements",
+      "atomic_logic": "Generate NEET level questions on D and F Block Elements. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Coordination Compounds",
+      "atomic_logic": "Generate NEET level questions on Coordination Compounds. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Haloalkanes and Haloarenes",
+      "atomic_logic": "Generate NEET level questions on Haloalkanes and Haloarenes. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Alcohols, Phenols and Ethers",
+      "atomic_logic": "Generate NEET level questions on Alcohols, Phenols and Ethers. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Aldehydes, Ketones and Carboxylic Acids",
+      "atomic_logic": "Generate NEET level questions on Aldehydes, Ketones and Carboxylic Acids. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Organic Compounds Containing Nitrogen",
+      "atomic_logic": "Generate NEET level questions on Organic Compounds Containing Nitrogen. Focus on NCERT concepts."
+    },
+    {
+      "exam_type": "NEET",
+      "branch": "Common",
+      "subject": "Chemistry",
+      "topic_name": "Biomolecules",
+      "atomic_logic": "Generate NEET level questions on Biomolecules. Focus on NCERT concepts."
     }
   ];
 
@@ -217,7 +326,7 @@ async function main() {
     console.log(`✅ Created pattern: ${created.topic_name}`);
   }
 
-  console.log('✨ Mathematics seeding finished successfully!');
+  console.log('✨ NEET Physics and Chemistry seeding finished successfully!');
 }
 
 main()
