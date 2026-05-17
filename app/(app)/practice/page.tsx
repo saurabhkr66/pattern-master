@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import { cleanTextForMeta } from "@/lib/seo";
+import { cleanTextForMeta, joinExamLabels, getExamSeoInfo } from "@/lib/seo";
 import PatternTable from "@/components/patterns/PatternTable";
 import ExamSwitcher from "@/components/patterns/ExamSwitcher";
 import PracticeHydrator from "@/components/patterns/PracticeHydrator";
@@ -45,18 +45,32 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   if (patternId) {
     const actualId = patternId.startsWith("subject-") ? patternId.replace("subject-", "") : patternId;
     let name = "";
+    let examType = "";
+    let branch: string | null = null;
     if (patternId.startsWith("subject-")) {
-      const sp = await prisma.subjectPattern.findUnique({ where: { id: actualId }, select: { subject_name: true } });
+      const sp = await prisma.subjectPattern.findUnique({
+        where: { id: actualId },
+        select: { subject_name: true, exam_type: true, branch: true },
+      });
       name = sp?.subject_name || "";
+      examType = sp?.exam_type || "";
+      branch = sp?.branch ?? null;
     } else {
-      const p = await prisma.pattern.findUnique({ where: { id: actualId }, select: { topic_name: true } });
+      const p = await prisma.pattern.findUnique({
+        where: { id: actualId },
+        select: { topic_name: true, exam_type: true, branch: true },
+      });
       name = p?.topic_name || "";
+      examType = p?.exam_type || "";
+      branch = p?.branch ?? null;
     }
 
     if (name) {
+      const exam = examType ? getExamSeoInfo(examType, branch) : null;
+      const examLabel = exam?.fullLabel ?? "your exam";
       return {
         title: `${name} Practice Questions & PYQs | BattleExam`,
-        description: `Practice ${name} questions for GATE CSE. Track your progress, solve previous year questions, and master patterns.`,
+        description: `Practice ${name} questions for ${examLabel}. Track your progress, solve previous year questions, and master patterns.`,
         alternates: { canonical: `${BASE}/practice?patternId=${patternId}` }
       };
     }
@@ -64,7 +78,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 
   return {
     title: "Practice Dashboard | BattleExam",
-    description: "Browse GATE CSE, ISRO, BARC & ESE topics and practice with AI-generated questions and previous year papers.",
+    description: `Browse ${joinExamLabels()} topics and practice with AI-generated questions and previous year papers.`,
     alternates: { canonical: `${BASE}/practice` }
   };
 }

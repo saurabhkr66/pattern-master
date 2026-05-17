@@ -23,6 +23,25 @@ const nextConfig: NextConfig = {
     // katex: only bundle the rendering functions, not the full package
     optimizePackageImports: ['lucide-react', 'katex'],
   },
+
+  // Old URLs with a `-common` suffix used to be the canonical form for
+  // branchless exams (JEE Main, NEET, SSC, etc.). We now hide "Common" from
+  // URLs entirely — these permanent redirects fold the indexed `-common`
+  // variants into the cleaner form so Google consolidates ranking signal.
+  async redirects() {
+    return [
+      { source: "/jee-main-common", destination: "/jee-main", permanent: true },
+      { source: "/jee-main-common/:path*", destination: "/jee-main/:path*", permanent: true },
+      { source: "/jee-advanced-common", destination: "/jee-advanced", permanent: true },
+      { source: "/jee-advanced-common/:path*", destination: "/jee-advanced/:path*", permanent: true },
+      { source: "/neet-common", destination: "/neet", permanent: true },
+      { source: "/neet-common/:path*", destination: "/neet/:path*", permanent: true },
+      { source: "/ugc-net-p1-common", destination: "/ugc-net-p1", permanent: true },
+      { source: "/ugc-net-p1-common/:path*", destination: "/ugc-net-p1/:path*", permanent: true },
+      { source: "/ugc-net-p2-common", destination: "/ugc-net-p2", permanent: true },
+      { source: "/ugc-net-p2-common/:path*", destination: "/ugc-net-p2/:path*", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

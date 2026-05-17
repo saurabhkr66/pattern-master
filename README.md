@@ -1,6 +1,6 @@
 # 🏆 BattleExam
 
-> **AI-Powered GATE, ISRO, BARC & ESE Exam Preparation Platform**
+> **AI-Powered GATE & ESE Exam Preparation Platform**
 
 BattleExam is a production-grade, full-stack web & mobile application built for serious competitive exam aspirants. It combines an AI question engine, pattern-based learning methodology, real-time progress tracking, and an offline-capable native Android app — all in a single cohesive platform.
 
@@ -33,7 +33,7 @@ BattleExam is a production-grade, full-stack web & mobile application built for 
 - **Pattern-Based Questions**: Each topic is decomposed into an "atomic logic" — the core reasoning pattern behind all GATE questions on that topic.
 - **AI-Generated Questions**: Powered by Google Gemini Pro, questions are generated dynamically per topic, ensuring an endless and fresh question bank.
 - **Previous Year Questions (PYQs)**: Real GATE questions from past years (MCQ, MSQ, and NAT types) are seeded and tracked separately.
-- **Subject-Level Practice**: Comprehensive subject-wide practice modes for boards like ISRO/BARC that test broad subject knowledge.
+- **Subject-Level Practice**: Comprehensive subject-wide practice modes that test broad subject knowledge.
 - **Flashcard Review Deck**: Spaced-repetition style flashcard review for mastery notes and key concepts.
 - **Mock Test System**: Timed, full-length mock tests with automatic scoring, section analysis, and a detailed results breakdown.
 
@@ -140,7 +140,7 @@ MockTestTemplate
 | `Pattern` | Core topic unit with atomic logic — the heart of the system |
 | `GeneratedQuestion` | AI-generated MCQ/MSQ/NAT questions tied to a Pattern |
 | `PYQ` | Official Previous Year Questions by exam and year |
-| `SubjectPattern` | Top-level subject grouping (for ISRO/BARC subject practice) |
+| `SubjectPattern` | Top-level subject grouping |
 | `SubjectPYQ` | Subject-level PYQs not tied to a specific topic Pattern |
 | `Attempt` | Records every question submission (correct/incorrect, user answer) |
 | `MockTestTemplate` | Reusable template for a full-length mock test configuration |
@@ -344,7 +344,7 @@ npx tsx prisma/seed_pyqs.ts
 # Seed mastery/short notes for AI-generated topics
 npx tsx prisma/seed_notes.ts
 
-# Seed subject-level patterns (e.g., for ISRO practice)
+# Seed subject-level patterns
 npx tsx prisma/seed_subjects.ts
 ```
 

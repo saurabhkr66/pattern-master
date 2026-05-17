@@ -1,19 +1,16 @@
 // app/[examType]/[subject]/[topic]/[questionId]/page.tsx
-// Public SEO-optimised question page
+//
+// Per-question URLs (pyq-*, gq-*, spyq-*) now 308 permanent-redirect to their
+// parent topic page with an anchor to the specific question (and the right
+// pagination page if the question is on page 2+). The topic page hosts every
+// question inline, so the per-question URL has no unique content of its own.
+//
 // URL example: /gate-cse/dbms/normalization/pyq-abc123
+//              → 308 → /gate-cse/dbms/normalization?page=2#q-pyq-abc123
 
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
+import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import {
-  cleanTextForMeta,
-  buildQuestionSchema,
-  toSlug,
-  buildBreadcrumbSchema,
-  buildExamSlug,
-  getExamSeoInfo,
-} from "@/lib/seo";
-import QuestionViewer from "@/components/question/QuestionViewer";
+import { toSlug, buildExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
 
 interface PageParams {
   examType: string;
@@ -22,217 +19,110 @@ interface PageParams {
   questionId: string;
 }
 
-// ------ Data fetching helpers -----------------------------------------------
+// Compute which pagination page hosts a given PYQ. Topic page orders PYQs by
+// `year desc, id asc`, so "before this row" = higher year OR same-year-lower-id.
+async function pyqPagePosition(pyq: { pattern_id: string; year: number; id: string }) {
+  const before = await prisma.pYQ.count({
+    where: {
+      pattern_id: pyq.pattern_id,
+      OR: [
+        { year: { gt: pyq.year } },
+        { year: pyq.year, id: { lt: pyq.id } },
+      ],
+    },
+  });
+  return Math.floor(before / TOPIC_PAGE_SIZE) + 1;
+}
 
-async function fetchQuestion(questionId: string) {
-  // IDs are prefixed: "pyq-", "spyq-", "gq-"
+// GQs come AFTER all PYQs in the combined list. Ordered by
+// `difficulty_level asc, id asc` within GQs.
+async function gqPagePosition(gq: { pattern_id: string; difficulty_level: string; id: string }) {
+  const [pyqTotal, gqBefore] = await Promise.all([
+    prisma.pYQ.count({ where: { pattern_id: gq.pattern_id } }),
+    prisma.generatedQuestion.count({
+      where: {
+        pattern_id: gq.pattern_id,
+        OR: [
+          { difficulty_level: { lt: gq.difficulty_level } },
+          { difficulty_level: gq.difficulty_level, id: { lt: gq.id } },
+        ],
+      },
+    }),
+  ]);
+  return Math.floor((pyqTotal + gqBefore) / TOPIC_PAGE_SIZE) + 1;
+}
+
+async function buildRedirectUrl(questionId: string): Promise<string | null> {
   if (questionId.startsWith("pyq-")) {
     const id = questionId.slice(4);
     const q = await prisma.pYQ.findUnique({
       where: { id },
-      include: { pattern: { select: { subject: true, topic_name: true, exam_type: true, branch: true } } },
+      select: {
+        id: true,
+        year: true,
+        pattern_id: true,
+        pattern: {
+          select: { subject: true, topic_name: true, exam_type: true, branch: true },
+        },
+      },
     });
     if (!q) return null;
-    return {
-      id: q.id,
-      prefix: "pyq",
-      questionText: q.question_text,
-      options: (q.options as string[]) ?? [],
-      correctAnswer: q.correct_answer,
-      explanation: q.explanation,
-      year: q.year,
-      questionType: q.question_type,
-      images: (q.images as any[]) ?? [],
-      subject: q.pattern.subject,
-      topicName: q.pattern.topic_name,
-      examType: q.pattern.exam_type,
-      branch: q.pattern.branch as string | null,
-    };
+    const page = await pyqPagePosition({ pattern_id: q.pattern_id, year: q.year, id: q.id });
+    const base = `/${buildExamSlug(q.pattern.exam_type, q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}`;
+    const query = page > 1 ? `?page=${page}` : "";
+    return `${base}${query}#q-pyq-${q.id}`;
   }
 
   if (questionId.startsWith("spyq-")) {
+    // Subject-level PYQs don't live on a topic page (they're attached to a
+    // SubjectPattern, not a Pattern). Redirect to the subject hub instead;
+    // no anchor since the question isn't inlined there yet.
     const id = questionId.slice(5);
     const q = await prisma.subjectPYQ.findUnique({
       where: { id },
-      include: { subject_pattern: { select: { subject_name: true, exam_type: true, branch: true } } },
+      select: {
+        subject_pattern: {
+          select: { subject_name: true, exam_type: true, branch: true },
+        },
+      },
     });
     if (!q) return null;
-    return {
-      id: q.id,
-      prefix: "spyq",
-      questionText: q.question_text,
-      options: (q.options as string[]) ?? [],
-      correctAnswer: q.correct_answer,
-      explanation: q.explanation,
-      year: q.year,
-      questionType: q.question_type,
-      images: (q.images as any[]) ?? [],
-      subject: q.subject_pattern.subject_name,
-      topicName: q.subject_pattern.subject_name,
-      examType: q.subject_pattern.exam_type,
-      branch: q.subject_pattern.branch as string | null,
-    };
+    return `/${buildExamSlug(q.subject_pattern.exam_type, q.subject_pattern.branch)}/${toSlug(q.subject_pattern.subject_name)}`;
   }
 
-  // gq- prefix = GeneratedQuestion
   const id = questionId.startsWith("gq-") ? questionId.slice(3) : questionId;
   const q = await prisma.generatedQuestion.findUnique({
     where: { id },
-    include: { pattern: { select: { subject: true, topic_name: true, exam_type: true, branch: true } } },
+    select: {
+      id: true,
+      difficulty_level: true,
+      pattern_id: true,
+      pattern: {
+        select: { subject: true, topic_name: true, exam_type: true, branch: true },
+      },
+    },
   });
   if (!q) return null;
-  return {
+  const page = await gqPagePosition({
+    pattern_id: q.pattern_id,
+    difficulty_level: q.difficulty_level,
     id: q.id,
-    prefix: "gq",
-    questionText: q.question_text,
-    options: (q.options as string[]) ?? [],
-    correctAnswer: q.correct_answer,
-    explanation: q.explanation,
-    year: new Date().getFullYear(),
-    questionType: q.question_type,
-    images: (q.images as any[]) ?? [],
-    subject: q.pattern.subject,
-    topicName: q.pattern.topic_name,
-    examType: q.pattern.exam_type,
-    branch: q.pattern.branch as string | null,
-  };
-}
-
-// ------ Metadata -------------------------------------------------------------
-
-export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
-  const { questionId } = await params;
-  const q = await fetchQuestion(questionId);
-  if (!q) return { title: "Question Not Found | BattleExam" };
-
-  const exam = getExamSeoInfo(q.examType, q.branch);
-  const subjectLabel = q.subject;
-  const topicLabel = q.topicName;
-  const yearLabel = q.year > 2000 ? ` ${q.year}` : "";
-
-  const title = `${exam.fullLabel} ${subjectLabel}${yearLabel} – ${topicLabel} | BattleExam`;
-
-  // "Answer-First" description for GEO: start with the direct context
-  const rawDesc = cleanTextForMeta(q.questionText, 150);
-  const description = `Solve this ${exam.fullLabel}${yearLabel} ${subjectLabel} question on ${topicLabel}. ${rawDesc}`;
-
-  // Canonical points at the indexable SEO URL itself.
-  const examSlug = buildExamSlug(q.examType, q.branch);
-  const subjectSlug = toSlug(subjectLabel);
-  const topicSlug = toSlug(topicLabel);
-  const canonical = `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}/${questionId}`;
-
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      url: canonical,
-      type: "article",
-      siteName: "BattleExam",
-      locale: "en_IN",
-      images: [
-        {
-          url: "https://battleexam.com/opengraph-image",
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["https://battleexam.com/opengraph-image"],
-    },
-  };
-}
-
-// ------ Page -----------------------------------------------------------------
-
-export default async function QuestionPage({ params }: { params: Promise<PageParams> }) {
-  const { questionId } = await params;
-  const q = await fetchQuestion(questionId);
-  if (!q) notFound();
-
-  const exam = getExamSeoInfo(q.examType, q.branch);
-  const examSlug = buildExamSlug(q.examType, q.branch);
-  const subjectSlug = toSlug(q.subject);
-  const topicSlug = toSlug(q.topicName);
-  const url = `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}/${questionId}`;
-
-  const questionSchema = buildQuestionSchema({
-    questionText: q.questionText,
-    options: q.options,
-    correctAnswer: q.correctAnswer,
-    explanation: q.explanation,
-    subject: q.subject,
-    topicName: q.topicName,
-    year: q.year,
-    questionType: q.questionType,
-    url,
-    exam,
   });
+  const base = `/${buildExamSlug(q.pattern.exam_type, q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}`;
+  const query = page > 1 ? `?page=${page}` : "";
+  return `${base}${query}#q-gq-${q.id}`;
+}
 
-  const breadcrumbSchema = buildBreadcrumbSchema([
-    { name: "Home", item: "https://battleexam.com" },
-    { name: exam.fullLabel, item: `https://battleexam.com/${examSlug}` },
-    { name: q.subject, item: `https://battleexam.com/${examSlug}/${subjectSlug}` },
-    ...(q.topicName !== q.subject
-      ? [{ name: q.topicName, item: `https://battleexam.com/${examSlug}/${subjectSlug}/${topicSlug}` }]
-      : []),
-  ]);
+export default async function QuestionPage({
+  params,
+}: {
+  params: Promise<PageParams>;
+}) {
+  const { questionId } = await params;
+  const url = await buildRedirectUrl(questionId);
+  if (!url) notFound();
 
-  return (
-    <>
-      {/* JSON-LD structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(questionSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-
-      <div className="max-w-3xl mx-auto py-8 md:py-14 px-4">
-        {/* Breadcrumb */}
-        <nav className="text-xs font-medium mb-6 flex items-center gap-2 flex-wrap" style={{ color: "var(--text-secondary)" }}>
-          <a href="/" className="hover:underline">Home</a>
-          <span>›</span>
-          <a href={`/${examSlug}/${subjectSlug}`} className="hover:underline">{q.subject}</a>
-          {q.topicName !== q.subject && (
-            <>
-              <span>›</span>
-              <a href={`/${examSlug}/${subjectSlug}/${topicSlug}`} className="hover:underline">{q.topicName}</a>
-            </>
-          )}
-        </nav>
-
-        {/* Meta pills */}
-        <div className="flex items-center gap-2 flex-wrap mb-4">
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-600 text-white">
-            {exam.fullLabel}
-          </span>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}>
-            {q.subject}
-          </span>
-          {q.year > 2000 && (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}>
-              {q.year}
-            </span>
-          )}
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ background: "var(--bg-surface-2)", color: "var(--text-secondary)" }}>
-            {q.questionType}
-          </span>
-        </div>
-
-        {/* Question viewer (client component – handles show/hide answer) */}
-        <QuestionViewer question={q} />
-      </div>
-    </>
-  );
+  // permanentRedirect emits a 308 (semantically equivalent to 301 for GET).
+  // Google treats both as permanent and consolidates ranking signal.
+  permanentRedirect(url);
 }

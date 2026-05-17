@@ -21,7 +21,7 @@ export async function generateQuestionsWithDeepSeek(prompt: string) {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an expert examiner for technical exams like GATE, ISRO, and BARC. You must ALWAYS output ONLY valid JSON as requested, without any markdown formatting or explanations."
+                        content: "You are an expert examiner for technical exams like GATE. You must ALWAYS output ONLY valid JSON as requested, without any markdown formatting or explanations."
                     },
                     {
                         role: "user",

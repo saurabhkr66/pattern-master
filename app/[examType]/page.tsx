@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { toSlug, parseExamSlug, buildExamSlug } from "@/lib/seo";
+import { toSlug, parseExamSlug, buildExamSlug, branchWhereClause } from "@/lib/seo";
 
 const BASE = "https://battleexam.com";
 
@@ -87,7 +87,7 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
   const patterns = await prisma.pattern.findMany({
     where: {
       exam_type: exam.examType,
-      ...(exam.branch ? { branch: { equals: exam.branch, mode: "insensitive" } } : {}),
+      ...branchWhereClause(exam.branch),
     },
     select: {
       subject: true,

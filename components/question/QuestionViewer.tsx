@@ -2,7 +2,7 @@
 // components/question/QuestionViewer.tsx
 // Client component that handles "Show Answer" toggle.
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Maximize2 } from "lucide-react";
 import katex from "katex";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -97,26 +97,32 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-export default function QuestionViewer({ question: q }: { question: QuestionData }) {
+export default function QuestionViewer({
+  question: q,
+  practiceHref,
+}: {
+  question: QuestionData;
+  /**
+   * Override the "Solve in Practice Mode" link. Callers on the topic page
+   * pass a fully-qualified URL with exam/branch/subject/patternId/questionId
+   * so the practice page lands in the right context. Defaults to the legacy
+   * shorthand if not provided.
+   */
+  practiceHref?: string;
+}) {
   const [showAnswer, setShowAnswer] = useState(false);
   const { language, setLanguage } = useLanguage();
-  const qRef = useRef<HTMLDivElement>(null);
-  const expRef = useRef<HTMLDivElement>(null);
 
-  // Render math into DOM refs after mount
-  useEffect(() => {
-    if (qRef.current) {
-      const text = (language === "hi" && q.questionTextHindi) ? q.questionTextHindi : q.questionText;
-      qRef.current.innerHTML = renderMath(text);
-    }
-  }, [q.questionText, q.questionTextHindi, language]);
-
-  useEffect(() => {
-    if (showAnswer && expRef.current) {
-      const text = (language === "hi" && q.explanationHindi) ? q.explanationHindi : q.explanation;
-      expRef.current.innerHTML = renderMath(text);
-    }
-  }, [showAnswer, q.explanation, q.explanationHindi, language]);
+  // Render math directly during render (runs server-side too) so Googlebot
+  // sees the fully-rendered question text + explanation in the initial HTML
+  // rather than empty <div>s populated only after JS hydration. katex's
+  // renderToString is synchronous and SSR-safe.
+  const questionHtml = renderMath(
+    (language === "hi" && q.questionTextHindi) ? q.questionTextHindi : q.questionText,
+  );
+  const explanationHtml = renderMath(
+    ((language === "hi" && q.explanationHindi) ? q.explanationHindi : q.explanation) || "",
+  );
 
   const correctLetters = q.correctAnswer
     .split(/[;,]/)
@@ -129,9 +135,9 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
       {/* Question text */}
       <div className="p-6 md:p-8">
         <div
-          ref={qRef}
           className="text-base leading-relaxed font-medium"
           style={{ color: "var(--text-primary)" }}
+          dangerouslySetInnerHTML={{ __html: questionHtml }}
         />
 
         {/* Question images (exclude explanation-type images) */}
@@ -186,7 +192,7 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
         </button>
 
         <a
-          href={`/practice?q=${q.prefix}-${q.id}`}
+          href={practiceHref ?? `/practice?q=${q.prefix}-${q.id}`}
           className="hidden sm:inline-flex rounded-xl px-6 py-2.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
           style={{
             background: "var(--bg-surface-2)",
@@ -230,10 +236,14 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
         )}
       </div>
 
-      {/* Explanation – only visible after Show Answer */}
-      {showAnswer && (q.explanation || (q.images && q.images.some(img => img.type === "explanation"))) && (
+      {/* Explanation — always in the DOM for SEO indexing, visually hidden
+          until the user clicks "Show Answer". `display: none` is used (not
+          `visibility: hidden`) so the block doesn't reserve layout space; Google
+          still indexes content inside `display: none` nodes. */}
+      {(q.explanation || (q.images && q.images.some(img => img.type === "explanation"))) && (
         <div
           className="px-6 md:px-8 pb-8"
+          style={{ display: showAnswer ? "block" : "none" }}
         >
           <div
             className="rounded-xl p-5 text-sm leading-relaxed"
@@ -243,8 +253,8 @@ export default function QuestionViewer({ question: q }: { question: QuestionData
               📖 Explanation
             </p>
             <div
-              ref={expRef}
               style={{ color: "var(--text-primary)" }}
+              dangerouslySetInnerHTML={{ __html: explanationHtml }}
             />
             {/* Explanation images */}
             {q.images && q.images.filter(img => img.type === "explanation").length > 0 && (

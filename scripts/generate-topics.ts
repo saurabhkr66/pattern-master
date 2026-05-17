@@ -138,30 +138,29 @@ async function generateTopic(q: { question_text: string; options: any; images?: 
 }
 
 // ── LIST MOCKS ────────────────────────────────────────────────────────────────
+// SQL-aggregate version: returns counts only, never ships the questions blob.
 async function listMocks() {
   console.log("Fetching mock tests and calculating uncategorized counts...\n");
-  const mocks = await prisma.mockTestTemplate.findMany({
-    where: {
-      exam_type: "JEE_MAIN",
-      mode: "seeded"
-    },
-    select: {
-      id: true,
-      title: true,
-      exam_type: true,
-      questions: true,
-    },
-    orderBy: { created_at: "desc" },
-  });
+  const rows = await prisma.$queryRaw<Array<{
+    id: string; title: string; total: bigint; missing: bigint;
+  }>>`
+    SELECT
+      m.id, m.title,
+      jsonb_array_length(m.questions) AS total,
+      (
+        SELECT count(*)::int
+        FROM jsonb_array_elements(m.questions) AS q
+        WHERE coalesce(q->>'topic', '') = '' OR q->>'topic' = 'Unknown'
+      ) AS missing
+    FROM "MockTestTemplate" m
+    WHERE m.exam_type = 'JEE_MAIN' AND m.mode = 'seeded'
+    ORDER BY m.created_at DESC
+  `;
 
-  const missingCounts = mocks.map(m => {
-    const qs = (m.questions as any[]) || [];
-    // Count questions that do not have a valid topic
-    const missing = qs.filter(q => !q.topic || q.topic.trim() === "" || q.topic === "Unknown").length;
-    return { ...m, missing, total: qs.length };
-  }).filter(m => m.missing > 0);
-
-  missingCounts.sort((a, b) => b.missing - a.missing);
+  const missingCounts = rows
+    .map(m => ({ ...m, missing: Number(m.missing), total: Number(m.total) }))
+    .filter(m => m.missing > 0)
+    .sort((a, b) => b.missing - a.missing);
 
   console.log(`Found ${missingCounts.length} mocks with missing topics.\n`);
   for (const m of missingCounts) {
@@ -169,13 +168,16 @@ async function listMocks() {
   }
 }
 
-async function saveMockTestWithRetry(mockId: string, updatedQuestions: any[], maxRetries = 3) {
+// Surgical JSONB patch — touches only one element, no RETURNING.
+async function patchQuestionTopic(mockId: string, idx: number, topic: string, maxRetries = 3) {
+  const path = `{${idx},topic}`;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await prisma.mockTestTemplate.update({
-        where: { id: mockId },
-        data: { questions: updatedQuestions },
-      });
+      await prisma.$executeRaw`
+        UPDATE "MockTestTemplate"
+        SET questions = jsonb_set(questions, ${path}::text[], to_jsonb(${topic}::text))
+        WHERE id = ${mockId}
+      `;
       return true;
     } catch (err: any) {
       if (err.code === 'P1001' && attempt < maxRetries) {
@@ -189,7 +191,11 @@ async function saveMockTestWithRetry(mockId: string, updatedQuestions: any[], ma
 }
 
 // ── PROCESS MOCK ──────────────────────────────────────────────────────────────
-async function processMock(mockId: string, isDry: boolean) {
+async function processMock(
+  mockId: string,
+  isDry: boolean,
+  allTopicsMap: Record<string, Record<string, string[]>>,
+) {
   const template = await prisma.mockTestTemplate.findUnique({
     where: { id: mockId },
     select: { id: true, title: true, questions: true, exam_type: true },
@@ -200,7 +206,6 @@ async function processMock(mockId: string, isDry: boolean) {
     return false;
   }
 
-  const allTopicsMap = await getAllTopics();
   const normalizedExam = template.exam_type.toUpperCase().replace(/\s+/g, '_');
   const examTopics = allTopicsMap[normalizedExam];
 
@@ -210,23 +215,25 @@ async function processMock(mockId: string, isDry: boolean) {
   }
 
   const questions = (template.questions as any[]);
-  const missing = questions.filter(q => !q.topic || q.topic.trim() === "" || q.topic === "Unknown");
+  // Pair each missing question with its original array index — needed for surgical jsonb_set.
+  const missingWithIdx = questions
+    .map((q, idx) => ({ q, idx }))
+    .filter(({ q }) => !q.topic || q.topic.trim() === "" || q.topic === "Unknown");
 
   console.log(`\n[Mock] "${template.title}"`);
   console.log(`  Total questions : ${questions.length}`);
-  console.log(`  Missing Topics  : ${missing.length}`);
-  if (missing.length === 0) { console.log("  Nothing to do."); return true; }
+  console.log(`  Missing Topics  : ${missingWithIdx.length}`);
+  if (missingWithIdx.length === 0) { console.log("  Nothing to do."); return true; }
   console.log();
 
   let fixed = 0, failed = 0;
-  const updatedQuestions = [...questions];
 
-  // Group missing questions by subject
-  const subjectGroups: Record<string, any[]> = {};
-  missing.forEach(q => {
+  // Group missing questions by subject (carrying original index)
+  const subjectGroups: Record<string, Array<{ q: any; idx: number }>> = {};
+  missingWithIdx.forEach(({ q, idx }) => {
     const subject = (q.subject || "GENERAL").toUpperCase().trim();
     if (!subjectGroups[subject]) subjectGroups[subject] = [];
-    subjectGroups[subject].push(q);
+    subjectGroups[subject].push({ q, idx });
   });
 
   for (const [subject, group] of Object.entries(subjectGroups)) {
@@ -256,10 +263,10 @@ Questions:
 
     let imageCounter = 1;
     for (let i = 0; i < group.length; i++) {
-      const q = group[i];
+      const { q } = group[i];
       promptText += `[Index: ${i}] Question: ${q.question_text}\n`;
       promptText += `Options: ${JSON.stringify(q.options)}\n`;
-      
+
       const images = (q.images as any[]) || [];
       for (const img of images.filter((i) => i.type !== "explanation")) {
         const filename = img.filename || img.url;
@@ -308,31 +315,25 @@ Questions:
       const topics = result.topics || [];
 
       let fixedInGroup = 0;
-      topics.forEach((t: any) => {
-        const idx = t.index;
+      for (const t of topics) {
+        const groupIdx = t.index;
         const topic = t.topic;
-        if (idx >= 0 && idx < group.length && topic) {
+        if (groupIdx >= 0 && groupIdx < group.length && topic) {
           const cleaned = cleanTopic(topic, allowedTopics);
           if (cleaned !== "Unknown") {
-            const q = group[idx];
-            const uIdx = updatedQuestions.findIndex(x => x.id === q.id);
-            if (uIdx !== -1) updatedQuestions[uIdx] = { ...updatedQuestions[uIdx], topic: cleaned };
+            const { q, idx } = group[groupIdx];
             console.log(`    Q: "${q.question_text.substring(0, 50)}..." -> ${cleaned}`);
             fixedInGroup++;
             fixed++;
+            // Surgical patch — ~topic-string bytes egress per save, no RETURNING.
+            if (!isDry) await patchQuestionTopic(mockId, idx, cleaned);
           } else {
              failed++;
           }
         }
-      });
+      }
 
       console.log(`  ✓ Fixed ${fixedInGroup}/${group.length} topics for subject ${subject}.`);
-
-      // Save after each subject group
-      if (!isDry && fixedInGroup > 0) {
-        console.log(`  [Periodic Save] Saving progress to DB...`);
-        await saveMockTestWithRetry(mockId, updatedQuestions);
-      }
 
     } catch (err: any) {
       console.error(`  Gemini error for subject ${subject}:`, err.message);
@@ -341,14 +342,7 @@ Questions:
   }
 
   console.log(`\n[Mock] Done: ${fixed} fixed, ${failed} failed`);
-
-  if (!isDry && fixed > 0) {
-    console.log("  Final saving to database...");
-    await saveMockTestWithRetry(mockId, updatedQuestions);
-    console.log("  Saved successfully!");
-  } else if (isDry && fixed > 0) {
-    console.log("  [DRY RUN] Changes not saved to database.");
-  }
+  if (isDry && fixed > 0) console.log("  [DRY RUN] Changes not saved to database.");
   return true;
 }
 
@@ -361,39 +355,34 @@ async function main() {
     await listMocks();
   } else if (args.includes("--auto")) {
     console.log("Starting Auto Mode: Will process all JEE_MAIN mocks with missing topics!");
-    const BATCH = 10;
-    let skip = 0;
-    const mocks: { id: string; questions: any }[] = [];
-    while (true) {
-      const batch = await prisma.mockTestTemplate.findMany({
-        where: { exam_type: "JEE_MAIN", mode: "seeded" },
-        select: { id: true, questions: true },
-        orderBy: { created_at: "desc" },
-        take: BATCH,
-        skip,
-      });
-      mocks.push(...batch);
-      if (batch.length < BATCH) break;
-      skip += BATCH;
-    }
-
-    const needWork = mocks.filter(m => {
-      const qs = (m.questions as any[]) || [];
-      return qs.some(q => !q.topic || q.topic.trim() === "" || q.topic === "Unknown");
-    });
+    // Pattern map fetched once and reused across all mocks (was previously called inside processMock).
+    const allTopicsMap = await getAllTopics();
+    // SQL aggregate — return ids that actually need work, skip mocks already fully topic'd.
+    const needWork = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT m.id
+      FROM "MockTestTemplate" m
+      WHERE m.exam_type = 'JEE_MAIN' AND m.mode = 'seeded'
+        AND EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(m.questions) AS q
+          WHERE coalesce(q->>'topic', '') = '' OR q->>'topic' = 'Unknown'
+        )
+      ORDER BY m.created_at DESC
+    `;
 
     console.log(`Found ${needWork.length} mocks that need topic categorization.\n`);
     for (let i = 0; i < needWork.length; i++) {
       console.log(`\n=============================================================`);
       console.log(`Processing Paper ${i + 1} of ${needWork.length}`);
       console.log(`=============================================================`);
-      await processMock(needWork[i].id, isDry);
+      await processMock(needWork[i].id, isDry, allTopicsMap);
     }
     console.log("\nAuto mode complete!");
   } else if (args.includes("--mock")) {
     const idIdx = args.indexOf("--mock") + 1;
     if (idIdx < args.length && !args[idIdx].startsWith("--")) {
-      await processMock(args[idIdx], isDry);
+      const allTopicsMap = await getAllTopics();
+      await processMock(args[idIdx], isDry, allTopicsMap);
     } else {
       console.error("Missing mock ID. Usage: --mock <id>");
       process.exit(1);

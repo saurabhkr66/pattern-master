@@ -127,23 +127,35 @@ async function generateExplanation(q: { question_text: string; options: any; cor
 }
 
 // ── LIST MOCKS ────────────────────────────────────────────────────────────────
+// SQL-aggregate version: returns counts only, never ships the questions blob.
 async function listMocks() {
-  const mocks = await prisma.mockTestTemplate.findMany({
-    where: { mode: "seeded" },
-    select: {
-      id: true, title: true, exam_type: true, mock_number: true,
-      questions: true,
-    },
-    orderBy: [{ exam_type: "asc" }, { mock_number: "asc" }],
-  });
+  const rows = await prisma.$queryRaw<Array<{
+    id: string; title: string; exam_type: string; mock_number: number;
+    total: bigint; missing: bigint;
+  }>>`
+    SELECT
+      m.id, m.title, m.exam_type, m.mock_number,
+      jsonb_array_length(m.questions) AS total,
+      (
+        SELECT count(*)::int
+        FROM jsonb_array_elements(m.questions) AS q
+        WHERE coalesce(q->>'explanation', '') = ''
+          AND NOT EXISTS (
+            SELECT 1 FROM jsonb_array_elements(coalesce(q->'images', '[]'::jsonb)) AS img
+            WHERE img->>'type' = 'explanation'
+          )
+      ) AS missing
+    FROM "MockTestTemplate" m
+    WHERE m.mode = 'seeded'
+    ORDER BY m.exam_type ASC, m.mock_number ASC
+  `;
 
   console.log("\nAvailable mock tests:\n");
   console.log("  #   | Exam       | Mock# | Missing | Title");
   console.log("  ----|------------|-------|---------|" + "-".repeat(40));
 
-  for (const [i, m] of mocks.entries()) {
-    const qs = (m.questions as any[]) || [];
-    const missing = qs.filter(q => !hasExplanation(q)).length;
+  for (const [i, m] of rows.entries()) {
+    const missing = Number(m.missing);
     const flag = missing > 0 ? `${missing} missing` : "all done ✓";
     console.log(`  ${String(i + 1).padEnd(3)} | ${m.exam_type.padEnd(10)} | ${String(m.mock_number).padEnd(5)} | ${flag.padEnd(9)} | ${m.title}`);
     console.log(`      ID: ${m.id}`);
@@ -151,13 +163,16 @@ async function listMocks() {
   console.log();
 }
 
-async function saveMockTestWithRetry(mockId: string, updatedQuestions: any[], maxRetries = 3) {
+// Surgical JSONB patch — touches only one element, no RETURNING.
+async function patchQuestionExplanation(mockId: string, idx: number, explanation: string, maxRetries = 3) {
+  const path = `{${idx},explanation}`;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await prisma.mockTestTemplate.update({
-        where: { id: mockId },
-        data: { questions: updatedQuestions },
-      });
+      await prisma.$executeRaw`
+        UPDATE "MockTestTemplate"
+        SET questions = jsonb_set(questions, ${path}::text[], to_jsonb(${explanation}::text))
+        WHERE id = ${mockId}
+      `;
       return true;
     } catch (err: any) {
       if (err.code === 'P1001' && attempt < maxRetries) {
@@ -183,7 +198,9 @@ async function processMock(mockId: string, dryRun: boolean, limit?: number) {
   }
 
   const questions = (template.questions as any[]);
-  const allMissing = questions.filter(q => !hasExplanation(q));
+  const allMissing = questions
+    .map((q, idx) => ({ q, idx }))
+    .filter(({ q }) => !hasExplanation(q));
   const missing = limit ? allMissing.slice(0, limit) : allMissing;
 
   console.log(`\n[Mock] "${template.title}"`);
@@ -193,15 +210,12 @@ async function processMock(mockId: string, dryRun: boolean, limit?: number) {
   console.log();
 
   let fixed = 0, failed = 0;
-  const updatedQuestions = [...questions];
 
-  for (const q of missing) {
+  for (const { q, idx } of missing) {
     process.stdout.write(`  Q ${(q.id || "?").slice(-8)} [${q.question_type || "MCQ"}] ... `);
     const explanation = await generateExplanation(q);
 
     if (explanation) {
-      const idx = updatedQuestions.findIndex(x => x.id === q.id);
-      if (idx !== -1) updatedQuestions[idx] = { ...updatedQuestions[idx], explanation };
       console.log(`✓ (${explanation.length} chars)`);
       console.log(`\n    --- QUESTION ---`);
       console.log(`    ${q.question_text}`);
@@ -211,10 +225,8 @@ async function processMock(mockId: string, dryRun: boolean, limit?: number) {
       console.log(`    ${explanation.split('\n').join('\n    ')}\n`);
       fixed++;
 
-      if (!dryRun && fixed % 5 === 0) {
-        console.log(`  [Periodic Save] Saving progress to DB (${fixed} fixed)...`);
-        await saveMockTestWithRetry(mockId, updatedQuestions);
-      }
+      // Surgical patch — durable per-question, ~explanation-size egress
+      if (!dryRun) await patchQuestionExplanation(mockId, idx, explanation);
     } else {
       console.log("✗ failed");
       failed++;
@@ -223,11 +235,7 @@ async function processMock(mockId: string, dryRun: boolean, limit?: number) {
     await sleep(DELAY_MS);
   }
 
-  if (!dryRun && fixed > 0) {
-    console.log(`\n  Final saving to database...`);
-    await saveMockTestWithRetry(mockId, updatedQuestions);
-    console.log(`  Saved ${fixed} explanations to DB.`);
-  } else if (dryRun) {
+  if (dryRun) {
     console.log(`\n  DRY RUN — nothing written.`);
   }
 
@@ -305,16 +313,22 @@ async function main() {
     await listMocks();
   } else if (args.includes("--auto")) {
     console.log("Starting Auto Mode: Will process all JEE_MAIN seeded mocks missing explanations!");
-    const mocks = await prisma.mockTestTemplate.findMany({
-      where: { exam_type: "JEE_MAIN", mode: "seeded" },
-      select: { id: true, questions: true },
-      orderBy: { created_at: "desc" },
-    });
-
-    const needWork = mocks.filter(m => {
-      const qs = (m.questions as any[]) || [];
-      return qs.some(q => !hasExplanation(q));
-    });
+    // SQL aggregate — only ids of mocks that actually need work, no questions blob shipped.
+    const needWork = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT m.id
+      FROM "MockTestTemplate" m
+      WHERE m.exam_type = 'JEE_MAIN' AND m.mode = 'seeded'
+        AND EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(m.questions) AS q
+          WHERE coalesce(q->>'explanation', '') = ''
+            AND NOT EXISTS (
+              SELECT 1 FROM jsonb_array_elements(coalesce(q->'images', '[]'::jsonb)) AS img
+              WHERE img->>'type' = 'explanation'
+            )
+        )
+      ORDER BY m.created_at DESC
+    `;
 
     console.log(`Found ${needWork.length} mocks that need explanations.\n`);
     for (let i = 0; i < needWork.length; i++) {

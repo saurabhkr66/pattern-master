@@ -24,20 +24,6 @@ const EXAMS = [
     branches: ['CSE', 'ECE'] 
   },
   { 
-    id: 'ISRO', 
-    name: 'ISRO', 
-    description: 'Indian Space Research Organisation',
-    icon: Cpu,
-    branches: ['CSE'] 
-  },
-  { 
-    id: 'SAT', 
-    name: 'SAT', 
-    description: 'Scholastic Assessment Test',
-    icon: BookOpen,
-    branches: ['Math'] 
-  },
-  { 
     id: 'SSC', 
     name: 'SSC', 
     description: 'Staff Selection Commission',

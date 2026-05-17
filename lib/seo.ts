@@ -3,6 +3,10 @@
 
 import { EXAM_CONFIGS, type ExamType } from "@/lib/examConfigs";
 
+// Number of questions per page on the topic SEO surface. Shared so the
+// per-question redirect can compute which page hosts a given question.
+export const TOPIC_PAGE_SIZE = 20;
+
 /**
  * Strips LaTeX delimiters, markdown formatting and truncates to a clean description.
  */
@@ -68,21 +72,65 @@ function examLevel(examType: ExamType): ExamSeoInfo["level"] {
   }
 }
 
+/**
+ * "Common" is treated as the absence of a branch for URL purposes — a
+ * Pattern with branch="Common" lives at /jee-main, not /jee-main-common.
+ * The DB still stores "Common"; the slug just hides it.
+ */
+export function isCommonBranch(branch: string | null | undefined): boolean {
+  return !!branch && toSlug(branch) === "common";
+}
+
 /** Build the URL slug for an exam+branch combo from raw DB values. */
 export function buildExamSlug(examType: string, branch: string | null | undefined): string {
   const examSlug = toSlug(examType);
-  return branch ? `${examSlug}-${toSlug(branch)}` : examSlug;
+  if (!branch || isCommonBranch(branch)) return examSlug;
+  return `${examSlug}-${toSlug(branch)}`;
+}
+
+/**
+ * Build a Prisma `where` fragment that matches a Pattern row's branch column
+ * against a URL-resolved branch value. The branch column is non-nullable, so
+ * branchless exams (JEE Main, NEET, etc.) store "Common" — which is what we
+ * match when the URL has no branch slug.
+ */
+export function branchWhereClause(branch: string | null | undefined) {
+  const target = !branch || isCommonBranch(branch) ? "Common" : branch;
+  return { branch: { equals: target, mode: "insensitive" as const } };
 }
 
 /**
  * Parse a URL slug like "gate-cse" / "jee-main" / "ugc-net-p1" back to its
  * exam config. Returns null if the slug doesn't match any known exam.
+ *
+ * Falls back tolerantly: if the slug starts with a known exam prefix followed
+ * by `-…`, the remainder is treated as a branch even when the config marks the
+ * exam as branchless. This handles legacy DB rows like `JEE_MAIN` + `Common`
+ * which produce `/jee-main-common/...` URLs that the strict matcher would
+ * otherwise 404.
  */
 export function parseExamSlug(slug: string): ExamSeoInfo | null {
   const norm = slug.toLowerCase();
+
+  // 1. Exact match against branchless exams.
   for (const cfg of EXAM_CONFIGS) {
-    const examSlug = toSlug(cfg.examType);
+    if (!cfg.hasBranches && norm === toSlug(cfg.examType)) {
+      return {
+        examType: cfg.examType,
+        branch: null,
+        examLabel: cfg.label,
+        branchLabel: null,
+        fullLabel: cfg.label,
+        slug: norm,
+        level: examLevel(cfg.examType),
+      };
+    }
+  }
+
+  // 2. Exact match against configured branch combos (e.g. gate-cse).
+  for (const cfg of EXAM_CONFIGS) {
     if (cfg.hasBranches && cfg.branches) {
+      const examSlug = toSlug(cfg.examType);
       for (const br of cfg.branches) {
         if (norm === `${examSlug}-${toSlug(br.id)}`) {
           return {
@@ -96,18 +144,34 @@ export function parseExamSlug(slug: string): ExamSeoInfo | null {
           };
         }
       }
-    } else if (norm === examSlug) {
+    }
+  }
+
+  // 3. Tolerant fallback for legacy data: longest matching exam prefix wins.
+  // Prefer longer prefixes so "ugc-net-p1-foo" matches UGC_NET_P1 over a
+  // hypothetical UGC_NET.
+  const candidates = EXAM_CONFIGS
+    .map((cfg) => ({ cfg, examSlug: toSlug(cfg.examType) }))
+    .sort((a, b) => b.examSlug.length - a.examSlug.length);
+
+  for (const { cfg, examSlug } of candidates) {
+    if (norm.startsWith(`${examSlug}-`)) {
+      const branchSlug = norm.slice(examSlug.length + 1);
+      const branchLabel = branchSlug
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
       return {
         examType: cfg.examType,
-        branch: null,
+        branch: branchLabel,
         examLabel: cfg.label,
-        branchLabel: null,
-        fullLabel: cfg.label,
+        branchLabel,
+        fullLabel: `${cfg.label} ${branchLabel}`,
         slug: norm,
         level: examLevel(cfg.examType),
       };
     }
   }
+
   return null;
 }
 
@@ -314,6 +378,20 @@ export function buildQuestionSchema(q: {
     ? `${q.exam.examLabel} ${q.exam.branchLabel} – ${q.subject}`
     : `${q.exam.examLabel} – ${q.subject}`;
 
+  // Google flags `acceptedAnswer` with empty/missing `text` as invalid. The
+  // explanation can survive a truthiness check but disappear after LaTeX/HTML
+  // stripping (pure-equation explanations), so always check the cleaned form.
+  // Same for the question text on `hasPart[Question]`.
+  const questionTextClean = cleanTextForMeta(q.questionText, 1000);
+  const explanationClean = q.explanation ? cleanTextForMeta(q.explanation, 1000) : "";
+  const acceptedAnswerText = explanationClean
+    || (q.questionType === "NAT" ? q.correctAnswer : "")
+    || q.options.find((opt) => {
+      const letter = opt.trim().match(/^([A-Z])[.)]/)?.[1] ?? "";
+      return q.correctAnswer.split(";").includes(letter);
+    })
+    || "";
+
   return {
     "@context": "https://schema.org/",
     "@type": "Quiz",
@@ -338,15 +416,15 @@ export function buildQuestionSchema(q: {
         "@type": "Question",
         "eduQuestionType": typeMap[q.questionType] ?? q.questionType,
         "learningResourceType": "Practice problem",
-        "text": cleanTextForMeta(q.questionText, 1000),
+        "text": questionTextClean || q.questionText.slice(0, 1000),
         "suggestedAnswer": q.questionType === "NAT"
           ? [{ "@type": "Answer", "text": q.correctAnswer, "isCorrect": true }]
           : suggestedAnswer,
-        ...(q.explanation
+        ...(acceptedAnswerText
           ? {
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": cleanTextForMeta(q.explanation, 1000),
+                "text": acceptedAnswerText,
                 "isCorrect": true,
               },
             }

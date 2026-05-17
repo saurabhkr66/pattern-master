@@ -328,7 +328,7 @@ const FAQS = [
   },
   {
     q: "Which exams and branches are covered?",
-    a: "GATE CSE/IT, ISRO CS, BARC CS, and ESE — with Computer Science as the primary branch. ECE and ME patterns are being added continuously.",
+    a: `BattleExam covers ${HOME_EXAM_COPY}. GATE is supported across all 8 branches (CSE, ECE, EE, ME, CE, IN, CH, BT). JEE Main and JEE Advanced cover Physics, Chemistry and Mathematics; NEET UG adds Biology. UGC NET Paper 1 (teaching & research aptitude) and Paper 2 (subject-specific) are also live.`,
   },
   {
     q: "Is it free?",

@@ -22,7 +22,7 @@ const SCRAPER_OUTPUT_DIR = path.resolve(__dirname, '../../exam-scraper/extractor
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPES
-═══════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════ */
 
 interface RawQuestion {
   question_text: string;
@@ -41,7 +41,7 @@ import { PAPER_CONFIGS } from './mock_seed_data';
 
 /* ═══════════════════════════════════════════════════════════════════
    UTILS
-═══════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════ */
 
 const c = {
   reset: '\x1b[0m', bright: '\x1b[1m',
@@ -69,7 +69,7 @@ function loadJson(fileName: string): any {
 
 /* ═══════════════════════════════════════════════════════════════════
    MAIN
-═══════════════════════════════════════════════════════════════════ */
+ ═══════════════════════════════════════════════════════════════════ */
 
 async function main() {
   console.log(`\n${c.bright}${c.cyan}${'═'.repeat(62)}${c.reset}`);
@@ -96,7 +96,26 @@ async function main() {
 
       if (config.file) {
         // Single file mode
-        paperData = loadJson(config.file);
+        const raw = loadJson(config.file);
+        if (Array.isArray(raw)) {
+          const gaQuestions = raw.filter(q => q.topic_name === "General Aptitude");
+          const subjectQuestions = raw.filter(q => q.topic_name !== "General Aptitude");
+
+          if (gaQuestions.length > 0) {
+            paperData = {
+              sections: [
+                { name: "General Aptitude", questions: gaQuestions },
+                { name: config.branch || "Subject", questions: subjectQuestions }
+              ]
+            };
+          } else {
+            paperData = {
+              sections: [{ name: config.branch || "General", questions: raw }]
+            };
+          }
+        } else {
+          paperData = raw;
+        }
       } else if (config.sections) {
         // Multi-file mode
         paperData = {
@@ -108,6 +127,10 @@ async function main() {
       } else {
         console.warn(`${c.yellow}⚠ Skipping "${config.title}" — No file or sections specified.${c.reset}`);
         continue;
+      }
+
+      if (!paperData.sections) {
+        throw new Error("Invalid JSON structure: missing 'sections' array");
       }
 
       const totalQs = paperData.sections.reduce((s, sec) => s + sec.questions.length, 0);
@@ -177,6 +200,7 @@ async function main() {
         await prisma.mockTestTemplate.update({
           where: { id: existing.id },
           data: {
+            subjects: paperData.sections.map(s => s.name),
             total_questions: allQuestions.length,
             max_score: maxScore,
             duration_secs: examConfig.durationSecs,
