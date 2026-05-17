@@ -1,36 +1,18 @@
 // app/sitemap.xml/route.ts
 //
-// Next 16's `generateSitemaps` only publishes child sitemaps at
-// /sitemap/[id].xml — it does NOT auto-publish a sitemap index at
-// /sitemap.xml. Without this handler, /sitemap.xml falls through to the
-// `[examType]` dynamic route and Google reports "Sitemap is HTML".
-//
-// This route reuses `generateSitemaps` from app/sitemap.ts so the index
-// and children stay in lockstep.
+// Sitemap index. Lists every child sitemap by URL so Google can discover
+// all of them from a single submission. The metadata-file convention
+// (`app/sitemap.ts` with `generateSitemaps`) does NOT publish an index at
+// /sitemap.xml in Next 16 — only children at /sitemap/[id].xml — so we
+// serve the index from an explicit Route Handler.
 
-import { generateSitemaps } from "../sitemap";
+import { listSitemapIds, renderSitemapIndex } from "@/lib/sitemap-data";
 
 export const dynamic = "force-dynamic";
 
-const BASE = "https://battleexam.com";
-
 export async function GET() {
-  const ids = await generateSitemaps();
-  const lastmod = new Date().toISOString();
-
-  const entries = ids
-    .map(
-      ({ id }) =>
-        `  <sitemap><loc>${BASE}/sitemap/${id}.xml</loc><lastmod>${lastmod}</lastmod></sitemap>`,
-    )
-    .join("\n");
-
-  const body = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries}
-</sitemapindex>`;
-
-  return new Response(body, {
+  const ids = await listSitemapIds();
+  return new Response(renderSitemapIndex(ids), {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=0, must-revalidate",
