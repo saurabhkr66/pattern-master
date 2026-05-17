@@ -57,10 +57,40 @@ export async function GET(req: NextRequest) {
     // Scan a limited set for the live report
     const limit = 200;
     
+    // Only pull the fields the LaTeX checker touches (question_text,
+    // explanation, options) and a minimal pattern reference for context.
+    // Previously used `include` which downloaded every column — Hindi
+    // translations, images, and the heavy pattern.atomic_logic/short_notes
+    // text columns — ~5–10 MB per scan.
+    const scanSelect = {
+      id: true,
+      question_text: true,
+      explanation: true,
+      options: true,
+    } as const;
+
     const [subjectPyqs, pyqs, generated] = await Promise.all([
-      prisma.subjectPYQ.findMany({ take: limit, include: { subject_pattern: true } }),
-      prisma.pYQ.findMany({ take: limit, include: { pattern: true } }),
-      prisma.generatedQuestion.findMany({ take: limit, include: { pattern: true } })
+      prisma.subjectPYQ.findMany({
+        take: limit,
+        select: {
+          ...scanSelect,
+          subject_pattern: { select: { subject_name: true } },
+        },
+      }),
+      prisma.pYQ.findMany({
+        take: limit,
+        select: {
+          ...scanSelect,
+          pattern: { select: { subject: true, topic_name: true } },
+        },
+      }),
+      prisma.generatedQuestion.findMany({
+        take: limit,
+        select: {
+          ...scanSelect,
+          pattern: { select: { subject: true, topic_name: true } },
+        },
+      }),
     ]);
 
     const results: any[] = [];

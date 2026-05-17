@@ -10,14 +10,9 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ examType: string; branch: string }[]> {
-  const rows = await prisma.mockTestTemplate.findMany({
-    select: { exam_type: true, branch: true },
-    distinct: ["exam_type", "branch"],
-  }).catch(() => []);
-  return rows.map((r) => ({
-    examType: toSlug(r.exam_type),
-    branch: toSlug(r.branch || "All Subjects"),
-  }));
+  // Skip build-time prerender. With `dynamicParams = true` and ISR, pages
+  // are generated on first visit and cached for `revalidate` seconds.
+  return [];
 }
 
 function unslug(slug: string) {
@@ -90,6 +85,15 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
   const info = getExamSeoInfo(actualExamType, null);
 
   // Find tests for this branch
+  const listSelect = {
+    id: true,
+    title: true,
+    branch: true,
+    total_questions: true,
+    max_score: true,
+    duration_secs: true,
+  } as const;
+
   const tests = await prisma.mockTestTemplate.findMany({
     where: {
       exam_type: actualExamType,
@@ -98,6 +102,7 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
         { branch: { equals: branch, mode: 'insensitive' } },
       ]
     },
+    select: listSelect,
     orderBy: { created_at: 'desc' }
   });
 
@@ -105,7 +110,8 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
   let finalTests = tests;
   if (tests.length === 0) {
      const allTemplates = await prisma.mockTestTemplate.findMany({
-        where: { exam_type: actualExamType }
+        where: { exam_type: actualExamType },
+        select: listSelect,
      });
      finalTests = allTemplates.filter(t => toSlug(t.branch || "All Subjects") === branch);
   }

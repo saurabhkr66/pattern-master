@@ -8,7 +8,9 @@
 
 import { listSitemapIds, renderSitemapIndex } from "@/lib/sitemap-data";
 
-export const dynamic = "force-dynamic";
+// Cache the response for 1 hour so bot floods don't re-query Prisma on every
+// hit. New mock tests show up within an hour, which is fine for SEO.
+export const revalidate = 3600;
 
 export async function GET() {
   const ids = await listSitemapIds();

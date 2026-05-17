@@ -10,11 +10,9 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ examType: string }[]> {
-  const rows = await prisma.mockTestTemplate.findMany({
-    select: { exam_type: true },
-    distinct: ["exam_type"],
-  }).catch(() => []);
-  return rows.map((r) => ({ examType: toSlug(r.exam_type) }));
+  // Skip build-time prerender. With `dynamicParams = true` and ISR, pages
+  // are generated on first visit and cached for `revalidate` seconds.
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ examType: string }> }): Promise<Metadata> {

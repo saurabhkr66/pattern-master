@@ -29,11 +29,15 @@ export async function POST(req: NextRequest) {
     let questionData;
     if (questionType === "MockQuestion") {
       if (!mockTestId) return NextResponse.json({ error: "mockTestId required" }, { status: 400 });
-      const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-      if (template) {
-        const questions = template.questions as any[];
-        questionData = questions.find(q => q.id === questionId);
-      }
+      // Surgical extract: pull only the matching question's JSONB element, not
+      // the entire template (which can hold 100+ questions = MBs of egress).
+      const rows = await prisma.$queryRaw<{ question: any }[]>`
+        SELECT elem AS question
+        FROM "MockTestTemplate", jsonb_array_elements(questions) AS elem
+        WHERE id = ${mockTestId} AND elem->>'id' = ${questionId}
+        LIMIT 1
+      `;
+      questionData = rows[0]?.question ?? null;
     } else if (isSubjectPyq) {
       questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId } });
     } else if (isPyq) {
@@ -134,24 +138,29 @@ Rules:
 
     // Save back to database
     if (questionType === "MockQuestion" && mockTestId) {
-      const template = await prisma.mockTestTemplate.findUnique({ where: { id: mockTestId } });
-      if (template) {
-        const questions = [...(template.questions as any[])];
-        const idx = questions.findIndex(q => q.id === questionId);
-        if (idx !== -1) {
-          questions[idx] = {
-            ...questions[idx],
-            explanation: cleanExplanation,
-            ai_answer_mismatch: !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase()),
-            ai_detected_answer: aiDetectedAnswer,
-            high_thinking_flag: highThinkingFlag,
-          };
-          await prisma.mockTestTemplate.update({
-            where: { id: mockTestId },
-            data: { questions }
-          });
-        }
-      }
+      // Merge the patch into the matching JSONB element in place, without
+      // reading the full questions array (the read-modify-write pattern
+      // previously downloaded the entire template — MBs per call).
+      const patch = {
+        explanation: cleanExplanation,
+        ai_answer_mismatch: !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase()),
+        ai_detected_answer: aiDetectedAnswer,
+        high_thinking_flag: highThinkingFlag,
+      };
+      const patchJson = JSON.stringify(patch);
+      await prisma.$executeRaw`
+        UPDATE "MockTestTemplate"
+        SET questions = (
+          SELECT jsonb_agg(
+            CASE WHEN elem->>'id' = ${questionId}
+            THEN elem || ${patchJson}::jsonb
+            ELSE elem
+            END
+          )
+          FROM jsonb_array_elements(questions) AS elem
+        )
+        WHERE id = ${mockTestId}
+      `;
     } else if (isSubjectPyq) {
       await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
     } else if (isPyq) {

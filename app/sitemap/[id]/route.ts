@@ -12,7 +12,9 @@
 
 import { buildSitemapById, renderUrlset } from "@/lib/sitemap-data";
 
-export const dynamic = "force-dynamic";
+// Cache each child sitemap for 1 hour so bot floods don't re-query Prisma on
+// every hit. New content shows up within an hour, which is fine for SEO.
+export const revalidate = 3600;
 
 export async function GET(
   _req: Request,

@@ -10,14 +10,10 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<{ examType: string; branch: string; mockId: string }[]> {
-  const rows = await prisma.mockTestTemplate.findMany({
-    select: { id: true, exam_type: true, branch: true },
-  }).catch(() => []);
-  return rows.map((r) => ({
-    examType: toSlug(r.exam_type),
-    branch: toSlug(r.branch || "All Subjects"),
-    mockId: r.id,
-  }));
+  // Skip build-time prerender. With `dynamicParams = true` and ISR, pages
+  // are generated on first visit and cached for `revalidate` seconds. With
+  // hundreds of mocks this previously triggered a heavy read per Vercel build.
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ examType: string; branch: string; mockId: string }> }): Promise<Metadata> {
@@ -80,9 +76,17 @@ export default async function MockTestLandingPage({ params }: { params: Promise<
 
   const test = await prisma.mockTestTemplate.findUnique({
     where: { id: mockId },
-    include: {
-      _count: { select: { sessions: true } }
-    }
+    select: {
+      id: true,
+      title: true,
+      exam_type: true,
+      branch: true,
+      total_questions: true,
+      max_score: true,
+      duration_secs: true,
+      created_at: true,
+      _count: { select: { sessions: true } },
+    },
   });
 
   if (!test) notFound();

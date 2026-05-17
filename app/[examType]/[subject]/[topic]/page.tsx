@@ -11,6 +11,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
   toSlug,
@@ -22,6 +23,20 @@ import {
   type ExamSeoInfo,
 } from "@/lib/seo";
 import QuestionViewer from "@/components/question/QuestionViewer";
+
+// Slug-matching needs every pattern for the exam_type, but the result is
+// identical across every topic page of the same exam. Cache the small slug
+// index (~30 KB per exam) so each crawl of N topic URLs is 1 query, not N.
+const getExamPatternIndex = unstable_cache(
+  async (examType: string) => {
+    return prisma.pattern.findMany({
+      where: { exam_type: { equals: examType, mode: "insensitive" } },
+      select: { id: true, topic_name: true, subject: true, branch: true, exam_type: true },
+    });
+  },
+  ["exam-pattern-slug-index"],
+  { revalidate: 3600, tags: ["patterns"] },
+);
 
 const BASE = "https://battleexam.com";
 const PAGE_SIZE = TOPIC_PAGE_SIZE;
@@ -44,16 +59,10 @@ export const revalidate = 86400;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {
-  const rows = await prisma.pattern
-    .findMany({
-      select: { exam_type: true, branch: true, subject: true, topic_name: true },
-    })
-    .catch(() => []);
-  return rows.map((r) => ({
-    examType: buildExamSlug(r.exam_type, r.branch),
-    subject: toSlug(r.subject),
-    topic: toSlug(r.topic_name),
-  }));
+  // Skip build-time prerender. With `dynamicParams = true` and ISR, pages
+  // are generated on first visit and cached for `revalidate` seconds. This
+  // avoids loading every pattern + every question on every Vercel build.
+  return [];
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -65,6 +74,8 @@ async function fetchPattern(
   exam: ExamSeoInfo,
   subjectLabel: string,
   topicSlug: string,
+  pageNum: number,
+  pageSize: number,
 ) {
   // Match by slug equivalence in memory rather than strict DB string equality —
   // exam_type / branch / subject may all be stored with varying casing or
@@ -74,12 +85,7 @@ async function fetchPattern(
   const branchSlug = exam.branch ? toSlug(exam.branch) : null;
   const subjectSlug = toSlug(subjectLabel);
 
-  const candidates = await prisma.pattern.findMany({
-    where: {
-      exam_type: { equals: exam.examType, mode: "insensitive" },
-    },
-    select: { id: true, topic_name: true, subject: true, branch: true, exam_type: true },
-  });
+  const candidates = await getExamPatternIndex(exam.examType);
 
   // Filter to rows whose buildExamSlug + subject slug + topic slug all match.
   const matched = candidates.filter((p) => {
@@ -98,43 +104,90 @@ async function fetchPattern(
   const match = matched[0];
   if (!match) return null;
 
-  return prisma.pattern.findUnique({
+  // First fetch pattern metadata + relation counts (cheap, no question bodies).
+  const meta = await prisma.pattern.findUnique({
     where: { id: match.id },
-    include: {
-      pyqs: {
-        orderBy: [{ year: "desc" }, { id: "asc" }],
-        select: {
-          id: true,
-          question_text: true,
-          question_text_hindi: true,
-          options: true,
-          options_hindi: true,
-          correct_answer: true,
-          explanation: true,
-          explanation_hindi: true,
-          year: true,
-          question_type: true,
-          images: true,
-        },
-      },
-      questions: {
-        orderBy: [{ difficulty_level: "asc" }, { id: "asc" }],
-        select: {
-          id: true,
-          question_text: true,
-          question_text_hindi: true,
-          options: true,
-          options_hindi: true,
-          correct_answer: true,
-          explanation: true,
-          explanation_hindi: true,
-          difficulty_level: true,
-          question_type: true,
-          images: true,
-        },
-      },
+    select: {
+      id: true,
+      subject: true,
+      atomic_logic: true,
+      short_notes: true,
+      _count: { select: { pyqs: true, questions: true } },
     },
   });
+  if (!meta) return null;
+
+  const pyqCount = meta._count.pyqs;
+  const gqCount = meta._count.questions;
+  const totalQ = pyqCount + gqCount;
+
+  // Combined order on the page is: all PYQs first, then all generated
+  // questions. Slice the requested page across both buckets so we only read
+  // the rows we actually render — a single topic can have hundreds of
+  // questions and pulling them all per render was the egress hot spot.
+  const offset = (pageNum - 1) * pageSize;
+  const end = offset + pageSize;
+
+  const pyqSelect = {
+    id: true,
+    question_text: true,
+    question_text_hindi: true,
+    options: true,
+    options_hindi: true,
+    correct_answer: true,
+    explanation: true,
+    explanation_hindi: true,
+    year: true,
+    question_type: true,
+    images: true,
+  } as const;
+  const gqSelect = {
+    id: true,
+    question_text: true,
+    question_text_hindi: true,
+    options: true,
+    options_hindi: true,
+    correct_answer: true,
+    explanation: true,
+    explanation_hindi: true,
+    difficulty_level: true,
+    question_type: true,
+    images: true,
+  } as const;
+
+  const pyqsPromise =
+    offset < pyqCount
+      ? prisma.pYQ.findMany({
+          where: { pattern_id: match.id },
+          orderBy: [{ year: "desc" }, { id: "asc" }],
+          skip: offset,
+          take: Math.min(end, pyqCount) - offset,
+          select: pyqSelect,
+        })
+      : Promise.resolve([]);
+
+  const questionsPromise =
+    end > pyqCount
+      ? prisma.generatedQuestion.findMany({
+          where: { pattern_id: match.id },
+          orderBy: [{ difficulty_level: "asc" }, { id: "asc" }],
+          skip: Math.max(0, offset - pyqCount),
+          take: end - Math.max(offset, pyqCount),
+          select: gqSelect,
+        })
+      : Promise.resolve([]);
+
+  const [pyqs, questions] = await Promise.all([pyqsPromise, questionsPromise]);
+
+  return {
+    id: meta.id,
+    subject: meta.subject,
+    atomic_logic: meta.atomic_logic,
+    short_notes: meta.short_notes,
+    pyqs,
+    questions,
+    totalQ,
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -260,14 +313,14 @@ export default async function TopicPage({
   const subjectLabel = unslug(subject);
   const topicLabel = unslug(topic);
 
-  const pattern = await fetchPattern(exam, subjectLabel, topic);
+  const pattern = await fetchPattern(exam, subjectLabel, topic, pageNum, PAGE_SIZE);
   if (!pattern) notFound();
 
   const basePath = `/${examType}/${subject}/${topic}`;
   const canonical = pageNum === 1 ? `${BASE}${basePath}` : `${BASE}${basePath}?page=${pageNum}`;
   const year = new Date().getFullYear() + 1;
 
-  // Combine PYQs and Generated Questions into one paginated stream.
+  // PYQs + Generated Questions for this page (already sliced in fetchPattern).
   // PYQs first (more authoritative SEO surface), then GQs.
   const combined: CombinedQuestion[] = [
     ...pattern.pyqs.map((q): CombinedQuestion => ({
@@ -300,12 +353,12 @@ export default async function TopicPage({
     })),
   ];
 
-  const totalQ = combined.length;
+  const totalQ = pattern.totalQ;
   const totalPages = Math.max(1, Math.ceil(totalQ / PAGE_SIZE));
   if (pageNum > totalPages) notFound();
 
   const start = (pageNum - 1) * PAGE_SIZE;
-  const pageQuestions = combined.slice(start, start + PAGE_SIZE);
+  const pageQuestions = combined;
 
   // ── JSON-LD ──────────────────────────────────────────────────────────────
   const itemListSchema = {

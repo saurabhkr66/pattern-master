@@ -18,11 +18,10 @@ export const revalidate = 86400;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {
-  const rows = await prisma.pattern.findMany({
-    select: { exam_type: true, branch: true },
-    distinct: ["exam_type", "branch"],
-  }).catch(() => []);
-  return rows.map((r) => ({ examType: buildExamSlug(r.exam_type, r.branch) }));
+  // Skip build-time prerender. With `dynamicParams = true` and ISR, pages
+  // are generated on first visit and cached for `revalidate` seconds. This
+  // avoids a full-table read on every Vercel build.
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {

@@ -12,65 +12,70 @@ export interface PaperConfig {
 }
 
 export const PAPER_CONFIGS: PaperConfig[] = [
- 
   {
-    "title": "GATE EE 2017 Set 1",
+    "title": "GATE EE 2010",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2017_set1.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2010.json"
   },
   {
-    "title": "GATE EE 2017 Set 2",
+    "title": "GATE EE 2011",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2017_set2.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2011.json"
   },
   {
-    "title": "GATE EE 2018",
+    "title": "GATE EE 2012",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2018.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2012.json"
   },
   {
-    "title": "GATE EE 2019",
+    "title": "GATE EE 2013",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2019.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2013.json"
   },
   {
-    "title": "GATE EE 2020",
+    "title": "GATE EE 2014 Set 1",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2020.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2014_set1.json"
   },
   {
-    "title": "GATE EE 2021",
+    "title": "GATE EE 2014 Set 2",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2021.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2014_set2.json"
   },
   {
-    "title": "GATE EE 2022",
+    "title": "GATE EE 2014 Set 3",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2022.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2014_set3.json"
   },
   {
-    "title": "GATE EE 2023",
+    "title": "GATE EE 2015 Set 1",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2023.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2015_set1.json"
   },
   {
-    "title": "GATE EE 2024",
+    "title": "GATE EE 2015 Set 2",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2024.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2015_set2.json"
   },
   {
-    "title": "GATE EE 2025",
+    "title": "GATE EE 2016 Set 1",
     "exam_type": "GATE",
     "branch": "EE",
-    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2025.json"
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2016_set1.json"
   },
-]
+  {
+    "title": "GATE EE 2016 Set 2",
+    "exam_type": "GATE",
+    "branch": "EE",
+    "file": "c:\\Users\\saura\\OneDrive\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate_ee_2016_set2.json"
+  },
+];
