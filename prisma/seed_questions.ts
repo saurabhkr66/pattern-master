@@ -619,7 +619,8 @@ async function main() {
           marks: q.marks ? parseInt(q.marks) : 1,
           semantic_hash: hash,
           pattern_id: pattern.id
-        }
+        },
+        select: { id: true }
       });
     }
   }

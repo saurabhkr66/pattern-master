@@ -73,7 +73,6 @@ model SubjectPYQ {
   topic               String?          // AI assigned topic
   @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
   @@index([subject_pattern_id])
-  @@index([explanation])
 }
 
 model PYQ {
@@ -92,6 +91,8 @@ model PYQ {
   question_type       String           @default("MCQ")
   marks               Int              @default(1)
   images              Json?
+  question_hash       String?
+  content_hash        String?
   attempts            Attempt[]
   pattern             Pattern          @relation(fields: [pattern_id], references: [id])
   bookmarks           Bookmark[]
@@ -99,7 +100,9 @@ model PYQ {
 
   topic               String?          // AI assigned topic
   @@unique([pattern_id, question_text], name: "pyq_identifier")
+  @@unique([pattern_id, question_hash], name: "pyq_hash_identifier")
   @@index([pattern_id, year(sort: Desc)])
+  @@index([pattern_id])
 }
 
 model GeneratedQuestion {
@@ -125,23 +128,26 @@ model GeneratedQuestion {
 
   topic               String?          // AI assigned topic
   @@index([pattern_id, created_at(sort: Desc)])
+  @@index([pattern_id])
 }
 
 model Attempt {
-  id             String             @id @default(uuid())
-  user_id        String
-  question_id    String?
-  is_correct     Boolean
-  created_at     DateTime           @default(now())
-  pyq_id         String?
-  user_answer    String?
-  subject_pyq_id String?
+  id               String             @id @default(uuid())
+  user_id          String
+  question_id      String?
+  is_correct       Boolean
+  created_at       DateTime           @default(now())
+  pyq_id           String?
+  user_answer      String?
+  subject_pyq_id   String?
   mock_question_id String?
-  time_spent     Int?
-  pyq            PYQ?               @relation(fields: [pyq_id], references: [id])
-  question       GeneratedQuestion? @relation(fields: [question_id], references: [id])
-  subject_pyq    SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id])
-  user           User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  time_spent       Int?
+  mock_test_id     String?
+  MockTestTemplate MockTestTemplate?  @relation(fields: [mock_test_id], references: [id])
+  pyq              PYQ?               @relation(fields: [pyq_id], references: [id])
+  question         GeneratedQuestion? @relation(fields: [question_id], references: [id])
+  subject_pyq      SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id])
+  user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, is_correct, created_at(sort: Desc)])
   @@index([question_id, user_id, is_correct])
@@ -185,7 +191,9 @@ model MockTestTemplate {
   sections        Json?
   topics          String[]      @default([]) // Summary of all topics in this test
   questions       Json
+  content_hash    String?
   created_at      DateTime      @default(now())
+  Attempt         Attempt[]
   sessions        TestSession[]
 
   @@index([exam_type, branch, mock_number, mode])
@@ -195,7 +203,7 @@ model UserNote {
   id         String   @id @default(uuid())
   user_id    String
   pattern_id String
-  content    String   @db.Text
+  content    String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -261,17 +269,17 @@ model Bookmark {
 }
 
 model TestSessionDraft {
-  id           String   @id @default(uuid())
+  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   user_id      String
   mock_test_id String?
   exam_type    String
   branch       String?
-  started_at   DateTime @default(now())
-  expires_at   DateTime
+  started_at   DateTime @default(now()) @db.Timestamptz(6)
+  expires_at   DateTime @db.Timestamptz(6)
   state        Json     @default("{}")
 
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   @@index([user_id])
   @@index([user_id, mock_test_id])
@@ -289,7 +297,7 @@ model QuestionReport {
   mock_question_id String?
 
   reason  String // e.g., "wrong_answer", "typo", "bad_explanation", "other"
-  details String? @db.Text
+  details String?
   status  String  @default("pending") // pending | resolved | rejected
 
   created_at DateTime @default(now())

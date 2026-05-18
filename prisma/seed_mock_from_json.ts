@@ -11,7 +11,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getExamConfig, type ExamType } from '../lib/examConfigs';
@@ -19,6 +19,24 @@ import { getExamConfig, type ExamType } from '../lib/examConfigs';
 const prisma = new PrismaClient();
 
 const SCRAPER_OUTPUT_DIR = path.resolve(__dirname, '../../exam-scraper/extractor');
+
+function sha256(s: string): string {
+  return createHash('sha256').update(s).digest('hex');
+}
+
+/**
+ * Hash of the questions array that is INVARIANT to:
+ *  - the random `id` field on each question (regenerated each run)
+ *  - the `topic` field (preserved across runs via merge — should not trigger update)
+ * Used to short-circuit re-seeds when nothing meaningful changed.
+ */
+function mockContentHash(allQuestions: any[]): string {
+  const stripped = allQuestions.map(q => {
+    const { id: _id, topic: _topic, ...rest } = q;
+    return rest;
+  });
+  return sha256(JSON.stringify(stripped));
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPES
@@ -143,6 +161,7 @@ async function main() {
       const mockNumber = (numberTracker.get(examKey) ?? 0) + 1;
       const examConfig = getExamConfig(config.exam_type as ExamType, config.branch ?? undefined);
 
+      // Tiny read: no questions blob. ~100 bytes/row instead of MBs.
       const existing = await prisma.mockTestTemplate.findFirst({
         where: {
           title: config.title,
@@ -150,45 +169,48 @@ async function main() {
           branch: config.branch,
           mode: 'seeded',
         },
-        select: { id: true, mock_number: true, questions: true },
+        select: { id: true, mock_number: true, content_hash: true },
       });
 
-      const allQuestions: any[] = [];
-      for (let si = 0; si < paperData.sections.length; si++) {
-        const sec = paperData.sections[si];
-
-        for (let qi = 0; qi < sec.questions.length; qi++) {
-          const q = sec.questions[qi];
-          const optional = isOptionalQuestion();
-
-          let topic = q.topic_name || "";
-          if (existing && Array.isArray(existing.questions)) {
-            const eq = (existing.questions as any[]).find((e: any) =>
-              e.question_text === q.question_text
-            );
-            if (eq && eq.topic) {
-              topic = eq.topic;
-            }
+      // Build the questions array from JSON. Topic is set from JSON for now; we'll
+      // merge in any DB-side topic edits only if we determine an update is actually needed.
+      const buildAllQuestions = (topicOverrides?: Map<string, string>): any[] => {
+        const out: any[] = [];
+        for (let si = 0; si < paperData.sections.length; si++) {
+          const sec = paperData.sections[si];
+          for (let qi = 0; qi < sec.questions.length; qi++) {
+            const q = sec.questions[qi];
+            const optional = isOptionalQuestion();
+            const topic = topicOverrides?.get(q.question_text) ?? (q.topic_name || "");
+            out.push({
+              id: randomUUID(),
+              source: 'template',
+              sectionIndex: si,
+              sectionName: sec.name,
+              isOptional: optional,
+              question_text: q.question_text,
+              options: q.options || [],
+              question_type: q.question_type || 'MCQ',
+              marks: q.marks || 0,
+              year: q.year || 0,
+              subject: sec.name,
+              topic,
+              images: q.images ?? [],
+              correct_answer: q.correct_answer,
+              explanation: q.explanation || "",
+            });
           }
-
-          allQuestions.push({
-            id: randomUUID(),
-            source: 'template',
-            sectionIndex: si,
-            sectionName: sec.name,
-            isOptional: optional,
-            question_text: q.question_text,
-            options: q.options || [],
-            question_type: q.question_type || 'MCQ',
-            marks: q.marks || 0,
-            year: q.year || 0,
-            subject: sec.name,
-            topic: topic,
-            images: q.images ?? [],
-            correct_answer: q.correct_answer,
-            explanation: q.explanation || "",
-          });
         }
+        return out;
+      };
+
+      const provisionalQuestions = buildAllQuestions();
+      const newHash = mockContentHash(provisionalQuestions);
+
+      // Skip path: nothing changed in the source JSON, don't touch the DB.
+      if (existing && existing.content_hash === newHash) {
+        console.log(`${c.cyan}⚡ Skipped "${config.title}" — unchanged (mock #${existing.mock_number})${c.reset}`);
+        continue;
       }
 
       const maxScore = paperData.sections.reduce((sum, sec) => {
@@ -197,16 +219,32 @@ async function main() {
       }, 0);
 
       if (existing) {
+        // Update path: content actually changed. Now (and only now) pull the existing
+        // questions blob so we can preserve any manually-edited `topic` values.
+        const existingFull = await prisma.mockTestTemplate.findUnique({
+          where: { id: existing.id },
+          select: { questions: true },
+        });
+        const topicOverrides = new Map<string, string>();
+        if (existingFull && Array.isArray(existingFull.questions)) {
+          for (const eq of existingFull.questions as any[]) {
+            if (eq?.question_text && eq?.topic) topicOverrides.set(eq.question_text, eq.topic);
+          }
+        }
+        const mergedQuestions = buildAllQuestions(topicOverrides);
+
         await prisma.mockTestTemplate.update({
           where: { id: existing.id },
           data: {
             subjects: paperData.sections.map(s => s.name),
-            total_questions: allQuestions.length,
+            total_questions: mergedQuestions.length,
             max_score: maxScore,
             duration_secs: examConfig.durationSecs,
             sections: examConfig.sections as any,
-            questions: allQuestions,
+            questions: mergedQuestions,
+            content_hash: newHash,
           },
+          select: { id: true },
         });
         console.log(`${c.yellow}↩ Updated "${config.title}"${c.reset} (mock #${existing.mock_number})`);
         updatedCount++;
@@ -219,12 +257,14 @@ async function main() {
             mock_number: mockNumber,
             title: config.title,
             subjects: paperData.sections.map(s => s.name),
-            total_questions: allQuestions.length,
+            total_questions: provisionalQuestions.length,
             max_score: maxScore,
             duration_secs: examConfig.durationSecs,
             sections: examConfig.sections as any,
-            questions: allQuestions,
+            questions: provisionalQuestions,
+            content_hash: newHash,
           },
+          select: { id: true },
         });
         numberTracker.set(examKey, mockNumber);
         console.log(`${c.green}✅ Seeded  "${config.title}"${c.reset} (mock #${mockNumber})`);

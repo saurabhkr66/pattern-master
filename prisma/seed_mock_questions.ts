@@ -50,10 +50,23 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { getExamConfig, type ExamType } from '../lib/examConfigs';
 
 const prisma = new PrismaClient();
+
+function sha256(s: string): string {
+  return createHash('sha256').update(s).digest('hex');
+}
+
+/** Hash invariant to per-run random `id` and DB-side `topic` edits. */
+function mockContentHash(allQuestions: any[]): string {
+  const stripped = allQuestions.map(q => {
+    const { id: _id, topic: _topic, ...rest } = q;
+    return rest;
+  });
+  return sha256(JSON.stringify(stripped));
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPE
@@ -1915,7 +1928,9 @@ async function main() {
       return sum + (secConfig ? sectionMaxScore(secConfig, sec.questions) : sec.questions.reduce((s, q) => s + q.marks, 0));
     }, 0);
 
-    // Upsert by title + exam_type + branch
+    const newHash = mockContentHash(allQuestions);
+
+    // Upsert by title + exam_type + branch. Tiny read: no `questions` blob.
     const existing = await prisma.mockTestTemplate.findFirst({
       where: {
         title: paper.title,
@@ -1923,13 +1938,21 @@ async function main() {
         branch: paper.branch,
         mode: 'seeded',
       },
-      select: { id: true, mock_number: true },
+      select: { id: true, mock_number: true, content_hash: true },
     });
+
+    if (existing && existing.content_hash === newHash) {
+      const examKey = `${paper.exam_type}::${paper.branch ?? '-'}`;
+      if (existing.mock_number > (numberTracker.get(examKey) ?? 0)) {
+        numberTracker.set(examKey, existing.mock_number);
+      }
+      console.log(`${c.cyan}⚡ Skipped "${paper.title}" — unchanged (mock #${existing.mock_number})${c.reset}`);
+      continue;
+    }
 
     if (existing) {
       // Keep existing mock_number — don't overwrite it (use renumber_mocks.ts to renumber)
       const existingMockNumber = existing.mock_number;
-      // Keep tracker in sync so future papers in this run get the right next number
       const examKey = `${paper.exam_type}::${paper.branch ?? '-'}`;
       if (existingMockNumber > (numberTracker.get(examKey) ?? 0)) {
         numberTracker.set(examKey, existingMockNumber);
@@ -1942,7 +1965,9 @@ async function main() {
           duration_secs: config.durationSecs,
           sections: config.sections as any,
           questions: allQuestions,
+          content_hash: newHash,
         },
+        select: { id: true },
       });
       console.log(`${c.yellow}↩  Updated "${paper.title}"${c.reset}  (${allQuestions.length} Qs, mock #${existingMockNumber})`);
       updatedPapers++;
@@ -1960,7 +1985,9 @@ async function main() {
           duration_secs: config.durationSecs,
           sections: config.sections as any,
           questions: allQuestions,
+          content_hash: newHash,
         },
+        select: { id: true },
       });
       numberTracker.set(examKey, mockNumber);
       console.log(`${c.green}✅ Seeded  "${paper.title}"${c.reset}  (${allQuestions.length} Qs, mock #${mockNumber})`);

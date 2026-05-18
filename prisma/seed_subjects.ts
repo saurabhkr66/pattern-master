@@ -96,7 +96,8 @@ async function main() {
           year: pyq.year,
           question_type: pyq.question_type,
           images: transformedImages
-        }
+        },
+        select: { id: true }
       });
 
       if (count % 5 === 0 || count === total) {

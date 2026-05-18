@@ -29,6 +29,12 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/dashboard", "/onboarding", "/api/"],
       },
+      // Block image-specific crawlers from fetching images. Page-rendering
+      // crawlers (Googlebot, Bingbot) still see the images for context.
+      {
+        userAgent: ["Googlebot-Image", "Bingbot-Image", "msnbot-media"],
+        disallow: "/",
+      },
     ],
     sitemap: "https://battleexam.com/sitemap.xml",
   };

@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -352,16 +353,25 @@ const MOCK_OPTIONS = [
 ];
 
 
+const getCachedBranchSubjects = unstable_cache(
+  async () => {
+    return prisma.pattern.findMany({
+      select: { exam_type: true, branch: true, subject: true },
+      distinct: ["exam_type", "branch", "subject"],
+      orderBy: [{ exam_type: "asc" }, { branch: "asc" }, { subject: "asc" }],
+    });
+  },
+  ["homepage-branch-subjects"],
+  { revalidate: 3600, tags: ["patterns"] }
+);
+
+
 export default async function HomePage() {
   const { userId } = await auth();
   if (userId) redirect("/dashboard");
 
-  // Fetch distinct branch+subject+exam combinations for the Topics explorer
-  const branchSubjectRows = await prisma.pattern.findMany({
-    select: { exam_type: true, branch: true, subject: true },
-    distinct: ["exam_type", "branch", "subject"],
-    orderBy: [{ branch: "asc" }, { subject: "asc" }],
-  });
+  // Fetch distinct branch+subject+exam combinations for the Topics explorer from cache
+  const branchSubjectRows = await getCachedBranchSubjects();
 
   // Group by branch: pick primary exam per branch (first one encountered)
   const branchMap = new Map<string, { exam: string; subjects: Set<string> }>();

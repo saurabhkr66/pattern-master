@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { Clock, BarChart3, Loader2, CheckCircle2, CloudOff } from "lucide-react";
 import { fmtTimer, type ExamConfig, type SectionConfig } from "@/lib/examConfigs";
 import { BE } from "@/lib/theme";
@@ -493,7 +494,22 @@ export default function TestEngine({
               {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
                 <div className="mb-6 flex flex-wrap gap-4">
                   {(currentQ.images as { index: number; filename: string }[]).map((img) => (
-                    <img key={img.index} src={getCloudinaryUrl(img.filename)} alt="" className="rounded-lg border max-h-[300px]" style={{ borderColor: BE.line }} />
+                    <Image
+                      key={img.index}
+                      src={getCloudinaryUrl(img.filename)}
+                      alt=""
+                      width={800}
+                      height={600}
+                      sizes="(max-width: 768px) 100vw, 800px"
+                      className="rounded-lg border"
+                      style={{
+                        borderColor: BE.line,
+                        maxHeight: 300,
+                        width: "auto",
+                        height: "auto",
+                        objectFit: "contain",
+                      }}
+                    />
                   ))}
                 </div>
               )}

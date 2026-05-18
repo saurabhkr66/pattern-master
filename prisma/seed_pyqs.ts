@@ -543,6 +543,7 @@ async function main() {
             question_type: pyq.question_type,
             images: cleanImages,
           },
+          select: { id: true },
         });
         count++;
         totalQuestions++;

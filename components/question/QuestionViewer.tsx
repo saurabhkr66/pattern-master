@@ -3,6 +3,7 @@
 // Client component that handles "Show Answer" toggle.
 
 import { useState } from "react";
+import Image from "next/image";
 import { Maximize2 } from "lucide-react";
 import katex from "katex";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -52,10 +53,12 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
   return (
     <>
       <div className="relative inline-block group">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={800}
+          height={600}
+          sizes="(max-width: 768px) 100vw, 800px"
           onClick={() => setExpanded(true)}
           className="rounded-lg cursor-zoom-in"
           style={{
@@ -85,11 +88,20 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
           style={{ background: "rgba(0,0,0,0.85)" }}
           onClick={() => setExpanded(false)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={src}
             alt={alt}
-            style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 12 }}
+            width={1600}
+            height={1200}
+            sizes="90vw"
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              width: "auto",
+              height: "auto",
+              objectFit: "contain",
+              borderRadius: 12,
+            }}
           />
         </div>
       )}
