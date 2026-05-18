@@ -172,6 +172,16 @@ function findBalancedEnvEnd(s: string, fromIdx: number, env: string): number {
   return -1;
 }
 
+// Scraper sometimes emits `$$ \begin{array}...\end{array}` without a closing
+// `$$`. remark-math then sees no math at all and the entire block leaks into
+// the rendered output as raw LaTeX. If we see an odd number of `$$` markers,
+// append one so the last math block has a closing delimiter.
+function autoCloseDisplayMath(s: string): string {
+  const matches = s.match(/\$\$/g);
+  if (!matches || matches.length % 2 === 0) return s;
+  return s + '\n$$';
+}
+
 function wrapBareMathEnvs(s: string): string {
   let out = '';
   let i = 0;
@@ -439,11 +449,14 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\b([A-Z])\s+([a-z])\s+([a-z])\s+([a-z])\s+([a-z])\b/g, (m) => m.replace(/\s+/g, ''))
     .replace(/\b([A-Z])\s+([a-z])\s+([a-z])\s+([a-z])\b/g, (m) => m.replace(/\s+/g, ''));
 
+  // Close any unmatched `$$` first so the rest of the pipeline can see balanced math.
+  const closedContent = autoCloseDisplayMath(baseContent);
+
   // Wrap bare \begin{env}...\end{env} blocks (those living outside any $...$
   // or $$...$$) in display math. Uses depth-balanced matching so nested
   // arrays (e.g. \begin{array}{|l|l|}...\begin{array}{l}...\end{array}...\end{array})
   // pair correctly instead of stopping at the first inner \end{array}.
-  const envWrapped = wrapBareMathEnvs(baseContent);
+  const envWrapped = wrapBareMathEnvs(closedContent);
 
   // Convert scraper-invented \text{table} matrix/cases blocks before the math-scoped pass.
   const tableExpanded = expandTextTable(envWrapped);

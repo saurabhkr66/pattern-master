@@ -1,14 +1,25 @@
-const CLOUDINARY_TRANSFORMS = "f_auto,q_auto";
+const IMAGEKIT_TRANSFORMS = "f-auto,q-auto";
 
-function injectTransforms(url: string): string {
-  // Already has our transforms — skip
-  if (url.includes(CLOUDINARY_TRANSFORMS)) return url;
-  return url.replace("/image/upload/", `/image/upload/${CLOUDINARY_TRANSFORMS}/`);
+// Strip Cloudinary's leading version (v\d+) and transform segments so the
+// remaining path can be appended to the ImageKit endpoint, which proxies the
+// configured Cloudinary base URL.
+function cloudinaryToImagekitPath(cloudinaryUrl: string): string | null {
+  const match = cloudinaryUrl.match(/\/image\/upload\/(.+)$/);
+  if (!match) return null;
+  const segments = match[1].split("/");
+  let i = 0;
+  while (i < segments.length - 1 && (/^v\d+$/.test(segments[i]) || segments[i].includes(","))) {
+    i++;
+  }
+  return segments.slice(i).join("/");
 }
 
 /**
- * Converts a database image path or URL into a Cloudinary URL.
- * It uses the NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME environment variable.
+ * Resolves a DB image path or legacy Cloudinary URL into an ImageKit delivery URL.
+ * ImageKit proxies our Cloudinary bucket via the Web Folder origin, so the same
+ * filenames continue to work without re-uploading. Transformations are applied
+ * server-side by ImageKit (free, unlimited on free tier).
+ *
  * This file is safe to use in Client Components.
  */
 export function getCloudinaryUrl(dbPath: string | null | undefined): string {
@@ -16,19 +27,23 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
 
   if (dbPath.startsWith("data:")) return dbPath;
 
+  const endpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
   if (dbPath.startsWith("http://") || dbPath.startsWith("https://")) {
-    if (dbPath.includes("res.cloudinary.com")) return injectTransforms(dbPath);
+    if (endpoint && dbPath.includes("res.cloudinary.com")) {
+      const path = cloudinaryToImagekitPath(dbPath);
+      if (path) return `${endpoint}/${path}?tr=${IMAGEKIT_TRANSFORMS}`;
+    }
     return dbPath;
   }
 
   let cleanPath = dbPath.replace(/^\/+/, "");
-  cleanPath = cleanPath.replace(/&/g, 'and');
+  cleanPath = cleanPath.replace(/&/g, "and");
   if (cleanPath.startsWith("images/questions/")) {
     cleanPath = cleanPath.replace("images/questions/", "");
   }
 
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  if (!cloudName) return `/${cleanPath}`;
+  if (!endpoint) return `/${cleanPath}`;
 
-  return `https://res.cloudinary.com/${cloudName}/image/upload/${CLOUDINARY_TRANSFORMS}/pattern-master/${cleanPath}`;
+  return `${endpoint}/pattern-master/${cleanPath}?tr=${IMAGEKIT_TRANSFORMS}`;
 }
