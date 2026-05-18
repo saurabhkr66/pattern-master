@@ -55,15 +55,11 @@ function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export const revalidate = 86400;
-export const dynamicParams = true;
-
-export async function generateStaticParams(): Promise<PageParams[]> {
-  // Skip build-time prerender. With `dynamicParams = true` and ISR, pages
-  // are generated on first visit and cached for `revalidate` seconds. This
-  // avoids loading every pattern + every question on every Vercel build.
-  return [];
-}
+// Page reads `searchParams` (?page=N) which is a request-time API, so it must
+// be dynamic. Setting `revalidate` would mark it ISR and Next.js would refuse
+// to read searchParams during prerender, throwing DYNAMIC_SERVER_USAGE in prod.
+// Heavy DB work is still cached via `unstable_cache` wrappers (getExamPatternIndex).
+export const dynamic = "force-dynamic";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Data fetch — Step 1 resolves slug to pattern id (cheap); Step 2 loads all

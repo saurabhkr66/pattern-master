@@ -394,7 +394,7 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
     try {
       // Async network save, but UI has already updated!
-      fetch("/api/save-attempt", {
+      const saveRequest = fetch("/api/save-attempt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -407,6 +407,13 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
           timeSpent: seconds,
         }),
       });
+      // practiceProgress has a 6h staleTime, so it won't refetch on its own; force a refresh
+      // after the server-side dashboard tag has been revalidated by /api/save-attempt.
+      if (isCorrect) {
+        saveRequest
+          .then(() => queryClient.invalidateQueries({ queryKey: ["practiceProgress"] }))
+          .catch((err) => console.error("Failed to refresh progress:", err));
+      }
       // Removing router.refresh() to prevent massive full-page re-renders freezing the browser.
     } catch (err) {
       console.error("Failed to save attempt:", err);

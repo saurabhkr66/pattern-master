@@ -15,9 +15,25 @@ interface MathRendererProps {
   style?: CSSProperties;
 }
 
+// Scraper/LLM sometimes drops one backslash from `\\` row separators inside
+// array/matrix/aligned/cases envs, leaving `\ ` (TeX control space). KaTeX
+// honors the control space and renders the whole environment on one line.
+// Within these envs, promote any lone backslash followed by whitespace back to
+// `\\`. Negative lookbehind protects real `\\` row breaks; the next-char check
+// leaves `\,`, `\;`, `\frac`, `\&`, etc. alone.
+const ROW_BREAK_ENV_NAMES = '(?:array|matrix|bmatrix|vmatrix|pmatrix|aligned|align\\*?|cases)';
+const ROW_BREAK_ENV_RE = new RegExp(
+  `(\\\\begin\\{${ROW_BREAK_ENV_NAMES}\\}(?:\\{[^}]*\\})?)([\\s\\S]*?)(\\\\end\\{${ROW_BREAK_ENV_NAMES}\\})`,
+  'g'
+);
+const fixRowBreaks = (s: string): string =>
+  s.replace(ROW_BREAK_ENV_RE, (_m, begin, body, end) =>
+    begin + body.replace(/(?<!\\)\\(?=\s)/g, '\\\\') + end
+  );
+
 // Math-scoped fixes: only applied inside $...$ and $$...$$ blocks so prose stays untouched.
 const transformMath = (s: string): string =>
-  s
+  fixRowBreaks(s)
     // Bare Greek-word names left over from the scraper (negative-lookbehind keeps already-escaped commands intact)
     .replace(
       /(?<!\\)\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|phi|chi|psi|omega)(?=[_]|\b)/g,
