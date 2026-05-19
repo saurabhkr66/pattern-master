@@ -1,16 +1,5 @@
 const IMAGEKIT_TRANSFORMS = "f-auto,q-auto";
 
-// Percent-encode characters that are unsafe in URL path segments:
-// spaces and any non-ASCII chars (e.g. ω → %CF%89, µ → %C2%B5, space → %20).
-// ASCII chars that are safe in paths (- _ . ~) are left as-is.
-// Slashes are kept as segment separators and never encoded.
-function encodePathSegments(path: string): string {
-  return path
-    .split("/")
-    .map((seg) => seg.replace(/[ \x80-￿]/g, (c) => encodeURIComponent(c)))
-    .join("/");
-}
-
 // Strip Cloudinary's leading version (v\d+) and transform segments so the
 // remaining path can be appended to the ImageKit endpoint, which proxies the
 // configured Cloudinary base URL.
@@ -63,5 +52,7 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
     ? cleanPath
     : `pattern-master/${cleanPath}`;
 
-  return `${endpoint}/${encodePathSegments(ikPath)}?tr=${IMAGEKIT_TRANSFORMS}`;
+  // encodeURI encodes spaces and non-ASCII chars (ω → %CF%89, space → %20)
+  // while leaving valid URI characters (/ - _ . : ? = &) untouched.
+  return encodeURI(`${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`);
 }

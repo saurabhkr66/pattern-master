@@ -286,6 +286,10 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\\\]/g, '$$$$')
     .replace(/\\\(/g, '$')
     .replace(/\\\)/g, '$')
+    // Display math $$ sitting at the end of a prose line — remark-math only
+    // recognises display blocks when $$ starts a new paragraph. Move it there.
+    // "text $$\ncontent" → "text\n\n$$\ncontent"
+    .replace(/([^\n$][ \t]*)\$\$[ \t]*\n/g, '$1\n\n$$\n')
     // JEE scraper: double-brace hat {{i}}^{\^} → \hat{i}
     .replace(/\{\{([a-zA-Z])\}\}\^\{\\\^\}/g, '\\hat{$1}')
     // JEE scraper: brace-wrapped hat {i^{\^}} → \hat{i}
