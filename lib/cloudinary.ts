@@ -50,9 +50,7 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
 
   if (!endpoint) return `/${cleanPath}`;
 
-  const ikPath = cleanPath.includes("/")
-    ? cleanPath
-    : `pattern-master/${cleanPath}`;
+  const ikPath = `pattern-master/${cleanPath}`;
 
   return `${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`;
 }

@@ -45,12 +45,8 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
 
   if (!endpoint) return `/${cleanPath}`;
 
-  // Old images (flat filename, no subfolder) live under pattern-master/ in Cloudinary.
-  // New images scraped with a topic subfolder (e.g. "Electrostatics/img.webp") were
-  // uploaded directly to Cloudinary without the pattern-master/ prefix.
-  const ikPath = cleanPath.includes("/")
-    ? cleanPath
-    : `pattern-master/${cleanPath}`;
+  // All uploads (flat and foldered) live under pattern-master/ in Cloudinary.
+  const ikPath = `pattern-master/${cleanPath}`;
 
   return `${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`;
 }
