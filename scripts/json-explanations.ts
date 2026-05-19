@@ -74,9 +74,16 @@ function cleanExplanation(text: string): string {
     .trim();
 }
 
+interface GenerationResult {
+  explanation: string;
+  promptTokenCount: number;
+  candidatesTokenCount: number;
+  thoughtsTokenCount: number;
+}
+
 async function generateExplanation(
   q: { question_text: string; options: any; correct_answer: string; images?: any[] }
-): Promise<string | null> {
+): Promise<GenerationResult | null> {
   try {
     const parts: any[] = [buildPrompt(q)];
     const images = (q.images as any[]) || [];
@@ -94,7 +101,14 @@ async function generateExplanation(
       ),
     });
 
-    return cleanExplanation(result.text || "");
+    const usage = result.usageMetadata || {};
+
+    return {
+      explanation: cleanExplanation(result.text || ""),
+      promptTokenCount: usage.promptTokenCount || 0,
+      candidatesTokenCount: usage.candidatesTokenCount || 0,
+      thoughtsTokenCount: usage.thoughtsTokenCount || 0,
+    };
   } catch (err: any) {
     console.error("  Gemini error:", err.message);
     return null;
@@ -138,42 +152,82 @@ async function processFile(filePath: string, isDry: boolean) {
     if (missing.length === 0) { console.log("  Nothing to do."); continue; }
 
     let fixed = 0, failed = 0;
+    const BATCH_SIZE = 15;
+    const BATCH_DELAY_MS = 1500;
+    const totalBatches = Math.ceil(missing.length / BATCH_SIZE);
 
-    for (const q of missing) {
-      process.stdout.write(`  Q ${(q.id || "?").slice(-8)} [${q.question_type || "MCQ"}] ... `);
+    for (let bi = 0; bi < totalBatches; bi++) {
+      const batch = missing.slice(bi * BATCH_SIZE, (bi + 1) * BATCH_SIZE);
+      console.log(`\n  [Batch ${bi + 1}/${totalBatches}] Processing ${batch.length} questions in parallel...`);
 
-      const explanation = await generateExplanation(q);
+      const results = await Promise.all(
+        batch.map(async (q) => {
+          const res = await generateExplanation(q);
+          if (res) {
+            q.explanation = res.explanation;
+            return {
+              success: true,
+              prompt: res.promptTokenCount,
+              candidate: res.candidatesTokenCount,
+              thinking: res.thoughtsTokenCount,
+              question_text: q.question_text,
+              options: q.options,
+              correct_answer: q.correct_answer,
+              explanation: res.explanation,
+              id: q.id,
+              question_type: q.question_type,
+            };
+          } else {
+            return {
+              success: false,
+              prompt: 0,
+              candidate: 0,
+              thinking: 0,
+              id: q.id,
+              question_type: q.question_type,
+            };
+          }
+        })
+      );
 
-      if (explanation) {
-        q.explanation = explanation;
-        console.log(`✓`);
-        console.log(`    Question: ${q.question_text}`);
-        console.log(`    Options: ${JSON.stringify(q.options)}`);
-        console.log(`    Answer: ${q.correct_answer}`);
-        console.log(`    Explanation: ${explanation}\n`);
-        fixed++;
-        totalFixed++;
+      let batchPromptTokens = 0;
+      let batchCandidateTokens = 0;
+      let batchThinkingTokens = 0;
 
-        // Save progress every 5 questions
-        if (!isDry && fixed % 5 === 0) {
-          console.log(`  [Save] Writing progress to file (${fixed} fixed)...`);
-          saveJson(absPath, isFlatArray ? mock.questions : data);
+      for (const r of results) {
+        if (r.success) {
+          fixed++;
+          totalFixed++;
+          console.log(`\n==================================================`);
+          console.log(`✓ Q ${(r.id || "?").slice(-8)} [${r.question_type || "MCQ"}]`);
+          console.log(`Question: ${r.question_text}`);
+          console.log(`Options: ${JSON.stringify(r.options)}`);
+          console.log(`Answer: ${r.correct_answer}`);
+          console.log(`Explanation: ${r.explanation}`);
+          console.log(`==================================================`);
+        } else {
+          failed++;
+          totalFailed++;
+          console.log(`✗ Q ${(r.id || "?").slice(-8)} [${r.question_type || "MCQ"}] failed`);
         }
-      } else {
-        console.log("✗ failed");
-        failed++;
-        totalFailed++;
+        batchPromptTokens += r.prompt;
+        batchCandidateTokens += r.candidate;
+        batchThinkingTokens += r.thinking;
       }
 
-      await sleep(DELAY_MS);
+      console.log(`\n  📊 [Batch Tokens] Input: ${batchPromptTokens} | Output: ${batchCandidateTokens} | Thinking: ${batchThinkingTokens}`);
+
+      if (!isDry && fixed > 0) {
+        console.log(`  [Save] Writing progress to file (${fixed} generated)...`);
+        saveJson(absPath, isFlatArray ? mock.questions : data);
+      }
+
+      if (bi < totalBatches - 1) {
+        await sleep(BATCH_DELAY_MS);
+      }
     }
 
-    if (!isDry && fixed > 0) {
-      console.log(`  [Save] Final save for this mock...`);
-      saveJson(absPath, isFlatArray ? mock.questions : data);
-    }
-
-    console.log(`  Done: ${fixed} fixed, ${failed} failed`);
+    console.log(`\n  Done: ${fixed} fixed, ${failed} failed`);
   }
 
   if (isDry) {

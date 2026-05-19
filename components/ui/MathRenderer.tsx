@@ -379,6 +379,12 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\{([a-zA-Z])\}\^\{\\\^\}/g, '\\hat{$1}')
     // Legacy triple-brace variant
     .replace(/\{\{\{([a-zA-Z])\}\}\}\^\{\\\^\}/g, '\\hat{$1}')
+    // JEE scraper: {{letter^{\^}}} (hat inside double-outer-brace) → \hat{letter}
+    .replace(/\{\{([a-zA-Z])\^\{\\\^\}\}\}/g, '\\hat{$1}')
+    // JEE scraper: {{\text{letter}}}^{\^} (text-mode letter in double braces) → \hat{letter}
+    .replace(/\{\{\\text\{([a-zA-Z])\}\}\}\^\{\\\^\}/g, '\\hat{$1}')
+    // JEE scraper: bare letter^{\^} (no outer braces, e.g. 3.0 i^{\^} m/s) → \hat{letter}
+    .replace(/([a-zA-Z])\^\{\\\^\}/g, '\\hat{$1}')
     .replace(/\\alphax/g, '\\alpha x')
     .replace(/\\betay/g, '\\beta y')
     .replace(/\\gammaz/g, '\\gamma z')

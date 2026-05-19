@@ -1,5 +1,16 @@
 const IMAGEKIT_TRANSFORMS = "f-auto,q-auto";
 
+// Percent-encode characters that are unsafe in URL path segments:
+// spaces and any non-ASCII chars (e.g. ω → %CF%89, µ → %C2%B5, space → %20).
+// ASCII chars that are safe in paths (- _ . ~) are left as-is.
+// Slashes are kept as segment separators and never encoded.
+function encodePathSegments(path: string): string {
+  return path
+    .split("/")
+    .map((seg) => seg.replace(/[ \x80-￿]/g, (c) => encodeURIComponent(c)))
+    .join("/");
+}
+
 // Strip Cloudinary's leading version (v\d+) and transform segments so the
 // remaining path can be appended to the ImageKit endpoint, which proxies the
 // configured Cloudinary base URL.
@@ -45,5 +56,12 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
 
   if (!endpoint) return `/${cleanPath}`;
 
-  return `${endpoint}/pattern-master/${cleanPath}?tr=${IMAGEKIT_TRANSFORMS}`;
+  // Old images (flat filename, no subfolder) live under pattern-master/ in Cloudinary.
+  // New images scraped with a topic subfolder (e.g. "Electrostatics/img.webp") were
+  // uploaded directly to Cloudinary without the pattern-master/ prefix.
+  const ikPath = cleanPath.includes("/")
+    ? cleanPath
+    : `pattern-master/${cleanPath}`;
+
+  return `${endpoint}/${encodePathSegments(ikPath)}?tr=${IMAGEKIT_TRANSFORMS}`;
 }

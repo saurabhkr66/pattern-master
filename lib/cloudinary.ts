@@ -11,6 +11,13 @@ export default cloudinary;
 
 const IMAGEKIT_TRANSFORMS = "f-auto,q-auto";
 
+function encodePathSegments(path: string): string {
+  return path
+    .split("/")
+    .map((seg) => seg.replace(/[ \x80-￿]/g, (c) => encodeURIComponent(c)))
+    .join("/");
+}
+
 function cloudinaryToImagekitPath(cloudinaryUrl: string): string | null {
   const match = cloudinaryUrl.match(/\/image\/upload\/(.+)$/);
   if (!match) return null;
@@ -50,5 +57,9 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
 
   if (!endpoint) return `/${cleanPath}`;
 
-  return `${endpoint}/pattern-master/${cleanPath}?tr=${IMAGEKIT_TRANSFORMS}`;
+  const ikPath = cleanPath.includes("/")
+    ? cleanPath
+    : `pattern-master/${cleanPath}`;
+
+  return `${endpoint}/${encodePathSegments(ikPath)}?tr=${IMAGEKIT_TRANSFORMS}`;
 }
