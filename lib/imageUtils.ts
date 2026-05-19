@@ -52,7 +52,5 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
     ? cleanPath
     : `pattern-master/${cleanPath}`;
 
-  // encodeURI encodes spaces and non-ASCII chars (ω → %CF%89, space → %20)
-  // while leaving valid URI characters (/ - _ . : ? = &) untouched.
-  return encodeURI(`${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`);
+  return `${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`;
 }

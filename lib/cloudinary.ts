@@ -54,5 +54,5 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
     ? cleanPath
     : `pattern-master/${cleanPath}`;
 
-  return encodeURI(`${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`);
+  return `${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`;
 }
