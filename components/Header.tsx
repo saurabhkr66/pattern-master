@@ -18,6 +18,7 @@ import {
   Moon,
   ClipboardList,
   Bookmark,
+  Trash2,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import GlobalSearch from "./search/GlobalSearch";
@@ -106,10 +107,8 @@ export default function Header() {
                 key={href}
                 href={href}
                 prefetch={true}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-                  pathname === href
-                    ? "text-amber-300 bg-amber-500/20"
-                    : "hover:bg-white/5"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm nav-item ${
+                  pathname === href ? "nav-item-active" : ""
                 }`}
                 style={
                   pathname === href
@@ -135,7 +134,7 @@ export default function Header() {
           <button
             type="button"
             onClick={toggle}
-            className="p-2.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2.5 rounded-lg nav-item transition-colors"
             style={{ color: "var(--text-secondary)" }}
             aria-label="Toggle theme"
           >
@@ -169,7 +168,15 @@ export default function Header() {
           </Show>
 
           <Show when="signed-in">
-            <UserButton />
+            <UserButton>
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  label="Account & deletion"
+                  labelIcon={<Trash2 size={16} />}
+                  href="/account"
+                />
+              </UserButton.MenuItems>
+            </UserButton>
           </Show>
 
           {/* Hamburger (only shown if not signed in or as a fallback) */}
@@ -230,10 +237,8 @@ export default function Header() {
                     href={href}
                     prefetch={true}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
-                      pathname === href
-                        ? "text-amber-300 bg-amber-500/20"
-                        : "hover:bg-white/5"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl nav-item ${
+                      pathname === href ? "nav-item-active" : ""
                     }`}
                     style={
                       pathname === href
@@ -251,7 +256,7 @@ export default function Header() {
                 <Link href="/sign-in">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full text-left px-4 py-3 rounded-xl text-sm hover:bg-white/5"
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm nav-item"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     Sign In

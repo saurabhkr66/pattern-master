@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import PreferenceModal from "@/components/onboarding/PreferenceModal";
+import { getCachedExamMeta } from "@/lib/examMeta";
 
 export default async function AppLayout({
   children,
@@ -24,12 +25,12 @@ export default async function AppLayout({
   }
 
   // Fast path: check DB first (single indexed lookup, ~2ms)
-  const dbUser = await prisma.user.findUnique({
+  let dbUser = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
       preferred_exam: true,
-      preferred_branch: true
+      preferred_branch: true,
     },
   });
 
@@ -40,18 +41,50 @@ export default async function AppLayout({
 
     const email = clerkUser.emailAddresses[0]?.emailAddress || "";
 
-    await prisma.user.upsert({
+    dbUser = await prisma.user.upsert({
       where: { email },
       create: { id: userId, email },
       update: { id: userId },
+      select: {
+        id: true,
+        preferred_exam: true,
+        preferred_branch: true,
+      },
     });
   }
 
-  const needsOnboarding = dbUser && (!dbUser.preferred_exam || !dbUser.preferred_branch);
+  // Only fetch the exam list when we actually need the modal — keeps the
+  // hot path (already-onboarded users) free of an extra cache hit on each
+  // navigation.
+  let modalProps: { exams: string[]; branchesByExam: Record<string, string[]> } | null = null;
+  let needsOnboarding = false;
+
+  if (!dbUser.preferred_exam) {
+    needsOnboarding = true;
+  } else {
+    const meta = await getCachedExamMeta();
+    const realBranches = (meta.branchesByExam[dbUser.preferred_exam] ?? []).filter(
+      (b) => b !== "Common",
+    );
+    if (realBranches.length > 0 && !dbUser.preferred_branch) {
+      needsOnboarding = true;
+      modalProps = { exams: meta.exams, branchesByExam: meta.branchesByExam };
+    }
+  }
+
+  if (needsOnboarding && !modalProps) {
+    const meta = await getCachedExamMeta();
+    modalProps = { exams: meta.exams, branchesByExam: meta.branchesByExam };
+  }
 
   return (
     <>
-      {needsOnboarding && <PreferenceModal />}
+      {needsOnboarding && modalProps && (
+        <PreferenceModal
+          availableExams={modalProps.exams}
+          branchesByExam={modalProps.branchesByExam}
+        />
+      )}
       {children}
     </>
   );

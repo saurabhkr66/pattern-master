@@ -14,6 +14,8 @@
   --text-faint: rgba(0, 0, 0, 0.20);
   --header-bg: rgba(245, 245, 240, 0.90);
   --sticky-bar-bg: rgba(245, 245, 240, 0.95);
+  --nav-hover-bg: rgba(0, 0, 0, 0.06);
+  --nav-active-color: #b45309;
 }
 
 /* ===== DARK THEME ===== */
@@ -30,6 +32,8 @@
   --text-faint: rgba(255, 255, 255, 0.20);
   --header-bg: rgba(10, 10, 10, 0.90);
   --sticky-bar-bg: rgba(10, 10, 10, 0.95);
+  --nav-hover-bg: rgba(255, 255, 255, 0.05);
+  --nav-active-color: #fcd34d;
 }
 
 @theme inline {
@@ -86,10 +90,32 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.nav-item:hover { background: var(--nav-hover-bg); }
+.nav-item-active { color: var(--nav-active-color) !important; background: rgba(180, 83, 9, 0.12); }
+[data-theme="dark"] .nav-item-active { background: rgba(252, 211, 77, 0.15); }
+
+/* Heatmap */
+:root {
+  --heatmap-empty: rgba(0, 0, 0, 0.10);
+  --heatmap-ring: rgba(0, 0, 0, 0.30);
+  --heatmap-today-ring: rgba(0, 0, 0, 0.40);
+  --heatmap-tooltip-bg: #1f2937;
+  --heatmap-tooltip-border: rgba(0, 0, 0, 0.15);
+}
+[data-theme="dark"] {
+  --heatmap-empty: rgba(255, 255, 255, 0.08);
+  --heatmap-ring: rgba(255, 255, 255, 0.25);
+  --heatmap-today-ring: rgba(255, 255, 255, 0.15);
+  --heatmap-tooltip-bg: #111827;
+  --heatmap-tooltip-border: rgba(255, 255, 255, 0.10);
+}
+.heatmap-cell:hover { box-shadow: 0 0 0 2px var(--heatmap-ring); }
+.heatmap-cell-today { box-shadow: 0 0 0 1px var(--heatmap-today-ring); }
+
 .be-screen {
   min-height: 100vh;
   /* fallback for older browsers */
   min-height: 100dvh;
 }
 
-
+

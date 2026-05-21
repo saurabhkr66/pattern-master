@@ -355,7 +355,7 @@ async function HeatmapSection({ userId }: { userId: string }) {
     heatCells.push(col);
   }
 
-  const heatColors = ["rgba(255,255,255,0.04)", "rgba(255,143,0,0.22)", "rgba(255,143,0,0.42)", "rgba(255,143,0,0.68)", "rgba(255,143,0,0.95)"];
+  const heatColors = ["var(--heatmap-empty)", "rgba(255,143,0,0.22)", "rgba(255,143,0,0.42)", "rgba(255,143,0,0.68)", "rgba(255,143,0,0.95)"];
 
   return (
     <div style={{ border: `1px solid ${BE.line}`, borderRadius: 12, padding: 20, marginBottom: 24, background: BE.surface }}>

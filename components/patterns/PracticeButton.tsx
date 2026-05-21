@@ -717,8 +717,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
             {question.images && Array.isArray(question.images) && question.images.filter((img: any) => img.type !== 'explanation').length > 0 && (
               <div className="flex flex-col gap-4 mb-8">
                 {question.images.filter((img: any) => img.type !== 'explanation').map((img: any, idx: number) => (
-                  <div key={idx} className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden" style={{ background: BE.surface, borderColor: BE.line }}>
-                    <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Question figure" className="max-w-full h-auto rounded-lg object-contain" />
+                  <div key={idx} className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden" style={{ background: BE.surface, borderColor: BE.line, maxHeight: 320, minHeight: 160 }}>
+                    <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Question figure" className="max-w-full rounded-lg object-contain" style={{ maxHeight: 294, width: 'auto' }} />
                   </div>
                 ))}
               </div>
@@ -923,8 +923,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
                           <>
                             <MathRenderer content={(language === "hi" && question.explanation_hindi) ? question.explanation_hindi : (generatedExplanation || question.explanation || "No explanation available.")} />
                             {question.images?.filter((img: any) => img.type === 'explanation').map((img: any, idx: number) => (
-                              <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line }}>
-                                <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Explanation logic" className="max-w-full h-auto rounded-lg" />
+                              <div key={idx} className="mt-4 flex justify-center rounded-xl p-3 border" style={{ background: BE.surface, borderColor: BE.line, maxHeight: 320, minHeight: 160 }}>
+                                <img src={getCloudinaryUrl(img.url || img.filename) || img.base64} alt="Explanation logic" className="max-w-full rounded-lg object-contain" style={{ maxHeight: 294, width: 'auto' }} />
                               </div>
                             ))}
                           </>

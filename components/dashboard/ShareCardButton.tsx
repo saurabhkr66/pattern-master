@@ -10,16 +10,30 @@ interface ShareCardButtonProps {
   userId: string;
 }
 
-const BASE = "https://battleexam.com";
-
 export default function ShareCardButton({ userId }: ShareCardButtonProps) {
-  const [open,    setOpen]    = useState(false);
-  const [copied,  setCopied]  = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [open,      setOpen]      = useState(false);
+  const [copied,    setCopied]    = useState(false);
+  const [loading,   setLoading]   = useState(false);
+  const [examLabel, setExamLabel] = useState<string | null>(null);
 
-  const cardUrl   = `${BASE}/api/share-card?userId=${userId}`;
-  const pageUrl   = `${BASE}/dashboard`;
-  const shareText = "Tracking my GATE CSE prep on BattleExam — pattern-based AI practice. Check it out!";
+  const origin  = typeof window !== "undefined" ? window.location.origin : "https://battleexam.com";
+  const cardUrl = `${origin}/share/${userId}`;
+  const pageUrl = cardUrl;
+  const label     = examLabel ?? "GATE CSE";
+  const shareText = `Tracking my ${label} prep on BattleExam — pattern-based AI practice. Check it out!`;
+
+  async function handleOpen() {
+    setOpen((v) => !v);
+    if (!examLabel) {
+      try {
+        const res  = await fetch(`/api/share-card/meta?userId=${userId}`);
+        const data = await res.json();
+        setExamLabel(data.examLabel);
+      } catch {
+        // keep default
+      }
+    }
+  }
 
   const twitterUrl  = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n${pageUrl}`)}`;
@@ -50,7 +64,7 @@ export default function ShareCardButton({ userId }: ShareCardButtonProps) {
     <div style={{ position: "relative", display: "inline-block" }}>
       {/* Trigger button */}
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleOpen}
         className="flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-sm transition-colors"
         style={{
           background:   "var(--bg-surface)",

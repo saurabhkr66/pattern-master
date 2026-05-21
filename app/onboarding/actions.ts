@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-export async function saveUserPreference(exam: string, branch: string) {
+export async function saveUserPreference(exam: string, branch: string | null) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");

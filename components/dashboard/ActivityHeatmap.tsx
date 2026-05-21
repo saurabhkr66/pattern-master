@@ -31,11 +31,11 @@ export default function ActivityHeatmap({ data, currentStreak }: ActivityHeatmap
 
   // Color scale based on count — returns CSSProperties for theme-aware coloring
   const getCellStyle = (count: number): React.CSSProperties => {
-    if (count === 0) return { background: "var(--border-strong)" };
-    if (count <= 2) return { background: "rgba(99,102,241,0.25)" };
-    if (count <= 5) return { background: "rgba(99,102,241,0.55)" };
+    if (count === 0) return { background: "var(--heatmap-empty)" };
+    if (count <= 2) return { background: "rgba(99,102,241,0.30)" };
+    if (count <= 5) return { background: "rgba(99,102,241,0.58)" };
     if (count <= 8) return { background: "rgba(99,102,241,0.82)" };
-    return { background: "#818cf8" };
+    return { background: "#6366f1" };
   };
 
   // Group days into weeks for column-based rendering (like GitHub)
@@ -122,8 +122,8 @@ export default function ActivityHeatmap({ data, currentStreak }: ActivityHeatmap
                       key={day.dateStr}
                       onMouseEnter={() => setHoveredDate({ date: day.dateStr, count: day.count })}
                       onMouseLeave={() => setHoveredDate(null)}
-                      className={`w-3 h-3 md:w-3.5 md:h-3.5 rounded-[3px] transition-all duration-300 hover:ring-2 hover:ring-white/20 cursor-pointer ${
-                        isSameDay(day.date, startOfToday()) ? "ring-1 ring-white/10" : ""
+                      className={`w-3 h-3 md:w-3.5 md:h-3.5 rounded-[3px] transition-all duration-300 heatmap-cell cursor-pointer ${
+                        isSameDay(day.date, startOfToday()) ? "heatmap-cell-today" : ""
                       }`}
                       style={getCellStyle(day.count)}
                     />
@@ -136,11 +136,14 @@ export default function ActivityHeatmap({ data, currentStreak }: ActivityHeatmap
 
         {/* Floating Tooltip */}
         {hoveredDate && (
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-900 border border-white/10 px-3 py-2 rounded-lg shadow-2xl z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-200">
-             <p className="text-[10px] font-black text-white whitespace-nowrap">
+          <div
+            className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-2 rounded-lg shadow-2xl z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+            style={{ background: "var(--heatmap-tooltip-bg)", border: "1px solid var(--heatmap-tooltip-border)" }}
+          >
+             <p className="text-[10px] font-black whitespace-nowrap" style={{ color: "#fff" }}>
                 {hoveredDate.count} {hoveredDate.count === 1 ? 'question' : 'questions'} solved
              </p>
-             <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
+             <p className="text-[10px] font-bold uppercase tracking-widest mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
                 {format(new Date(hoveredDate.date), "MMMM d, yyyy")}
              </p>
           </div>

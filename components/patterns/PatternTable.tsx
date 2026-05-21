@@ -47,13 +47,19 @@ export default function PatternTable({
 
   const exam = searchParams.get("exam") || resolvedExam;
   const branch = searchParams.get("branch") || resolvedBranch;
-  // Read live from URL so it reacts to client-side navigation (e.g. "Solve again")
-  const urlQuestionId = searchParams.get("questionId") ?? searchParams.get("q") ?? directQuestionId;
-  const urlPatternId = searchParams.get("patternId") ?? highlightPatternId;
+  // Read live from URL so it reacts to client-side navigation (e.g. "Solve again").
+  // Do NOT fall back to the server props here — once the user clears patternId
+  // from the URL, the prop fallback would re-assert and the sync effect below
+  // would reopen the originally-highlighted row. Props are used only to seed
+  // initial state.
+  const urlQuestionId = searchParams.get("questionId") ?? searchParams.get("q");
+  const urlPatternId = searchParams.get("patternId");
   const urlSubject = searchParams.get("subject");
 
   const [localSubject, setLocalSubject] = useState(urlSubject || initialSubject);
-  const [openPatternId, setOpenPatternId] = useState<string | null>(urlPatternId || null);
+  const [openPatternId, setOpenPatternId] = useState<string | null>(
+    urlPatternId ?? highlightPatternId ?? null
+  );
   const [sortMode, setSortMode] = useState<"default" | "practiced">("default");
   const tableRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -170,15 +176,16 @@ export default function PatternTable({
       >
         {subjects.map(s => {
           const active = s.id === localSubject;
+          const isFullPapers = s.id === 'Full Papers';
           return (
-            <div key={s.id} 
+            <div key={s.id}
               onClick={() => handleFilterClick(s.id)}
               style={{
                 padding: '6px 14px', borderRadius: 999,
-                border: `1px solid ${active ? BE.accent : BE.line}`,
-                background: active ? BE.accentSoft : 'transparent',
-                color: active ? BE.accent : BE.textDim,
-                fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                border: `1px solid ${active ? BE.accent : isFullPapers ? BE.accent : BE.line}`,
+                background: active ? BE.accent : isFullPapers ? BE.accentSoft : 'transparent',
+                color: active ? '#fff' : isFullPapers ? BE.accent : BE.textDim,
+                fontSize: 12.5, fontWeight: isFullPapers ? 700 : 600, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 transition: 'all 0.2s',
                 whiteSpace: 'nowrap',
@@ -271,10 +278,9 @@ export default function PatternTable({
       <div style={{ borderTop: `1px solid ${BE.line}` }}>
         {isLoading ? (
            <div className="py-12 text-center text-sm text-gray-400">Loading subtopics...</div>
-        ) : sortedPatterns.length > 0 ? (
-          sortedPatterns.map((pattern: any) => {
+        ) : sortedPatterns.filter((p: any) => localSubject === "All" || !p.isSubjectLevel).length > 0 ? (
+          sortedPatterns.filter((p: any) => localSubject === "All" || !p.isSubjectLevel).map((pattern: any) => {
             // Subject-level rows on the "All" view act as navigation (drill into subject).
-            // Subject-level rows on a specific-subject view act as expandable question lists.
             const isNavRow = pattern.isSubjectLevel && localSubject === "All";
             return (
               <PatternRow
@@ -283,7 +289,7 @@ export default function PatternTable({
                 isHighlighted={pattern.id === urlPatternId}
                 isOpen={openPatternId === pattern.id}
                 onToggle={() => isNavRow ? handleFilterClick(pattern.topic_name) : handleTopicToggle(pattern.id)}
-                directQuestionId={pattern.id === urlPatternId ? urlQuestionId : undefined}
+                directQuestionId={pattern.id === urlPatternId ? urlQuestionId ?? undefined : undefined}
               />
             );
           })

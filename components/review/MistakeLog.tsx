@@ -10,10 +10,8 @@ type MistakeCard = {
   id: string;
   attemptId: string;
   question_text: string;
-  options: string[];
   correct_answer: string;
   user_answer: string | null;
-  explanation: string;
   topic_name: string;
   subject: string;
   patternId: string;
@@ -216,6 +214,12 @@ export default function MistakeLog({ cards }: { cards: MistakeCard[] }) {
             )}
           </div>
 
+          {patternGroups.length === 0 && (
+            <div style={{ padding: '48px 0', textAlign: 'center', color: BE.textMute, fontSize: 14 }}>
+              No mistakes in this subject yet.
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {patternGroups.map((p, i) => {
               const isExpanded = expandedPattern === p.patternId;
@@ -261,7 +265,14 @@ export default function MistakeLog({ cards }: { cards: MistakeCard[] }) {
                         }}>{p.subject}</span>
                       </div>
                       <div style={{ fontSize: 11.5, color: BE.textMute }}>
-                        Last seen {lastSeenLabel} · {p.cards.filter(c => c.ispyq).length > 0 ? `${p.cards.filter(c => c.ispyq).length} PYQ` : 'Generated Qs'}
+                        {(() => {
+                          const pyqCount = p.cards.filter(c => c.ispyq).length;
+                          const genCount = p.cards.length - pyqCount;
+                          const parts = [];
+                          if (pyqCount > 0) parts.push(`${pyqCount} PYQ`);
+                          if (genCount > 0) parts.push(`${genCount} Generated`);
+                          return `Last seen ${lastSeenLabel} · ${parts.join(' · ')}`;
+                        })()}
                       </div>
                     </div>
 
@@ -301,7 +312,7 @@ export default function MistakeLog({ cards }: { cards: MistakeCard[] }) {
                             <div style={{
                               fontSize: 13, color: BE.textDim, lineHeight: 1.5, fontFamily: BE.serif,
                               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                            }}>
+                            } as any}>
                               <MathRenderer content={c.question_text} />
                             </div>
                             <div style={{ fontSize: 11, color: BE.textMute, marginTop: 4 }}>

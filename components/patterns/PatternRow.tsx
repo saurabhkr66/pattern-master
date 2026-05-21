@@ -208,15 +208,20 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     <div ref={rowRef} id={`pattern-${pattern.id}`} style={{ borderBottom: `1px solid ${BE.line}` }}>
       {isNavigating && <LoadingLogo />}
       {/* Row Header */}
-      <div 
+      <div
         onClick={onToggle}
         style={{
-          padding: '14px 4px', cursor: 'pointer',
-          background: isOpen ? 'rgba(255,255,255,0.02)' : 'transparent',
+          padding: pattern.isMock ? '16px 4px 16px 12px' : '14px 4px', cursor: 'pointer',
+          background: pattern.isMock
+            ? isOpen ? 'rgba(255,143,0,0.08)' : 'rgba(255,143,0,0.04)'
+            : isOpen ? 'rgba(255,255,255,0.02)' : 'transparent',
           borderBottom: `1px solid transparent`,
-          transition: 'all 0.2s'
+          borderLeft: pattern.isMock ? `3px solid ${BE.accent}` : '3px solid transparent',
+          transition: 'all 0.2s',
+          borderRadius: pattern.isMock ? '0 8px 8px 0' : undefined,
+          marginLeft: pattern.isMock ? -4 : undefined,
         }}
-        className="hover:bg-amber-50/20 hover:border-b-amber-500/30 group/row"
+        className={pattern.isMock ? "hover:bg-amber-500/10 group/row" : "hover:bg-amber-50/20 hover:border-b-amber-500/30 group/row"}
       >
         {/* Desktop grid layout */}
         <div className="hidden md:grid" style={{ gridTemplateColumns: '1fr 130px 170px 32px', alignItems: 'center' }}>
@@ -238,9 +243,9 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                 }}>{pattern.questionsCount} Bank</span>
               )}
               {pattern.isMock && (
-                <span className="hidden md:inline-block" style={{ 
-                  fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, 
-                  background: BE.accentSoft, color: BE.accent,
+                <span className="hidden md:inline-block" style={{
+                  fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 4,
+                  background: BE.accent, color: '#fff',
                   textTransform: 'uppercase', letterSpacing: 0.5
                 }}>Full Paper</span>
               )}
@@ -273,7 +278,16 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
         <div className="flex md:hidden items-center gap-3">
           <div className="flex-1 min-w-0">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 10 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 500, color: isOpen ? BE.accent : BE.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pattern.topic_name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 500, color: isOpen ? BE.accent : BE.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pattern.topic_name}</div>
+                {pattern.isMock && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 4,
+                    background: BE.accent, color: '#fff',
+                    textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0
+                  }}>Full Paper</span>
+                )}
+              </div>
               <div style={{ fontSize: 10.5, color: BE.textDim, fontFamily: BE.mono, flexShrink: 0 }}>{solved}/{total}</div>
             </div>
             {/* Progress bar below topic name with reduced width */}

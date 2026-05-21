@@ -65,26 +65,38 @@ const COL_STYLE = "3rem 5rem 1fr 6rem 8rem 5rem 4rem 9rem";
 export default function TestAnalysis({ result, onRestart }: Props) {
   type Filter = "all" | "correct" | "incorrect" | "skipped" | "slow";
   const [filter, setFilter] = useState<Filter>("all");
+  const [activeSubject, setActiveSubject] = useState<string>("All");
   const [expandedQId, setExpandedQId] = useState<string | null>(null);
   const [expandedSec, setExpandedSec] = useState<string | null>(null);
 
-  const filteredQs = useMemo(() => result.questions.filter(q => {
+  const subjects = useMemo(() => {
+    const set = new Set<string>();
+    result.questions.forEach(q => { if (q.subject) set.add(q.subject); });
+    return Array.from(set).sort();
+  }, [result.questions]);
+
+  const subjectQs = useMemo(() =>
+    activeSubject === "All" ? result.questions : result.questions.filter(q => q.subject === activeSubject),
+    [result.questions, activeSubject]
+  );
+
+  const filteredQs = useMemo(() => subjectQs.filter(q => {
     if (filter === "correct")   return q.is_correct === true;
     if (filter === "incorrect") return q.is_correct === false && q.user_answer !== null;
     if (filter === "skipped")   return q.user_answer === null;
     if (filter === "slow")      return q.timeSpentSecs > 180;
     return true;
-  }), [result.questions, filter]);
+  }), [subjectQs, filter]);
 
   const scorePercent = result.maxScore > 0 ? (result.score / result.maxScore) * 100 : 0;
   const circleColor = scorePercent >= 66 ? BE.good : scorePercent >= 33 ? BE.warn : BE.bad;
 
   const filterTabs: { key: Filter; label: string; count: number }[] = [
-    { key: "all",       label: "All",     count: result.questions.length },
-    { key: "correct",   label: "Correct", count: result.correct },
-    { key: "incorrect", label: "Wrong",   count: result.incorrect },
-    { key: "skipped",   label: "Skipped", count: result.unattempted },
-    { key: "slow",      label: "Slow",    count: result.questions.filter(q => q.timeSpentSecs > 180).length },
+    { key: "all",       label: "All",     count: subjectQs.length },
+    { key: "correct",   label: "Correct", count: subjectQs.filter(q => q.is_correct === true).length },
+    { key: "incorrect", label: "Wrong",   count: subjectQs.filter(q => q.is_correct === false && q.user_answer !== null).length },
+    { key: "skipped",   label: "Skipped", count: subjectQs.filter(q => q.user_answer === null).length },
+    { key: "slow",      label: "Slow",    count: subjectQs.filter(q => q.timeSpentSecs > 180).length },
   ];
 
   const renderBarList = (title: string, sections: any[]) => {
@@ -226,6 +238,9 @@ export default function TestAnalysis({ result, onRestart }: Props) {
           </div>
         </section>
 
+        {/* ── TIME × RESULT STRIP ── */}
+        <QuestionTimingStrip questions={result.questions} />
+
         {/* ── SECTION BREAKDOWN ── */}
         <section className="be-card p-6 md:p-10 border" style={{ borderColor: BE.line }}>
           {renderBarList("Paper Sections", result.sectionBreakdown || [])}
@@ -263,6 +278,43 @@ export default function TestAnalysis({ result, onRestart }: Props) {
               ))}
             </div>
           </div>
+
+          {/* Subject filter */}
+          {subjects.length > 1 && (
+            <div
+              className="flex items-center gap-2 px-6 py-3 border-b flex-wrap"
+              style={{ borderColor: BE.line, background: "rgba(0,0,0,0.08)" }}
+            >
+              <span style={{ fontSize: 10, fontWeight: 700, color: BE.textMute, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
+                Subject
+              </span>
+              {["All", ...subjects].map(s => {
+                const count = s === "All"
+                  ? result.questions.length
+                  : result.questions.filter(q => q.subject === s).length;
+                const active = s === activeSubject;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setActiveSubject(s)}
+                    style={{
+                      padding: "4px 10px 4px 11px",
+                      borderRadius: 999,
+                      border: `1px solid ${active ? BE.accent : BE.line}`,
+                      background: active ? BE.accentSoft : "transparent",
+                      color: active ? BE.accent : BE.textDim,
+                      fontSize: 11, fontWeight: 600, cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {s}
+                    <span style={{ fontSize: 10, fontFamily: BE.mono, opacity: 0.75 }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Table */}
           <div style={{ overflowX: "auto" }}>
@@ -389,6 +441,134 @@ export default function TestAnalysis({ result, onRestart }: Props) {
         </section>
       </main>
     </div>
+  );
+}
+
+/* ─────────────── Per-question timing strip ─────────────── */
+function QuestionTimingStrip({ questions }: { questions: ResultData["questions"] }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  if (!questions?.length) return null;
+
+  const times = questions.map(q => q.timeSpentSecs || 0);
+  const maxTime = Math.max(...times, 1);
+  const sqrtMax = Math.sqrt(maxTime) || 1;
+  const MAX_H = 84;
+  const avgTime = Math.round(times.reduce((s, t) => s + t, 0) / times.length);
+  const medianTime = [...times].sort((a, b) => a - b)[Math.floor(times.length / 2)];
+
+  const hovered = hoverIdx !== null ? questions[hoverIdx] : null;
+  const hoveredStatus = hovered
+    ? hovered.user_answer === null ? "skipped" : hovered.is_correct ? "correct" : "incorrect"
+    : null;
+  const hoveredStatusColor = hoveredStatus === "correct" ? BE.good
+    : hoveredStatus === "incorrect" ? BE.bad : BE.textMute;
+
+  return (
+    <section className="be-card p-6 md:p-8 border" style={{ borderColor: BE.line }}>
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-5">
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: BE.textMute, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Pacing · Time × Result
+          </div>
+          <div style={{ fontSize: 12, color: BE.textDim, marginTop: 4 }}>
+            Bar height = time spent. Color = result. Hover for details.
+          </div>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap" style={{ fontSize: 11, color: BE.textMute }}>
+          <span className="flex items-center gap-1.5">
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: BE.good, display: "inline-block" }} />
+            Correct
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: BE.bad, display: "inline-block" }} />
+            Wrong
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: BE.textMute, opacity: 0.5, display: "inline-block" }} />
+            Skipped
+          </span>
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <div style={{ minWidth: Math.max(questions.length * 8, 320) }}>
+          {/* Bars */}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: MAX_H }}>
+            {questions.map((q, i) => {
+              const t = q.timeSpentSecs || 0;
+              const h = t > 0 ? Math.max(3, (Math.sqrt(t) / sqrtMax) * MAX_H) : 3;
+              const status = q.user_answer === null ? "skipped" : q.is_correct ? "correct" : "incorrect";
+              const color = status === "correct" ? BE.good : status === "incorrect" ? BE.bad : BE.textMute;
+              const baseOpacity = status === "skipped" ? 0.35 : 1;
+              const opacity = hoverIdx === null ? baseOpacity : hoverIdx === i ? 1 : baseOpacity * 0.4;
+
+              return (
+                <div
+                  key={q.id}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                  style={{
+                    flex: "1 1 0",
+                    minWidth: 6,
+                    height: h,
+                    background: color,
+                    opacity,
+                    borderRadius: "2px 2px 0 0",
+                    transition: "opacity 0.12s",
+                    cursor: "pointer",
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* X-axis ticks */}
+          <div style={{ display: "flex", gap: 2, marginTop: 6, fontSize: 10, color: BE.textMute, fontFamily: BE.mono }}>
+            {questions.map((_, i) => {
+              const showTick = i === 0 || (i + 1) % 5 === 0 || i === questions.length - 1;
+              return (
+                <div key={i} style={{ flex: "1 1 0", minWidth: 6, textAlign: "center" }}>
+                  {showTick ? i + 1 : ""}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary / hover detail — same vertical space either way */}
+      <div
+        className="mt-5 pt-4 border-t flex items-center gap-4 flex-wrap"
+        style={{ borderColor: BE.line, fontSize: 11.5, color: BE.textMute, minHeight: 28 }}
+      >
+        {hovered && hoveredStatus ? (
+          <>
+            <span style={{ fontFamily: BE.mono, color: BE.text, fontWeight: 700 }}>Q{(hoverIdx ?? 0) + 1}</span>
+            <span style={{
+              flex: 1, minWidth: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
+              color: BE.textDim,
+            }}>
+              {plainPreview(hovered.question_text).slice(0, 110) || "—"}
+            </span>
+            <span style={{ fontFamily: BE.mono, color: BE.text, fontWeight: 600 }}>{fmtTime(hovered.timeSpentSecs)}</span>
+            <span style={{
+              fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.4,
+              padding: "3px 8px", borderRadius: 4,
+              color: hoveredStatusColor, background: hoveredStatusColor + "22",
+            }}>
+              {hoveredStatus}
+            </span>
+          </>
+        ) : (
+          <>
+            <span>Avg <span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{fmtTime(avgTime)}</span></span>
+            <span>Median <span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{fmtTime(medianTime)}</span></span>
+            <span>Slowest <span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{fmtTime(maxTime)}</span></span>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 

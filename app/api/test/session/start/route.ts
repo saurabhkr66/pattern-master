@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { addActiveParticipant } from "@/lib/leaderboard";
-import { initDraft, readDraftState } from "@/lib/draft";
+import { initDraft, readDraftState, DEADLINE_CLEANUP_BUFFER_MS } from "@/lib/draft";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -18,7 +18,9 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const timeLeftSecs = Math.max(
         0,
-        Math.floor((existing.expires_at.getTime() - Date.now()) / 1000)
+        Math.floor(
+          (existing.expires_at.getTime() - DEADLINE_CLEANUP_BUFFER_MS - Date.now()) / 1000
+        )
       );
       addActiveParticipant(mockTestId, userId, existing.expires_at.getTime()).catch(
         (e) => console.warn("[leaderboard] addActiveParticipant failed", e)
@@ -26,10 +28,15 @@ export async function POST(req: NextRequest) {
       // Prefer Redis state (current); fall back to DB.state (last persisted).
       const redisState = await readDraftState(userId, existing.id);
       const state = redisState ?? existing.state;
+      // Expose the *user-facing* deadline (DB cleanup buffer subtracted),
+      // so the client's timer math doesn't have to know about the buffer.
+      const userDeadline = new Date(
+        existing.expires_at.getTime() - DEADLINE_CLEANUP_BUFFER_MS,
+      );
       return NextResponse.json({
         draftId: existing.id,
         startedAt: existing.started_at.toISOString(),
-        expiresAt: existing.expires_at.toISOString(),
+        expiresAt: userDeadline.toISOString(),
         timeLeftSecs,
         state,
         resumed: true,
@@ -41,7 +48,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const expiresAt = new Date(Date.now() + durationSecs * 1000 + 3_600_000); // +1h buffer
+  const expiresAt = new Date(Date.now() + durationSecs * 1000 + DEADLINE_CLEANUP_BUFFER_MS);
 
   const draft = await prisma.testSessionDraft.create({
     data: {
@@ -65,10 +72,13 @@ export async function POST(req: NextRequest) {
     console.warn("[draft] initDraft failed", e)
   );
 
+  // User-facing deadline (DB cleanup buffer subtracted) — the client's timer
+  // computes off this, and we don't want the buffer leaking into UI time.
+  const userDeadline = new Date(draft.expires_at.getTime() - DEADLINE_CLEANUP_BUFFER_MS);
   return NextResponse.json({
     draftId: draft.id,
     startedAt: draft.started_at.toISOString(),
-    expiresAt: draft.expires_at.toISOString(),
+    expiresAt: userDeadline.toISOString(),
     timeLeftSecs: durationSecs,
     state: {},
     resumed: false,

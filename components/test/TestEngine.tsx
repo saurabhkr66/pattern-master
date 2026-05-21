@@ -130,6 +130,21 @@ export default function TestEngine({
   const timeSpentRef = useRef(timeSpent);
 
   useEffect(() => { currentQIdRef.current = currentQId; }, [currentQId]);
+
+  // Each question counts as its own page view. We stamp `?q=N` (1-indexed
+  // global position) into the URL on every question change; Next.js's
+  // useSearchParams reacts to history.replaceState in 14+, which the
+  // GlobalAnalyticsTracker watches — so the pageview fires automatically
+  // without us calling trackPageView() here.
+  useEffect(() => {
+    if (!currentQId) return;
+    const idx = questions.findIndex((q) => q.id === currentQId);
+    if (idx < 0) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("q") === String(idx + 1)) return;
+    url.searchParams.set("q", String(idx + 1));
+    window.history.replaceState(null, "", url.toString());
+  }, [currentQId, questions]);
   useEffect(() => { sectionIdxRef.current = activeSectionIdx; }, [activeSectionIdx]);
   useEffect(() => { mcqRef.current = mcqSelected; }, [mcqSelected]);
   useEffect(() => { msqRef.current = msqSelected; }, [msqSelected]);
@@ -448,7 +463,7 @@ export default function TestEngine({
       <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
         {/* ── QUESTION PANE ── */}
         <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "22px 28px" }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: "22px 28px" }}>
             {/* Meta row */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <span style={{ fontFamily: BE.mono, fontSize: 12, color: BE.textDim }}>
@@ -492,24 +507,23 @@ export default function TestEngine({
             {/* Question text */}
             <div style={{ fontFamily: BE.serif, fontSize: 19, lineHeight: 1.55, color: BE.text, marginBottom: 22 }}>
               {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
-                <div className="mb-6 flex flex-wrap gap-4">
+                <div className="mb-6 flex flex-col gap-4">
                   {(currentQ.images as { index: number; filename: string }[]).map((img) => (
-                    <Image
+                    <div
                       key={img.index}
-                      src={getCloudinaryUrl(img.filename)}
-                      alt=""
-                      width={800}
-                      height={600}
-                      sizes="(max-width: 768px) 100vw, 800px"
-                      className="rounded-lg border"
-                      style={{
-                        borderColor: BE.line,
-                        maxHeight: 300,
-                        width: "auto",
-                        height: "auto",
-                        objectFit: "contain",
-                      }}
-                    />
+                      className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden"
+                      style={{ background: BE.surface, borderColor: BE.line, maxHeight: 320, minHeight: 160 }}
+                    >
+                      <Image
+                        src={getCloudinaryUrl(img.filename)}
+                        alt=""
+                        width={800}
+                        height={600}
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="rounded-lg object-contain"
+                        style={{ maxHeight: 294, width: "auto", height: "auto" }}
+                      />
+                    </div>
                   ))}
                 </div>
               )}

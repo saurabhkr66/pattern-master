@@ -98,9 +98,13 @@ const transformMath = (s: string): string =>
     //    a whole table cell — including its math — in \text{}. Wrap the
     //    body in `$...$` so the operators evaluate as math instead of
     //    breaking the whole expression. Handles one level of nested braces.
+    //    Scraper also sometimes emits stray `$` inside the body (e.g.
+    //    `\text{$(M) $T_n = T_{n-1} + n$}`); strip those before wrapping or
+    //    the wrap produces `$$` adjacencies KaTeX cannot parse.
     .replace(/\\text\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match, body: string) => {
       if (!/[_^]/.test(body)) return match;
-      return '\\text{$' + body + '$}';
+      const cleaned = body.replace(/\$/g, '');
+      return '\\text{$' + cleaned + '$}';
     })
     // 2. Normalize malformed `\\hline` / `\\\\hline` (no space between line
     //    break and hline command). Without normalization KaTeX parses `\\`
@@ -286,10 +290,13 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\\\]/g, '$$$$')
     .replace(/\\\(/g, '$')
     .replace(/\\\)/g, '$')
-    // Display math $$ sitting at the end of a prose line — remark-math only
-    // recognises display blocks when $$ starts a new paragraph. Move it there.
-    // "text $$\ncontent" → "text\n\n$$\ncontent"
-    .replace(/([^\n$][ \t]*)\$\$[ \t]*\n/g, '$1\n\n$$\n')
+    // Scraper emits "prose $$ \n \begin{ENV}" — remark-math only parses $$
+    // as display math when it starts its own paragraph (blank line before it).
+    // Move the $$ to its own paragraph. Use a function replacer so $$ in the
+    // return value is never misinterpreted as a replacement-string escape.
+    .replace(/([^\n])\$\$[ \t]*\n+[ \t]*(\\begin\{)/g, (_m, before, begin) => `${before}\n\n$$\n${begin}`)
+    // Same for $$ directly glued to \begin (no newline between them).
+    .replace(/([^\n])\$\$(\\begin\{)/g, (_m, before, begin) => `${before}\n\n$$\n${begin}`)
     // JEE scraper: double-brace hat {{i}}^{\^} → \hat{i}
     .replace(/\{\{([a-zA-Z])\}\}\^\{\\\^\}/g, '\\hat{$1}')
     // JEE scraper: brace-wrapped hat {i^{\^}} → \hat{i}
@@ -407,11 +414,13 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     .replace(/\$([^$]*?)⇒([^$]*?)\$/g, (_, a, b) => `$${a}\\Rightarrow ${b}$`)
     // JEE scraper: inline $\begin{cases}...\end{cases}$ may span newlines which
     // remark-math's inline $ doesn't support — promote to display math $$...$$
+    // \n\n before/after ensures $$ appears at block level so remark-math's mathFlow
+    // parser recognises it as display math (mathFlow requires $$ at start of a block).
     .replace(/\$(?!\$)((?:[^$]|\\\$)*\\begin\{cases\}[\s\S]*?\\end\{cases\}(?:[^$]|\\\$)*)\$/g,
-      (_m, body) => `$$\n${body}\n$$`)
+      (_m, body) => `\n\n$$\n${body}\n$$\n\n`)
     // Upgrade inline \begin{aligned}...\end{aligned} spanning newlines to display math $$...$$
     .replace(/\$(?!\$)((?:[^$]|\\\$)*\\begin\{aligned\}[\s\S]*?\\end\{aligned\}(?:[^$]|\\\$)*)\$/g,
-      (_m, body) => `$$\n${body}\n$$`)
+      (_m, body) => `\n\n$$\n${body}\n$$\n\n`)
     // Upgrade inline matrix-family envs to display math. Covers the cases-style
     // construct \left\{ \begin{matrix}...\end{matrix} \right. that the scraper
     // emits instead of a real \begin{cases}; remark-math's inline $ chokes on
@@ -421,7 +430,7 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
     // $$$ boundaries and break legitimate display math like
     // `$$ \begin{array}...\end{array} $$`.
     .replace(/(?<!\$)\$(?!\$)((?:[^$]|\\\$)*\\begin\{(bmatrix|vmatrix|pmatrix|matrix|array)\}[\s\S]*?\\end\{\2\}(?:[^$]|\\\$)*)\$(?!\$)/g,
-      (_m, body) => `$$\n${body}\n$$`)
+      (_m, body) => `\n\n$$\n${body}\n$$\n\n`)
     // Fix 3-column cases (scraper writes: expr & \text{if} & cond) → 2-column
     // KaTeX cases only allows 2 columns; merge the extra & into the condition
     .replace(/(\\begin\{cases\}[\s\S]*?\\end\{cases\})/g,

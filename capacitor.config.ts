@@ -11,19 +11,13 @@ const config: CapacitorConfig = {
   webDir: 'out', 
 
   server: {
-    // During production, we want to bundle the code for offline use and performance.
-    // Set this to the live URL only for development or if you strictly want a webview wrapper.
     url: 'https://battleexam.com',
-    cleartext: true,
-
-    // This tells the app to keep your domain inside the native screen!
     allowNavigation: [
-      '*',
       'battleexam.com',
       '*.battleexam.com',
-      '*.clerk.accounts.dev', // Allows Clerk's fallback domains
-      '*.clerk.services',     // Allows Clerk's API
-      'accounts.google.com',  // Allows Google Login
+      '*.clerk.accounts.dev',
+      '*.clerk.services',
+      'accounts.google.com',
       '*.google.com'
     ]
   }

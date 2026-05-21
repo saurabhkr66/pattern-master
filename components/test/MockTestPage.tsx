@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Loader2, AlertTriangle, Check, Trash2,
+  Loader2, AlertTriangle, Check, Trash2, Search, X,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { deleteMockTest } from "@/app/actions/admin";
 import {
   EXAM_CONFIGS, getExamConfig, fmtDuration,
-  type ExamType, type ExamConfig,
+  type ExamType, type ExamConfig, type QType,
 } from "@/lib/examConfigs";
 import TestEngine, { type TestQuestion, type SubmitAnswer } from "@/components/test/TestEngine";
 import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
@@ -125,6 +125,8 @@ export default function MockTestPage() {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [seededMocks, setSeededMocks] = useState<SeededMock[]>([]);
+  const [paperCounts, setPaperCounts] = useState<{ exam_type: string; branch: string | null; count: number }[]>([]);
+  const [mockSearch, setMockSearch] = useState("");
   const [briefAgreed, setBriefAgreed] = useState(false);
   const { user } = useUser();
   const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
@@ -247,9 +249,27 @@ export default function MockTestPage() {
 
   const hasBranches = !!(config?.branches?.length);
 
+  /* Fetch paper counts per exam/branch on mount */
+  useEffect(() => {
+    fetch("/api/test/mocks/counts")
+      .then((r) => r.json())
+      .then((d) => setPaperCounts(d.counts ?? []))
+      .catch(() => {});
+  }, []);
+
+  const examPaperTotal = useCallback(
+    (et: string) => paperCounts.filter((c) => c.exam_type === et).reduce((s, c) => s + c.count, 0),
+    [paperCounts]
+  );
+  const branchPaperCount = useCallback(
+    (et: string, br: string) => paperCounts.find((c) => c.exam_type === et && c.branch === br)?.count ?? 0,
+    [paperCounts]
+  );
+
   /* fetch subjects + seeded mocks whenever exam/branch changes */
   useEffect(() => {
     if (!selectedExam) return;
+    setMockSearch("");
     const params = new URLSearchParams({ exam_type: selectedExam });
     if (selectedBranch) params.set("branch", selectedBranch);
     fetch(`/api/test/subjects?${params}`)
@@ -573,6 +593,10 @@ export default function MockTestPage() {
                   <div className="flex gap-2.5 pt-2 border-t" style={{ borderColor: BE.line, fontSize: 10, color: BE.textMute }}>
                     <span><span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{exam.totalQuestions}</span> Q</span>
                     <span><span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{Math.round(exam.durationSecs / 60)}</span> min</span>
+                    <span>
+                      <span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{examPaperTotal(exam.examType)}</span>{' '}
+                      {examPaperTotal(exam.examType) === 1 ? 'paper' : 'papers'}
+                    </span>
                   </div>
                 </div>
               );
@@ -587,6 +611,7 @@ export default function MockTestPage() {
             <div className="flex flex-wrap gap-2">
               {config.branches?.map((b) => {
                 const sel = selectedBranch === b.id;
+                const count = branchPaperCount(selectedExam!, b.id);
                 return (
                   <div
                     key={b.id}
@@ -600,6 +625,14 @@ export default function MockTestPage() {
                   >
                     <span style={{ fontFamily: BE.mono, fontSize: 12, fontWeight: 700, color: sel ? BE.accent : BE.textDim }}>{b.id}</span>
                     <span style={{ fontSize: 12, color: BE.text }}>{b.label}</span>
+                    <span style={{
+                      fontFamily: BE.mono, fontSize: 10.5, fontWeight: 600,
+                      color: count > 0 ? (sel ? BE.accent : BE.textDim) : BE.textMute,
+                      opacity: count > 0 ? 1 : 0.6,
+                      marginLeft: 4,
+                    }}>
+                      {count}
+                    </span>
                   </div>
                 );
               })}
@@ -652,17 +685,62 @@ export default function MockTestPage() {
         )}
 
         {/* Config panel — shown once mode is picked */}
-        {isSpec && (
+        {isSpec && (() => {
+          const q = mockSearch.trim().toLowerCase();
+          const visibleMocks = q
+            ? seededMocks.filter(m =>
+                m.title.toLowerCase().includes(q) ||
+                String(m.mock_number).includes(q)
+              )
+            : seededMocks;
+          return (
           <div className="mb-6">
-            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Select Paper</div>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>Select Paper</div>
+              {seededMocks.length > 0 && (
+                <div className="relative" style={{ width: 220, maxWidth: '60%' }}>
+                  <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: BE.textMute, pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    value={mockSearch}
+                    onChange={(e) => setMockSearch(e.target.value)}
+                    placeholder="Search papers…"
+                    className="w-full rounded-lg outline-none transition-colors"
+                    style={{
+                      fontSize: 12,
+                      padding: '6px 26px 6px 28px',
+                      background: BE.surface,
+                      border: `1px solid ${BE.line}`,
+                      color: BE.text,
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = BE.accent; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = BE.line; }}
+                  />
+                  {mockSearch && (
+                    <button
+                      onClick={() => setMockSearch("")}
+                      aria-label="Clear search"
+                      className="absolute"
+                      style={{ right: 6, top: '50%', transform: 'translateY(-50%)', padding: 2, color: BE.textMute }}
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             {seededMocks.length === 0 ? (
               <div className="border border-dashed rounded-xl p-10 text-center" style={{ borderColor: BE.line }}>
                 <div className="text-xl mb-2">📭</div>
                 <div style={{ fontSize: 13, color: BE.textDim }}>No papers seeded yet.</div>
               </div>
+            ) : visibleMocks.length === 0 ? (
+              <div className="border border-dashed rounded-xl p-8 text-center" style={{ borderColor: BE.line }}>
+                <div style={{ fontSize: 13, color: BE.textDim }}>No papers match &ldquo;{mockSearch}&rdquo;.</div>
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {seededMocks.map((m) => {
+                {visibleMocks.map((m) => {
                   const taken = !!m.session;
                   const isSel = selectedMock?.mock_number === m.mock_number;
                   return (
@@ -699,13 +777,36 @@ export default function MockTestPage() {
                               ))}
                             </div>
                           )}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); loadAnalysis(m); }}
-                            className="w-full mt-1 rounded-lg py-1 text-[10px] font-semibold transition-colors"
-                            style={{ background: BE.accentSoft, color: BE.accent }}
-                          >
-                            View Analysis
-                          </button>
+                        </div>
+                      )}
+                      {isSel && (
+                        <div className="mt-2 pt-2 border-t flex gap-1.5" style={{ borderColor: BE.line }}>
+                          {taken ? (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setBriefAgreed(false); goTo("brief", false, m.id); }}
+                                className="flex-1 rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
+                                style={{ background: BE.accent, color: '#fff' }}
+                              >
+                                Retake
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); loadAnalysis(m); }}
+                                className="flex-1 rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
+                                style={{ background: BE.accentSoft, color: BE.accent }}
+                              >
+                                Analysis
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setBriefAgreed(false); goTo("brief", false, m.id); }}
+                              className="w-full rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
+                              style={{ background: BE.accent, color: '#fff' }}
+                            >
+                              Continue →
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -714,7 +815,8 @@ export default function MockTestPage() {
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {isRandom && (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4 mb-6">
@@ -765,16 +867,18 @@ export default function MockTestPage() {
           </div>
         )}
 
-        <div className="flex justify-end pt-4 border-t" style={{ borderColor: BE.line }}>
-          <button
-            className="be-btn be-btn-primary"
-            disabled={!canContinue}
-            onClick={() => { setBriefAgreed(false); goTo("brief", false, selectedMock?.id); }}
-            style={{ padding: '10px 24px', opacity: canContinue ? 1 : 0.4 }}
-          >
-            Continue →
-          </button>
-        </div>
+        {!isSpec && (
+          <div className="flex justify-end pt-4 border-t" style={{ borderColor: BE.line }}>
+            <button
+              className="be-btn be-btn-primary"
+              disabled={!canContinue}
+              onClick={() => { setBriefAgreed(false); goTo("brief", false, selectedMock?.id); }}
+              style={{ padding: '10px 24px', opacity: canContinue ? 1 : 0.4 }}
+            >
+              Continue →
+            </button>
+          </div>
+        )}
       </MTPage>
     );
   }
@@ -807,11 +911,17 @@ export default function MockTestPage() {
             </div>
             <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
               <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Marking scheme</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                <MarkRow type="MCQ" marks="+1 / +2" neg="−⅓ / −⅔" />
-                <MarkRow type="MSQ" marks="+1 / +2" neg="No partial" />
-                <MarkRow type="NAT" marks="+1 / +2" neg="No penalty" />
-              </div>
+              {(() => {
+                const rows = getMarkingRows(config, selectedExam);
+                const cols = Math.min(rows.length, 3);
+                return (
+                  <div className="grid gap-2 text-xs" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+                    {rows.map((r) => (
+                      <MarkRow key={r.type} type={r.type} marks={r.marks} neg={r.neg} />
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
             <div className="border rounded-xl p-3.5 flex gap-2.5" style={{ borderColor: BE.warn + '33', background: `linear-gradient(135deg, ${BE.warn}08, transparent)` }}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke={BE.warn} strokeWidth="1.6" className="shrink-0 mt-0.5"><circle cx="9" cy="9" r="7.5"/><path d="M9 5v4M9 12v.5"/></svg>
@@ -953,8 +1063,54 @@ function MarkRow({ type, marks, neg }: { type: string; marks: string; neg: strin
   return (
     <div className="p-2.5 border rounded-lg" style={{ borderColor: BE.line }}>
       <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: BE.accent, marginBottom: 4 }}>{type}</div>
-      <div style={{ fontSize: 11, color: BE.text, marginBottom: 1 }}>+ {marks}</div>
+      <div style={{ fontSize: 11, color: BE.text, marginBottom: 1 }}>{marks}</div>
       <div style={{ fontSize: 10.5, color: BE.textMute }}>{neg}</div>
     </div>
   );
+}
+
+function fmtNeg(n: number): string {
+  if (n === 0) return "0";
+  if (Math.abs(n - 1 / 3) < 0.01) return "−⅓";
+  if (Math.abs(n - 2 / 3) < 0.01) return "−⅔";
+  if (Math.abs(n - 1 / 2) < 0.01) return "−½";
+  if (Math.abs(n - Math.round(n)) < 0.01) return `−${Math.round(n)}`;
+  return `−${n.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function getMarkingRows(
+  config: ExamConfig,
+  examType: ExamType | null,
+): { type: QType; marks: string; neg: string }[] {
+  const typeMarks: Record<string, Set<number>> = {};
+  for (const sec of config.sections) {
+    for (const band of sec.markDistribution) {
+      const types = band.type ? [band.type] : sec.questionTypes;
+      for (const t of types) {
+        if (!typeMarks[t]) typeMarks[t] = new Set();
+        typeMarks[t].add(band.marks);
+      }
+    }
+  }
+  const negFrac = config.sections[0]?.negativePerMark ?? 0;
+  const isAdv = examType === "JEE_ADVANCED";
+  const order: QType[] = ["MCQ", "MSQ", "NAT"];
+  const rows: { type: QType; marks: string; neg: string }[] = [];
+  for (const t of order) {
+    const set = typeMarks[t];
+    if (!set || set.size === 0) continue;
+    const marks = [...set].sort((a, b) => a - b);
+    const marksStr = marks.map((m) => `+${m}`).join(" / ");
+    let negStr: string;
+    if (t === "MCQ") {
+      if (negFrac === 0) negStr = "No negative";
+      else negStr = marks.map((m) => fmtNeg(m * negFrac)).join(" / ");
+    } else if (t === "MSQ") {
+      negStr = isAdv ? "Partial credit · 0 wrong" : "All-or-nothing · 0 wrong";
+    } else {
+      negStr = "0 wrong";
+    }
+    rows.push({ type: t, marks: marksStr, neg: negStr });
+  }
+  return rows;
 }

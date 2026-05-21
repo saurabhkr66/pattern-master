@@ -73,15 +73,7 @@ function getCachedMistakes(userId: string) {
         orderBy: { created_at: "desc" },
       });
 
-      // De-duplicate: one card per question, keep most recent attempt
-      const seen = new Set<string>();
       const cards = wrongAttempts
-        .filter((a) => {
-          const key = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        })
         .map((a) => {
           const q = a.question ?? a.pyq ?? a.subject_pyq;
           const sp = a.subject_pyq?.subject_pattern;
@@ -110,7 +102,7 @@ function getCachedMistakes(userId: string) {
             practiceUrl: `/practice?patternId=${pattern.id}&questionId=${qId}&subject=${encodeURIComponent(pattern.subject)}`,
           };
         })
-        .filter(Boolean) as any[];
+        .filter((c): c is NonNullable<typeof c> => c !== null);
 
       return cards;
     },

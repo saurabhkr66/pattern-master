@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { readDraftState } from "@/lib/draft";
+import { readDraftState, DEADLINE_CLEANUP_BUFFER_MS } from "@/lib/draft";
 
 // Resume hits the DB for the lifecycle row (which has the canonical expires_at
 // and metadata) but reads the heavy `state` JSON from Redis when present.
@@ -19,13 +19,18 @@ export async function GET() {
 
   const timeLeftSecs = Math.max(
     0,
-    Math.floor((draft.expires_at.getTime() - Date.now()) / 1000)
+    Math.floor(
+      (draft.expires_at.getTime() - DEADLINE_CLEANUP_BUFFER_MS - Date.now()) / 1000
+    )
   );
 
   // Prefer Redis state (most recent). Fall back to DB state on cold cache.
   const redisState = await readDraftState(userId, draft.id);
   const state = redisState ?? draft.state;
 
+  // User-facing deadline (DB cleanup buffer subtracted) — client uses this
+  // directly, so the buffer doesn't leak into the UI timer.
+  const userDeadline = new Date(draft.expires_at.getTime() - DEADLINE_CLEANUP_BUFFER_MS);
   return NextResponse.json({
     draft: {
       draftId: draft.id,
@@ -33,7 +38,7 @@ export async function GET() {
       examType: draft.exam_type,
       branch: draft.branch,
       startedAt: draft.started_at.toISOString(),
-      expiresAt: draft.expires_at.toISOString(),
+      expiresAt: userDeadline.toISOString(),
       timeLeftSecs,
       state,
     },

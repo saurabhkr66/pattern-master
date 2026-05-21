@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { VertexAI } from '@google-cloud/vertexai';
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { revalidatePath, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
 
@@ -216,6 +216,9 @@ export async function deleteMockTest(mockTestId: string) {
   });
 
   revalidatePath("/mocktest");
+  // Bust the 24h-cached counts endpoint so the paper grid reflects the
+  // deletion immediately for everyone.
+  revalidateTag("mocks", "max");
 }
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;

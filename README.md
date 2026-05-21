@@ -31,7 +31,7 @@ BattleExam is a production-grade, full-stack web & mobile application built for 
 
 ### Core Learning Engine
 - **Pattern-Based Questions**: Each topic is decomposed into an "atomic logic" — the core reasoning pattern behind all GATE questions on that topic.
-- **AI-Generated Questions**: Powered by Google Gemini Pro, questions are generated dynamically per topic, ensuring an endless and fresh question bank.
+- **AI-Generated Questions**: Powered by large language models, questions are generated dynamically per topic, ensuring an endless and fresh question bank.
 - **Previous Year Questions (PYQs)**: Real GATE questions from past years (MCQ, MSQ, and NAT types) are seeded and tracked separately.
 - **Subject-Level Practice**: Comprehensive subject-wide practice modes that test broad subject knowledge.
 - **Flashcard Review Deck**: Spaced-repetition style flashcard review for mastery notes and key concepts.
@@ -67,8 +67,7 @@ BattleExam is a production-grade, full-stack web & mobile application built for 
 | **Database** | PostgreSQL (hosted on Supabase) |
 | **ORM** | Prisma v6 |
 | **Auth** | Clerk (v7) |
-| **AI - Primary** | Google Gemini Pro (`@google/generative-ai`) |
-| **AI - Secondary** | DeepSeek / OpenRouter |
+| **AI** | Third-party LLM providers via API |
 | **Math Rendering** | KaTeX + remark-math + rehype-katex |
 | **State Management** | TanStack React Query v5 |
 | **Analytics** | Google Analytics 4 + Microsoft Clarity |
@@ -176,7 +175,7 @@ pattern-master/
 │   ├── (auth)/                     # sign-in, sign-up (Clerk hosted)
 │   ├── [examType]/                 # Public SEO question pages (e.g. /gate-cse/...)
 │   ├── api/
-│   │   ├── generate-question/      # Calls Gemini to generate a new question
+│   │   ├── generate-question/      # Calls an LLM provider to generate a new question
 │   │   ├── save-attempt/           # Logs a user's question submission
 │   │   ├── patterns/[id]/          # Fetches questions for a given pattern
 │   │   └── search/                 # Full-text search across topics
@@ -199,8 +198,8 @@ pattern-master/
 │
 ├── lib/
 │   ├── prisma.ts                   # Prisma client singleton (prevents connection leaks)
-│   ├── gemini.ts                   # Google Gemini API client
-│   ├── deepseek.ts                 # DeepSeek API client (via OpenRouter)
+│   ├── gemini.ts                   # Primary LLM API client
+│   ├── deepseek.ts                 # Secondary LLM API client (via OpenRouter)
 │   ├── prompts.ts                  # AI system prompts for question generation
 │   ├── seo.ts                      # JSON-LD schema builders, URL slug utilities
 │   └── hash.ts                     # Semantic hash utility for deduplication

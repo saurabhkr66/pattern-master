@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { BE } from "@/lib/theme";
+import { getCloudinaryUrl } from "@/lib/imageUtils";
 
 type SRSState = {
   interval: number;
@@ -14,6 +15,8 @@ type SRSState = {
   lastGrade: string | null;
 };
 
+type QuestionImage = { url?: string; filename?: string; base64?: string; type?: string };
+
 type Flashcard = {
   id: string;
   question_id: string | null;
@@ -23,6 +26,7 @@ type Flashcard = {
   options: string[];
   correct_answer: string;
   explanation: string;
+  images?: QuestionImage[];
   topic_name: string;
   subject: string;
   patternId: string;
@@ -272,6 +276,12 @@ export default function FlashcardDeck({
               <div style={{ fontSize: 17, lineHeight: 1.65, color: BE.text, fontFamily: BE.serif, flex: 1 }}>
                 <MathRenderer content={current.question_text} />
               </div>
+              {/* Question images */}
+              {current.images?.filter(img => img.type !== 'explanation').map((img, idx) => (
+                <div key={idx} style={{ display: "flex", justifyContent: "center", borderRadius: 10, padding: 10, border: `1px solid ${BE.line}`, background: BE.surface, marginTop: 14, maxHeight: 320, minHeight: 160, overflow: "hidden" }}>
+                  <img src={getCloudinaryUrl(img.url || img.filename || '') || img.base64} alt="Question figure" style={{ maxHeight: 294, width: "auto", objectFit: "contain", borderRadius: 6 }} />
+                </div>
+              ))}
               {current.options.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 18 }}>
                   {current.options.map((opt, i) => (
@@ -305,6 +315,12 @@ export default function FlashcardDeck({
                 <div style={{ padding: "14px 16px", borderRadius: 10, border: `1px solid rgba(255,255,255,0.06)`, background: "rgba(255,255,255,0.03)", fontSize: 13.5, color: BE.textDim, lineHeight: 1.65, fontFamily: BE.serif, flex: 1 }}>
                   <div style={{ fontSize: 10, color: BE.textMute, textTransform: "uppercase", letterSpacing: 0.08, fontWeight: 600, marginBottom: 8 }}>Explanation</div>
                   <MathRenderer content={current.explanation} />
+                  {/* Explanation images */}
+                  {current.images?.filter(img => img.type === 'explanation').map((img, idx) => (
+                    <div key={idx} style={{ display: "flex", justifyContent: "center", borderRadius: 10, padding: 10, border: `1px solid ${BE.line}`, background: BE.surface, marginTop: 12, maxHeight: 320, minHeight: 160, overflow: "hidden" }}>
+                      <img src={getCloudinaryUrl(img.url || img.filename || '') || img.base64} alt="Explanation figure" style={{ maxHeight: 294, width: "auto", objectFit: "contain", borderRadius: 6 }} />
+                    </div>
+                  ))}
                 </div>
               )}
             </>

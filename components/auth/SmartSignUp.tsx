@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SignIn } from "@clerk/nextjs";
+import { SignUp } from "@clerk/nextjs";
 import { Capacitor } from "@capacitor/core";
 import MobileGoogleSignIn from "./MobileGoogleSignIn";
 
-export default function SmartSignIn() {
+export default function SmartSignUp() {
   const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
@@ -13,16 +13,15 @@ export default function SmartSignIn() {
   }, []);
 
   if (isNative) {
-    // Native: external-browser Google OAuth only — Clerk's <SignIn /> form
-    // does not show up on Android, by request. Google sign-in covers both new
-    // and returning users (Clerk auto-creates the account on first sign-in).
+    // Native: external-browser Google OAuth only. Clerk auto-creates the user
+    // on first sign-in via Google, so the same button covers sign-up.
     return (
       <div className="flex w-full max-w-sm flex-col items-center gap-6">
-        <h1 className="text-2xl font-semibold text-white">Sign in to BattleExam</h1>
+        <h1 className="text-2xl font-semibold text-white">Create your BattleExam account</h1>
         <MobileGoogleSignIn />
       </div>
     );
   }
 
-  return <SignIn />;
+  return <SignUp />;
 }

@@ -25,6 +25,16 @@ const stateKey = (userId: string, draftId: string): string =>
 // are effectively dead anyway — the DB row's expires_at is the real lifecycle.
 const DRAFT_TTL_SECONDS = 5 * 60 * 60;
 
+/**
+ * `expires_at` on TestSessionDraft is `actual_deadline + this buffer`. The
+ * buffer is purely a DB-cleanup grace period so the row isn't deleted at the
+ * exact instant the user's timer hits zero — submission needs a few moments
+ * to finalize. It is NOT user-facing time. Anywhere we compute the user's
+ * remaining time from expires_at we must subtract this back out, otherwise
+ * resuming a 3h test shows a 4h timer.
+ */
+export const DEADLINE_CLEANUP_BUFFER_MS = 60 * 60 * 1000; // 1 hour
+
 /** Initialize empty state when a draft is created. One SET. */
 export async function initDraft(
   userId: string,

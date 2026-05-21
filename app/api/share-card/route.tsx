@@ -86,22 +86,6 @@ function computeStreak(dateSet: Set<string>): number {
   return streak;
 }
 
-// ── Fonts ────────────────────────────────────────────────────────────────────
-// Module-level singleton so the font is fetched only once per Lambda warm start.
-let _font400: ArrayBuffer | null = null;
-let _font900: ArrayBuffer | null = null;
-
-async function loadFonts(): Promise<{ regular: ArrayBuffer; black: ArrayBuffer }> {
-  if (!_font400 || !_font900) {
-    const [r400, r900] = await Promise.all([
-      fetch("https://fonts.bunny.net/inter/files/inter-latin-400-normal.woff2"),
-      fetch("https://fonts.bunny.net/inter/files/inter-latin-900-normal.woff2"),
-    ]);
-    _font400 = await r400.arrayBuffer();
-    _font900 = await r900.arrayBuffer();
-  }
-  return { regular: _font400, black: _font900 };
-}
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -174,21 +158,6 @@ export async function GET(req: NextRequest) {
   const CGAP   = 4;  // gap between cells
   const cellStep = CELL + CGAP;
 
-  // ── Load fonts ────────────────────────────────────────────────────────────
-  let fonts: { regular: ArrayBuffer; black: ArrayBuffer } | null = null;
-  try {
-    fonts = await loadFonts();
-  } catch {
-    // If font load fails, continue without — ImageResponse will use fallback
-  }
-
-  const fontOptions = fonts
-    ? [
-        { name: "Inter", data: fonts.regular, weight: 400 as const, style: "normal" as const },
-        { name: "Inter", data: fonts.black,   weight: 900 as const, style: "normal" as const },
-      ]
-    : [];
-
   // ── Render ────────────────────────────────────────────────────────────────
   return new ImageResponse(
     (
@@ -200,7 +169,7 @@ export async function GET(req: NextRequest) {
           height:         H,
           background:     C.bg,
           padding:        "40px 50px",
-          fontFamily:     "Inter, sans-serif",
+          fontFamily:     "sans-serif",
           position:       "relative",
         }}
       >
@@ -429,9 +398,8 @@ export async function GET(req: NextRequest) {
     {
       width:  W,
       height: H,
-      fonts:  fontOptions,
       headers: {
-        "Cache-Control": "public, max-age=300, s-maxage=300", // 5-min cache
+        "Cache-Control": "public, max-age=300, s-maxage=300",
       },
     }
   );

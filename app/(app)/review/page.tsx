@@ -47,52 +47,65 @@ export default async function ReviewPage() {
     </div>
   );
 
-  const [wrongAttempts, srsStates] = await Promise.all([
-    prisma.attempt.findMany({
-      where: { id: { in: ids } },
-      select: {
-        id: true,
-        question_id: true,
-        pyq_id: true,
-        subject_pyq_id: true,
-        created_at: true,
-        question: {
-          select: {
-            question_text: true,
-            options: true,
-            correct_answer: true,
-            explanation: true,
-            pattern: { select: { id: true, topic_name: true, subject: true } },
-          },
-        },
-        pyq: {
-          select: {
-            question_text: true,
-            options: true,
-            correct_answer: true,
-            explanation: true,
-            year: true,
-            pattern: { select: { id: true, topic_name: true, subject: true } },
-          },
-        },
-        subject_pyq: {
-          select: {
-            question_text: true,
-            options: true,
-            correct_answer: true,
-            explanation: true,
-            year: true,
-            subject_pattern: { select: { id: true, subject_name: true } },
-          },
+  // Fetch wrong attempts first to get the question IDs, then fetch SRS states scoped to only those IDs
+  const wrongAttempts = await prisma.attempt.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      question_id: true,
+      pyq_id: true,
+      subject_pyq_id: true,
+      created_at: true,
+      question: {
+        select: {
+          question_text: true,
+          options: true,
+          correct_answer: true,
+          explanation: true,
+          images: true,
+          pattern: { select: { id: true, topic_name: true, subject: true } },
         },
       },
-      orderBy: { created_at: "desc" },
-    }),
-    prisma.flashcard.findMany({
-      where: { user_id: userId },
-      take: 1000,
-    }),
-  ]);
+      pyq: {
+        select: {
+          question_text: true,
+          options: true,
+          correct_answer: true,
+          explanation: true,
+          images: true,
+          year: true,
+          pattern: { select: { id: true, topic_name: true, subject: true } },
+        },
+      },
+      subject_pyq: {
+        select: {
+          question_text: true,
+          options: true,
+          correct_answer: true,
+          explanation: true,
+          images: true,
+          year: true,
+          subject_pattern: { select: { id: true, subject_name: true } },
+        },
+      },
+    },
+    orderBy: { created_at: "desc" },
+  });
+
+  const qIds     = wrongAttempts.map(a => a.question_id).filter(Boolean) as string[];
+  const pyqIds   = wrongAttempts.map(a => a.pyq_id).filter(Boolean) as string[];
+  const spyqIds  = wrongAttempts.map(a => a.subject_pyq_id).filter(Boolean) as string[];
+
+  const srsStates = await prisma.flashcard.findMany({
+    where: {
+      user_id: userId,
+      OR: [
+        ...(qIds.length    ? [{ question_id:    { in: qIds    } }] : []),
+        ...(pyqIds.length  ? [{ pyq_id:         { in: pyqIds  } }] : []),
+        ...(spyqIds.length ? [{ subject_pyq_id: { in: spyqIds } }] : []),
+      ],
+    },
+  });
 
   // Map SRS states by question/pyq/subject_pyq id for quick lookup
   const srsMap = new Map<string, (typeof srsStates)[0]>();
@@ -124,6 +137,7 @@ export default async function ReviewPage() {
         options:        (q.options as string[]) ?? [],
         correct_answer: q.correct_answer,
         explanation:    q.explanation,
+        images:         (q.images as any[]) ?? [],
         topic_name:     pattern.topic_name,
         subject:        pattern.subject,
         patternId:      pattern.id,
