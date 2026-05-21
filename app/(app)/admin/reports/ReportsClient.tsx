@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react"; // AI Model selection enabled 2026-05-03
-import { resolveReport, deleteQuestion, generateAIExplanation, processMockTestExplanations, toggleManualFlag } from "@/app/actions/admin";
+import { useState, useMemo } from "react";
 import MathRenderer from "@/components/ui/MathRenderer";
-import { getCloudinaryUrl } from "@/lib/imageUtils";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
+import ReportEditorModal from "./ReportEditorModal";
+import BatchProcessPanel from "./BatchProcessPanel";
 
 const isMissingExplanation = (q: any) => {
   const hasText = q.explanation && q.explanation.trim() !== "";
@@ -12,290 +12,82 @@ const isMissingExplanation = (q: any) => {
   return !hasText && !hasImages;
 };
 
-export default function ReportsClient({ reports, mockTests }: { reports: any[], mockTests?: any[] }) {
+function processReport(r: any) {
+  const q = r.q || r.question || r.pyq || r.subject_pyq;
+  let exam = "Other", subject = "Other", type = "Generated";
+  if (r.subject_pyq) {
+    exam = r.subject_pyq.subject_pattern?.exam_type || "GATE";
+    subject = r.subject_pyq.subject_pattern?.subject_name || "Unknown";
+    type = "SubjectPYQ";
+  } else if (r.pyq) {
+    exam = r.pyq.exam_type || r.pyq.pattern?.exam_type || "GATE";
+    subject = r.pyq.pattern?.subject || "Unknown";
+    type = "PYQ";
+  } else if (r.question) {
+    exam = r.question.pattern?.exam_type || "GATE";
+    subject = r.question.pattern?.subject || "Unknown";
+    type = "Generated";
+  } else if (r.isMock) {
+    exam = r.exam_type || "Unknown";
+    subject = r.subject || "Unknown";
+    type = "Mock";
+  }
+  return { ...r, exam, subject, type, q };
+}
+
+export default function ReportsClient({ reports, mockTests }: { reports: any[]; mockTests?: any[] }) {
   const [localReports, setLocalReports] = useState(reports);
-  const [editingReport, setEditingReport] = useState<any | null>(null);
-  const [filterExam, setFilterExam] = useState<string>("all");
-  const [filterSubject, setFilterSubject] = useState<string>("all");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterMockId, setFilterMockId] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showMissingOnly, setShowMissingOnly] = useState(false);
-
-  // Reset subject filter when exam filter changes
-  const handleExamChange = (newExam: string) => {
-    setFilterExam(newExam);
-    setFilterSubject("all");
-  };
-
-  const [formData, setFormData] = useState({
-    question_text: "",
-    correct_answer: "",
-    explanation: "",
-    options: [] as string[],
-    images: [] as any[],
-    ai_answer_mismatch: false,
-    ai_detected_answer: null as string | null,
-    question_type: "MCQ"
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [batchProcessing, setBatchProcessing] = useState<string | null>(null);
-  const [batchResult, setBatchResult] = useState<{total: number, fixed: number, failed: number} | null>(null);
-  const [showBatchPanel, setShowBatchPanel] = useState(false);
-  const [isScanningLatex, setIsScanningLatex] = useState(false);
   const [latexReports, setLatexReports] = useState<any[]>([]);
+  const [editingReport, setEditingReport] = useState<any | null>(null);
+  const [formData, setFormData] = useState({
+    question_text: "", correct_answer: "", explanation: "",
+    options: [] as string[], images: [] as any[],
+    ai_answer_mismatch: false, ai_detected_answer: null as string | null,
+    question_type: "MCQ",
+  });
   const [selectedAIModel, setSelectedAIModel] = useState<"gemini" | "gpt-4o-mini">("gemini");
 
-  // ── PDF Solution Generator state ─────────────────────────────────────────
-  const [showPdfPanel, setShowPdfPanel] = useState(false);
-  const [pdfMockTestId, setPdfMockTestId] = useState<string>("");
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfProcessing, setPdfProcessing] = useState(false);
-  const [pdfLogPreview, setPdfLogPreview] = useState<{ question: any; explanation: string } | null>(null);
-  const [pdfLiveFeed, setPdfLiveFeed] = useState<{
-    testTitle: string;
-    mock_test_id?: string;
-    currentQ: any;
-    currentExplanation: string;
-    currentMismatch?: boolean;
-    currentAIDetectedAnswer?: string | null;
-    currentHighThinkingFlag?: boolean;
-    currentPdfSourced?: boolean | null;
-    progress: number;
-    total: number;
-    fixed: number;
-    failed: number;
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalThoughtsTokens: number;
-    log: {
-      id: string;
-      text: string;
-      status: "ok" | "fail";
-      question: any;
-      explanation: string;
-      isMismatch?: boolean;
-      aiDetectedAnswer?: string | null;
-      pdfSourced?: boolean | null;
-      tokens?: { input: number; output: number };
-      thoughts?: number;
-      highThinkingFlag?: boolean;
-    }[];
-    done: boolean;
-  } | null>(null);
+  // Filters
+  const [filterExam, setFilterExam] = useState("all");
+  const [filterSubject, setFilterSubject] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [filterMockId, setFilterMockId] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMissingOnly, setShowMissingOnly] = useState(false);
+  const [isScanningLatex, setIsScanningLatex] = useState(false);
 
-  const handlePdfGenerate = async () => {
-    if (!pdfMockTestId || !pdfFile) return;
-    const test = mockTests?.find((t) => t.id === pdfMockTestId);
-    if (!test) return;
+  const handleExamChange = (newExam: string) => { setFilterExam(newExam); setFilterSubject("all"); };
 
-    const confirmed = confirm(
-      `This will read the uploaded PDF and generate explanations for all missing questions in "${test.title}". Continue?`
-    );
-    if (!confirmed) return;
-
-    setPdfProcessing(true);
-    setPdfLiveFeed({
-      testTitle: test.title,
-      mock_test_id: pdfMockTestId,
-      currentQ: null,
-      currentExplanation: "",
-      currentMismatch: false,
-      currentAIDetectedAnswer: null,
-      currentHighThinkingFlag: false,
-      progress: 0,
-      total: 0,
-      fixed: 0,
-      failed: 0,
-      totalInputTokens: 0,
-      totalOutputTokens: 0,
-      totalThoughtsTokens: 0,
-      log: [],
-      done: false,
-    });
-
-    const fd = new FormData();
-    fd.append("mockTestId", pdfMockTestId);
-    fd.append("pdf", pdfFile);
-
-    let cumInput = 0, cumOutput = 0, cumThoughts = 0;
-
-    try {
-      const response = await fetch("/api/admin/generate-solution-from-pdf", {
-        method: "POST",
-        body: fd,
-      });
-
-      if (!response.ok || !response.body) {
-        const errData = await response.json().catch(() => ({}));
-        alert(`Error: ${errData.error || response.statusText}`);
-        setPdfProcessing(false);
-        return;
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const event = JSON.parse(line);
-            if (event.type === "start") {
-              setPdfLiveFeed(prev => prev ? { ...prev, total: event.total } : null);
-            } else if (event.type === "progress") {
-              const qData = (mockTests?.find(t => t.id === pdfMockTestId)?.questions as any[] || [])
-                .find((q: any) => q.id === event.questionId);
-              setPdfLiveFeed(prev => prev ? { ...prev, currentQ: qData || { question_text: event.questionText, id: event.questionId }, currentExplanation: "", progress: event.index } : null);
-            } else if (event.type === "batch_tokens") {
-              // Single batch call returned — update cumulative totals once
-              cumInput = event.tokens?.input || 0;
-              cumOutput = event.tokens?.output || 0;
-              cumThoughts = event.tokens?.thoughts || 0;
-              setPdfLiveFeed(prev => prev ? {
-                ...prev,
-                totalInputTokens: cumInput,
-                totalOutputTokens: cumOutput,
-                totalThoughtsTokens: cumThoughts,
-              } : null);
-            } else if (event.type === "result") {
-              const thoughts = event.tokens?.thoughts || 0;
-              const isHighThinking = thoughts > 8000;
-              cumInput += event.tokens?.input || 0;
-              cumOutput += event.tokens?.output || 0;
-              cumThoughts += thoughts;
-              const qData = (mockTests?.find(t => t.id === pdfMockTestId)?.questions as any[] || [])
-                .find((q: any) => q.id === event.questionId);
-              setPdfLiveFeed(prev => prev ? {
-                ...prev,
-                fixed: event.fixed,
-                failed: event.failed,
-                currentExplanation: event.explanation || "",
-                currentMismatch: event.isMismatch,
-                currentAIDetectedAnswer: event.aiDetectedAnswer,
-                currentHighThinkingFlag: isHighThinking,
-                currentPdfSourced: typeof event.pdfSourced === "boolean" ? event.pdfSourced : null,
-                totalInputTokens: cumInput,
-                totalOutputTokens: cumOutput,
-                totalThoughtsTokens: cumThoughts,
-                log: [...prev.log, {
-                  id: event.questionId,
-                  text: event.status === "ok" ? (event.explanation || "").substring(0, 80) + "..." : `Failed: ${event.error || ""}`,
-                  status: event.status,
-                  question: qData || { question_text: "", id: event.questionId },
-                  explanation: event.explanation || "",
-                  isMismatch: event.isMismatch,
-                  aiDetectedAnswer: event.aiDetectedAnswer,
-                  pdfSourced: typeof event.pdfSourced === "boolean" ? event.pdfSourced : null,
-                  tokens: event.tokens ? { input: event.tokens.input, output: event.tokens.output } : undefined,
-                  thoughts,
-                  highThinkingFlag: isHighThinking,
-                }],
-              } : null);
-            } else if (event.type === "done") {
-              setPdfLiveFeed(prev => prev ? { ...prev, done: true, fixed: event.fixed, failed: event.failed, progress: event.total } : null);
-            }
-          } catch {}
-        }
-      }
-    } catch (err: any) {
-      alert(`Failed: ${err.message}`);
-    } finally {
-      setPdfProcessing(false);
-    }
-  };
-
-  // Process reports to extract exam, subject, and type for easier filtering and display
-  const processedReports = useMemo(() => {
-    return localReports.map(r => {
-      const q = r.q || r.question || r.pyq || r.subject_pyq;
-      let exam = "Other";
-      let subject = "Other";
-      let type = "Generated";
-
-      if (r.subject_pyq) {
-        exam = r.subject_pyq.subject_pattern?.exam_type || "GATE";
-        subject = r.subject_pyq.subject_pattern?.subject_name || "Unknown";
-        type = "SubjectPYQ";
-      } else if (r.pyq) {
-        exam = r.pyq.exam_type || r.pyq.pattern?.exam_type || "GATE";
-        subject = r.pyq.pattern?.subject || "Unknown";
-        type = "PYQ";
-      } else if (r.question) {
-        exam = r.question.pattern?.exam_type || "GATE";
-        subject = r.question.pattern?.subject || "Unknown";
-        type = "Generated";
-      } else if (r.isMock) {
-        exam = r.exam_type || "Unknown";
-        subject = r.subject || "Unknown";
-        type = "Mock";
-      }
-
-      return { ...r, exam, subject, type, q };
-    });
-  }, [reports, latexReports]);
+  const processedReports = useMemo(() => localReports.map(processReport), [localReports]);
 
   const allProcessedReports = useMemo(() => {
     const latexProcessed = latexReports.map(lr => {
       const q = lr.q || lr.question || lr.pyq || lr.subject_pyq;
-      let exam = "Other";
-      let subject = "Other";
-      let type = "Generated";
-
-      if (lr.subject_pyq) {
-        exam = lr.subject_pyq.subject_pattern?.exam_type || "GATE";
-        subject = lr.subject_pyq.subject_pattern?.subject_name || "Unknown";
-        type = "SubjectPYQ";
-      } else if (lr.pyq) {
-        exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE";
-        subject = lr.pyq.pattern?.subject || "Unknown";
-        type = "PYQ";
-      } else if (lr.isMock) {
-        exam = lr.exam_type || "JEE_MAIN";
-        subject = lr.subject || "Unknown";
-        type = "Mock";
-      } else if (lr.question) {
-        exam = lr.question.pattern?.exam_type || "GATE";
-        subject = lr.question.pattern?.subject || "Unknown";
-        type = "Generated";
-      }
+      let exam = "Other", subject = "Other", type = "Generated";
+      if (lr.subject_pyq) { exam = lr.subject_pyq.subject_pattern?.exam_type || "GATE"; subject = lr.subject_pyq.subject_pattern?.subject_name || "Unknown"; type = "SubjectPYQ"; }
+      else if (lr.pyq) { exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE"; subject = lr.pyq.pattern?.subject || "Unknown"; type = "PYQ"; }
+      else if (lr.isMock) { exam = lr.exam_type || "JEE_MAIN"; subject = lr.subject || "Unknown"; type = "Mock"; }
+      else if (lr.question) { exam = lr.question.pattern?.exam_type || "GATE"; subject = lr.question.pattern?.subject || "Unknown"; type = "Generated"; }
       return { ...lr, exam, subject, type, q };
     });
 
-    // 3. Inject all missing questions from a specific mock test if selected
     let mockMissingReports: any[] = [];
     if (filterMockId !== "all" && mockTests) {
       const selectedTest = mockTests.find(t => t.id === filterMockId);
       if (selectedTest) {
-        const questions = (selectedTest.questions as any[]) || [];
-        questions.forEach(q => {
+        (selectedTest.questions as any[] || []).forEach(q => {
           if (isMissingExplanation(q)) {
-            // Check if we already have a report for this question to avoid duplicates
             const exists = [...latexProcessed, ...processedReports].some(r => r.mock_question_id === q.id && r.mock_test_id === selectedTest.id);
             if (!exists) {
               mockMissingReports.push({
                 id: `auto-mock-filter-${selectedTest.id}-${q.id}`,
-                reason: "Missing Explanation (Filter)",
-                status: "pending",
-                created_at: new Date(),
-                user: { email: "Mock Filter" },
-                isMock: true,
-                mock_test_id: selectedTest.id,
-                mock_question_id: q.id,
-                exam_type: selectedTest.exam_type,
-                exam: selectedTest.exam_type,
+                reason: "Missing Explanation (Filter)", status: "pending",
+                created_at: new Date(), user: { email: "Mock Filter" },
+                isMock: true, mock_test_id: selectedTest.id, mock_question_id: q.id,
+                exam_type: selectedTest.exam_type, exam: selectedTest.exam_type,
                 subject: q.subject || q.sectionName || q.topic_name || selectedTest.title,
-                type: "Mock",
-                q: q,
-                details: `Question in "${selectedTest.title}" has no explanation.`
+                type: "Mock", q,
+                details: `Question in "${selectedTest.title}" has no explanation.`,
               });
             }
           }
@@ -303,79 +95,57 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       }
     }
 
-    // Put Mock Filter issues, then LaTeX issues at the top, followed by existing reports
     return [...mockMissingReports, ...latexProcessed, ...processedReports];
   }, [processedReports, latexReports, filterMockId, mockTests]);
 
-  // Unique values for filters
   const exams = useMemo(() => {
-    const standardExams = EXAM_CONFIGS.map(e => e.examType);
-    const foundExams = allProcessedReports.map(r => r.exam);
-    return Array.from(new Set([...standardExams, ...foundExams])).sort();
+    const standard = EXAM_CONFIGS.map(e => e.examType);
+    const found = allProcessedReports.map(r => r.exam);
+    return Array.from(new Set([...standard, ...found])).sort();
   }, [allProcessedReports]);
 
   const subjects = useMemo(() => {
-    const foundSubjects = allProcessedReports
-      .filter(r => filterExam === "all" || r.exam === filterExam)
-      .map(r => r.subject);
-
+    const found = allProcessedReports.filter(r => filterExam === "all" || r.exam === filterExam).map(r => r.subject);
     let configSubjects: string[] = [];
     if (filterExam === "all") {
-      // Collect all subjects from all configs
-      EXAM_CONFIGS.forEach(config => {
-        config.sections.forEach(sec => {
-          if (sec.name) configSubjects.push(sec.name);
-          if (sec.subjects) configSubjects.push(...sec.subjects);
-        });
-      });
+      EXAM_CONFIGS.forEach(c => { c.sections.forEach(s => { if (s.name) configSubjects.push(s.name); if (s.subjects) configSubjects.push(...s.subjects); }); });
       configSubjects.push(...GATE_BRANCHES.map(b => b.id));
     } else {
-      const config = EXAM_CONFIGS.find(e => e.examType === filterExam);
-      if (config) {
-        config.sections.forEach(sec => {
-          if (sec.name) configSubjects.push(sec.name);
-          if (sec.subjects) configSubjects.push(...sec.subjects);
-        });
-      }
-      if (filterExam === "GATE") {
-        configSubjects.push(...GATE_BRANCHES.map(b => b.id));
-      }
+      const c = EXAM_CONFIGS.find(e => e.examType === filterExam);
+      if (c) { c.sections.forEach(s => { if (s.name) configSubjects.push(s.name); if (s.subjects) configSubjects.push(...s.subjects); }); }
+      if (filterExam === "GATE") configSubjects.push(...GATE_BRANCHES.map(b => b.id));
     }
-
-    return Array.from(new Set([...configSubjects, ...foundSubjects])).filter(s => s && s !== "Other" && s !== "Unknown").sort();
+    return Array.from(new Set([...configSubjects, ...found])).filter(s => s && s !== "Other" && s !== "Unknown").sort();
   }, [allProcessedReports, filterExam]);
 
   const types = ["PYQ", "SubjectPYQ", "Mock", "Generated"];
 
-  // Filtered reports
   const filteredReports = useMemo(() => {
     return allProcessedReports.filter(r => {
       if (filterExam !== "all" && r.exam !== filterExam) return false;
       if (filterSubject !== "all" && r.subject !== filterSubject) return false;
       if (filterType !== "all" && r.type !== filterType) return false;
-      
-      // Filter by missing explanations if requested
       if (showMissingOnly && !isMissingExplanation(r.q)) return false;
-      
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const text = (r.q?.question_text || "") + (r.details || "") + (r.reason || "");
+        if (!text.toLowerCase().includes(q)) return false;
+      }
       return true;
     });
-  }, [allProcessedReports, filterExam, filterSubject, filterType, showMissingOnly]);
+  }, [allProcessedReports, filterExam, filterSubject, filterType, showMissingOnly, searchQuery]);
 
   const openEditor = (report: any) => {
     const questionData = report.q;
-    
     let questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" = "GeneratedQuestion";
     if (report.subject_pyq_id) questionType = "SubjectPYQ";
     else if (report.pyq_id) questionType = "PYQ";
     else if (report.isMock) questionType = "MockQuestion";
 
     setEditingReport({
-      ...report,
-      questionData,
-      questionType,
-      questionId: report.subject_pyq_id || report.pyq_id || report.question_id || report.mock_question_id
+      ...report, questionData, questionType,
+      questionId: report.subject_pyq_id || report.pyq_id || report.question_id || report.mock_question_id,
     });
-
     setFormData({
       question_text: questionData?.question_text || "",
       correct_answer: questionData?.correct_answer || "",
@@ -384,251 +154,8 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
       images: (questionData?.images as any[]) || [],
       ai_answer_mismatch: questionData?.ai_answer_mismatch || false,
       ai_detected_answer: questionData?.ai_detected_answer || null,
-      question_type: questionData?.question_type || "MCQ"
+      question_type: questionData?.question_type || "MCQ",
     });
-  };
-
-  const handleSave = async () => {
-    if (!editingReport) return;
-    setIsSaving(true);
-    try {
-      await resolveReport(
-        editingReport.id,
-        editingReport.questionId,
-        editingReport.questionType,
-        {
-          ...formData,
-          mockTestId: editingReport.mock_test_id
-        }
-      );
-      
-      // Remove from the local list immediately
-      setLocalReports(prev => prev.filter(r => r.id !== editingReport.id));
-      
-      if (editingReport.id.startsWith("auto-latex-")) {
-        setLatexReports(prev => prev.filter(r => r.id !== editingReport.id));
-      }
-      
-      setEditingReport(null);
-    } catch (error) {
-      console.error("Failed to resolve", error);
-      alert("Failed to save changes.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!editingReport) return;
-    const confirmed = confirm("🚨 Are you absolutely sure you want to DELETE this entire question from the database? This cannot be undone.");
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      await deleteQuestion(
-        editingReport.questionId, 
-        editingReport.questionType,
-        editingReport.mock_test_id
-      );
-      setEditingReport(null);
-    } catch (error) {
-      console.error("Failed to delete", error);
-      alert("Failed to delete question.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleGenerateAI = async () => {
-    if (!editingReport) return;
-    console.log(`[CLIENT] Requesting AI explanation using model: ${selectedAIModel}`);
-    setIsGeneratingAI(true);
-    try {
-      const result = await generateAIExplanation(
-        editingReport.questionId,
-        editingReport.questionType,
-        editingReport.mock_test_id,
-        selectedAIModel
-      );
-      setFormData({ 
-        ...formData, 
-        explanation: (result as any).explanation,
-        ai_answer_mismatch: (result as any).isMismatch || false,
-        ai_detected_answer: (result as any).aiDetectedAnswer || null
-      });
-    } catch (error) {
-      console.error("AI generation failed", error);
-      alert("Failed to generate explanation. Check console for details.");
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
-
-  // Live feed state
-  const [liveFeed, setLiveFeed] = useState<{
-    testTitle: string;
-    currentQ: any;
-    currentExplanation: string;
-    currentMismatch?: boolean;
-    currentAIDetectedAnswer?: string | null;
-    currentHighThinkingFlag?: boolean;
-    mock_test_id?: string;
-    progress: number;
-    total: number;
-    fixed: number;
-    failed: number;
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalThoughtsTokens: number;
-    log: {
-      id: string;
-      text: string;
-      status: "ok" | "fail";
-      question: any;
-      explanation: string;
-      isMismatch?: boolean;
-      aiDetectedAnswer?: string | null;
-      tokens?: { input: number; output: number };
-      thoughts?: number;
-      highThinkingFlag?: boolean;
-    }[];
-    done: boolean;
-  } | null>(null);
-
-  const [logPreview, setLogPreview] = useState<{ question: any; explanation: string } | null>(null);
-
-  const handleBatchProcess = async (testId: string) => {
-    const test = mockTests?.find(t => t.id === testId);
-    if (!test) return;
-
-    const confirmed = confirm(`This will generate AI explanations for all missing questions in "${test.title}". Continue?`);
-    if (!confirmed) return;
-
-    const missingQs = reports
-      .filter((r: any) => r.isMock && r.mock_test_id === testId && r.status === "pending" && isMissingExplanation(r.q))
-      .map((r: any) => r.q);
-
-    if (missingQs.length === 0) {
-      alert("No missing questions found for this test in the current reports list.");
-      return;
-    }
-
-    setBatchProcessing(testId);
-    setLiveFeed({
-      testTitle: test.title,
-      currentQ: null,
-      currentExplanation: "",
-      currentMismatch: false,
-      currentAIDetectedAnswer: null,
-      currentHighThinkingFlag: false,
-      mock_test_id: testId,
-      progress: 0,
-      total: missingQs.length,
-      fixed: 0,
-      failed: 0,
-      totalInputTokens: 0,
-      totalOutputTokens: 0,
-      totalThoughtsTokens: 0,
-      log: [],
-      done: false,
-    });
-    
-    let fixed = 0;
-    let failed = 0;
-    let cumulativeInput = 0;
-    let cumulativeOutput = 0;
-    let cumulativeThoughts = 0;
-
-    for (let i = 0; i < missingQs.length; i++) {
-      const q = missingQs[i];
-
-      setLiveFeed(prev => prev ? {
-        ...prev,
-        currentQ: q,
-        currentExplanation: "",
-        progress: i,
-      } : null);
-
-      try {
-        // 1. Generate Explanation via API (More stable for long-running thinking tasks)
-        const response = await fetch("/api/questions/generate-explanation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            questionId: q.id,
-            questionType: "MockQuestion",
-            mockTestId: testId,
-            aiModel: selectedAIModel
-          })
-        });
-
-        if (!response.ok) throw new Error("API request failed");
-        const result = await response.json();
-        
-        const explanation = result.explanation;
-        const usage = result.usage;
-        const isMismatch = result.isMismatch;
-        const aiDetectedAnswer = result.aiDetectedAnswer;
-        const highThinkingFlag = result.highThinkingFlag ?? false;
-        
-        // 2. Already saved in the API route, so we just update the UI
-        fixed++;
-        cumulativeInput += usage.input;
-        cumulativeOutput += usage.output;
-        cumulativeThoughts += (usage.thoughts || 0);
-        
-        setLiveFeed(prev => prev ? {
-          ...prev,
-          currentExplanation: explanation,
-          currentMismatch: isMismatch,
-          currentAIDetectedAnswer: aiDetectedAnswer,
-          currentHighThinkingFlag: highThinkingFlag,
-          fixed,
-          totalInputTokens: cumulativeInput,
-          totalOutputTokens: cumulativeOutput,
-          totalThoughtsTokens: cumulativeThoughts,
-          log: [...prev.log, {
-            id: q.id,
-            text: (q.question_text || "").substring(0, 80) + "...",
-            status: "ok",
-            question: q,
-            explanation,
-            isMismatch,
-            aiDetectedAnswer,
-            tokens: usage,
-            thoughts: usage.thoughts,
-            highThinkingFlag,
-          }],
-        } : null);
-
-        // Add a small 500ms delay to let the connection "breathe"
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (err) {
-        failed++;
-        setLiveFeed(prev => prev ? {
-          ...prev,
-          failed,
-          log: [...prev.log, { 
-            id: q.id, 
-            text: (q.question_text || "").substring(0, 80) + "...", 
-            status: "fail",
-            question: q,
-            explanation: "",
-          }],
-        } : null);
-      }
-    }
-
-    // 3. Remove processed questions from the local reports list
-    const processedIds = missingQs.map(q => q.id);
-    setLocalReports(prev => prev.filter(r => {
-      const qId = r.questionId || r.pyq_id || r.subject_pyq_id || r.mock_question_id;
-      return !processedIds.includes(qId);
-    }));
-
-    setLiveFeed(prev => prev ? { ...prev, done: true, progress: missingQs.length } : null);
-    setBatchProcessing(null);
-    setBatchResult({ total: missingQs.length, fixed, failed });
   };
 
   const handleScanLatex = async () => {
@@ -636,702 +163,101 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
     try {
       const res = await fetch("/api/admin/scan-latex");
       const data = await res.json();
-      if (data.results) {
-        setLatexReports(data.results);
-      }
-    } catch (error) {
-      console.error("Scan failed", error);
-    } finally {
-      setIsScanningLatex(false);
-    }
+      if (data.results) setLatexReports(data.results);
+    } catch {}
+    finally { setIsScanningLatex(false); }
   };
 
   return (
     <>
-      {/* LOG PREVIEW POPUP */}
-      {logPreview && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
-              <span className="text-sm font-black">Question Preview</span>
-              <button onClick={() => setLogPreview(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Question</div>
-                <div className="p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-xs"><MathRenderer content={logPreview.question.question_text || ""} /></div>
-              </div>
-              {logPreview.question.options && (
-                <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Options</div>
-                  <div className="flex flex-col gap-1">
-                    {(logPreview.question.options as string[]).map((opt: string, i: number) => (
-                      <div key={i} className={`p-2 rounded-lg text-xs border ${opt === logPreview.question.correct_answer ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 font-bold" : "bg-gray-50 dark:bg-black/20 dark:border-zinc-800"}`}>
-                        <span className="font-bold text-gray-400 mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <div className="text-[10px] font-bold text-green-500 uppercase mb-1">Correct Answer</div>
-                <div className="p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-xs font-bold">{logPreview.question.correct_answer}</div>
-              </div>
-              {logPreview.explanation && (
-                <div>
-                  <div className="text-[10px] font-bold text-purple-500 uppercase mb-1">AI Explanation</div>
-                  <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/10 text-xs"><MathRenderer content={logPreview.explanation} /></div>
-                </div>
-              )}
-              
-              <div className="pt-2 flex flex-col gap-2">
-                <button
-                  onClick={async () => {
-                    const testId = liveFeed?.mock_test_id;
-                    if (!testId) return;
-                    await toggleManualFlag(logPreview.question.id, "MockQuestion", testId, true);
-                    alert("Question flagged as mismatch!");
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
-                >
-                  🚩 Flag as Incorrect
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Batch + PDF panels (owns their own modals internally) */}
+      <BatchProcessPanel
+        mockTests={mockTests || []}
+        reports={localReports}
+        selectedAIModel={selectedAIModel}
+        onModelChange={setSelectedAIModel}
+        onBatchComplete={(processedIds) => {
+          setLocalReports(prev => prev.filter(r => {
+            const qId = r.questionId || r.pyq_id || r.subject_pyq_id || r.mock_question_id;
+            return !processedIds.includes(qId);
+          }));
+        }}
+      />
 
-      {/* LIVE FEED MODAL */}
-      {liveFeed && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
-          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 flex flex-col max-h-[80vh]">
-            
-            {/* Header */}
-            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-black flex items-center gap-2">
-                  {liveFeed.done ? "✅" : "⚡"} AI Explanation Generator
-                </h3>
-                <p className="text-[10px] text-gray-500 mt-0.5">{liveFeed.testTitle}</p>
-              </div>
-              {liveFeed.done && (
-                <button 
-                  onClick={() => setLiveFeed(null)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs"
-                >✕</button>
-              )}
-            </div>
-
-            {/* Progress Bar */}
-            <div className="px-4 pt-3">
-              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
-                <span>{liveFeed.progress} / {liveFeed.total}</span>
-                <span className="flex gap-3">
-                  <span className="text-green-500">✅ {liveFeed.fixed}</span>
-                  {liveFeed.failed > 0 && <span className="text-red-500">❌ {liveFeed.failed}</span>}
-                </span>
-              </div>
-              <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
-                  style={{ width: `${(liveFeed.progress / liveFeed.total) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Current Question */}
-            <div className="p-4 flex-1 overflow-y-auto">
-              {liveFeed.currentQ && !liveFeed.done && (
-                <div className="mb-4">
-                  <div className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1.5">Currently Processing</div>
-                  <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/10 text-xs text-gray-700 dark:text-gray-300">
-                    <MathRenderer content={liveFeed.currentQ.question_text || ""} />
-                  </div>
-                  {/* Options & Answer */}
-                  <div className="mt-2 flex flex-col gap-1">
-                    {(liveFeed.currentQ.options as string[] || []).map((opt: string, i: number) => (
-                      <div key={i} className={`px-2 py-1 rounded text-[10px] ${opt === liveFeed.currentQ.correct_answer ? "bg-green-100 dark:bg-green-500/10 font-bold text-green-700 dark:text-green-400" : "text-gray-500"}`}>
-                        {String.fromCharCode(65 + i)}. {opt}
-                      </div>
-                    ))}
-                    <div className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-1 flex items-center justify-between">
-                      <span>✓ Answer: {liveFeed.currentQ.correct_answer}</span>
-                      <button
-                        onClick={async () => {
-                          const testId = liveFeed.mock_test_id;
-                          if (!testId) return;
-                          await toggleManualFlag(liveFeed.currentQ.id, "MockQuestion", testId, true);
-                          // Optionally update local log to show it's flagged
-                          setLiveFeed(prev => {
-                            if (!prev) return null;
-                            const newLog = [...prev.log];
-                            const lastIdx = newLog.length - 1;
-                            if (lastIdx >= 0) newLog[lastIdx] = { ...newLog[lastIdx], isMismatch: true };
-                            return { ...prev, log: newLog, currentMismatch: true };
-                          });
-                        }}
-                        className="px-2 py-0.5 rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-[8px] font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/30 transition-colors"
-                      >
-                        🚩 Flag Incorrect
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Latest Generated Explanation */}
-              {liveFeed.currentExplanation && (
-                <div className="mb-4">
-                  <div className="text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">
-                    {liveFeed.done ? "Last Generated" : "Generated Explanation"}
-                  </div>
-                  <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10 text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto">
-                    <MathRenderer content={liveFeed.currentExplanation} />
-                  </div>
-                  {/* MISMATCH WARNING */}
-                  {liveFeed.currentMismatch && (
-                    <div className="mt-2 p-2 rounded-lg bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 flex items-center gap-2">
-                      <span className="text-sm">⚠️</span>
-                      <span className="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">
-                        AI Mismatch: AI thinks the answer is {liveFeed.currentAIDetectedAnswer}
-                      </span>
-                    </div>
-                  )}
-                  {/* HIGH THINKING TOKEN WARNING */}
-                  {liveFeed.currentHighThinkingFlag && (
-                    <div className="mt-2 p-2 rounded-lg bg-orange-100 dark:bg-orange-500/20 border border-orange-200 dark:border-orange-500/30 flex items-center gap-2">
-                      <span className="text-sm">🔴</span>
-                      <span className="text-[10px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-wider">
-                        High Thinking Tokens (&gt;8000) — flagged for review
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Completed Log */}
-              {liveFeed.log.length > 0 && (
-                <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Processing Log</div>
-                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                    {[...liveFeed.log].reverse().map((entry, i) => (
-                      <button 
-                        key={i} 
-                        onClick={() => setLogPreview({ question: entry.question, explanation: entry.explanation })}
-                        className="flex items-center gap-2 text-[10px] text-gray-500 py-1.5 px-2 rounded bg-gray-50 dark:bg-black/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors text-left w-full"
-                      >
-                        <span className="flex-shrink-0">{entry.status === "ok" ? "✅" : "❌"}</span>
-                        <span className="truncate flex-1">{entry.text}</span>
-                        {entry.isMismatch && <span className="text-[10px] flex-shrink-0" title="AI answer mismatch">⚠️</span>}
-                        {entry.highThinkingFlag && <span className="text-[10px] flex-shrink-0" title="High thinking tokens (>8000)">🔴</span>}
-                        {entry.tokens && (
-                          <span className="flex-shrink-0 text-[8px] bg-gray-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded flex gap-2">
-                            <span className="text-purple-500">↑{entry.tokens.input}</span>
-                            <span className="text-pink-500">↓{entry.tokens.output}</span>
-                            {(entry.thoughts ?? 0) > 0 && <span className="text-amber-500">🧠{entry.thoughts}</span>}
-                          </span>
-                        )}
-                        <span className="text-gray-300">→</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Done Message */}
-              {liveFeed.done && (
-                <div className="mt-4 p-4 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-center">
-                  <div className="text-2xl mb-2">🎓</div>
-                  <div className="text-sm font-bold text-green-800 dark:text-green-300">
-                    {liveFeed.fixed} explanations generated and verified.
-                  </div>
-                  {/* Token Summary */}
-                  <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-500/20 flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                    <div className="flex flex-col gap-1">
-                      <span>Input Tokens</span>
-                      <span className="text-gray-900 dark:text-white">{liveFeed.totalInputTokens.toLocaleString()}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span>Output Tokens</span>
-                      <span className="text-gray-900 dark:text-white">{liveFeed.totalOutputTokens.toLocaleString()}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span>Thoughts</span>
-                      <span className="text-amber-500">{liveFeed.totalThoughtsTokens.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            {!liveFeed.done && (
-              <div className="px-4 py-2 bg-gray-50 dark:bg-black/20 border-t dark:border-zinc-800 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-gray-400">
-                <div className="flex items-center gap-2">
-                  <span className="animate-pulse">⏳</span>
-                  <span>Processing...</span>
-                </div>
-                <div className="flex gap-4">
-                  <span className="text-purple-500 font-black">In: {liveFeed.totalInputTokens}</span>
-                  <span className="text-pink-500 font-black">Out: {liveFeed.totalOutputTokens}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* PDF LOG PREVIEW POPUP */}
-      {pdfLogPreview && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
-              <span className="text-sm font-black">Question Preview</span>
-              <button onClick={() => setPdfLogPreview(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Question</div>
-                <div className="p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-xs"><MathRenderer content={pdfLogPreview.question.question_text || ""} /></div>
-              </div>
-              {pdfLogPreview.question.options && (
-                <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Options</div>
-                  <div className="flex flex-col gap-1">
-                    {(pdfLogPreview.question.options as string[]).map((opt: string, i: number) => (
-                      <div key={i} className={`p-2 rounded-lg text-xs border ${opt === pdfLogPreview.question.correct_answer ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 font-bold" : "bg-gray-50 dark:bg-black/20 dark:border-zinc-800"}`}>
-                        <span className="font-bold text-gray-400 mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <div className="text-[10px] font-bold text-green-500 uppercase mb-1">Correct Answer</div>
-                <div className="p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-xs font-bold">{pdfLogPreview.question.correct_answer}</div>
-              </div>
-              {pdfLogPreview.explanation && (
-                <div>
-                  <div className="text-[10px] font-bold text-indigo-500 uppercase mb-1">📄 PDF-Informed Explanation</div>
-                  <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 text-xs"><MathRenderer content={pdfLogPreview.explanation} /></div>
-                </div>
-              )}
-              <div className="pt-2">
-                <button
-                  onClick={async () => {
-                    if (!pdfLiveFeed?.mock_test_id) return;
-                    await toggleManualFlag(pdfLogPreview.question.id, "MockQuestion", pdfLiveFeed.mock_test_id, true);
-                    alert("Question flagged as mismatch!");
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
-                >🚩 Flag as Incorrect</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PDF LIVE FEED MODAL */}
-      {pdfLiveFeed && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
-          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border dark:border-zinc-800 flex flex-col max-h-[80vh]">
-            <div className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-black flex items-center gap-2">{pdfLiveFeed.done ? "✅" : "⚡"} 📄 PDF Solution Generator</h3>
-                <p className="text-[10px] text-gray-500 mt-0.5">{pdfLiveFeed.testTitle}</p>
-              </div>
-              {pdfLiveFeed.done && (
-                <button onClick={() => setPdfLiveFeed(null)} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
-              )}
-            </div>
-
-            <div className="px-4 pt-3">
-              <div className="flex justify-between text-[10px] text-gray-500 mb-1">
-                <span>{pdfLiveFeed.progress} / {pdfLiveFeed.total}</span>
-                <span className="flex gap-3">
-                  <span className="text-green-500">✅ {pdfLiveFeed.fixed}</span>
-                  {pdfLiveFeed.failed > 0 && <span className="text-red-500">❌ {pdfLiveFeed.failed}</span>}
-                </span>
-              </div>
-              <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                  style={{ width: `${pdfLiveFeed.total ? (pdfLiveFeed.progress / pdfLiveFeed.total) * 100 : 0}%` }} />
-              </div>
-            </div>
-
-            <div className="p-4 flex-1 overflow-y-auto">
-              {pdfLiveFeed.currentQ && !pdfLiveFeed.done && (
-                <div className="mb-4">
-                  <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Currently Processing</div>
-                  <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 text-xs text-gray-700 dark:text-gray-300">
-                    <MathRenderer content={pdfLiveFeed.currentQ.question_text || ""} />
-                  </div>
-                  <div className="mt-2 flex flex-col gap-1">
-                    {(pdfLiveFeed.currentQ.options as string[] || []).map((opt: string, i: number) => (
-                      <div key={i} className={`px-2 py-1 rounded text-[10px] ${opt === pdfLiveFeed.currentQ.correct_answer ? "bg-green-100 dark:bg-green-500/10 font-bold text-green-700 dark:text-green-400" : "text-gray-500"}`}>
-                        {String.fromCharCode(65 + i)}. {opt}
-                      </div>
-                    ))}
-                    <div className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-1 flex items-center justify-between">
-                      <span>✓ Answer: {pdfLiveFeed.currentQ.correct_answer}</span>
-                      <button
-                        onClick={async () => {
-                          if (!pdfLiveFeed.mock_test_id) return;
-                          await toggleManualFlag(pdfLiveFeed.currentQ.id, "MockQuestion", pdfLiveFeed.mock_test_id, true);
-                          setPdfLiveFeed(prev => { if (!prev) return null; const l = [...prev.log]; if (l.length) l[l.length-1] = {...l[l.length-1], isMismatch: true}; return {...prev, log: l, currentMismatch: true}; });
-                        }}
-                        className="px-2 py-0.5 rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-[8px] font-black uppercase hover:bg-red-200 dark:hover:bg-red-500/30 transition-colors"
-                      >🚩 Flag Incorrect</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {pdfLiveFeed.currentExplanation && (
-                <div className="mb-4">
-                  <div className="text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5 flex items-center gap-2">
-                    <span>{pdfLiveFeed.done ? "Last Generated" : "Generated Explanation"}</span>
-                    {pdfLiveFeed.currentPdfSourced === true && (
-                      <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[9px] font-black tracking-wider" title="Explanation derived from the uploaded PDF">📄 PDF</span>
-                    )}
-                    {pdfLiveFeed.currentPdfSourced === false && (
-                      <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[9px] font-black tracking-wider" title="Solution not in PDF — generated from general knowledge">💭 FALLBACK</span>
-                    )}
-                  </div>
-                  <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-100 dark:border-green-500/10 text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto">
-                    <MathRenderer content={pdfLiveFeed.currentExplanation} />
-                  </div>
-                  {pdfLiveFeed.currentMismatch && (
-                    <div className="mt-2 p-2 rounded-lg bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 flex items-center gap-2">
-                      <span className="text-sm">⚠️</span>
-                      <span className="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">AI Mismatch: AI thinks the answer is {pdfLiveFeed.currentAIDetectedAnswer}</span>
-                    </div>
-                  )}
-                  {pdfLiveFeed.currentHighThinkingFlag && (
-                    <div className="mt-2 p-2 rounded-lg bg-orange-100 dark:bg-orange-500/20 border border-orange-200 dark:border-orange-500/30 flex items-center gap-2">
-                      <span className="text-sm">🔴</span>
-                      <span className="text-[10px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-wider">High Thinking Tokens (&gt;8000) — flagged for review</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {pdfLiveFeed.log.length > 0 && (
-                <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Processing Log</div>
-                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                    {[...pdfLiveFeed.log].reverse().map((entry, i) => (
-                      <button key={i} onClick={() => setPdfLogPreview({ question: entry.question, explanation: entry.explanation })}
-                        className="flex items-center gap-2 text-[10px] text-gray-500 py-1.5 px-2 rounded bg-gray-50 dark:bg-black/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors text-left w-full">
-                        <span className="flex-shrink-0">{entry.status === "ok" ? "✅" : "❌"}</span>
-                        {entry.pdfSourced === true && <span className="flex-shrink-0" title="Sourced from PDF">📄</span>}
-                        {entry.pdfSourced === false && <span className="flex-shrink-0" title="Fallback: not in PDF, used general knowledge">💭</span>}
-                        <span className="truncate flex-1">{entry.text}</span>
-                        {entry.isMismatch && <span className="text-[10px] flex-shrink-0" title="AI answer mismatch">⚠️</span>}
-                        {entry.highThinkingFlag && <span className="text-[10px] flex-shrink-0" title="High thinking tokens">🔴</span>}
-                        {entry.tokens && (
-                          <span className="flex-shrink-0 text-[8px] bg-gray-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded flex gap-2">
-                            <span className="text-purple-500">↑{entry.tokens.input}</span>
-                            <span className="text-pink-500">↓{entry.tokens.output}</span>
-                            {(entry.thoughts ?? 0) > 0 && <span className="text-amber-500">🧠{entry.thoughts}</span>}
-                          </span>
-                        )}
-                        <span className="text-gray-300">→</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {pdfLiveFeed.done && (
-                <div className="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-center">
-                  <div className="text-2xl mb-2">🎓</div>
-                  <div className="text-sm font-bold text-indigo-800 dark:text-indigo-300">{pdfLiveFeed.fixed} explanations generated & saved to DB.</div>
-                  <div className="mt-4 pt-4 border-t border-indigo-200 dark:border-indigo-500/20 flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                    <div className="flex flex-col gap-1"><span>Input Tokens</span><span className="text-gray-900 dark:text-white">{pdfLiveFeed.totalInputTokens.toLocaleString()}</span></div>
-                    <div className="flex flex-col gap-1"><span>Output Tokens</span><span className="text-gray-900 dark:text-white">{pdfLiveFeed.totalOutputTokens.toLocaleString()}</span></div>
-                    <div className="flex flex-col gap-1"><span>Thoughts</span><span className="text-amber-500">{pdfLiveFeed.totalThoughtsTokens.toLocaleString()}</span></div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {!pdfLiveFeed.done && (
-              <div className="px-4 py-2 bg-gray-50 dark:bg-black/20 border-t dark:border-zinc-800 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-gray-400">
-                <div className="flex items-center gap-2"><span className="animate-pulse">⏳</span><span>Processing PDF...</span></div>
-                <div className="flex gap-4">
-                  <span className="text-purple-500 font-black">In: {pdfLiveFeed.totalInputTokens}</span>
-                  <span className="text-pink-500 font-black">Out: {pdfLiveFeed.totalOutputTokens}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── PDF SOLUTION GENERATOR PANEL ───────────────────────────────── */}
-      {mockTests && mockTests.length > 0 && (
-        <div className="mb-6">
-          <button
-            onClick={() => setShowPdfPanel(!showPdfPanel)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-500/20 transition-colors mb-4"
-          >
-            📄 Generate from Reference PDF
-            <span className="text-xs opacity-60">{showPdfPanel ? '▲' : '▼'}</span>
-          </button>
-
-          {showPdfPanel && (
-            <div className="p-5 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm mb-6">
-              <p className="text-xs text-gray-500 mb-4">
-                Upload an official reference solution PDF (e.g. GATE answer key PDF). Gemini will read it and generate
-                its own detailed explanations for all questions in the selected paper that are missing explanations in the DB.
-              </p>
-
-              <div className="flex flex-col gap-4">
-                {/* Paper selector */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5">Select Paper</label>
-                  <select
-                    value={pdfMockTestId}
-                    onChange={(e) => setPdfMockTestId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-700 text-sm outline-none"
-                  >
-                    <option value="">-- Choose a mock test / paper --</option>
-                    {mockTests.map((t: any) => {
-                      const missing = reports.filter((r: any) => r.isMock && r.mock_test_id === t.id && r.status === "pending" && isMissingExplanation(r.q)).length;
-                      if (missing === 0) return null;
-                      return (
-                        <option key={t.id} value={t.id}>
-                          {t.title} ({t.exam_type}) — {missing} missing
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                {/* PDF upload */}
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5">Reference Solution PDF</label>
-                  <input
-                    id="pdf-solution-upload"
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
-                    className="block w-full text-sm text-gray-500 dark:text-gray-400
-                      file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
-                      file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700
-                      dark:file:bg-indigo-500/10 dark:file:text-indigo-400
-                      hover:file:bg-indigo-200 dark:hover:file:bg-indigo-500/20 cursor-pointer"
-                  />
-                  {pdfFile && (
-                    <p className="text-[10px] text-green-500 font-bold mt-1">📎 {pdfFile.name} ({(pdfFile.size / 1024).toFixed(0)} KB)</p>
-                  )}
-                </div>
-
-                {/* Submit */}
-                <button
-                  onClick={handlePdfGenerate}
-                  disabled={pdfProcessing || !pdfMockTestId || !pdfFile}
-                  className={`self-start px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    pdfProcessing
-                      ? "bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-wait animate-pulse"
-                      : !pdfMockTestId || !pdfFile
-                      ? "bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-not-allowed"
-                      : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
-                  }`}
-                >
-                  {pdfProcessing ? "⏳ Generating..." : "🚀 Generate Explanations from PDF"}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* BATCH AI PANEL */}
-      {mockTests && mockTests.length > 0 && (
-        <div className="mb-6">
-          <button
-            onClick={() => setShowBatchPanel(!showBatchPanel)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 hover:bg-purple-200 dark:hover:bg-purple-500/20 transition-colors mb-4"
-          >
-            ✨ AI Batch Explanation Generator
-            <span className="text-xs opacity-60">{showBatchPanel ? '▲' : '▼'}</span>
-          </button>
-
-          {showBatchPanel && (
-            <div className="p-5 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm mb-6">
-              <p className="text-xs text-gray-500 mb-4">Select a mock test below to auto-generate explanations for all questions missing them.</p>
-              <div className="flex flex-col gap-3">
-                {mockTests.map((test: any) => {
-                  const missing = reports.filter((r: any) => r.isMock && r.mock_test_id === test.id && r.status === "pending" && isMissingExplanation(r.q)).length;
-                  if (missing === 0) return null;
-                  const isProcessing = batchProcessing === test.id;
-                  return (
-                    <div key={test.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800">
-                      <div>
-                        <div className="font-bold text-sm">{test.title}</div>
-                        <div className="text-[10px] text-gray-500">
-                          {test.exam_type} · <span className={missing > 0 ? "text-red-500 font-bold" : "text-green-500"}>{missing} missing</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={selectedAIModel}
-                          onChange={(e) => setSelectedAIModel(e.target.value as any)}
-                          className="px-2 py-2 rounded-lg text-[10px] font-bold bg-white dark:bg-zinc-800 border dark:border-zinc-700 outline-none"
-                        >
-                          <option value="gemini">Gemini Flash</option>
-                          <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        </select>
-                        <button
-                          onClick={() => handleBatchProcess(test.id)}
-                          disabled={isProcessing || missing === 0}
-                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
-                            missing === 0
-                              ? "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400 cursor-default"
-                              : isProcessing
-                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400 animate-pulse"
-                              : "bg-purple-500 text-white hover:bg-purple-600"
-                          }`}
-                        >
-                          {missing === 0 ? "✅ Complete" : isProcessing ? `⏳ Processing...` : `Generate ${missing} Explanations`}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {batchResult && (
-                <div className="mt-4 p-3 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 text-sm text-green-800 dark:text-green-300">
-                  ✅ Last batch: {batchResult.fixed} fixed, {batchResult.failed} failed, {batchResult.total} total questions.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* LATEX HEALTH PANEL */}
+      {/* LaTeX health panel */}
       <div className="mb-8 p-6 rounded-2xl border-2 border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 flex flex-col items-center text-center">
         <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         </div>
         <h3 className="text-sm font-black mb-1">LaTeX Health Diagnostic</h3>
         <p className="text-xs text-gray-500 max-w-sm mb-4">Run a server-side scan to detect broken formulas, undefined Greek letters, or unescaped characters across your database.</p>
-        <button 
+        <button
           onClick={handleScanLatex}
           disabled={isScanningLatex}
-          className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${
-            isScanningLatex 
-              ? "bg-gray-100 text-gray-400 dark:bg-zinc-800 animate-pulse cursor-wait" 
-              : "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20"
-          }`}
-        >
-          {isScanningLatex ? "🔍 Scanning Database..." : "🚀 Run Health Scan"}
-        </button>
-        {latexReports.length > 0 && (
-          <div className="mt-4 text-[10px] font-black text-red-500 uppercase tracking-widest">
-            ⚠️ {latexReports.length} Issues Detected
-          </div>
-        )}
+          className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${isScanningLatex ? "bg-gray-100 text-gray-400 dark:bg-zinc-800 animate-pulse cursor-wait" : "bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20"}`}
+        >{isScanningLatex ? "🔍 Scanning Database..." : "🚀 Run Health Scan"}</button>
+        {latexReports.length > 0 && <div className="mt-4 text-[10px] font-black text-red-500 uppercase tracking-widest">⚠️ {latexReports.length} Issues Detected</div>}
       </div>
 
-      {/* FILTER BAR */}
+      {/* Filter bar */}
       <div className="mb-8 p-6 bg-gray-50 dark:bg-zinc-900/50 border dark:border-zinc-800 rounded-3xl flex flex-col gap-6">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Search Question / Details</label>
             <div className="relative">
-              <input 
-                type="text"
-                placeholder="Type to search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+              <input
+                type="text" placeholder="Type to search..."
+                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full p-2.5 pl-10 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
               />
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 opacity-50">🔍</span>
             </div>
           </div>
-
           <div className="min-w-[140px]">
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Exam</label>
-            <select 
-              value={filterExam} 
-              onChange={(e) => handleExamChange(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
-            >
+            <select value={filterExam} onChange={(e) => handleExamChange(e.target.value)} className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none">
               <option value="all">All Exams</option>
               {exams.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
           </div>
-
           <div className="min-w-[140px]">
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Subject</label>
-            <select 
-              value={filterSubject} 
-              onChange={(e) => setFilterSubject(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
-            >
+            <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none">
               <option value="all">All Subjects</option>
               {subjects.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-
           <div className="min-w-[140px]">
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Type</label>
-            <select 
-              value={filterType} 
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
-            >
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none">
               <option value="all">All Types</option>
               {types.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-
-          <button 
-            onClick={() => { 
-              setFilterExam("all"); 
-              setFilterSubject("all"); 
-              setFilterType("all"); 
-              setFilterMockId("all");
-              setSearchQuery(""); 
-              setShowMissingOnly(false); 
-            }}
+          <button
+            onClick={() => { setFilterExam("all"); setFilterSubject("all"); setFilterType("all"); setFilterMockId("all"); setSearchQuery(""); setShowMissingOnly(false); }}
             className="p-2.5 px-4 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            Reset
-          </button>
+          >Reset</button>
         </div>
 
         <div className="flex flex-wrap gap-4 pt-4 border-t dark:border-zinc-800 items-end">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1.5 ml-1">Target Mock Paper (Find Missing Qs)</label>
-            <select 
-              value={filterMockId} 
-              onChange={(e) => setFilterMockId(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none"
-            >
+            <select value={filterMockId} onChange={(e) => setFilterMockId(e.target.value)} className="w-full p-2.5 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-sm focus:ring-2 focus:ring-amber-500/20 outline-none">
               <option value="all">-- Select Mock Test --</option>
               {mockTests?.map(t => <option key={t.id} value={t.id}>{t.title} ({t.exam_type})</option>)}
             </select>
           </div>
-
-          <button 
+          <button
             onClick={() => setShowMissingOnly(!showMissingOnly)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
-              showMissingOnly 
-                ? "bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20" 
-                : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 hover:border-red-500/50"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${showMissingOnly ? "bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20" : "bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 hover:border-red-500/50"}`}
           >
             {showMissingOnly ? "✅" : "⭕"} Show Only Missing
           </button>
         </div>
       </div>
 
+      {/* Report list */}
       {filteredReports.length === 0 ? (
         <div className="text-center py-20 border rounded-2xl bg-gray-50 dark:bg-zinc-900/50 dark:border-zinc-800">
           <div className="text-4xl mb-4">🎉</div>
@@ -1344,53 +270,31 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
             const q = r.q;
             return (
               <div key={r.id} className="p-6 rounded-2xl border bg-white dark:bg-zinc-900 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow">
-                
-                {/* Report Info */}
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex flex-wrap gap-2 items-center">
-                      <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">
-                        {r.reason}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 text-[10px] font-bold uppercase">
-                        {r.exam}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[10px] font-bold uppercase">
-                        {r.subject}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400 text-[10px] font-bold uppercase">
-                        {r.type}
-                      </span>
+                      <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">{r.reason}</span>
+                      <span className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 text-[10px] font-bold uppercase">{r.exam}</span>
+                      <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[10px] font-bold uppercase">{r.subject}</span>
+                      <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400 text-[10px] font-bold uppercase">{r.type}</span>
                     </div>
                     <div className="text-right text-[10px] text-gray-400 font-medium">
-                      {r.user?.email || 'Unknown'} <br/>
-                      {new Date(r.created_at).toLocaleDateString()}
+                      {r.user?.email || 'Unknown'}<br />{new Date(r.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  
                   {r.details && (
                     <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-white/5 text-sm text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-wrap">
                       <strong>{r.reason === "LaTeX Error" ? "Diagnostic Details" : "User Comment"}:</strong> {r.details}
                     </div>
                   )}
-                  
-                  {/* Sneak peek of the question */}
                   {q && (
                     <div className="text-sm text-gray-500 line-clamp-2 mb-4 bg-gray-50 dark:bg-black/20 p-3 rounded-lg border dark:border-zinc-800">
-                       <MathRenderer content={q.question_text} />
+                      <MathRenderer content={q.question_text} />
                     </div>
                   )}
-
                   <div className="flex justify-between items-center">
-                    <div className="text-[10px] text-gray-400 font-mono">
-                      ID: {r.subject_pyq_id || r.pyq_id || r.question_id || r.mock_question_id}
-                    </div>
-                    <button 
-                      onClick={() => openEditor(r)}
-                      className="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm"
-                    >
-                      Review & Fix Issue
-                    </button>
+                    <div className="text-[10px] text-gray-400 font-mono">ID: {r.subject_pyq_id || r.pyq_id || r.question_id || r.mock_question_id}</div>
+                    <button onClick={() => openEditor(r)} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm">Review & Fix Issue</button>
                   </div>
                 </div>
               </div>
@@ -1399,248 +303,22 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[], 
         </div>
       )}
 
-      {/* QUICK EDIT MODAL */}
+      {/* Report editor modal */}
       {editingReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-          <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border dark:border-zinc-800 flex flex-col max-h-[90vh]">
-            
-            <div className="p-6 border-b dark:border-zinc-800 flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-black">Fix Question</h3>
-                <p className="text-sm text-gray-500 font-mono mt-1">ID: {editingReport.questionId} ({editingReport.questionType})</p>
-              </div>
-              <button onClick={() => setEditingReport(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700">✕</button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex flex-col gap-5 flex-1">
-              
-              {/* User Complaint Reminder */}
-              <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl text-sm text-red-800 dark:text-red-300">
-                <strong>Complaint ({editingReport.reason}):</strong> {editingReport.details || "No extra details provided."}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Question Text (Supports LaTeX)</label>
-                <textarea 
-                  value={formData.question_text}
-                  onChange={(e) => setFormData({...formData, question_text: e.target.value})}
-                  className="w-full p-4 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
-                  rows={4}
-                />
-                {formData.question_text && (
-                  <div className="mt-2 p-3 border dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 text-sm">
-                    <span className="text-[10px] uppercase font-bold text-amber-500 mb-2 block">Live Preview</span>
-                    <MathRenderer content={formData.question_text} />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Question Type</label>
-                <select 
-                  value={formData.question_type}
-                  onChange={(e) => setFormData({...formData, question_type: e.target.value})}
-                  className="w-full p-3 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
-                >
-                  <option value="MCQ">MCQ (Multiple Choice)</option>
-                  <option value="MSQ">MSQ (Multiple Select)</option>
-                  <option value="NAT">NAT (Numerical Answer)</option>
-                </select>
-              </div>
-
-              {/* IMAGES SECTION */}
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Question Images</label>
-                <div className="flex flex-col gap-3">
-                  {formData.images.map((img, idx) => (
-                    <div key={idx} className="flex gap-2 items-center bg-gray-50 dark:bg-black/20 p-3 rounded-xl border dark:border-zinc-800">
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <input 
-                          type="text" 
-                          placeholder="filename.png"
-                          value={img.filename} 
-                          onChange={(e) => {
-                            const newImages = [...formData.images];
-                            newImages[idx].filename = e.target.value;
-                            setFormData({...formData, images: newImages});
-                          }}
-                          className="p-2 rounded bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-xs"
-                        />
-                        <select 
-                          value={img.type || "question"}
-                          onChange={(e) => {
-                            const newImages = [...formData.images];
-                            newImages[idx].type = e.target.value;
-                            setFormData({...formData, images: newImages});
-                          }}
-                          className="p-2 rounded bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-xs"
-                        >
-                          <option value="question">Question</option>
-                          <option value="explanation">Explanation</option>
-                        </select>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          const newImages = formData.images.filter((_, i) => i !== idx);
-                          setFormData({...formData, images: newImages});
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  <button 
-                    onClick={() => setFormData({...formData, images: [...formData.images, { index: formData.images.length + 1, filename: "", type: "question" }]})}
-                    className="text-xs font-bold text-amber-500 hover:underline text-left w-fit"
-                  >
-                    + Add Image
-                  </button>
-                </div>
-              </div>
-
-              {/* OPTIONS SECTION */}
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Options</label>
-                <div className="flex flex-col gap-3">
-                  {formData.options.map((opt, idx) => (
-                    <div key={idx} className="flex flex-col gap-2">
-                      <div className="flex gap-2 items-center">
-                        <span className="font-bold text-gray-400 w-6">{String.fromCharCode(65 + idx)}.</span>
-                        <textarea 
-                          value={opt}
-                          onChange={(e) => {
-                            const newOptions = [...formData.options];
-                            newOptions[idx] = e.target.value;
-                            setFormData({...formData, options: newOptions});
-                          }}
-                          className="w-full p-3 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  {formData.options.length === 0 && (
-                    <p className="text-xs text-gray-500 italic">No options (Numerical Answer Type?)</p>
-                  )}
-                  <div className="flex gap-2">
-                     <button 
-                      onClick={() => setFormData({...formData, options: [...formData.options, ""]})}
-                      className="text-xs font-bold text-amber-500 hover:underline"
-                    >
-                      + Add Option
-                    </button>
-                    {formData.options.length > 0 && (
-                       <button 
-                       onClick={() => setFormData({...formData, options: formData.options.slice(0, -1)})}
-                       className="text-xs font-bold text-red-500 hover:underline"
-                     >
-                       - Remove Last
-                     </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Correct Answer (e.g., A, B, C or 45)</label>
-                <input 
-                  type="text"
-                  value={formData.correct_answer}
-                  onChange={(e) => setFormData({...formData, correct_answer: e.target.value})}
-                  className="w-full p-4 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none font-mono"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-4">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Explanation (Supports LaTeX)</label>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, ai_answer_mismatch: !formData.ai_answer_mismatch })}
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${
-                        formData.ai_answer_mismatch 
-                          ? "bg-red-500 text-white" 
-                          : "bg-gray-100 dark:bg-zinc-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                      }`}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-                        <line x1="4" x2="4" y1="22" y2="15"></line>
-                      </svg>
-                      {formData.ai_answer_mismatch ? "Flagged" : "Flag Issue"}
-                    </button>
-                    {formData.ai_answer_mismatch && formData.ai_detected_answer && (
-                      <span className="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg border border-red-200 dark:border-red-500/20">
-                        AI Detected: {formData.ai_detected_answer}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={selectedAIModel}
-                      onChange={(e) => setSelectedAIModel(e.target.value as any)}
-                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-gray-50 dark:bg-zinc-800 border dark:border-zinc-700 outline-none"
-                    >
-                      <option value="gemini">Gemini</option>
-                      <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleGenerateAI}
-                      disabled={isGeneratingAI}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
-                    >
-                      {isGeneratingAI ? "⏳ Generating..." : "✨ Generate AI"}
-                    </button>
-                  </div>
-                </div>
-                <textarea 
-                  value={formData.explanation}
-                  onChange={(e) => setFormData({...formData, explanation: e.target.value})}
-                  className="w-full p-4 rounded-xl text-sm bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 focus:border-amber-500 outline-none"
-                  rows={4}
-                />
-                {(formData.explanation || formData.images.some((img: any) => img.type === "explanation")) && (
-                  <div className="mt-2 p-3 border dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 text-sm">
-                    <span className="text-[10px] uppercase font-bold text-amber-500 mb-2 block">Live Preview</span>
-                    {formData.explanation && <MathRenderer content={formData.explanation} />}
-                    {formData.images.filter((img: any) => img.type === "explanation").map((img: any, idx: number) => (
-                      <div key={idx} className="mt-2">
-                        <img src={getCloudinaryUrl(img.filename)} alt={`Explanation image ${idx + 1}`} className="max-w-full h-auto rounded-lg" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="p-6 border-t dark:border-zinc-800 flex gap-3 bg-gray-50 dark:bg-zinc-900/50 rounded-b-3xl">
-              <button 
-                onClick={handleDelete}
-                disabled={isDeleting || isSaving}
-                className="flex-[0.5] py-3 px-2 rounded-xl font-bold bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 shadow-sm transition-colors text-xs sm:text-sm"
-              >
-                {isDeleting ? "..." : "🗑️ Delete"}
-              </button>
-              <button 
-                onClick={() => setEditingReport(null)} 
-                className="flex-[0.5] py-3 rounded-xl font-bold bg-white border shadow-sm dark:bg-zinc-800 dark:border-zinc-700 text-xs sm:text-sm"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSave}
-                disabled={isSaving || isDeleting}
-                className="flex-1 py-3 rounded-xl font-black text-white bg-green-600 hover:bg-green-700 shadow-md flex justify-center items-center text-xs sm:text-sm"
-              >
-                {isSaving ? "Saving..." : "Save & Resolve"}
-              </button>
-            </div>
-
-          </div>
-        </div>
+        <ReportEditorModal
+          editingReport={editingReport}
+          formData={formData}
+          selectedAIModel={selectedAIModel}
+          onFormChange={setFormData}
+          onModelChange={setSelectedAIModel}
+          onClose={() => setEditingReport(null)}
+          onSaved={(reportId) => {
+            setLocalReports(prev => prev.filter(r => r.id !== reportId));
+            if (reportId.startsWith("auto-latex-")) setLatexReports(prev => prev.filter(r => r.id !== reportId));
+            setEditingReport(null);
+          }}
+          onDeleted={() => setEditingReport(null)}
+        />
       )}
     </>
   );

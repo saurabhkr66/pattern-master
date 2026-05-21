@@ -111,6 +111,7 @@ export const GATE_BRANCHES = [
   { id: "IN", label: "Instrumentation" },
   { id: "CH", label: "Chemical Engg." },
   { id: "BT", label: "Biotechnology" },
+  { id: "PI", label: "Production & Industrial" },
 ] as const;
 
 export const EXAM_CONFIGS: ExamConfig[] = [

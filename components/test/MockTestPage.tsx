@@ -1,13 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Loader2, AlertTriangle, Check, Trash2, Search, X,
-} from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { deleteMockTest } from "@/app/actions/admin";
 import {
-  EXAM_CONFIGS, getExamConfig, fmtDuration,
-  type ExamType, type ExamConfig, type QType,
+  EXAM_CONFIGS, getExamConfig,
+  type ExamType, type ExamConfig,
 } from "@/lib/examConfigs";
 import TestEngine, { type TestQuestion, type SubmitAnswer } from "@/components/test/TestEngine";
 import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
@@ -16,11 +14,14 @@ import { BE } from "@/lib/theme";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import React from "react";
+import SetupPhase from "./SetupPhase";
+import BriefPhase from "./BriefPhase";
+import { buildResultData } from "./mockTestUtils";
 
 /* ─────────────── Types ─────────────── */
 type Phase = "setup" | "brief" | "loading" | "test" | "submitting" | "results";
 
-interface SeededMock {
+export interface SeededMock {
   id: string;
   mock_number: number;
   title: string;
@@ -116,7 +117,6 @@ export default function MockTestPage() {
   const searchParams = useSearchParams();
   const urlTestId = searchParams.get("id");
 
-  // Start in "loading" so we can check for an active draft before showing setup
   const [phase, setPhase] = useState<Phase>("loading");
   const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
@@ -140,7 +140,6 @@ export default function MockTestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Session persistence
   const [draftId, setDraftId] = useState<string | null>(null);
   const [serverExpiresAt, setServerExpiresAt] = useState<string | null>(null);
   const [initialDraftState, setInitialDraftState] = useState<Record<string, any> | null>(null);
@@ -149,8 +148,6 @@ export default function MockTestPage() {
 
   const router = useRouter();
   const pathname = usePathname();
-  // Tracks the phase we programmatically set, so the URL-sync effect can distinguish
-  // a forward navigation push from an actual browser back press.
   const targetPhaseRef = useRef<Phase>("loading");
 
   const goTo = useCallback((p: Phase, replace = false, mockId?: string) => {
@@ -167,43 +164,29 @@ export default function MockTestPage() {
     setPhase(p);
   }, [router, pathname]);
 
-  // Handle browser back/forward: sync URL step → phase
   useEffect(() => {
-    // Never fire during initial hydration — init() hasn't run yet and there is
-    // no "step" param on a fresh deep-link (?id=...), which would wrongly look
-    // like a back-navigation to step 1 and force the phase to "setup".
     if (targetPhaseRef.current === "loading") return;
-
     const step = parseInt(searchParams.get("step") ?? "1", 10) || 1;
     const phaseStepMap: Partial<Record<Phase, number>> = {
       setup: 1, brief: 2, loading: 2, test: 3, submitting: 3, results: 4,
     };
     const targetStep = phaseStepMap[targetPhaseRef.current] ?? 1;
-
-    // Only act on backward navigation (URL step went below current phase step)
     if (step >= targetStep) return;
-
-    // Determine which phase to restore; going back from test → brief is allowed
     const newPhase: Phase = step === 2 && targetPhaseRef.current === "test" ? "brief" : "setup";
     targetPhaseRef.current = newPhase;
     setPhase(newPhase);
   }, [searchParams]);
 
-  /* On mount: check for active draft (resume) or deep-link */
   useEffect(() => {
     if (hasAttemptedHydration.current) return;
     hasAttemptedHydration.current = true;
 
     const init = async () => {
-      // 1. Check for active in-progress draft (user refreshed during a test)
       try {
         const r = await fetch("/api/test/session/resume");
         const { draft } = await r.json();
         if (draft?.mockTestId) {
-          // Re-fetch questions for this template
-          const qRes = await fetch(
-            `/api/test/generate?templateId=${draft.mockTestId}&exam_type=${draft.examType}`
-          );
+          const qRes = await fetch(`/api/test/generate?templateId=${draft.mockTestId}&exam_type=${draft.examType}`);
           const qData = await qRes.json();
           if (qRes.ok && qData.questions?.length > 0) {
             setDraftId(draft.draftId);
@@ -220,7 +203,6 @@ export default function MockTestPage() {
         }
       } catch {}
 
-      // 2. Deep-link: ?id=<mockTestId> in URL
       if (urlTestId) {
         try {
           const r = await fetch(`/api/test/mocks?id=${urlTestId}`);
@@ -249,7 +231,6 @@ export default function MockTestPage() {
 
   const hasBranches = !!(config?.branches?.length);
 
-  /* Fetch paper counts per exam/branch on mount */
   useEffect(() => {
     fetch("/api/test/mocks/counts")
       .then((r) => r.json())
@@ -266,7 +247,6 @@ export default function MockTestPage() {
     [paperCounts]
   );
 
-  /* fetch subjects + seeded mocks whenever exam/branch changes */
   useEffect(() => {
     if (!selectedExam) return;
     setMockSearch("");
@@ -279,10 +259,8 @@ export default function MockTestPage() {
     fetch(`/api/test/mocks?${params}`)
       .then((r) => r.json())
       .then((d) => {
-        const mocks = d.mocks ?? [];
-        const sorted = [...mocks].sort((a, b) => {
-          const aTaken = !!a.session;
-          const bTaken = !!b.session;
+        const sorted = [...(d.mocks ?? [])].sort((a, b) => {
+          const aTaken = !!a.session, bTaken = !!b.session;
           if (aTaken && !bTaken) return -1;
           if (!aTaken && bTaken) return 1;
           return a.mock_number - b.mock_number;
@@ -292,7 +270,6 @@ export default function MockTestPage() {
       .catch(() => {});
   }, [selectedExam, selectedBranch]);
 
-  /* restore brief agreement from localStorage */
   useEffect(() => {
     if (phase === "brief") {
       try { if (localStorage.getItem("pm_brief_agreed") === "true") setBriefAgreed(true); }
@@ -300,16 +277,13 @@ export default function MockTestPage() {
     }
   }, [phase]);
 
-  /* start test */
   const startTest = useCallback(async () => {
     if (!selectedExam || !selectedMode || !config) return;
     setPhase("loading");
     setError(null);
     const params = new URLSearchParams({ exam_type: selectedExam, mode: selectedMode });
     if (selectedBranch) params.set("branch", selectedBranch);
-    if (selectedMode === "seeded" && selectedMock) {
-      params.set("mock_number", String(selectedMock.mock_number));
-    }
+    if (selectedMode === "seeded" && selectedMock) params.set("mock_number", String(selectedMock.mock_number));
     selectedSubjects.forEach((s) => params.append("subject", s));
     try {
       const res = await fetch(`/api/test/generate?${params}`);
@@ -321,7 +295,6 @@ export default function MockTestPage() {
       setMockTestId(newMockTestId);
       setMockTestTitle(data.title ?? config.label ?? "Mock Test");
 
-      // Create or resume a server-side draft (handles persistence + server timer)
       if (newMockTestId) {
         try {
           const sRes = await fetch("/api/test/session/start", {
@@ -341,10 +314,7 @@ export default function MockTestPage() {
           setServerExpiresAt(sData.expiresAt ?? null);
           setInitialDraftState(sData.resumed ? (sData.state ?? null) : null);
         } catch {
-          // Non-fatal — test still works, just no server-side persistence
-          setDraftId(null);
-          setServerExpiresAt(null);
-          setInitialDraftState(null);
+          setDraftId(null); setServerExpiresAt(null); setInitialDraftState(null);
         }
       }
 
@@ -352,11 +322,10 @@ export default function MockTestPage() {
       trackPageView();
     } catch (e: any) {
       setError(e.message);
-      setPhase("brief"); // error recovery — URL is already at ?step=2
+      setPhase("brief");
     }
   }, [selectedExam, selectedBranch, selectedMode, selectedMock, selectedSubjects, config, goTo]);
 
-  /* submit */
   const handleSubmit = useCallback(async (answers: SubmitAnswer[], timeTakenSecs: number) => {
     setSubmitting(true);
     setSubmitError(null);
@@ -369,8 +338,6 @@ export default function MockTestPage() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      // Fetch breakdown from saved session (avoids sending ~300KB in the submit response).
-      // Fall back to inline breakdown only when DB save failed (local- session id).
       let breakdown: any[] = data.breakdown || [];
       let sessionScore = data;
       if (!data.breakdown && data.sessionId && !data.sessionId.startsWith("local-")) {
@@ -387,65 +354,11 @@ export default function MockTestPage() {
         }
       }
 
-      const accuracy = (sessionScore.correctCount + sessionScore.wrongCount) > 0
-        ? (sessionScore.correctCount / (sessionScore.correctCount + sessionScore.wrongCount)) * 100 : 0;
-
-      const sectionMap: Record<string, {
-        name: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number;
-        topics: Record<string, { topic: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number; }>
-      }> = {};
-      const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number }> = {};
-
-      breakdown.forEach((q: any) => {
-        const secName = q.sectionName || "Section";
-        if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0, topics: {} };
-        const sec = sectionMap[secName];
-        sec.max += q.marks; sec.total += 1;
-        sec.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { sec.score += q.marks; sec.correct += 1; }
-
-        const topName = q.topic || "Uncategorized";
-        if (!sec.topics[topName]) sec.topics[topName] = { topic: topName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0 };
-        const top = sec.topics[topName];
-        top.max += q.marks; top.total += 1;
-        top.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { top.score += q.marks; top.correct += 1; }
-
-        const subName = q.subject || "General";
-        if (!subjectMap[subName]) subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0 };
-        const sub = subjectMap[subName];
-        sub.max += q.marks; sub.total += 1;
-        sub.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { sub.score += q.marks; sub.correct += 1; }
-      });
-
-      setResult({
-        examType: selectedExam ?? undefined,
-        mockTestId: mockTestId ?? null,
-        score: sessionScore.score, maxScore: sessionScore.maxScore, accuracy,
-        timeTakenSecs: sessionScore.timeTakenSecs,
-        attempted: sessionScore.correctCount + sessionScore.wrongCount,
-        correct: sessionScore.correctCount, incorrect: sessionScore.wrongCount, unattempted: sessionScore.skippedCount,
-        sectionBreakdown: Object.values(sectionMap).map(s => ({
-          name: s.name, score: s.score, max: s.max, correct: s.correct, total: s.total, timeSpentSecs: s.timeSpentSecs,
-          accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0,
-          topics: Object.values(s.topics).map(t => ({
-            topic: t.topic, score: t.score, max: t.max, correct: t.correct, total: t.total, timeSpentSecs: t.timeSpentSecs,
-            accuracy: t.total > 0 ? (t.correct / t.total) * 100 : 0,
-          }))
-        })),
-        subjectBreakdown: Object.values(subjectMap).map(sub => ({
-          subject: sub.subject, score: sub.score, max: sub.max, correct: sub.correct, total: sub.total, timeSpentSecs: sub.timeSpentSecs,
-          accuracy: sub.total > 0 ? (sub.correct / sub.total) * 100 : 0,
-        })),
-        questions: breakdown.map((q: any) => ({
-          id: q.questionId, question_text: q.questionText, options: q.options,
-          question_type: q.questionType, correct_answer: q.correctAnswer,
-          user_answer: q.userAnswer, is_correct: q.isCorrect,
-          marks: q.marks, subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
-          timeSpentSecs: q.timeSpentSecs || 0,
-        })),
-      });
+      setResult(buildResultData(breakdown, {
+        score: sessionScore.score, maxScore: sessionScore.maxScore,
+        correctCount: sessionScore.correctCount, wrongCount: sessionScore.wrongCount,
+        skippedCount: sessionScore.skippedCount, timeTakenSecs: sessionScore.timeTakenSecs,
+      }, { examType: selectedExam ?? undefined, mockTestId }));
       goTo("results", false, mockTestId ?? undefined);
     } catch (err: any) {
       setSubmitError(err.message);
@@ -472,64 +385,12 @@ export default function MockTestPage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to load analysis");
       const s = data.session;
       const breakdown: any[] = Array.isArray(s.answers) ? s.answers : [];
-      const sectionMap: Record<string, { 
-        name: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number;
-        topics: Record<string, { topic: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number; }>
-      }> = {};
-      const subjectMap: Record<string, { subject: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number }> = {};
-      
-      breakdown.forEach((q: any) => {
-        const secName = q.sectionName || "Section";
-        if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0, topics: {} };
-        const sec = sectionMap[secName];
-        sec.max += q.marks; sec.total += 1;
-        sec.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { sec.score += q.marks; sec.correct += 1; }
-
-        const topName = q.topic || "Uncategorized";
-        if (!sec.topics[topName]) sec.topics[topName] = { topic: topName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0 };
-        const top = sec.topics[topName];
-        top.max += q.marks; top.total += 1;
-        top.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { top.score += q.marks; top.correct += 1; }
-
-        const subName = q.subject || "General";
-        if (!subjectMap[subName]) subjectMap[subName] = { subject: subName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0 };
-        const sub = subjectMap[subName];
-        sub.max += q.marks; sub.total += 1;
-        sub.timeSpentSecs += (q.timeSpentSecs || 0);
-        if (q.isCorrect) { sub.score += q.marks; sub.correct += 1; }
-      });
-      const accuracy = (s.correct_count + s.wrong_count) > 0
-        ? (s.correct_count / (s.correct_count + s.wrong_count)) * 100 : 0;
       setMockTestTitle(s.mock_test?.title ?? mock.title);
-      setResult({
-        examType: s.exam_type,
-        mockTestId: s.mock_test_id ?? mock.id ?? null,
-        score: s.score, maxScore: s.max_score, accuracy,
-        timeTakenSecs: s.time_taken_secs,
-        attempted: s.correct_count + s.wrong_count,
-        correct: s.correct_count, incorrect: s.wrong_count, unattempted: s.skipped_count,
-        sectionBreakdown: Object.values(sectionMap).map(sec => ({
-          name: sec.name, score: sec.score, max: sec.max, correct: sec.correct, total: sec.total, timeSpentSecs: sec.timeSpentSecs,
-          accuracy: sec.total > 0 ? (sec.correct / sec.total) * 100 : 0,
-          topics: Object.values(sec.topics).map(t => ({
-            topic: t.topic, score: t.score, max: t.max, correct: t.correct, total: t.total, timeSpentSecs: t.timeSpentSecs,
-            accuracy: t.total > 0 ? (t.correct / t.total) * 100 : 0,
-          }))
-        })),
-        subjectBreakdown: Object.values(subjectMap).map(sub => ({
-          subject: sub.subject, score: sub.score, max: sub.max, correct: sub.correct, total: sub.total, timeSpentSecs: sub.timeSpentSecs,
-          accuracy: sub.total > 0 ? (sub.correct / sub.total) * 100 : 0,
-        })),
-        questions: breakdown.map((q: any) => ({
-          id: q.questionId, question_text: q.questionText, options: q.options,
-          question_type: q.questionType, correct_answer: q.correctAnswer,
-          user_answer: q.userAnswer, is_correct: q.isCorrect,
-          marks: q.marks, subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
-          timeSpentSecs: q.timeSpentSecs || 0,
-        })),
-      });
+      setResult(buildResultData(breakdown, {
+        score: s.score, maxScore: s.max_score,
+        correctCount: s.correct_count, wrongCount: s.wrong_count,
+        skippedCount: s.skipped_count, timeTakenSecs: s.time_taken_secs,
+      }, { examType: s.exam_type, mockTestId: s.mock_test_id ?? mock.id ?? null }));
       goTo("results", false, mock.id);
     } catch (e: any) {
       setError(e.message);
@@ -545,442 +406,83 @@ export default function MockTestPage() {
     } catch (err: any) { alert(err.message); }
   };
 
-  /* ════════════════════════════════════
-     STEP 1 — Setup (Exam + Branch + Mode + Config)
-  ════════════════════════════════════ */
+  const canContinue = !!(
+    selectedExam &&
+    (!hasBranches || selectedBranch) &&
+    selectedMode &&
+    (selectedMode !== "seeded" || selectedMock)
+  );
+
+  /* ════════ STEP 1 — Setup ════════ */
   if (phase === "setup") {
-    const isSpec = selectedMode === "seeded";
-    const isRandom = selectedMode === "random";
-
-    // Determine if user can proceed to brief
-    const canContinue = !!(
-      selectedExam &&
-      (!hasBranches || selectedBranch) &&
-      selectedMode &&
-      (!isSpec || selectedMock)
-    );
-
     return (
       <MTPage phase={phase} maxWidth={1100}>
-        {/* ── Section A: Exam ── */}
-        <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Step 1 of 4 · Setup</div>
-        <h1 style={{ fontFamily: BE.serif, fontWeight: 500, fontSize: 28, letterSpacing: '-0.6px', marginBottom: 20, color: BE.text }}>Configure your test.</h1>
-
-        {/* Exam selection */}
-        <div className="mb-6">
-          <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Exam</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {EXAM_CONFIGS.map((exam) => {
-              const sel = selectedExam === exam.examType;
-              return (
-                <div
-                  key={exam.examType}
-                  onClick={() => {
-                    setSelectedExam(exam.examType);
-                    setSelectedBranch(null);
-                    setSelectedMode(null);
-                    setSelectedMock(null);
-                  }}
-                  className="border rounded-xl p-3 cursor-pointer transition-all hover:shadow-sm"
-                  style={{
-                    borderColor: sel ? BE.accent : BE.line,
-                    borderWidth: sel ? 2 : 1,
-                    background: sel ? `${BE.accent}10` : BE.surface,
-                  }}
-                >
-                  <div style={{ fontFamily: BE.serif, fontSize: 18, fontWeight: 600, color: BE.text, marginBottom: 2 }}>{exam.label}</div>
-                  <div style={{ fontSize: 11, color: BE.textDim, marginBottom: 8 }}>{exam.description}</div>
-                  <div className="flex gap-2.5 pt-2 border-t" style={{ borderColor: BE.line, fontSize: 10, color: BE.textMute }}>
-                    <span><span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{exam.totalQuestions}</span> Q</span>
-                    <span><span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{Math.round(exam.durationSecs / 60)}</span> min</span>
-                    <span>
-                      <span style={{ color: BE.text, fontFamily: BE.mono, fontWeight: 600 }}>{examPaperTotal(exam.examType)}</span>{' '}
-                      {examPaperTotal(exam.examType) === 1 ? 'paper' : 'papers'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Branch selection — only when exam has branches */}
-        {selectedExam && config && hasBranches && (
-          <div className="mb-6">
-            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Branch</div>
-            <div className="flex flex-wrap gap-2">
-              {config.branches?.map((b) => {
-                const sel = selectedBranch === b.id;
-                const count = branchPaperCount(selectedExam!, b.id);
-                return (
-                  <div
-                    key={b.id}
-                    onClick={() => { setSelectedBranch(b.id); setSelectedMode(null); setSelectedMock(null); }}
-                    className="border rounded-lg px-3.5 py-2.5 cursor-pointer transition-all flex items-center gap-2.5"
-                    style={{
-                      borderColor: sel ? BE.accent : BE.line,
-                      borderWidth: sel ? 2 : 1,
-                      background: sel ? `${BE.accent}10` : BE.surface,
-                    }}
-                  >
-                    <span style={{ fontFamily: BE.mono, fontSize: 12, fontWeight: 700, color: sel ? BE.accent : BE.textDim }}>{b.id}</span>
-                    <span style={{ fontSize: 12, color: BE.text }}>{b.label}</span>
-                    <span style={{
-                      fontFamily: BE.mono, fontSize: 10.5, fontWeight: 600,
-                      color: count > 0 ? (sel ? BE.accent : BE.textDim) : BE.textMute,
-                      opacity: count > 0 ? 1 : 0.6,
-                      marginLeft: 4,
-                    }}>
-                      {count}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Mode selection — shown once exam (and branch if needed) is picked */}
-        {selectedExam && (!hasBranches || selectedBranch) && (
-          <div className="mb-6">
-            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>Mode</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Specialized */}
-              <div
-                onClick={() => { setSelectedMode("seeded"); setSelectedMock(null); }}
-                className="border-2 rounded-xl p-4 cursor-pointer transition-all"
-                style={{
-                  borderColor: isSpec ? BE.accent : BE.line,
-                  background: isSpec ? `${BE.accent}10` : BE.surface,
-                }}
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: isSpec ? BE.accentSoft : 'rgba(255,255,255,0.05)', color: isSpec ? BE.accent : BE.textDim }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                  </div>
-                  <div style={{ fontFamily: BE.serif, fontSize: 16, fontWeight: 600, color: BE.text }}>Specialized Mock</div>
-                  {!selectedMode && <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: BE.accent }}>REC</span>}
-                </div>
-                <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5 }}>Fixed past-paper set. Same questions every attempt — comparable scores.</div>
-              </div>
-              {/* Random */}
-              <div
-                onClick={() => { setSelectedMode("random"); setSelectedMock(null); }}
-                className="border-2 rounded-xl p-4 cursor-pointer transition-all"
-                style={{
-                  borderColor: isRandom ? BE.accent : BE.line,
-                  background: isRandom ? `${BE.accent}10` : BE.surface,
-                }}
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: isRandom ? BE.accentSoft : 'rgba(255,255,255,0.05)', color: isRandom ? BE.accent : BE.textDim }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
-                  </div>
-                  <div style={{ fontFamily: BE.serif, fontSize: 16, fontWeight: 600, color: BE.text }}>Random Test</div>
-                </div>
-                <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5 }}>Fresh paper from the bank. Filter by subjects. Great for daily drilling.</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Config panel — shown once mode is picked */}
-        {isSpec && (() => {
-          const q = mockSearch.trim().toLowerCase();
-          const visibleMocks = q
-            ? seededMocks.filter(m =>
-                m.title.toLowerCase().includes(q) ||
-                String(m.mock_number).includes(q)
-              )
-            : seededMocks;
-          return (
-          <div className="mb-6">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>Select Paper</div>
-              {seededMocks.length > 0 && (
-                <div className="relative" style={{ width: 220, maxWidth: '60%' }}>
-                  <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: BE.textMute, pointerEvents: 'none' }} />
-                  <input
-                    type="text"
-                    value={mockSearch}
-                    onChange={(e) => setMockSearch(e.target.value)}
-                    placeholder="Search papers…"
-                    className="w-full rounded-lg outline-none transition-colors"
-                    style={{
-                      fontSize: 12,
-                      padding: '6px 26px 6px 28px',
-                      background: BE.surface,
-                      border: `1px solid ${BE.line}`,
-                      color: BE.text,
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = BE.accent; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = BE.line; }}
-                  />
-                  {mockSearch && (
-                    <button
-                      onClick={() => setMockSearch("")}
-                      aria-label="Clear search"
-                      className="absolute"
-                      style={{ right: 6, top: '50%', transform: 'translateY(-50%)', padding: 2, color: BE.textMute }}
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-            {seededMocks.length === 0 ? (
-              <div className="border border-dashed rounded-xl p-10 text-center" style={{ borderColor: BE.line }}>
-                <div className="text-xl mb-2">📭</div>
-                <div style={{ fontSize: 13, color: BE.textDim }}>No papers seeded yet.</div>
-              </div>
-            ) : visibleMocks.length === 0 ? (
-              <div className="border border-dashed rounded-xl p-8 text-center" style={{ borderColor: BE.line }}>
-                <div style={{ fontSize: 13, color: BE.textDim }}>No papers match &ldquo;{mockSearch}&rdquo;.</div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {visibleMocks.map((m) => {
-                  const taken = !!m.session;
-                  const isSel = selectedMock?.mock_number === m.mock_number;
-                  return (
-                    <div
-                      key={m.mock_number}
-                      onClick={() => { setSelectedMock(m); router.replace(`${pathname}?id=${m.id}`, { scroll: false }); }}
-                      className="border rounded-xl p-3 cursor-pointer relative hover:shadow-sm transition-all group"
-                      style={{ borderColor: isSel ? BE.accent : BE.line, borderWidth: isSel ? 2 : 1, background: isSel ? `${BE.accent}10` : BE.surface }}
-                    >
-                      {isAdmin && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteTest(m.id, m.title); }}
-                          className="absolute top-2 right-2 p-1 rounded-full hover:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        ><Trash2 size={12} /></button>
-                      )}
-                      <div style={{ fontFamily: BE.mono, fontSize: 10, color: BE.textMute, textTransform: 'uppercase', fontWeight: 600, marginBottom: 4 }}>
-                        {m.mock_number}
-                        {taken && <span className="ml-2" style={{ color: BE.good }}>● Done</span>}
-                      </div>
-                      <div style={{ fontFamily: BE.serif, fontSize: 15, fontWeight: 600, color: BE.text, marginBottom: 2 }}>{m.title}</div>
-                      <div style={{ fontSize: 11, color: BE.textDim }}>{m.total_questions} Q · {fmtDuration(m.duration_secs)}</div>
-                      {taken && m.session && (
-                        <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: BE.line }}>
-                          <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 700, color: BE.text }}>
-                            Score: {m.session.score} / {m.session.max_score}
-                          </div>
-                          {m.session.section_scores && Array.isArray(m.session.section_scores) && (
-                            <div className="grid grid-cols-1 gap-0.5 pt-0.5 border-t border-dashed mt-1" style={{ borderColor: BE.line }}>
-                              {m.session.section_scores.map((ss: any, idx: number) => (
-                                <div key={idx} className="flex justify-between items-center text-[9px] leading-tight">
-                                  <div style={{ color: BE.textMute, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{ss.name}</div>
-                                  <div style={{ fontWeight: 600, color: BE.textDim }}>{ss.score}/{ss.maxScore}</div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {isSel && (
-                        <div className="mt-2 pt-2 border-t flex gap-1.5" style={{ borderColor: BE.line }}>
-                          {taken ? (
-                            <>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setBriefAgreed(false); goTo("brief", false, m.id); }}
-                                className="flex-1 rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
-                                style={{ background: BE.accent, color: '#fff' }}
-                              >
-                                Retake
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); loadAnalysis(m); }}
-                                className="flex-1 rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
-                                style={{ background: BE.accentSoft, color: BE.accent }}
-                              >
-                                Analysis
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setBriefAgreed(false); goTo("brief", false, m.id); }}
-                              className="w-full rounded-lg py-1.5 text-[11px] font-semibold transition-colors"
-                              style={{ background: BE.accent, color: '#fff' }}
-                            >
-                              Continue →
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          );
-        })()}
-
-        {isRandom && (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4 mb-6">
-            {/* Difficulty + stats */}
-            <div className="flex flex-col gap-3">
-              <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: BE.text, marginBottom: 8 }}>Difficulty mix</div>
-                <div className="flex h-6 rounded-lg overflow-hidden mb-1">
-                  <div className="flex items-center justify-center text-[10px] font-bold text-black" style={{ flex: 30, background: BE.good + '99' }}>Easy 30%</div>
-                  <div className="flex items-center justify-center text-[10px] font-bold text-black" style={{ flex: 50, background: BE.warn + '99' }}>Medium 50%</div>
-                  <div className="flex items-center justify-center text-[10px] font-bold text-white" style={{ flex: 20, background: BE.bad + '99' }}>Hard 20%</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="border rounded-xl p-3" style={{ borderColor: BE.line, background: BE.surface }}>
-                  <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Questions</div>
-                  <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{config?.totalQuestions}</div>
-                </div>
-                <div className="border rounded-xl p-3" style={{ borderColor: BE.line, background: BE.surface }}>
-                  <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Duration</div>
-                  <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{Math.round((config?.durationSecs ?? 0) / 60)}<span style={{ fontSize: 12, color: BE.textDim }}> min</span></div>
-                </div>
-              </div>
-            </div>
-            {/* Subject filter */}
-            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-              <div className="flex items-center justify-between mb-3">
-                <div style={{ fontSize: 12, fontWeight: 600, color: BE.text }}>Filter subjects <span style={{ color: BE.textMute, fontWeight: 400 }}>(optional)</span></div>
-                <button className="be-btn text-[10px] px-2 py-1" onClick={() => setSelectedSubjects([])}>Clear</button>
-              </div>
-              <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
-                {availableSubjects.map((s) => {
-                  const sel = selectedSubjects.includes(s);
-                  return (
-                    <div
-                      key={s}
-                      onClick={() => setSelectedSubjects(prev => sel ? prev.filter(x => x !== s) : [...prev, s])}
-                      className="flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all"
-                      style={{ borderColor: sel ? BE.accent : BE.line, background: sel ? BE.accentSoft : 'transparent' }}
-                    >
-                      <div className="w-3 h-3 rounded border flex items-center justify-center text-[9px] text-white shrink-0" style={{ borderColor: sel ? BE.accent : BE.line, background: sel ? BE.accent : 'transparent' }}>{sel && "✓"}</div>
-                      <span style={{ fontSize: 12, color: BE.text }}>{s}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!isSpec && (
-          <div className="flex justify-end pt-4 border-t" style={{ borderColor: BE.line }}>
-            <button
-              className="be-btn be-btn-primary"
-              disabled={!canContinue}
-              onClick={() => { setBriefAgreed(false); goTo("brief", false, selectedMock?.id); }}
-              style={{ padding: '10px 24px', opacity: canContinue ? 1 : 0.4 }}
-            >
-              Continue →
-            </button>
-          </div>
-        )}
+        <SetupPhase
+          selectedExam={selectedExam}
+          selectedBranch={selectedBranch}
+          selectedMode={selectedMode}
+          selectedMock={selectedMock}
+          selectedSubjects={selectedSubjects}
+          availableSubjects={availableSubjects}
+          seededMocks={seededMocks}
+          mockSearch={mockSearch}
+          config={config}
+          hasBranches={hasBranches}
+          isAdmin={isAdmin}
+          canContinue={canContinue}
+          examPaperTotal={examPaperTotal}
+          branchPaperCount={branchPaperCount}
+          onSelectExam={(exam) => {
+            setSelectedExam(exam);
+            setSelectedBranch(null);
+            setSelectedMode(null);
+            setSelectedMock(null);
+          }}
+          onSelectBranch={(branch) => {
+            setSelectedBranch(branch);
+            setSelectedMode(null);
+            setSelectedMock(null);
+          }}
+          onSelectMode={(mode) => { setSelectedMode(mode); setSelectedMock(null); }}
+          onSelectMock={(mock) => {
+            setSelectedMock(mock);
+            router.replace(`${pathname}?id=${mock.id}`, { scroll: false });
+          }}
+          onSearchChange={setMockSearch}
+          onSubjectsChange={setSelectedSubjects}
+          onDeleteTest={handleDeleteTest}
+          onContinue={() => { setBriefAgreed(false); goTo("brief", false, selectedMock?.id); }}
+          onGoToBrief={(mock) => { setBriefAgreed(false); goTo("brief", false, mock.id); }}
+          onLoadAnalysis={loadAnalysis}
+        />
       </MTPage>
     );
   }
 
-  /* ════════════════════════════════════
-     STEP 2 — Brief
-  ════════════════════════════════════ */
+  /* ════════ STEP 2 — Brief ════════ */
   if (phase === "brief" && config) {
-    const isSpec = selectedMode === "seeded";
     return (
       <MTPage phase={phase}>
-        <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>
-          Step 2 of 4 · {isSpec ? 'Past paper' : 'Random test'}
-        </div>
-        <h1 style={{ fontFamily: BE.serif, fontWeight: 500, fontSize: 28, letterSpacing: '-0.6px', marginBottom: 4, color: BE.text }}>Read this. Then begin.</h1>
-        <div style={{ fontSize: 13.5, color: BE.textDim, marginBottom: 20 }}>
-          {isSpec ? `${selectedMock?.title} · ${config.label}` : `Custom paper · ${config.label}`}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-3.5 mb-4">
-          <div className="flex flex-col gap-2.5">
-            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Exam pattern</div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <BriefStat label="Questions" val={isSpec ? String(selectedMock?.total_questions) : String(config.totalQuestions)} />
-                <BriefStat label="Total marks" val={isSpec ? String(selectedMock?.max_score) : String(config.maxScore)} />
-                <BriefStat label="Time" val={isSpec ? fmtDuration(selectedMock?.duration_secs ?? 0) : "3h"} />
-                <BriefStat label="Sections" val={String(config.sections.length)} />
-              </div>
-            </div>
-            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-              <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Marking scheme</div>
-              {(() => {
-                const rows = getMarkingRows(config, selectedExam);
-                const cols = Math.min(rows.length, 3);
-                return (
-                  <div className="grid gap-2 text-xs" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-                    {rows.map((r) => (
-                      <MarkRow key={r.type} type={r.type} marks={r.marks} neg={r.neg} />
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
-            <div className="border rounded-xl p-3.5 flex gap-2.5" style={{ borderColor: BE.warn + '33', background: `linear-gradient(135deg, ${BE.warn}08, transparent)` }}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke={BE.warn} strokeWidth="1.6" className="shrink-0 mt-0.5"><circle cx="9" cy="9" r="7.5"/><path d="M9 5v4M9 12v.5"/></svg>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: BE.text }}>Timer cannot be paused.</div>
-                <div style={{ fontSize: 11.5, color: BE.textDim, lineHeight: 1.5 }}>Refreshing is fine — answers auto-save. Closing the tab won't stop the clock.</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
-            <div style={{ fontSize: 11, color: BE.textMute, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>Instructions</div>
-            <ol className="flex flex-col gap-2.5 list-none p-0 m-0 text-xs leading-relaxed" style={{ color: BE.text }}>
-              {[
-                'Use the question palette to navigate freely.',
-                'Mark for review to revisit later.',
-                'Type numeric answers for NAT questions.',
-                'A virtual calculator is available (Ctrl+K).',
-                'Auto-saves every 15 seconds. Refresh is safe.',
-                'You can change answers before final submit.',
-              ].map((t, i) => (
-                <li key={i} className="flex gap-2.5">
-                  <span style={{ fontFamily: BE.mono, fontSize: 10.5, color: BE.accent, fontWeight: 600, minWidth: 14 }}>{String(i + 1).padStart(2, '0')}</span>
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-
-        <div
-          className="border rounded-xl p-3.5 flex items-center gap-2.5 cursor-pointer select-none mb-4"
-          style={{ borderColor: briefAgreed ? BE.accent : BE.line, background: BE.surface }}
-          onClick={() => setBriefAgreed(v => {
+        <BriefPhase
+          config={config}
+          selectedExam={selectedExam}
+          selectedMode={selectedMode}
+          selectedMock={selectedMock}
+          briefAgreed={briefAgreed}
+          error={error}
+          onToggleAgreed={() => setBriefAgreed(v => {
             const next = !v;
             try { localStorage.setItem("pm_brief_agreed", String(next)); } catch {}
             return next;
           })}
-        >
-          <div className="flex items-center justify-center rounded-[4px] shrink-0 border transition-all"
-            style={{ width: 18, height: 18, background: briefAgreed ? BE.accent : 'transparent', borderColor: briefAgreed ? BE.accent : BE.line, color: '#fff' }}>
-            {briefAgreed && <Check size={11} />}
-          </div>
-          <div style={{ fontSize: 12.5, color: BE.text }}>I have read the instructions and agree to abide by them.</div>
-        </div>
-
-        {error && <div className="mb-4 p-3 rounded-lg border text-sm text-red-500 bg-red-500/10" style={{ borderColor: BE.bad + '33' }}>{error}</div>}
-
-        <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: BE.line }}>
-          <button className="be-btn" onClick={() => { setError(null); router.back(); }}>← Back</button>
-          <button className="be-btn be-btn-primary" disabled={!briefAgreed} onClick={startTest} style={{ padding: '11px 26px', fontSize: 14 }}>Begin Test →</button>
-        </div>
+          onBack={() => { setError(null); router.back(); }}
+          onBeginTest={startTest}
+        />
       </MTPage>
     );
   }
 
-  /* ════════════════════════════════════
-     LOADING / SUBMITTING
-  ════════════════════════════════════ */
+  /* ════════ LOADING / SUBMITTING ════════ */
   if (phase === "loading" || phase === "submitting") {
     return (
       <div className="be-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg-base)' }}>
@@ -996,9 +498,7 @@ export default function MockTestPage() {
     );
   }
 
-  /* ════════════════════════════════════
-     STEP 3 — Test
-  ════════════════════════════════════ */
+  /* ════════ STEP 3 — Test ════════ */
   if (phase === "test" && config) {
     if (questions.length === 0) {
       return (
@@ -1035,9 +535,7 @@ export default function MockTestPage() {
     );
   }
 
-  /* ════════════════════════════════════
-     STEP 4 — Results
-  ════════════════════════════════════ */
+  /* ════════ STEP 4 — Results ════════ */
   if (phase === "results" && result) {
     return <TestAnalysis result={result} onRestart={handleRetake} />;
   }
@@ -1047,70 +545,4 @@ export default function MockTestPage() {
       <Loader2 size={32} className="animate-spin text-muted-foreground" />
     </div>
   );
-}
-
-function BriefStat({ label, val, sub }: { label: string; val: string; sub?: string }) {
-  return (
-    <div>
-      <div style={{ fontSize: 10.5, color: BE.textMute, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</div>
-      <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 600, letterSpacing: '-0.4px', marginTop: 2, color: BE.text }}>{val}</div>
-      {sub && <div style={{ fontSize: 10.5, color: BE.textDim }}>{sub}</div>}
-    </div>
-  );
-}
-
-function MarkRow({ type, marks, neg }: { type: string; marks: string; neg: string }) {
-  return (
-    <div className="p-2.5 border rounded-lg" style={{ borderColor: BE.line }}>
-      <div style={{ fontFamily: BE.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: BE.accent, marginBottom: 4 }}>{type}</div>
-      <div style={{ fontSize: 11, color: BE.text, marginBottom: 1 }}>{marks}</div>
-      <div style={{ fontSize: 10.5, color: BE.textMute }}>{neg}</div>
-    </div>
-  );
-}
-
-function fmtNeg(n: number): string {
-  if (n === 0) return "0";
-  if (Math.abs(n - 1 / 3) < 0.01) return "−⅓";
-  if (Math.abs(n - 2 / 3) < 0.01) return "−⅔";
-  if (Math.abs(n - 1 / 2) < 0.01) return "−½";
-  if (Math.abs(n - Math.round(n)) < 0.01) return `−${Math.round(n)}`;
-  return `−${n.toFixed(2).replace(/\.?0+$/, "")}`;
-}
-
-function getMarkingRows(
-  config: ExamConfig,
-  examType: ExamType | null,
-): { type: QType; marks: string; neg: string }[] {
-  const typeMarks: Record<string, Set<number>> = {};
-  for (const sec of config.sections) {
-    for (const band of sec.markDistribution) {
-      const types = band.type ? [band.type] : sec.questionTypes;
-      for (const t of types) {
-        if (!typeMarks[t]) typeMarks[t] = new Set();
-        typeMarks[t].add(band.marks);
-      }
-    }
-  }
-  const negFrac = config.sections[0]?.negativePerMark ?? 0;
-  const isAdv = examType === "JEE_ADVANCED";
-  const order: QType[] = ["MCQ", "MSQ", "NAT"];
-  const rows: { type: QType; marks: string; neg: string }[] = [];
-  for (const t of order) {
-    const set = typeMarks[t];
-    if (!set || set.size === 0) continue;
-    const marks = [...set].sort((a, b) => a - b);
-    const marksStr = marks.map((m) => `+${m}`).join(" / ");
-    let negStr: string;
-    if (t === "MCQ") {
-      if (negFrac === 0) negStr = "No negative";
-      else negStr = marks.map((m) => fmtNeg(m * negFrac)).join(" / ");
-    } else if (t === "MSQ") {
-      negStr = isAdv ? "Partial credit · 0 wrong" : "All-or-nothing · 0 wrong";
-    } else {
-      negStr = "0 wrong";
-    }
-    rows.push({ type: t, marks: marksStr, neg: negStr });
-  }
-  return rows;
 }

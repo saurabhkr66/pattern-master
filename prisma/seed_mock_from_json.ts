@@ -30,12 +30,17 @@ function sha256(s: string): string {
  *  - the `topic` field (preserved across runs via merge — should not trigger update)
  * Used to short-circuit re-seeds when nothing meaningful changed.
  */
+// Bump SEED_VERSION whenever the seeder's question shape changes in a way that
+// requires re-writing existing rows even though the source JSON is unchanged.
+// v2: align sectionIndex with examConfig (GA at 0, Subject at 1) — fixes prior
+// bug where subject-only papers had every question land under the GA tab.
+const SEED_VERSION = "v2";
 function mockContentHash(allQuestions: any[]): string {
   const stripped = allQuestions.map(q => {
     const { id: _id, topic: _topic, ...rest } = q;
     return rest;
   });
-  return sha256(JSON.stringify(stripped));
+  return sha256(SEED_VERSION + ":" + JSON.stringify(stripped));
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -119,18 +124,16 @@ async function main() {
           const gaQuestions = raw.filter(q => q.topic_name === "General Aptitude");
           const subjectQuestions = raw.filter(q => q.topic_name !== "General Aptitude");
 
-          if (gaQuestions.length > 0) {
-            paperData = {
-              sections: [
-                { name: "General Aptitude", questions: gaQuestions },
-                { name: config.branch || "Subject", questions: subjectQuestions }
-              ]
-            };
-          } else {
-            paperData = {
-              sections: [{ name: config.branch || "General", questions: raw }]
-            };
-          }
+          // Always emit GA at index 0 and Subject at index 1 to match the
+          // canonical examConfig.sections layout for GATE. If we omit the GA
+          // section when it's empty, subject questions get sectionIndex 0,
+          // which the test engine then renders under the GA tab.
+          paperData = {
+            sections: [
+              { name: "General Aptitude", questions: gaQuestions },
+              { name: config.branch || "Subject", questions: subjectQuestions },
+            ],
+          };
         } else {
           paperData = raw;
         }

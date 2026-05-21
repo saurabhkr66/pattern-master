@@ -64,93 +64,74 @@ const FILE_TOPIC_MAP: Array<{
   branch: string;
   subject: string;
 }> = [
-
-
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_oscillations_1.json',
-    topic_name: 'Oscillations',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_oscillations_2.json',
-    topic_name: 'Oscillations',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_waves.json',
-    topic_name: 'Waves',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_waves1.json',
-    topic_name: 'Waves',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_vector_algebra.json',
-    topic_name: 'Vector Algebra',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics.json',
-    topic_name: 'Thermodynamics',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics_2.json',
-    topic_name: 'Thermodynamics',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics_3.json',
-    topic_name: 'Thermodynamics',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_thermodynamics_4.json',
-    topic_name: 'Thermodynamics',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_properties_of_matter.json',
-    topic_name: 'Properties of Matter',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_properties_of_matter_part2.json',
-    topic_name: 'Properties of Matter',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  },
-  {
-    file: 'c:/Users/saura/OneDrive/Desktop/projects/exam-scraper/extractor/jee_properties_of_matter_part3.json',
-    topic_name: 'Properties of Matter',
-    exam_type: 'JEE Main',
-    branch: 'Common',
-    subject: 'Physics'
-  }
-];
+    
+    // ── GATE CSE → Computer Organization & Architecture ─────────────────────
+    // Restoring PYQs that were lost when the ISRO exam was deleted (cascade
+    // removed COA-subject rows across exam_types, not just ISRO).
+    {
+      file: 'scratch/jeemains/gate_cse_pipeline_processor.json',
+      topic_name: 'Pipeline Processor',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_cache_memory.json',
+      topic_name: 'Cache Memory',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_alu_data_path_and_control_unit.json',
+      topic_name: 'ALU Data Path and Control Unit',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_machine_instruction.json',
+      topic_name: 'Machine Instruction',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_memory_chip_design.json',
+      topic_name: 'Memory Chip Design',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_secondary_storage.json',
+      topic_name: 'Secondary Storage',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_io_interface.json',
+      topic_name: 'IO Interface',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_interrupt.json',
+      topic_name: 'Interrupt',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+    {
+      file: 'scratch/jeemains/gate_cse_addressing_modes.json',
+      topic_name: 'Addressing Modes',
+      exam_type: 'GATE',
+      branch: 'CSE',
+      subject: 'Computer Organization & Architecture',
+    },
+  ];
 
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
@@ -208,13 +189,13 @@ async function main() {
       // pre-existing rows and backfill their hashes. After that we only fetch hashes.
       const existing = missingHashCount > 0
         ? await prisma.pYQ.findMany({
-            where: { pattern_id: pattern.id },
-            select: { id: true, question_text: true, question_hash: true, content_hash: true },
-          })
+          where: { pattern_id: pattern.id },
+          select: { id: true, question_text: true, question_hash: true, content_hash: true },
+        })
         : await prisma.pYQ.findMany({
-            where: { pattern_id: pattern.id },
-            select: { id: true, question_hash: true, content_hash: true },
-          });
+          where: { pattern_id: pattern.id },
+          select: { id: true, question_hash: true, content_hash: true },
+        });
 
       const byHash = new Map<string, { id: string; content_hash: string | null }>();
       const byText = new Map<string, { id: string; content_hash: string | null }>();
