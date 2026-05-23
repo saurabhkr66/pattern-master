@@ -39,11 +39,11 @@ export async function POST(req: NextRequest) {
       `;
       questionData = rows[0]?.question ?? null;
     } else if (isSubjectPyq) {
-      questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId } });
+      questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId }, select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true, explanation_hindi: true, images: true } });
     } else if (isPyq) {
-      questionData = await prisma.pYQ.findUnique({ where: { id: questionId } });
+      questionData = await prisma.pYQ.findUnique({ where: { id: questionId }, select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true, images: true } });
     } else {
-      questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId } });
+      questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId }, select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true, images: true } });
     }
 
     if (!questionData) {
@@ -88,7 +88,7 @@ Rules:
       generationConfig: {
         maxOutputTokens: 2500,
         // @ts-ignore
-        thinkingConfig: { thinkingLevel: "MEDIUM" },
+        thinkingConfig: { thinkingLevel: "HIGH" },
       }
     });
     const result = await model.generateContent(contentParts);

@@ -171,18 +171,9 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     if (questionStatusFilter === "wrong") filtered = filtered.filter(q => q.attempts?.length && !q.attempts[0].is_correct);
     if (questionStatusFilter === "correct") filtered = filtered.filter(q => q.attempts?.length && q.attempts[0].is_correct);
 
-    const shuffle = (arr: any[]) => {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    };
-
-    const wrong   = shuffle(filtered.filter(q => q.attempts?.length && !q.attempts[0].is_correct));
-    const unseen  = shuffle(filtered.filter(q => !q.attempts?.length));
-    const correct = shuffle(filtered.filter(q => q.attempts?.length &&  q.attempts[0].is_correct));
+    const wrong   = filtered.filter(q => q.attempts?.length && !q.attempts[0].is_correct);
+    const unseen  = filtered.filter(q => !q.attempts?.length);
+    const correct = filtered.filter(q => q.attempts?.length &&  q.attempts[0].is_correct);
     return [...wrong, ...unseen, ...correct];
   };
 

@@ -293,12 +293,13 @@ export async function generateAIExplanation(
   // Fetch the question data
   let questionData: any = null;
 
+  const qSelect = { id: true, question_text: true, options: true, correct_answer: true, images: true };
   if (questionType === "SubjectPYQ") {
-    questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId } });
+    questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId }, select: qSelect });
   } else if (questionType === "PYQ") {
-    questionData = await prisma.pYQ.findUnique({ where: { id: questionId } });
+    questionData = await prisma.pYQ.findUnique({ where: { id: questionId }, select: qSelect });
   } else if (questionType === "GeneratedQuestion") {
-    questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId } });
+    questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId }, select: qSelect });
   } else if (questionType === "MockQuestion") {
     if (!mockTestId) throw new Error("mockTestId required for MockQuestion");
     // Pull only the single matching question via JSONB, not the entire
@@ -399,7 +400,7 @@ Rules:
       generationConfig: {
         maxOutputTokens: 2500,
         // @ts-ignore
-        thinkingConfig: { thinkingLevel: "MEDIUM" },
+        thinkingConfig: { thinkingLevel: "HIGH" },
       }
     });
     const result = await model.generateContent(contentParts);
@@ -435,7 +436,7 @@ Rules:
   // Extract AI's verified answer
   const aiAnswerMatch = explanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
   const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
-  const isMismatch = aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase();
+  const isMismatch = !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase());
 
   // Clean up the tag and any redundant natural language conclusions
   const cleanExplanation = explanation
@@ -593,9 +594,9 @@ Rules:
             model: GEMINI_MODEL,
             tools: [],
             generationConfig: {
-              maxOutputTokens: 2500,
+            
               // @ts-ignore
-              thinkingConfig: { thinkingLevel: "MEDIUM" },
+              thinkingConfig: { thinkingLevel: "HIGH" },
             }
           });
           const result = await model.generateContent(contentParts);
@@ -833,6 +834,83 @@ export async function updateMockTestQuestionTopic(
   `;
 
   return { success: true };
+}
+
+/**
+ * Returns GATE CSE PYQs (both PYQ and SubjectPYQ) that have an empty/missing explanation.
+ * Only fetches the minimal fields needed for display + AI generation — no egress waste.
+ */
+export async function getGateCsePyqsMissingExplanation(page = 0, pageSize = 50) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
+
+  const offset = page * pageSize;
+
+  const [pyqs, subjectPyqs, totalPyq, totalSubjectPyq] = await Promise.all([
+    prisma.pYQ.findMany({
+      where: {
+        pattern: { exam_type: "GATE", branch: "CSE" },
+        explanation: "",
+      },
+      select: {
+        id: true,
+        question_text: true,
+        options: true,
+        correct_answer: true,
+        year: true,
+        marks: true,
+        images: true,
+        pattern: { select: { subject: true, topic_name: true } },
+      },
+      orderBy: { year: "desc" },
+      skip: offset,
+      take: pageSize,
+    }),
+    prisma.subjectPYQ.findMany({
+      where: {
+        branch: "CSE",
+        subject_pattern: { exam_type: "GATE" },
+        explanation: "",
+      },
+      select: {
+        id: true,
+        question_text: true,
+        options: true,
+        correct_answer: true,
+        year: true,
+        marks: true,
+        images: true,
+        subject_pattern: { select: { subject_name: true } },
+      },
+      orderBy: { year: "desc" },
+      skip: offset,
+      take: pageSize,
+    }),
+    prisma.pYQ.count({
+      where: {
+        pattern: { exam_type: "GATE", branch: "CSE" },
+        explanation: "",
+      },
+    }),
+    prisma.subjectPYQ.count({
+      where: {
+        branch: "CSE",
+        subject_pattern: { exam_type: "GATE" },
+        explanation: "",
+      },
+    }),
+  ]);
+
+  return {
+    pyqs: pyqs.map(q => ({ ...q, questionType: "PYQ" as const, subject: q.pattern.subject, topic: q.pattern.topic_name })),
+    subjectPyqs: subjectPyqs.map(q => ({ ...q, questionType: "SubjectPYQ" as const, subject: q.subject_pattern.subject_name })),
+    totalPyq,
+    totalSubjectPyq,
+    page,
+    pageSize,
+  };
 }
 
 export async function getMockTestQuestions(mockTestId: string) {

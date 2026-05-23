@@ -274,15 +274,108 @@ const expandTextTable = (s: string): string =>
       return '\\begin{cases}' + rows.join(' \\\\ ') + '\\end{cases}';
     });
 
+// Reformat C code stored as a single prose line into indented multi-line code.
+// Input:  "int foo(int n){ int i; for(i=0; i<n; i++) { bar(i); } return i; }"
+// Output: properly indented multi-line C code string.
+const formatCCode = (raw: string): string => {
+  // Tokenise: split on statement boundaries and braces, preserving them.
+  // Strategy: insert a newline before/after { and }, and after ; that are not
+  // inside a for(;;) init clause.
+  let out = '';
+  let indent = 0;
+  let i = 0;
+  // Track whether we're inside a for(...) paren so we don't break on its semicolons.
+  let parenDepth = 0;
+  let inForParen = false;
+  const INDENT = '    ';
+
+  const flush = (line: string) => {
+    const trimmed = line.trim();
+    if (trimmed) out += INDENT.repeat(indent) + trimmed + '\n';
+  };
+
+  let cur = '';
+  while (i < raw.length) {
+    const ch = raw[i];
+
+    if (ch === '(') {
+      parenDepth++;
+      // Detect `for (` or `for(`
+      if (/\bfor\s*$/.test(cur)) inForParen = true;
+      cur += ch;
+    } else if (ch === ')') {
+      parenDepth--;
+      if (parenDepth === 0) inForParen = false;
+      cur += ch;
+    } else if (ch === '{') {
+      flush(cur + ' {');
+      cur = '';
+      indent++;
+    } else if (ch === '}') {
+      flush(cur);
+      cur = '';
+      indent = Math.max(0, indent - 1);
+      // Peek: if next non-space is `else`, keep on same line
+      const rest = raw.slice(i + 1).trimStart();
+      if (rest.startsWith('else')) {
+        out += INDENT.repeat(indent) + '} ';
+      } else {
+        out += INDENT.repeat(indent) + '}\n';
+      }
+    } else if (ch === ';' && !inForParen) {
+      flush(cur + ';');
+      cur = '';
+    } else {
+      cur += ch;
+    }
+    i++;
+  }
+  flush(cur);
+  return out.trim();
+};
+
+// Detect C/C++ function or pseudocode blocks embedded as plain prose and wrap
+// them in a fenced code block with proper indentation.
+const wrapInlineCode = (s: string): string => {
+  // Signature: one or more C primitive type keywords + identifier + parens, then `{`
+  const SIG_RE = /(?<![`])((?:(?:int|void|char|float|double|long|short|unsigned|struct|bool|auto)\s+)+\w+\s*\([^)]*\)\s*)\{/g;
+  let result = '';
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = SIG_RE.exec(s)) !== null) {
+    const sigStart = match.index;
+    const bodyStart = match.index + match[0].length;
+
+    // Walk forward to find the matching closing `}` (balanced)
+    let depth = 1;
+    let j = bodyStart;
+    while (j < s.length && depth > 0) {
+      if (s[j] === '{') depth++;
+      else if (s[j] === '}') depth--;
+      j++;
+    }
+    if (depth !== 0) continue;
+
+    const rawCode = match[1] + '{' + s.slice(bodyStart, j);
+    const formatted = formatCCode(rawCode.trim());
+    result += s.slice(lastIndex, sigStart) + `\n\n\`\`\`c\n${formatted}\n\`\`\`\n\n`;
+    lastIndex = j;
+    SIG_RE.lastIndex = j;
+  }
+  result += s.slice(lastIndex);
+  return result;
+};
+
 const MathRenderer = memo(function MathRenderer({ content, className, style }: MathRendererProps) {
   // Normalise typographic/smart characters that KaTeX doesn't understand.
   // These appear in scraped question text (e.g. "1's", "it's", "don't").
-  const baseContent = (content || '')
+  const baseContent = wrapInlineCode(content || '')
     // Smart/curly quotes → straight equivalents
-    .replace(/[‘’ʼ`´]/g, "'")   // ' ' → '
-    .replace(/[“”]/g, '"')                       // " " → "
+    .replace(/[\u2018\u2019\u02BC\u00B4]/g, "'") // curly/smart single quotes -> straight
+    .replace(/[\u201C\u201D]/g, '"') // curly double quotes -> straight
     // Em/en dashes → hyphen
-    .replace(/[–—]/g, '-')
+    .replace(/[\u2013\u2014]/g, '-') // en/em dashes -> hyphen
     // Ellipsis character → three dots
     .replace(/…/g, '...')
     // LaTeX delimiter conversions
@@ -493,15 +586,25 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
         rehypePlugins={[rehypeKatex]}
         components={{
           pre: ({ children }) => (
-            <pre className="whitespace-pre-wrap break-words bg-transparent p-0 m-0 font-mono text-[13px]">
+            <pre className="whitespace-pre-wrap break-words bg-zinc-900 border border-zinc-700 rounded-md px-4 py-3 my-3 font-mono text-[13px] text-zinc-100 overflow-x-auto">
               {children}
             </pre>
           ),
-          code: ({ children }) => (
-            <code className="whitespace-pre-wrap break-words bg-transparent p-0 font-mono">
-              {children}
-            </code>
-          ),
+          code: ({ node, ...props }) => {
+            // Inside a <pre> (fenced block) — no extra bg
+            const isBlock = (node?.data as Record<string, unknown> | undefined)?.meta !== undefined
+              || !!(props as { className?: string }).className;
+            return (
+              <code
+                className={
+                  isBlock
+                    ? 'whitespace-pre-wrap break-words font-mono text-[13px]'
+                    : 'whitespace-pre-wrap break-words bg-zinc-800 text-zinc-100 rounded px-1 font-mono text-[13px]'
+                }
+                {...props}
+              />
+            );
+          },
         }}
       >
         {processedContent}
