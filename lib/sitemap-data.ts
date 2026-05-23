@@ -68,10 +68,9 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
 
   const staticPages: UrlEntry[] = [
     { url: BASE,                 lastmod: now, changefreq: "weekly", priority: 1.0 },
-    { url: `${BASE}/sign-up`,    lastmod: now, changefreq: "yearly", priority: 0.7 },
-    { url: `${BASE}/sign-in`,    lastmod: now, changefreq: "yearly", priority: 0.5 },
-    { url: `${BASE}/practice`,   lastmod: now, changefreq: "daily",  priority: 0.95 },
     { url: `${BASE}/mock-tests`, lastmod: now, changefreq: "daily",  priority: 0.95 },
+    // /sign-up, /sign-in, /practice are auth/gated — excluded to avoid
+    // robots.txt conflict (practice is disallowed) and thin-content signals.
   ];
 
   const mockTemplates = await prisma.mockTestTemplate
@@ -136,7 +135,22 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     priority: 0.85,
   }));
 
-  return [...staticPages, ...mockLandingPages, ...examPages, ...subjectPages, ...topicPages];
+  // /[examType]/pyq — one per exam that has seeded papers
+  const pyqExamRows = await prisma.mockTestTemplate
+    .findMany({
+      where: { mode: "seeded" },
+      select: { exam_type: true, branch: true },
+      distinct: ["exam_type", "branch"],
+    })
+    .catch(logFail("pyq hub"));
+  const pyqPages: UrlEntry[] = pyqExamRows.map((r) => ({
+    url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/pyq`,
+    lastmod: now,
+    changefreq: "weekly",
+    priority: 0.9,
+  }));
+
+  return [...staticPages, ...mockLandingPages, ...examPages, ...subjectPages, ...topicPages, ...pyqPages];
 }
 
 export async function buildMockChunk(chunkIdx: number): Promise<UrlEntry[]> {

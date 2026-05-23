@@ -97,6 +97,17 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
 
   if (!patterns.length) notFound();
 
+  // Seeded previous-year papers for this exam
+  const seededPapers = await prisma.mockTestTemplate.findMany({
+    where: {
+      exam_type: exam.examType,
+      ...branchWhereClause(exam.branch),
+      mode: 'seeded',
+    },
+    select: { id: true, title: true, branch: true, total_questions: true, max_score: true, duration_secs: true },
+    orderBy: { created_at: 'desc' },
+  });
+
   // Group by subject
   const subjectMap = new Map<string, { topics: number; questions: number; pyqs: number }>();
   for (const p of patterns) {
@@ -223,28 +234,58 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
           ))}
         </div>
 
-        {/* Mock tests CTA */}
-        <div
-          className="mb-10 p-6 rounded-2xl border"
-          style={{ background: "var(--bg-surface-2)", borderColor: "var(--border)" }}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="font-bold mb-1" style={{ color: "var(--text-primary)" }}>
-                Take a {exam.fullLabel} full-length mock test
-              </p>
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                Real exam interface · timed · with detailed analysis after submission.
-              </p>
+        {/* Previous year papers */}
+        {seededPapers.length > 0 && (
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-black" style={{ color: "var(--text-primary)" }}>
+                Previous Year Papers
+              </h2>
+              <Link
+                href={`/${examType}/pyq`}
+                className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                View all →
+              </Link>
             </div>
-            <Link
-              href={`/mock-tests/${toSlug(exam.examType)}`}
-              className="inline-block px-5 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
-            >
-              Browse mock tests →
-            </Link>
+            <div className="flex flex-col gap-3">
+              {seededPapers.map((paper) => {
+                const branchSlug = toSlug(paper.branch || "all-subjects");
+                const examSlug = toSlug(exam.examType);
+                const practiceUrl = `/practice?exam=${encodeURIComponent(exam.examType)}${exam.branch ? `&branch=${encodeURIComponent(exam.branch)}` : ""}&subject=Full+Papers`;
+                return (
+                  <div
+                    key={paper.id}
+                    className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl border"
+                    style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+                  >
+                    <div>
+                      <p className="font-bold mb-1" style={{ color: "var(--text-primary)" }}>{paper.title}</p>
+                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                        {paper.total_questions} Questions · {paper.max_score} Marks · {Math.round(paper.duration_secs / 60)} Mins
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link
+                        href={practiceUrl}
+                        className="px-4 py-2 rounded-xl font-bold text-sm border hover:border-indigo-500/60 transition-colors"
+                        style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+                      >
+                        Practice
+                      </Link>
+                      <Link
+                        href={`/mock-tests/${examSlug}/${branchSlug}/${paper.id}`}
+                        className="px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+                      >
+                        Take Mock Test →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Signup CTA */}
         <div

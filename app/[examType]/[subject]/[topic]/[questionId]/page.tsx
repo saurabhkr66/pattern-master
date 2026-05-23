@@ -8,7 +8,7 @@
 // URL example: /gate-cse/dbms/normalization/pyq-abc123
 //              → 308 → /gate-cse/dbms/normalization?page=2#q-pyq-abc123
 
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, unstable_rethrow } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { toSlug, buildExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
 
@@ -119,7 +119,18 @@ export default async function QuestionPage({
   params: Promise<PageParams>;
 }) {
   const { questionId } = await params;
-  const url = await buildRedirectUrl(questionId);
+
+  let url: string | null = null;
+  try {
+    url = await buildRedirectUrl(questionId);
+  } catch (err) {
+    unstable_rethrow(err);
+    // DB errors (connection timeout, etc.) should 404 rather than 500 so
+    // Google doesn't keep retrying these old per-question URLs as broken pages.
+    console.error("[question-redirect] DB error for", questionId, err);
+    notFound();
+  }
+
   if (!url) notFound();
 
   // permanentRedirect emits a 308 (semantically equivalent to 301 for GET).
