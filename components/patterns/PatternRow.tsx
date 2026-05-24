@@ -141,6 +141,13 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     }
   }, [directQuestionId, questions, pyqs]);
 
+  // Auto-switch to bank tab when there are no PYQs but there are bank questions
+  useEffect(() => {
+    if (data && pyqs.length === 0 && questions.length > 0) {
+      setActiveTab("bank");
+    }
+  }, [data, pyqs.length, questions.length]);
+
   // Sync URL when question is cleared
   useEffect(() => {
     if (!selectedQuestion && !directQuestionId) {

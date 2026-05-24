@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
@@ -92,16 +91,13 @@ export default function QuestionPane({
                 <div
                   key={img.index}
                   className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden"
-                  style={{ background: BE.surface, borderColor: BE.line, maxHeight: 320, minHeight: 160 }}
+                  style={{ background: BE.surface, borderColor: BE.line }}
                 >
-                  <Image
+                  <img
                     src={getCloudinaryUrl(img.filename)}
                     alt=""
-                    width={800}
-                    height={600}
-                    sizes="(max-width: 768px) 100vw, 800px"
-                    className="rounded-lg object-contain"
-                    style={{ maxHeight: 294, width: "auto", height: "auto" }}
+                    className="rounded-lg object-contain w-full"
+                    style={{ maxHeight: 400, height: "auto" }}
                   />
                 </div>
               ))}
