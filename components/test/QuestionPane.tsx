@@ -43,7 +43,7 @@ export default function QuestionPane({
 
   return (
     <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: "22px 28px" }}>
+      <div className="qp-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "auto", padding: "22px 28px" }}>
         {/* Meta row */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
           <span style={{ fontFamily: BE.mono, fontSize: 12, color: BE.textDim }}>
@@ -85,7 +85,7 @@ export default function QuestionPane({
         </div>
 
         {/* Question text */}
-        <div style={{ fontFamily: BE.serif, fontSize: 19, lineHeight: 1.55, color: BE.text, marginBottom: 22 }}>
+        <div className="qp-qtext" style={{ fontFamily: BE.serif, fontSize: 19, lineHeight: 1.55, color: BE.text, marginBottom: 22 }}>
           {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
             <div className="mb-6 flex flex-col gap-4">
               {(currentQ.images as { index: number; filename: string }[]).map((img) => (

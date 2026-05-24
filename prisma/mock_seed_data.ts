@@ -12,12 +12,16 @@ export interface PaperConfig {
 }
 
 export const PAPER_CONFIGS: PaperConfig[] = [
- 
- 
   {
-    title: "GATE CSE 2026 Shift 1",
-    exam_type: "GATE",
-    branch: "CSE",
-    file: "c:\\Users\\saura\\Desktop\\projects\\pattern-master\\scratch\\jeemains\\gate-cs-1-question-paper-08-feb-2026-shift-1-69c640b57782ba3e456826d5.json"
+    title: "NEET 2024",
+    exam_type: "NEET",
+    branch: null,
+    sections: [
+      { name: "Physics",   file: "c:\\Users\\saura\\Desktop\\projects\\pattern-master\\scratch\\neet\\neet-ug-question-paper-05-may-2024-68779e355991c463c6687c45_physics.json" },
+      { name: "Chemistry", file: "c:\\Users\\saura\\Desktop\\projects\\pattern-master\\scratch\\neet\\neet-ug-question-paper-05-may-2024-68779e355991c463c6687c45_chemistry.json" },
+      { name: "Botany",    file: "c:\\Users\\saura\\Desktop\\projects\\pattern-master\\scratch\\neet\\neet-ug-question-paper-05-may-2024-68779e355991c463c6687c45_botany.json" },
+      { name: "Zoology",   file: "c:\\Users\\saura\\Desktop\\projects\\pattern-master\\scratch\\neet\\neet-ug-question-paper-05-may-2024-68779e355991c463c6687c45_zoology.json" },
+    ],
   },
+
 ];

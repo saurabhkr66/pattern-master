@@ -9,9 +9,10 @@ interface Props {
   q: ResultData["questions"][number];
   status: string;
   statusColor: string;
+  compact?: boolean;
 }
 
-export default function ExpandedQuestion({ q, status }: Props) {
+export default function ExpandedQuestion({ q, status, compact }: Props) {
   const optionLetters = ["A", "B", "C", "D", "E", "F"];
   const correctLetters = new Set(
     (q.correct_answer || "").split(/[;,]/).map(l => l.trim().toUpperCase()).filter(Boolean)
@@ -21,8 +22,8 @@ export default function ExpandedQuestion({ q, status }: Props) {
   );
 
   return (
-    <div style={{ padding: "0 24px 24px", borderTop: `1px solid ${BE.line}`, background: "rgba(0,0,0,0.18)" }}>
-      <div className="rounded-xl border mt-5 p-6 space-y-6" style={{ borderColor: BE.line, background: "var(--surface, #111)" }}>
+    <div style={{ padding: compact ? "0" : "0 24px 24px", borderTop: `1px solid ${BE.line}`, background: "rgba(0,0,0,0.18)" }}>
+      <div className={`rounded-xl border space-y-6 ${compact ? "mt-0 p-3 rounded-none border-x-0 border-b-0" : "mt-5 p-6"}`} style={{ borderColor: BE.line, background: "var(--surface, #111)" }}>
 
         <div style={{ fontSize: 15, lineHeight: 1.7, color: BE.text }}>
           <MathRenderer content={q.question_text} />

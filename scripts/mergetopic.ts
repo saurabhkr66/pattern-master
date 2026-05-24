@@ -92,17 +92,61 @@ async function mergeTopics(config: {
     console.log(`✅ Topics removed: ${deleted.count}`);
 }
 
-// --- CHANGE THESE VALUES TO MERGE DIFFERENT TOPICS ---
-mergeTopics({
+async function countTopics(config: {
+    branch: string,
+    subject: string,
+    sourceTopics: string[]
+}) {
+    const { branch, subject, sourceTopics } = config;
+
+    const patterns = await prisma.pattern.findMany({
+        where: { branch, subject, topic_name: { in: sourceTopics } },
+        select: { id: true, topic_name: true }
+    });
+
+    if (patterns.length === 0) {
+        console.log("❌ No matching patterns found.");
+        return;
+    }
+
+    console.log(`\n📊 Question counts for ${subject} (${branch}):\n`);
+    for (const p of patterns) {
+        const [pyqs, qs] = await Promise.all([
+            prisma.pYQ.count({ where: { pattern_id: p.id } }),
+            prisma.generatedQuestion.count({ where: { pattern_id: p.id } }),
+        ]);
+        console.log(`  "${p.topic_name}"  →  PYQs: ${pyqs}  |  Generated: ${qs}  |  Total: ${pyqs + qs}`);
+    }
+}
+
+// --- CHANGE THESE VALUES ---
+const config = {
     branch: "CSE",
     subject: "Operating Systems",
-    targetTopic: "System Call", // The master topic name
+    targetTopic: "System Call",
     sourceTopics: [
         "System Calls"
-
-
-
-
     ]
-}).catch(err => console.error(err))
+};
+
+async function main() {
+    const readline = await import("readline");
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const ask = (q: string) => new Promise<string>(res => rl.question(q, res));
+
+    await countTopics(config);
+
+    console.log(`\n🎯 Target topic: "${config.targetTopic}"`);
+    const answer = await ask("\nMerge these into the target? (yes/no): ");
+    rl.close();
+
+    if (answer.trim().toLowerCase() === "yes") {
+        await mergeTopics(config);
+    } else {
+        console.log("❌ Merge cancelled.");
+    }
+}
+
+main()
+    .catch(err => console.error(err))
     .finally(() => prisma.$disconnect());

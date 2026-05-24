@@ -11,105 +11,120 @@ interface Props {
 }
 
 export default function NextActions({ result, onRestart }: Props) {
+  const wrongCount = result.incorrect;
   const wrongQs = result.questions.filter(q => q.is_correct === false && q.user_answer !== null);
   const slowQs  = result.questions.filter(q => q.timeSpentSecs > 180);
-  const wrongPatterns = new Set(wrongQs.map(q => q.topic || q.subject)).size;
-  const avgSlowSecs   = slowQs.length > 0
-    ? Math.round(slowQs.reduce((s, q) => s + q.timeSpentSecs, 0) / slowQs.length)
-    : 0;
+  // Use server-reported wrong count as source of truth; fall back to filtered array
+  const displayWrong = wrongCount > 0 ? wrongCount : wrongQs.length;
+  const weakest = result.subjectBreakdown?.sort((a, b) => a.accuracy - b.accuracy)[0]?.subject;
 
-  const cards = [
-    wrongQs.length > 0 && {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-          <path d="M9 1l2.5 5.5L17 7.5l-4 3.9 1 5.6L9 14.4l-5 2.6 1-5.6L1 7.5l5.5-1L9 1z"/>
-        </svg>
-      ),
-      iconBg: BE.bad + "22",
-      iconColor: BE.bad,
-      title: `Add ${wrongQs.length} wrong question${wrongQs.length !== 1 ? "s" : ""} to mistake log`,
-      sub: `Auto-grouped into ${wrongPatterns} pattern${wrongPatterns !== 1 ? "s" : ""}`,
-      action: "Review patterns →",
-      href: "/mistakes",
-    },
-    slowQs.length > 0 && {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6">
-          <circle cx="9" cy="9" r="7.5"/><path d="M9 5v4l2.5 2"/>
-        </svg>
-      ),
-      iconBg: BE.warn + "22",
-      iconColor: BE.warn,
-      title: `Drill ${slowQs.length} slow question${slowQs.length !== 1 ? "s" : ""}`,
-      sub: `Avg ${fmtTime(avgSlowSecs)} · aim for under 3m`,
-      action: "Speed practice →",
-      href: "/practice",
-    },
+  // Always show retake + review + one more (slow or weakest), always exactly 3 cols
+  const cards: {
+    k: string;
+    h: React.ReactNode;
+    d: string;
+    action: string;
+    href: string | null;
+    onClick?: () => void;
+    primary?: boolean;
+  }[] = [
     {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-          <path d="M9 1l2.5 5.5L17 7.5l-4 3.9 1 5.6L9 14.4l-5 2.6 1-5.6L1 7.5l5.5-1L9 1z"/>
-        </svg>
-      ),
-      iconBg: BE.accent + "22",
-      iconColor: BE.accent,
-      title: "Take the next mock test",
-      sub: "Same series · keep the streak going",
-      action: "Start →",
+      k: "Next attempt",
+      h: <>Retake <em style={{ fontStyle: "italic", color: "#fbcb6a" }}>this test</em></>,
+      d: "Same question set. See how your score improves with a fresh attempt.",
+      action: "Start now →",
       href: null,
       onClick: onRestart,
+      primary: true,
     },
-  ].filter(Boolean) as {
-    icon: React.ReactNode; iconBg: string; iconColor: string;
-    title: string; sub: string; action: string;
-    href: string | null; onClick?: () => void;
-  }[];
+    {
+      k: "Review",
+      h: displayWrong > 0
+        ? <><em style={{ fontStyle: "italic", color: "#fbcb6a" }}>{displayWrong} wrong</em> answers</>
+        : <>Review <em style={{ fontStyle: "italic", color: "#fbcb6a" }}>all answers</em></>,
+      d: displayWrong > 0
+        ? "Walk through your errors with full solutions and the concept page for each."
+        : "Review all questions with full solutions and concept pages.",
+      action: "Review now →",
+      href: "/review",
+    },
+    slowQs.length > 0 ? {
+      k: "Speed practice",
+      h: <>Drill <em style={{ fontStyle: "italic", color: "#fbcb6a" }}>slow questions</em></>,
+      d: `${slowQs.length} question${slowQs.length > 1 ? "s" : ""} took over 3 minutes. Avg ${fmtTime(Math.round(slowQs.reduce((s, q) => s + q.timeSpentSecs, 0) / slowQs.length))} — aim for under 3m.`,
+      action: "Speed drill →",
+      href: "/practice",
+    } : {
+      k: "Targeted practice",
+      h: <>Drill <em style={{ fontStyle: "italic", color: "#fbcb6a" }}>{weakest ?? "weak topics"}</em></>,
+      d: "Focus on your weakest subject from this paper to close the gap before your next attempt.",
+      action: "Open set →",
+      href: "/practice",
+    },
+  ];
 
   if (cards.length === 0) return null;
 
   return (
-    <section>
-      <div style={{ fontSize: 11, fontWeight: 700, color: BE.textMute, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 14 }}>
-        What to do next
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((card, i) => (
-          <div
-            key={i}
-            className="be-card p-5 flex flex-col gap-3"
-            style={{ borderColor: BE.line }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: card.iconBg, color: card.iconColor,
-              }}>
-                {card.icon}
-              </div>
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: BE.text, lineHeight: 1.4 }}>{card.title}</div>
-                <div style={{ fontSize: 11.5, color: BE.textMute, marginTop: 3 }}>{card.sub}</div>
-              </div>
-            </div>
-            {card.href ? (
-              <Link
-                href={card.href}
-                style={{ fontSize: 12.5, fontWeight: 700, color: BE.accent, marginTop: "auto" }}
-              >
-                {card.action}
-              </Link>
-            ) : (
-              <button
-                onClick={card.onClick}
-                style={{ fontSize: 12.5, fontWeight: 700, color: BE.accent, textAlign: "left", marginTop: "auto", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-              >
-                {card.action}
-              </button>
-            )}
+    <>
+      <style>{`
+        .na-band {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          overflow: hidden;
+          background: var(--bg-surface);
+        }
+        .na-card { border-right-width: 1px; border-right-style: solid; border-right-color: var(--border); }
+        .na-card:last-child { border-right: none; }
+        @media (max-width: 768px) {
+          .na-band { grid-template-columns: 1fr; }
+          .na-card { border-right: none !important; border-bottom: 1px solid var(--border); }
+          .na-card:last-child { border-bottom: none; }
+        }
+      `}</style>
+      <div className="na-band">
+      {cards.map((card, i) => (
+        <div
+          key={i}
+          className="na-card"
+          style={{
+            padding: 28,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            background: card.primary ? "linear-gradient(140deg, rgba(245,166,35,0.07) 0%, transparent 60%)" : "transparent",
+            cursor: card.href ? "default" : "pointer",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={e => { if (!card.primary) (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.02)"; }}
+          onMouseLeave={e => { if (!card.primary) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+        >
+          <div style={{ fontFamily: BE.mono, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: BE.textMute }}>
+            {card.k}
           </div>
-        ))}
+          <div style={{ fontFamily: BE.serif, fontSize: 22, fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.2, color: BE.text }}>
+            {card.h}
+          </div>
+          <div style={{ fontSize: 13, color: BE.textDim, lineHeight: 1.55, flex: 1 }}>
+            {card.d}
+          </div>
+          {card.href ? (
+            <Link href={card.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: BE.accent, fontWeight: 500, marginTop: 4 }}>
+              {card.action}
+            </Link>
+          ) : (
+            <button
+              onClick={card.onClick}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: card.primary ? "#fbcb6a" : BE.accent, fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 4 }}
+            >
+              {card.action}
+            </button>
+          )}
+        </div>
+      ))}
       </div>
-    </section>
+    </>
   );
 }

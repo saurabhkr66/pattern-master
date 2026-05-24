@@ -69,6 +69,7 @@ export default function TestEngine({
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error" | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
   const autoSubmittedRef = useRef(false);
   const currentQIdRef = useRef(currentQId);
   const sectionIdxRef = useRef(activeSectionIdx);
@@ -145,7 +146,7 @@ export default function TestEngine({
           clearInterval(timerRef.current!);
           if (!autoSubmittedRef.current) {
             autoSubmittedRef.current = true;
-            setTimeout(() => { onSubmit(buildAnswers(), config.durationSecs); }, 100);
+            setTimeout(() => { onSubmit(buildAnswers(), Math.round((Date.now() - startTimeRef.current) / 1000)); }, 100);
           }
           return 0;
         }
@@ -289,7 +290,7 @@ export default function TestEngine({
 
   const doSubmit = useCallback(() => {
     clearInterval(timerRef.current!);
-    onSubmit(buildAnswers(), config.durationSecs - timeLeft);
+    onSubmit(buildAnswers(), Math.round((Date.now() - startTimeRef.current) / 1000));
   }, [buildAnswers, timeLeft, config.durationSecs, onSubmit]);
 
   const answeredCount = Object.values(statuses).filter((s) => s === "answered").length;
@@ -375,6 +376,7 @@ export default function TestEngine({
           counts={counts}
           onGoTo={goTo}
           onClose={() => setShowPalette(false)}
+          onSubmitClick={() => { setShowPalette(false); setConfirmSubmit(true); }}
         />
       )}
 

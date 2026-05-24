@@ -17,9 +17,11 @@ export default function TestAnalysis({ result, onRestart }: Props) {
       <main className="flex-1 max-w-7xl mx-auto w-full p-6 md:p-10 space-y-10">
         <ScoreOverview result={result} onRestart={onRestart} />
         <QuestionTimingStrip questions={result.questions} />
-        <SectionBreakdown sections={result.sectionBreakdown || []} />
+        <SectionBreakdown sections={result.sectionBreakdown || []} questions={result.questions} />
         <NextActions result={result} onRestart={onRestart} />
-        <QuestionBreakdownTable questions={result.questions} />
+        <div className="max-md:-mx-6">
+          <QuestionBreakdownTable questions={result.questions} />
+        </div>
       </main>
     </div>
   );

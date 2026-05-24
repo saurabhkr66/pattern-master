@@ -18,10 +18,11 @@ interface Props {
   counts: Counts;
   onGoTo: (q: TestQuestion) => void;
   onClose: () => void;
+  onSubmitClick: () => void;
 }
 
 export default function MobilePaletteOverlay({
-  questions, statuses, currentQId, counts, onGoTo, onClose,
+  questions, statuses, currentQId, counts, onGoTo, onClose, onSubmitClick,
 }: Props) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex justify-end" onClick={onClose}>
@@ -46,7 +47,14 @@ export default function MobilePaletteOverlay({
           currentQId={currentQId}
           onGoTo={onGoTo}
         />
-        <button onClick={onClose} className="be-btn w-full mt-auto">Close</button>
+        <button
+          onClick={() => { onClose(); onSubmitClick(); }}
+          className="be-btn be-btn-primary w-full"
+          style={{ justifyContent: "center", display: "flex" }}
+        >
+          Submit test
+        </button>
+        <button onClick={onClose} className="be-btn w-full" style={{ justifyContent: "center", display: "flex" }}>Close</button>
       </div>
     </div>
   );

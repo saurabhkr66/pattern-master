@@ -17,16 +17,14 @@ import * as path from "path";
 dotenv.config({ path: ".env" });
 
 const ai = new GoogleGenAI({
-  vertexai: true,
-  project: "project-27ed127f-554a-419a-b39",
-  location: "us-central1",
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const BATCH_SIZE = 15;       // questions processed in parallel
-const BATCH_DELAY_MS = 1500; // pause between batches to stay under RPM
-const MAX_RETRIES = 4;       // attempts per question on transient failure
-const RETRY_BASE_MS = 2000;  // first retry waits this long; doubles each retry
+const BATCH_SIZE = 1;        // Process one at a time for fine-grained throttling
+const BATCH_DELAY_MS = 4500;  // 4.5 seconds pause between requests to stay under 15 RPM
+const MAX_RETRIES = 4;        // attempts per question on transient failure
+const RETRY_BASE_MS = 2000;   // first retry waits this long; doubles each retry
 const PROCESSED_LOG = path.resolve("scripts/processed-rewrite.log");
 
 function loadProcessed(): Set<string> {
@@ -78,24 +76,26 @@ function buildRewritePrompt(q: {
   const optionsText = Array.isArray(q.options) && q.options.length > 0
     ? `\nOptions: ${q.options.join(' | ')}`
     : '';
-  return `You are an expert GATE/competitive exam educator. Rewrite the explanation below in clear, student-friendly language.
+  return `You are an expert competitive exam educator writing a fresh explanation for students.
+
+Use the reference below ONLY to verify facts, values, and which answer is correct. Do NOT copy its phrasing, sentence structure, or wording.
 
 Question: ${q.question_text}${optionsText}
 Correct Answer: ${q.correct_answer}
 
-Original Explanation (mathematically correct — preserve all steps and values):
+Reference (facts only — do NOT copy):
 ${q.explanation}
 
-Rules:
-1. Keep every reasoning step, formula, and numerical value exactly as in the original.
-2. Write in a clear, direct teaching style — like explaining to a student preparing for GATE.
-3. Use LaTeX ($...$) for all inline math and ($$...$$) for standalone equations.
-4. Structure: start with the key concept/formula, show the working, state the result.
-5. Length: 2-4 sentences for conceptual questions. For numerical problems show the working concisely — no repeated steps, no restating intermediate results.
-6. Do NOT add new methods, alternative approaches, or steps not in the original.
+Write a completely fresh explanation from scratch in your own voice:
+1. Start with the core concept, law, or principle that makes the correct answer obvious.
+2. Walk through the reasoning naturally — like a teacher explaining it for the first time.
+3. All numerical values and facts must match the reference exactly.
+4. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units.
+5. 2-4 sentences for conceptual questions; concise step-by-step for numerical problems.
+6. Do NOT use bullet points or numbered lists — flowing paragraphs only.
 7. Do NOT write meta phrases like "The given solution...", "Let us analyze...", "To solve this...".
 8. Do NOT end with "The correct option is X" or "Hence option X is correct".
-9. Output ONLY the rewritten explanation — no headings, no preamble.`.trim();
+9. Output ONLY the explanation — no headings, no preamble.`.trim();
 }
 
 function buildGeneratePrompt(q: {
@@ -106,7 +106,7 @@ function buildGeneratePrompt(q: {
   const optionsText = Array.isArray(q.options) && q.options.length > 0
     ? `\nOptions: ${q.options.join(' | ')}`
     : '';
-  return `You are an expert GATE/competitive exam educator. Write a clear, complete explanation for why the correct answer is right.
+  return `You are an expert competitive exam educator. Write a clear, complete explanation for why the correct answer is right.
 
 Question: ${q.question_text}${optionsText}
 Correct Answer: ${q.correct_answer}
@@ -114,8 +114,8 @@ Correct Answer: ${q.correct_answer}
 Rules:
 1. Start directly with the key concept, law, or formula — do NOT restate the question.
 2. For numerical problems show key steps only — no repeated lines, no restating intermediate values. For conceptual questions explain the principle in 2-3 sentences.
-3. Use LaTeX ($...$) for all inline math and ($$...$$) for standalone equations.
-4. Length: 2-3 sentences for conceptual MCQs, full step-by-step working for numerical/NAT questions.
+3. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units.
+4. Length: 2-3 sentences for conceptual MCQs, full step-by-step working for numerical problems.
 5. Do NOT use bullet points or numbered lists — write in flowing paragraphs.
 6. Do NOT write meta phrases like "Let's analyze...", "To solve this...", "We need to find...".
 7. Do NOT end with "The correct option is X" or "Hence option X is correct".
@@ -161,16 +161,15 @@ async function produceExplanation(
   );
 
   const idTag = (q.id || "?").slice(-8);
-  let lastErr: string | null = null;
+  let lastErr = "";
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.1-flash-lite",
         contents,
         config: {
-          thinkingConfig: { thinkingBudget: 0 },
-          
+          thinkingConfig: { thinkingBudget: -1 },
         }
       });
 
@@ -186,6 +185,15 @@ async function produceExplanation(
       lastErr = "empty response";
     } catch (err: any) {
       lastErr = err?.message || String(err);
+      const isRateLimit = lastErr.toLowerCase().includes("quota") || 
+                          lastErr.toLowerCase().includes("rate limit") || 
+                          lastErr.includes("429");
+      if (isRateLimit) {
+        console.warn(`  [Rate Limit] Q ${idTag} hit Gemini API rate limit (429). Waiting 65s before retry...`);
+        await sleep(65000);
+        attempt--; // Don't consume a retry attempt for rate limiting
+        continue;
+      }
     }
 
     if (attempt < MAX_RETRIES) {
@@ -232,7 +240,7 @@ async function processFile(filePath: string, isDry: boolean, processed: Set<stri
     const eligible = questions.filter((q) => q && q.question_text);
     const withExplanation = eligible.filter((q) => hasTextExplanation(q));
     const missingExplanation = eligible.filter((q) => !hasTextExplanation(q));
-    const targets = eligible.filter((q) => q.id ? !processed.has(String(q.id)) : !hasTextExplanation(q));
+    const targets = eligible.filter((q) => q.id ? !processed.has(String(q.id)) : true);
     const skipped = eligible.length - targets.length;
     totalSkipped += skipped;
     const toRewrite = targets.filter((q) => hasTextExplanation(q)).length;
@@ -321,7 +329,7 @@ async function processFile(filePath: string, isDry: boolean, processed: Set<stri
   }
 }
 
-const AUTO_DIR = "scratch/jeemains";
+const AUTO_DIR = "scratch/jeemains"; // default; override with --dir <path>
 
 function findJsonFiles(dir: string): string[] {
   const results: string[] = [];
@@ -342,8 +350,11 @@ async function main() {
     console.log(`Loaded ${processed.size} previously processed question id(s) from ${PROCESSED_LOG}`);
   }
 
+  const dirArgIdx = args.indexOf("--dir");
+  const autoDir = dirArgIdx !== -1 ? args[dirArgIdx + 1] : AUTO_DIR;
+
   if (args.includes("--auto")) {
-    const dirPath = path.resolve(AUTO_DIR);
+    const dirPath = path.resolve(autoDir);
     if (!fs.existsSync(dirPath)) {
       console.error(`Auto dir not found: ${dirPath}`);
       process.exit(1);
@@ -353,7 +364,7 @@ async function main() {
       console.log(`No JSON files found in ${dirPath}`);
       process.exit(0);
     }
-    console.log(`Found ${files.length} file(s) in ${AUTO_DIR}\n`);
+    console.log(`Found ${files.length} file(s) in ${autoDir}\n`);
     for (const file of files) {
       console.log(`\n${"=".repeat(60)}`);
       console.log(`File: ${file}`);
@@ -367,14 +378,15 @@ async function main() {
   if (!fileArg || fileArg.startsWith("--")) {
     console.log(`
 Usage:
-  --file <path>      Path to JSON file (array of mock objects with questions)
-  --auto             Process all JSON files in ${AUTO_DIR}/
+  --file <path>      Path to a single JSON file
+  --auto             Process all JSON files in the target directory
+  --dir <path>       Directory to use with --auto (default: ${AUTO_DIR})
   --dry              Dry run — print results without writing to file
 
 Examples:
-  npx ts-node --project tsconfig.json scripts/json-rewrite-explanations.ts --file scratch/mocks.json
-  npx ts-node --project tsconfig.json scripts/json-rewrite-explanations.ts --auto
-  npx ts-node --project tsconfig.json scripts/json-rewrite-explanations.ts --auto --dry
+  npx tsx scripts/json-rewrite-explanations.ts --file scratch/neet/file.json
+  npx tsx scripts/json-rewrite-explanations.ts --auto --dir scratch/neet
+  npx tsx scripts/json-rewrite-explanations.ts --auto --dir scratch/neet --dry
     `);
     process.exit(0);
   }

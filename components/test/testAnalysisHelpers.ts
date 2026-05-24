@@ -32,7 +32,7 @@ export function shortAns(answer: string | null, type: string): string {
 }
 
 export function fmtTime(secs: number): string {
-  if (!secs) return "0s";
+  if (!secs || secs < 0) return "0s";
   const m = Math.floor(secs / 60);
   const s = secs % 60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;

@@ -122,7 +122,7 @@ function saveJson(filePath: string, data: any[]) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
 }
 
-async function processFile(filePath: string, topicMap: Record<string, string[]>, isDry: boolean) {
+async function processFile(filePath: string, topicMap: Record<string, string[]>, isDry: boolean, isForce: boolean) {
   const absPath = path.resolve(filePath);
   if (!fs.existsSync(absPath)) {
     console.error(`File not found: ${absPath}`);
@@ -136,11 +136,22 @@ async function processFile(filePath: string, topicMap: Record<string, string[]>,
     ? [{ title: path.basename(filePath), questions: raw }]
     : raw;
 
-  // Subject from parent directory name (handle NEET folder structure)
+  // Subject from parent directory name or filename (handle NEET folder structure and split files)
   const dirName = path.basename(path.dirname(absPath)).toUpperCase();
+  const fileName = path.basename(absPath).toUpperCase();
   let subjectFromPath = dirName;
-  if (dirName.includes("NEET_BIO")) subjectFromPath = "BIOLOGY";
-  else if (dirName.includes("NEET_PHY_CHEM")) subjectFromPath = "PHY_CHEM";
+
+  if (fileName.includes("_PHYSICS")) {
+    subjectFromPath = "PHYSICS";
+  } else if (fileName.includes("_CHEMISTRY")) {
+    subjectFromPath = "CHEMISTRY";
+  } else if (fileName.includes("_BOTANY") || fileName.includes("_ZOOLOGY") || fileName.includes("_BIOLOGY")) {
+    subjectFromPath = "BIOLOGY";
+  } else if (dirName.includes("NEET_BIO")) {
+    subjectFromPath = "BIOLOGY";
+  } else if (dirName.includes("NEET_PHY_CHEM")) {
+    subjectFromPath = "PHY_CHEM";
+  }
 
   console.log(`\nLoaded ${isFlatArray ? data[0].questions.length : data.length} question(s) from ${absPath} [subject mapped: ${subjectFromPath}]`);
 
@@ -149,22 +160,26 @@ async function processFile(filePath: string, topicMap: Record<string, string[]>,
   for (let mi = 0; mi < data.length; mi++) {
     const mock = data[mi];
     const questions: any[] = mock.questions || [];
-    const missing = questions.filter(
-      (q) => !q.topic_name || q.topic_name.trim() === "" || q.topic_name === "Unknown" || q.topic_name === "Uncategorized"
-    );
+    const toProcess = isForce
+      ? questions
+      : questions.filter(
+        (q) => !q.topic_name || q.topic_name.trim() === "" || q.topic_name === "Unknown" || q.topic_name === "Uncategorized"
+      );
 
     console.log(`\n[${mi + 1}/${data.length}] "${mock.title || mock.id}"`);
-    console.log(`  Total: ${questions.length} | Missing topics: ${missing.length}`);
-    if (missing.length === 0) { console.log("  Nothing to do."); continue; }
+    console.log(`  Total: ${questions.length} | Questions to process: ${toProcess.length}`);
+    if (toProcess.length === 0) { console.log("  Nothing to do."); continue; }
 
     let fixed = 0, failed = 0;
 
     const subject = subjectFromPath || "GENERAL";
     let allowedTopics: string[] = [];
 
-    // Combine topics for combined Physics/Chemistry files
+    // Combine topics for combined Physics/Chemistry files or general NEET files
     if (subject === "PHY_CHEM") {
       allowedTopics = [...(topicMap["PHYSICS"] || []), ...(topicMap["CHEMISTRY"] || [])];
+    } else if (subject === "NEET" || subject === "GENERAL") {
+      allowedTopics = Object.values(topicMap).flat();
     } else {
       allowedTopics = topicMap[subject] || [];
     }
@@ -179,10 +194,10 @@ async function processFile(filePath: string, topicMap: Record<string, string[]>,
     const BATCH_SIZE = 10;
     console.log(`  Processing in batches of ${BATCH_SIZE} with a 1.5s delay...`);
 
-    for (let i = 0; i < missing.length; i += BATCH_SIZE) {
-      const batch = missing.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < toProcess.length; i += BATCH_SIZE) {
+      const batch = toProcess.slice(i, i + BATCH_SIZE);
       const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(missing.length / BATCH_SIZE);
+      const totalBatches = Math.ceil(toProcess.length / BATCH_SIZE);
 
       process.stdout.write(`  Batch [${batchIndex}/${totalBatches}] processing... `);
 
@@ -206,7 +221,7 @@ async function processFile(filePath: string, topicMap: Record<string, string[]>,
         saveJson(absPath, isFlatArray ? mock.questions : data);
       }
 
-      if (i + BATCH_SIZE < missing.length) {
+      if (i + BATCH_SIZE < toProcess.length) {
         await sleep(1500); // Sleep 1.5 seconds between batches
       }
     }
@@ -245,6 +260,7 @@ async function main() {
   const examIdx = args.indexOf("--exam");
   const examArg = examIdx !== -1 ? args[examIdx + 1] : "NEET";
   const isDry = args.includes("--dry");
+  const isForce = args.includes("--force");
 
   console.log(`Fetching topics for exam: ${examArg}...`);
   const topicMap = await getAllTopics(examArg);
@@ -266,7 +282,7 @@ async function main() {
       console.log(`\n${"=".repeat(60)}`);
       console.log(`File: ${file}`);
       console.log("=".repeat(60));
-      await processFile(file, topicMap, isDry);
+      await processFile(file, topicMap, isDry, isForce);
     }
     console.log("\nAuto mode complete!");
     return;
@@ -279,16 +295,18 @@ Usage:
   --auto             Process all JSON files in ${AUTO_DIR}/
   --exam <type>      Exam type to fetch topics for (default: NEET)
   --dry              Dry run — print results without writing to file
+  --force            Force rewrite of existing topic names (by default, skips already assigned topics)
 
 Examples:
   npx ts-node --project tsconfig.json scripts/json-topics-neet.ts --file scratch/mocks.json
   npx ts-node --project tsconfig.json scripts/json-topics-neet.ts --auto
   npx ts-node --project tsconfig.json scripts/json-topics-neet.ts --auto --dry
+  npx ts-node --project tsconfig.json scripts/json-topics-neet.ts --file scratch/mocks.json --force
     `);
     process.exit(0);
   }
 
-  await processFile(fileArg, topicMap, isDry);
+  await processFile(fileArg, topicMap, isDry, isForce);
 }
 
 main().catch((err) => {

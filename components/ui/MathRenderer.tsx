@@ -580,7 +580,7 @@ const MathRenderer = memo(function MathRenderer({ content, className, style }: M
 
 
   return (
-    <div className={className} style={style}>
+    <div className={className} style={{ overflowX: "auto", ...style }}>
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkBreaks]}
         rehypePlugins={[rehypeKatex]}

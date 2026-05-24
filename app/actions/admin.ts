@@ -9,6 +9,18 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
 
+// In-process cache: userId → email. Avoids a DB round-trip on every action
+// call during batch processing. TTL is process lifetime (fine for admin use).
+const userEmailCache = new Map<string, string>();
+
+async function getAdminEmail(userId: string): Promise<string | undefined> {
+  if (userEmailCache.has(userId)) return userEmailCache.get(userId);
+  const dbUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  const email = dbUser?.email?.toLowerCase();
+  if (email) userEmailCache.set(userId, email);
+  return email;
+}
+
 // Surgically update one question inside the MockTestTemplate.questions JSONB array.
 // Uses Postgres || (object merge) instead of reading/writing the full array.
 async function patchMockQuestion(mockTestId: string, questionId: string, patch: Record<string, unknown>) {
@@ -63,10 +75,7 @@ export async function resolveReport(
   if (!userId) throw new Error("Unauthorized");
 
   // Get email from our own database to avoid Clerk API timeouts in Server Actions
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-
-  if (!checkIsAdmin(userEmail)) {
+  if (!checkIsAdmin(await getAdminEmail(userId))) {
     throw new Error("Forbidden: You are not an admin.");
   }
 
@@ -117,11 +126,7 @@ export async function deleteQuestion(
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-  if (!checkIsAdmin(userEmail)) {
-    throw new Error("Forbidden: You are not an admin.");
-  }
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden: You are not an admin.");
 
   // Delete the actual question (Cascades to reports, bookmarks, attempts)
   if (questionType === "SubjectPYQ") {
@@ -147,11 +152,7 @@ export async function quickEditExplanation(
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-  if (!checkIsAdmin(userEmail)) {
-    throw new Error("Forbidden: You are not an admin.");
-  }
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden: You are not an admin.");
 
   if (questionType === "MockQuestion" && mockTestId) {
     await patchMockQuestion(mockTestId, questionId, { explanation });
@@ -182,11 +183,7 @@ export async function toggleManualFlag(
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-  if (!checkIsAdmin(userEmail)) {
-    throw new Error("Forbidden: You are not an admin.");
-  }
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden: You are not an admin.");
 
   if (questionType === "MockQuestion" && mockTestId) {
     await patchMockQuestion(mockTestId, questionId, { ai_answer_mismatch: flagStatus, manual_flag: flagStatus });
@@ -199,11 +196,7 @@ export async function deleteMockTest(mockTestId: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-  if (!checkIsAdmin(userEmail)) {
-    throw new Error("Forbidden: You are not an admin.");
-  }
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden: You are not an admin.");
 
   // Delete all related test sessions first (manual cascade)
   await prisma.testSession.deleteMany({
@@ -284,8 +277,7 @@ export async function generateAIExplanation(
   console.log(`[AI] Generating explanation for ${questionId} using model: ${aiModel}`);
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
 
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
   if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
@@ -398,7 +390,7 @@ Rules:
       model: GEMINI_MODEL,
       tools: [],
       generationConfig: {
-        maxOutputTokens: 2500,
+        
         // @ts-ignore
         thinkingConfig: { thinkingLevel: "HIGH" },
       }
@@ -490,8 +482,7 @@ Rules:
 export async function processMockTestExplanations(mockTestId: string, aiModel: "gemini" | "gpt-4o-mini" = "gemini") {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
 
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
   if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
@@ -840,20 +831,39 @@ export async function updateMockTestQuestionTopic(
  * Returns GATE CSE PYQs (both PYQ and SubjectPYQ) that have an empty/missing explanation.
  * Only fetches the minimal fields needed for display + AI generation — no egress waste.
  */
-export async function getGateCsePyqsMissingExplanation(page = 0, pageSize = 50) {
+export async function getGateCsePyqsMissingExplanation(
+  page = 0,
+  pageSize = 50,
+  examType = "GATE",
+  branch = "CSE",
+  topic: string | null = null,
+  subject: string | null = null,
+) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
 
   const offset = page * pageSize;
 
+  const pyqWhere = {
+    pattern: {
+      exam_type: examType,
+      branch: branch || undefined,
+      ...(topic ? { topic_name: topic } : {}),
+      ...(subject && !topic ? { subject } : {}),
+    },
+    explanation: "",
+  };
+
+  const subjectPyqWhere = {
+    ...(branch ? { branch } : {}),
+    subject_pattern: { exam_type: examType },
+    explanation: "",
+  };
+
   const [pyqs, subjectPyqs, totalPyq, totalSubjectPyq] = await Promise.all([
     prisma.pYQ.findMany({
-      where: {
-        pattern: { exam_type: "GATE", branch: "CSE" },
-        explanation: "",
-      },
+      where: pyqWhere,
       select: {
         id: true,
         question_text: true,
@@ -861,51 +871,42 @@ export async function getGateCsePyqsMissingExplanation(page = 0, pageSize = 50) 
         correct_answer: true,
         year: true,
         marks: true,
-        images: true,
         pattern: { select: { subject: true, topic_name: true } },
       },
       orderBy: { year: "desc" },
       skip: offset,
       take: pageSize,
     }),
-    prisma.subjectPYQ.findMany({
-      where: {
-        branch: "CSE",
-        subject_pattern: { exam_type: "GATE" },
-        explanation: "",
-      },
-      select: {
-        id: true,
-        question_text: true,
-        options: true,
-        correct_answer: true,
-        year: true,
-        marks: true,
-        images: true,
-        subject_pattern: { select: { subject_name: true } },
-      },
-      orderBy: { year: "desc" },
-      skip: offset,
-      take: pageSize,
-    }),
-    prisma.pYQ.count({
-      where: {
-        pattern: { exam_type: "GATE", branch: "CSE" },
-        explanation: "",
-      },
-    }),
-    prisma.subjectPYQ.count({
-      where: {
-        branch: "CSE",
-        subject_pattern: { exam_type: "GATE" },
-        explanation: "",
-      },
-    }),
+    // SubjectPYQs don't have topics — only filter by exam/branch
+    topic
+      ? Promise.resolve([])
+      : prisma.subjectPYQ.findMany({
+          where: subjectPyqWhere,
+          select: {
+            id: true,
+            question_text: true,
+            options: true,
+            correct_answer: true,
+            year: true,
+            marks: true,
+            subject_pattern: { select: { subject_name: true } },
+          },
+          orderBy: { year: "desc" },
+          skip: offset,
+          take: pageSize,
+        }),
+    prisma.pYQ.count({ where: pyqWhere }),
+    topic
+      ? Promise.resolve(0)
+      : prisma.subjectPYQ.count({ where: subjectPyqWhere }),
   ]);
 
+  const stripBase64 = (text: string) =>
+    text.replace(/data:image\/[^;]+;base64,[^"'\s)]{100,}/g, "[image]");
+
   return {
-    pyqs: pyqs.map(q => ({ ...q, questionType: "PYQ" as const, subject: q.pattern.subject, topic: q.pattern.topic_name })),
-    subjectPyqs: subjectPyqs.map(q => ({ ...q, questionType: "SubjectPYQ" as const, subject: q.subject_pattern.subject_name })),
+    pyqs: pyqs.map(q => ({ ...q, question_text: stripBase64(q.question_text), questionType: "PYQ" as const, subject: q.pattern.subject, topic: q.pattern.topic_name })),
+    subjectPyqs: subjectPyqs.map(q => ({ ...q, question_text: stripBase64((q as any).question_text), questionType: "SubjectPYQ" as const, subject: (q as any).subject_pattern.subject_name })),
     totalPyq,
     totalSubjectPyq,
     page,
@@ -913,11 +914,43 @@ export async function getGateCsePyqsMissingExplanation(page = 0, pageSize = 50) 
   };
 }
 
+export async function getExamTypesWithMissingExplanations() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+
+  const rows = await prisma.pattern.findMany({
+    where: { pyqs: { some: { explanation: "" } } },
+    select: { exam_type: true, branch: true },
+    distinct: ["exam_type", "branch"],
+    orderBy: { exam_type: "asc" },
+  });
+
+  return rows.map(r => ({ examType: r.exam_type, branch: r.branch }));
+}
+
+export async function getTopicsForExam(examType: string, branch: string | null) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+
+  const rows = await prisma.pattern.findMany({
+    where: {
+      exam_type: examType,
+      ...(branch ? { branch } : {}),
+      pyqs: { some: { explanation: "" } },
+    },
+    select: { topic_name: true, subject: true },
+    orderBy: [{ subject: "asc" }, { topic_name: "asc" }],
+  });
+
+  return rows.map(r => ({ topic: r.topic_name, subject: r.subject }));
+}
+
 export async function getMockTestQuestions(mockTestId: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  if (!checkIsAdmin(dbUser?.email?.toLowerCase())) throw new Error("Forbidden");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
 
   // Only fetch questions that still need categorization — filter in Postgres, not JS
   const rows = await prisma.$queryRaw<{ question: any }[]>`

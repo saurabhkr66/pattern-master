@@ -65,6 +65,17 @@ body {
 /* Force bottom nav visible in the native Android/iOS app regardless of viewport width */
 .native-app .mobile-nav-bar { display: block !important; }
 
+/* KaTeX — scale down on mobile so wide math fits the screen */
+.katex { font-size: 1em; }
+.katex-display { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+
+@media (max-width: 768px) {
+  .katex { font-size: 0.7em; }
+  .katex-display { font-size: 0.7em; text-align: left; }
+  .qp-qtext { font-size: 14px !important; line-height: 1.45 !important; }
+  .qp-scroll { padding: 12px 10px !important; }
+}
+
 /* Hide scrollbar for horizontal filter bars */
 .scrollbar-hide {
   -ms-overflow-style: none;

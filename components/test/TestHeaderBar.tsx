@@ -28,13 +28,14 @@ export default function TestHeaderBar({
   const timerColor = timeLeft < 600 ? BE.bad : timeLeft < 1800 ? BE.warn : BE.text;
 
   return (
-    <header style={{ height: 56, borderBottom: `1px solid ${BE.line}`, display: "flex", alignItems: "center", padding: "0 22px", gap: 12, background: BE.surface, flexShrink: 0 }}>
-      <div style={{ fontFamily: BE.serif, fontSize: 15, fontWeight: 600, color: BE.text, whiteSpace: "nowrap" }}>
+    <header style={{ height: 56, borderBottom: `1px solid ${BE.line}`, display: "flex", alignItems: "center", padding: "0 12px", gap: 8, background: BE.surface, flexShrink: 0, minWidth: 0 }}>
+      {/* Title — hidden on mobile to save space */}
+      <div className="hidden sm:block" style={{ fontFamily: BE.serif, fontSize: 15, fontWeight: 600, color: BE.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 220 }}>
         {mockTestTitle} · {config.label}{branch ? ` ${branch}` : ""}
       </div>
 
       {multiSection && (
-        <div style={{ display: "flex", gap: 2, padding: 3, background: "var(--bg-base)", borderRadius: 7, border: `1px solid ${BE.line}` }}>
+        <div style={{ display: "flex", gap: 2, padding: 3, background: "var(--bg-base)", borderRadius: 7, border: `1px solid ${BE.line}`, flexShrink: 0 }}>
           {sections.map((sec, i) => {
             const active = i === activeSectionIdx;
             return (
@@ -67,12 +68,17 @@ export default function TestHeaderBar({
       <button className="be-btn hidden sm:flex" style={{ padding: "5px 10px", fontSize: 11.5 }}>Calculator</button>
       <button className="be-btn hidden sm:flex" style={{ padding: "5px 10px", fontSize: 11.5 }}>Instructions</button>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: `${timerColor}15`, border: `1px solid ${timerColor}33`, borderRadius: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: `${timerColor}15`, border: `1px solid ${timerColor}33`, borderRadius: 8, flexShrink: 0 }}>
         <Clock size={12} style={{ color: timerColor }} />
         <span style={{ fontFamily: BE.mono, fontSize: 13, fontWeight: 600, color: timerColor }}>{fmtTimer(timeLeft)}</span>
       </div>
 
-      <button onClick={onTogglePalette} className="lg:hidden p-2 rounded-lg border" style={{ borderColor: BE.line }}>
+      {/* Palette toggle — mobile only, always visible */}
+      <button
+        onClick={onTogglePalette}
+        className="lg:hidden"
+        style={{ padding: "7px 8px", borderRadius: 8, border: `1px solid ${BE.line}`, background: "transparent", color: BE.textDim, flexShrink: 0, display: "flex", alignItems: "center" }}
+      >
         <BarChart3 size={18} />
       </button>
     </header>
