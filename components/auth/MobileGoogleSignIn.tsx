@@ -1,71 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useClerk } from "@clerk/nextjs";
-import { Browser } from "@capacitor/browser";
+import { SocialLogin } from "@capgo/capacitor-social-login";
 
-// Clerk does not accept custom URL schemes (battleexam://) in its mobile SSO
-// allowlist — only http/https. We point Clerk at the hosted bridge page below,
-// which itself forwards the OAuth params on to battleexam://oauth-callback,
-// where Android's intent filter routes them back into the native app.
-function getRedirectUrl(): string {
-  if (typeof window === "undefined") return "";
-  return `${window.location.origin}/native-sso-callback`;
-}
+const GOOGLE_WEB_CLIENT_ID =
+  "93722174281-3hstp5qr7mejgs93bfve54smui0k7bb0.apps.googleusercontent.com";
 
 /**
- * Native-only "Continue with Google" button. Opens the OAuth flow in the
- * system browser (Chrome Custom Tabs) instead of the in-app WebView, so the
- * user's device Google accounts appear as one-tap options. After auth, Google
- * redirects back to Clerk's callback, Clerk redirects to battleexam://oauth-callback,
- * Android opens the app via the deep link intent filter, and NativeMobileBridge
- * routes to /sso-callback to complete the session.
+ * Native Google sign-in for Capacitor Android. Uses Credential Manager
+ * via @capgo/capacitor-social-login to obtain a Google ID token entirely
+ * inside the app process (no Chrome Custom Tabs, no deep link), then
+ * exchanges it with Clerk via authenticateWithGoogleOneTap. The session
+ * cookie lands in the same WebView jar that started the flow, which is
+ * what the external-browser flow could not guarantee.
  */
 export default function MobileGoogleSignIn() {
   const clerk = useClerk();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    SocialLogin.initialize({
+      google: {
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        mode: "online",
+      },
+    }).catch((e) => {
+      console.error("[MobileGoogleSignIn] initialize failed", e);
+    });
+  }, []);
 
   async function handleGoogleSignIn() {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Wait up to 8s for Clerk to finish bootstrapping. Reading `clerk.loaded`
-      // imperatively avoids the React closure problem we'd hit with useSignIn().
       const deadline = Date.now() + 8000;
       while (!clerk?.loaded && Date.now() < deadline) {
         await new Promise((r) => setTimeout(r, 200));
       }
-      const signIn = clerk?.client?.signIn;
-      if (!clerk?.loaded || !signIn) {
+      if (!clerk?.loaded) {
         setError(
           "Sign-in service didn't finish loading. Check your connection and try again.",
         );
         return;
       }
-      const redirectUrl = getRedirectUrl();
-      await signIn.create({
-        strategy: "oauth_google",
-        redirectUrl,
-        actionCompleteRedirectUrl: redirectUrl,
+
+      const login = await SocialLogin.login({
+        provider: "google",
+        options: { scopes: ["profile", "email"] },
       });
 
-      const verification = signIn.firstFactorVerification as
-        | { externalVerificationRedirectURL?: URL | string | null }
-        | undefined;
-      const raw = verification?.externalVerificationRedirectURL;
-      const oauthUrl = raw ? raw.toString() : null;
-
-      if (!oauthUrl) {
-        setError("Could not retrieve Google sign-in URL from Clerk.");
+      const result = login.result as { idToken?: string | null };
+      const idToken = result?.idToken;
+      if (!idToken) {
+        setError(
+          "Google did not return an ID token. Make sure the device has a Google account configured.",
+        );
         return;
       }
 
-      await Browser.open({ url: oauthUrl, presentationStyle: "fullscreen" });
+      const clerkWithOneTap = clerk as unknown as {
+        authenticateWithGoogleOneTap: (args: {
+          token: string;
+        }) => Promise<unknown>;
+        handleGoogleOneTapCallback: (
+          res: unknown,
+          opts: {
+            signInFallbackRedirectUrl?: string;
+            signUpFallbackRedirectUrl?: string;
+          },
+        ) => Promise<void>;
+      };
+
+      const res = await clerkWithOneTap.authenticateWithGoogleOneTap({
+        token: idToken,
+      });
+      await clerkWithOneTap.handleGoogleOneTapCallback(res, {
+        signInFallbackRedirectUrl: "/dashboard",
+        signUpFallbackRedirectUrl: "/dashboard",
+      });
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "Google sign-in failed to start.";
+        err instanceof Error ? err.message : "Google sign-in failed.";
       setError(msg);
       console.error("[MobileGoogleSignIn]", err);
     } finally {
@@ -87,7 +108,7 @@ export default function MobileGoogleSignIn() {
           <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
           <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
         </svg>
-        {isLoading ? "Opening browser..." : "Continue with Google"}
+        {isLoading ? "Signing in..." : "Continue with Google"}
       </button>
       {error && (
         <p className="text-sm text-red-400" role="alert">
