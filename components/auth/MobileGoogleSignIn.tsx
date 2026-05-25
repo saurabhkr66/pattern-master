@@ -5,7 +5,7 @@ import { useClerk } from "@clerk/nextjs";
 import { SocialLogin } from "@capgo/capacitor-social-login";
 
 const GOOGLE_WEB_CLIENT_ID =
-  "93722174281-3hstp5qr7mejgs93bfve54smui0k7bb0.apps.googleusercontent.com";
+  process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
 
 /**
  * Native Google sign-in for Capacitor Android. Uses Credential Manager
@@ -24,6 +24,12 @@ export default function MobileGoogleSignIn() {
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      console.error(
+        "[MobileGoogleSignIn] NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID is not set",
+      );
+      return;
+    }
     SocialLogin.initialize({
       google: {
         webClientId: GOOGLE_WEB_CLIENT_ID,
@@ -52,7 +58,7 @@ export default function MobileGoogleSignIn() {
 
       const login = await SocialLogin.login({
         provider: "google",
-        options: { scopes: ["profile", "email"] },
+        options: {},
       });
 
       const result = login.result as { idToken?: string | null };
@@ -89,6 +95,21 @@ export default function MobileGoogleSignIn() {
         err instanceof Error ? err.message : "Google sign-in failed.";
       setError(msg);
       console.error("[MobileGoogleSignIn]", err);
+      console.error(
+        "[MobileGoogleSignIn] error JSON:",
+        JSON.stringify(err, Object.getOwnPropertyNames(err ?? {}), 2),
+      );
+      const clerkErr = err as {
+        errors?: Array<{ code?: string; message?: string; longMessage?: string; meta?: unknown }>;
+        clerkError?: boolean;
+        status?: number;
+      };
+      if (clerkErr?.errors?.length) {
+        console.error(
+          "[MobileGoogleSignIn] Clerk errors:",
+          JSON.stringify(clerkErr.errors, null, 2),
+        );
+      }
     } finally {
       setIsLoading(false);
     }
