@@ -8,6 +8,56 @@ import { EXAM_CONFIGS, type ExamType } from "@/lib/examConfigs";
 export const TOPIC_PAGE_SIZE = 20;
 
 /**
+ * Derive a URL slug for a mock paper from its title.
+ * Strips the exam+branch prefix (e.g. "GATE CSE", "JEE Main", "JEE MAIN") then
+ * strips the year, leaving only the distinguishing part (shift, set, date).
+ *
+ * Examples:
+ *   "GATE CSE 2026 Shift 1"          → "shift-1"
+ *   "GATE CSE 2014 SET 1"            → "set-1"
+ *   "1 Feb 2024 Shift 1"             → "1-feb-2024-shift-1"   (JEE titles have no prefix)
+ *   "JEE MAIN 2020 - 02 SEP S1 2020" → "02-sep-s1"
+ *   "NEET 2024"                       → "paper"               (no distinguishing part)
+ *   "UGC NET English June 2025 Paper 2" → "english-june-paper-2"
+ */
+export function paperSlug(title: string, examLabel: string, year: number): string {
+  let s = title.trim();
+
+  // Strip known exam+branch prefixes (case-insensitive).
+  // Order matters: longer patterns first so "UGC NET English" beats "UGC NET".
+  const prefixes = [
+    /^gate\s+\w+\s+/i,          // "GATE CSE ", "GATE ECE ", "GATE EE ", ...
+    /^jee\s+main\s+/i,
+    /^jee\s+advanced\s+/i,
+    /^jee\s+main\s+-\s+/i,      // "JEE MAIN 2020 - " style (year stripped separately)
+    /^neet\s+/i,
+    /^ugc\s+net\s+\w+\s+/i,     // "UGC NET English "
+    /^ugc\s+net\s+/i,
+  ];
+  for (const p of prefixes) {
+    const stripped = s.replace(p, "");
+    if (stripped !== s) { s = stripped; break; }
+  }
+
+  // Strip all 4-digit year occurrences (title may have year twice e.g. "JEE MAIN 2020 - 02 SEP S1 2020")
+  s = s.replace(/\b(19|20)\d{2}\b/g, "");
+
+  // Strip leading/trailing dashes, separators and whitespace left after removals
+  s = s.replace(/^[\s\-–]+/, "").replace(/[\s\-–]+$/, "");
+
+  const slug = toSlug(s);
+  return slug || "paper";
+}
+
+/**
+ * Extract the year from a mock title as a number, or null if not found.
+ */
+export function paperYear(title: string): number | null {
+  const m = title.match(/\b(19|20)\d{2}\b/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+/**
  * Strips LaTeX delimiters, markdown formatting and truncates to a clean description.
  */
 export function cleanTextForMeta(raw: string, maxLen = 160): string {
@@ -281,15 +331,7 @@ export function buildOrganizationSchema() {
         "name": name,
         "description": `Pattern-based ${examList} preparation with AI-generated questions and previous year questions.`,
         "inLanguage": "en-IN",
-        "publisher": { "@id": `${url}/#organization` },
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": {
-            "@type": "EntryPoint",
-            "urlTemplate": `${url}/practice?q={search_term_string}`
-          },
-          "query-input": "required name=search_term_string"
-        }
+        "publisher": { "@id": `${url}/#organization` }
       }
     ]
   };

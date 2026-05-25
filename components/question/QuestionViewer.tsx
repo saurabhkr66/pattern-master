@@ -5,32 +5,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Maximize2 } from "lucide-react";
-import katex from "katex";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
-
-// ------------------- Math rendering helper -----------------------------------
-function renderMath(text: string): string {
-  // Block math: \[ ... \]
-  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => {
-    try {
-      return `<div class="math-block">${katex.renderToString(math.trim(), { displayMode: true, throwOnError: false })}</div>`;
-    } catch { return `<div class="math-block">[math]</div>`; }
-  });
-  // Inline math: \( ... \)
-  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, math) => {
-    try {
-      return katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
-    } catch { return "[math]"; }
-  });
-  // Inline math: $ ... $ (single dollar, non-greedy)
-  text = text.replace(/\$([^$\n]+?)\$/g, (_, math) => {
-    try {
-      return katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
-    } catch { return "[math]"; }
-  });
-  return text;
-}
+import MathRenderer from "@/components/ui/MathRenderer";
 
 interface QuestionData {
   id: string;
@@ -123,18 +100,10 @@ export default function QuestionViewer({
   practiceHref?: string;
 }) {
   const [showAnswer, setShowAnswer] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
   const { language, setLanguage } = useLanguage();
 
-  // Render math directly during render (runs server-side too) so Googlebot
-  // sees the fully-rendered question text + explanation in the initial HTML
-  // rather than empty <div>s populated only after JS hydration. katex's
-  // renderToString is synchronous and SSR-safe.
-  const questionHtml = renderMath(
-    (language === "hi" && q.questionTextHindi) ? q.questionTextHindi : q.questionText,
-  );
-  const explanationHtml = renderMath(
-    ((language === "hi" && q.explanationHindi) ? q.explanationHindi : q.explanation) || "",
-  );
+  const questionText = (language === "hi" && q.questionTextHindi) ? q.questionTextHindi : q.questionText;
 
   const correctLetters = q.correctAnswer
     .split(/[;,]/)
@@ -149,8 +118,9 @@ export default function QuestionViewer({
         <div
           className="text-base leading-relaxed font-medium"
           style={{ color: "var(--text-primary)" }}
-          dangerouslySetInnerHTML={{ __html: questionHtml }}
-        />
+        >
+          <MathRenderer content={questionText} />
+        </div>
 
         {/* Question images (exclude explanation-type images) */}
         {q.images && q.images.filter(img => img.type !== "explanation").length > 0 && (
@@ -167,41 +137,94 @@ export default function QuestionViewer({
         <div className="px-6 pb-2 md:px-8 grid gap-2">
           {q.options.map((opt, i) => {
             const letter = opt.trim().match(/^([A-Z])[.)]/)?.[1] ?? String.fromCharCode(65 + i);
-            const isCorrect = showAnswer && correctLetters.includes(letter.toUpperCase());
+            const upperLetter = letter.toUpperCase();
+            const isCorrect = correctLetters.includes(upperLetter);
+            const isSelected = selected === upperLetter;
+            const revealed = showAnswer || selected !== null;
+
+            let bg = "var(--bg-surface-2)";
+            let border = "var(--border)";
+            let fw: number = 400;
+
+            if (revealed && isCorrect) {
+              bg = "rgba(34,197,94,0.12)";
+              border = "rgba(34,197,94,0.4)";
+              fw = 700;
+            } else if (isSelected && !isCorrect) {
+              bg = "rgba(239,68,68,0.12)";
+              border = "rgba(239,68,68,0.4)";
+              fw = 700;
+            }
+
+            const optText = (language === "hi" && q.optionsHindi && q.optionsHindi[i]) ? q.optionsHindi[i] : opt;
             return (
-              <div
+              <button
                 key={i}
-                className="rounded-xl px-4 py-3 text-sm transition-colors"
+                onClick={() => {
+                  setSelected(upperLetter);
+                  setShowAnswer(true);
+                }}
+                className="rounded-xl px-4 py-3 text-sm text-left transition-colors w-full"
                 style={{
-                  background: isCorrect ? "rgba(34,197,94,0.12)" : "var(--bg-surface-2)",
-                  border: `1px solid ${isCorrect ? "rgba(34,197,94,0.4)" : "var(--border)"}`,
+                  background: bg,
+                  border: `1px solid ${border}`,
                   color: "var(--text-primary)",
-                  fontWeight: isCorrect ? 700 : 400,
+                  fontWeight: fw,
+                  cursor: selected !== null ? "default" : "pointer",
                 }}
-                dangerouslySetInnerHTML={{ 
-                  __html: renderMath(
-                    (language === "hi" && q.optionsHindi && q.optionsHindi[i]) ? q.optionsHindi[i] : opt
-                  ) 
-                }}
-              />
+                disabled={selected !== null}
+              >
+                <MathRenderer content={optText} />
+              </button>
             );
           })}
         </div>
       )}
 
       {/* Show Answer button */}
-      <div className="px-6 md:px-8 py-6 flex items-center gap-4">
-        <button
-          onClick={() => setShowAnswer(v => !v)}
-          className="rounded-xl px-6 py-2.5 text-sm font-bold transition-all"
-          style={{
-            background: showAnswer ? "var(--bg-surface-2)" : "var(--accent)",
-            color: showAnswer ? "var(--text-secondary)" : "#fff",
-            border: "1px solid var(--border)",
-          }}
-        >
-          {showAnswer ? "Hide Answer" : "Show Answer"}
-        </button>
+      <div className="px-6 md:px-8 py-6 flex items-center gap-3 flex-wrap">
+        {/* Result badge after selection */}
+        {selected !== null && (
+          <span
+            className="text-sm font-black px-3 py-1.5 rounded-xl"
+            style={{
+              background: correctLetters.includes(selected) ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+              color: correctLetters.includes(selected) ? "rgb(34,197,94)" : "rgb(239,68,68)",
+            }}
+          >
+            {correctLetters.includes(selected) ? "✓ Correct" : "✗ Wrong"}
+          </span>
+        )}
+
+        {/* Show/Hide answer — hidden once user has selected (explanation auto-shown) */}
+        {selected === null && (
+          <button
+            onClick={() => setShowAnswer(v => !v)}
+            className="rounded-xl px-6 py-2.5 text-sm font-bold transition-all"
+            style={{
+              background: showAnswer ? "var(--bg-surface-2)" : "var(--accent)",
+              color: showAnswer ? "var(--text-secondary)" : "#fff",
+              border: "1px solid var(--border)",
+            }}
+          >
+            {showAnswer ? "Hide Answer" : "Show Answer"}
+          </button>
+        )}
+
+        {/* Try Again — resets selection so user can re-attempt */}
+        {selected !== null && (
+          <button
+            onClick={() => { setSelected(null); setShowAnswer(false); }}
+            className="rounded-xl px-4 py-2.5 text-sm font-bold transition-all"
+            style={{
+              background: "var(--bg-surface-2)",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            Try Again
+          </button>
+        )}
 
         <a
           href={practiceHref ?? `/practice?q=${q.prefix}-${q.id}`}
@@ -264,9 +287,9 @@ export default function QuestionViewer({
             <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
               📖 Explanation
             </p>
-            <div
+            <MathRenderer
+              content={(language === "hi" && q.explanationHindi) ? q.explanationHindi : (q.explanation || "")}
               style={{ color: "var(--text-primary)" }}
-              dangerouslySetInnerHTML={{ __html: explanationHtml }}
             />
             {/* Explanation images */}
             {q.images && q.images.filter(img => img.type === "explanation").length > 0 && (

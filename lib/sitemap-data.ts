@@ -10,7 +10,7 @@
 // hub and mock buckets are emitted.
 
 import { prisma } from "@/lib/prisma";
-import { toSlug, buildExamSlug } from "@/lib/seo";
+import { toSlug, buildExamSlug, paperSlug, paperYear } from "@/lib/seo";
 
 export const BASE = "https://battleexam.com";
 export const CHUNK_SIZE = 10_000; // generous headroom under Google's 50K cap
@@ -43,7 +43,7 @@ function chunkCount(rows: number): number {
 }
 
 // Returns the set of sitemap ids that should appear in the index.
-// "0" is the hub; "mock-N" are the chunked mock-test instances.
+// "0" is the hub; "mock-N" are chunked mock-test instances; "pyq-years" is the year-wise PYQ index.
 export async function listSitemapIds(): Promise<string[]> {
   const ids: string[] = ["0"];
 
@@ -60,15 +60,41 @@ export async function listSitemapIds(): Promise<string[]> {
     console.warn("[sitemap] mock bucket is empty — skipping");
   }
 
+  const pyqYearCount = await prisma.pYQ
+    .groupBy({ by: ["exam_type", "year"] })
+    .then((r) => r.length)
+    .catch((e) => {
+      console.error("[sitemap] pyq year count failed:", e);
+      return 0;
+    });
+
+  if (pyqYearCount > 0) {
+    ids.push("pyq-years");
+  }
+
+  const paperCount = await prisma.mockTestTemplate
+    .count({ where: { mode: "seeded" } })
+    .catch((e) => {
+      console.error("[sitemap] paper count failed:", e);
+      return 0;
+    });
+
+  if (paperCount > 0) {
+    ids.push("papers");
+  }
+
   return ids;
 }
 
-export async function buildHubSitemap(): Promise<UrlEntry[]> {
-  const now = new Date().toISOString();
+// Static pages don't change on every request — use a real deploy date so
+// Googlebot doesn't treat a rotating `lastmod` as noise and ignore it.
+const STATIC_LASTMOD = "2025-05-01";
 
+export async function buildHubSitemap(): Promise<UrlEntry[]> {
   const staticPages: UrlEntry[] = [
-    { url: BASE,                 lastmod: now, changefreq: "weekly", priority: 1.0 },
-    { url: `${BASE}/mock-tests`, lastmod: now, changefreq: "daily",  priority: 0.95 },
+    { url: BASE,                  lastmod: STATIC_LASTMOD, changefreq: "weekly",  priority: 1.0 },
+    { url: `${BASE}/mock-tests`,  lastmod: STATIC_LASTMOD, changefreq: "daily",   priority: 0.95 },
+    { url: `${BASE}/privacy`,     lastmod: STATIC_LASTMOD, changefreq: "yearly",  priority: 0.3 },
     // /sign-up, /sign-in, /practice are auth/gated — excluded to avoid
     // robots.txt conflict (practice is disallowed) and thin-content signals.
   ];
@@ -85,7 +111,6 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
       seenExam.add(t.exam_type);
       mockLandingPages.push({
         url: `${BASE}/mock-tests/${toSlug(t.exam_type)}`,
-        lastmod: now,
         changefreq: "weekly",
         priority: 0.85,
       });
@@ -95,7 +120,6 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
       seenExamBranch.add(branchKey);
       mockLandingPages.push({
         url: `${BASE}/mock-tests/${toSlug(t.exam_type)}/${toSlug(t.branch || "All Subjects")}`,
-        lastmod: now,
         changefreq: "weekly",
         priority: 0.8,
       });
@@ -107,7 +131,6 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     .catch(logFail("exam hub"));
   const examPages: UrlEntry[] = examRows.map((r) => ({
     url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}`,
-    lastmod: now,
     changefreq: "weekly",
     priority: 0.95,
   }));
@@ -120,7 +143,6 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     .catch(logFail("subject hub"));
   const subjectPages: UrlEntry[] = subjectRows.map((r) => ({
     url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/${toSlug(r.subject)}`,
-    lastmod: now,
     changefreq: "weekly",
     priority: 0.9,
   }));
@@ -130,7 +152,6 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     .catch(logFail("topic hub"));
   const topicPages: UrlEntry[] = topicRows.map((r) => ({
     url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`,
-    lastmod: now,
     changefreq: "weekly",
     priority: 0.85,
   }));
@@ -145,12 +166,69 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     .catch(logFail("pyq hub"));
   const pyqPages: UrlEntry[] = pyqExamRows.map((r) => ({
     url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/pyq`,
-    lastmod: now,
     changefreq: "weekly",
     priority: 0.9,
   }));
 
   return [...staticPages, ...mockLandingPages, ...examPages, ...subjectPages, ...topicPages, ...pyqPages];
+}
+
+export async function buildPaperPagesSitemap(): Promise<UrlEntry[]> {
+  const mocks = await prisma.mockTestTemplate
+    .findMany({
+      where: { mode: "seeded" },
+      select: { id: true, title: true, exam_type: true, branch: true, created_at: true },
+      orderBy: { exam_type: "asc" },
+    })
+    .catch(logFail("paper pages"));
+
+  const entries: UrlEntry[] = [];
+  for (const m of mocks) {
+    const year = paperYear(m.title);
+    if (!year) continue;
+    const examSlug = buildExamSlug(m.exam_type, m.branch);
+    const pSlug = paperSlug(m.title, m.exam_type, year);
+    entries.push({
+      url: `${BASE}/${examSlug}/pyq/${year}/${pSlug}`,
+      lastmod: m.created_at.toISOString(),
+      changefreq: "yearly",
+      priority: 0.85,
+    });
+  }
+  return entries;
+}
+
+export async function buildPyqYearsSitemap(): Promise<UrlEntry[]> {
+  // Fetch distinct (exam_type, branch, year) combos from PYQ table.
+  // Pattern holds exam_type + branch; join through pattern.
+  const rows = await prisma.pYQ
+    .findMany({
+      select: {
+        year: true,
+        exam_type: true,
+        pattern: { select: { branch: true } },
+      },
+      distinct: ["exam_type", "year"],
+      orderBy: [{ exam_type: "asc" }, { year: "desc" }],
+    })
+    .catch(logFail("pyq years"));
+
+  // Deduplicate on (exam_type, branch, year) since distinct only covers exam_type+year
+  const seen = new Set<string>();
+  const entries: UrlEntry[] = [];
+  for (const r of rows) {
+    const branch = r.pattern?.branch ?? null;
+    const examSlug = buildExamSlug(r.exam_type, branch);
+    const key = `${examSlug}::${r.year}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    entries.push({
+      url: `${BASE}/${examSlug}/pyq/${r.year}`,
+      changefreq: "yearly",
+      priority: 0.8,
+    });
+  }
+  return entries;
 }
 
 export async function buildMockChunk(chunkIdx: number): Promise<UrlEntry[]> {
@@ -172,10 +250,12 @@ export async function buildMockChunk(chunkIdx: number): Promise<UrlEntry[]> {
   }));
 }
 
-// Resolves a sitemap id (e.g. "0", "mock-3") to its URL entries.
+// Resolves a sitemap id (e.g. "0", "mock-3", "pyq-years") to its URL entries.
 // Returns null when the id is unrecognised.
 export async function buildSitemapById(id: string): Promise<UrlEntry[] | null> {
   if (id === "0") return buildHubSitemap();
+  if (id === "pyq-years") return buildPyqYearsSitemap();
+  if (id === "papers") return buildPaperPagesSitemap();
 
   const dashIdx = id.lastIndexOf("-");
   if (dashIdx === -1) return null;

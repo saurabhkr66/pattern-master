@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
+import ImageKit, { toFile } from "@imagekit/nodejs";
+
+const ik = new ImageKit({
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,32 +14,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const fileName = file.name || `upload-${Date.now()}`;
+    const fileForUpload = await toFile(buffer, fileName);
 
-    // Create a promise to handle the stream upload
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "pattern-master" },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-      
-      // Pass the buffer to the stream
-      uploadStream.end(buffer);
+    const result = await ik.files.upload({
+      file: fileForUpload,
+      fileName,
+      folder: "/pattern-master",
+      useUniqueFileName: true,
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      result 
+    // Keep response shape backwards-compatible: callers read result.secure_url
+    return NextResponse.json({
+      success: true,
+      result: {
+        secure_url: result.url,
+        public_id: result.fileId,
+        ...result,
+      },
     });
   } catch (error: any) {
-    console.error("Cloudinary upload error:", error);
+    console.error("ImageKit upload error:", error);
     return NextResponse.json(
       { error: "Image upload failed", details: error.message },
       { status: 500 }

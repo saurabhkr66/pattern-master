@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toSlug, parseExamSlug, buildExamSlug, branchWhereClause } from "@/lib/seo";
+import FeatureBanner from "@/components/ui/FeatureBanner";
 
 const BASE = "https://battleexam.com";
 
@@ -194,6 +195,11 @@ export default async function SubjectPage({
             &amp; Previous Year Questions for {exam.fullLabel} {year}
           </p>
         </div>
+
+        <FeatureBanner
+          heading={`Master all ${subjectLabel} topics — 100% free`}
+          practiceHref={`/practice?${new URLSearchParams({ exam: exam.examLabel, ...(exam.branch ? { branch: exam.branch } : {}), subject: subjectLabel }).toString()}`}
+        />
 
         {/* Topic grid */}
         <div className="grid sm:grid-cols-2 gap-3">

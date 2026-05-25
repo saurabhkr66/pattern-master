@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import MasteryNotes from "@/components/MasteryNotes";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function MasteryNotesPage() {
   return (

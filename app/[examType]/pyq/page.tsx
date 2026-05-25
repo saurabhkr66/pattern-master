@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toSlug, parseExamSlug, branchWhereClause } from "@/lib/seo";
+import FeatureBanner from "@/components/ui/FeatureBanner";
 
 const BASE = "https://battleexam.com";
 
@@ -83,24 +84,35 @@ export default async function PYQPage({
   const exam = parseExamSlug(examType);
   if (!exam) notFound();
 
-  const papers = await prisma.mockTestTemplate.findMany({
-    where: {
-      exam_type: exam.examType,
-      ...branchWhereClause(exam.branch),
-      mode: "seeded",
-    },
-    select: {
-      id: true,
-      title: true,
-      branch: true,
-      total_questions: true,
-      max_score: true,
-      duration_secs: true,
-    },
-    orderBy: { created_at: "desc" },
-  });
+  const [papers, yearRows] = await Promise.all([
+    prisma.mockTestTemplate.findMany({
+      where: {
+        exam_type: exam.examType,
+        ...branchWhereClause(exam.branch),
+        mode: "seeded",
+      },
+      select: {
+        id: true,
+        title: true,
+        branch: true,
+        total_questions: true,
+        max_score: true,
+        duration_secs: true,
+      },
+      orderBy: { created_at: "desc" },
+    }),
+    prisma.pYQ.groupBy({
+      by: ["year"],
+      where: {
+        exam_type: exam.examType,
+        pattern: branchWhereClause(exam.branch),
+      },
+      _count: { year: true },
+      orderBy: { year: "desc" },
+    }),
+  ]);
 
-  if (papers.length === 0) notFound();
+  if (papers.length === 0 && yearRows.length === 0) notFound();
 
   const canonical = `${BASE}/${examType}/pyq`;
   const year = new Date().getFullYear();
@@ -163,50 +175,89 @@ export default async function PYQPage({
             {exam.fullLabel} PYQ {year}
           </h1>
           <p className="text-sm max-w-2xl" style={{ color: "var(--text-secondary)" }}>
-            {papers.length} previous year paper{papers.length > 1 ? "s" : ""} — solve them in
-            timed mock test mode or practise questions at your own pace.
+            {yearRows.length > 0 && <>{yearRows.length} years of questions · </>}
+            {papers.length > 0 && <>{papers.length} full paper{papers.length > 1 ? "s" : ""} · </>}
+            browse by year or take a timed mock test.
           </p>
         </div>
 
-        {/* Papers list */}
-        <div className="flex flex-col gap-4">
-          {papers.map((paper) => {
-            const branchSlug = toSlug(paper.branch || "all-subjects");
-            const practiceUrl = `/practice?exam=${encodeURIComponent(exam.examType)}${exam.branch ? `&branch=${encodeURIComponent(exam.branch)}` : ""}&subject=Full+Papers`;
+        <FeatureBanner
+          heading={`Practice ${exam.fullLabel} PYQs with full analytics — free`}
+          practiceHref={`/practice?${new URLSearchParams({ exam: exam.examLabel, ...(exam.branch ? { branch: exam.branch } : {}) }).toString()}`}
+        />
 
-            return (
-              <div
-                key={paper.id}
-                className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl border"
-                style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
-              >
-                <div>
-                  <p className="font-bold text-base mb-1" style={{ color: "var(--text-primary)" }}>
-                    {paper.title}
-                  </p>
-                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                    {paper.total_questions} Questions · {paper.max_score} Marks · {Math.round(paper.duration_secs / 60)} Mins
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    href={practiceUrl}
-                    className="px-4 py-2 rounded-xl font-bold text-sm border hover:border-indigo-500/60 transition-colors"
-                    style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+        {/* Year-wise PYQ links */}
+        {yearRows.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-base font-black mb-4" style={{ color: "var(--text-primary)" }}>
+              Browse by Year
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {yearRows.map((row) => (
+                <Link
+                  key={row.year}
+                  href={`/${examType}/pyq/${row.year}`}
+                  className="flex items-center justify-between p-4 rounded-xl border hover:border-indigo-500/60 transition-colors"
+                  style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+                >
+                  <span className="font-black text-base" style={{ color: "var(--text-primary)" }}>
+                    {row.year}
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {row._count.year}Q
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Full papers / mock tests */}
+        {papers.length > 0 && (
+          <>
+            <h2 className="text-base font-black mb-4" style={{ color: "var(--text-primary)" }}>
+              Full Mock Papers
+            </h2>
+            <div className="flex flex-col gap-4">
+              {papers.map((paper) => {
+                const branchSlug = toSlug(paper.branch || "all-subjects");
+                const practiceUrl = `/practice?exam=${encodeURIComponent(exam.examType)}${exam.branch ? `&branch=${encodeURIComponent(exam.branch)}` : ""}&subject=Full+Papers`;
+
+                return (
+                  <div
+                    key={paper.id}
+                    className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl border"
+                    style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
                   >
-                    Practice
-                  </Link>
-                  <Link
-                    href={`/mock-tests/${examSlug}/${branchSlug}/${paper.id}`}
-                    className="px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
-                  >
-                    Take Mock Test →
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                    <div>
+                      <p className="font-bold text-base mb-1" style={{ color: "var(--text-primary)" }}>
+                        {paper.title}
+                      </p>
+                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                        {paper.total_questions} Questions · {paper.max_score} Marks · {Math.round(paper.duration_secs / 60)} Mins
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link
+                        href={practiceUrl}
+                        className="px-4 py-2 rounded-xl font-bold text-sm border hover:border-indigo-500/60 transition-colors"
+                        style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+                      >
+                        Practice
+                      </Link>
+                      <Link
+                        href={`/mock-tests/${examSlug}/${branchSlug}/${paper.id}`}
+                        className="px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+                      >
+                        Take Mock Test →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
     </>
   );

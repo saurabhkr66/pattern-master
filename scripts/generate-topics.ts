@@ -54,21 +54,31 @@ async function fetchImageAsBase64(filename: string): Promise<{ data: string; mim
 
 async function getAllTopics() {
   const patterns = await prisma.pattern.findMany({
-    select: { topic_name: true, exam_type: true, subject: true },
+    select: { topic_name: true, exam_type: true, subject: true, branch: true },
     orderBy: { topic_name: "asc" },
   });
 
+  // topicMap: "EXAM_TYPE|branch" → SUBJECT_UPPER → topic_name[]
   const topicMap: Record<string, Record<string, string[]>> = {};
+  // subjectOriginal: "EXAM_TYPE|branch" → SUBJECT_UPPER → original casing
+  const subjectOriginal: Record<string, Record<string, string>> = {};
+
   patterns.forEach((p) => {
     const normalizedExam = p.exam_type.toUpperCase().replace(/\s+/g, "_");
+    const key = p.branch ? `${normalizedExam}|${p.branch}` : normalizedExam;
     const normalizedSubject = (p.subject || "GENERAL").toUpperCase().trim();
-    if (!topicMap[normalizedExam]) topicMap[normalizedExam] = {};
-    if (!topicMap[normalizedExam][normalizedSubject]) topicMap[normalizedExam][normalizedSubject] = [];
-    if (!topicMap[normalizedExam][normalizedSubject].includes(p.topic_name)) {
-      topicMap[normalizedExam][normalizedSubject].push(p.topic_name);
+
+    if (!topicMap[key]) topicMap[key] = {};
+    if (!topicMap[key][normalizedSubject]) topicMap[key][normalizedSubject] = [];
+    if (!topicMap[key][normalizedSubject].includes(p.topic_name)) {
+      topicMap[key][normalizedSubject].push(p.topic_name);
     }
+
+    if (!subjectOriginal[key]) subjectOriginal[key] = {};
+    if (p.subject) subjectOriginal[key][normalizedSubject] = p.subject;
   });
-  return topicMap;
+
+  return { topicMap, subjectOriginal };
 }
 
 function buildPrompt(q: { question_text: string; options: any }, allowedTopics: string[]) {
@@ -160,10 +170,9 @@ async function listMocks() {
 
   const missingCounts = rows
     .map(m => ({ ...m, missing: Number(m.missing), total: Number(m.total) }))
-    .filter(m => m.missing > 0)
     .sort((a, b) => b.missing - a.missing);
 
-  console.log(`Found ${missingCounts.length} mocks with missing topics.\n`);
+  console.log(`Found ${missingCounts.length} mocks.\n`);
   for (const m of missingCounts) {
     console.log(`${m.id} | Missing: ${m.missing.toString().padEnd(3)} | Total: ${m.total.toString().padEnd(3)} | ${m.title}`);
   }
@@ -195,11 +204,12 @@ async function patchQuestionTopic(mockId: string, idx: number, topic: string, ma
 async function processMock(
   mockId: string,
   isDry: boolean,
-  allTopicsMap: Record<string, Record<string, string[]>>,
+  allData: { topicMap: Record<string, Record<string, string[]>>; subjectOriginal: Record<string, Record<string, string>> },
+  subjectFilter?: string,
 ) {
   const template = await prisma.mockTestTemplate.findUnique({
     where: { id: mockId },
-    select: { id: true, title: true, questions: true, exam_type: true },
+    select: { id: true, title: true, questions: true, exam_type: true, branch: true },
   });
 
   if (!template) {
@@ -208,28 +218,34 @@ async function processMock(
   }
 
   const normalizedExam = template.exam_type.toUpperCase().replace(/\s+/g, '_');
-  const examTopics = allTopicsMap[normalizedExam];
+  const key = template.branch ? `${normalizedExam}|${template.branch}` : normalizedExam;
+  const examTopics = allData.topicMap[key] ?? allData.topicMap[normalizedExam];
+  const examSubjectOriginal = allData.subjectOriginal[key] ?? allData.subjectOriginal[normalizedExam] ?? {};
 
   if (!examTopics) {
-    console.error(`No topics found in the database for exam type: ${template.exam_type}.`);
+    console.error(`No topics found for exam: ${template.exam_type}, branch: ${template.branch ?? "none"}.`);
     return false;
   }
 
+  console.log(`  Branch: ${template.branch ?? "none"} — loaded ${Object.keys(examTopics).length} subjects from patterns`);
+
   const questions = (template.questions as any[]);
-  // Pair each missing question with its original array index — needed for surgical jsonb_set.
+  // Pair ALL questions with their original array index — optionally filtered by subject.
   const missingWithIdx = questions
     .map((q, idx) => ({ q, idx }))
-    .filter(({ q }) => !q.topic || q.topic.trim() === "" || q.topic === "Unknown");
+    .filter(({ q }) => !subjectFilter || (q.subject || "").toLowerCase() === subjectFilter.toLowerCase());
 
   console.log(`\n[Mock] "${template.title}"`);
   console.log(`  Total questions : ${questions.length}`);
-  console.log(`  Missing Topics  : ${missingWithIdx.length}`);
   if (missingWithIdx.length === 0) { console.log("  Nothing to do."); return true; }
   console.log();
 
   let fixed = 0, failed = 0;
 
-  // Group missing questions by subject (carrying original index)
+  // All original-casing subject names for this exam branch — used as fallback for catch-all subjects like "CSE".
+  const allBranchSubjects = Object.keys(examTopics).map(k => examSubjectOriginal[k] || k);
+
+  // Group questions by subject (carrying original index)
   const subjectGroups: Record<string, Array<{ q: any; idx: number }>> = {};
   missingWithIdx.forEach(({ q, idx }) => {
     const subject = (q.subject || "GENERAL").toUpperCase().trim();
@@ -238,9 +254,14 @@ async function processMock(
   });
 
   for (const [subject, group] of Object.entries(subjectGroups)) {
-    const allowedTopics = examTopics[subject] || [];
+    let allowedTopics = examTopics[subject] || [];
     if (allowedTopics.length === 0) {
-      console.log(`  Skipping subject ${subject} (No topics defined)`);
+      // Subject is a catch-all (e.g. "CSE") — use only the subjects that appear in this mock.
+      allowedTopics = allBranchSubjects;
+      console.log(`  Subject "${subject}" has no direct mapping — using ${allowedTopics.length} subjects from this paper: ${allowedTopics.join(", ")}`);
+    }
+    if (allowedTopics.length === 0) {
+      console.log(`  Skipping subject ${subject} (No topics defined for exam)`);
       failed += group.length;
       continue;
     }
@@ -288,7 +309,7 @@ Questions:
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: parts.map((p) =>
-          typeof p === "string" ? p : p.inlineData ? { inlineData: p.inlineData } : p
+          typeof p === "string" ? { text: p } : p.inlineData ? { inlineData: p.inlineData } : p
         ),
         config: {
           thinkingConfig: { thinkingBudget: 0 },
@@ -324,7 +345,9 @@ Questions:
           const cleaned = cleanTopic(topic, allowedTopics);
           if (cleaned !== "Unknown") {
             const { q, idx } = group[groupIdx];
-            console.log(`    Q: "${q.question_text.substring(0, 50)}..." -> ${cleaned}`);
+            const prevTopic = q.topic?.trim() || "(none)";
+            const changed = prevTopic !== cleaned ? `${prevTopic} → ${cleaned}` : `${cleaned} (unchanged)`;
+            console.log(`    Q: "${q.question_text.substring(0, 50)}..." | ${changed}`);
             fixedInGroup++;
             fixed++;
             // Surgical patch — ~topic-string bytes egress per save, no RETURNING.
@@ -352,39 +375,73 @@ Questions:
 async function main() {
   const args = process.argv.slice(2);
   const isDry = args.includes("--dry");
+  const subjectIdx = args.indexOf("--subject");
+  const subjectFilter = subjectIdx !== -1 && subjectIdx + 1 < args.length ? args[subjectIdx + 1] : undefined;
 
   if (args.includes("--list-mocks")) {
     await listMocks();
   } else if (args.includes("--auto")) {
-    console.log("Starting Auto Mode: Will process all JEE_MAIN mocks with missing topics!");
-    // Pattern map fetched once and reused across all mocks (was previously called inside processMock).
-    const allTopicsMap = await getAllTopics();
-    // SQL aggregate — return ids that actually need work, skip mocks already fully topic'd.
+    console.log("Starting Auto Mode: Will process all JEE_MAIN mocks!");
+    const allData = await getAllTopics();
     const needWork = await prisma.$queryRaw<Array<{ id: string }>>`
       SELECT m.id
       FROM "MockTestTemplate" m
       WHERE m.exam_type = 'JEE_MAIN' AND m.mode = 'seeded'
-        AND EXISTS (
-          SELECT 1
-          FROM jsonb_array_elements(m.questions) AS q
-          WHERE coalesce(q->>'topic', '') = '' OR q->>'topic' = 'Unknown'
-        )
       ORDER BY m.created_at DESC
     `;
 
-    console.log(`Found ${needWork.length} mocks that need topic categorization.\n`);
+    console.log(`Found ${needWork.length} mocks.\n`);
     for (let i = 0; i < needWork.length; i++) {
       console.log(`\n=============================================================`);
       console.log(`Processing Paper ${i + 1} of ${needWork.length}`);
       console.log(`=============================================================`);
-      await processMock(needWork[i].id, isDry, allTopicsMap);
+      await processMock(needWork[i].id, isDry, allData, subjectFilter);
     }
     console.log("\nAuto mode complete!");
+  } else if (args.includes("--exam")) {
+    const examIdx = args.indexOf("--exam") + 1;
+    if (examIdx >= args.length || args[examIdx].startsWith("--")) {
+      console.error("Missing exam type. Usage: --exam <EXAM_TYPE> [--title <keyword>]");
+      process.exit(1);
+    }
+    const examType = args[examIdx].toUpperCase().replace(/\s+/g, "_");
+    const titleIdx = args.indexOf("--title");
+    const titleFilter = titleIdx !== -1 && titleIdx + 1 < args.length ? args[titleIdx + 1].toLowerCase() : null;
+
+    console.log(`Fetching mocks for exam: ${examType}${titleFilter ? ` matching title: "${titleFilter}"` : ""}...`);
+    const allData = await getAllTopics();
+    const allMocks = await prisma.$queryRaw<Array<{ id: string; title: string }>>`
+      SELECT m.id, m.title
+      FROM "MockTestTemplate" m
+      WHERE m.exam_type = ${examType} AND m.mode = 'seeded'
+      ORDER BY m.created_at DESC
+    `;
+
+    const filtered = titleFilter
+      ? allMocks.filter(m => m.title.toLowerCase().includes(titleFilter))
+      : allMocks;
+
+    if (filtered.length === 0) {
+      console.log("No matching mocks found.");
+      process.exit(0);
+    }
+
+    console.log(`Found ${filtered.length} mock(s):\n`);
+    filtered.forEach(m => console.log(`  ${m.id} | ${m.title}`));
+    console.log();
+
+    for (let i = 0; i < filtered.length; i++) {
+      console.log(`\n=============================================================`);
+      console.log(`Processing Paper ${i + 1} of ${filtered.length}: ${filtered[i].title}`);
+      console.log(`=============================================================`);
+      await processMock(filtered[i].id, isDry, allData, subjectFilter);
+    }
+    console.log("\nDone!");
   } else if (args.includes("--mock")) {
     const idIdx = args.indexOf("--mock") + 1;
     if (idIdx < args.length && !args[idIdx].startsWith("--")) {
-      const allTopicsMap = await getAllTopics();
-      await processMock(args[idIdx], isDry, allTopicsMap);
+      const allData = await getAllTopics();
+      await processMock(args[idIdx], isDry, allData, subjectFilter);
     } else {
       console.error("Missing mock ID. Usage: --mock <id>");
       process.exit(1);
@@ -392,14 +449,19 @@ async function main() {
   } else {
     console.log(`
 Usage:
-  --list-mocks                     List all mock tests with missing topic counts
+  --list-mocks                     List all mock tests with topic counts
   --mock <id>                      Generate topics for a specific mock test by ID
-  --auto                           Automatically process all missing papers sequentially
+  --auto                           Process all JEE_MAIN mocks sequentially
+  --exam <type> [--title <kw>]     Process all mocks for an exam type, optionally filtered by title keyword
+  --subject <name>                 Only process questions with this subject (e.g. CSE, "General Aptitude")
   --dry                            Dry run — print results without writing to DB
 
 Examples:
   npx ts-node --project tsconfig.json scripts/generate-topics.ts --auto
   npx ts-node --project tsconfig.json scripts/generate-topics.ts --mock clxyz123
+  npx ts-node --project tsconfig.json scripts/generate-topics.ts --exam GATE_CSE
+  npx ts-node --project tsconfig.json scripts/generate-topics.ts --exam GATE_CSE --title "2026 shift1"
+  npx ts-node --project tsconfig.json scripts/generate-topics.ts --exam GATE_CSE --title "2026" --dry
     `);
   }
 

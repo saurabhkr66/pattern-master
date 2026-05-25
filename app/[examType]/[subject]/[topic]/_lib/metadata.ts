@@ -135,12 +135,18 @@ export function buildSchemas({
       {
         "@type": "ListItem",
         position: 2,
+        name: exam.fullLabel,
+        item: `${BASE}/${exam.slug}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
         name: subjectLabel,
         item: `${BASE}/${examType}/${subject}`,
       },
       {
         "@type": "ListItem",
-        position: 3,
+        position: 4,
         name: topicLabel,
         item: `${BASE}${basePath}`,
       },
