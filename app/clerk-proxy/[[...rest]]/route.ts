@@ -9,13 +9,17 @@ import { createFrontendApiProxyHandlers } from "@clerk/nextjs/server";
  * Without the cookie, every Clerk API call returns 403.
  *
  * This catch-all route proxies all Clerk Frontend API requests through our
- * own domain (www.battleexam.com/__clerk/*), turning them into first-party
+ * own domain (www.battleexam.com/clerk-proxy/*), turning them into first-party
  * requests. Clerk then sets cookies on our domain instead, which the WebView
  * accepts.
  *
+ * Path note: must NOT start with `_` — Next.js excludes any folder prefixed
+ * with `_` from routing entirely. `app/_clerk/...` or `app/__clerk/...` would
+ * never match and traffic would fall through to dynamic page routes.
+ *
  * Requires:
- *  1. NEXT_PUBLIC_CLERK_PROXY_URL env var set to https://www.battleexam.com/__clerk
- *  2. Clerk Dashboard → Domains → Proxy URL set to https://www.battleexam.com/__clerk
+ *  1. NEXT_PUBLIC_CLERK_PROXY_URL env var set to https://www.battleexam.com/clerk-proxy
+ *  2. Clerk Dashboard → Domains → Proxy URL set to https://www.battleexam.com/clerk-proxy
  */
 const { GET, POST } = createFrontendApiProxyHandlers();
 
