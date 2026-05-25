@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "How BattleExam collects, uses, shares, and protects your personal information.",
 };
 
-const LAST_UPDATED = "2026-05-20";
+const LAST_UPDATED = "2026-05-25";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -19,11 +19,16 @@ export default function PrivacyPolicyPage() {
 
       <section className="mb-8">
         <p className="leading-relaxed">
-          This Privacy Policy explains how BattleExam (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) collects, uses,
-          shares, and protects information about you when you use the BattleExam
-          website at <Link href="/" className="text-blue-400 hover:underline">battleexam.com</Link> and
-          the BattleExam Android application (collectively, the &ldquo;Service&rdquo;).
-          By using the Service you agree to the practices described here.
+          This Privacy Policy explains how BattleExam (&ldquo;we&rdquo;,
+          &ldquo;us&rdquo;, &ldquo;our&rdquo;) collects, uses, shares, and
+          protects information about you when you use the BattleExam website at{" "}
+          <Link href="/" className="text-blue-400 hover:underline">
+            battleexam.com
+          </Link>{" "}
+          and the BattleExam Android application (collectively, the
+          &ldquo;Service&rdquo;). By using the Service you agree to the
+          practices described here. If you do not agree, please do not use the
+          Service.
         </p>
       </section>
 
@@ -32,15 +37,15 @@ export default function PrivacyPolicyPage() {
         <p className="leading-relaxed">
           BattleExam is an AI-assisted exam preparation platform for Indian
           competitive examinations including GATE, JEE Main, JEE Advanced,
-          NEET UG, and UGC NET. For privacy-related questions or requests,
-          contact us at{" "}
+          NEET UG, and UGC NET. The Service is operated from India. For
+          privacy-related questions or requests, contact us at{" "}
           <a
             href="mailto:support@battleexam.com"
             className="text-blue-400 hover:underline"
           >
             support@battleexam.com
           </a>
-          .
+          . We aim to respond within 7 business days.
         </p>
       </section>
 
@@ -55,8 +60,9 @@ export default function PrivacyPolicyPage() {
         <ul className="ml-6 list-disc space-y-1 leading-relaxed">
           <li>
             <strong>Account information.</strong> When you sign in with Google,
-            we receive your email address, name, and profile picture URL from
-            your Google account via our authentication provider (Clerk).
+            our authentication provider Clerk receives your email address,
+            display name, and profile picture URL from your Google account and
+            shares them with us. We never see or receive your Google password.
           </li>
           <li>
             <strong>Preferences.</strong> Your selected exam (e.g., GATE) and
@@ -64,7 +70,8 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong>User-generated content.</strong> Notes you write, bookmarks
-            you create, mistakes you flag, and feedback you submit.
+            you create, flashcards you save, mistakes you flag, questions you
+            report, and any feedback you submit.
           </li>
         </ul>
 
@@ -73,21 +80,22 @@ export default function PrivacyPolicyPage() {
         </h3>
         <ul className="ml-6 list-disc space-y-1 leading-relaxed">
           <li>
-            <strong>Activity data.</strong> Questions you attempt, your answers,
-            scores, mock-test sessions, time spent per question, and progress
-            statistics.
+            <strong>Activity data.</strong> Questions you attempt, your
+            answers, scores, time spent per question, mock-test sessions,
+            review grades, and progress statistics. We use this to power
+            personalized practice and progress tracking.
           </li>
           <li>
             <strong>Device and log data.</strong> IP address, browser type and
-            version, device model and operating system, app version, and
-            timestamps of activity. This is collected automatically when you
-            use the Service.
+            version, device model, operating system, app version, screen size,
+            referring URL, and timestamps of activity. This is collected
+            automatically when you use the Service.
           </li>
           <li>
-            <strong>Cookies and similar technologies.</strong> We use cookies
-            (primarily session cookies set by Clerk) to keep you signed in and
-            to remember preferences. We do not currently use third-party
-            advertising cookies.
+            <strong>Cookies and similar technologies.</strong> Strictly
+            necessary cookies set by Clerk to keep you signed in; functional
+            cookies to remember your theme and preferences; analytics cookies
+            set by Google Analytics 4 and Microsoft Clarity (see Section 3).
           </li>
         </ul>
 
@@ -96,14 +104,71 @@ export default function PrivacyPolicyPage() {
         </h3>
         <p className="leading-relaxed">
           We do not collect precise location, contacts, calendar, microphone,
-          camera, SMS, or call-log data. The Android app requests only the
-          internet permission required to load content.
+          camera, SMS, or call-log data. The Android app declares only the
+          INTERNET permission required to load content. We do not process
+          payments and do not collect payment-card information.
         </p>
       </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          3. How we use your information
+          3. Analytics and product measurement
+        </h2>
+        <p className="mb-3 leading-relaxed">
+          We use the following analytics services on the website and inside
+          the Android app:
+        </p>
+        <ul className="ml-6 list-disc space-y-2 leading-relaxed">
+          <li>
+            <strong>Google Analytics 4 (Google LLC).</strong> Tracks pageviews,
+            referrers, device/browser type, approximate location derived from
+            IP, and in-app navigation events. Google may use this data
+            subject to its own{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              privacy policy
+            </a>
+            . You can opt out using the{" "}
+            <a
+              href="https://tools.google.com/dlpage/gaoptout"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              Google Analytics opt-out browser add-on
+            </a>{" "}
+            or by blocking analytics cookies in your browser.
+          </li>
+          <li>
+            <strong>Microsoft Clarity (Microsoft Corporation).</strong>{" "}
+            Records pseudonymized sessions including mouse movements, clicks,
+            scrolls, and page interactions to help us understand usability
+            problems. Clarity automatically masks input fields and other
+            sensitive content. Data is processed under Microsoft&apos;s{" "}
+            <a
+              href="https://privacy.microsoft.com/en-us/privacystatement"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              privacy statement
+            </a>
+            .
+          </li>
+        </ul>
+        <p className="mt-3 leading-relaxed">
+          We use these tools only to improve the Service. We do not use them
+          for cross-site advertising or to build advertising profiles.
+        </p>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          4. How we use your information
         </h2>
         <ul className="ml-6 list-disc space-y-1 leading-relaxed">
           <li>To authenticate you and keep your account secure.</li>
@@ -111,6 +176,9 @@ export default function PrivacyPolicyPage() {
             To provide and personalize the Service: deliver questions, track
             progress, generate AI explanations, surface practice
             recommendations, and remember your preferences.
+          </li>
+          <li>
+            To operate real-time features such as mock-test leaderboards.
           </li>
           <li>
             To analyze aggregate usage so we can improve features, performance,
@@ -121,8 +189,8 @@ export default function PrivacyPolicyPage() {
             material changes to the Service.
           </li>
           <li>
-            To detect, prevent, and respond to fraud, abuse, or violations of
-            our terms.
+            To detect, prevent, and respond to fraud, abuse, scraping, or
+            violations of our terms.
           </li>
           <li>To comply with legal obligations.</li>
         </ul>
@@ -130,81 +198,203 @@ export default function PrivacyPolicyPage() {
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          4. How we share your information
+          5. Service providers and third parties we share with
         </h2>
         <p className="mb-3 leading-relaxed">
-          We do not sell your personal information. We share it only with the
-          following categories of service providers, strictly for the purposes
-          described:
+          We do not sell your personal information and we do not share it for
+          third-party advertising. We share limited data with the following
+          processors, strictly for the purposes described:
         </p>
+
+        <h3 className="mb-2 mt-4 font-semibold text-white">
+          5.1 Authentication and identity
+        </h3>
         <ul className="ml-6 list-disc space-y-2 leading-relaxed">
           <li>
-            <strong>Authentication and identity:</strong> Clerk (
+            <strong>Clerk, Inc.</strong> — sign-in, session management, and
+            user records.{" "}
             <a
               href="https://clerk.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:underline"
             >
-              privacy policy
+              clerk.com/privacy
             </a>
-            ) — sign-in, session management, and user records. Google — OAuth
-            provider for sign-in (
+          </li>
+          <li>
+            <strong>Google LLC</strong> — OAuth provider for sign-in.{" "}
             <a
               href="https://policies.google.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:underline"
             >
-              Google&apos;s privacy policy
+              policies.google.com/privacy
             </a>
-            ).
+          </li>
+        </ul>
+
+        <h3 className="mb-2 mt-4 font-semibold text-white">
+          5.2 Hosting, database, and storage
+        </h3>
+        <ul className="ml-6 list-disc space-y-2 leading-relaxed">
+          <li>
+            <strong>Vercel Inc.</strong> — web application hosting and edge
+            delivery.
           </li>
           <li>
-            <strong>Hosting and infrastructure:</strong> Vercel (web hosting),
-            a managed PostgreSQL provider (primary database), Upstash Redis
-            (caching), Cloudinary and ImageKit (image storage and delivery),
-            and Pusher (realtime mock-test leaderboards).
+            <strong>Supabase / PostgreSQL</strong> — primary database storing
+            user accounts, attempts, bookmarks, notes, flashcards, and
+            question reports.
           </li>
           <li>
-            <strong>AI explanation generation:</strong> third-party AI
-            providers. When we generate an explanation for a question, the
-            question text and any associated images may be sent to these
-            providers for processing. We do not send your personal account
-            details to these providers as part of explanation generation.
+            <strong>Upstash, Inc.</strong> — Redis cache used for
+            leaderboards, rate limiting, and short-lived session state.
           </li>
           <li>
-            <strong>Analytics (aggregate):</strong> internal anonymized
-            counters and dashboards for product improvement. No personal
-            identifiers are shared with external analytics providers as of the
-            date of this policy.
+            <strong>Cloudinary, Ltd.</strong> and{" "}
+            <strong>ImageKit IO Pvt. Ltd.</strong> — storage and delivery of
+            images embedded in questions and explanations.
+          </li>
+        </ul>
+
+        <h3 className="mb-2 mt-4 font-semibold text-white">
+          5.3 Real-time features
+        </h3>
+        <ul className="ml-6 list-disc space-y-2 leading-relaxed">
+          <li>
+            <strong>Pusher Channels (Pusher Ltd.)</strong> — real-time
+            mock-test leaderboard updates. Pusher receives a non-identifying
+            channel name and the leaderboard payload (display name and score)
+            it must broadcast to other participants of the same mock.
+          </li>
+        </ul>
+
+        <h3 className="mb-2 mt-4 font-semibold text-white">
+          5.4 AI explanation and content generation
+        </h3>
+        <p className="leading-relaxed">
+          To generate or improve explanations and practice content, we may
+          send question text (and, where relevant, associated images) to one
+          or more of the following AI providers. The exact provider used
+          depends on availability, cost, and content type, and may change
+          over time. We do not send your name, email, account identifier, or
+          activity history as part of these requests:
+        </p>
+        <ul className="ml-6 list-disc space-y-2 leading-relaxed mt-2">
+          <li>
+            <strong>Google (Gemini API / Vertex AI)</strong> —{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              privacy policy
+            </a>
           </li>
           <li>
-            <strong>Legal and safety:</strong> we may disclose information to
-            comply with a lawful request from a competent authority, to
-            protect our rights, or to investigate fraud or abuse.
+            <strong>OpenAI, L.L.C.</strong> —{" "}
+            <a
+              href="https://openai.com/policies/privacy-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              privacy policy
+            </a>
+          </li>
+          <li>
+            <strong>DeepSeek</strong> —{" "}
+            <a
+              href="https://chat.deepseek.com/downloads/DeepSeek%20Privacy%20Policy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              privacy policy
+            </a>
+          </li>
+          <li>
+            <strong>OpenRouter</strong> (router that may route requests to
+            other underlying model providers) —{" "}
+            <a
+              href="https://openrouter.ai/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              privacy policy
+            </a>
+          </li>
+        </ul>
+
+        <h3 className="mb-2 mt-4 font-semibold text-white">
+          5.5 Legal, safety, and corporate changes
+        </h3>
+        <p className="leading-relaxed">
+          We may disclose information to comply with a lawful request from a
+          competent authority, to enforce our terms, to protect our rights,
+          property, or safety (or those of our users), or to investigate
+          fraud or abuse. If BattleExam is involved in a merger, acquisition,
+          or sale of assets, your information may be transferred as part of
+          that transaction; we will notify you of any change in ownership or
+          materially different uses of your data.
+        </p>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          6. Legal bases for processing
+        </h2>
+        <p className="mb-3 leading-relaxed">
+          Where applicable laws require us to identify a legal basis (for
+          example, EU/UK GDPR or India&apos;s Digital Personal Data Protection
+          Act, 2023), we rely on:
+        </p>
+        <ul className="ml-6 list-disc space-y-1 leading-relaxed">
+          <li>
+            <strong>Performance of a contract</strong> — to provide the
+            Service you have signed up for.
+          </li>
+          <li>
+            <strong>Legitimate interests</strong> — to secure the Service,
+            prevent abuse, improve features, and analyze aggregate usage.
+          </li>
+          <li>
+            <strong>Consent</strong> — for non-essential analytics cookies
+            (where required by your jurisdiction). You can withdraw consent
+            at any time by clearing your browser cookies or using
+            browser-level opt-out tools.
+          </li>
+          <li>
+            <strong>Legal obligation</strong> — to comply with applicable
+            laws, court orders, or regulatory requests.
           </li>
         </ul>
       </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          5. Data retention
+          7. Data retention
         </h2>
         <p className="leading-relaxed">
           We retain your account information and activity data for as long as
-          your account is active. If you delete your account (see Section 6),
+          your account is active. If you delete your account (see Section 8),
           we permanently delete your personal data and associated content
-          (attempts, bookmarks, notes, preferences) from our primary database
-          immediately, and from backups within 30 days. Aggregated or
-          anonymized data that cannot be linked back to you may be retained
-          for analytics.
+          (attempts, bookmarks, notes, flashcards, reports, preferences) from
+          our primary database immediately, and from routine backups within
+          30 days. Aggregated or de-identified data that cannot reasonably be
+          linked back to you may be retained for analytics and product
+          improvement. Server access logs are retained for up to 90 days for
+          security and abuse-investigation purposes.
         </p>
       </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          6. Your rights and choices
+          8. Your rights and choices
         </h2>
         <p className="mb-3 leading-relaxed">You can, at any time:</p>
         <ul className="ml-6 list-disc space-y-2 leading-relaxed">
@@ -215,8 +405,8 @@ export default function PrivacyPolicyPage() {
             </Link>
             , or open the Android app, tap your profile, and choose
             &ldquo;Account &amp; deletion&rdquo;. Deletion is immediate and
-            irreversible. The same URL also works from any browser, including
-            if you have already uninstalled the app.
+            irreversible. The same URL works from any browser, including
+            after you have uninstalled the app.
           </li>
           <li>
             <strong>Access or correct your information.</strong> Most account
@@ -230,25 +420,36 @@ export default function PrivacyPolicyPage() {
             .
           </li>
           <li>
-            <strong>Export your data.</strong> Email us and we will provide a
-            copy of your account data within 30 days.
+            <strong>Export your data.</strong> Email us and we will provide
+            a machine-readable copy of your account data within 30 days, at
+            no cost.
           </li>
           <li>
-            <strong>Withdraw consent.</strong> Delete your account to revoke
-            consent to data processing under this policy.
+            <strong>Object or restrict processing.</strong> You may object to
+            specific uses (for example, analytics) by blocking cookies or
+            emailing us. Some processing is necessary to provide the
+            Service — if you object to all processing, we may not be able to
+            continue providing the Service to you.
+          </li>
+          <li>
+            <strong>Withdraw consent.</strong> Where we rely on consent, you
+            can withdraw it at any time without affecting the lawfulness of
+            prior processing. Deleting your account revokes consent to all
+            processing under this policy.
+          </li>
+          <li>
+            <strong>Lodge a complaint.</strong> If you are in a jurisdiction
+            with a supervisory authority (for example the Data Protection
+            Board of India under the DPDP Act, 2023, or a Data Protection
+            Authority in the EU/UK), you have the right to complain to that
+            authority in addition to contacting us.
           </li>
         </ul>
-        <p className="mt-3 leading-relaxed">
-          If you are located in a jurisdiction with additional rights (for
-          example under India&apos;s Digital Personal Data Protection Act,
-          2023, or the EU GDPR), you may have rights to lodge a complaint with
-          a supervisory authority in addition to contacting us directly.
-        </p>
       </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          7. Children&apos;s privacy
+          9. Children&apos;s privacy
         </h2>
         <p className="leading-relaxed">
           The Service is intended for users aged 13 and above. We do not
@@ -261,19 +462,24 @@ export default function PrivacyPolicyPage() {
           >
             support@battleexam.com
           </a>{" "}
-          and we will delete it.
+          and we will delete it promptly.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-xl font-semibold text-white">8. Security</h2>
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          10. Security
+        </h2>
         <p className="leading-relaxed">
           We use industry-standard measures to protect your information,
-          including HTTPS in transit, encrypted database connections, and
-          access controls. Authentication credentials are managed by Clerk —
-          we never see or store your Google password. No system is perfectly
-          secure; please use a strong, unique password on your Google account
-          and report any suspected compromise to{" "}
+          including HTTPS for data in transit, encrypted database
+          connections, hashed and salted credentials at our authentication
+          provider, role-based access controls for internal systems, and
+          audited third-party processors. Authentication credentials are
+          managed by Clerk — we never see or store your Google password.
+          No system is perfectly secure; please use a strong, unique
+          password on your Google account and report any suspected
+          compromise to{" "}
           <a
             href="mailto:support@battleexam.com"
             className="text-blue-400 hover:underline"
@@ -286,44 +492,98 @@ export default function PrivacyPolicyPage() {
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          9. International data transfers
+          11. International data transfers
         </h2>
         <p className="leading-relaxed">
-          BattleExam operates primarily in India. Some of our service
-          providers (including Clerk, Vercel, Google, Cloudinary, ImageKit,
-          Pusher, Upstash, and the third-party AI providers referenced in
-          Section 4) may process data in jurisdictions outside India,
-          including the United States and the European Union. We rely on
-          these providers&apos; own data-protection commitments and standard
-          contractual terms.
+          BattleExam operates primarily in India. Several of our processors
+          (including Clerk, Vercel, Google, Cloudinary, ImageKit, Pusher,
+          Upstash, Microsoft Clarity, OpenAI, DeepSeek, and OpenRouter) may
+          process data in jurisdictions outside India, including the United
+          States, the European Union, and other regions. Where required, we
+          rely on the standard contractual terms or equivalent safeguards
+          published by those providers. By using the Service, you understand
+          and consent to such transfers.
         </p>
       </section>
 
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold text-white">
-          10. Changes to this policy
+          12. Your choices on the Android app
+        </h2>
+        <ul className="ml-6 list-disc space-y-1 leading-relaxed">
+          <li>
+            You can revoke Google sign-in access at any time from{" "}
+            <a
+              href="https://myaccount.google.com/permissions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              your Google Account permissions page
+            </a>
+            .
+          </li>
+          <li>
+            You can clear local app data and cache through Android Settings
+            → Apps → BattleExam → Storage. This does not delete your
+            server-side account; use the in-app deletion flow for that.
+          </li>
+          <li>
+            Uninstalling the app does not delete your account. To delete
+            your account after uninstall, visit{" "}
+            <Link
+              href="/account"
+              className="text-blue-400 hover:underline"
+            >
+              battleexam.com/account
+            </Link>{" "}
+            from any browser.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          13. Do Not Track and Global Privacy Control
         </h2>
         <p className="leading-relaxed">
-          We may update this Privacy Policy from time to time. When we make
-          material changes we will update the &ldquo;Last updated&rdquo; date
-          at the top and, where appropriate, notify you in-app or by email.
-          Continued use of the Service after a change constitutes acceptance
-          of the revised policy.
+          Browser &ldquo;Do Not Track&rdquo; signals are not currently
+          standardized, and the Service does not change its behavior based
+          on them. We honor cookie blocking and the analytics opt-out
+          mechanisms described in Sections 3 and 8.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-xl font-semibold text-white">11. Contact</h2>
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          14. Changes to this policy
+        </h2>
         <p className="leading-relaxed">
-          Questions, requests, or complaints about this policy or our handling
-          of your information can be sent to{" "}
+          We may update this Privacy Policy from time to time. When we make
+          material changes we will update the &ldquo;Last updated&rdquo;
+          date at the top and, where appropriate, notify you in-app or by
+          email. Continued use of the Service after a change constitutes
+          acceptance of the revised policy.
+        </p>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-xl font-semibold text-white">
+          15. Grievance officer / Contact
+        </h2>
+        <p className="leading-relaxed">
+          For privacy questions, data-subject requests, complaints, or
+          notices under India&apos;s DPDP Act, 2023, contact our grievance
+          officer at{" "}
           <a
             href="mailto:support@battleexam.com"
             className="text-blue-400 hover:underline"
           >
             support@battleexam.com
-          </a>
-          . We aim to respond within 7 business days.
+          </a>{" "}
+          with the subject line &ldquo;Privacy request&rdquo;. We aim to
+          acknowledge within 72 hours and substantively respond within 30
+          days.
         </p>
       </section>
     </article>
