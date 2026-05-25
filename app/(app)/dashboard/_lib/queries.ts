@@ -24,11 +24,11 @@ export function getCachedStatsActivity(userId: string) {
           SELECT COUNT(*)::bigint as count FROM (
             SELECT is_correct,
                    ROW_NUMBER() OVER (
-                     PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id)
+                     PARTITION BY COALESCE(question_id, pyq_id)
                      ORDER BY created_at DESC
                    ) as rn
             FROM "Attempt"
-            WHERE user_id = ${userId}
+            WHERE user_id = ${userId} AND mock_question_id IS NULL
           ) t
           WHERE rn = 1 AND is_correct = false
         `,
@@ -69,32 +69,30 @@ export function getCachedWeakTopic(userId: string) {
       const topicStats = await prisma.$queryRaw<{ pattern_id: string; topic_name: string; subject: string; count: bigint }[]>`
         SELECT
           t.pattern_id,
-          COALESCE(pat.topic_name, sp_pat.subject_name, 'Unknown Topic') as topic_name,
-          COALESCE(pat.subject, sp_pat.subject_name, 'General') as subject,
+          COALESCE(pat.topic_name, 'Unknown Topic') as topic_name,
+          COALESCE(pat.subject, 'General') as subject,
           t.count
         FROM (
           SELECT
-            COALESCE(q.pattern_id, p.pattern_id, 'subject-' || sp.subject_pattern_id) as pattern_id,
+            COALESCE(q.pattern_id, p.pattern_id) as pattern_id,
             COUNT(*)::bigint as count
           FROM (
-            SELECT question_id, pyq_id, subject_pyq_id, is_correct,
+            SELECT question_id, pyq_id, is_correct,
                    ROW_NUMBER() OVER (
-                     PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id)
+                     PARTITION BY COALESCE(question_id, pyq_id)
                      ORDER BY created_at DESC
                    ) as rn
             FROM "Attempt"
-            WHERE user_id = ${userId}
+            WHERE user_id = ${userId} AND mock_question_id IS NULL
           ) latest
           LEFT JOIN "GeneratedQuestion" q ON q.id = latest.question_id
           LEFT JOIN "PYQ" p ON p.id = latest.pyq_id
-          LEFT JOIN "SubjectPYQ" sp ON sp.id = latest.subject_pyq_id
           WHERE latest.rn = 1 AND latest.is_correct = false
           GROUP BY 1
         ) t
         LEFT JOIN "Pattern" pat ON pat.id = t.pattern_id
-        LEFT JOIN "SubjectPattern" sp_pat ON ('subject-' || sp_pat.id) = t.pattern_id
         WHERE t.pattern_id IS NOT NULL
-          AND (pat.id IS NOT NULL OR sp_pat.id IS NOT NULL)
+          AND pat.id IS NOT NULL
           AND t.count > 0
         ORDER BY t.count DESC
         LIMIT 5
@@ -117,34 +115,25 @@ export function getCachedRecentAttempts(userId: string) {
       // images) the dashboard never renders. Keeps egress to ~3-5KB per row
       // instead of ~2KB pre-trim + nested-include bloat.
       const recentAttempts = await prisma.attempt.findMany({
-        where: { user_id: userId },
+        where: { user_id: userId, mock_question_id: null },
         select: {
           id: true,
           is_correct: true,
           created_at: true,
           question_id: true,
           pyq_id: true,
-          subject_pyq_id: true,
           question: {
             select: {
               id: true,
               question_text: true,
-              pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } },
+              pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true, branch: true } },
             },
           },
           pyq: {
             select: {
               id: true,
               question_text: true,
-              pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true } },
-            },
-          },
-          subject_pyq: {
-            select: {
-              id: true,
-              question_text: true,
-              topic: true,
-              subject_pattern: { select: { subject_name: true, id: true } },
+              pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true, branch: true } },
             },
           },
         },
@@ -155,7 +144,7 @@ export function getCachedRecentAttempts(userId: string) {
       const latestRecentAttempts: any[] = [];
       const seenQ = new Set<string>();
       recentAttempts.forEach((a) => {
-        const qId = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
+        const qId = a.question_id ?? a.pyq_id ?? a.id;
         if (!seenQ.has(qId)) {
           latestRecentAttempts.push(a);
           seenQ.add(qId);

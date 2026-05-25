@@ -69,14 +69,7 @@ export async function GET(req: NextRequest) {
       options: true,
     } as const;
 
-    const [subjectPyqs, pyqs, generated] = await Promise.all([
-      prisma.subjectPYQ.findMany({
-        take: limit,
-        select: {
-          ...scanSelect,
-          subject_pattern: { select: { subject_name: true } },
-        },
-      }),
+    const [pyqs, generated] = await Promise.all([
       prisma.pYQ.findMany({
         take: limit,
         select: {
@@ -95,11 +88,11 @@ export async function GET(req: NextRequest) {
 
     const results: any[] = [];
 
-    const processSet = (set: any[], type: "PYQ" | "SubjectPYQ" | "GeneratedQuestion") => {
+    const processSet = (set: any[], type: "PYQ" | "GeneratedQuestion") => {
       for (const q of set) {
         const qCheck = checkMath(q.question_text);
         const eCheck = checkMath(q.explanation);
-        
+
         let optionsBroken = false;
         const optionErrors: string[] = [];
         if (Array.isArray(q.options)) {
@@ -113,7 +106,7 @@ export async function GET(req: NextRequest) {
         }
 
         if (qCheck.isBroken || eCheck.isBroken || optionsBroken) {
-          const reportKey = type === "GeneratedQuestion" ? "question" : (type === "SubjectPYQ" ? "subject_pyq" : "pyq");
+          const reportKey = type === "GeneratedQuestion" ? "question" : "pyq";
           results.push({
             id: `auto-latex-${q.id}`,
             reason: "LaTeX Error",
@@ -132,7 +125,6 @@ export async function GET(req: NextRequest) {
       }
     };
 
-    processSet(subjectPyqs, "SubjectPYQ");
     processSet(pyqs, "PYQ");
     processSet(generated, "GeneratedQuestion");
 

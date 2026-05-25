@@ -20,7 +20,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 interface RawQuestion {
   id: string;
-  source: "pyq" | "subject_pyq";
+  source: "pyq";
   question_text: string;
   options: unknown;
   correct_answer: string;
@@ -39,12 +39,26 @@ async function fetchSectionQuestions(
   branch: string | null,
   subjectFilters: string[]
 ): Promise<RawQuestion[]> {
-  const subjects =
-    subjectFilters.length > 0
-      ? subjectFilters.filter((s) =>
-          section.subjects === null || section.subjects.includes(s)
-        )
-      : section.subjects ?? [];
+  // If the user applied a subject filter, check whether this section overlaps it.
+  // section.subjects === null means "all branch subjects" (GATE subject section) — always overlaps.
+  // For sections with a fixed list, zero overlap means this section should be skipped entirely;
+  // return [] so the caller can omit it.
+  let subjects: string[];
+  if (subjectFilters.length > 0) {
+    if (section.subjects === null) {
+      // GATE-style open subject section — apply user filter directly
+      subjects = subjectFilters;
+    } else {
+      const overlap = subjectFilters.filter((s) => section.subjects!.includes(s));
+      if (overlap.length === 0) {
+        // No overlap → skip this section
+        return [];
+      }
+      subjects = overlap;
+    }
+  } else {
+    subjects = section.subjects ?? [];
+  }
 
   const usedSubjectFilter = subjects.length > 0;
 
@@ -60,13 +74,6 @@ async function fetchSectionQuestions(
       ? { subject: { in: usedSubjectFilter ? subjects : section.subjects } }
       : usedSubjectFilter
       ? { subject: { in: subjects } }
-      : {};
-
-  const subjPyqSubjectFilter =
-    section.subjects !== null
-      ? { subject_name: { in: usedSubjectFilter ? subjects : section.subjects } }
-      : usedSubjectFilter
-      ? { subject_name: { in: subjects } }
       : {};
 
   // Push marks + type filters into DB to avoid loading the full question bank.
@@ -87,88 +94,44 @@ async function fetchSectionQuestions(
     : section.totalQuestions;
   const takeLimit = Math.max(totalNeeded * 4, 50);
 
-  const [pyqs, subjectPyqs] = await Promise.all([
-    // PYQ table: linked through Pattern (has exam_type + branch)
-    prisma.pYQ.findMany({
-      where: {
-        ...marksFilter,
-        ...typeFilter,
-        pattern: {
-          exam_type: examType,
-          ...branchFilter,
-          ...pyqSubjectFilter,
-        },
+  const pyqs = await prisma.pYQ.findMany({
+    where: {
+      ...marksFilter,
+      ...typeFilter,
+      pattern: {
+        exam_type: examType,
+        ...branchFilter,
+        ...pyqSubjectFilter,
       },
-      select: {
-        id: true,
-        question_text: true,
-        options: true,
-        correct_answer: true,
-        explanation: true,
-        question_type: true,
-        marks: true,
-        year: true,
-        images: true,
-        pattern: { select: { subject: true } },
-      },
-      take: takeLimit,
-    }),
+    },
+    select: {
+      id: true,
+      question_text: true,
+      options: true,
+      correct_answer: true,
+      explanation: true,
+      question_type: true,
+      marks: true,
+      year: true,
+      images: true,
+      pattern: { select: { subject: true } },
+    },
+    take: takeLimit,
+  });
 
-    // SubjectPYQ table: linked through SubjectPattern (has exam_type + branch)
-    prisma.subjectPYQ.findMany({
-      where: {
-        ...marksFilter,
-        ...typeFilter,
-        subject_pattern: {
-          exam_type: examType,
-          ...branchFilter,
-          ...subjPyqSubjectFilter,
-        },
-      },
-      select: {
-        id: true,
-        question_text: true,
-        options: true,
-        correct_answer: true,
-        explanation: true,
-        question_type: true,
-        marks: true,
-        year: true,
-        images: true,
-        subject_pattern: { select: { subject_name: true } },
-      },
-      take: takeLimit,
-    }),
-  ]);
-
-  const normalized: RawQuestion[] = [
-    ...pyqs.map((q) => ({
-      id: q.id,
-      source: "pyq" as const,
-      question_text: q.question_text,
-      options: q.options,
-      correct_answer: q.correct_answer,
-      explanation: q.explanation,
-      question_type: q.question_type,
-      marks: q.marks,
-      year: q.year,
-      subject: q.pattern?.subject ?? "Unknown",
-      images: q.images,
-    })),
-    ...subjectPyqs.map((q) => ({
-      id: q.id,
-      source: "subject_pyq" as const,
-      question_text: q.question_text,
-      options: q.options,
-      correct_answer: q.correct_answer,
-      explanation: q.explanation,
-      question_type: q.question_type,
-      marks: q.marks,
-      year: q.year,
-      subject: q.subject_pattern?.subject_name ?? "Unknown",
-      images: q.images,
-    })),
-  ];
+  const normalized: RawQuestion[] = pyqs.map((q) => ({
+    id: q.id,
+    source: "pyq" as const,
+    question_text: q.question_text,
+    options: q.options,
+    correct_answer: q.correct_answer,
+    explanation: q.explanation,
+    question_type: q.question_type,
+    marks: q.marks,
+    year: q.year,
+    subject: q.pattern?.subject ?? "Unknown",
+    images: q.images,
+  }));
 
   return shuffle(normalized);
 }
@@ -314,12 +277,16 @@ export async function GET(req: NextRequest) {
       sectionName: string;
       questions: RawQuestion[];
     }> = [];
+    const includedSectionIndices = new Set<number>();
 
     for (let si = 0; si < config.sections.length; si++) {
       const sec = config.sections[si];
       const pool = await fetchSectionQuestions(sec, examType, branch, subjectFilters);
+      // fetchSectionQuestions returns [] when subject filter has no overlap with this section
+      if (pool.length === 0 && subjectFilters.length > 0) continue;
       const picked = pickSectionQuestions(pool, sec);
       allSectionQuestions.push({ sectionIdx: si, sectionName: sec.name, questions: picked });
+      includedSectionIndices.add(si);
     }
 
     // Check we have at least some questions
@@ -344,7 +311,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const maxScore = config.sections.reduce((sum, sec) => sum + sec.maxScore, 0);
+    const maxScore = config.sections
+      .filter((_, i) => includedSectionIndices.has(i))
+      .reduce((sum, sec) => sum + sec.maxScore, 0);
 
     // Determine how many seeded mocks already exist
     const existingCount = await prisma.mockTestTemplate.count({

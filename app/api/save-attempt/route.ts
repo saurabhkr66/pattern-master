@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { questionId, pyqId, subjectPyqId, mockQuestionId, isCorrect, userAnswer, timeSpent } = body;
+        const { questionId, pyqId, mockQuestionId, isCorrect, userAnswer, timeSpent } = body;
 
-        if ((!questionId && !pyqId && !subjectPyqId && !mockQuestionId) || isCorrect === undefined) {
+        if ((!questionId && !pyqId && !mockQuestionId) || isCorrect === undefined) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
             data: {
                 question_id: questionId || null,
                 pyq_id: pyqId || null,
-                subject_pyq_id: subjectPyqId || null,
                 mock_question_id: mockQuestionId || null,
                 is_correct: isCorrect,
                 user_answer: userAnswer ? String(userAnswer) : null,

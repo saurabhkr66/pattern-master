@@ -128,12 +128,21 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   useEffect(() => {
     if (directQuestionId && (questions.length > 0 || pyqs.length > 0)) {
       const q = questions.find((x: any) => x.id === directQuestionId);
+      console.log("[PatternRow] deep-link lookup", {
+        directQuestionId,
+        bank: questions.length,
+        pyq: pyqs.length,
+        foundInBank: !!q,
+        firstPyqId: pyqs[0]?.id,
+        pyqIdMatchType: pyqs[0] ? typeof pyqs[0].id : "n/a",
+      });
       if (q) {
         setSelectedQuestion({ ...q, _isPyq: false });
         setActiveTab("bank");
         return;
       }
       const p = pyqs.find((x: any) => x.id === directQuestionId);
+      console.log("[PatternRow] pyq lookup result", { foundInPyq: !!p, pyqId: p?.id });
       if (p) {
         setSelectedQuestion({ ...p, _isPyq: true });
         setActiveTab("pyq");
@@ -141,15 +150,27 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
     }
   }, [directQuestionId, questions, pyqs]);
 
-  // Auto-switch to bank tab when there are no PYQs but there are bank questions
+  // Resolve the default tab once data arrives, but only if there's no
+  // directQuestionId driving the choice (that effect above sets the tab itself).
+  // Prefer PYQ when any exist; fall back to bank otherwise.
   useEffect(() => {
-    if (data && pyqs.length === 0 && questions.length > 0) {
-      setActiveTab("bank");
-    }
-  }, [data, pyqs.length, questions.length]);
+    if (!data) return;
+    if (directQuestionId) return;
+    setActiveTab(pyqs.length > 0 ? "pyq" : "bank");
+  }, [data, pyqs.length, questions.length, directQuestionId]);
 
-  // Sync URL when question is cleared
+  // Sync URL when question is cleared — but only after THIS row has actually
+  // had a selectedQuestion at some point. Without this guard, every freshly
+  // mounted PatternRow (one per topic in the list) would race to strip the
+  // ?questionId param before the matched row's data finished loading,
+  // breaking deep-links from mistakes/bookmarks/dashboard on first click.
+  const hadSelectionRef = useRef(false);
   useEffect(() => {
+    if (selectedQuestion) hadSelectionRef.current = true;
+  }, [selectedQuestion]);
+
+  useEffect(() => {
+    if (!hadSelectionRef.current) return;
     if (!selectedQuestion && !directQuestionId) {
       const url = new URL(window.location.href);
       if (url.searchParams.has("q") || url.searchParams.has("questionId")) {

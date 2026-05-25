@@ -14,16 +14,14 @@ export async function GET(req: NextRequest) {
 
   const rows = await prisma.$queryRaw<{ exam_type: string; branch: string; cnt: bigint }[]>`
     SELECT
-      COALESCE(pat.exam_type, pyq_pat.exam_type, sp.exam_type, 'GATE') AS exam_type,
-      COALESCE(pat.branch,    pyq_pat.branch,    sp.branch,    'CSE')  AS branch,
+      COALESCE(pat.exam_type, pyq_pat.exam_type, 'GATE') AS exam_type,
+      COALESCE(pat.branch,    pyq_pat.branch,    'CSE')  AS branch,
       COUNT(*)::bigint AS cnt
     FROM "Attempt" a
     LEFT JOIN "GeneratedQuestion" gq      ON gq.id  = a.question_id
     LEFT JOIN "Pattern"           pat     ON pat.id = gq.pattern_id
     LEFT JOIN "PYQ"               pyq     ON pyq.id = a.pyq_id
     LEFT JOIN "Pattern"           pyq_pat ON pyq_pat.id = pyq.pattern_id
-    LEFT JOIN "SubjectPYQ"        spyq    ON spyq.id = a.subject_pyq_id
-    LEFT JOIN "SubjectPattern"    sp      ON sp.id  = spyq.subject_pattern_id
     WHERE a.user_id = ${userId}
     GROUP BY 1, 2
     ORDER BY cnt DESC

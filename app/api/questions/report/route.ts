@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { questionId, isPyq, isSubjectPyq, reason, details } = await req.json();
+    const { questionId, isPyq, reason, details } = await req.json();
 
     if (!questionId || !reason) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -23,9 +23,7 @@ export async function POST(req: NextRequest) {
       status: "pending",
     };
 
-    if (isSubjectPyq) {
-      data.subject_pyq_id = questionId;
-    } else if (isPyq) {
+    if (isPyq) {
       data.pyq_id = questionId;
     } else {
       data.question_id = questionId;

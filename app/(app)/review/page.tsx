@@ -25,11 +25,11 @@ export default async function ReviewPage() {
     SELECT id FROM (
       SELECT id, is_correct, created_at,
              ROW_NUMBER() OVER (
-               PARTITION BY COALESCE(question_id, pyq_id, subject_pyq_id)
+               PARTITION BY COALESCE(question_id, pyq_id)
                ORDER BY created_at DESC
              ) as rn
       FROM "Attempt"
-      WHERE user_id = ${userId}
+      WHERE user_id = ${userId} AND mock_question_id IS NULL
     ) t
     WHERE rn = 1 AND is_correct = false
     ORDER BY created_at DESC
@@ -54,7 +54,6 @@ export default async function ReviewPage() {
       id: true,
       question_id: true,
       pyq_id: true,
-      subject_pyq_id: true,
       created_at: true,
       question: {
         select: {
@@ -77,24 +76,12 @@ export default async function ReviewPage() {
           pattern: { select: { id: true, topic_name: true, subject: true } },
         },
       },
-      subject_pyq: {
-        select: {
-          question_text: true,
-          options: true,
-          correct_answer: true,
-          explanation: true,
-          images: true,
-          year: true,
-          subject_pattern: { select: { id: true, subject_name: true } },
-        },
-      },
     },
     orderBy: { created_at: "desc" },
   });
 
   const qIds     = wrongAttempts.map(a => a.question_id).filter(Boolean) as string[];
   const pyqIds   = wrongAttempts.map(a => a.pyq_id).filter(Boolean) as string[];
-  const spyqIds  = wrongAttempts.map(a => a.subject_pyq_id).filter(Boolean) as string[];
 
   const srsStates = await prisma.flashcard.findMany({
     where: {
@@ -102,37 +89,30 @@ export default async function ReviewPage() {
       OR: [
         ...(qIds.length    ? [{ question_id:    { in: qIds    } }] : []),
         ...(pyqIds.length  ? [{ pyq_id:         { in: pyqIds  } }] : []),
-        ...(spyqIds.length ? [{ subject_pyq_id: { in: spyqIds } }] : []),
       ],
     },
   });
 
-  // Map SRS states by question/pyq/subject_pyq id for quick lookup
+  // Map SRS states by question/pyq id for quick lookup
   const srsMap = new Map<string, (typeof srsStates)[0]>();
   srsStates.forEach(s => {
     if (s.question_id)    srsMap.set(s.question_id, s);
     if (s.pyq_id)         srsMap.set(s.pyq_id, s);
-    if (s.subject_pyq_id) srsMap.set(s.subject_pyq_id, s);
   });
 
   const cards = wrongAttempts
     .map(a => {
-      const q = a.question ?? a.pyq ?? a.subject_pyq;
-      const sp = a.subject_pyq?.subject_pattern;
-      const pattern =
-        a.question?.pattern ??
-        a.pyq?.pattern ??
-        (sp ? { id: `subject-${sp.id}`, topic_name: sp.subject_name, subject: sp.subject_name } : null);
+      const q = a.question ?? a.pyq;
+      const pattern = a.question?.pattern ?? a.pyq?.pattern ?? null;
       if (!q || !pattern) return null;
 
-      const qId = a.question_id ?? a.pyq_id ?? a.subject_pyq_id ?? a.id;
+      const qId = a.question_id ?? a.pyq_id ?? a.id;
       const srs = srsMap.get(qId);
 
       return {
         id: qId,
         question_id:    a.question_id    ?? null,
         pyq_id:         a.pyq_id         ?? null,
-        subject_pyq_id: a.subject_pyq_id ?? null,
         question_text:  q.question_text,
         options:        (q.options as string[]) ?? [],
         correct_answer: q.correct_answer,
@@ -141,7 +121,7 @@ export default async function ReviewPage() {
         topic_name:     pattern.topic_name,
         subject:        pattern.subject,
         patternId:      pattern.id,
-        ispyq:          !!a.pyq_id || !!a.subject_pyq_id,
+        ispyq:          !!a.pyq_id,
         year:           "year" in q ? (q.year as number) : undefined,
         // SRS state
         srs: srs ? {

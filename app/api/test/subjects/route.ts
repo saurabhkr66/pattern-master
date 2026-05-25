@@ -11,36 +11,19 @@ export async function GET(req: NextRequest) {
     const examType = searchParams.get("exam_type") ?? "GATE";
     const branch = searchParams.get("branch") ?? null;
 
-    const [patternSubjects, subjectPatternNames] = await Promise.all([
-      // Subjects from PYQ → Pattern (uses exam_type + branch)
-      prisma.pattern.findMany({
-        where: {
-          exam_type: examType,
-          ...(branch ? { branch } : {}),
-          pyqs: { some: {} },
-        },
-        select: { subject: true },
-        distinct: ["subject"],
-        orderBy: { subject: "asc" },
-      }),
-      // Subjects from SubjectPYQ → SubjectPattern (uses exam_type + branch)
-      prisma.subjectPattern.findMany({
-        where: {
-          exam_type: examType,
-          ...(branch ? { branch } : {}),
-          pyqs: { some: {} },
-        },
-        select: { subject_name: true },
-        distinct: ["subject_name"],
-        orderBy: { subject_name: "asc" },
-      }),
-    ]);
+    const patternSubjects = await prisma.pattern.findMany({
+      where: {
+        exam_type: examType,
+        ...(branch ? { branch } : {}),
+        pyqs: { some: {} },
+      },
+      select: { subject: true },
+      distinct: ["subject"],
+      orderBy: { subject: "asc" },
+    });
 
     const merged = Array.from(
-      new Set([
-        ...patternSubjects.map((p) => p.subject),
-        ...subjectPatternNames.map((p) => p.subject_name),
-      ])
+      new Set(patternSubjects.map((p) => p.subject))
     ).sort();
 
     return NextResponse.json({ subjects: merged }, { headers: { "Cache-Control": "private, s-maxage=3600, max-age=0" } });

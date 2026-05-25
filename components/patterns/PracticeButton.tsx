@@ -322,9 +322,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: (question._isPyq || question._isSubjectPyq || question.isMock) ? undefined : question.id,
-          pyqId: (question._isPyq && !question._isSubjectPyq) ? question.id : undefined,
-          subjectPyqId: question._isSubjectPyq ? question.id : undefined,
+          questionId: (question._isPyq || question.isMock) ? undefined : question.id,
+          pyqId: question._isPyq ? question.id : undefined,
           mockQuestionId: question.isMock ? question.id : undefined,
           isCorrect,
           userAnswer: finalAnswer,
@@ -348,7 +347,6 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       let type = "GeneratedQuestion";
       let mockTestId: string | undefined;
       if (question.isMock) { type = "MockQuestion"; mockTestId = patternId.replace("mock-", ""); }
-      else if (question._isSubjectPyq) type = "SubjectPYQ";
       else if (question._isPyq) type = "PYQ";
 
       await quickEditExplanation(question.id, type, editedExplanation, mockTestId);
@@ -374,9 +372,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: (question._isPyq || question._isSubjectPyq || question.isMock) ? undefined : question.id,
-          pyqId: (question._isPyq && !question._isSubjectPyq) ? question.id : undefined,
-          subjectPyqId: question._isSubjectPyq ? question.id : undefined,
+          questionId: (question._isPyq || question.isMock) ? undefined : question.id,
+          pyqId: question._isPyq ? question.id : undefined,
           mockQuestionId: question.isMock ? question.id : undefined,
         }),
       });

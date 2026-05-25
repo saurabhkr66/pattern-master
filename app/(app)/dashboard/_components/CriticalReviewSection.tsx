@@ -1,8 +1,20 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { BE } from "@/lib/theme";
-import MathRenderer from "@/components/ui/MathRenderer";
 import { getCachedRecentAttempts } from "../_lib/queries";
+
+function toPreview(text: string, max = 140): string {
+  return text
+    .replace(/\$\$[\s\S]*?\$\$/g, "[math]")
+    .replace(/\$[^$\n]+?\$/g, "[math]")
+    .replace(/\\\[[\s\S]*?\\\]/g, "[math]")
+    .replace(/\\\([\s\S]*?\\\)/g, "[math]")
+    .replace(/[*_`#>|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max)
+    .concat(text.length > max ? "…" : "");
+}
 
 export default async function CriticalReviewSection({ userId }: { userId: string }) {
   const { recentFailures } = await getCachedRecentAttempts(userId);
@@ -10,26 +22,21 @@ export default async function CriticalReviewSection({ userId }: { userId: string
   if (recentFailures.length === 0) return null;
 
   const reviewItems = recentFailures.map((a: any) => {
-    const q = a.question ?? a.pyq ?? a.subject_pyq;
-    const pattern = q?.pattern ?? (q?.subject_pattern ? {
-      topic_name: q.topic || ((q.subject_pattern.subject_name && q.subject_pattern.subject_name !== "null") ? q.subject_pattern.subject_name : "Subject Practice"),
-      subject: (q.subject_pattern.subject_name && q.subject_pattern.subject_name !== "null") ? q.subject_pattern.subject_name : "Subject Practice",
-      id: `subject-${q.subject_pattern.id}`,
+    const q = a.question ?? a.pyq;
+    const pattern = q?.pattern ?? {
+      topic_name: "Unknown",
+      subject: "Unknown",
+      id: "unknown",
       exam_type: "GATE",
-    } : {
-      topic_name: "Subject Practice",
-      subject: "Subject Practice",
-      id: q?.id ? `subject-${q.id}` : "unknown",
-      exam_type: "GATE",
-    });
-    const patternId = q?.pattern?.id || (q?.subject_pattern ? `subject-${q.subject_pattern.id}` : "unknown");
+    };
+    const patternId = q?.pattern?.id || "unknown";
     return {
       id: a.id,
       question_text: q?.question_text,
       topic_name: pattern?.topic_name,
       subject: pattern?.subject,
       age: formatDistanceToNow(new Date(a.created_at), { addSuffix: true }).replace("about ", "").replace("almost ", ""),
-      practiceUrl: `/practice?patternId=${patternId}&questionId=${q?.id || ""}&subject=${encodeURIComponent(pattern?.subject || "All")}`,
+      practiceUrl: `/practice?patternId=${patternId}&questionId=${q?.id || ""}&subject=${encodeURIComponent(pattern?.subject || "All")}${(pattern as any)?.exam_type ? `&exam=${encodeURIComponent((pattern as any).exam_type)}` : ""}${(pattern as any)?.branch ? `&branch=${encodeURIComponent((pattern as any).branch)}` : ""}`,
     };
   });
 
@@ -53,8 +60,8 @@ export default async function CriticalReviewSection({ userId }: { userId: string
                 Solve again →
               </Link>
             </div>
-            <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5, fontFamily: BE.serif, fontStyle: "italic", marginTop: 8, paddingTop: 8, borderTop: `1px solid ${BE.line}` }} className="line-clamp-2">
-              <MathRenderer content={(r.question_text && r.question_text !== "null") ? r.question_text : "No question text available"} />
+            <div style={{ fontSize: 12, color: BE.textDim, lineHeight: 1.5, fontFamily: BE.serif, fontStyle: "italic", marginTop: 8, paddingTop: 8, borderTop: `1px solid ${BE.line}`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              {(r.question_text && r.question_text !== "null") ? toPreview(r.question_text) : "No question text available"}
             </div>
           </div>
         ))}

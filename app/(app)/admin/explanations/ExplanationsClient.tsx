@@ -11,7 +11,7 @@ type QuestionRow = {
   correct_answer: string;
   year: number;
   marks: number;
-  questionType: "PYQ" | "SubjectPYQ";
+  questionType: "PYQ";
   subject: string;
   topic?: string;
 };

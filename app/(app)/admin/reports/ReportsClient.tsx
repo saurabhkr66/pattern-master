@@ -13,13 +13,9 @@ const isMissingExplanation = (q: any) => {
 };
 
 function processReport(r: any) {
-  const q = r.q || r.question || r.pyq || r.subject_pyq;
+  const q = r.q || r.question || r.pyq;
   let exam = "Other", subject = "Other", type = "Generated";
-  if (r.subject_pyq) {
-    exam = r.subject_pyq.subject_pattern?.exam_type || "GATE";
-    subject = r.subject_pyq.subject_pattern?.subject_name || "Unknown";
-    type = "SubjectPYQ";
-  } else if (r.pyq) {
+  if (r.pyq) {
     exam = r.pyq.exam_type || r.pyq.pattern?.exam_type || "GATE";
     subject = r.pyq.pattern?.subject || "Unknown";
     type = "PYQ";
@@ -62,10 +58,9 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
 
   const allProcessedReports = useMemo(() => {
     const latexProcessed = latexReports.map(lr => {
-      const q = lr.q || lr.question || lr.pyq || lr.subject_pyq;
+      const q = lr.q || lr.question || lr.pyq;
       let exam = "Other", subject = "Other", type = "Generated";
-      if (lr.subject_pyq) { exam = lr.subject_pyq.subject_pattern?.exam_type || "GATE"; subject = lr.subject_pyq.subject_pattern?.subject_name || "Unknown"; type = "SubjectPYQ"; }
-      else if (lr.pyq) { exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE"; subject = lr.pyq.pattern?.subject || "Unknown"; type = "PYQ"; }
+      if (lr.pyq) { exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE"; subject = lr.pyq.pattern?.subject || "Unknown"; type = "PYQ"; }
       else if (lr.isMock) { exam = lr.exam_type || "JEE_MAIN"; subject = lr.subject || "Unknown"; type = "Mock"; }
       else if (lr.question) { exam = lr.question.pattern?.exam_type || "GATE"; subject = lr.question.pattern?.subject || "Unknown"; type = "Generated"; }
       return { ...lr, exam, subject, type, q };
@@ -118,7 +113,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
     return Array.from(new Set([...configSubjects, ...found])).filter(s => s && s !== "Other" && s !== "Unknown").sort();
   }, [allProcessedReports, filterExam]);
 
-  const types = ["PYQ", "SubjectPYQ", "Mock", "Generated"];
+  const types = ["PYQ", "Mock", "Generated"];
 
   const filteredReports = useMemo(() => {
     return allProcessedReports.filter(r => {
@@ -137,14 +132,13 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
 
   const openEditor = (report: any) => {
     const questionData = report.q;
-    let questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" = "GeneratedQuestion";
-    if (report.subject_pyq_id) questionType = "SubjectPYQ";
-    else if (report.pyq_id) questionType = "PYQ";
+    let questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion" = "GeneratedQuestion";
+    if (report.pyq_id) questionType = "PYQ";
     else if (report.isMock) questionType = "MockQuestion";
 
     setEditingReport({
       ...report, questionData, questionType,
-      questionId: report.subject_pyq_id || report.pyq_id || report.question_id || report.mock_question_id,
+      questionId: report.pyq_id || report.question_id || report.mock_question_id,
     });
     setFormData({
       question_text: questionData?.question_text || "",
@@ -178,7 +172,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
         onModelChange={setSelectedAIModel}
         onBatchComplete={(processedIds) => {
           setLocalReports(prev => prev.filter(r => {
-            const qId = r.questionId || r.pyq_id || r.subject_pyq_id || r.mock_question_id;
+            const qId = r.questionId || r.pyq_id || r.mock_question_id;
             return !processedIds.includes(qId);
           }));
         }}
@@ -293,7 +287,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <div className="text-[10px] text-gray-400 font-mono">ID: {r.subject_pyq_id || r.pyq_id || r.question_id || r.mock_question_id}</div>
+                    <div className="text-[10px] text-gray-400 font-mono">ID: {r.pyq_id || r.question_id || r.mock_question_id}</div>
                     <button onClick={() => openEditor(r)} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm">Review & Fix Issue</button>
                   </div>
                 </div>

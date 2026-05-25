@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python scraper.py)"
+      "Bash(python scraper.py)",
+      "Bash(npx tsx *)",
+      "WebFetch(domain:www.testranking.in)",
+      "PowerShell($ProgressPreference='SilentlyContinue'; $urls=@\\('https://www.testranking.in/user/instruction/3323285/615','https://www.testranking.in/user/test/3323285/615','https://www.testranking.in/user/full-test/3323285/615','https://www.testranking.in/user/specific-instruction/3323285/615','https://www.testranking.in/user/solution-details/3323285/615','https://www.testranking.in/user/analysis/3323285/615'\\); foreach\\($u in $urls\\){ try{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -MaximumRedirection 0 -ErrorAction Stop; \"$u -> $\\($r.StatusCode\\) len=$\\($r.Content.Length\\)\" } catch { $resp=$_.Exception.Response; if\\($resp\\){ \"$u -> $\\([int]$resp.StatusCode\\) loc=$\\($resp.Headers.Location\\)\" } else { \"$u -> ERR $\\($_.Exception.Message\\)\" } } })"
     ]
   }
 }

@@ -49,13 +49,6 @@ export default async function AdminReportsPage() {
           pattern: { select: { id: true, topic_name: true, subject: true, exam_type: true } },
         },
       },
-      subject_pyq: {
-        select: {
-          id: true, question_text: true, options: true, correct_answer: true,
-          explanation: true, question_type: true, year: true, images: true,
-          subject_pattern: { select: { id: true, subject_name: true, exam_type: true } },
-        },
-      },
     }
   });
 
@@ -65,22 +58,12 @@ export default async function AdminReportsPage() {
 
   // All remaining queries run in parallel
   const [
-    missingSubjectPYQs,
     missingPYQs,
     mockTemplatesMeta,
     missingMockRows,
     flaggedMockRows,
     reportedMockRows,
   ] = await Promise.all([
-    prisma.subjectPYQ.findMany({
-      where: { explanation: "", subject_pattern: { exam_type: { in: EXAMS } } },
-      take: 15,
-      select: {
-        id: true, question_text: true, options: true, correct_answer: true,
-        explanation: true, question_type: true, images: true,
-        subject_pattern: { select: { exam_type: true, subject_name: true } },
-      },
-    }),
     prisma.pYQ.findMany({
       where: { explanation: "", exam_type: { in: EXAMS } },
       take: 15,
@@ -187,16 +170,6 @@ export default async function AdminReportsPage() {
   // Convert them into "virtual reports" so they show up in the UI
   const autoReports = [
     ...flaggedMockQuestions,
-    ...missingSubjectPYQs.map(q => ({
-      id: `auto-empty-s-${q.id}`,
-      reason: "Missing Explanation (Auto)",
-      status: "pending",
-      created_at: new Date(),
-      user: { email: "System Scanner" },
-      subject_pyq_id: q.id,
-      subject_pyq: q,
-      details: "This question currently has no explanation in the database."
-    })),
     ...missingPYQs.map(q => ({
       id: `auto-empty-p-${q.id}`,
       reason: "Missing Explanation (Auto)",

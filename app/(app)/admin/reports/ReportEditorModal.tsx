@@ -19,7 +19,7 @@ interface FormData {
 interface EditingReport {
   id: string;
   questionId: string;
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion";
+  questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion";
   mock_test_id?: string;
   reason: string;
   details?: string;

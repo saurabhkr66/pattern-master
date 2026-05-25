@@ -72,7 +72,7 @@ type MatchResult = {
     mockTestTitle: string;
     mockQuestionId: string;
     mockExplanation: string;
-    pyqTable: "PYQ" | "SubjectPYQ";
+    pyqTable: "PYQ";
     pyqId: string;
     pyqExplanation: string;
     questionText: string;
@@ -86,19 +86,13 @@ async function findMatches(): Promise<MatchResult[]> {
 
     console.log(`\n🔍 Scanning ${mockTests.length} mock test(s)...`);
 
-    // Load all PYQs and SubjectPYQs with non-empty explanations into memory for fast lookup
-    const [pyqs, subjectPyqs] = await Promise.all([
-        prisma.pYQ.findMany({
-            select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true },
-            where: ONLY_COPY_IF_PYQ_EMPTY ? { explanation: "" } : undefined,
-        }),
-        prisma.subjectPYQ.findMany({
-            select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true },
-            where: ONLY_COPY_IF_PYQ_EMPTY ? { explanation: "" } : undefined,
-        }),
-    ]);
+    // Load all PYQs with non-empty explanations into memory for fast lookup
+    const pyqs = await prisma.pYQ.findMany({
+        select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true },
+        where: ONLY_COPY_IF_PYQ_EMPTY ? { explanation: "" } : undefined,
+    });
 
-    console.log(`📚 Loaded ${pyqs.length} PYQs + ${subjectPyqs.length} SubjectPYQs (with empty explanations) for matching.`);
+    console.log(`📚 Loaded ${pyqs.length} PYQs (with empty explanations) for matching.`);
 
     // Build lookup maps: normalizedText+options → row
     type PyqRow = { id: string; question_text: string; options: unknown; correct_answer: string; explanation: string };
@@ -112,7 +106,6 @@ async function findMatches(): Promise<MatchResult[]> {
     };
 
     const pyqLookup = makeLookup(pyqs as PyqRow[]);
-    const subjectPyqLookup = makeLookup(subjectPyqs as PyqRow[]);
 
     const matches: MatchResult[] = [];
 
@@ -136,21 +129,6 @@ async function findMatches(): Promise<MatchResult[]> {
                     pyqExplanation: pyqMatch.explanation,
                     questionText: mq.question_text?.substring(0, 80) ?? "",
                 });
-                continue;
-            }
-
-            const subjectMatch = subjectPyqLookup.get(key);
-            if (subjectMatch) {
-                matches.push({
-                    mockTestId: mock.id,
-                    mockTestTitle: mock.title,
-                    mockQuestionId: mq.id,
-                    mockExplanation,
-                    pyqTable: "SubjectPYQ",
-                    pyqId: subjectMatch.id,
-                    pyqExplanation: subjectMatch.explanation,
-                    questionText: mq.question_text?.substring(0, 80) ?? "",
-                });
             }
         }
     }
@@ -161,11 +139,7 @@ async function findMatches(): Promise<MatchResult[]> {
 async function applyMatches(matches: MatchResult[]) {
     let copied = 0;
     for (const m of matches) {
-        if (m.pyqTable === "PYQ") {
-            await prisma.pYQ.update({ where: { id: m.pyqId }, data: { explanation: m.mockExplanation } });
-        } else {
-            await prisma.subjectPYQ.update({ where: { id: m.pyqId }, data: { explanation: m.mockExplanation } });
-        }
+        await prisma.pYQ.update({ where: { id: m.pyqId }, data: { explanation: m.mockExplanation } });
         copied++;
         process.stdout.write(`\r  ✅ Copied ${copied}/${matches.length}`);
     }

@@ -116,6 +116,7 @@ function MTPage({ children, phase, maxWidth = 980 }: { children: React.ReactNode
 export default function MockTestPage() {
   const searchParams = useSearchParams();
   const urlTestId = searchParams.get("id");
+  const urlSessionId = searchParams.get("sessionId");
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [selectedExam, setSelectedExam] = useState<ExamType | null>(null);
@@ -164,24 +165,56 @@ export default function MockTestPage() {
     setPhase(p);
   }, [router, pathname]);
 
+  // Listen to popstate (browser back/forward) directly instead of reacting to
+  // searchParams changes — searchParams also updates on programmatic router.push,
+  // causing races where a queued back-navigation snaps the phase back to setup
+  // right after the user manually moved forward.
   useEffect(() => {
-    if (targetPhaseRef.current === "loading") return;
-    const step = parseInt(searchParams.get("step") ?? "1", 10) || 1;
-    const phaseStepMap: Partial<Record<Phase, number>> = {
-      setup: 1, brief: 2, loading: 2, test: 3, submitting: 3, results: 4,
+    const onPop = () => {
+      if (targetPhaseRef.current === "loading") return;
+      const url = new URL(window.location.href);
+      const step = parseInt(url.searchParams.get("step") ?? "1", 10) || 1;
+      const phaseStepMap: Partial<Record<Phase, number>> = {
+        setup: 1, brief: 2, loading: 2, test: 3, submitting: 3, results: 4,
+      };
+      const targetStep = phaseStepMap[targetPhaseRef.current] ?? 1;
+      if (step >= targetStep) return;
+      const newPhase: Phase = step === 2 && targetPhaseRef.current === "test" ? "brief" : "setup";
+      targetPhaseRef.current = newPhase;
+      setPhase(newPhase);
     };
-    const targetStep = phaseStepMap[targetPhaseRef.current] ?? 1;
-    if (step >= targetStep) return;
-    const newPhase: Phase = step === 2 && targetPhaseRef.current === "test" ? "brief" : "setup";
-    targetPhaseRef.current = newPhase;
-    setPhase(newPhase);
-  }, [searchParams]);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   useEffect(() => {
     if (hasAttemptedHydration.current) return;
     hasAttemptedHydration.current = true;
 
     const init = async () => {
+      if (urlSessionId) {
+        try {
+          const r = await fetch(`/api/test/history/${urlSessionId}`);
+          const data = await r.json();
+          if (r.ok && data.session) {
+            const s = data.session;
+            const breakdown: any[] = Array.isArray(s.answers) ? s.answers : [];
+            setSelectedExam(s.exam_type as ExamType);
+            setMockTestTitle(s.mock_test?.title ?? "Mock Test");
+            setMockTestId(s.mock_test_id ?? null);
+            setResult(buildResultData(breakdown, {
+              score: s.score, maxScore: s.max_score,
+              correctCount: s.correct_count, wrongCount: s.wrong_count,
+              skippedCount: s.skipped_count, timeTakenSecs: s.time_taken_secs,
+            }, { examType: s.exam_type, mockTestId: s.mock_test_id ?? null }));
+            goTo("results", true, s.mock_test_id ?? undefined);
+            return;
+          }
+        } catch {}
+        setPhase("setup");
+        return;
+      }
+
       try {
         const r = await fetch("/api/test/session/resume");
         const { draft } = await r.json();

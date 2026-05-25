@@ -1,6 +1,6 @@
 export interface TestQuestion {
   id: string;
-  source: "pyq" | "subject_pyq" | "template";
+  source: "pyq" | "template";
   sectionIndex: number;
   sectionName: string;
   isOptional: boolean;
@@ -16,7 +16,7 @@ export interface TestQuestion {
 
 export interface SubmitAnswer {
   questionId: string;
-  source: "pyq" | "subject_pyq" | "template";
+  source: "pyq" | "template";
   sectionIndex: number;
   isOptional: boolean;
   questionType: string;

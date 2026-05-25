@@ -43,27 +43,16 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   }
 
   if (patternId) {
-    const actualId = patternId.startsWith("subject-") ? patternId.replace("subject-", "") : patternId;
     let name = "";
     let examType = "";
     let branch: string | null = null;
-    if (patternId.startsWith("subject-")) {
-      const sp = await prisma.subjectPattern.findUnique({
-        where: { id: actualId },
-        select: { subject_name: true, exam_type: true, branch: true },
-      });
-      name = sp?.subject_name || "";
-      examType = sp?.exam_type || "";
-      branch = sp?.branch ?? null;
-    } else {
-      const p = await prisma.pattern.findUnique({
-        where: { id: actualId },
-        select: { topic_name: true, exam_type: true, branch: true },
-      });
-      name = p?.topic_name || "";
-      examType = p?.exam_type || "";
-      branch = p?.branch ?? null;
-    }
+    const p = await prisma.pattern.findUnique({
+      where: { id: patternId },
+      select: { topic_name: true, exam_type: true, branch: true },
+    });
+    name = p?.topic_name || "";
+    examType = p?.exam_type || "";
+    branch = p?.branch ?? null;
 
     if (name) {
       const exam = examType ? getExamSeoInfo(examType, branch) : null;
@@ -98,14 +87,6 @@ const getSubjectStats = (examType: string, branch: string | null) => {
         stats[entry.subject] = entry._count._all;
       });
 
-      const subjectPatternStats = await prisma.subjectPattern.findMany({
-        where: { ...(branch ? { branch } : {}) },
-        select: { subject_name: true },
-      });
-      subjectPatternStats.forEach(sp => {
-        stats[sp.subject_name] = (stats[sp.subject_name] || 0) + 1;
-      });
-
       const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main"
         ? ["JEE_MAIN", "JEE Main"]
         : [examType];
@@ -132,52 +113,6 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
   return unstable_cache(
     async () => {
       const isAll = !subject || subject === "All";
-
-      const subjectPatterns = await prisma.subjectPattern.findMany({
-        where: {
-          exam_type: examType,
-          ...(branch ? { branch } : {}),
-          ...(!isAll ? { subject_name: subject } : {}),
-        },
-        select: {
-          id: true,
-          subject_name: true,
-          branch: true,
-          exam_type: true,
-        },
-      });
-
-      const subjectsWithCounts = await Promise.all(
-        subjectPatterns.map(async (sp) => {
-          const pyqCount = await prisma.pYQ.count({
-            where: {
-              pattern: {
-                subject: sp.subject_name,
-                branch: sp.branch,
-                exam_type: sp.exam_type,
-              }
-            }
-          });
-          return { ...sp, pyqCount };
-        })
-      );
-
-      const mappedSubjects = subjectsWithCounts.map((sp) => ({
-        id: `subject-${sp.id}`,
-        _rawId: sp.id,
-        subject: sp.subject_name,
-        topic_name: sp.subject_name,
-        atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
-        isSubjectLevel: true,
-        totalQuestions: sp.pyqCount,
-        questionsCount: 0,
-        pyqsCount: sp.pyqCount,
-        solvedQuestions: 0,
-        questions: [],
-        pyqs: [],
-      }));
-
-      if (isAll && mappedSubjects.length > 0) return mappedSubjects;
 
       const topicPatterns = await prisma.pattern.findMany({
         where: {
@@ -242,7 +177,7 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
         }));
       }
 
-      return [...mappedSubjects, ...mappedTopics];
+      return mappedTopics;
     },
     [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v1`],
     { revalidate: 600, tags: ["patterns"] }
@@ -288,13 +223,8 @@ async function TopicsSection({
 
   // Resolve subject from patternId (deep-link path — rare)
   if (patternId && (activeSubject === "All" || !activeSubject)) {
-    if (patternId.startsWith("subject-")) {
-      const sp = await prisma.subjectPattern.findUnique({ where: { id: patternId.replace("subject-", "") }, select: { subject_name: true } });
-      if (sp) activeSubject = sp.subject_name;
-    } else {
-      const p = await prisma.pattern.findUnique({ where: { id: patternId }, select: { subject: true } });
-      if (p) activeSubject = p.subject;
-    }
+    const p = await prisma.pattern.findUnique({ where: { id: patternId }, select: { subject: true } });
+    if (p) activeSubject = p.subject;
   }
 
   const [subjectStats, topics] = await Promise.all([

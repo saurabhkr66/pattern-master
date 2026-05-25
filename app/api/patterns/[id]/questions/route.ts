@@ -10,73 +10,12 @@ function resolveMarks(questionType: string, dbMarks: number): number {
   return dbMarks ?? 1;
 }
 
-const PYQ_SELECT = {
-  id: true,
-  question_text: true,
-  question_text_hindi: true,
-  options: true,
-  options_hindi: true,
-  correct_answer: true,
-  explanation: true,
-  explanation_hindi: true,
-  year: true,
-  exam_type: true,
-  question_type: true,
-  marks: true,
-  images: true,
-} as const;
-
 // ── Global cache for question content (no userId) ──
 // Question text, options, correct answers, explanations are static data.
 // This cache is shared across ALL users hitting the same pattern.
 // skip/take only applies to subject patterns (pagination); 0 = fetch all.
 const getStaticQuestions = unstable_cache(
   async (id: string, skip = 0, take = 0) => {
-    if (id.startsWith("subject-")) {
-      const actualId = id.replace("subject-", "");
-      const paginate = take > 0;
-
-      const subjectPattern = await prisma.subjectPattern.findUnique({
-        where: { id: actualId },
-        select: { id: true, subject_name: true, branch: true, exam_type: true },
-      });
-
-      if (!subjectPattern) return { error: "Subject Pattern not found", status: 404 };
-
-      const pyqWhere = {
-        pattern: {
-          subject: subjectPattern.subject_name,
-          branch: subjectPattern.branch,
-          exam_type: subjectPattern.exam_type,
-        },
-      };
-
-      const [pyqs, total] = await Promise.all([
-        prisma.pYQ.findMany({
-          where: pyqWhere,
-          select: PYQ_SELECT,
-          orderBy: { year: "desc" },
-          ...(paginate ? { skip, take } : {}),
-        }),
-        paginate
-          ? prisma.pYQ.count({ where: pyqWhere })
-          : Promise.resolve(0),
-      ]);
-
-      return {
-        data: {
-          questions: [],
-          pyqs: pyqs.map(pyq => ({
-            ...pyq,
-            marks: resolveMarks(pyq.question_type, pyq.marks),
-            attempts: [],
-            isBookmarked: false,
-          })),
-          total,
-        }
-      };
-    }
-
     if (id.startsWith("mock-")) {
       const actualId = id.replace("mock-", "");
       const mock = await prisma.mockTestTemplate.findUnique({
@@ -172,15 +111,14 @@ const getStaticQuestions = unstable_cache(
 
 // ── Per-user state: attempts + bookmarks ─────────────────────────────────────
 // Single UNION ALL query — 1 DB connection instead of 2 concurrent ones.
-async function getUserState(userId: string, questionIds: string[], pyqIds: string[], subjectPyqIds: string[]) {
-  const allIds = [...questionIds, ...pyqIds, ...subjectPyqIds];
+async function getUserState(userId: string, questionIds: string[], pyqIds: string[]) {
+  const allIds = [...questionIds, ...pyqIds];
   if (allIds.length === 0) return { attemptMap: {}, bookmarkSet: new Set<string>() };
 
   const qClause = questionIds.length > 0 ? Prisma.sql`OR question_id::text = ANY(${questionIds})` : Prisma.empty;
   const pClause = pyqIds.length > 0 ? Prisma.sql`OR pyq_id::text = ANY(${pyqIds})` : Prisma.empty;
-  const spClause = subjectPyqIds.length > 0 ? Prisma.sql`OR subject_pyq_id::text = ANY(${subjectPyqIds})` : Prisma.empty;
   // FALSE starts the OR chain so each clause can be appended uniformly
-  const whereIds = Prisma.sql`(FALSE ${qClause} ${pClause} ${spClause})`;
+  const whereIds = Prisma.sql`(FALSE ${qClause} ${pClause})`;
 
   const rows = await prisma.$queryRaw<{
     type: string;
@@ -189,13 +127,13 @@ async function getUserState(userId: string, questionIds: string[], pyqIds: strin
     created_at: Date | null;
   }[]>(Prisma.sql`
     SELECT 'a'::text AS type,
-           COALESCE(question_id, pyq_id, subject_pyq_id)::text AS id,
+           COALESCE(question_id, pyq_id)::text AS id,
            is_correct, created_at
     FROM "Attempt"
     WHERE user_id = ${userId} AND ${whereIds}
     UNION ALL
     SELECT 'b'::text AS type,
-           COALESCE(question_id, pyq_id, subject_pyq_id)::text AS id,
+           COALESCE(question_id, pyq_id)::text AS id,
            NULL::boolean AS is_correct, NULL::timestamptz AS created_at
     FROM "Bookmark"
     WHERE user_id = ${userId} AND ${whereIds}
@@ -234,18 +172,16 @@ export async function GET(
             return NextResponse.json({ error: result.error }, { status: result.status });
         }
 
-        const { questions, pyqs, total } = result.data!;
+        const { questions, pyqs } = result.data!;
+        const total = (result.data as any).total ?? 0;
 
         // 2. If user is logged in, overlay their attempt/bookmark state
         if (userId) {
-          const isSubjectLevel = id.startsWith("subject-");
           const isMock = id.startsWith("mock-");
-          const questionIds = (isSubjectLevel || isMock) ? [] : questions.map((q: any) => q.id);
-          // Subject-level patterns now return regular PYQ IDs (SubjectPYQ table is unused)
+          const questionIds = isMock ? [] : questions.map((q: any) => q.id);
           const pyqIds = isMock ? [] : pyqs.map((q: any) => q.id);
-          const subjectPyqIds: string[] = [];
 
-          const { attemptMap, bookmarkSet } = await getUserState(userId, questionIds, pyqIds, subjectPyqIds);
+          const { attemptMap, bookmarkSet } = await getUserState(userId, questionIds, pyqIds);
 
           const hydrate = (q: any) => ({
             ...q,

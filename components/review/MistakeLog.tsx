@@ -30,6 +30,22 @@ type PatternGroup = {
   cards: MistakeCard[];
 };
 
+function groupPracticeUrl(g: PatternGroup): string {
+  // Reuse the fully-qualified practiceUrl from any card in the group
+  // (carries exam/branch/subject correctly), just drop questionId so the
+  // pattern opens without auto-selecting a specific question.
+  const base = g.cards[0]?.practiceUrl;
+  if (!base) return `/practice?patternId=${g.patternId}&subject=${encodeURIComponent(g.subject)}`;
+  try {
+    const u = new URL(base, "http://x");
+    u.searchParams.delete("questionId");
+    u.searchParams.delete("q");
+    return u.pathname + (u.search || "");
+  } catch {
+    return base;
+  }
+}
+
 export default function MistakeLog({ cards }: { cards: MistakeCard[] }) {
   const [activeSubject, setActiveSubject] = useState("All");
   const [activeTab, setActiveTab] = useState<"patterns" | "log">("patterns");
@@ -206,7 +222,7 @@ export default function MistakeLog({ cards }: { cards: MistakeCard[] }) {
             </div>
             {patternGroups[0] && (
               <Link
-                href={`/practice?patternId=${patternGroups[0].patternId}&subject=${encodeURIComponent(patternGroups[0].subject)}`}
+                href={groupPracticeUrl(patternGroups[0])}
                 style={{ fontSize: 12, color: BE.accent, fontWeight: 600, textDecoration: 'none' }}
               >
                 Fix worst pattern →
@@ -279,7 +295,7 @@ export default function MistakeLog({ cards }: { cards: MistakeCard[] }) {
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }} className="ml-actions">
                       <Link
-                        href={`/practice?patternId=${p.patternId}&subject=${encodeURIComponent(p.subject)}`}
+                        href={groupPracticeUrl(p)}
                         onClick={e => e.stopPropagation()}
                         style={{
                           padding: '7px 14px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,

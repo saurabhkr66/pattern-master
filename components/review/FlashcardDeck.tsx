@@ -21,7 +21,6 @@ type Flashcard = {
   id: string;
   question_id: string | null;
   pyq_id: string | null;
-  subject_pyq_id: string | null;
   question_text: string;
   options: string[];
   correct_answer: string;
@@ -55,7 +54,6 @@ async function saveGrade(card: Flashcard, grade: Grade) {
       body: JSON.stringify({
         questionId:    card.question_id,
         pyqId:         card.pyq_id,
-        subjectPyqId:  card.subject_pyq_id,
         grade,
       }),
     });

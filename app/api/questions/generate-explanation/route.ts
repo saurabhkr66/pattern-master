@@ -16,7 +16,7 @@ const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch 
 
 export async function POST(req: NextRequest) {
   try {
-    const { questionId, questionType, mockTestId, isSubjectPyq, isPyq } = await req.json();
+    const { questionId, questionType, mockTestId, isPyq } = await req.json();
 
     if (!questionId) {
       return NextResponse.json({ error: "Missing questionId" }, { status: 400 });
@@ -38,8 +38,6 @@ export async function POST(req: NextRequest) {
         LIMIT 1
       `;
       questionData = rows[0]?.question ?? null;
-    } else if (isSubjectPyq) {
-      questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId }, select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true, explanation_hindi: true, images: true } });
     } else if (isPyq) {
       questionData = await prisma.pYQ.findUnique({ where: { id: questionId }, select: { id: true, question_text: true, options: true, correct_answer: true, explanation: true, images: true } });
     } else {
@@ -161,8 +159,6 @@ Rules:
         )
         WHERE id = ${mockTestId}
       `;
-    } else if (isSubjectPyq) {
-      await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
     } else if (isPyq) {
       await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
     } else {

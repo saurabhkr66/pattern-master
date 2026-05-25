@@ -73,23 +73,6 @@ async function buildRedirectUrl(questionId: string): Promise<string | null> {
     return `${base}${query}#q-pyq-${q.id}`;
   }
 
-  if (questionId.startsWith("spyq-")) {
-    // Subject-level PYQs don't live on a topic page (they're attached to a
-    // SubjectPattern, not a Pattern). Redirect to the subject hub instead;
-    // no anchor since the question isn't inlined there yet.
-    const id = questionId.slice(5);
-    const q = await prisma.subjectPYQ.findUnique({
-      where: { id },
-      select: {
-        subject_pattern: {
-          select: { subject_name: true, exam_type: true, branch: true },
-        },
-      },
-    });
-    if (!q) return null;
-    return `/${buildExamSlug(q.subject_pattern.exam_type, q.subject_pattern.branch)}/${toSlug(q.subject_pattern.subject_name)}`;
-  }
-
   const id = questionId.startsWith("gq-") ? questionId.slice(3) : questionId;
   const q = await prisma.generatedQuestion.findUnique({
     where: { id },

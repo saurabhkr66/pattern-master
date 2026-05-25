@@ -269,31 +269,6 @@ async function processPYQs(dryRun: boolean) {
   console.log(`[PYQ] Done: ${fixed} fixed, ${failed} failed`);
 }
 
-// ── PROCESS SubjectPYQs ───────────────────────────────────────────────────────
-async function processSubjectPYQs(dryRun: boolean) {
-  const fetched = await prisma.subjectPYQ.findMany({
-    where: { explanation: "" },
-    select: { id: true, question_text: true, options: true, correct_answer: true, images: true },
-    take: BATCH_SIZE * 2,
-  });
-  const questions = fetched.filter(q => !hasExplanation(q)).slice(0, BATCH_SIZE);
-
-  console.log(`\n[SubjectPYQ] Found ${questions.length} missing explanations`);
-  let fixed = 0, failed = 0;
-
-  for (const q of questions) {
-    process.stdout.write(`  ${q.id.slice(-8)} ... `);
-    const explanation = await generateExplanation(q as any);
-    if (explanation) {
-      if (!dryRun) await prisma.subjectPYQ.update({ where: { id: q.id }, data: { explanation } });
-      console.log(`✓`);
-      fixed++;
-    } else { console.log("✗"); failed++; }
-    await sleep(DELAY_MS);
-  }
-  console.log(`[SubjectPYQ] Done: ${fixed} fixed, ${failed} failed`);
-}
-
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 async function main() {
   if (!process.env.GEMINI_API_KEY) {
@@ -350,8 +325,6 @@ async function main() {
     await processMock(template.id, dryRun, limitArg);
   } else if (args.includes("--pyqs")) {
     await processPYQs(dryRun);
-  } else if (args.includes("--subject-pyqs")) {
-    await processSubjectPYQs(dryRun);
   } else {
     console.log(`
 Usage:
@@ -360,7 +333,6 @@ Usage:
   --mock-number <n> --exam <exam>  Generate for mock #n of an exam (e.g. --mock-number 3 --exam GATE)
   --auto                           Automatically process all missing papers sequentially
   --pyqs                           Generate for missing PYQ explanations
-  --subject-pyqs                   Generate for missing SubjectPYQ explanations
   --dry                            Dry run — print results without writing to DB
 
 Examples:

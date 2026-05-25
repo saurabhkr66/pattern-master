@@ -11,27 +11,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ subjects: [], topics: [] });
   }
 
-  const [subjectResults, topicResults] = await Promise.all([
-    prisma.subjectPattern.findMany({
-      where: {
-        subject_name: { contains: q, mode: "insensitive" },
-      },
-      select: { id: true, subject_name: true },
-      take: 3,
-    }),
-    prisma.pattern.findMany({
-      where: {
-        topic_name: { contains: q, mode: "insensitive" },
-        ...(exam ? { exam_type: exam } : {}),
-        ...(branch ? { branch } : {}),
-      },
-      select: { id: true, topic_name: true, subject: true, exam_type: true, branch: true },
-      take: 5,
-    }),
-  ]);
+  const topicResults = await prisma.pattern.findMany({
+    where: {
+      topic_name: { contains: q, mode: "insensitive" },
+      ...(exam ? { exam_type: exam } : {}),
+      ...(branch ? { branch } : {}),
+    },
+    select: { id: true, topic_name: true, subject: true, exam_type: true, branch: true },
+    take: 5,
+  });
 
   return NextResponse.json(
-    { subjects: subjectResults, topics: topicResults },
+    { subjects: [], topics: topicResults },
     { headers: { "Cache-Control": "public, s-maxage=60, max-age=0" } }
   );
 }

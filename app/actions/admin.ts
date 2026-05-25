@@ -58,7 +58,7 @@ async function removeMockQuestion(mockTestId: string, questionId: string) {
 export async function resolveReport(
   reportId: string,
   questionId: string,
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" | "subject_pyq" | "pyq",
+  questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion" | "pyq",
   updates: {
     question_text?: string,
     correct_answer?: string,
@@ -89,12 +89,7 @@ export async function resolveReport(
     // For standard questions, we only update fields that exist in the schema
     const { ai_answer_mismatch, ai_detected_answer, mockTestId, ...validUpdates } = updates;
 
-    if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
-      await prisma.subjectPYQ.update({
-        where: { id: questionId },
-        data: validUpdates as any
-      });
-    } else if (questionType === "PYQ" || questionType === "pyq") {
+    if (questionType === "PYQ" || questionType === "pyq") {
       await prisma.pYQ.update({
         where: { id: questionId },
         data: validUpdates as any
@@ -120,7 +115,7 @@ export async function resolveReport(
 
 export async function deleteQuestion(
   questionId: string,
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion",
+  questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion",
   mockTestId?: string
 ) {
   const { userId } = await auth();
@@ -129,9 +124,7 @@ export async function deleteQuestion(
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden: You are not an admin.");
 
   // Delete the actual question (Cascades to reports, bookmarks, attempts)
-  if (questionType === "SubjectPYQ") {
-    await prisma.subjectPYQ.delete({ where: { id: questionId } });
-  } else if (questionType === "PYQ") {
+  if (questionType === "PYQ") {
     await prisma.pYQ.delete({ where: { id: questionId } });
   } else if (questionType === "MockQuestion") {
     if (!mockTestId) throw new Error("Mock Test ID is required for MockQuestion deletion");
@@ -145,7 +138,7 @@ export async function deleteQuestion(
 
 export async function quickEditExplanation(
   questionId: string,
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion" | string,
+  questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion" | string,
   explanation: string,
   mockTestId?: string
 ) {
@@ -156,11 +149,6 @@ export async function quickEditExplanation(
 
   if (questionType === "MockQuestion" && mockTestId) {
     await patchMockQuestion(mockTestId, questionId, { explanation });
-  } else if (questionType === "SubjectPYQ" || questionType === "subject_pyq") {
-    await prisma.subjectPYQ.update({
-      where: { id: questionId },
-      data: { explanation }
-    });
   } else if (questionType === "PYQ" || questionType === "pyq") {
     await prisma.pYQ.update({
       where: { id: questionId },
@@ -270,7 +258,7 @@ async function getImageBase64(filename: string) {
  */
 export async function generateAIExplanation(
   questionId: string,
-  questionType: "PYQ" | "SubjectPYQ" | "GeneratedQuestion" | "MockQuestion",
+  questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion",
   mockTestId?: string,
   aiModel: "gemini" | "gpt-4o-mini" = "gemini"
 ) {
@@ -286,9 +274,7 @@ export async function generateAIExplanation(
   let questionData: any = null;
 
   const qSelect = { id: true, question_text: true, options: true, correct_answer: true, images: true };
-  if (questionType === "SubjectPYQ") {
-    questionData = await prisma.subjectPYQ.findUnique({ where: { id: questionId }, select: qSelect });
-  } else if (questionType === "PYQ") {
+  if (questionType === "PYQ") {
     questionData = await prisma.pYQ.findUnique({ where: { id: questionId }, select: qSelect });
   } else if (questionType === "GeneratedQuestion") {
     questionData = await prisma.generatedQuestion.findUnique({ where: { id: questionId }, select: qSelect });
@@ -444,9 +430,7 @@ Rules:
   }
 
   // Save back to DB
-  if (questionType === "SubjectPYQ") {
-    await prisma.subjectPYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
-  } else if (questionType === "PYQ") {
+  if (questionType === "PYQ") {
     await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
   } else if (questionType === "GeneratedQuestion") {
     await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
@@ -828,7 +812,7 @@ export async function updateMockTestQuestionTopic(
 }
 
 /**
- * Returns GATE CSE PYQs (both PYQ and SubjectPYQ) that have an empty/missing explanation.
+ * Returns GATE CSE PYQs that have an empty/missing explanation.
  * Only fetches the minimal fields needed for display + AI generation — no egress waste.
  */
 export async function getGateCsePyqsMissingExplanation(
@@ -855,13 +839,7 @@ export async function getGateCsePyqsMissingExplanation(
     explanation: "",
   };
 
-  const subjectPyqWhere = {
-    ...(branch ? { branch } : {}),
-    subject_pattern: { exam_type: examType },
-    explanation: "",
-  };
-
-  const [pyqs, subjectPyqs, totalPyq, totalSubjectPyq] = await Promise.all([
+  const [pyqs, totalPyq] = await Promise.all([
     prisma.pYQ.findMany({
       where: pyqWhere,
       select: {
@@ -877,28 +855,7 @@ export async function getGateCsePyqsMissingExplanation(
       skip: offset,
       take: pageSize,
     }),
-    // SubjectPYQs don't have topics — only filter by exam/branch
-    topic
-      ? Promise.resolve([])
-      : prisma.subjectPYQ.findMany({
-          where: subjectPyqWhere,
-          select: {
-            id: true,
-            question_text: true,
-            options: true,
-            correct_answer: true,
-            year: true,
-            marks: true,
-            subject_pattern: { select: { subject_name: true } },
-          },
-          orderBy: { year: "desc" },
-          skip: offset,
-          take: pageSize,
-        }),
     prisma.pYQ.count({ where: pyqWhere }),
-    topic
-      ? Promise.resolve(0)
-      : prisma.subjectPYQ.count({ where: subjectPyqWhere }),
   ]);
 
   const stripBase64 = (text: string) =>
@@ -906,9 +863,9 @@ export async function getGateCsePyqsMissingExplanation(
 
   return {
     pyqs: pyqs.map(q => ({ ...q, question_text: stripBase64(q.question_text), questionType: "PYQ" as const, subject: q.pattern.subject, topic: q.pattern.topic_name })),
-    subjectPyqs: subjectPyqs.map(q => ({ ...q, question_text: stripBase64((q as any).question_text), questionType: "SubjectPYQ" as const, subject: (q as any).subject_pattern.subject_name })),
+    subjectPyqs: [] as never[],
     totalPyq,
-    totalSubjectPyq,
+    totalSubjectPyq: 0,
     page,
     pageSize,
   };

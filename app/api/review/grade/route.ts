@@ -69,26 +69,23 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { questionId, pyqId, subjectPyqId, grade } = body as {
+    const { questionId, pyqId, grade } = body as {
       questionId?: string;
       pyqId?: string;
-      subjectPyqId?: string;
       grade: Grade;
     };
 
     if (!grade || !["again", "hard", "good", "easy"].includes(grade)) {
       return NextResponse.json({ error: "Invalid grade" }, { status: 400 });
     }
-    if (!questionId && !pyqId && !subjectPyqId) {
+    if (!questionId && !pyqId) {
       return NextResponse.json({ error: "No question ID provided" }, { status: 400 });
     }
 
     // Build the unique where clause
     const whereClause = questionId
       ? { user_id_question_id: { user_id: userId, question_id: questionId } }
-      : pyqId
-      ? { user_id_pyq_id: { user_id: userId, pyq_id: pyqId } }
-      : { user_id_subject_pyq_id: { user_id: userId, subject_pyq_id: subjectPyqId! } };
+      : { user_id_pyq_id: { user_id: userId, pyq_id: pyqId! } };
 
     // Fetch existing card state (or defaults for new card)
     let existing = await prisma.flashcard.findUnique({ where: whereClause as any });
@@ -109,7 +106,6 @@ export async function POST(req: NextRequest) {
       user_id: userId,
       question_id: questionId ?? null,
       pyq_id: pyqId ?? null,
-      subject_pyq_id: subjectPyqId ?? null,
       interval,
       ease_factor: easeFactor,
       repetitions,

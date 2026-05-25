@@ -42,9 +42,6 @@ function checkMath(text: string | null): { isBroken: boolean; errors: string[] }
 async function main() {
   console.log("🔍 Scanning database for broken LaTeX...");
 
-  const subjectPyqs = await prisma.subjectPYQ.findMany({
-    select: { id: true, question_text: true, explanation: true, options: true }
-  });
   const pyqs = await prisma.pYQ.findMany({
     select: { id: true, question_text: true, explanation: true, options: true }
   });
@@ -53,7 +50,6 @@ async function main() {
   });
 
   const allQuestions = [
-    ...subjectPyqs.map(q => ({ ...q, type: "SubjectPYQ" })),
     ...pyqs.map(q => ({ ...q, type: "PYQ" })),
     ...generated.map(q => ({ ...q, type: "Generated" }))
   ];

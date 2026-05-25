@@ -42,7 +42,7 @@ export default function QuestionPane({
 
   return (
     <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div className="qp-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "auto", padding: "22px 28px" }}>
+      <div className="qp-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: "22px 28px" }}>
         {/* Meta row */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
           <span style={{ fontFamily: BE.mono, fontSize: 12, color: BE.textDim }}>

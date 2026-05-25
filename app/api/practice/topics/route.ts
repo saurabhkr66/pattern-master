@@ -9,70 +9,25 @@ const getTopicsBase = unstable_cache(
   async (examType: string, branch: string, subject: string) => {
     const isAll = !subject || subject === "All";
 
-    const [subjectPatterns, topicPatterns] = await Promise.all([
-      prisma.subjectPattern.findMany({
-        where: {
-          exam_type: examType,
-          branch: branch || "CSE",
-          ...(!isAll ? { subject_name: subject } : {}),
-        },
-        select: {
-          id: true,
-          subject_name: true,
-          branch: true,
-          exam_type: true,
-        },
-      }),
-      isAll
-        ? Promise.resolve([])
-        : prisma.pattern.findMany({
-            where: {
-              exam_type: examType,
-              ...(branch && branch !== "null" ? { branch } : {}),
-              subject,
-            },
-            select: {
-              id: true,
-              topic_name: true,
-              subject: true,
-              atomic_logic: true,
-              _count: { select: { questions: true, pyqs: true } },
-            },
-            orderBy: { topic_name: "asc" },
-          }),
-    ]);
-
-    const subjectsWithCounts = await Promise.all(
-      subjectPatterns.map(async (sp) => {
-        const pyqCount = await prisma.pYQ.count({
+    const topicPatterns = isAll
+      ? []
+      : await prisma.pattern.findMany({
           where: {
-            pattern: {
-              subject: sp.subject_name,
-              branch: sp.branch,
-              exam_type: sp.exam_type,
-            }
-          }
+            exam_type: examType,
+            ...(branch && branch !== "null" ? { branch } : {}),
+            subject,
+          },
+          select: {
+            id: true,
+            topic_name: true,
+            subject: true,
+            atomic_logic: true,
+            _count: { select: { questions: true, pyqs: true } },
+          },
+          orderBy: { topic_name: "asc" },
         });
-        return { ...sp, pyqCount };
-      })
-    );
 
-    const mappedSubjectsBase = subjectsWithCounts.map((sp) => ({
-      id: `subject-${sp.id}`,
-      _rawId: sp.id,
-      subject: sp.subject_name,
-      topic_name: sp.subject_name,
-      atomic_logic: `Comprehensive practice covering all seeded questions for ${sp.subject_name}.`,
-      isSubjectLevel: true,
-      totalQuestions: sp.pyqCount,
-      questionsCount: 0,
-      pyqsCount: sp.pyqCount,
-      solvedQuestions: 0,
-      questions: [],
-      pyqs: [],
-    }));
-
-    if (isAll) return { subjects: mappedSubjectsBase, topics: [] };
+    if (isAll) return { subjects: [], topics: [] };
 
     const mappedTopicsBase = topicPatterns.map((p) => ({
       ...p,
@@ -121,7 +76,7 @@ const getTopicsBase = unstable_cache(
       return { subjects: [], topics: mappedMocks };
     }
 
-    return { subjects: mappedSubjectsBase, topics: mappedTopicsBase };
+    return { subjects: [], topics: mappedTopicsBase };
   },
   ["topics-base"],
   { revalidate: 3600, tags: ["patterns"] }
@@ -134,34 +89,18 @@ const getSolvedCounts = (
   examType: string,
   branch: string,
   subject: string,
-  spIds: string[],
   patternIds: string[],
 ) =>
   unstable_cache(
     async () => {
       const results = {
-        bySubjectPattern: {} as Record<string, number>,
         byQPattern: {} as Record<string, number>,
         byPPattern: {} as Record<string, number>,
       };
 
-      if (spIds.length === 0 && patternIds.length === 0) return results;
+      if (patternIds.length === 0) return results;
 
       const parts: Prisma.Sql[] = [];
-
-      if (spIds.length > 0) {
-        parts.push(Prisma.sql`
-          SELECT 'subject'::text as type, sp.id::text as id,
-                 COUNT(DISTINCT a.pyq_id)::bigint as solved
-          FROM "Attempt" a
-          JOIN "PYQ" p ON p.id = a.pyq_id
-          JOIN "Pattern" pat ON pat.id = p.pattern_id
-          JOIN "SubjectPattern" sp ON sp.subject_name = pat.subject AND sp.branch = pat.branch AND sp.exam_type = pat.exam_type
-          WHERE a.user_id = ${userId} AND a.is_correct = true
-            AND sp.id = ANY(${spIds})
-          GROUP BY sp.id
-        `);
-      }
 
       if (patternIds.length > 0) {
         parts.push(Prisma.sql`
@@ -190,8 +129,7 @@ const getSolvedCounts = (
 
       for (const r of rows) {
         const n = Number(r.solved);
-        if (r.type === "subject") results.bySubjectPattern[r.id] = n;
-        else if (r.type === "gq") results.byQPattern[r.id] = n;
+        if (r.type === "gq") results.byQPattern[r.id] = n;
         else results.byPPattern[r.id] = n;
       }
 
@@ -211,28 +149,19 @@ export async function GET(request: Request) {
     const { userId } = await auth();
 
     // 1. Get base data from long-lived cache (no userId)
-    const { subjects, topics } = await getTopicsBase(examType, branch, subject);
+    const { topics } = await getTopicsBase(examType, branch, subject);
 
     // 2. Merge user-specific solved counts (fast single queries)
-    const spIds = subjects.map((s: any) => s._rawId).filter(Boolean);
     const patternIds = topics.filter((t: any) => !t.isMock).map((t: any) => t.id).filter(Boolean);
 
-    let solvedBySubjectPattern: Record<string, number> = {};
     let solvedQByPattern: Record<string, number> = {};
     let solvedPByPattern: Record<string, number> = {};
 
     if (userId) {
-      const counts = await getSolvedCounts(userId, examType, branch, subject, spIds, patternIds);
-      solvedBySubjectPattern = counts.bySubjectPattern;
+      const counts = await getSolvedCounts(userId, examType, branch, subject, patternIds);
       solvedQByPattern = counts.byQPattern;
       solvedPByPattern = counts.byPPattern;
     }
-
-    // 3. Merge solved counts into the base data
-    const mergedSubjects = subjects.map((s: any) => ({
-      ...s,
-      solvedQuestions: solvedBySubjectPattern[s._rawId] ?? 0,
-    }));
 
     const mergedTopics = topics.map((t: any) => ({
       ...t,
@@ -240,7 +169,7 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json(
-      { topics: subject === "All" ? mergedSubjects : [...mergedSubjects, ...mergedTopics] },
+      { topics: mergedTopics },
       { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
     );
   } catch (err) {

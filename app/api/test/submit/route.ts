@@ -89,7 +89,6 @@ export async function POST(req: NextRequest) {
 
     // Fetch correct answers from DB
     const pyqIds = answers.filter((a) => a.source === "pyq").map((a) => a.questionId);
-    const subjPyqIds = answers.filter((a) => a.source === "subject_pyq").map((a) => a.questionId);
 
     // Also try to get answers from the stored template (avoids N+1 lookups and handles all question types)
     let templateAnswers: Map<string, { correct_answer: string; explanation: string; question_text: string; options: unknown; topic?: string }> | null = null;
@@ -113,27 +112,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Fallback: fetch from individual tables
-    const [fetchedPyqs, fetchedSubjPyqs] = await Promise.all([
-      pyqIds.length > 0 && !templateAnswers
-        ? prisma.pYQ.findMany({
-            where: { id: { in: pyqIds } },
-            select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true, topic: true },
-          })
-        : [],
-      subjPyqIds.length > 0 && !templateAnswers
-        ? prisma.subjectPYQ.findMany({
-            where: { id: { in: subjPyqIds } },
-            select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true, topic: true },
-          })
-        : [],
-    ]);
+    const fetchedPyqs = pyqIds.length > 0 && !templateAnswers
+      ? await prisma.pYQ.findMany({
+          where: { id: { in: pyqIds } },
+          select: { id: true, correct_answer: true, explanation: true, question_text: true, options: true, topic: true },
+        })
+      : [];
 
     const pyqMap = new Map((fetchedPyqs as any[]).map((q) => [q.id, q]));
-    const subjPyqMap = new Map((fetchedSubjPyqs as any[]).map((q) => [q.id, q]));
 
     function getQData(ans: SubmitAnswer) {
       if (templateAnswers) return templateAnswers.get(ans.questionId) ?? null;
-      return ans.source === "pyq" ? pyqMap.get(ans.questionId) ?? null : subjPyqMap.get(ans.questionId) ?? null;
+      return pyqMap.get(ans.questionId) ?? null;
     }
 
     // ── Grade all answers ──
@@ -278,7 +268,6 @@ export async function POST(req: NextRequest) {
         return {
           user_id: userId,
           pyq_id: ans.source === "pyq" ? ans.questionId : null,
-          subject_pyq_id: ans.source === "subject_pyq" ? ans.questionId : null,
           is_correct: isAnswerCorrect(ans.questionType, ans.userAnswer!, qData.correct_answer),
           user_answer: ans.userAnswer,
           time_spent: ans.timeSpentSecs || null,

@@ -39,42 +39,6 @@ model Pattern {
   @@index([exam_type, branch, subject], name: "pattern_subject_lookup")
 }
 
-model SubjectPattern {
-  id           String       @id @default(uuid())
-  subject_name String
-  branch       String       @default("CSE")
-  exam_type    String       @default("GATE")
-  pyqs         SubjectPYQ[]
-
-  @@unique([subject_name, branch, exam_type], name: "subject_pattern_identifier")
-}
-
-model SubjectPYQ {
-  id                  String           @id @default(uuid())
-  subject_pattern_id  String
-  question_text       String
-  question_text_hindi String?
-  options             Json
-  options_hindi       Json?
-  correct_answer      String
-  explanation         String
-  explanation_hindi   String?
-  year                Int
-  question_type       String           @default("MCQ")
-  marks               Int              @default(1)
-  branch              String           @default("CSE")
-  images              Json?
-  created_at          DateTime         @default(now())
-  attempts            Attempt[]
-  subject_pattern     SubjectPattern   @relation(fields: [subject_pattern_id], references: [id])
-  bookmarks           Bookmark[]
-  questionReports     QuestionReport[]
-
-  topic               String?          // AI assigned topic
-  @@unique([subject_pattern_id, question_text], name: "subject_pyq_identifier")
-  @@index([subject_pattern_id])
-}
-
 model PYQ {
   id                  String           @id @default(uuid())
   pattern_id          String
@@ -139,20 +103,17 @@ model Attempt {
   created_at       DateTime           @default(now())
   pyq_id           String?
   user_answer      String?
-  subject_pyq_id   String?
   mock_question_id String?
   time_spent       Int?
   mock_test_id     String?
   MockTestTemplate MockTestTemplate?  @relation(fields: [mock_test_id], references: [id])
   pyq              PYQ?               @relation(fields: [pyq_id], references: [id])
   question         GeneratedQuestion? @relation(fields: [question_id], references: [id])
-  subject_pyq      SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id])
   user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, is_correct, created_at(sort: Desc)])
   @@index([question_id, user_id, is_correct])
   @@index([pyq_id, user_id, is_correct])
-  @@index([subject_pyq_id, user_id, is_correct])
 }
 
 model TestSession {
@@ -221,7 +182,6 @@ model Flashcard {
   // Exactly one of these is set
   question_id    String?
   pyq_id         String?
-  subject_pyq_id String?
   mock_question_id String?
 
   // SM-2 fields
@@ -239,7 +199,6 @@ model Flashcard {
 
   @@unique([user_id, question_id])
   @@unique([user_id, pyq_id])
-  @@unique([user_id, subject_pyq_id])
   @@unique([user_id, mock_question_id])
   @@index([user_id, next_review])
   @@index([user_id, status])
@@ -251,7 +210,6 @@ model Bookmark {
   // Exactly one of these is set
   question_id    String?
   pyq_id         String?
-  subject_pyq_id String?
   mock_question_id String?
 
   created_at DateTime @default(now())
@@ -259,11 +217,9 @@ model Bookmark {
   user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   question    GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
   pyq         PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
-  subject_pyq SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, question_id])
   @@unique([user_id, pyq_id])
-  @@unique([user_id, subject_pyq_id])
   @@unique([user_id, mock_question_id])
   @@index([user_id])
 }
@@ -293,7 +249,6 @@ model QuestionReport {
   // Exactly one of these is set
   question_id    String?
   pyq_id         String?
-  subject_pyq_id String?
   mock_question_id String?
 
   reason  String // e.g., "wrong_answer", "typo", "bad_explanation", "other"
@@ -306,11 +261,9 @@ model QuestionReport {
   user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   question    GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
   pyq         PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
-  subject_pyq SubjectPYQ?        @relation(fields: [subject_pyq_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([status])
   @@index([question_id])
   @@index([pyq_id])
-  @@index([subject_pyq_id])
 }

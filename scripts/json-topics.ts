@@ -137,37 +137,66 @@ async function processFile(filePath: string, topicMap: Record<string, string[]>,
     ? [{ title: path.basename(filePath), questions: raw }]
     : raw;
 
-  // Subject from parent directory name (e.g. chemistry/02_sep_s1_chemistry.json → CHEMISTRY)
+  // Subject from parent directory name (e.g. chemistry/02_sep_s1_chemistry.json → CHEMISTRY).
+  // Used as a fallback when a question has no `subject` field.
   const subjectFromPath = path.basename(path.dirname(absPath)).toUpperCase();
 
-  console.log(`\nLoaded ${isFlatArray ? data[0].questions.length : data.length} question(s) from ${absPath} [subject: ${subjectFromPath}]`);
+  console.log(`\nLoaded ${isFlatArray ? data[0].questions.length : data.length} question(s) from ${absPath} [path subject: ${subjectFromPath}]`);
 
   let totalFixed = 0, totalFailed = 0;
+
+  // Known subjects, used to detect scraper output where `topic_name` was filled with
+  // just the subject name (e.g. topic_name: "Physics") — that's a subject, not a topic,
+  // so treat those as un-categorized and re-run them through Gemini.
+  const KNOWN_SUBJECTS = new Set(
+    Object.keys(topicMap).map((s) => s.toUpperCase())
+  );
+  // Always recognize the common ones even if not in topicMap yet
+  ["PHYSICS", "CHEMISTRY", "MATHEMATICS", "MATHS", "BIOLOGY", "BOTANY", "ZOOLOGY"]
+    .forEach((s) => KNOWN_SUBJECTS.add(s));
+
+  const isMissingTopic = (q: any): boolean => {
+    if (!q.topic_name) return true;
+    const t = String(q.topic_name).trim();
+    if (t === "" || t === "Unknown" || t === "Uncategorized") return true;
+    if (KNOWN_SUBJECTS.has(t.toUpperCase())) return true; // subject name used as topic
+    return false;
+  };
 
   for (let mi = 0; mi < data.length; mi++) {
     const mock = data[mi];
     const questions: any[] = mock.questions || [];
-    const missing = questions.filter(
-      (q) => !q.topic_name || q.topic_name.trim() === "" || q.topic_name === "Unknown" || q.topic_name === "Uncategorized"
-    );
+    const missing = questions.filter(isMissingTopic);
 
     console.log(`\n[${mi + 1}/${data.length}] "${mock.title || mock.id}"`);
     console.log(`  Total: ${questions.length} | Missing topics: ${missing.length}`);
     if (missing.length === 0) { console.log("  Nothing to do."); continue; }
 
     let fixed = 0, failed = 0;
-
-    // Use path-derived subject as the authoritative source — never fall back to all topics.
-    const subject = subjectFromPath || "GENERAL";
-    const allowedTopics = topicMap[subject];
-    if (!allowedTopics || allowedTopics.length === 0) {
-      console.log(`  [!] No topics found for subject "${subject}" — skipping file`);
-      continue;
-    }
-    console.log(`  Using ${allowedTopics.length} topics for subject: ${subject}`);
+    const missingSubjects = new Set<string>();
 
     for (const q of missing) {
-      process.stdout.write(`  Q ${q.question_text?.slice(0, 40)}… `);
+      // Per-question subject is authoritative — physics question gets physics topics,
+      // chemistry question gets chemistry topics, even if they live in the same file.
+      // Source order: explicit q.subject → q.topic_name when it's actually a subject name
+      // (scraper quirk) → path-derived directory name → "GENERAL".
+      const topicLooksLikeSubject =
+        q.topic_name && KNOWN_SUBJECTS.has(String(q.topic_name).trim().toUpperCase());
+      const rawSubject =
+        q.subject || (topicLooksLikeSubject ? q.topic_name : null) || subjectFromPath || "GENERAL";
+      const subject = String(rawSubject).toUpperCase().trim();
+      const allowedTopics = topicMap[subject];
+      if (!allowedTopics || allowedTopics.length === 0) {
+        if (!missingSubjects.has(subject)) {
+          console.log(`  [!] No topics in DB for subject "${subject}" — skipping its questions`);
+          missingSubjects.add(subject);
+        }
+        failed++;
+        totalFailed++;
+        continue;
+      }
+
+      process.stdout.write(`  [${subject}] Q ${q.question_text?.slice(0, 40)}… `);
 
       const topic = await generateTopic(q, allowedTopics);
 
