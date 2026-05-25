@@ -21,6 +21,11 @@ import { createFrontendApiProxyHandlers } from "@clerk/nextjs/server";
  *  1. NEXT_PUBLIC_CLERK_PROXY_URL env var set to https://www.battleexam.com/clerk-proxy
  *  2. Clerk Dashboard → Domains → Proxy URL set to https://www.battleexam.com/clerk-proxy
  */
-const { GET, POST } = createFrontendApiProxyHandlers();
+// Must pass proxyPath explicitly — Clerk's default is "/__clerk", and any
+// folder starting with "_" is excluded from Next.js routing, so the SDK's
+// default is unusable in app router. We route from /clerk-proxy.
+const { GET, POST } = createFrontendApiProxyHandlers({
+  proxyPath: "/clerk-proxy",
+});
 
 export { GET, POST };
