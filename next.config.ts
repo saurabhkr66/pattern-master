@@ -28,12 +28,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', 'katex'],
   },
 
-  // NOTE: We do NOT add a next.config rewrite for /__clerk here. The actual
-  // proxying happens in app/__clerk/[[...rest]]/route.ts via Clerk's
-  // createFrontendApiProxyHandlers helper, which rewrites Set-Cookie domains
-  // from clerk.battleexam.com → www.battleexam.com. A naive rewrites() block
-  // would short-circuit the route handler and skip the cookie rewriting.
-
   // Old URLs with a `-common` suffix used to be the canonical form for
   // branchless exams (JEE Main, NEET, SSC, etc.). We now hide "Common" from
   // URLs entirely — these permanent redirects fold the indexed `-common`
