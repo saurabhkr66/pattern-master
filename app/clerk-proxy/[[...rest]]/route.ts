@@ -24,8 +24,14 @@ import { createFrontendApiProxyHandlers } from "@clerk/nextjs/server";
 // Must pass proxyPath explicitly — Clerk's default is "/__clerk", and any
 // folder starting with "_" is excluded from Next.js routing, so the SDK's
 // default is unusable in app router. We route from /clerk-proxy.
+//
+// Also pass publishableKey explicitly: the SDK reads from CLERK_PUBLISHABLE_KEY
+// by default, which we don't set — we use NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+// (the standard Next.js convention). Without this the proxy returns
+// host_invalid because it can't identify which Clerk instance to route to.
 const { GET, POST } = createFrontendApiProxyHandlers({
   proxyPath: "/clerk-proxy",
+  publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 });
 
 export { GET, POST };
