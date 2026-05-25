@@ -28,19 +28,11 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', 'katex'],
   },
 
-  // Proxy Clerk Frontend API requests through our own domain so the
-  // __client / __session cookies are first-party to www.battleexam.com.
-  // Android WebView (Chromium 91+) blocks third-party SameSite=None cookies
-  // even with setAcceptThirdPartyCookies(true), which broke native sign-in.
-  // ClerkProvider sets proxyUrl=/__clerk to send all SDK traffic here.
-  async rewrites() {
-    return [
-      {
-        source: "/__clerk/:path*",
-        destination: "https://clerk.battleexam.com/:path*",
-      },
-    ];
-  },
+  // NOTE: We do NOT add a next.config rewrite for /__clerk here. The actual
+  // proxying happens in app/__clerk/[[...rest]]/route.ts via Clerk's
+  // createFrontendApiProxyHandlers helper, which rewrites Set-Cookie domains
+  // from clerk.battleexam.com → www.battleexam.com. A naive rewrites() block
+  // would short-circuit the route handler and skip the cookie rewriting.
 
   // Old URLs with a `-common` suffix used to be the canonical form for
   // branchless exams (JEE Main, NEET, SSC, etc.). We now hide "Common" from
