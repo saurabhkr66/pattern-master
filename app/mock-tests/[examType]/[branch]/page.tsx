@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { toSlug, getExamSeoInfo } from "@/lib/seo";
+import { unstable_cache } from "next/cache";
+import { toSlug, getExamSeoInfo, displayBranch } from "@/lib/seo";
 import type { Metadata } from "next";
 
 const BASE = "https://battleexam.com";
@@ -19,13 +20,16 @@ function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+const getDistinctExamTypes = unstable_cache(
+  () => prisma.mockTestTemplate.findMany({ select: { exam_type: true }, distinct: ["exam_type"] }),
+  ["mock-distinct-exam-types"],
+  { revalidate: 3600 }
+);
+
 export async function generateMetadata({ params }: { params: Promise<{ examType: string; branch: string }> }): Promise<Metadata> {
   const { examType, branch } = await params;
 
-  const allExams = await prisma.mockTestTemplate.findMany({
-    select: { exam_type: true },
-    distinct: ['exam_type'],
-  }).catch(() => []);
+  const allExams = await getDistinctExamTypes().catch(() => []);
   const actualExamType = allExams.find((e) => toSlug(e.exam_type) === examType)?.exam_type ?? examType;
   const info = getExamSeoInfo(actualExamType, null);
 
@@ -74,11 +78,7 @@ export async function generateMetadata({ params }: { params: Promise<{ examType:
 export default async function BranchMockTestsPage({ params }: { params: Promise<{ examType: string; branch: string }> }) {
   const { examType, branch } = await params;
 
-  // Find actual exam type
-  const allExams = await prisma.mockTestTemplate.findMany({
-    select: { exam_type: true },
-    distinct: ['exam_type']
-  });
+  const allExams = await getDistinctExamTypes();
   const actualExamType = allExams.find(e => toSlug(e.exam_type) === examType)?.exam_type;
   if (!actualExamType) notFound();
 
@@ -106,25 +106,25 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
     orderBy: { created_at: 'desc' }
   });
 
-  // If no tests found via direct match, do a fuzzy slug match
+  // If no tests found via direct match, do a fuzzy slug match scoped to this exam
   let finalTests = tests;
   if (tests.length === 0) {
-     const allTemplates = await prisma.mockTestTemplate.findMany({
-        where: { exam_type: actualExamType },
-        select: listSelect,
-     });
-     finalTests = allTemplates.filter(t => toSlug(t.branch || "All Subjects") === branch);
+    const allTemplates = await prisma.mockTestTemplate.findMany({
+      where: { exam_type: actualExamType },
+      select: listSelect,
+    });
+    finalTests = allTemplates.filter(t => toSlug(t.branch ?? "All Subjects") === branch);
   }
 
   if (finalTests.length === 0) notFound();
 
-  const displayBranch = finalTests[0].branch || "All Subjects";
+  const branchLabel = displayBranch(finalTests[0].branch) ?? "All Subjects";
   const canonical = `${BASE}/mock-tests/${examType}/${branch}`;
 
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${info.examLabel} ${displayBranch} Mock Tests`,
+    name: `${info.examLabel} ${branchLabel} Mock Tests`,
     url: canonical,
     numberOfItems: finalTests.length,
     itemListElement: finalTests.map((t, i) => ({
@@ -142,7 +142,7 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
       { "@type": "ListItem", position: 1, name: "Home", item: BASE },
       { "@type": "ListItem", position: 2, name: "Mock Tests", item: `${BASE}/mock-tests` },
       { "@type": "ListItem", position: 3, name: `${info.examLabel} Mock Tests`, item: `${BASE}/mock-tests/${examType}` },
-      { "@type": "ListItem", position: 4, name: `${displayBranch}`, item: canonical },
+      { "@type": "ListItem", position: 4, name: `${branchLabel}`, item: canonical },
     ],
   };
 
@@ -155,7 +155,7 @@ export default async function BranchMockTestsPage({ params }: { params: Promise<
         <div className="mb-12">
           <Link href={`/mock-tests/${examType}`} className="text-sm font-bold opacity-60 hover:opacity-100 transition-opacity">← Back to {info.examLabel}</Link>
           <h1 className="text-4xl font-black mt-4" style={{ color: 'var(--text-primary)' }}>
-            {displayBranch} Mock Papers
+            {branchLabel} Mock Papers
           </h1>
           <p className="text-lg mt-2 opacity-70">
             Prepare with our collection of {finalTests.length} specialized {info.examLabel} mock tests.

@@ -5,11 +5,35 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { toSlug, parseExamSlug, buildExamSlug, branchWhereClause } from "@/lib/seo";
 import FeatureBanner from "@/components/ui/FeatureBanner";
 
 const BASE = "https://battleexam.com";
+
+// Per-subject topic index. Many subject pages share underlying patterns when
+// the page-level ISR window expires; this dedupes the actual DB hit across
+// concurrent revalidations and across subjects of the same exam.
+const getSubjectTopicIndex = unstable_cache(
+  (examType: string, branch: string | null, subjectLabel: string) =>
+    prisma.pattern.findMany({
+      where: {
+        exam_type: examType,
+        ...branchWhereClause(branch),
+        subject: { equals: subjectLabel, mode: "insensitive" },
+      },
+      select: {
+        id: true,
+        topic_name: true,
+        atomic_logic: true,
+        _count: { select: { pyqs: true, questions: true } },
+      },
+      orderBy: { topic_name: "asc" },
+    }),
+  ["subject-topic-index"],
+  { revalidate: 86400, tags: ["patterns"] },
+);
 
 interface PageParams {
   examType: string; // e.g. "gate-cse", "jee-main", "neet"
@@ -100,20 +124,11 @@ export default async function SubjectPage({
 
   const subjectLabel = unslug(subject);
 
-  const patterns = await prisma.pattern.findMany({
-    where: {
-      exam_type: exam.examType,
-      ...branchWhereClause(exam.branch),
-      subject: { equals: subjectLabel, mode: "insensitive" },
-    },
-    select: {
-      id: true,
-      topic_name: true,
-      atomic_logic: true,
-      _count: { select: { pyqs: true, questions: true } },
-    },
-    orderBy: { topic_name: "asc" },
-  });
+  const patterns = await getSubjectTopicIndex(
+    exam.examType,
+    exam.branch ?? null,
+    subjectLabel,
+  );
 
   if (!patterns.length) notFound();
 

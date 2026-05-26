@@ -40,10 +40,10 @@ type Grade = "again" | "hard" | "good" | "easy";
 type SessionCard = Flashcard & { sessionIndex: number };
 
 const GRADE_CONFIG = [
-  { key: "again" as Grade, label: "Again", shortcut: 1, sub: "<1 min",  color: BE.bad,    soft: BE.badSoft },
-  { key: "hard"  as Grade, label: "Hard",  shortcut: 2, sub: "~6 min",  color: BE.warn,   soft: BE.warnSoft },
-  { key: "good"  as Grade, label: "Good",  shortcut: 3, sub: "1 day",   color: BE.good,   soft: BE.goodSoft },
-  { key: "easy"  as Grade, label: "Easy",  shortcut: 4, sub: "4 days",  color: BE.accent, soft: BE.accentSoft },
+  { key: "again" as Grade, label: "Again", shortcut: 1, sub: "<1 min",  color: BE.bad,    soft: BE.badSoft,    title: "I didn't know this — show again very soon" },
+  { key: "hard"  as Grade, label: "Hard",  shortcut: 2, sub: "~6 min",  color: BE.warn,   soft: BE.warnSoft,   title: "I struggled — show again soon" },
+  { key: "good"  as Grade, label: "Good",  shortcut: 3, sub: "1 day",   color: BE.good,   soft: BE.goodSoft,   title: "I knew it — show again tomorrow" },
+  { key: "easy"  as Grade, label: "Easy",  shortcut: 4, sub: "4 days",  color: BE.accent, soft: BE.accentSoft, title: "I knew it well — won't appear again for 4 days" },
 ];
 
 async function saveGrade(card: Flashcard, grade: Grade) {
@@ -82,11 +82,15 @@ export default function FlashcardDeck({
   const [savingGrade, setSavingGrade] = useState(false);
 
   const current = queue[currentIdx];
-  const total = queue.length;
-  const goodCount  = graded.filter(g => g.grade === "good" || g.grade === "easy").length;
-  const againCount = graded.filter(g => g.grade === "again" || g.grade === "hard").length;
-  const seenCount  = graded.length;
-  const estMin     = Math.ceil((total - seenCount) * 0.5);
+  // Fixed denominator — re-injected "again" cards don't inflate the total
+  const originalTotal = cards.length;
+  // Track latest grade per unique card (by sessionIndex) so re-grades don't double-count
+  const latestGrades = new Map<number, Grade>();
+  graded.forEach(g => latestGrades.set(g.card.sessionIndex, g.grade));
+  const goodCount  = [...latestGrades.values()].filter(g => g === "good" || g === "easy").length;
+  const againCount = [...latestGrades.values()].filter(g => g === "again" || g === "hard").length;
+  const seenCount  = latestGrades.size;
+  const estMin     = Math.ceil((originalTotal - seenCount) * 0.5);
 
   const flip = useCallback(() => {
     if (isAnimating || flipped) return;
@@ -98,7 +102,6 @@ export default function FlashcardDeck({
     if (!flipped || !current || isAnimating || savingGrade) return;
 
     setSavingGrade(true);
-    // Fire-and-forget DB save (don't block UI)
     saveGrade(current, g).finally(() => setSavingGrade(false));
 
     const newGraded = [...graded, { card: current, grade: g }];
@@ -108,7 +111,6 @@ export default function FlashcardDeck({
     setTimeout(() => {
       let newQueue = [...queue];
       if (g === "again") {
-        // Re-inject the card 3 positions ahead
         const insertAt = Math.min(currentIdx + 3, newQueue.length);
         newQueue.splice(insertAt, 0, { ...current, sessionIndex: current.sessionIndex });
       }
@@ -130,15 +132,24 @@ export default function FlashcardDeck({
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if ((e.key === " " || e.key === "Enter") && !flipped) { e.preventDefault(); flip(); }
-      else if (e.key === "1") grade("again");
+      if ((e.key === " " || e.key === "Enter") && !flipped) {
+        e.preventDefault(); flip();
+      } else if (e.key === "Backspace" && flipped) {
+        e.preventDefault(); setFlipped(false);
+      } else if (e.key === "ArrowLeft" && !flipped) {
+        e.preventDefault();
+        if (currentIdx > 0) { setCurrentIdx(i => i - 1); setFlipped(false); }
+      } else if (e.key === "ArrowRight" && !flipped) {
+        e.preventDefault();
+        if (currentIdx < queue.length - 1) { setCurrentIdx(i => i + 1); setFlipped(false); }
+      } else if (e.key === "1") grade("again");
       else if (e.key === "2") grade("hard");
       else if (e.key === "3") grade("good");
       else if (e.key === "4") grade("easy");
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [flip, grade, flipped]);
+  }, [flip, grade, flipped, currentIdx, queue.length]);
 
   /* ───────── EMPTY ───────── */
   if (cards.length === 0) {
@@ -195,8 +206,8 @@ export default function FlashcardDeck({
   }
 
   /* ───────── MAIN ───────── */
-  const progressGoodPct  = total > 0 ? (goodCount  / total) * 100 : 0;
-  const progressAgainPct = total > 0 ? (againCount / total) * 100 : 0;
+  const progressGoodPct  = originalTotal > 0 ? (goodCount  / originalTotal) * 100 : 0;
+  const progressAgainPct = originalTotal > 0 ? (againCount / originalTotal) * 100 : 0;
   const isNew = !current.srs;
 
   return (
@@ -216,12 +227,15 @@ export default function FlashcardDeck({
             est {estMin} min
           </div>
         </div>
+        <div style={{ fontSize: 11, color: BE.textMute, marginTop: 4 }}>
+          Good &amp; Easy cards are scheduled and leave today's session
+        </div>
       </div>
 
       {/* Progress */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
         <div style={{ fontSize: 12, color: BE.textDim, fontFamily: BE.mono, minWidth: 52 }}>
-          {String(seenCount).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          {String(seenCount).padStart(2, "0")} / {String(originalTotal).padStart(2, "0")}
         </div>
         <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden", display: "flex" }}>
           <div style={{ width: `${progressGoodPct}%`,  height: "100%", background: BE.good,  transition: "width 0.4s" }} />
@@ -254,12 +268,12 @@ export default function FlashcardDeck({
 
         {/* The card face */}
         <div
-          onClick={() => !flipped && flip()}
+          onClick={() => { if (!flipped) flip(); else setFlipped(false); }}
           style={{
             border: `1px solid ${flipped ? BE.good + "55" : BE.line}`,
             borderRadius: 14, background: BE.surface, minHeight: 300,
             padding: "28px 28px 24px", display: "flex", flexDirection: "column",
-            position: "relative", cursor: flipped ? "default" : "pointer",
+            position: "relative", cursor: "pointer",
             opacity: isAnimating ? 0 : 1,
             transform: isAnimating ? "translateY(4px)" : "translateY(0)",
             transition: "opacity 0.12s, transform 0.12s, border-color 0.25s",
@@ -274,7 +288,6 @@ export default function FlashcardDeck({
               <div style={{ fontSize: 17, lineHeight: 1.65, color: BE.text, fontFamily: BE.serif, flex: 1 }}>
                 <MathRenderer content={current.question_text} />
               </div>
-              {/* Question images */}
               {current.images?.filter(img => img.type !== 'explanation').map((img, idx) => (
                 <div key={idx} style={{ display: "flex", justifyContent: "center", borderRadius: 10, padding: 10, border: `1px solid ${BE.line}`, background: BE.surface, marginTop: 14, maxHeight: 320, minHeight: 160, overflow: "hidden" }}>
                   <img src={getCloudinaryUrl(img.url || img.filename || '') || img.base64} alt="Question figure" style={{ maxHeight: 294, width: "auto", objectFit: "contain", borderRadius: 6 }} />
@@ -313,7 +326,6 @@ export default function FlashcardDeck({
                 <div style={{ padding: "14px 16px", borderRadius: 10, border: `1px solid rgba(255,255,255,0.06)`, background: "rgba(255,255,255,0.03)", fontSize: 13.5, color: BE.textDim, lineHeight: 1.65, fontFamily: BE.serif, flex: 1 }}>
                   <div style={{ fontSize: 10, color: BE.textMute, textTransform: "uppercase", letterSpacing: 0.08, fontWeight: 600, marginBottom: 8 }}>Explanation</div>
                   <MathRenderer content={current.explanation} />
-                  {/* Explanation images */}
                   {current.images?.filter(img => img.type === 'explanation').map((img, idx) => (
                     <div key={idx} style={{ display: "flex", justifyContent: "center", borderRadius: 10, padding: 10, border: `1px solid ${BE.line}`, background: BE.surface, marginTop: 12, maxHeight: 320, minHeight: 160, overflow: "hidden" }}>
                       <img src={getCloudinaryUrl(img.url || img.filename || '') || img.base64} alt="Explanation figure" style={{ maxHeight: 294, width: "auto", objectFit: "contain", borderRadius: 6 }} />
@@ -325,7 +337,7 @@ export default function FlashcardDeck({
           )}
 
           <div style={{ position: "absolute", top: 16, right: 18, fontSize: 11, color: BE.textMute }}>
-            {flipped ? "Press 1–4 to grade" : "Space to reveal"}
+            {flipped ? "Press 1–4 to grade · click to flip back" : "Press Space to reveal"}
           </div>
           {savingGrade && (
             <div style={{ position: "absolute", bottom: 14, right: 16, fontSize: 10, color: BE.textMute }}>Saving…</div>
@@ -334,22 +346,28 @@ export default function FlashcardDeck({
 
         {/* Controls */}
         {flipped ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginTop: 14 }}>
-            {GRADE_CONFIG.map(b => (
-              <button
-                key={b.key}
-                onClick={() => grade(b.key)}
-                disabled={savingGrade}
-                style={{ border: `1px solid ${b.color}`, background: b.soft, color: b.color, padding: "12px 8px", borderRadius: 10, display: "flex", flexDirection: "column", gap: 4, alignItems: "center", cursor: "pointer", transition: "all 0.15s", opacity: savingGrade ? 0.6 : 1 }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <kbd style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 15, height: 15, padding: "0 3px", border: `1px solid ${b.color}`, borderRadius: 3, background: "transparent", color: b.color, fontFamily: BE.mono, fontSize: 9, fontWeight: 700 }}>{b.shortcut}</kbd>
-                  <span style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</span>
-                </div>
-                <div style={{ fontSize: 10.5, opacity: 0.7, fontFamily: BE.mono }}>next: {b.sub}</div>
-              </button>
-            ))}
-          </div>
+          <>
+            <div style={{ marginTop: 14, marginBottom: 6, fontSize: 11, color: BE.textMute, textAlign: "center" }}>
+              Rate your recall — this sets when the card comes back
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+              {GRADE_CONFIG.map(b => (
+                <button
+                  key={b.key}
+                  onClick={() => grade(b.key)}
+                  disabled={savingGrade}
+                  title={b.title}
+                  style={{ border: `1px solid ${b.color}`, background: b.soft, color: b.color, padding: "12px 8px", borderRadius: 10, display: "flex", flexDirection: "column", gap: 4, alignItems: "center", cursor: "pointer", transition: "all 0.15s", opacity: savingGrade ? 0.6 : 1 }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <kbd style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 15, height: 15, padding: "0 3px", border: `1px solid ${b.color}`, borderRadius: 3, background: "transparent", color: b.color, fontFamily: BE.mono, fontSize: 9, fontWeight: 700 }}>{b.shortcut}</kbd>
+                    <span style={{ fontSize: 13.5, fontWeight: 700 }}>{b.label}</span>
+                  </div>
+                  <div style={{ fontSize: 10.5, opacity: 0.7, fontFamily: BE.mono }}>next: {b.sub}</div>
+                </button>
+              ))}
+            </div>
+          </>
         ) : (
           <div style={{ display: "flex", gap: 8, marginTop: 14, alignItems: "center" }}>
             <button
@@ -363,12 +381,12 @@ export default function FlashcardDeck({
               onClick={flip}
               style={{ flex: 1, padding: "11px 20px", borderRadius: 9, background: BE.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.15s" }}
             >
-              Reveal answer · Space
+              Reveal answer · Press Space
             </button>
             <button
-              onClick={() => { if (currentIdx < total - 1) { setCurrentIdx(i => i + 1); setFlipped(false); } }}
-              disabled={currentIdx >= total - 1}
-              style={{ padding: "10px 16px", borderRadius: 9, border: `1px solid ${BE.line}`, background: "transparent", color: BE.textDim, fontSize: 13, fontWeight: 500, cursor: currentIdx >= total - 1 ? "not-allowed" : "pointer", opacity: currentIdx >= total - 1 ? 0.4 : 1 }}
+              onClick={() => { if (currentIdx < queue.length - 1) { setCurrentIdx(i => i + 1); setFlipped(false); } }}
+              disabled={currentIdx >= queue.length - 1}
+              style={{ padding: "10px 16px", borderRadius: 9, border: `1px solid ${BE.line}`, background: "transparent", color: BE.textDim, fontSize: 13, fontWeight: 500, cursor: currentIdx >= queue.length - 1 ? "not-allowed" : "pointer", opacity: currentIdx >= queue.length - 1 ? 0.4 : 1 }}
             >
               Skip →
             </button>
@@ -376,16 +394,26 @@ export default function FlashcardDeck({
         )}
 
         {/* Keyboard hints */}
-        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: BE.textMute, display: "flex", justifyContent: "center", gap: 6, alignItems: "center" }}>
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: BE.textMute, display: "flex", justifyContent: "center", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
           {flipped ? (
-            GRADE_CONFIG.map((b, i) => (
-              <span key={b.key}>
-                <kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>{b.shortcut}</kbd>{" "}{b.label}
-                {i < GRADE_CONFIG.length - 1 && <span style={{ margin: "0 4px", opacity: 0.3 }}>·</span>}
-              </span>
-            ))
+            <>
+              {GRADE_CONFIG.map((b, i) => (
+                <span key={b.key}>
+                  <kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>{b.shortcut}</kbd>{" "}{b.label}
+                  {i < GRADE_CONFIG.length - 1 && <span style={{ margin: "0 4px", opacity: 0.3 }}>·</span>}
+                </span>
+              ))}
+              <span style={{ margin: "0 4px", opacity: 0.3 }}>·</span>
+              <span><kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>Backspace</kbd> flip back</span>
+            </>
           ) : (
-            <><kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>Space</kbd> to reveal · <kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>←</kbd><kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>→</kbd> to navigate</>
+            <>
+              Press <kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>Space</kbd> to reveal
+              <span style={{ margin: "0 4px", opacity: 0.3 }}>·</span>
+              <kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>←</kbd>
+              <kbd style={{ fontFamily: BE.mono, padding: "1px 5px", border: `1px solid ${BE.line}`, borderRadius: 3 }}>→</kbd>
+              to navigate
+            </>
           )}
         </div>
       </div>

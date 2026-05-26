@@ -12,7 +12,6 @@ import {
   toSlug,
   cleanTextForMeta,
   paperSlug,
-  paperYear,
   type ExamSeoInfo,
 } from "@/lib/seo";
 import FeatureBanner from "@/components/ui/FeatureBanner";
@@ -130,19 +129,18 @@ export default async function YearPYQPage({
       where: {
         exam_type: exam.examType,
         mode: "seeded",
+        paper_year: yearNum,
         ...(exam.branch ? { branch: exam.branch } : {}),
       },
       select: { id: true, title: true, total_questions: true, max_score: true, duration_secs: true, branch: true },
     }),
   ]);
 
-  // Filter mock papers to this year and derive their slugs
-  const yearPapers = mockPapers
-    .filter((m) => paperYear(m.title) === yearNum)
-    .map((m) => ({
-      ...m,
-      slug: paperSlug(m.title, exam.examLabel, yearNum),
-    }));
+  // Derive slugs for the year's papers
+  const yearPapers = mockPapers.map((m) => ({
+    ...m,
+    slug: paperSlug(m.title, exam.examLabel, yearNum),
+  }));
 
   if (pyqs.length === 0 && yearPapers.length === 0) notFound();
 

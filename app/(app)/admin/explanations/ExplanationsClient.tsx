@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { generateAIExplanation, getGateCsePyqsMissingExplanation, getTopicsForExam } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { displayBranch } from "@/lib/seo";
 
 type QuestionRow = {
   id: string;
@@ -416,8 +417,9 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
       {/* FILTER BAR */}
       <div className="flex flex-wrap items-end gap-3 p-4 bg-gray-50 dark:bg-zinc-800 rounded-xl border dark:border-zinc-700">
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Exam Type</label>
+          <label htmlFor="filter-exam" className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Exam Type</label>
           <select
+            id="filter-exam"
             value={selectedExam}
             onChange={e => handleExamChange(e.target.value)}
             disabled={batchRunning}
@@ -425,15 +427,16 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
           >
             {examTypes.map(e => (
               <option key={`${e.examType}::${e.branch ?? ""}`} value={`${e.examType}::${e.branch ?? ""}`}>
-                {e.examType}{e.branch ? ` (${e.branch})` : ""}
+                {e.examType}{displayBranch(e.branch) ? ` (${displayBranch(e.branch)})` : ""}
               </option>
             ))}
           </select>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Subject</label>
+          <label htmlFor="filter-subject" className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Subject</label>
           <select
+            id="filter-subject"
             value={selectedSubject}
             onChange={e => { setSelectedSubject(e.target.value); setSelectedTopic(""); }}
             disabled={batchRunning || loadingTopics || subjects.length === 0}
@@ -447,8 +450,9 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Topic</label>
+          <label htmlFor="filter-topic" className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Topic</label>
           <select
+            id="filter-topic"
             value={selectedTopic}
             onChange={e => setSelectedTopic(e.target.value)}
             disabled={batchRunning || loadingTopics}

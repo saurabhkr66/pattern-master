@@ -11,6 +11,7 @@ import {
 } from "@/lib/pusher-client";
 import LiveLeaderboard from "./LiveLeaderboard";
 import ScoreDistribution from "./ScoreDistribution";
+import { displayBranch } from "@/lib/seo";
 
 interface MockMeta {
   id: string;
@@ -202,7 +203,7 @@ export default function MockDashboardClient({
                 style={{ color: BE.textMute }}
               >
                 <span>{mock.exam_type}</span>
-                {mock.branch && <span>· {mock.branch}</span>}
+                {displayBranch(mock.branch) && <span>· {displayBranch(mock.branch)}</span>}
                 <span>· {mock.total_questions} questions</span>
                 <span>· Max {mock.max_score}</span>
               </div>

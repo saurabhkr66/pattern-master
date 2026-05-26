@@ -11,15 +11,15 @@ datasource db {
 model User {
   id               String           @id @default(cuid())
   email            String           @unique
-  preferred_exam   String?
-  preferred_branch String?
   created_at       DateTime         @default(now())
   updated_at       DateTime         @updatedAt
+  preferred_branch String?
+  preferred_exam   String?
   attempts         Attempt[]
-  userNotes        UserNote[]
-  flashcards       Flashcard[]
   bookmarks        Bookmark[]
+  flashcards       Flashcard[]
   questionReports  QuestionReport[]
+  userNotes        UserNote[]
 }
 
 model Pattern {
@@ -31,38 +31,44 @@ model Pattern {
   branch            String
   short_notes       String?
   short_notes_hindi String?
+  exam_slug         String?             @default(dbgenerated("btrim(lower(regexp_replace(exam_type, '[^a-zA-Z0-9]+'::text, '-'::text, 'g'::text)), '-'::text)"))
+  branch_slug       String?             @default(dbgenerated("btrim(lower(regexp_replace(branch, '[^a-zA-Z0-9]+'::text, '-'::text, 'g'::text)), '-'::text)"))
+  subject_slug      String?             @default(dbgenerated("btrim(lower(regexp_replace(subject, '[^a-zA-Z0-9]+'::text, '-'::text, 'g'::text)), '-'::text)"))
+  topic_slug        String?             @default(dbgenerated("btrim(lower(regexp_replace(topic_name, '[^a-zA-Z0-9]+'::text, '-'::text, 'g'::text)), '-'::text)"))
   questions         GeneratedQuestion[]
   pyqs              PYQ[]
   userNotes         UserNote[]
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
-  @@index([exam_type, branch, subject], name: "pattern_subject_lookup")
+  @@index([exam_type, branch, subject], map: "pattern_subject_lookup")
+  @@index([exam_slug, branch_slug, subject_slug, topic_slug], map: "pattern_slug_lookup")
+  @@index([topic_name(ops: raw("gin_trgm_ops"))], map: "pattern_topic_trgm", type: Gin)
 }
 
 model PYQ {
   id                  String           @id @default(uuid())
   pattern_id          String
   question_text       String
-  question_text_hindi String?
   options             Json
-  options_hindi       Json?
   correct_answer      String
   explanation         String
-  explanation_hindi   String?
   year                Int
   exam_type           String
   created_at          DateTime         @default(now())
   question_type       String           @default("MCQ")
-  marks               Int              @default(1)
   images              Json?
-  question_hash       String?
+  marks               Int              @default(1)
+  explanation_hindi   String?
+  options_hindi       Json?
+  question_text_hindi String?
+  topic               String?
   content_hash        String?
+  question_hash       String?
   attempts            Attempt[]
-  pattern             Pattern          @relation(fields: [pattern_id], references: [id])
   bookmarks           Bookmark[]
+  pattern             Pattern          @relation(fields: [pattern_id], references: [id])
   questionReports     QuestionReport[]
 
-  topic               String?          // AI assigned topic
   @@unique([pattern_id, question_text], name: "pyq_identifier")
   @@unique([pattern_id, question_hash], name: "pyq_hash_identifier")
   @@index([pattern_id, year(sort: Desc)])
@@ -73,24 +79,24 @@ model GeneratedQuestion {
   id                  String           @id @default(uuid())
   pattern_id          String
   question_text       String
-  question_text_hindi String?
   options             Json
-  options_hindi       Json?
   correct_answer      String
   explanation         String
-  explanation_hindi   String?
   difficulty_level    String
   semantic_hash       String           @unique
   created_at          DateTime         @default(now())
   question_type       String           @default("MCQ")
-  marks               Int              @default(1)
   images              Json?
+  marks               Int              @default(1)
+  explanation_hindi   String?
+  options_hindi       Json?
+  question_text_hindi String?
+  topic               String?
   attempts            Attempt[]
-  pattern             Pattern          @relation(fields: [pattern_id], references: [id])
   bookmarks           Bookmark[]
+  pattern             Pattern          @relation(fields: [pattern_id], references: [id])
   questionReports     QuestionReport[]
 
-  topic               String?          // AI assigned topic
   @@index([pattern_id, created_at(sort: Desc)])
   @@index([pattern_id])
 }
@@ -103,8 +109,8 @@ model Attempt {
   created_at       DateTime           @default(now())
   pyq_id           String?
   user_answer      String?
-  mock_question_id String?
   time_spent       Int?
+  mock_question_id String?
   mock_test_id     String?
   MockTestTemplate MockTestTemplate?  @relation(fields: [mock_test_id], references: [id])
   pyq              PYQ?               @relation(fields: [pyq_id], references: [id])
@@ -119,8 +125,6 @@ model Attempt {
 model TestSession {
   id              String            @id @default(uuid())
   user_id         String
-  exam_type       String            @default("GATE")
-  branch          String?
   score           Float
   max_score       Float
   total_questions Int
@@ -128,10 +132,12 @@ model TestSession {
   wrong_count     Int
   skipped_count   Int
   time_taken_secs Int?
-  section_scores  Json?
   answers         Json
   created_at      DateTime          @default(now())
   mock_test_id    String?
+  branch          String?
+  exam_type       String            @default("GATE")
+  section_scores  Json?
   mock_test       MockTestTemplate? @relation(fields: [mock_test_id], references: [id])
 
   @@index([user_id, created_at(sort: Desc)])
@@ -140,24 +146,26 @@ model TestSession {
 
 model MockTestTemplate {
   id              String        @id @default(uuid())
-  exam_type       String        @default("GATE")
-  branch          String?
-  mock_number     Int           @default(0)
-  mode            String        @default("random")
   title           String
   subjects        String[]
   total_questions Int
   max_score       Int
-  duration_secs   Int           @default(10800)
-  sections        Json?
-  topics          String[]      @default([]) // Summary of all topics in this test
   questions       Json
-  content_hash    String?
   created_at      DateTime      @default(now())
+  branch          String?
+  duration_secs   Int           @default(10800)
+  exam_type       String        @default("GATE")
+  mock_number     Int           @default(0)
+  mode            String        @default("random")
+  sections        Json?
+  topics          String[]      @default([])
+  content_hash    String?
+  paper_year      Int?          @default(dbgenerated("(NULLIF(\"substring\"(title, '((19|20)\\d{2})'::text), ''::text))::integer"))
   Attempt         Attempt[]
   sessions        TestSession[]
 
   @@index([exam_type, branch, mock_number, mode])
+  @@index([exam_type, branch, mode, paper_year], map: "mocktest_year_idx")
 }
 
 model UserNote {
@@ -167,9 +175,8 @@ model UserNote {
   content    String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  pattern Pattern @relation(fields: [pattern_id], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pattern    Pattern  @relation(fields: [pattern_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, pattern_id])
 }
@@ -177,25 +184,20 @@ model UserNote {
 /// Spaced Repetition System card state per user per question.
 /// Uses a SuperMemo-2 inspired algorithm.
 model Flashcard {
-  id             String  @id @default(uuid())
-  user_id        String
-  // Exactly one of these is set
-  question_id    String?
-  pyq_id         String?
+  id               String   @id @default(uuid())
+  user_id          String
+  question_id      String?
+  pyq_id           String?
+  interval         Int      @default(0)
+  ease_factor      Float    @default(2.5)
+  repetitions      Int      @default(0)
+  next_review      DateTime @default(now())
+  status           String   @default("new")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  last_grade       String?
   mock_question_id String?
-
-  // SM-2 fields
-  interval    Int      @default(0) // Days until next review
-  ease_factor Float    @default(2.5) // Difficulty multiplier
-  repetitions Int      @default(0) // Consecutive successful reviews
-  next_review DateTime @default(now())
-  status      String   @default("new") // new | learning | review | lapsed
-
-  last_grade String? // again | hard | good | easy
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, question_id])
   @@unique([user_id, pyq_id])
@@ -205,18 +207,15 @@ model Flashcard {
 }
 
 model Bookmark {
-  id             String  @id @default(uuid())
-  user_id        String
-  // Exactly one of these is set
-  question_id    String?
-  pyq_id         String?
+  id               String             @id @default(uuid())
+  user_id          String
+  question_id      String?
+  pyq_id           String?
+  created_at       DateTime           @default(now())
   mock_question_id String?
-
-  created_at DateTime @default(now())
-
-  user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  question    GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
-  pyq         PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
+  pyq              PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
+  question         GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, question_id])
   @@unique([user_id, pyq_id])
@@ -233,7 +232,6 @@ model TestSessionDraft {
   started_at   DateTime @default(now()) @db.Timestamptz(6)
   expires_at   DateTime @db.Timestamptz(6)
   state        Json     @default("{}")
-
   created_at   DateTime @default(now()) @db.Timestamptz(6)
   updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
@@ -243,24 +241,19 @@ model TestSessionDraft {
 }
 
 model QuestionReport {
-  id      String @id @default(uuid())
-  user_id String
-
-  // Exactly one of these is set
-  question_id    String?
-  pyq_id         String?
+  id               String             @id @default(uuid())
+  user_id          String
+  question_id      String?
+  pyq_id           String?
+  reason           String
+  details          String?
+  status           String             @default("pending")
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
   mock_question_id String?
-
-  reason  String // e.g., "wrong_answer", "typo", "bad_explanation", "other"
-  details String?
-  status  String  @default("pending") // pending | resolved | rejected
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  user        User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  question    GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
-  pyq         PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
+  pyq              PYQ?               @relation(fields: [pyq_id], references: [id], onDelete: Cascade)
+  question         GeneratedQuestion? @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
   @@index([status])

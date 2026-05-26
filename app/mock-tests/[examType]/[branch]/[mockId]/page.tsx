@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getExamSeoInfo, toSlug } from "@/lib/seo";
+import { getExamSeoInfo, toSlug, displayBranch } from "@/lib/seo";
 import type { Metadata } from "next";
 
 const BASE = "https://battleexam.com";
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ examType:
   if (!test) return { title: "Mock Test Not Found | BattleExam" };
 
   const info = getExamSeoInfo(test.exam_type, test.branch);
-  const branchLabel = test.branch || null;
+  const branchLabel = displayBranch(test.branch);
   const fullLabel = branchLabel ? `${info.examLabel} (${branchLabel})` : info.examLabel;
   const durationMins = Math.round(test.duration_secs / 60);
 
@@ -92,7 +92,7 @@ export default async function MockTestLandingPage({ params }: { params: Promise<
   if (!test) notFound();
 
   const info = getExamSeoInfo(test.exam_type, test.branch);
-  const branchLabel = test.branch || null;
+  const branchLabel = displayBranch(test.branch);
   const fullLabel = branchLabel ? `${info.examLabel} ${branchLabel}` : info.examLabel;
   const durationMins = Math.round(test.duration_secs / 60);
   const canonical = `${BASE}/mock-tests/${examType}/${branch}/${mockId}`;

@@ -2,22 +2,26 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
   toSlug,
-  isCommonBranch,
   type ExamSeoInfo,
 } from "@/lib/seo";
 
-// Slug-matching needs every pattern for the exam_type, but the result is
-// identical across every topic page of the same exam. Cache the small slug
-// index (~30 KB per exam) so each crawl of N topic URLs is 1 query, not N.
-export const getExamPatternIndex = unstable_cache(
-  async (examType: string) => {
-    return prisma.pattern.findMany({
-      where: { exam_type: { equals: examType, mode: "insensitive" } },
-      select: { id: true, topic_name: true, subject: true, branch: true, exam_type: true },
-    });
-  },
-  ["exam-pattern-slug-index"],
-  { revalidate: 3600, tags: ["patterns"] },
+// Indexed slug lookup — Postgres maintains exam_slug/branch_slug/subject_slug/
+// topic_slug as STORED generated columns and the pattern_slug_lookup index
+// turns this into a single seek. Replaces the previous full-exam fetch +
+// JS .filter() over toSlug() of every row.
+const getPatternBySlug = unstable_cache(
+  (examSlug: string, branchSlug: string, subjectSlug: string, topicSlug: string) =>
+    prisma.pattern.findFirst({
+      where: {
+        exam_slug: examSlug,
+        branch_slug: branchSlug,
+        subject_slug: subjectSlug,
+        topic_slug: topicSlug,
+      },
+      select: { id: true },
+    }),
+  ["pattern-by-slug"],
+  { revalidate: 86400, tags: ["patterns"] },
 );
 
 export function unslug(slug: string) {
@@ -54,6 +58,92 @@ export type CombinedQuestion =
       images?: { index: number; filename: string; type?: string }[] | null;
     };
 
+const getPatternPage = unstable_cache(
+  async (patternId: string, page: number, size: number) => {
+    const meta = await prisma.pattern.findUnique({
+      where: { id: patternId },
+      select: {
+        id: true,
+        subject: true,
+        atomic_logic: true,
+        short_notes: true,
+        _count: { select: { pyqs: true, questions: true } },
+      },
+    });
+    if (!meta) return null;
+
+    const pyqCount = meta._count.pyqs;
+    const gqCount = meta._count.questions;
+    const totalQ = pyqCount + gqCount;
+
+    const offset = (page - 1) * size;
+    const end = offset + size;
+
+    const pyqSelect = {
+      id: true,
+      question_text: true,
+      question_text_hindi: true,
+      options: true,
+      options_hindi: true,
+      correct_answer: true,
+      explanation: true,
+      explanation_hindi: true,
+      year: true,
+      question_type: true,
+      images: true,
+    } as const;
+    const gqSelect = {
+      id: true,
+      question_text: true,
+      question_text_hindi: true,
+      options: true,
+      options_hindi: true,
+      correct_answer: true,
+      explanation: true,
+      explanation_hindi: true,
+      difficulty_level: true,
+      question_type: true,
+      images: true,
+    } as const;
+
+    const pyqsPromise =
+      offset < pyqCount
+        ? prisma.pYQ.findMany({
+            where: { pattern_id: patternId },
+            orderBy: [{ year: "desc" }, { id: "asc" }],
+            skip: offset,
+            take: Math.min(end, pyqCount) - offset,
+            select: pyqSelect,
+          })
+        : Promise.resolve([]);
+
+    const questionsPromise =
+      end > pyqCount
+        ? prisma.generatedQuestion.findMany({
+            where: { pattern_id: patternId },
+            orderBy: [{ difficulty_level: "asc" }, { id: "asc" }],
+            skip: Math.max(0, offset - pyqCount),
+            take: end - Math.max(offset, pyqCount),
+            select: gqSelect,
+          })
+        : Promise.resolve([]);
+
+    const [pyqs, questions] = await Promise.all([pyqsPromise, questionsPromise]);
+
+    return {
+      id: meta.id,
+      subject: meta.subject,
+      atomic_logic: meta.atomic_logic,
+      short_notes: meta.short_notes,
+      pyqs,
+      questions,
+      totalQ,
+    };
+  },
+  ["topic-pattern-page"],
+  { revalidate: 604800, tags: ["patterns"] },
+);
+
 export async function fetchPattern(
   exam: ExamSeoInfo,
   subjectLabel: string,
@@ -61,117 +151,12 @@ export async function fetchPattern(
   pageNum: number,
   pageSize: number,
 ) {
-  // Match by slug equivalence in memory rather than strict DB string equality —
-  // exam_type / branch / subject may all be stored with varying casing or
-  // null branches (legacy data), so we fetch a generous candidate set and
-  // filter using the same `toSlug` normalisation the URL was built from.
-  const examTypeSlug = toSlug(exam.examType);
-  const branchSlug = exam.branch ? toSlug(exam.branch) : null;
+  const examSlug    = toSlug(exam.examType);
+  const branchSlug  = exam.branch ? toSlug(exam.branch) : "common";
   const subjectSlug = toSlug(subjectLabel);
 
-  const candidates = await getExamPatternIndex(exam.examType);
-
-  const matched = candidates.filter((p) => {
-    if (toSlug(p.exam_type) !== examTypeSlug) return false;
-    // Branch: a URL with no branch slug (or our resolver returning "common"
-    // as a tolerant fallback) matches rows with branch=null OR branch="Common".
-    // A URL with a real branch like "cse" must match that branch exactly.
-    const urlAbsentBranch = !branchSlug || branchSlug === "common";
-    const rowAbsentBranch = !p.branch || isCommonBranch(p.branch);
-    if (urlAbsentBranch !== rowAbsentBranch) return false;
-    if (!urlAbsentBranch && p.branch && toSlug(p.branch) !== branchSlug) return false;
-    if (toSlug(p.subject) !== subjectSlug) return false;
-    return toSlug(p.topic_name) === topicSlug;
-  });
-
-  const match = matched[0];
+  const match = await getPatternBySlug(examSlug, branchSlug, subjectSlug, topicSlug);
   if (!match) return null;
-
-  const getPatternPage = unstable_cache(
-    async (patternId: string, page: number, size: number) => {
-      const meta = await prisma.pattern.findUnique({
-        where: { id: patternId },
-        select: {
-          id: true,
-          subject: true,
-          atomic_logic: true,
-          short_notes: true,
-          _count: { select: { pyqs: true, questions: true } },
-        },
-      });
-      if (!meta) return null;
-
-      const pyqCount = meta._count.pyqs;
-      const gqCount = meta._count.questions;
-      const totalQ = pyqCount + gqCount;
-
-      const offset = (page - 1) * size;
-      const end = offset + size;
-
-      const pyqSelect = {
-        id: true,
-        question_text: true,
-        question_text_hindi: true,
-        options: true,
-        options_hindi: true,
-        correct_answer: true,
-        explanation: true,
-        explanation_hindi: true,
-        year: true,
-        question_type: true,
-        images: true,
-      } as const;
-      const gqSelect = {
-        id: true,
-        question_text: true,
-        question_text_hindi: true,
-        options: true,
-        options_hindi: true,
-        correct_answer: true,
-        explanation: true,
-        explanation_hindi: true,
-        difficulty_level: true,
-        question_type: true,
-        images: true,
-      } as const;
-
-      const pyqsPromise =
-        offset < pyqCount
-          ? prisma.pYQ.findMany({
-              where: { pattern_id: patternId },
-              orderBy: [{ year: "desc" }, { id: "asc" }],
-              skip: offset,
-              take: Math.min(end, pyqCount) - offset,
-              select: pyqSelect,
-            })
-          : Promise.resolve([]);
-
-      const questionsPromise =
-        end > pyqCount
-          ? prisma.generatedQuestion.findMany({
-              where: { pattern_id: patternId },
-              orderBy: [{ difficulty_level: "asc" }, { id: "asc" }],
-              skip: Math.max(0, offset - pyqCount),
-              take: end - Math.max(offset, pyqCount),
-              select: gqSelect,
-            })
-          : Promise.resolve([]);
-
-      const [pyqs, questions] = await Promise.all([pyqsPromise, questionsPromise]);
-
-      return {
-        id: meta.id,
-        subject: meta.subject,
-        atomic_logic: meta.atomic_logic,
-        short_notes: meta.short_notes,
-        pyqs,
-        questions,
-        totalQ,
-      };
-    },
-    [`topic-pattern-page`],
-    { revalidate: 604800, tags: ["patterns"] },
-  );
 
   return getPatternPage(match.id, pageNum, pageSize);
 }

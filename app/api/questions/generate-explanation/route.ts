@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { VertexAI } from '@google-cloud/vertexai';
+import { auth } from "@clerk/nextjs/server";
+import { rateLimit } from "@/lib/rateLimit";
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
@@ -16,6 +18,16 @@ const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch 
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rl = await rateLimit(`explain:${userId}`, 5, 60);
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": "60" } });
+    }
+
     const { questionId, questionType, mockTestId, isPyq } = await req.json();
 
     if (!questionId) {

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { toSlug, getExamSeoInfo } from "@/lib/seo";
+import { toSlug, getExamSeoInfo, displayBranch } from "@/lib/seo";
 import type { Metadata } from "next";
 
 const BASE = "https://battleexam.com";
@@ -97,7 +97,7 @@ export default async function ExamMockTestsPage({ params }: { params: Promise<{ 
     url: canonical,
     numberOfItems: branches.length,
     itemListElement: branches.map((b, i) => {
-      const branchLabel = b.branch || "All Subjects";
+      const branchLabel = displayBranch(b.branch) ?? "All Subjects";
       const branchSlug = toSlug(branchLabel);
       return {
         "@type": "ListItem",
@@ -133,7 +133,7 @@ export default async function ExamMockTestsPage({ params }: { params: Promise<{ 
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {branches.map((b) => {
-            const branchLabel = b.branch || "All Subjects";
+            const branchLabel = displayBranch(b.branch) ?? "All Subjects";
             const branchSlug = toSlug(branchLabel);
 
             return (

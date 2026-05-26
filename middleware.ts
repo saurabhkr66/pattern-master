@@ -1,19 +1,25 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-// Default Clerk middleware: enables `auth()` everywhere but does NOT
-// auto-protect routes. Pages/route handlers that need auth must call
-// `auth()` themselves and handle the unauthenticated case (the existing
-// routes already do this — they check `if (!userId) return 401` or redirect).
+// Clerk runs ONLY on paths that actually call `auth()` / `currentUser()`.
+// SEO surface (`/[examType]/...`, `/mock-tests/...`, `/share/...`, etc.) is
+// excluded so bot crawls don't pay Clerk's per-request JWT-verification cost.
 //
-// The public mock leaderboard and dashboard remain public because they
-// don't call `auth()`.
+// Auth-required URLs (verified by grepping for `auth()` / `currentUser`):
+//   /                 — homepage redirects signed-in users to /dashboard
+//   /account, /onboarding, /sso-callback
+//   /dashboard, /practice, /test, /review, /mistakes, /bookmarks, /admin/*
+//                     — all live under the (app) route group whose layout
+//                       calls auth()
+//   /api/*, /trpc/*   — most call auth(); safer to run middleware on all
 export default clerkMiddleware();
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params.
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes.
-    "/(api|trpc)(.*)",
+    "/",
+    "/(account|onboarding|sso-callback|dashboard|practice|test|review|mistakes|bookmarks|admin)(/.*)?",
+    // Public API routes (share-card, search) never call auth();
+    // exclude them so Clerk's JWT verification doesn't run on each request.
+    "/api/((?!share-card|search).*)",
+    "/trpc/(.*)",
   ],
 };

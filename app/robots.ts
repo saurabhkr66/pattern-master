@@ -35,6 +35,27 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: ["Googlebot-Image", "Bingbot-Image", "msnbot-media"],
         disallow: "/",
       },
+      // Block SEO-tool / scraper bots. They drive zero user traffic and
+      // crawl aggressively (one was responsible for the May 14 CPU spike).
+      // Googlebot / Bingbot / AI crawlers are still explicitly allowed above.
+      {
+        userAgent: [
+          "SemrushBot",
+          "AhrefsBot",
+          "MJ12bot",
+          "DotBot",
+          "DataForSeoBot",
+          "PetalBot",
+          "Bytespider",
+          "BLEXBot",
+          "SeznamBot",
+          "ZoominfoBot",
+          "rogerbot",
+          "Barkrowler",
+          "Amazonbot",
+        ],
+        disallow: "/",
+      },
     ],
     sitemap: "https://battleexam.com/sitemap.xml",
   };

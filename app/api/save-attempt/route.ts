@@ -3,17 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidateTag } from "next/cache";
+import { rateLimit } from "@/lib/rateLimit";
 
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await auth();
+        const [{ userId }, body] = await Promise.all([auth(), req.json()]);
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await req.json();
+        const rl = await rateLimit(`attempt:${userId}`, 60, 60);
+        if (!rl.success) {
+            return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": "60" } });
+        }
+
         const { questionId, pyqId, mockQuestionId, isCorrect, userAnswer, timeSpent } = body;
 
         if ((!questionId && !pyqId && !mockQuestionId) || isCorrect === undefined) {

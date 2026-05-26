@@ -5,10 +5,20 @@
 
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs"; // Prisma requires Node.js runtime
 export const dynamic = "force-dynamic";
+
+// Static GATE-CSE pattern count — does not depend on userId, changes only when
+// new patterns are seeded. Cached for a day so every share-card render skips
+// the DB hit on warm cache.
+const getTotalGatePatterns = unstable_cache(
+  () => prisma.pattern.count({ where: { exam_type: "GATE", branch: "CSE" } }),
+  ["share-card-gate-cse-pattern-count"],
+  { revalidate: 86400, tags: ["patterns"] },
+);
 
 const W = 1200;
 const H = 630;
@@ -100,23 +110,30 @@ export async function GET(req: NextRequest) {
   const eightWeeksAgo = new Date();
   eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 84);
 
-  const [user, attemptStats, activityRows, totalPatterns] = await Promise.all([
+  // Single Attempt scan that returns both the per-day activity rows AND the
+  // global correct/total counts — the previous code paid for two scans of the
+  // same table. `correct_total` / `grand_total` are repeated on every row,
+  // which is fine (only ~84 rows max) and saves a separate groupBy round-trip.
+  const [user, statRows, totalPatterns] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { email: true } }),
 
-    prisma.attempt.groupBy({
-      by: ["is_correct"],
-      where: { user_id: userId },
-      _count: true,
-    }),
-
-    prisma.$queryRaw<{ date: Date | string; count: bigint }[]>`
-      SELECT DATE(created_at) AS date, COUNT(*)::bigint AS count
+    prisma.$queryRaw<{
+      date: Date | string | null;
+      count: bigint;
+      correct_total: bigint;
+      grand_total: bigint;
+    }[]>`
+      SELECT
+        DATE(created_at) AS date,
+        COUNT(*)::bigint AS count,
+        SUM(COUNT(*)) FILTER (WHERE is_correct) OVER ()::bigint  AS correct_total,
+        SUM(COUNT(*)) OVER ()::bigint                            AS grand_total
       FROM "Attempt"
       WHERE user_id = ${userId} AND created_at >= ${eightWeeksAgo}
       GROUP BY DATE(created_at)
     `,
 
-    prisma.pattern.count({ where: { exam_type: "GATE", branch: "CSE" } }),
+    getTotalGatePatterns(),
   ]);
 
   if (!user) {
@@ -124,16 +141,30 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Derive stats ─────────────────────────────────────────────────────────
-  const correctRow   = attemptStats.find((r) => r.is_correct === true);
-  const incorrectRow = attemptStats.find((r) => r.is_correct === false);
-  const correctCount = correctRow?._count ?? 0;
-  const totalCount   = correctCount + (incorrectRow?._count ?? 0);
-  const accuracy     = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+  // For users with no recent activity statRows is empty; we still need totals
+  // for *all-time* accuracy, so fall back to a cheap groupBy in that case.
+  // This branch only runs for inactive accounts.
+  let correctCount: number;
+  let totalCount: number;
+  if (statRows.length > 0) {
+    correctCount = Number(statRows[0].correct_total ?? 0);
+    totalCount   = Number(statRows[0].grand_total ?? 0);
+  } else {
+    const allTime = await prisma.attempt.groupBy({
+      by: ["is_correct"],
+      where: { user_id: userId },
+      _count: true,
+    });
+    correctCount = allTime.find((r) => r.is_correct === true)?._count ?? 0;
+    totalCount   = correctCount + (allTime.find((r) => r.is_correct === false)?._count ?? 0);
+  }
+  const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
 
   // Build heatmap data
   const countByDate = new Map<string, number>();
   const dateSet     = new Set<string>();
-  for (const row of activityRows) {
+  for (const row of statRows) {
+    if (!row.date) continue;
     const key = typeof row.date === "string"
       ? row.date.slice(0, 10)
       : toISO(new Date(row.date));
@@ -399,7 +430,7 @@ export async function GET(req: NextRequest) {
       width:  W,
       height: H,
       headers: {
-        "Cache-Control": "public, max-age=300, s-maxage=300",
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     }
   );

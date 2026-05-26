@@ -7,11 +7,21 @@ import { generateQuestionsWithOpenRouter } from "@/lib/openrouter";
 import { buildQuestionPrompt } from "@/lib/prompts";
 import { generateSemanticHash } from "@/lib/hash";
 import { auth } from "@clerk/nextjs/server";
+import { rateLimit } from "@/lib/rateLimit";
 
 
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json();
+        const [{ userId }, body] = await Promise.all([auth(), req.json()]);
+        if (!userId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const rl = await rateLimit(`gen-question:${userId}`, 10, 60);
+        if (!rl.success) {
+            return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": "60" } });
+        }
+
         const { patternId, difficulty = "Medium", provider = "gemini" } = body;
 
         console.log(`[API] Generation Request - Provider: ${provider}, Topic: ${patternId}`);
@@ -29,27 +39,27 @@ export async function POST(req: NextRequest) {
         }
 
         // --- Threshold Check ---
-        const { userId } = await auth();
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const totalPYQs = await prisma.pYQ.count({
             where: { pattern_id: patternId },
         });
 
         if (totalPYQs > 0) {
-            const solvedPYQs = await prisma.attempt.groupBy({
-                by: ["pyq_id"],
-                where: {
-                    user_id: userId,
-                    is_correct: true,
-                    pyq_id: { not: null },
-                    pyq: { pattern_id: patternId },
-                },
-            });
+            // Push the distinct-pyq count down to Postgres so it returns a single
+            // integer instead of one row per solved pyq. As the Attempt table
+            // grows this stays O(index scan) regardless of how many PYQs the
+            // user has solved.
+            const solvedRows = await prisma.$queryRaw<{ count: bigint }[]>`
+                SELECT COUNT(DISTINCT a.pyq_id)::bigint AS count
+                FROM "Attempt" a
+                JOIN "PYQ" p ON p.id = a.pyq_id
+                WHERE a.user_id = ${userId}
+                  AND a.is_correct = true
+                  AND p.pattern_id = ${patternId}
+            `;
+            const solvedCount = Number(solvedRows[0]?.count ?? 0);
 
-            const completionPercentage = (solvedPYQs.length / totalPYQs) * 100;
+            const completionPercentage = (solvedCount / totalPYQs) * 100;
 
             if (completionPercentage < 95) {
                 return NextResponse.json({
@@ -122,35 +132,34 @@ export async function POST(req: NextRequest) {
             return 1;
         };
 
-        // Save all unique questions to DB
-        const savedQuestions = [];
+        // Hash all questions in parallel, then bulk insert with skipDuplicates.
+        // Relies on UNIQUE(semantic_hash) — duplicates are silently dropped at
+        // the DB level instead of N findUnique round-trips.
+        const rows = await Promise.all(
+            questionsArray.map(async (q: any) => ({
+                pattern_id: pattern.id,
+                question_text: q.question_text,
+                options: q.options,
+                correct_answer: q.correct_answer,
+                explanation: q.explanation,
+                difficulty_level: difficulty,
+                question_type: q.question_type || "MCQ",
+                marks: computeMarks(q.question_type || "MCQ", difficulty),
+                semantic_hash: await generateSemanticHash(q.question_text),
+            })),
+        );
 
-        for (const q of questionsArray) {
-            const hash = generateSemanticHash(q.question_text);
+        await prisma.generatedQuestion.createMany({
+            data: rows,
+            skipDuplicates: true,
+        });
 
-            // Skip duplicates
-            const existing = await prisma.generatedQuestion.findUnique({
-                where: { semantic_hash: hash },
-            });
-
-            if (existing) continue;
-
-            const saved = await prisma.generatedQuestion.create({
-                data: {
-                    pattern_id: pattern.id,
-                    question_text: q.question_text,
-                    options: q.options,
-                    correct_answer: q.correct_answer,
-                    explanation: q.explanation,
-                    difficulty_level: difficulty,
-                    question_type: q.question_type || "MCQ",
-                    marks: computeMarks(q.question_type || "MCQ", difficulty),
-                    semantic_hash: hash,
-                },
-            });
-
-            savedQuestions.push(saved);
-        }
+        const savedQuestions = await prisma.generatedQuestion.findMany({
+            where: {
+                pattern_id: pattern.id,
+                semantic_hash: { in: rows.map((r) => r.semantic_hash) },
+            },
+        });
 
         if (savedQuestions.length === 0) {
             return NextResponse.json(

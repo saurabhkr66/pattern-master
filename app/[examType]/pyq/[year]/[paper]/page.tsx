@@ -10,11 +10,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
   parseExamSlug,
   paperSlug,
-  paperYear,
   toSlug,
   cleanTextForMeta,
 } from "@/lib/seo";
@@ -36,17 +36,16 @@ export async function generateStaticParams(): Promise<PageParams[]> {
   return [];
 }
 
-// Find the mock template matching examType + year + paper slug.
-// We can't store the slug in DB so we derive it at query time.
 async function findMock(examType: string, yearNum: number, paperParam: string) {
   const exam = parseExamSlug(examType);
   if (!exam) return null;
 
-  // Fetch all seeded mocks for this exam+year — typically 1–4 rows
+  // Fetch only this exam+year's seeded mocks — typically 1–4 rows
   const candidates = await prisma.mockTestTemplate.findMany({
     where: {
       exam_type: exam.examType,
       mode: "seeded",
+      paper_year: yearNum,
       ...(exam.branch ? { branch: exam.branch } : {}),
     },
     select: {
@@ -63,12 +62,12 @@ async function findMock(examType: string, yearNum: number, paperParam: string) {
     },
   });
 
-  // Filter by year then match slug
-  const yearMatches = candidates.filter((m) => paperYear(m.title) === yearNum);
-  return yearMatches.find(
+  return candidates.find(
     (m) => paperSlug(m.title, exam.examLabel, yearNum) === paperParam,
   ) ?? null;
 }
+
+const getCachedMock = unstable_cache(findMock, ["pyq-paper"], { revalidate: 86400 });
 
 export async function generateMetadata({
   params,
@@ -80,7 +79,7 @@ export async function generateMetadata({
   const yearNum = parseInt(year, 10);
   if (!exam || isNaN(yearNum)) return { title: "Not Found | BattleExam" };
 
-  const mock = await findMock(examType, yearNum, paper);
+  const mock = await getCachedMock(examType, yearNum, paper);
   if (!mock) return { title: "Not Found | BattleExam" };
 
   const canonical = `${BASE}/${examType}/pyq/${year}/${paper}`;
@@ -145,20 +144,20 @@ export default async function PaperPage({
   const yearNum = parseInt(year, 10);
   if (!exam || isNaN(yearNum)) notFound();
 
-  const mock = await findMock(examType, yearNum, paper);
+  const [mock, patterns] = await Promise.all([
+    getCachedMock(examType, yearNum, paper),
+    prisma.pattern.findMany({
+      where: {
+        exam_type: exam.examType,
+        ...(exam.branch ? { branch: exam.branch } : {}),
+      },
+      select: { id: true, subject: true, topic_name: true },
+    }),
+  ]);
   if (!mock) notFound();
 
   const questions = (mock.questions as unknown as MockQuestion[]) ?? [];
   const durationMins = Math.round(mock.duration_secs / 60);
-
-  // Fetch patterns so we can build per-question "Solve in Practice Mode" links
-  const patterns = await prisma.pattern.findMany({
-    where: {
-      exam_type: exam.examType,
-      ...(exam.branch ? { branch: exam.branch } : {}),
-    },
-    select: { id: true, subject: true, topic_name: true },
-  });
   // Map "subject::topic_name" → patternId for O(1) lookup
   const patternMap = new Map<string, string>(
     patterns.map((p) => [`${p.subject}::${p.topic_name}`, p.id]),

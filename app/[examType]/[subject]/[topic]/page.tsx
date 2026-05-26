@@ -35,7 +35,7 @@ interface PageSearchParams {
 // Page reads `searchParams` (?page=N) which is a request-time API, so it must
 // be dynamic. Setting `revalidate` would mark it ISR and Next.js would refuse
 // to read searchParams during prerender, throwing DYNAMIC_SERVER_USAGE in prod.
-// Heavy DB work is still cached via `unstable_cache` wrappers (getExamPatternIndex).
+// Heavy DB work is still cached via `unstable_cache` wrappers (getPatternBySlug, getPatternPage).
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({

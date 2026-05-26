@@ -131,6 +131,16 @@ export function isCommonBranch(branch: string | null | undefined): boolean {
   return !!branch && toSlug(branch) === "common";
 }
 
+/**
+ * Returns the branch for display purposes — i.e. the value to show in titles,
+ * breadcrumbs, badges. "Common" is a DB placeholder for branchless exams
+ * (JEE/NEET/etc.) and must never be rendered to users.
+ */
+export function displayBranch(branch: string | null | undefined): string | null {
+  if (!branch || isCommonBranch(branch)) return null;
+  return branch;
+}
+
 /** Build the URL slug for an exam+branch combo from raw DB values. */
 export function buildExamSlug(examType: string, branch: string | null | undefined): string {
   const examSlug = toSlug(examType);
@@ -207,6 +217,18 @@ export function parseExamSlug(slug: string): ExamSeoInfo | null {
   for (const { cfg, examSlug } of candidates) {
     if (norm.startsWith(`${examSlug}-`)) {
       const branchSlug = norm.slice(examSlug.length + 1);
+      // "common" is a DB placeholder for branchless exams — never expose it.
+      if (branchSlug === "common") {
+        return {
+          examType: cfg.examType,
+          branch: null,
+          examLabel: cfg.label,
+          branchLabel: null,
+          fullLabel: cfg.label,
+          slug: examSlug,
+          level: examLevel(cfg.examType),
+        };
+      }
       const branchLabel = branchSlug
         .replace(/-/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -254,13 +276,15 @@ export function getExamSeoInfo(examType: string, branch: string | null | undefin
   if (parsed) return parsed;
 
   // Fallback: legacy / unknown exam_type values. Don't 500 — render sensibly.
+  // "Common" is a DB placeholder for branchless exams — never expose it.
   const upper = (examType || "").toUpperCase().replace(/_/g, " ");
+  const displayed = displayBranch(branch);
   return {
     examType: (examType || "GATE") as ExamType,
-    branch: branch || null,
+    branch: displayed,
     examLabel: upper || "Exam",
-    branchLabel: branch || null,
-    fullLabel: branch ? `${upper} ${branch}` : upper,
+    branchLabel: displayed,
+    fullLabel: displayed ? `${upper} ${displayed}` : upper,
     slug,
     level: "Graduate",
   };

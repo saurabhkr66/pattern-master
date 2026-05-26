@@ -22,11 +22,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const clerkUser = await currentUser();
-  if (!clerkUser) redirect("/sign-in");
+  const [{ userId }, clerkUser] = await Promise.all([auth(), currentUser()]);
+  if (!userId || !clerkUser) redirect("/sign-in");
 
   const firstName = clerkUser.firstName || clerkUser.username || "Learner";
 

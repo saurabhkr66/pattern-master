@@ -35,6 +35,7 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
           alt={alt}
           width={800}
           height={600}
+          unoptimized={true}
           sizes="(max-width: 768px) 100vw, 800px"
           onClick={() => setExpanded(true)}
           className="rounded-lg cursor-zoom-in"
@@ -70,6 +71,7 @@ function QuestionImage({ src, alt }: { src: string; alt: string }) {
             alt={alt}
             width={1600}
             height={1200}
+            unoptimized={true}
             sizes="90vw"
             style={{
               maxWidth: "90vw",
