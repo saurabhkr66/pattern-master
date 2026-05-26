@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { unstable_cache } from "next/cache";
+import { getCachedTemplateById } from "@/lib/mockTemplate";
 
 // NAT and MSQ are always 2 marks; MCQ uses the stored per-question value.
 function resolveMarks(questionType: string, dbMarks: number): number {
@@ -18,10 +19,7 @@ const getStaticQuestions = unstable_cache(
   async (id: string, skip = 0, take = 0) => {
     if (id.startsWith("mock-")) {
       const actualId = id.replace("mock-", "");
-      const mock = await prisma.mockTestTemplate.findUnique({
-        where: { id: actualId },
-        select: { questions: true }
-      });
+      const mock = await getCachedTemplateById(actualId);
 
       if (!mock) return { error: "Mock Test not found", status: 404 };
 

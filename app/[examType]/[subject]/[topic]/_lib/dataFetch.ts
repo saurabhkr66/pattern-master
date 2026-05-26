@@ -87,89 +87,93 @@ export async function fetchPattern(
   const match = matched[0];
   if (!match) return null;
 
-  const meta = await prisma.pattern.findUnique({
-    where: { id: match.id },
-    select: {
-      id: true,
-      subject: true,
-      atomic_logic: true,
-      short_notes: true,
-      _count: { select: { pyqs: true, questions: true } },
+  const getPatternPage = unstable_cache(
+    async (patternId: string, page: number, size: number) => {
+      const meta = await prisma.pattern.findUnique({
+        where: { id: patternId },
+        select: {
+          id: true,
+          subject: true,
+          atomic_logic: true,
+          short_notes: true,
+          _count: { select: { pyqs: true, questions: true } },
+        },
+      });
+      if (!meta) return null;
+
+      const pyqCount = meta._count.pyqs;
+      const gqCount = meta._count.questions;
+      const totalQ = pyqCount + gqCount;
+
+      const offset = (page - 1) * size;
+      const end = offset + size;
+
+      const pyqSelect = {
+        id: true,
+        question_text: true,
+        question_text_hindi: true,
+        options: true,
+        options_hindi: true,
+        correct_answer: true,
+        explanation: true,
+        explanation_hindi: true,
+        year: true,
+        question_type: true,
+        images: true,
+      } as const;
+      const gqSelect = {
+        id: true,
+        question_text: true,
+        question_text_hindi: true,
+        options: true,
+        options_hindi: true,
+        correct_answer: true,
+        explanation: true,
+        explanation_hindi: true,
+        difficulty_level: true,
+        question_type: true,
+        images: true,
+      } as const;
+
+      const pyqsPromise =
+        offset < pyqCount
+          ? prisma.pYQ.findMany({
+              where: { pattern_id: patternId },
+              orderBy: [{ year: "desc" }, { id: "asc" }],
+              skip: offset,
+              take: Math.min(end, pyqCount) - offset,
+              select: pyqSelect,
+            })
+          : Promise.resolve([]);
+
+      const questionsPromise =
+        end > pyqCount
+          ? prisma.generatedQuestion.findMany({
+              where: { pattern_id: patternId },
+              orderBy: [{ difficulty_level: "asc" }, { id: "asc" }],
+              skip: Math.max(0, offset - pyqCount),
+              take: end - Math.max(offset, pyqCount),
+              select: gqSelect,
+            })
+          : Promise.resolve([]);
+
+      const [pyqs, questions] = await Promise.all([pyqsPromise, questionsPromise]);
+
+      return {
+        id: meta.id,
+        subject: meta.subject,
+        atomic_logic: meta.atomic_logic,
+        short_notes: meta.short_notes,
+        pyqs,
+        questions,
+        totalQ,
+      };
     },
-  });
-  if (!meta) return null;
+    [`topic-pattern-page`],
+    { revalidate: 604800, tags: ["patterns"] },
+  );
 
-  const pyqCount = meta._count.pyqs;
-  const gqCount = meta._count.questions;
-  const totalQ = pyqCount + gqCount;
-
-  // Combined order on the page is: all PYQs first, then all generated
-  // questions. Slice the requested page across both buckets so we only read
-  // the rows we actually render — a single topic can have hundreds of
-  // questions and pulling them all per render was the egress hot spot.
-  const offset = (pageNum - 1) * pageSize;
-  const end = offset + pageSize;
-
-  const pyqSelect = {
-    id: true,
-    question_text: true,
-    question_text_hindi: true,
-    options: true,
-    options_hindi: true,
-    correct_answer: true,
-    explanation: true,
-    explanation_hindi: true,
-    year: true,
-    question_type: true,
-    images: true,
-  } as const;
-  const gqSelect = {
-    id: true,
-    question_text: true,
-    question_text_hindi: true,
-    options: true,
-    options_hindi: true,
-    correct_answer: true,
-    explanation: true,
-    explanation_hindi: true,
-    difficulty_level: true,
-    question_type: true,
-    images: true,
-  } as const;
-
-  const pyqsPromise =
-    offset < pyqCount
-      ? prisma.pYQ.findMany({
-          where: { pattern_id: match.id },
-          orderBy: [{ year: "desc" }, { id: "asc" }],
-          skip: offset,
-          take: Math.min(end, pyqCount) - offset,
-          select: pyqSelect,
-        })
-      : Promise.resolve([]);
-
-  const questionsPromise =
-    end > pyqCount
-      ? prisma.generatedQuestion.findMany({
-          where: { pattern_id: match.id },
-          orderBy: [{ difficulty_level: "asc" }, { id: "asc" }],
-          skip: Math.max(0, offset - pyqCount),
-          take: end - Math.max(offset, pyqCount),
-          select: gqSelect,
-        })
-      : Promise.resolve([]);
-
-  const [pyqs, questions] = await Promise.all([pyqsPromise, questionsPromise]);
-
-  return {
-    id: meta.id,
-    subject: meta.subject,
-    atomic_logic: meta.atomic_logic,
-    short_notes: meta.short_notes,
-    pyqs,
-    questions,
-    totalQ,
-  };
+  return getPatternPage(match.id, pageNum, pageSize);
 }
 
 export function combineQuestions(

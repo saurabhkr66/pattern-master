@@ -12,6 +12,9 @@ import { notFound, permanentRedirect, unstable_rethrow } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { toSlug, buildExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
 
+export const revalidate = 86400;
+export const dynamicParams = true;
+
 interface PageParams {
   examType: string;
   subject: string;
