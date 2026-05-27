@@ -6,7 +6,7 @@
 // question inline, so the per-question URL has no unique content of its own.
 //
 // URL example: /gate-cse/dbms/normalization/pyq-abc123
-//              → 308 → /gate-cse/dbms/normalization?page=2#q-pyq-abc123
+//              → 308 → /gate-cse/dbms/normalization/page/2#q-pyq-abc123
 
 import { notFound, permanentRedirect, unstable_rethrow } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -72,8 +72,8 @@ async function buildRedirectUrl(questionId: string): Promise<string | null> {
     if (!q) return null;
     const page = await pyqPagePosition({ pattern_id: q.pattern_id, year: q.year, id: q.id });
     const base = `/${buildExamSlug(q.pattern.exam_type, q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}`;
-    const query = page > 1 ? `?page=${page}` : "";
-    return `${base}${query}#q-pyq-${q.id}`;
+    const pageSuffix = page > 1 ? `/page/${page}` : "";
+    return `${base}${pageSuffix}#q-pyq-${q.id}`;
   }
 
   const id = questionId.startsWith("gq-") ? questionId.slice(3) : questionId;
@@ -95,8 +95,8 @@ async function buildRedirectUrl(questionId: string): Promise<string | null> {
     id: q.id,
   });
   const base = `/${buildExamSlug(q.pattern.exam_type, q.pattern.branch)}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}`;
-  const query = page > 1 ? `?page=${page}` : "";
-  return `${base}${query}#q-gq-${q.id}`;
+  const pageSuffix = page > 1 ? `/page/${page}` : "";
+  return `${base}${pageSuffix}#q-gq-${q.id}`;
 }
 
 export default async function QuestionPage({
