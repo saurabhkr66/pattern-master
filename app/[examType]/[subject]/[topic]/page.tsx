@@ -33,6 +33,15 @@ interface PageParams {
 export const revalidate = 86400;
 export const dynamicParams = true;
 
+// Empty array still flips this route's build classification from `ƒ` (dynamic)
+// to `●` (SSG/ISR). Without `generateStaticParams`, Netlify's Durable Cache
+// bypasses the response and the function runs on every hit — `revalidate`
+// becomes a no-op. With it present (even returning nothing), `dynamicParams`
+// renders pages on first visit and caches them at the CDN edge for 24 h.
+export async function generateStaticParams(): Promise<PageParams[]> {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {

@@ -28,6 +28,13 @@ interface PageParams {
 export const revalidate = 86400;
 export const dynamicParams = true;
 
+// See note in ../../page.tsx — required to flip build classification to ●
+// so Netlify Durable Cache actually caches ISR responses for paginated topic
+// pages instead of marking them `fwd=bypass`.
+export async function generateStaticParams(): Promise<PageParams[]> {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {

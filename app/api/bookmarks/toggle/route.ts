@@ -29,12 +29,19 @@ export async function POST(req: NextRequest) {
             }
         });
 
+        // Only invalidate the `bookmarks` tag — the bookmarks listing page is
+        // the only cache that actually reflects bookmark state. The `patterns`
+        // tag was being wiped here too, which nuked 8 unrelated caches
+        // (mastery notes, question banks, topic SEO pages, subject stats, etc.)
+        // for every user across the whole app on every toggle. The questions
+        // API overlays bookmark state per-request after reading the cached
+        // static payload — the static payload itself never depends on
+        // bookmarks, so it never needs to be invalidated when one toggles.
         if (existingBookmark) {
             await prisma.bookmark.delete({
                 where: { id: existingBookmark.id }
             });
             revalidateTag("bookmarks", "page");
-            revalidateTag("patterns", "page");
             return NextResponse.json({ bookmarked: false });
         } else {
             await prisma.bookmark.create({
@@ -46,7 +53,6 @@ export async function POST(req: NextRequest) {
                 }
             });
             revalidateTag("bookmarks", "page");
-            revalidateTag("patterns", "page");
             return NextResponse.json({ bookmarked: true });
         }
     } catch (error) {

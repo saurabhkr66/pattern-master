@@ -22,6 +22,14 @@ interface PageParams {
   questionId: string;
 }
 
+// Even though this route only emits a 308 redirect, Netlify still needs the
+// route classified as ● (not ƒ) to cache the redirect response. Otherwise
+// every Googlebot crawl of an old per-question URL re-queries Neon to
+// compute the redirect target.
+export async function generateStaticParams(): Promise<PageParams[]> {
+  return [];
+}
+
 // Compute which pagination page hosts a given PYQ. Topic page orders PYQs by
 // `year desc, id asc`, so "before this row" = higher year OR same-year-lower-id.
 async function pyqPagePosition(pyq: { pattern_id: string; year: number; id: string }) {
