@@ -34,6 +34,13 @@ const nextConfig: NextConfig = {
   // variants into the cleaner form so Google consolidates ranking signal.
   async redirects() {
     return [
+      // Legacy ?page=N topic pagination → path-based /page/N (ISR-compatible)
+      {
+        source: "/:p1/:p2/:p3",
+        has: [{ type: "query", key: "page", value: "(?<page>\\d+)" }],
+        destination: "/:p1/:p2/:p3/page/:page",
+        permanent: true,
+      },
       { source: "/jee-main-common", destination: "/jee-main", permanent: true },
       { source: "/jee-main-common/:path*", destination: "/jee-main/:path*", permanent: true },
       { source: "/jee-advanced-common", destination: "/jee-advanced", permanent: true },

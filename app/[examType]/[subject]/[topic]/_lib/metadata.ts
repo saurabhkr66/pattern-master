@@ -19,7 +19,7 @@ export function buildTopicMetadata({
 }: MetaArgs): Metadata {
   const year = new Date().getFullYear() + 1;
   const basePath = `${BASE}/${examType}/${subject}/${topic}`;
-  const canonical = pageNum === 1 ? basePath : `${basePath}?page=${pageNum}`;
+  const canonical = pageNum === 1 ? basePath : `${basePath}/page/${pageNum}`;
   const pageSuffix = pageNum > 1 ? ` – Page ${pageNum}` : "";
 
   const title = `${topicLabel} – ${exam.fullLabel} ${subjectLabel} Practice Questions & PYQs${pageSuffix} | BattleExam`;

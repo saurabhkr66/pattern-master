@@ -179,10 +179,21 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
 
       return mappedTopics;
     },
-    [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v1`],
-    { revalidate: 600, tags: ["patterns"] }
+    [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v2`],
+    { revalidate: 86400, tags: ["patterns"] }
   )();
 };
+
+const getCachedUserPrefs = (userId: string) =>
+  unstable_cache(
+    () =>
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { preferred_exam: true, preferred_branch: true },
+      }),
+    ["user-prefs", userId],
+    { revalidate: 3600, tags: [`user-${userId}`] }
+  )();
 
 const getCachedExamMeta = unstable_cache(
   async () => {
@@ -284,10 +295,7 @@ export default async function PracticePage({
     // These are fast and allow the header + ExamSwitcher to render immediately.
     const [examMeta, dbUser, cookieStore] = await Promise.all([
       getCachedExamMeta(),
-      userId ? prisma.user.findUnique({
-        where: { id: userId },
-        select: { preferred_exam: true, preferred_branch: true }
-      }) : Promise.resolve(null),
+      userId ? getCachedUserPrefs(userId) : Promise.resolve(null),
       cookies(),
     ]);
 

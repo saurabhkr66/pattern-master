@@ -25,12 +25,12 @@ import GlobalSearch from "./search/GlobalSearch";
 import { useLanguage } from "./providers/LanguageProvider";
 
 const navLinks = [
-  { href: "/practice", label: "Practice", icon: BookOpen },
+  { href: "/practice", label: "Practice", icon: BookOpen, prefetch: false },
   { href: "/test", label: "Mock Test", icon: ClipboardList, disabled: true },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/review", label: "Review", icon: RotateCcw },
-  { href: "/mistakes", label: "Mistakes", icon: XCircle },
-  { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, prefetch: false },
+  { href: "/review", label: "Review", icon: RotateCcw, prefetch: false },
+  { href: "/mistakes", label: "Mistakes", icon: XCircle, prefetch: false },
+  { href: "/bookmarks", label: "Bookmarks", icon: Bookmark, prefetch: false },
 ];
 
 
@@ -81,7 +81,7 @@ export default function Header() {
 
         {/* Desktop Nav — always visible */}
         <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
-          {navLinks.map(({ href, label, icon: Icon, disabled }) => {
+          {navLinks.map(({ href, label, icon: Icon, disabled, prefetch }) => {
             const content = (
               <>
                 <Icon size={16} />
@@ -106,7 +106,7 @@ export default function Header() {
               <Link
                 key={href}
                 href={href}
-                prefetch={true}
+                prefetch={prefetch ?? false}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm nav-item ${
                   pathname === href ? "nav-item-active" : ""
                 }`}
@@ -211,7 +211,7 @@ export default function Header() {
 
             <nav className="flex flex-col p-4 gap-2">
 
-              {navLinks.map(({ href, label, icon: Icon, disabled }) => {
+              {navLinks.map(({ href, label, icon: Icon, disabled, prefetch }) => {
                 const content = (
                   <>
                     <Icon size={18} />
@@ -235,7 +235,7 @@ export default function Header() {
                   <Link
                     key={href}
                     href={href}
-                    prefetch={true}
+                    prefetch={prefetch ?? false}
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl nav-item ${
                       pathname === href ? "nav-item-active" : ""

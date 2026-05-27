@@ -1,25 +1,19 @@
-// app/[examType]/[subject]/[topic]/page.tsx
+// app/[examType]/[subject]/[topic]/page/[pageNum]/page.tsx
 //
-// Public SEO surface: a *rich* topic page that hosts every question in the
-// topic inline (paginated). This replaces the old design where each question
-// got its own ultra-thin URL — Google was crawling those but not indexing
-// them because the per-question pages had ~50–200 words of content.
+// Pages 2+ of the topic question list.
+// URL example: /gate-cse/algorithms/divide-and-conquer/page/2
 //
-// URL example: /gate-cse/algorithms/divide-and-conquer        ← page 1 (this file)
-//              /gate-cse/algorithms/divide-and-conquer/page/2 ← page 2+ (./page/[pageNum]/page.tsx)
-//
-// No searchParams → ISR-compatible. `force-dynamic` is gone.
+// ISR-compatible: pageNum comes from the path, no searchParams needed.
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
-import { fetchPattern, combineQuestions, unslug } from "./_lib/dataFetch";
-import { buildTopicMetadata, buildSchemas } from "./_lib/metadata";
-import TopicHeader from "./_components/TopicHeader";
-import PracticeModePromo from "./_components/PracticeModePromo";
-import QuestionList from "./_components/QuestionList";
-import TopicPagination from "./_components/TopicPagination";
-import SignupCTA from "./_components/SignupCTA";
+import { fetchPattern, combineQuestions, unslug } from "../../_lib/dataFetch";
+import { buildTopicMetadata, buildSchemas } from "../../_lib/metadata";
+import TopicHeader from "../../_components/TopicHeader";
+import QuestionList from "../../_components/QuestionList";
+import TopicPagination from "../../_components/TopicPagination";
+import SignupCTA from "../../_components/SignupCTA";
 
 const BASE = "https://battleexam.com";
 const PAGE_SIZE = TOPIC_PAGE_SIZE;
@@ -28,6 +22,7 @@ interface PageParams {
   examType: string;
   subject: string;
   topic: string;
+  pageNum: string;
 }
 
 export const revalidate = 86400;
@@ -38,7 +33,9 @@ export async function generateMetadata({
 }: {
   params: Promise<PageParams>;
 }): Promise<Metadata> {
-  const { examType, subject, topic } = await params;
+  const { examType, subject, topic, pageNum: pageNumStr } = await params;
+  const pageNum = parseInt(pageNumStr, 10);
+  if (isNaN(pageNum) || pageNum < 2) return { title: "Not Found | BattleExam" };
 
   const exam = parseExamSlug(examType);
   if (!exam) return { title: "Not Found | BattleExam" };
@@ -50,17 +47,21 @@ export async function generateMetadata({
     topic,
     subjectLabel: unslug(subject),
     topicLabel: unslug(topic),
-    pageNum: 1,
+    pageNum,
   });
 }
 
-export default async function TopicPage({
+export default async function TopicPageN({
   params,
 }: {
   params: Promise<PageParams>;
 }) {
-  const { examType, subject, topic } = await params;
-  const pageNum = 1;
+  const { examType, subject, topic, pageNum: pageNumStr } = await params;
+  const pageNum = parseInt(pageNumStr, 10);
+
+  const basePath = `/${examType}/${subject}/${topic}`;
+
+  if (isNaN(pageNum) || pageNum < 2) redirect(basePath);
 
   const exam = parseExamSlug(examType);
   if (!exam) notFound();
@@ -71,15 +72,16 @@ export default async function TopicPage({
   const pattern = await fetchPattern(exam, subjectLabel, topic, pageNum, PAGE_SIZE);
   if (!pattern) notFound();
 
-  const basePath = `/${examType}/${subject}/${topic}`;
-  const canonical = `${BASE}${basePath}`;
+  const canonical = `${BASE}${basePath}/page/${pageNum}`;
   const year = new Date().getFullYear() + 1;
 
   const pageQuestions = combineQuestions(pattern.pyqs, pattern.questions);
 
   const totalQ = pattern.totalQ;
   const totalPages = Math.max(1, Math.ceil(totalQ / PAGE_SIZE));
-  const start = 0;
+  if (pageNum > totalPages) notFound();
+
+  const start = (pageNum - 1) * PAGE_SIZE;
 
   const { itemListSchema, courseSchema, breadcrumbSchema } = buildSchemas({
     exam,
@@ -131,8 +133,6 @@ export default async function TopicPage({
           year={year}
           shortNotes={pattern.short_notes}
         />
-
-        <PracticeModePromo topicLabel={topicLabel} practiceHref={practiceHref} />
 
         <QuestionList
           pageQuestions={pageQuestions}

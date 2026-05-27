@@ -5,20 +5,21 @@ import { prisma } from "@/lib/prisma";
 // Memoise by normalised (q, exam, branch). Two users typing "graph" within
 // the revalidate window share a single DB hit even across different edge
 // POPs, where the CDN-level s-maxage couldn't dedupe.
-const searchTopics = unstable_cache(
-  (q: string, exam: string | null, branch: string | null) =>
-    prisma.pattern.findMany({
-      where: {
-        topic_name: { contains: q, mode: "insensitive" },
-        ...(exam ? { exam_type: exam } : {}),
-        ...(branch ? { branch } : {}),
-      },
-      select: { id: true, topic_name: true, subject: true, exam_type: true, branch: true },
-      take: 5,
-    }),
-  ["search-topics"],
-  { revalidate: 300, tags: ["patterns"] },
-);
+const searchTopics = (q: string, exam: string | null, branch: string | null) =>
+  unstable_cache(
+    () =>
+      prisma.pattern.findMany({
+        where: {
+          topic_name: { contains: q, mode: "insensitive" },
+          ...(exam ? { exam_type: exam } : {}),
+          ...(branch ? { branch } : {}),
+        },
+        select: { id: true, topic_name: true, subject: true, exam_type: true, branch: true },
+        take: 5,
+      }),
+    ["search-topics", q, exam || "null", branch || "null"],
+    { revalidate: 300, tags: ["patterns"] }
+  )();
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

@@ -5,82 +5,83 @@ import { auth } from "@clerk/nextjs/server";
 import { unstable_cache } from "next/cache";
 
 // Module-level stable cache — keyed without userId so content is shared
-const getTopicsBase = unstable_cache(
-  async (examType: string, branch: string, subject: string) => {
-    const isAll = !subject || subject === "All";
+const getTopicsBase = (examType: string, branch: string, subject: string) =>
+  unstable_cache(
+    async () => {
+      const isAll = !subject || subject === "All";
 
-    const topicPatterns = isAll
-      ? []
-      : await prisma.pattern.findMany({
-          where: {
-            exam_type: examType,
-            ...(branch && branch !== "null" ? { branch } : {}),
-            subject,
-          },
-          select: {
-            id: true,
-            topic_name: true,
-            subject: true,
-            atomic_logic: true,
-            _count: { select: { questions: true, pyqs: true } },
-          },
-          orderBy: { topic_name: "asc" },
-        });
+      const topicPatterns = isAll
+        ? []
+        : await prisma.pattern.findMany({
+            where: {
+              exam_type: examType,
+              ...(branch && branch !== "null" ? { branch } : {}),
+              subject,
+            },
+            select: {
+              id: true,
+              topic_name: true,
+              subject: true,
+              atomic_logic: true,
+              _count: { select: { questions: true, pyqs: true } },
+            },
+            orderBy: { topic_name: "asc" },
+          });
 
-    if (isAll) return { subjects: [], topics: [] };
+      if (isAll) return { subjects: [], topics: [] };
 
-    const mappedTopicsBase = topicPatterns.map((p) => ({
-      ...p,
-      totalQuestions: p._count.questions + p._count.pyqs,
-      questionsCount: p._count.questions,
-      pyqsCount: p._count.pyqs,
-      solvedQuestions: 0,
-      questions: [],
-      pyqs: [],
-    }));
-
-    if (subject === "Full Papers") {
-      const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main"
-        ? ["JEE_MAIN", "JEE Main"]
-        : [examType];
-
-      const mocks = await prisma.mockTestTemplate.findMany({
-        where: {
-          exam_type: { in: normalizedExamTypes },
-          ...(branch && branch !== "null" && branch !== "Common" ? { branch } : {}),
-          mode: 'seeded'
-        },
-        select: {
-          id: true,
-          title: true,
-          total_questions: true,
-          subjects: true,
-        },
-        orderBy: { mock_number: 'desc' }
-      });
-
-      const mappedMocks = mocks.map(m => ({
-        id: `mock-${m.id}`,
-        topic_name: m.title,
-        subject: "Full Papers",
-        atomic_logic: `Full paper practice for ${m.title}.`,
-        totalQuestions: m.total_questions,
-        questionsCount: m.total_questions,
-        pyqsCount: 0,
+      const mappedTopicsBase = topicPatterns.map((p) => ({
+        ...p,
+        totalQuestions: p._count.questions + p._count.pyqs,
+        questionsCount: p._count.questions,
+        pyqsCount: p._count.pyqs,
         solvedQuestions: 0,
         questions: [],
         pyqs: [],
-        isMock: true
       }));
 
-      return { subjects: [], topics: mappedMocks };
-    }
+      if (subject === "Full Papers") {
+        const normalizedExamTypes = examType === "JEE_MAIN" || examType === "JEE Main"
+          ? ["JEE_MAIN", "JEE Main"]
+          : [examType];
 
-    return { subjects: [], topics: mappedTopicsBase };
-  },
-  ["topics-base"],
-  { revalidate: 3600, tags: ["patterns"] }
-);
+        const mocks = await prisma.mockTestTemplate.findMany({
+          where: {
+            exam_type: { in: normalizedExamTypes },
+            ...(branch && branch !== "null" && branch !== "Common" ? { branch } : {}),
+            mode: 'seeded'
+          },
+          select: {
+            id: true,
+            title: true,
+            total_questions: true,
+            subjects: true,
+          },
+          orderBy: { mock_number: 'desc' }
+        });
+
+        const mappedMocks = mocks.map(m => ({
+          id: `mock-${m.id}`,
+          topic_name: m.title,
+          subject: "Full Papers",
+          atomic_logic: `Full paper practice for ${m.title}.`,
+          totalQuestions: m.total_questions,
+          questionsCount: m.total_questions,
+          pyqsCount: 0,
+          solvedQuestions: 0,
+          questions: [],
+          pyqs: [],
+          isMock: true
+        }));
+
+        return { subjects: [], topics: mappedMocks };
+      }
+
+      return { subjects: [], topics: mappedTopicsBase };
+    },
+    ["topics-base", examType, branch, subject],
+    { revalidate: 3600, tags: ["patterns"] }
+  )();
 
 // Module-level factory so unstable_cache deduplicates across concurrent requests.
 // Uses a single UNION ALL query — 1 connection instead of 3 parallel ones.
@@ -136,7 +137,7 @@ const getSolvedCounts = (
       return results;
     },
     [`practice-solved-${userId}-${examType}-${branch || "all"}-${subject || "all"}`],
-    { revalidate: 60, tags: [`dashboard-${userId}`] }
+    { revalidate: 300, tags: [`dashboard-${userId}`] }
   )();
 
 export async function GET(request: Request) {

@@ -160,7 +160,7 @@ export default function MockDashboardClient({
         /* ignore */
       }
     };
-    const id = setInterval(sync, 30_000);
+    const id = setInterval(sync, 300_000);
     return () => {
       cancelled = true;
       clearInterval(id);

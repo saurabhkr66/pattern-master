@@ -15,25 +15,26 @@ const BASE = "https://battleexam.com";
 // Per-subject topic index. Many subject pages share underlying patterns when
 // the page-level ISR window expires; this dedupes the actual DB hit across
 // concurrent revalidations and across subjects of the same exam.
-const getSubjectTopicIndex = unstable_cache(
-  (examType: string, branch: string | null, subjectLabel: string) =>
-    prisma.pattern.findMany({
-      where: {
-        exam_type: examType,
-        ...branchWhereClause(branch),
-        subject: { equals: subjectLabel, mode: "insensitive" },
-      },
-      select: {
-        id: true,
-        topic_name: true,
-        atomic_logic: true,
-        _count: { select: { pyqs: true, questions: true } },
-      },
-      orderBy: { topic_name: "asc" },
-    }),
-  ["subject-topic-index"],
-  { revalidate: 86400, tags: ["patterns"] },
-);
+const getSubjectTopicIndex = (examType: string, branch: string | null, subjectLabel: string) =>
+  unstable_cache(
+    () =>
+      prisma.pattern.findMany({
+        where: {
+          exam_type: examType,
+          ...branchWhereClause(branch),
+          subject: { equals: subjectLabel, mode: "insensitive" },
+        },
+        select: {
+          id: true,
+          topic_name: true,
+          atomic_logic: true,
+          _count: { select: { pyqs: true, questions: true } },
+        },
+        orderBy: { topic_name: "asc" },
+      }),
+    ["subject-topic-index", examType, branch || "null", subjectLabel],
+    { revalidate: 86400, tags: ["patterns"] },
+  )();
 
 interface PageParams {
   examType: string; // e.g. "gate-cse", "jee-main", "neet"

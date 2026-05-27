@@ -67,7 +67,26 @@ async function findMock(examType: string, yearNum: number, paperParam: string) {
   ) ?? null;
 }
 
-const getCachedMock = unstable_cache(findMock, ["pyq-paper"], { revalidate: 86400 });
+const getCachedMock = (examType: string, yearNum: number, paperParam: string) =>
+  unstable_cache(
+    () => findMock(examType, yearNum, paperParam),
+    ["pyq-paper", examType, String(yearNum), paperParam],
+    { revalidate: 86400 }
+  )();
+
+const getPatternMap = (examType: string, branch: string | null) =>
+  unstable_cache(
+    () =>
+      prisma.pattern.findMany({
+        where: {
+          exam_type: examType,
+          ...(branch ? { branch } : {}),
+        },
+        select: { id: true, subject: true, topic_name: true },
+      }),
+    ["pyq-pattern-map", examType, branch || "null"],
+    { revalidate: 86400, tags: ["patterns"] }
+  )();
 
 export async function generateMetadata({
   params,
@@ -146,13 +165,7 @@ export default async function PaperPage({
 
   const [mock, patterns] = await Promise.all([
     getCachedMock(examType, yearNum, paper),
-    prisma.pattern.findMany({
-      where: {
-        exam_type: exam.examType,
-        ...(exam.branch ? { branch: exam.branch } : {}),
-      },
-      select: { id: true, subject: true, topic_name: true },
-    }),
+    getPatternMap(exam.examType, exam.branch ?? null),
   ]);
   if (!mock) notFound();
 
