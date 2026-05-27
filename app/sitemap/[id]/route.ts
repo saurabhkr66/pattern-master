@@ -12,9 +12,10 @@
 
 import { buildSitemapById, renderUrlset } from "@/lib/sitemap-data";
 
-// Cache each child sitemap for 1 hour so bot floods don't re-query Prisma on
-// every hit. New content shows up within an hour, which is fine for SEO.
-export const revalidate = 3600;
+// Cache each child sitemap for 24 hours. Heavy findMany/groupBy queries here
+// (distinct exam/branch/subject/topic combos) are the most expensive in the
+// sitemap path — keep them off Neon by letting the CDN edge serve bots.
+export const revalidate = 86400;
 
 export async function GET(
   _req: Request,
@@ -36,7 +37,7 @@ export async function GET(
   return new Response(renderUrlset(entries), {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
     },
   });
 }

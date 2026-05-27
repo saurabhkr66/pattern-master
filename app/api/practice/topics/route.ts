@@ -137,7 +137,7 @@ const getSolvedCounts = (
       return results;
     },
     [`practice-solved-${userId}-${examType}-${branch || "all"}-${subject || "all"}`],
-    { revalidate: 300, tags: [`dashboard-${userId}`] }
+    { revalidate: false, tags: [`dashboard-${userId}`] }
   )();
 
 export async function GET(request: Request) {

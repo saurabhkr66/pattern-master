@@ -8,16 +8,18 @@
 
 import { listSitemapIds, renderSitemapIndex } from "@/lib/sitemap-data";
 
-// Cache the response for 1 hour so bot floods don't re-query Prisma on every
-// hit. New mock tests show up within an hour, which is fine for SEO.
-export const revalidate = 3600;
+// Cache for 24 hours. Sitemaps don't need hourly freshness — new content
+// surfaces on topic pages (which have their own ISR) long before Google
+// recrawls. s-maxage lets Vercel's CDN edge serve bot floods without ever
+// invoking the function or waking Neon.
+export const revalidate = 86400;
 
 export async function GET() {
   const ids = await listSitemapIds();
   return new Response(renderSitemapIndex(ids), {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
     },
   });
 }

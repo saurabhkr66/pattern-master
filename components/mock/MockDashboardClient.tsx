@@ -149,6 +149,8 @@ export default function MockDashboardClient({
   useEffect(() => {
     let cancelled = false;
     const sync = async () => {
+      // Do not ping if the tab is hidden to prevent keeping the DB awake 24/7.
+      if (document.visibilityState === "hidden") return;
       try {
         const res = await fetch(`/api/mock/${mock.id}/leaderboard`, {
           cache: "no-store",
@@ -160,7 +162,8 @@ export default function MockDashboardClient({
         /* ignore */
       }
     };
-    const id = setInterval(sync, 300_000);
+    // Relaxed interval (10 mins) as primary real-time updates happen via Pusher.
+    const id = setInterval(sync, 600_000);
     return () => {
       cancelled = true;
       clearInterval(id);

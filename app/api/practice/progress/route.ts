@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     const getCached = unstable_cache(
       () => queryProgress(userId, exam, branch),
       [`practice-progress-${userId}-${exam}-${branch || "all"}`],
-      { revalidate: 30, tags: [`dashboard-${userId}`] }
+      { revalidate: false, tags: [`dashboard-${userId}`] }
     );
 
     const progress = await getCached();

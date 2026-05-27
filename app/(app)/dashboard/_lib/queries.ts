@@ -59,7 +59,7 @@ export function getCachedStatsActivity(userId: string) {
       return { totalAttempted, correctAttempts, currentMistakesCount, activityData, currentStreak };
     },
     [`dashboard-stats-activity-${userId}`],
-    { revalidate: 30, tags: [`dashboard-${userId}`, `mistakes-${userId}`] }
+    { revalidate: false, tags: [`dashboard-${userId}`, `mistakes-${userId}`] }
   )();
 }
 
@@ -104,7 +104,7 @@ export function getCachedWeakTopic(userId: string) {
         : null;
     },
     [`dashboard-weak-topic-${userId}`],
-    { revalidate: 30, tags: [`dashboard-${userId}`] }
+    { revalidate: false, tags: [`dashboard-${userId}`] }
   )();
 }
 
@@ -157,6 +157,6 @@ export function getCachedRecentAttempts(userId: string) {
       };
     },
     [`dashboard-recent-attempts-${userId}`],
-    { revalidate: 30, tags: [`dashboard-${userId}`] }
+    { revalidate: false, tags: [`dashboard-${userId}`] }
   )();
 }

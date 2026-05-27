@@ -144,15 +144,20 @@ export async function recordSubmission(input: {
   mockId: string;
   sessionId: string;
   userId: string;
-  email: string | null;
   score: number;
   maxScore: number;
   timeTakenSecs: number | null;
 }): Promise<void> {
   if (!isRedisConfigured()) return;
 
-  const { mockId, sessionId, userId, email, score, maxScore, timeTakenSecs } = input;
-  const name = anonymizeName(email, userId);
+  const { mockId, sessionId, userId, score, maxScore, timeTakenSecs } = input;
+  // Email lookup lives here (not in the submit route) so the DB round-trip
+  // stays off the submit response's critical path — the caller invokes us
+  // fire-and-forget.
+  const userRow = await prisma.user
+    .findUnique({ where: { id: userId }, select: { email: true } })
+    .catch(() => null);
+  const name = anonymizeName(userRow?.email ?? null, userId);
   const now = Date.now();
   const payload: MetaPayload = { name, score, maxScore, time: timeTakenSecs, at: now };
 

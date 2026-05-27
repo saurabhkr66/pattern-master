@@ -241,20 +241,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Delete the in-progress draft now that the test is submitted.
-    // Look up IDs first so we can also drop their Redis state keys.
+    // Single DELETE ... RETURNING id replaces the prior findMany+deleteMany
+    // pair: one DB round-trip, and the returned ids still drive Redis cleanup.
     if (mockTestId) {
-      const drafts = await prisma.testSessionDraft
-        .findMany({
-          where: { user_id: userId, mock_test_id: mockTestId },
-          select: { id: true },
-        })
-        .catch(() => []);
-      for (const d of drafts) {
+      const deletedDrafts = await prisma.$queryRaw<{ id: string }[]>`
+        DELETE FROM "TestSessionDraft"
+        WHERE user_id = ${userId} AND mock_test_id = ${mockTestId}
+        RETURNING id
+      `.catch(() => [] as { id: string }[]);
+      for (const d of deletedDrafts) {
         clearDraft(userId, d.id).catch(() => {});
       }
-      await prisma.testSessionDraft
-        .deleteMany({ where: { user_id: userId, mock_test_id: mockTestId } })
-        .catch(() => {});
     }
 
     // Save attempts for dashboard tracking (bulk insert for performance)
@@ -279,17 +276,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Real-time leaderboard: push to Redis + trigger Pusher event.
-    // Fire-and-forget so the submit response isn't blocked.
+    // Fire-and-forget so the submit response isn't blocked. The user-email
+    // lookup needed for the display name now lives inside recordSubmission,
+    // off the critical path.
     if (savedToDb && mockTestId) {
-      const userRow = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true },
-      }).catch(() => null);
       recordSubmission({
         mockId: mockTestId,
         sessionId,
         userId,
-        email: userRow?.email ?? null,
         score: finalScore,
         maxScore,
         timeTakenSecs: timeTakenSecs ?? null,
