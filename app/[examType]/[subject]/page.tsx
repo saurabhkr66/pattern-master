@@ -223,6 +223,7 @@ export default async function SubjectPage({
             <Link
               key={p.id}
               href={`/${examType}/${subject}/${toSlug(p.topic_name)}`}
+              prefetch={false}
               className="block p-4 rounded-xl border transition-colors hover:border-indigo-500/40"
               style={{
                 background: "var(--bg-surface)",

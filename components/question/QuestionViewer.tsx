@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Maximize2 } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
-import MathRenderer from "@/components/ui/MathRenderer";
+import MathHtml from "@/components/ui/MathHtml";
 
 interface QuestionData {
   id: string;
@@ -21,6 +21,13 @@ interface QuestionData {
   explanationHindi?: string;
   questionType: string;
   images?: { index: number; filename: string; type?: string }[];
+  // Option B: pre-rendered HTML (inner markup). Null/absent → live fallback.
+  questionHtml?: string | null;
+  questionHtmlHindi?: string | null;
+  optionsHtml?: (string | null)[];
+  optionsHtmlHindi?: (string | null)[];
+  explanationHtml?: string | null;
+  explanationHtmlHindi?: string | null;
 }
 
 // Constrained image with click-to-expand lightbox
@@ -102,15 +109,35 @@ export default function QuestionViewer({
   practiceHref?: string;
 }) {
   const [showAnswer, setShowAnswer] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const { language, setLanguage } = useLanguage();
 
-  const questionText = (language === "hi" && q.questionTextHindi) ? q.questionTextHindi : q.questionText;
+  const isMSQ = q.questionType === "MSQ";
+  const useHi = language === "hi";
+  const questionText = (useHi && q.questionTextHindi) ? q.questionTextHindi : q.questionText;
+  const questionHtml = (useHi && q.questionTextHindi) ? q.questionHtmlHindi : q.questionHtml;
 
   const correctLetters = q.correctAnswer
     .split(/[;,]/)
     .map(s => s.trim().toUpperCase())
     .filter(Boolean);
+
+  const hasSelection = selected.length > 0;
+  const isAttemptCorrect =
+    hasSelection &&
+    selected.length === correctLetters.length &&
+    selected.every(l => correctLetters.includes(l));
+
+  const handleOptionClick = (letter: string) => {
+    if (showAnswer) return;
+    if (isMSQ) {
+      setSelected(prev =>
+        prev.includes(letter) ? prev.filter(l => l !== letter) : [...prev, letter]
+      );
+    } else {
+      setSelected([letter]);
+    }
+  };
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--bg-surface)" }}>
@@ -121,7 +148,7 @@ export default function QuestionViewer({
           className="text-base leading-relaxed font-medium"
           style={{ color: "var(--text-primary)" }}
         >
-          <MathRenderer content={questionText} />
+          <MathHtml html={questionHtml} raw={questionText} />
         </div>
 
         {/* Question images (exclude explanation-type images) */}
@@ -141,42 +168,45 @@ export default function QuestionViewer({
             const letter = opt.trim().match(/^([A-Z])[.)]/)?.[1] ?? String.fromCharCode(65 + i);
             const upperLetter = letter.toUpperCase();
             const isCorrect = correctLetters.includes(upperLetter);
-            const isSelected = selected === upperLetter;
-            const revealed = showAnswer || selected !== null;
+            const isSelected = selected.includes(upperLetter);
 
             let bg = "var(--bg-surface-2)";
             let border = "var(--border)";
             let fw: number = 400;
 
-            if (revealed && isCorrect) {
+            if (showAnswer && isCorrect) {
               bg = "rgba(34,197,94,0.12)";
               border = "rgba(34,197,94,0.4)";
               fw = 700;
-            } else if (isSelected && !isCorrect) {
+            } else if (showAnswer && isSelected && !isCorrect) {
               bg = "rgba(239,68,68,0.12)";
               border = "rgba(239,68,68,0.4)";
               fw = 700;
+            } else if (isSelected) {
+              bg = "rgba(99,102,241,0.12)";
+              border = "rgba(99,102,241,0.5)";
+              fw = 700;
             }
 
-            const optText = (language === "hi" && q.optionsHindi && q.optionsHindi[i]) ? q.optionsHindi[i] : opt;
+            const optText = (useHi && q.optionsHindi && q.optionsHindi[i]) ? q.optionsHindi[i] : opt;
+            const optHtml = (useHi && q.optionsHindi && q.optionsHindi[i])
+              ? q.optionsHtmlHindi?.[i]
+              : q.optionsHtml?.[i];
             return (
               <button
                 key={i}
-                onClick={() => {
-                  setSelected(upperLetter);
-                  setShowAnswer(true);
-                }}
+                onClick={() => handleOptionClick(upperLetter)}
                 className="rounded-xl px-4 py-3 text-sm text-left transition-colors w-full"
                 style={{
                   background: bg,
                   border: `1px solid ${border}`,
                   color: "var(--text-primary)",
                   fontWeight: fw,
-                  cursor: selected !== null ? "default" : "pointer",
+                  cursor: showAnswer ? "default" : "pointer",
                 }}
-                disabled={selected !== null}
+                disabled={showAnswer}
               >
-                <MathRenderer content={optText} />
+                <MathHtml html={optHtml} raw={optText} />
               </button>
             );
           })}
@@ -185,38 +215,36 @@ export default function QuestionViewer({
 
       {/* Show Answer button */}
       <div className="px-6 md:px-8 py-6 flex items-center gap-3 flex-wrap">
-        {/* Result badge after selection */}
-        {selected !== null && (
+        {/* Result badge — only after answer is revealed and user had a selection */}
+        {showAnswer && hasSelection && (
           <span
             className="text-sm font-black px-3 py-1.5 rounded-xl"
             style={{
-              background: correctLetters.includes(selected) ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
-              color: correctLetters.includes(selected) ? "rgb(34,197,94)" : "rgb(239,68,68)",
+              background: isAttemptCorrect ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+              color: isAttemptCorrect ? "rgb(34,197,94)" : "rgb(239,68,68)",
             }}
           >
-            {correctLetters.includes(selected) ? "✓ Correct" : "✗ Wrong"}
+            {isAttemptCorrect ? "✓ Correct" : "✗ Wrong"}
           </span>
         )}
 
-        {/* Show/Hide answer — hidden once user has selected (explanation auto-shown) */}
-        {selected === null && (
-          <button
-            onClick={() => setShowAnswer(v => !v)}
-            className="rounded-xl px-6 py-2.5 text-sm font-bold transition-all"
-            style={{
-              background: showAnswer ? "var(--bg-surface-2)" : "var(--accent)",
-              color: showAnswer ? "var(--text-secondary)" : "#fff",
-              border: "1px solid var(--border)",
-            }}
-          >
-            {showAnswer ? "Hide Answer" : "Show Answer"}
-          </button>
-        )}
+        {/* Show/Hide answer */}
+        <button
+          onClick={() => setShowAnswer(v => !v)}
+          className="rounded-xl px-6 py-2.5 text-sm font-bold transition-all"
+          style={{
+            background: showAnswer ? "var(--bg-surface-2)" : "var(--accent)",
+            color: showAnswer ? "var(--text-secondary)" : "#fff",
+            border: "1px solid var(--border)",
+          }}
+        >
+          {showAnswer ? "Hide Answer" : "Show Answer"}
+        </button>
 
         {/* Try Again — resets selection so user can re-attempt */}
-        {selected !== null && (
+        {(showAnswer || hasSelection) && (
           <button
-            onClick={() => { setSelected(null); setShowAnswer(false); }}
+            onClick={() => { setSelected([]); setShowAnswer(false); }}
             className="rounded-xl px-4 py-2.5 text-sm font-bold transition-all"
             style={{
               background: "var(--bg-surface-2)",
@@ -289,8 +317,9 @@ export default function QuestionViewer({
             <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: "var(--accent)" }}>
               📖 Explanation
             </p>
-            <MathRenderer
-              content={(language === "hi" && q.explanationHindi) ? q.explanationHindi : (q.explanation || "")}
+            <MathHtml
+              html={(useHi && q.explanationHindi) ? q.explanationHtmlHindi : q.explanationHtml}
+              raw={(useHi && q.explanationHindi) ? q.explanationHindi : (q.explanation || "")}
               style={{ color: "var(--text-primary)" }}
             />
             {/* Explanation images */}

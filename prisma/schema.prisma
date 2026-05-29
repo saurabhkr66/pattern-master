@@ -64,6 +64,15 @@ model PYQ {
   topic               String?
   content_hash        String?
   question_hash       String?
+  // Option B: pre-rendered KaTeX/markdown HTML (see lib/math/renderHtml).
+  // Null = not yet backfilled → MathHtml falls back to live rendering.
+  question_html         String?
+  explanation_html      String?
+  options_html          Json?
+  question_html_hindi   String?
+  explanation_html_hindi String?
+  options_html_hindi    Json?
+  render_version        Int            @default(0)
   attempts            Attempt[]
   bookmarks           Bookmark[]
   pattern             Pattern          @relation(fields: [pattern_id], references: [id])
@@ -92,6 +101,15 @@ model GeneratedQuestion {
   options_hindi       Json?
   question_text_hindi String?
   topic               String?
+  // Option B: pre-rendered KaTeX/markdown HTML (see lib/math/renderHtml).
+  // Null = not yet backfilled → MathHtml falls back to live rendering.
+  question_html         String?
+  explanation_html      String?
+  options_html          Json?
+  question_html_hindi   String?
+  explanation_html_hindi String?
+  options_html_hindi    Json?
+  render_version        Int            @default(0)
   attempts            Attempt[]
   bookmarks           Bookmark[]
   pattern             Pattern          @relation(fields: [pattern_id], references: [id])

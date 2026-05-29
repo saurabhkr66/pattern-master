@@ -65,6 +65,12 @@ export default function QuestionList({ pageQuestions, start, examLabel, practice
                 explanationHindi: q.explanationHindi ?? undefined,
                 questionType: q.questionType,
                 images: (q.images as any) ?? undefined,
+                questionHtml: q.questionHtml ?? undefined,
+                questionHtmlHindi: q.questionHtmlHindi ?? undefined,
+                optionsHtml: (q.optionsHtml as (string | null)[] | undefined) ?? undefined,
+                optionsHtmlHindi: (q.optionsHtmlHindi as (string | null)[] | undefined) ?? undefined,
+                explanationHtml: q.explanationHtml ?? undefined,
+                explanationHtmlHindi: q.explanationHtmlHindi ?? undefined,
               }}
               practiceHref={practiceHref}
             />

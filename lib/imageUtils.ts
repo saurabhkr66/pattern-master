@@ -24,14 +24,17 @@ function cloudinaryToImagekitPath(cloudinaryUrl: string): string | null {
 }
 
 /**
- * Resolves a DB image path or legacy Cloudinary URL into an ImageKit delivery URL.
- * ImageKit proxies our Cloudinary bucket via the Web Folder origin, so the same
- * filenames continue to work without re-uploading. Transformations are applied
- * server-side by ImageKit (free, unlimited on free tier).
+ * Resolves a DB image path (or a legacy Cloudinary URL) into an ImageKit
+ * delivery URL.
  *
- * This file is safe to use in Client Components.
+ * ImageKit is the active image CDN. The Cloudinary handling here is only a
+ * fall-through for old DB rows that still store full Cloudinary URLs — those
+ * get rewritten to point at ImageKit's Web Folder origin, which proxies the
+ * Cloudinary bucket so the same filenames keep working without re-uploading.
+ *
+ * Safe to use in Client Components.
  */
-export function getCloudinaryUrl(dbPath: string | null | undefined): string {
+export function getImageUrl(dbPath: string | null | undefined): string {
   if (!dbPath) return "";
 
   if (dbPath.startsWith("data:")) return dbPath;
@@ -39,6 +42,8 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
   const endpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
 
   if (dbPath.startsWith("http://") || dbPath.startsWith("https://")) {
+    // Legacy: rewrite Cloudinary URLs to ImageKit. New URLs (e.g. already
+    // ik.imagekit.io) pass straight through.
     if (endpoint && dbPath.includes("res.cloudinary.com")) {
       const path = cloudinaryToImagekitPath(dbPath);
       if (path) return `${endpoint}/${path}?tr=${IMAGEKIT_TRANSFORMS}`;
@@ -60,3 +65,10 @@ export function getCloudinaryUrl(dbPath: string | null | undefined): string {
 
   return `${endpoint}/${ikPath}?tr=${IMAGEKIT_TRANSFORMS}`;
 }
+
+/**
+ * @deprecated Misleading name — this function returns ImageKit URLs, not
+ * Cloudinary. Use {@link getImageUrl} instead. Kept as an alias so existing
+ * callers continue to work during the migration.
+ */
+export const getCloudinaryUrl = getImageUrl;

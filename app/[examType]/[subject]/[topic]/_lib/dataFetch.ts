@@ -29,8 +29,17 @@ export function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+interface HtmlFields {
+  questionHtml?: string | null;
+  questionHtmlHindi?: string | null;
+  optionsHtml?: (string | null)[] | null;
+  optionsHtmlHindi?: (string | null)[] | null;
+  explanationHtml?: string | null;
+  explanationHtmlHindi?: string | null;
+}
+
 export type CombinedQuestion =
-  | {
+  | ({
       source: "pyq";
       id: string;
       questionText: string;
@@ -43,8 +52,8 @@ export type CombinedQuestion =
       questionType: string;
       year: number;
       images?: { index: number; filename: string; type?: string }[] | null;
-    }
-  | {
+    } & HtmlFields)
+  | ({
       source: "gq";
       id: string;
       questionText: string;
@@ -57,7 +66,7 @@ export type CombinedQuestion =
       questionType: string;
       difficulty: string;
       images?: { index: number; filename: string; type?: string }[] | null;
-    };
+    } & HtmlFields);
 
 const getPatternPage = (patternId: string, page: number, size: number) =>
   unstable_cache(
@@ -93,6 +102,12 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
         year: true,
         question_type: true,
         images: true,
+        question_html: true,
+        explanation_html: true,
+        options_html: true,
+        question_html_hindi: true,
+        explanation_html_hindi: true,
+        options_html_hindi: true,
       } as const;
       const gqSelect = {
         id: true,
@@ -106,6 +121,12 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
         difficulty_level: true,
         question_type: true,
         images: true,
+        question_html: true,
+        explanation_html: true,
+        options_html: true,
+        question_html_hindi: true,
+        explanation_html_hindi: true,
+        options_html_hindi: true,
       } as const;
 
       const pyqsPromise =
@@ -185,6 +206,12 @@ export function combineQuestions(
       questionType: q.question_type,
       year: q.year,
       images: (q.images as any) ?? null,
+      questionHtml: q.question_html ?? null,
+      questionHtmlHindi: q.question_html_hindi ?? null,
+      optionsHtml: (q.options_html as (string | null)[] | null) ?? null,
+      optionsHtmlHindi: (q.options_html_hindi as (string | null)[] | null) ?? null,
+      explanationHtml: q.explanation_html ?? null,
+      explanationHtmlHindi: q.explanation_html_hindi ?? null,
     })),
     ...(questions as any[]).map((q): CombinedQuestion => ({
       source: "gq",
@@ -199,6 +226,12 @@ export function combineQuestions(
       questionType: q.question_type,
       difficulty: q.difficulty_level,
       images: (q.images as any) ?? null,
+      questionHtml: q.question_html ?? null,
+      questionHtmlHindi: q.question_html_hindi ?? null,
+      optionsHtml: (q.options_html as (string | null)[] | null) ?? null,
+      optionsHtmlHindi: (q.options_html_hindi as (string | null)[] | null) ?? null,
+      explanationHtml: q.explanation_html ?? null,
+      explanationHtmlHindi: q.explanation_html_hindi ?? null,
     })),
   ];
 }

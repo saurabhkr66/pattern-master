@@ -1,13 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { VertexAI } from '@google-cloud/vertexai';
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
-import { getCloudinaryUrl } from "@/lib/imageUtils";
+import { getImageUrl } from "@/lib/imageUtils";
 
 // In-process cache: userId → email. Avoids a DB round-trip on every action
 // call during batch processing. TTL is process lifetime (fine for admin use).
@@ -80,34 +81,40 @@ export async function resolveReport(
   }
 
 
-  // Update the actual question
+  // Update the actual question.
+  //
+  // We use $executeRaw with a dynamically-built SET clause rather than
+  // prisma.xxx.update() because the Neon HTTP adapter cannot execute
+  // transactions, and Prisma's fluent `update` on Json columns may wrap
+  // the SELECT-then-UPDATE in an implicit transaction. Raw SQL sidesteps
+  // that — single statement, no transaction needed.
   if (questionType === "MockQuestion") {
     if (!updates.mockTestId) throw new Error("Mock Test ID is required for MockQuestion updates");
     const { mockTestId: _mockTestId, ...patch } = updates;
     await patchMockQuestion(updates.mockTestId, questionId, patch);
   } else {
-    // For standard questions, we only update fields that exist in the schema
     const { ai_answer_mismatch, ai_detected_answer, mockTestId, ...validUpdates } = updates;
+    const tableName = (questionType === "PYQ" || questionType === "pyq") ? "PYQ" : "GeneratedQuestion";
 
-    if (questionType === "PYQ" || questionType === "pyq") {
-      await prisma.pYQ.update({
-        where: { id: questionId },
-        data: validUpdates as any
-      });
-    } else {
-      await prisma.generatedQuestion.update({
-        where: { id: questionId },
-        data: validUpdates as any
-      });
+    const setFragments: Prisma.Sql[] = [];
+    if (validUpdates.question_text !== undefined) setFragments.push(Prisma.sql`question_text = ${validUpdates.question_text}`);
+    if (validUpdates.correct_answer !== undefined) setFragments.push(Prisma.sql`correct_answer = ${validUpdates.correct_answer}`);
+    if (validUpdates.explanation !== undefined) setFragments.push(Prisma.sql`explanation = ${validUpdates.explanation}`);
+    if (validUpdates.question_type !== undefined) setFragments.push(Prisma.sql`question_type = ${validUpdates.question_type}`);
+    if (validUpdates.options !== undefined) setFragments.push(Prisma.sql`options = ${JSON.stringify(validUpdates.options)}::jsonb`);
+    if (validUpdates.images !== undefined) setFragments.push(Prisma.sql`images = ${JSON.stringify(validUpdates.images)}::jsonb`);
+
+    if (setFragments.length > 0) {
+      // tableName comes from a hardcoded ternary above — safe for Prisma.raw.
+      await prisma.$executeRaw(
+        Prisma.sql`UPDATE ${Prisma.raw(`"${tableName}"`)} SET ${Prisma.join(setFragments, ", ")} WHERE id = ${questionId}`
+      );
     }
   }
 
-  // Mark report as resolved ONLY if it's a real report, not a virtual one
+  // Mark report as resolved (skip virtual auto-* report ids).
   if (!reportId.startsWith("auto-")) {
-    await prisma.questionReport.updateMany({
-      where: { id: reportId },
-      data: { status: "resolved" }
-    });
+    await prisma.$executeRaw`UPDATE "QuestionReport" SET status = 'resolved' WHERE id = ${reportId}`;
   }
 
   revalidatePath("/admin/reports");
@@ -204,7 +211,13 @@ export async function deleteMockTest(mockTestId: string) {
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch Gemini models
+const GEMINI_SEARCH_MODEL = "gemini-3.1-flash"; // Flash-lite doesn't support the googleSearch tool; full Flash does
+const VERTEX_MODEL = "gemini-2.5-pro"; // Vertex AI Gemini 2.5 Pro — needs ADC creds
 const GEMINI_TOPIC_MODEL = "gemini-3.1-flash-lite"; // Specific model for faster topic classification
+
+// Canonical reason string for auto-flagged QuestionReports from generateAIExplanation.
+// Kept as a constant so the read-side query (and any future cleanup logic) can filter on it.
+const AI_MISMATCH_REASON = "⚠️ AI Answer Mismatch";
 import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
@@ -215,42 +228,64 @@ const vertexAI = new VertexAI({
 });
 
 /**
- * Helper to fetch image as base64 from local or Cloudinary
+ * Helper to fetch a question image and return base64 inline data for the model.
+ *
+ * Resolution order:
+ *   1. If the input is already a full http(s) URL (ImageKit, Cloudinary, etc.),
+ *      fetch it directly — skip the local filesystem (path.join would mangle
+ *      the URL into a bogus disk path).
+ *   2. Otherwise treat it as a DB path: try local /public first (dev/seeded
+ *      assets), then resolve via getImageUrl (which now returns ImageKit
+ *      delivery URLs since the Cloudinary → ImageKit migration).
+ *
+ * Failures are logged with the resolved URL so missing/broken images are
+ * obvious in the dev console — silent failures previously made it look like
+ * Gemini was ignoring images when in reality the fetch had 404'd.
  */
 async function getImageBase64(filename: string) {
-  const fs = await import("fs");
-  const path = await import("path");
+  const isHttpUrl = /^https?:\/\//i.test(filename);
 
-  // 1. Try local paths first
-  const possiblePaths = [
-    path.join(process.cwd(), "public", "images", "questions", filename),
-    path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
-  ];
-  for (const filePath of possiblePaths) {
-    try {
-      if (fs.existsSync(filePath)) {
-        const data = fs.readFileSync(filePath);
-        const ext = path.extname(filePath).slice(1).toLowerCase();
-        const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
-        return { data: data.toString("base64"), mimeType };
-      }
-    } catch { }
-  }
-
-  // 2. Fallback to Cloudinary URL
-  const cloudinaryUrl = getCloudinaryUrl(filename);
-  if (cloudinaryUrl.startsWith("http")) {
-    try {
-      const response = await fetch(cloudinaryUrl);
-      if (response.ok) {
-        const buffer = Buffer.from(await response.arrayBuffer());
-        return { data: buffer.toString("base64"), mimeType: response.headers.get("content-type") || "image/jpeg" };
-      }
-    } catch (err) {
-      console.error(`[AI] Failed to fetch image from Cloudinary: ${cloudinaryUrl}`, err);
+  // Step 1: local filesystem (skipped for URLs)
+  if (!isHttpUrl) {
+    const fs = await import("fs");
+    const path = await import("path");
+    const possiblePaths = [
+      path.join(process.cwd(), "public", "images", "questions", filename),
+      path.join(process.cwd(), "public", filename.startsWith("/") ? filename.slice(1) : filename),
+    ];
+    for (const filePath of possiblePaths) {
+      try {
+        if (fs.existsSync(filePath)) {
+          const data = fs.readFileSync(filePath);
+          const ext = path.extname(filePath).slice(1).toLowerCase();
+          const mimeType = ext === "png" ? "image/png" : (ext === "jpg" || ext === "jpeg") ? "image/jpeg" : "image/webp";
+          console.log(`[AI] Image loaded from local: ${filePath}`);
+          return { data: data.toString("base64"), mimeType };
+        }
+      } catch { }
     }
   }
-  return null;
+
+  // Step 2: resolve to a delivery URL. Full URLs pass through unchanged.
+  const url = isHttpUrl ? filename : getImageUrl(filename);
+  if (!url || !/^https?:\/\//i.test(url)) {
+    console.warn(`[AI] No URL resolved for image input: "${filename}" — model will not see this image.`);
+    return null;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`[AI] Image fetch failed: ${response.status} ${response.statusText} — ${url}`);
+      return null;
+    }
+    const buffer = Buffer.from(await response.arrayBuffer());
+    console.log(`[AI] Image loaded from URL (${buffer.length} bytes): ${url}`);
+    return { data: buffer.toString("base64"), mimeType: response.headers.get("content-type") || "image/jpeg" };
+  } catch (err) {
+    console.error(`[AI] Image fetch threw for ${url}:`, err);
+    return null;
+  }
 }
 
 /**
@@ -260,9 +295,10 @@ export async function generateAIExplanation(
   questionId: string,
   questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion",
   mockTestId?: string,
-  aiModel: "gemini" | "gpt-4o-mini" = "gemini"
+  aiModel: "gemini" | "gpt-4o-mini" | "vertex-2.5-pro" = "gemini",
+  useSearch: boolean = false
 ) {
-  console.log(`[AI] Generating explanation for ${questionId} using model: ${aiModel}`);
+  console.log(`[AI] Generating explanation for ${questionId} using model: ${aiModel}${useSearch ? " + search" : ""}`);
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
@@ -273,7 +309,7 @@ export async function generateAIExplanation(
   // Fetch the question data
   let questionData: any = null;
 
-  const qSelect = { id: true, question_text: true, options: true, correct_answer: true, images: true };
+  const qSelect = { id: true, question_text: true, options: true, correct_answer: true, question_type: true, images: true };
   if (questionType === "PYQ") {
     questionData = await prisma.pYQ.findUnique({ where: { id: questionId }, select: qSelect });
   } else if (questionType === "GeneratedQuestion") {
@@ -293,13 +329,38 @@ export async function generateAIExplanation(
 
   if (!questionData) throw new Error("Question not found");
 
-  // Build content parts for Gemini (text + images if any)
   let cleanQuestionText = questionData.question_text || "";
   // Strip massive base64 strings from text if they exist (they eat tokens)
   cleanQuestionText = cleanQuestionText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
+  // Question type is fetched from DB — use it to instruct the AI on output
+  // format. Without this, MSQs throw false mismatches because the AI defaults
+  // to a single-letter answer when the question text doesn't say "select all".
+  const qType = (questionData.question_type || "MCQ").toUpperCase();
+  const formatHint =
+    qType === "MSQ"
+      ? `This question is MSQ (multiple-select). The answer is one OR more letters. End with [ANSWER: A,C] (comma-separated, any order).`
+      : qType === "NAT"
+      ? `This question is NAT (numeric answer, no options). End with [ANSWER: 12.5] (just the numeric value).`
+      : `This question is MCQ (single-select). End with [ANSWER: X] where X is a single letter A, B, C, or D.`;
+
+  // === PROMPT 1: Independent verification (no target answer revealed) ===
+  // Used purely to detect whether our stored `correct_answer` may be wrong.
+  const verifyPrompt = `You are solving an exam question independently. Decide the correct answer using only your own reasoning — do not assume any answer has been provided.
+
+Question type: ${qType}
+Question: ${cleanQuestionText}
+Options: ${JSON.stringify(questionData.options)}
+
+Rules:
+- Reason briefly (under 4 lines), then output your final answer.
+- ${formatHint}
+- The [ANSWER: ...] tag is REQUIRED on the last line.`;
+
+  // === PROMPT 2: Explanation that derives the stored target answer ===
   const textPrompt = `You are an expert educator. Provide a concise and precise explanation for this question.
 
+Question type: ${qType}
 Question: ${cleanQuestionText}
 Options: ${JSON.stringify(questionData.options)}
 Target Answer: ${questionData.correct_answer}
@@ -310,111 +371,139 @@ Rules:
 3. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
 4. Keep it concise: 5-7 lines max. Only the key steps.
 5. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words. Do NOT write with character-level spacing (e.g., do NOT write "G i v e n").
-6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
+6. Do not restate the final answer letter at the end — the consumer already has it.`;
 
-  console.log(`[AI] Debug - Text Length: ${textPrompt.length}, Options Length: ${JSON.stringify(questionData.options).length}`);
-  console.log(`[AI] Prompt Snippet: ${textPrompt.substring(0, 150)}...`);
+  console.log(`[AI] Debug - Explanation prompt length: ${textPrompt.length}, options length: ${JSON.stringify(questionData.options).length}`);
 
-  const contentParts: any[] = [textPrompt];
+  // Pre-fetch images once and reuse across both calls (verification + explanation).
+  // Canonical DB shape is [{ index, filename, type? }] — matches the practice
+  // page renderer. We deliberately filter out explanation-type images so the
+  // verification call isn't primed with the answer's worked solution.
+  const rawImages = Array.isArray(questionData.images) ? (questionData.images as Array<{ index?: number; filename?: string; type?: string }>) : [];
+  const questionImages = rawImages.filter(img => img && img.filename && img.type !== "explanation");
+  console.log(`[AI] Found ${questionImages.length} question images (of ${rawImages.length} total) to process`);
+  const fetchedImages: Array<{ data: string; mimeType: string }> = [];
+  for (const img of questionImages) {
+    const imgResult = await getImageBase64(img.filename!);
+    if (imgResult) fetchedImages.push(imgResult);
+  }
+  console.log(`[AI] Successfully loaded ${fetchedImages.length} / ${questionImages.length} images for the model`);
 
-  // If question has images, fetch them and include as inline data
-  const images = (questionData.images as any[]) || [];
-  console.log(`[AI] Found ${images.length} images to process`);
-  if (images.length > 0) {
-    for (const img of images) {
-      const filename = img.filename || img.url;
-      if (!filename) continue;
+  // Helper: dispatches to the chosen model. Always called twice — once for
+  // verification (grounded=false, fast) and once for explanation.
+  async function callAIModel(
+    prompt: string,
+    grounded: boolean
+  ): Promise<{ text: string; usage: { input: number; output: number; thoughts: number } }> {
+    const contentParts: any[] = [prompt];
+    for (const im of fetchedImages) {
+      contentParts.push({ inlineData: { data: im.data, mimeType: im.mimeType } });
+    }
 
-      const imgResult = await getImageBase64(filename);
-      if (imgResult) {
-        contentParts.push({
-          inlineData: { data: imgResult.data, mimeType: imgResult.mimeType }
+    if (aiModel === "gpt-4o-mini" && openai) {
+      const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
+      for (const im of fetchedImages) {
+        messages[0].content.push({
+          type: "image_url",
+          image_url: { url: `data:${im.mimeType};base64,${im.data}`, detail: "low" },
         });
       }
-    }
-  }
-
-  let explanation = "";
-  let openaiUsage: any = null;
-  let geminiUsage: any = null;
-
-  if (aiModel === "gpt-4o-mini" && openai) {
-    const messages: any[] = [{ role: "user", content: [{ type: "text", text: textPrompt }] }];
-
-    // Add images if any
-    if (images.length > 0) {
-      for (const img of images) {
-        const filename = img.filename || img.url;
-        if (!filename) continue;
-        const imgResult = await getImageBase64(filename);
-        if (imgResult) {
-          messages[0].content.push({
-            type: "image_url",
-            image_url: {
-              url: `data:${imgResult.mimeType};base64,${imgResult.data}`,
-              detail: "low"
-            }
-          });
-        }
-      }
+      const response = await openai.chat.completions.create({ model: "gpt-4o-mini", messages });
+      const text = response.choices[0].message.content || "";
+      if (!text.trim()) throw new Error(`GPT-4o-mini returned empty for ${questionId}`);
+      return {
+        text,
+        usage: {
+          input: response.usage?.prompt_tokens ?? 0,
+          output: response.usage?.completion_tokens ?? 0,
+          thoughts: 0,
+        },
+      };
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-    });
-    explanation = response.choices[0].message.content || "";
-    openaiUsage = response.usage;
-    console.log(`[AI] OpenAI Tokens: Input: ${response.usage?.prompt_tokens}, Output: ${response.usage?.completion_tokens}, Total: ${response.usage?.total_tokens}`);
-    if (!explanation.trim()) {
-      throw new Error(`GPT-4o-mini returned empty explanation for ${questionId}`);
+    if (aiModel === "vertex-2.5-pro") {
+      console.log(`[AI] 🚀 Vertex AI - Model: ${VERTEX_MODEL}${grounded ? " (grounded)" : ""}`);
+      const model = vertexAI.getGenerativeModel({
+        model: VERTEX_MODEL,
+        // @ts-ignore — googleSearch tool type isn't in the Vertex SDK's published types yet
+        ...(grounded ? { tools: [{ googleSearch: {} }] } : {}),
+      });
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: contentParts.map(p => (typeof p === "string" ? { text: p } : p)) }],
+      });
+      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (!text.trim()) throw new Error(`Vertex returned empty for ${questionId}`);
+      const usage = result.response.usageMetadata;
+      return {
+        text,
+        usage: {
+          input: usage?.promptTokenCount ?? 0,
+          output: usage?.candidatesTokenCount ?? 0,
+          thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
+        },
+      };
     }
-  } else {
-    // --- ORIGINAL API KEY METHOD ---
-    console.log(`[AI] 🚀 Using Gemini API - Model: ${GEMINI_MODEL}`);
+
+    // Default: Gemini AI Studio. Flash-lite can't ground, so swap to full Flash when grounded.
+    const activeModel = grounded ? GEMINI_SEARCH_MODEL : GEMINI_MODEL;
+    console.log(`[AI] 🚀 Gemini API - Model: ${activeModel}${grounded ? " (grounded)" : ""}`);
     const model = genAI!.getGenerativeModel({
-      model: GEMINI_MODEL,
-      tools: [],
+      model: activeModel,
+      // @ts-ignore
+      tools: grounded ? [{ googleSearch: {} }] : [],
       generationConfig: {
-        
         // @ts-ignore
         thinkingConfig: { thinkingLevel: "HIGH" },
-      }
+      },
     });
     const result = await model.generateContent(contentParts);
-    explanation = result.response.text();
-    geminiUsage = result.response.usageMetadata;
-
-    /* --- VERTEX AI METHOD (ADC) (Commented) ---
-    console.log(`[AI] 🚀 Using Vertex AI (ADC) - Model: ${GEMINI_MODEL}`);
-    const model = vertexAI.getGenerativeModel({
-      model: GEMINI_MODEL,
-    });
-
-    const vertexContent = {
-      contents: [{
-        role: 'user',
-        parts: contentParts.map(p => typeof p === 'string' ? { text: p } : p)
-      }]
+    const text = result.response.text();
+    if (!text.trim()) throw new Error(`Gemini returned empty for ${questionId}`);
+    const usage = result.response.usageMetadata;
+    return {
+      text,
+      usage: {
+        input: usage?.promptTokenCount ?? 0,
+        output: usage?.candidatesTokenCount ?? 0,
+        thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
+      },
     };
-
-    const result = await model.generateContent(vertexContent);
-    explanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    geminiUsage = result.response.usageMetadata;
-    console.log(`[AI] Vertex Gemini Tokens: Input: ${geminiUsage?.promptTokenCount}, Output: ${geminiUsage?.candidatesTokenCount}`);
-    if (!explanation.trim()) {
-      throw new Error(`AI returned empty explanation for ${questionId} — candidates: ${result.response.candidates?.length ?? 0}`);
-    }
-    */
   }
+
+  // --- Fire verification + explanation in parallel (no data dependency). ---
+  // Verification is never grounded (would waste search quota); explanation
+  // respects the per-question useSearch flag.
+  const [verifyCall, explainCall] = await Promise.all([
+    callAIModel(verifyPrompt, false),
+    callAIModel(textPrompt, useSearch),
+  ]);
+
+  // Parse the verification result and compute the real mismatch signal.
+  const verifyMatch = verifyCall.text.match(/\[ANSWER:\s*([^\]\n]+)\]/i);
+  const rawAiAnswer = verifyMatch?.[1].trim() ?? null;
+
+  // Normalize answers for compare: uppercase, split on comma/semicolon, sort,
+  // rejoin. Handles MCQ ("A"), MSQ ("A,C" === "C,A"), and NAT ("12.5") uniformly.
+  const normalizeAnswer = (s: string): string =>
+    s.toUpperCase().split(/[,;]/).map(x => x.trim()).filter(Boolean).sort().join(",");
+  const aiNorm = rawAiAnswer ? normalizeAnswer(rawAiAnswer) : "";
+  const targetNorm = questionData.correct_answer ? normalizeAnswer(questionData.correct_answer) : "";
+  const aiDetectedAnswer = rawAiAnswer;
+  const isMismatch = !!rawAiAnswer && aiNorm !== targetNorm;
+  console.log(`[AI] Verification → AI: ${rawAiAnswer ?? "(no answer)"}, target: ${questionData.correct_answer}, mismatch: ${isMismatch}`);
+
+  // Cleaned verification text for UI display: strip the [ANSWER: X] tag,
+  // keep the reasoning so admin can compare the two derivations side-by-side.
+  const verifyText = verifyCall.text
+    .replace(/\[ANSWER:\s*[^\]\n]+\]/gi, "")
+    .replace(/^```(markdown|latex)?\s*/i, "")
+    .replace(/```\s*$/, "")
+    .trim();
+
+  let explanation = explainCall.text;
 
   // Clean markdown artifacts
   explanation = explanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
-
-  // Extract AI's verified answer
-  const aiAnswerMatch = explanation.match(/\[CORRECT_OPTION:\s*([A-D])\]/i);
-  const aiDetectedAnswer = aiAnswerMatch ? aiAnswerMatch[1].toUpperCase() : null;
-  const isMismatch = !!(aiDetectedAnswer && aiDetectedAnswer !== questionData.correct_answer?.toUpperCase());
 
   // Clean up the tag and any redundant natural language conclusions
   const cleanExplanation = explanation
@@ -423,10 +512,13 @@ Rules:
     .replace(/Correct option is\s*[A-D]\.?/gi, "")
     .trim();
 
-  const thoughtsTokens = (geminiUsage as any)?.thoughtsTokenCount || 0;
-  const highThinkingFlag = thoughtsTokens > 8000;
+  // Token totals across both calls (verification + explanation).
+  const totalInput = verifyCall.usage.input + explainCall.usage.input;
+  const totalOutput = verifyCall.usage.output + explainCall.usage.output;
+  const totalThoughts = verifyCall.usage.thoughts + explainCall.usage.thoughts;
+  const highThinkingFlag = totalThoughts > 8000;
   if (highThinkingFlag) {
-    console.warn(`[AI] ⚠️ High thinking tokens: ${thoughtsTokens} for ${questionId}`);
+    console.warn(`[AI] ⚠️ High thinking tokens: ${totalThoughts} for ${questionId}`);
   }
 
   // Save back to DB
@@ -437,22 +529,50 @@ Rules:
   } else if (questionType === "MockQuestion" && mockTestId) {
     await patchMockQuestion(mockTestId, questionId, {
       explanation: cleanExplanation,
+      ai_answer_mismatch: isMismatch,
+      ai_detected_answer: aiDetectedAnswer,
       high_thinking_flag: highThinkingFlag,
     });
+  }
+
+  // Surface AI mismatches via the existing QuestionReport table. PYQ and
+  // GeneratedQuestion don't have JSONB metadata fields like MockQuestion does,
+  // so we use QuestionReport (which admin/reports already reads). Mock mismatches
+  // are flagged inline in the JSONB above; no QuestionReport row needed for them.
+  if (questionType === "PYQ" || questionType === "GeneratedQuestion") {
+    const reportFilter =
+      questionType === "PYQ"
+        ? { pyq_id: questionId, reason: AI_MISMATCH_REASON, status: "pending" }
+        : { question_id: questionId, reason: AI_MISMATCH_REASON, status: "pending" };
+
+    // Always clear the prior pending mismatch report — if the current run came
+    // back clean, an earlier flag should disappear too.
+    await prisma.questionReport.deleteMany({ where: reportFilter });
+
+    if (isMismatch) {
+      await prisma.questionReport.create({
+        data: {
+          ...reportFilter,
+          user_id: userId,
+          details: `AI's independent solution arrived at "${aiDetectedAnswer}" but the stored correct_answer is "${questionData.correct_answer}". Verify which one is right.`,
+        },
+      });
+    }
   }
 
   revalidatePath("/admin/reports");
 
   return {
     explanation: cleanExplanation,
+    verifyText,
     highThinkingFlag,
     usage: {
-      input: (openaiUsage?.prompt_tokens || geminiUsage?.promptTokenCount || 0),
-      output: (openaiUsage?.completion_tokens || geminiUsage?.candidatesTokenCount || 0),
-      thoughts: thoughtsTokens,
+      input: totalInput,
+      output: totalOutput,
+      thoughts: totalThoughts,
     },
     isMismatch,
-    aiDetectedAnswer
+    aiDetectedAnswer,
   };
 }
 
@@ -849,6 +969,7 @@ export async function getGateCsePyqsMissingExplanation(
         correct_answer: true,
         year: true,
         marks: true,
+        images: true,
         pattern: { select: { subject: true, topic_name: true } },
       },
       orderBy: { year: "desc" },
@@ -862,7 +983,7 @@ export async function getGateCsePyqsMissingExplanation(
     text.replace(/data:image\/[^;]+;base64,[^"'\s)]{100,}/g, "[image]");
 
   return {
-    pyqs: pyqs.map(q => ({ ...q, question_text: stripBase64(q.question_text), questionType: "PYQ" as const, subject: q.pattern.subject, topic: q.pattern.topic_name })),
+    pyqs: pyqs.map(q => ({ ...q, question_text: stripBase64(q.question_text), questionType: "PYQ" as const, subject: q.pattern.subject, topic: q.pattern.topic_name, images: q.images as { index: number; filename: string; type?: string }[] | null })),
     subjectPyqs: [] as never[],
     totalPyq,
     totalSubjectPyq: 0,

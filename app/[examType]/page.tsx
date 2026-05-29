@@ -212,6 +212,7 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
             <Link
               key={s.subject}
               href={`/${examType}/${toSlug(s.subject)}`}
+              prefetch={false}
               className="block p-4 rounded-xl border transition-colors hover:border-indigo-500/40"
               style={{
                 background: "var(--bg-surface)",
@@ -274,6 +275,7 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link
                         href={practiceUrl}
+                        prefetch={false}
                         className="px-4 py-2 rounded-xl font-bold text-sm border hover:border-indigo-500/60 transition-colors"
                         style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
                       >
@@ -281,6 +283,7 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
                       </Link>
                       <Link
                         href={`/mock-tests/${examSlug}/${branchSlug}/${paper.id}`}
+                        prefetch={false}
                         className="px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
                       >
                         Take Mock Test →

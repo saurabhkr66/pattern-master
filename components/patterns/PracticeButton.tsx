@@ -308,6 +308,12 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     if (type === "MCQ" && !finalAnswerOverride) setSelectedAnswer(finalAnswer);
     setIsRevealed(true);
 
+    // Did this question already count toward the solved total BEFORE this attempt?
+    // The server counts DISTINCT correctly-answered questions per pattern, so we
+    // only bump on the FIRST correct solve — never on re-solves, never for mocks.
+    const wasAlreadySolved = (question.attempts || []).some((a: any) => a?.is_correct);
+    const shouldIncrement = isCorrect && !wasAlreadySolved && !question.isMock;
+
     queryClient.setQueryData(["patternQuestions", patternId], (oldData: any) => {
       if (!oldData) return oldData;
       const newAttempt = { is_correct: isCorrect, user_answer: finalAnswer, created_at: new Date().toISOString() };
@@ -317,27 +323,53 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       return { ...oldData, questions: updateArray(oldData.questions), pyqs: updateArray(oldData.pyqs) };
     });
 
-    try {
-      const saveRequest = fetch("/api/save-attempt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId: (question._isPyq || question.isMock) ? undefined : question.id,
-          pyqId: question._isPyq ? question.id : undefined,
-          mockQuestionId: question.isMock ? question.id : undefined,
-          isCorrect,
-          userAnswer: finalAnswer,
-          timeSpent: seconds,
-        }),
+    // Optimistically bump the solved count so the progress bar ticks up instantly —
+    // no refetch (which the endpoint's `private, max-age=30` would serve stale anyway),
+    // no DB aggregation. PatternTable derives the displayed count as
+    // `progress[id] ?? topic.solvedQuestions`, so we patch BOTH caches: the progress
+    // map (authoritative when present) and the topics list (the fallback, and the only
+    // cache guaranteed to exist for the rows on screen). The server reconciles the
+    // true count on the next full page load.
+    const bumpSolved = (delta: number) => {
+      queryClient.setQueriesData({ queryKey: ["practiceProgress"] }, (old: any) => {
+        const map = old?.progress ?? {};
+        return { ...(old ?? {}), progress: { ...map, [patternId]: Math.max(0, (map[patternId] ?? 0) + delta) } };
       });
-      if (isCorrect) {
-        saveRequest
-          .then(() => queryClient.invalidateQueries({ queryKey: ["practiceProgress"] }))
-          .catch((err) => console.error("Failed to refresh progress:", err));
-      }
-    } catch (err) {
-      console.error("Failed to save attempt:", err);
-    }
+      queryClient.setQueriesData({ queryKey: ["practiceTopics"] }, (old: any) => {
+        if (!old?.topics) return old;
+        return {
+          ...old,
+          topics: old.topics.map((t: any) =>
+            t.id === patternId
+              ? { ...t, solvedQuestions: Math.max(0, (t.solvedQuestions ?? 0) + delta) }
+              : t
+          ),
+        };
+      });
+    };
+
+    if (shouldIncrement) bumpSolved(1);
+
+    fetch("/api/save-attempt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        questionId: (question._isPyq || question.isMock) ? undefined : question.id,
+        pyqId: question._isPyq ? question.id : undefined,
+        mockQuestionId: question.isMock ? question.id : undefined,
+        isCorrect,
+        userAnswer: finalAnswer,
+        timeSpent: seconds,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`save-attempt failed: ${res.status}`);
+      })
+      .catch((err) => {
+        console.error("Failed to save attempt:", err);
+        // Roll back the optimistic bump so the bar can't drift above the DB count.
+        if (shouldIncrement) bumpSolved(-1);
+      });
   };
 
   const handleSaveExplanation = async () => {

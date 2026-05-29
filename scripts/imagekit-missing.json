@@ -1,0 +1,4163 @@
+{
+  "summary": {
+    "totalRefs": 6695,
+    "distinct": 6688,
+    "imagekitResolvable": 6688,
+    "dataUris": 0,
+    "external": 0,
+    "available": 6369,
+    "missing": 319,
+    "errored": 0
+  },
+  "missing": [
+    {
+      "refs": [
+        "Electrical_Machines/the-operating-region-of-the-develop_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-operating-region-of-the-develop_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5f560cc9-b74e-49b1-88d1-47a5ec20a820"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/for-a-single-phase-capacitor-start_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/for-a-single-phase-capacitor-start_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a51e13c4-9685-4405-8eb5-cd18dad9d707"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/if-an-ideal-transformer-has-an-indu_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/if-an-ideal-transformer-has-an-indu_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c4eee47b-0689-4666-9541-0ad56f6f45d9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/if-an-ideal-transformer-has-an-indu_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/if-an-ideal-transformer-has-an-indu_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c4eee47b-0689-4666-9541-0ad56f6f45d9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-balanced-threephase-voltage-is-ap_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-balanced-threephase-voltage-is-ap_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a6034c4b-29d7-4f15-959e-5039b97eacf3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-buses-i-and-j-are-connected-wit_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-buses-i-and-j-are-connected-wit_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c6959185-4282-434c-93d0-ecbe27e39e07"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-buses-i-and-j-are-connected-wit_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-buses-i-and-j-are-connected-wit_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c6959185-4282-434c-93d0-ecbe27e39e07"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/three-generators-are-feeding-a-load_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/three-generators-are-feeding-a-load_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "60901fc4-bc18-4198-92c4-ec1236d99811"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-generator-is-connected-through-a_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-generator-is-connected-through-a_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "623f9c7f-f439-4c7b-89ec-52b9d0b09404"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-50-hz-synchronous-generator-is-in_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-50-hz-synchronous-generator-is-in_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6249db0b-93cf-4bd2-8e28-997a23e91423"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-50-hz-synchronous-generator-is-in_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-50-hz-synchronous-generator-is-in_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6249db0b-93cf-4bd2-8e28-997a23e91423"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-electromagnetic-torque-t_e-of-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-electromagnetic-torque-t_e-of-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "62d441a6-3874-407c-87b8-7604bbda2322"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-electromagnetic-torque-t_e-of-a_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-electromagnetic-torque-t_e-of-a_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "62d441a6-3874-407c-87b8-7604bbda2322"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-electromagnetic-torque-t_e-of-a_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-electromagnetic-torque-t_e-of-a_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "62d441a6-3874-407c-87b8-7604bbda2322"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-a-power-system-network-with-n-n_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-a-power-system-network-with-n-n_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6318cbf3-84bc-4e26-a4eb-c1b7e98b843e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-a-power-system-network-with-n-n_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-a-power-system-network-with-n-n_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6318cbf3-84bc-4e26-a4eb-c1b7e98b843e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-single-50-hz-synchronous-generato_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-single-50-hz-synchronous-generato_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "aefdd936-1a92-4df2-873b-a3a141f7d38f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-230-v-phase-50-hz-threephase-4wir_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-230-v-phase-50-hz-threephase-4wir_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "cd4d892f-a19b-4427-98f5-e2aef9865fea"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-parameters-measured-for-a-220-v_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-parameters-measured-for-a-220-v_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "65837213-c461-4ffd-afa8-0ff2cebc6084"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-single-line-diagram-of-a-lossle_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-single-line-diagram-of-a-lossle_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c24ba6ca-8513-49c5-9e39-7822b2811e59"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-single-line-diagram-of-a-lossle_exp_img2.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-single-line-diagram-of-a-lossle_exp_img2.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c24ba6ca-8513-49c5-9e39-7822b2811e59"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-separately-excited-dc-motor-rated_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-separately-excited-dc-motor-rated_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "63544ffb-a0f3-4ea0-979d-73a3a4ddfe9c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-dc-series-motor-with-negligible-s_exp_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-dc-series-motor-with-negligible-s_exp_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "db417f1d-e5f2-4244-8c76-007d80639278"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-5-mathrmkw-220-mathrmv-dc-shunt-m_exp_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-5-mathrmkw-220-mathrmv-dc-shunt-m_exp_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f21f2da6-3a30-40f4-8c7e-0751d5cc5764"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-200-v-dc-series-motor-when-operat_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-200-v-dc-series-motor-when-operat_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e17c3622-a7b7-4054-98f5-e5c09f6164e3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-4pole-lapconnected-separately-exc_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-4pole-lapconnected-separately-exc_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e51dfac9-08f0-4156-9b7e-5a67ebe091d5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-4pole-lapconnected-separately-exc_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-4pole-lapconnected-separately-exc_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e51dfac9-08f0-4156-9b7e-5a67ebe091d5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-4pole-lapconnected-separately-exc_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-4pole-lapconnected-separately-exc_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e51dfac9-08f0-4156-9b7e-5a67ebe091d5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-separately-excited-dc-generator-s_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-separately-excited-dc-generator-s_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "76c83245-9ffa-445f-ac5f-195595fb8033"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-separately-excited-dc-generator-h_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-separately-excited-dc-generator-h_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "67a28ab6-a3ad-4e63-ab25-48cd30b25318"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-separately-excited-dc-motor-runs_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-separately-excited-dc-motor-runs_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9b83e147-4688-4059-aeab-9425be1c628c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-dc-motor-which-can-provide-zero_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-dc-motor-which-can-provide-zero_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "dd96596c-66fb-4206-a1c3-2702f2154f9f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/in-relation-to-dc-machines-match-th_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/in-relation-to-dc-machines-match-th_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7d945195-5251-45d8-ad16-9c79c009484b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-50-kw-dc-shunt-is-loaded-to-draw_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-50-kw-dc-shunt-is-loaded-to-draw_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b45af09b-0238-427f-a4da-212158dd5369"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/an-alternator-with-internal-voltage_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/an-alternator-with-internal-voltage_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "760c7498-07cd-431f-8d8d-f4688d192eb9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-200-v-2000-rpm-10a-separately-exc_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-200-v-2000-rpm-10a-separately-exc_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "852dc647-7296-4fbd-a3ad-718e53a9377b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-dc-series-motor-fed-from-rated-su_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-dc-series-motor-fed-from-rated-su_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a5cdc18f-10ef-4d31-9dcc-cef2566bf6b2"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-magnetic-circuit-shown-below-ha_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-magnetic-circuit-shown-below-ha_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "70249097-9405-4276-b9d8-7c8f6e32c160"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-four-stator-conductor-lefta-apr_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-four-stator-conductor-lefta-apr_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b22e4501-d96f-4dc3-a7aa-04a313c1f4e0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-equivalent-circuit-of-a-single_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-equivalent-circuit-of-a-single_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "54f70476-7c66-4bb1-9b26-ae0a38211e62"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-equivalent-circuit-of-a-single_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-equivalent-circuit-of-a-single_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "54f70476-7c66-4bb1-9b26-ae0a38211e62"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-equivalent-circuit-of-a-single_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-equivalent-circuit-of-a-single_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "54f70476-7c66-4bb1-9b26-ae0a38211e62"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/groupi-lists-different-applications_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/groupi-lists-different-applications_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8f5657e7-5362-4ab2-b90e-edc32207f3a1"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6ff5c988-201e-412e-9b79-9a9b2534ca12"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6ff5c988-201e-412e-9b79-9a9b2534ca12"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6ff5c988-201e-412e-9b79-9a9b2534ca12"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img4.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threephase-cylindrical-rotor-sync_exp_img4.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6ff5c988-201e-412e-9b79-9a9b2534ca12"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/two-parallel-connected-threephase-5_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/two-parallel-connected-threephase-5_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "bbc4b4e1-51a2-417c-bde9-ab1db281e6b9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/curves-x-and-y-in-figure-denote-ope_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/curves-x-and-y-in-figure-denote-ope_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7ac10726-a088-473c-a961-02fbec915e2b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/curves-x-and-y-in-figure-denote-ope_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/curves-x-and-y-in-figure-denote-ope_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7ac10726-a088-473c-a961-02fbec915e2b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-direct-axis-and-quadrature-axis_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-direct-axis-and-quadrature-axis_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4f6b46e6-4032-4e68-aa75-108e2c86eb09"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-three-phase-synchronous-generator_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-three-phase-synchronous-generator_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "53e6ac00-50cf-4171-9a64-d2c2369d99b9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threephase-synchronous-motor-conn_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threephase-synchronous-motor-conn_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "17dc1663-5163-414c-aece-579481ffee6c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threephase-synchronous-motor-conn_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threephase-synchronous-motor-conn_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "17dc1663-5163-414c-aece-579481ffee6c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-100-kva-415-vline-starconnected-s_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-100-kva-415-vline-starconnected-s_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "43ab481e-d1e7-4447-9f8b-1786f3ba26f2"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/when-stator-and-rotor-windings-of-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/when-stator-and-rotor-windings-of-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8b45d938-fd8f-40f8-b4b5-1795ec92e9d0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/when-stator-and-rotor-windings-of-a_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/when-stator-and-rotor-windings-of-a_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8b45d938-fd8f-40f8-b4b5-1795ec92e9d0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/when-stator-and-rotor-windings-of-a_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/when-stator-and-rotor-windings-of-a_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8b45d938-fd8f-40f8-b4b5-1795ec92e9d0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/when-stator-and-rotor-windings-of-a_exp_img4.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/when-stator-and-rotor-windings-of-a_exp_img4.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8b45d938-fd8f-40f8-b4b5-1795ec92e9d0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-round-rotor-generator-with-intern_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-round-rotor-generator-with-intern_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e38cc37d-60b6-4835-b609-c7d8fc2fbd59"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-starconnected-440-v-50-hz-alterna_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-starconnected-440-v-50-hz-alterna_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b075457e-37f8-48fb-9033-2dbb43422969"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-torque-speed-characteristics-of_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-torque-speed-characteristics-of_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d76771d5-2e09-4fe7-89ac-3639994c4488"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-torque-speed-characteristics-of_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-torque-speed-characteristics-of_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d76771d5-2e09-4fe7-89ac-3639994c4488"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-torque-speed-characteristics-of_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-torque-speed-characteristics-of_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d76771d5-2e09-4fe7-89ac-3639994c4488"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-single-phase-induction-motor-draw_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-single-phase-induction-motor-draw_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d9e958ef-4906-4db4-b678-0a2213db4173"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/under-no-load-condition-if-the-appl_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/under-no-load-condition-if-the-appl_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "742a7762-6e4b-4d37-bf5a-de2f93023d26"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/on-the-torquespeed-curve-of-the-ind_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/on-the-torquespeed-curve-of-the-ind_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "258cb8a9-4b57-4c29-944a-8856219362d8"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/on-the-torquespeed-curve-of-the-ind_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/on-the-torquespeed-curve-of-the-ind_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "258cb8a9-4b57-4c29-944a-8856219362d8"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-three-phase-slipring-induction-mo_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-three-phase-slipring-induction-mo_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d1206835-fe64-4927-8f55-c5c5e5d34a4f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-single-phase-air-core-transformer_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-single-phase-air-core-transformer_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d14f2644-c64e-4406-84c3-917487682364"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-single-phase-air-core-transformer_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-single-phase-air-core-transformer_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d14f2644-c64e-4406-84c3-917487682364"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/an-open-circuit-test-is-performed-o_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/an-open-circuit-test-is-performed-o_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d17d8f83-9c9c-41e8-959c-c662876f3653"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/an-open-circuit-test-is-performed-o_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/an-open-circuit-test-is-performed-o_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d17d8f83-9c9c-41e8-959c-c662876f3653"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/which-one-of-the-following-options_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/which-one-of-the-following-options_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a3941cb5-3ef6-443b-94d7-923ecec4618b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/windings-a-b-and-c-have-20-turns-ea_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/windings-a-b-and-c-have-20-turns-ea_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "79556749-4429-4b64-9459-ba82c67cff90"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-3phase-900kva-3kvsqrt3kvdelta-y-5_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-3phase-900kva-3kvsqrt3kvdelta-y-5_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "24991711-6f1a-49a4-ac19-b980f21bf4cf"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-self-inductance-of-the-primary_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-self-inductance-of-the-primary_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6dcdaba7-a1fa-4dcd-a2a1-c2c626f92f33"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-200400-v-50-hz-twowinding-transfo_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-200400-v-50-hz-twowinding-transfo_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4f25e394-e0d2-47c8-9843-3d58a8cfa961"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-threewinding-transformer-is-conne_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-threewinding-transformer-is-conne_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8f401391-f6ca-4ee4-bddc-5e5724683330"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-balanced-positive-sequence-threep_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-balanced-positive-sequence-threep_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8f6e020f-7f58-4050-9f94-db59dc372b6d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-single-phase-50-kva-1000-v100-v-t_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-single-phase-50-kva-1000-v100-v-t_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8755a718-0b21-42fd-85fa-f7b8183185c1"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-balanced-starconnected-and-purely_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-balanced-starconnected-and-purely_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4591c2b6-ed33-4a36-bac3-842aacfcb51c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-balanced-starconnected-and-purely_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-balanced-starconnected-and-purely_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4591c2b6-ed33-4a36-bac3-842aacfcb51c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-two-bus-power-system-n_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-two-bus-power-system-n_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "fc5f921b-2c66-4ab3-8621-b0c0f18c0c77"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-two-bus-power-system-n_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-two-bus-power-system-n_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "fc5f921b-2c66-4ab3-8621-b0c0f18c0c77"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/match-the-items-in-listi-to-with-th_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/match-the-items-in-listi-to-with-th_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e0c8212f-30b9-4cb9-ad58-f1bf675d5f25"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-incremental-cost-curves-in-rsmw_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-incremental-cost-curves-in-rsmw_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4c95fae1-0ead-48c9-81c0-9269010f667c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-threephase-50-hz-11-kv-d_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-threephase-50-hz-11-kv-d_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "64d08cb7-dbf4-46c4-9aef-e58c487c933e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-threephase-50-hz-11-kv-d_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-threephase-50-hz-11-kv-d_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "64d08cb7-dbf4-46c4-9aef-e58c487c933e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-phase-sequences-of-the-3phase-s_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-phase-sequences-of-the-3phase-s_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ae0b201c-41e2-4cda-b078-5e7244192ca4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-phase-sequences-of-the-3phase-s_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-phase-sequences-of-the-3phase-s_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ae0b201c-41e2-4cda-b078-5e7244192ca4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-incremental-cost-curves-of-two_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-incremental-cost-curves-of-two_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "30b580bb-bb0c-497d-85a3-d8643633c0ad"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-a-twogenerator-sys_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-a-twogenerator-sys_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5e23fe27-b7a7-46cc-9daa-48319ad96972"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-load-center-of-120-mw-derives-pow_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-load-center-of-120-mw-derives-pow_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "474340e8-401a-4fe2-8149-554355c72970"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-load-center-of-120-mw-derives-pow_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-load-center-of-120-mw-derives-pow_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "474340e8-401a-4fe2-8149-554355c72970"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-load-centre-is-at-an-equidistant_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-load-centre-is-at-an-equidistant_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7993fcd1-1a50-41ea-85c3-0f2983094e1b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-positive-negative-and-zero-sequ_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-positive-negative-and-zero-sequ_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8de17a09-fe1b-4ea8-b685-d236a4dabdab"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-identical-unloaded-generators-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-identical-unloaded-generators-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "437e230a-291d-4e16-8a2b-d81b58824aff"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-identical-unloaded-generators-a_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-identical-unloaded-generators-a_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "437e230a-291d-4e16-8a2b-d81b58824aff"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-three-phase-100-mva-25-kv-generat_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-three-phase-100-mva-25-kv-generat_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d00f301f-6b6e-43de-bd51-04843e2c2249"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-an-unbalanced-three-phase-system_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-an-unbalanced-three-phase-system_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8c4a4c83-8165-489b-a163-b4b42315a53d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-generator-units-g1-and-g2-are-c_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-generator-units-g1-and-g2-are-c_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "81d8d6d5-e66f-414d-a70e-7c59efddad9f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-generator-units-g1-and-g2-are-c_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-generator-units-g1-and-g2-are-c_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "81d8d6d5-e66f-414d-a70e-7c59efddad9f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/threephase-to-ground-fault-takes-pl_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/threephase-to-ground-fault-takes-pl_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ec194d7c-7f08-4250-bee2-13d758a56e48"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/threephase-to-ground-fault-takes-pl_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/threephase-to-ground-fault-takes-pl_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ec194d7c-7f08-4250-bee2-13d758a56e48"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/threephase-to-ground-fault-takes-pl_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/threephase-to-ground-fault-takes-pl_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ec194d7c-7f08-4250-bee2-13d758a56e48"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/threephase-to-ground-fault-takes-pl_exp_img4.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/threephase-to-ground-fault-takes-pl_exp_img4.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ec194d7c-7f08-4250-bee2-13d758a56e48"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-3phase-transmission-line-supplies_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-3phase-transmission-line-supplies_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ad447507-ab5c-4183-bcda-b15fde1bb526"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-20mva-66kv-3phase-alternator-is-c_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-20mva-66kv-3phase-alternator-is-c_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ff4d4719-b2ac-4e8c-8d3d-e9a55fd0e264"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-500-mva-50-hz-3phase-turbogenerat_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-500-mva-50-hz-3phase-turbogenerat_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b2c32fcf-eb10-47de-b340-324a9c35819a"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-50-hz-alternator-is-rated-500-mva_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-50-hz-alternator-is-rated-500-mva_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "2f7dd3e1-d943-4b85-be2a-cbecb73a0f74"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/bus-1-with-voltage-magnitude-v_1-11_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/bus-1-with-voltage-magnitude-v_1-11_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "55edefdd-f7c5-4953-998b-d7e80eb1affa"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/bus-1-with-voltage-magnitude-v_1-11_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/bus-1-with-voltage-magnitude-v_1-11_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "55edefdd-f7c5-4953-998b-d7e80eb1affa"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-10bus-power-system-consists-of-fo_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-10bus-power-system-consists-of-fo_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5a5fe2ed-7211-4c87-987c-c60e9513c423"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-singlephase-load-is-supplied-by-a_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-singlephase-load-is-supplied-by-a_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "990027af-79f2-4ec0-afdc-f6b6a568970a"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-bus-admittance-matrix-of-a-thre_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-bus-admittance-matrix-of-a-thre_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "abe139d9-eb06-4456-895d-f353f0c902f4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-two-power-systems-show_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-two-power-systems-show_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "35385ac2-2a80-4d1f-b7de-d1a967755de4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-two-power-systems-show_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-two-power-systems-show_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "35385ac2-2a80-4d1f-b7de-d1a967755de4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-power-system-consist-of-300-buses_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-power-system-consist-of-300-buses_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e367dfb1-b57f-4a77-ae23-747ce2561436"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-50-mathrmhz-275-mathrmkv-line-of_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-50-mathrmhz-275-mathrmkv-line-of_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "2c5db6fb-2f63-4cef-8836-c2cbfa6e8547"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-transformer-connection-given-in_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-transformer-connection-given-in_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "40fd0a2d-6b5b-4925-9f65-a4f4e0418dd9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-transformer-connection-given-in_exp_img2.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-transformer-connection-given-in_exp_img2.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "40fd0a2d-6b5b-4925-9f65-a4f4e0418dd9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-an-overhead-transmission-l_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-an-overhead-transmission-l_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "fd9eb626-32bd-42d8-892b-f3d2e7344110"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-an-overhead-transmission-l_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-an-overhead-transmission-l_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "fd9eb626-32bd-42d8-892b-f3d2e7344110"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-balanced-yy-connected-3phas_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-balanced-yy-connected-3phas_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "3606637c-ca1e-434e-acd2-3351563a827e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-composite-conductor-consists-of-t_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-composite-conductor-consists-of-t_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9ee9cbdb-7798-47e4-a460-63e81cb89408"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-single-machine-infinite-bus_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-single-machine-infinite-bus_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f8da13e9-e909-47de-9075-b147ca32298f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-figure-shown-selfimpedances_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-figure-shown-selfimpedances_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "38bdcbee-91ad-4107-b912-54a6a2c18481"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-figure-shown-selfimpedances_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-figure-shown-selfimpedances_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "38bdcbee-91ad-4107-b912-54a6a2c18481"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-figure-shown-selfimpedances_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-figure-shown-selfimpedances_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "38bdcbee-91ad-4107-b912-54a6a2c18481"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-generating-units-rated-for-250_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-generating-units-rated-for-250_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "38ebe7c3-f4dd-4207-b783-12acb4423a2b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-loss-less-single-machine-infinite_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-loss-less-single-machine-infinite_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "cf66b5f0-44ab-4fbb-a9a7-8cd4cb9323c0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-loss-less-single-machine-infinite_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-loss-less-single-machine-infinite_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "cf66b5f0-44ab-4fbb-a9a7-8cd4cb9323c0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/there-are-two-generators-in-a-power_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/there-are-two-generators-in-a-power_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f765aeaa-358f-413e-b88e-9d54ae894eaa"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-synchronous-generator-co_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-synchronous-generator-co_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a9900fbf-fab7-465b-9bbc-5dec7d849089"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-synchronous-generator-co_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-synchronous-generator-co_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a9900fbf-fab7-465b-9bbc-5dec7d849089"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-step-voltage-of-magnitud_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-step-voltage-of-magnitud_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "acd48210-3d43-4541-a229-59a05be09d6f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-step-voltage-of-magnitud_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-step-voltage-of-magnitud_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "acd48210-3d43-4541-a229-59a05be09d6f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-nuclear-power-station-of-500-mw-c_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-nuclear-power-station-of-500-mw-c_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7f5313a7-90a1-41ad-8912-bd53a938f33b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-transmission-line-distance-prot_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-transmission-line-distance-prot_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6b81ef3d-0ff0-4e14-9165-a057961c8a22"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-problem-of-relay-coord_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-problem-of-relay-coord_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4c942b84-2597-48a2-8b85-611d8d1fbf4e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-list-of-relays-and-the-power-syst_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-list-of-relays-and-the-power-syst_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "bc9334e0-e0f2-4a5a-a9d8-f42ed414312a"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-separately-excited-dc-motor-has-a_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-separately-excited-dc-motor-has-a_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "698efa9a-dada-4d1c-8b60-ac25d287a669"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-dc-shunt-generator-delivers-45-a_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-dc-shunt-generator-delivers-45-a_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d2ffc9ca-611f-43c0-a963-1027ebd72d09"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-transformer-with-toroidal-core-of_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-transformer-with-toroidal-core-of_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6a2f7117-f4fe-4612-9199-cbefda8ff732"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-transformer-with-toroidal-core-of_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-transformer-with-toroidal-core-of_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6a2f7117-f4fe-4612-9199-cbefda8ff732"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-following-columns-present-vario_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-following-columns-present-vario_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "6b6ca43f-ced9-44d5-b948-4253cfe568f6"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_consider-the-pinjointed-truss-shown_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_consider-the-pinjointed-truss-shown_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8326d84b-2482-4a11-ae3e-f3a1df5d02c3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-source-is-supplying-a-load-throug_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-source-is-supplying-a-load-throug_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8ca2e89c-76c1-4b78-bc9f-01eea3041ad6"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-new-generator-having-e_g-14-angle_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-new-generator-having-e_g-14-angle_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8e9fb874-f546-4957-9289-6ee573b7a718"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-new-generator-having-e_g-14-angle_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-new-generator-having-e_g-14-angle_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8e9fb874-f546-4957-9289-6ee573b7a718"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Fluid Mechanics & Hydraulics/ce_a-venturimeter-as-shown-in-the-figu_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Fluid_Mechanics_and_Hydraulics/ce_a-venturimeter-as-shown-in-the-figu_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ae3e81bc-04b1-4969-86d6-78f795cf1681"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-nonsalient-pole-synchronous-gener_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-nonsalient-pole-synchronous-gener_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "86d132b5-cd8e-4272-9050-d7cfbf7b95bc"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-zerosequence-circuit-of-the-thr_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-zerosequence-circuit-of-the-thr_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d8417bc9-d9c2-4645-a4b8-49005d0e6dd0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-zerosequence-circuit-of-the-thr_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-zerosequence-circuit-of-the-thr_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d8417bc9-d9c2-4645-a4b8-49005d0e6dd0"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-threebus-power-system-shown-in_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-threebus-power-system-shown-in_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9a9c9bce-9b06-49ff-9190-3d49e1768849"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-sustained-threephase-fault-occurs_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-sustained-threephase-fault-occurs_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "d8bd4ed4-6d1f-4f51-b991-942eac8846d6"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-15-kw-230-v-dc-shunt-motor-has-ar_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-15-kw-230-v-dc-shunt-motor-has-ar_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "71dd9a24-5ff0-475d-ac0c-33e5da93f5d2"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-over-current-relays-for-the-lin_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-over-current-relays-for-the-lin_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "db43d555-7d3f-4951-9eae-d2aa32b1fed2"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_employ-stiffness-matrix-approach-fo_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_employ-stiffness-matrix-approach-fo_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ffadffb7-8c30-439c-931d-03b5a96a768d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-propped-cantilever-beam-xy-with-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-propped-cantilever-beam-xy-with-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "83ac40fd-85f8-49bf-86a4-08ca9c206e1f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_the-plane-truss-shown-in-the-figure_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_the-plane-truss-shown-in-the-figure_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "eef4fb54-2740-4f8e-8444-3f68c775c239"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_the-plane-truss-shown-in-the-figure_exp_img2.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_the-plane-truss-shown-in-the-figure_exp_img2.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "eef4fb54-2740-4f8e-8444-3f68c775c239"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-twobus-power-system-shown-in-fi_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-twobus-power-system-shown-in-fi_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "73ea7a0a-ba72-4df6-91a2-81ce06b78ece"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/following-are-some-of-the-propertie_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/following-are-some-of-the-propertie_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "76a0248b-eecc-4313-be2e-adbd378b6dba"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-3phase-11-mathrmkv-10-mva-synchro_exp_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-3phase-11-mathrmkv-10-mva-synchro_exp_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e0c8ccf7-a97f-4fcf-92a5-a5eba760e04d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/for-a-specified-input-voltage-and-f_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/for-a-specified-input-voltage-and-f_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "79e8d2f8-4f45-4723-8997-1419e2a2fa11"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-generator-is-connected-to-a-trans_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-generator-is-connected-to-a-trans_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7a250698-c4bf-4e15-ab34-90e6eceab6b9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-generator-is-connected-to-a-trans_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-generator-is-connected-to-a-trans_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7a250698-c4bf-4e15-ab34-90e6eceab6b9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-model-shown-in-figure_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-model-shown-in-figure_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e40994c0-7393-45f9-8d7f-057e5a423f11"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-synchronous-generator-shown-in_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-synchronous-generator-shown-in_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e4ed270a-98f7-43bf-a9f8-1264dde2681b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-synchronous-generator-shown-in_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-synchronous-generator-shown-in_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e4ed270a-98f7-43bf-a9f8-1264dde2681b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-generator-delivers-power-of-10-pu_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-generator-delivers-power-of-10-pu_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "e83e8665-02bf-4f06-a314-16ca85f5c0b4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-following-network-the-voltag_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-following-network-the-voltag_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "7eb9270b-f85f-4449-bdc2-5c58cdef57dd"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_img1_2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_img1_2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8be18510-6d8d-40f8-826f-08104ab5fc19"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img2_2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img2_2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8be18510-6d8d-40f8-826f-08104ab5fc19"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-singlephase-transmission-line-has_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-singlephase-transmission-line-has_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ea0d712e-045b-4961-8abb-920dc6f3ff5c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-singlephase-transmission-line-has_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-singlephase-transmission-line-has_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ea0d712e-045b-4961-8abb-920dc6f3ff5c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-4pole-separately-excited-wave-wou_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-4pole-separately-excited-wave-wou_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "83f9856a-7a6f-4122-8030-f22bbb16549f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-4pole-separately-excited-wave-wou_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-4pole-separately-excited-wave-wou_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "83f9856a-7a6f-4122-8030-f22bbb16549f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-balanced-delta-connected-load-con_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-balanced-delta-connected-load-con_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ea88530e-1dbb-4311-b7b5-cfdd8bc1c4aa"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-balanced-delta-connected-load-con_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-balanced-delta-connected-load-con_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ea88530e-1dbb-4311-b7b5-cfdd8bc1c4aa"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-balanced-delta-connected-load-con_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-balanced-delta-connected-load-con_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ea88530e-1dbb-4311-b7b5-cfdd8bc1c4aa"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/single-line-diagram-of-a-4bus-singl_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/single-line-diagram-of-a-4bus-singl_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "004efbd5-60d1-4b56-90ad-39e5d5a63b25"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "004efbd5-60d1-4b56-90ad-39e5d5a63b25"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "004efbd5-60d1-4b56-90ad-39e5d5a63b25"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img4.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img4.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "004efbd5-60d1-4b56-90ad-39e5d5a63b25"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img5.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/single-line-diagram-of-a-4bus-singl_exp_img5.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "004efbd5-60d1-4b56-90ad-39e5d5a63b25"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-a-400-km-long-transmission-line_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-a-400-km-long-transmission-line_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0351cf0b-13bc-493f-b359-8b4f6348c09e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-3phase-440-v-50-hz-4pole-slip-rin_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-3phase-440-v-50-hz-4pole-slip-rin_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "05a4fffd-a64a-4a08-8a76-d5f4a72faa4a"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-threephase-load-is-connected-to-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-threephase-load-is-connected-to-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8269a869-7a28-4c35-ad0d-e0cf940cb095"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-3bus-power-system-is-shown-in-the_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-3bus-power-system-is-shown-in-the_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "058d6782-7cbc-4699-99fc-0abbd3df05ad"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/if-the-primary-line-voltage-rating_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/if-the-primary-line-voltage-rating_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "06bafe41-2a18-4e36-a543-f4277340cc61"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-generator-with-constant-10-pu-ter_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-generator-with-constant-10-pu-ter_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "06bc7d89-bf97-4e1a-af64-c9228dcd7616"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-threebus-power-system-shown_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-threebus-power-system-shown_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0909efe7-2de4-45aa-a992-a41aebd1fd81"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-threebus-power-system-shown_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-threebus-power-system-shown_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0909efe7-2de4-45aa-a992-a41aebd1fd81"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-separately-excited-dc-machine-is_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-separately-excited-dc-machine-is_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "07a82d9a-b9bf-4a75-a8fd-954ffca06e7d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-singlephase-230-v-50-hz-4pole-cap_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-singlephase-230-v-50-hz-4pole-cap_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0b286fb7-4ef6-40de-af8a-874d8aed65f4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-prismatic-fixedfixed-beam-modelle_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-prismatic-fixedfixed-beam-modelle_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0b5915b7-32c5-41e9-9a66-348d95753855"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-starconnected-125-kw-208-v-line-3_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-starconnected-125-kw-208-v-line-3_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0b97eecb-9051-4c2f-b901-a02ac248ee00"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/threephase-alternator-generating-un_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/threephase-alternator-generating-un_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "154d670f-9258-40da-a4f3-e0f999b31224"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/noload-test-on-a-3phase-induction-m_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/noload-test-on-a-3phase-induction-m_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "0fab7dee-87c3-42d9-8de7-f7300252c003"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-ybus-matrix-of-a-4bus-syste_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-ybus-matrix-of-a-4bus-syste_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "105f5951-063b-451e-a414-35ebcf8c9680"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-4pole-induction-motor-with-inerti_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-4pole-induction-motor-with-inerti_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1086297d-9e57-44fa-a98c-be6221563696"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/figure-shows-the-magnetization-curv_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/figure-shows-the-magnetization-curv_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "12148468-0f64-44e7-9dfd-6de5613acd0c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-figure-below-shows-the-perphase_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-figure-below-shows-the-perphase_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "13a0161a-50f8-4062-8798-b788584037a3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-threebus-network-is-shown-in-the_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-threebus-network-is-shown-in-the_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "15009b7e-2a5c-4970-a623-92b40fe198cb"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-threebus-network-is-shown-in-the_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-threebus-network-is-shown-in-the_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "15009b7e-2a5c-4970-a623-92b40fe198cb"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-load-shown-in-the-figure-absorb_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-load-shown-in-the-figure-absorb_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1635a6fd-cc1f-4df3-b16b-b00d5d5290c5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-load-shown-in-the-figure-absorb_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-load-shown-in-the-figure-absorb_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1635a6fd-cc1f-4df3-b16b-b00d5d5290c5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-load-shown-in-the-figure-absorb_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-load-shown-in-the-figure-absorb_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1635a6fd-cc1f-4df3-b16b-b00d5d5290c5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-dc-distribution-system-is-shown-i_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-dc-distribution-system-is-shown-i_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "18a6e5f5-2153-4829-ac31-321f6fceb471"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-dc-distribution-system-is-shown-i_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-dc-distribution-system-is-shown-i_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "18a6e5f5-2153-4829-ac31-321f6fceb471"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-3bus-network-is-shown-consider-ge_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-3bus-network-is-shown-consider-ge_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1763cdad-ce84-40bd-81c7-7bd0c2544a92"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-3bus-network-is-shown-consider-ge_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-3bus-network-is-shown-consider-ge_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1763cdad-ce84-40bd-81c7-7bd0c2544a92"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-220-v-dc-shunt-motor-takes-3-a-at_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-220-v-dc-shunt-motor-takes-3-a-at_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "174a2e6a-c07a-4032-a0b3-8143fae82955"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-single-phase-transmission-line-an_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-single-phase-transmission-line-an_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "190fd605-0786-455d-a931-affb3cbd181e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-threebus-lossless-power-net_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-threebus-lossless-power-net_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "19dfc02e-9651-46a2-b5ed-0fd698b46c23"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/if-the-star-side-of-the-stardelta-t_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/if-the-star-side-of-the-stardelta-t_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1a101773-6605-4be3-9f4f-80b474ed11ef"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/if-the-star-side-of-the-stardelta-t_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/if-the-star-side-of-the-stardelta-t_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1a101773-6605-4be3-9f4f-80b474ed11ef"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-induced-emf-in-a-33-mathrmkv-4_exp_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-induced-emf-in-a-33-mathrmkv-4_exp_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1a6fbc92-4e8a-46ca-a6f6-5da6964db800"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-bus-admittance-lefty_text-bus-r_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-bus-admittance-lefty_text-bus-r_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1b9c022d-2b62-43a6-bb28-9021f1af1238"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-lossy-transmission-line_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-lossy-transmission-line_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1e42db75-4967-44b2-9b6f-5bfc6e8c70f3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-lossy-transmission-line_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-lossy-transmission-line_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1e42db75-4967-44b2-9b6f-5bfc6e8c70f3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/two-magnetic-poles-revolve-around-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/two-magnetic-poles-revolve-around-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1f951074-7618-4694-9e7b-3b48e3127c10"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/two-magnetic-poles-revolve-around-a_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/two-magnetic-poles-revolve-around-a_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1f951074-7618-4694-9e7b-3b48e3127c10"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/two-magnetic-poles-revolve-around-a_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/two-magnetic-poles-revolve-around-a_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "1f951074-7618-4694-9e7b-3b48e3127c10"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-transformer-connection_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-transformer-connection_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "20818e4a-f593-44a4-b7f1-72e4f3e11748"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-transformer-connection_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-transformer-connection_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "20818e4a-f593-44a4-b7f1-72e4f3e11748"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/match-the-items-in-listi-type-of-tr_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/match-the-items-in-listi-type-of-tr_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "247f423b-16ac-4b6a-b773-54091d951122"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/two-regional-systems-each-having-se_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/two-regional-systems-each-having-se_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "257cf629-0926-4343-921e-e1efda4ff040"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-frame-efg-is-shown-in-the-figure_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-frame-efg-is-shown-in-the-figure_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "27507c40-4510-4ef2-bf6c-b0addb3cfd9d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-surge-of-20-kv-magnitude-travels_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-surge-of-20-kv-magnitude-travels_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "29dcf7f6-378c-4ed7-bc68-493a3ddad1bd"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "2a14162c-a206-4bfc-a8b9-531c48eab359"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "2a14162c-a206-4bfc-a8b9-531c48eab359"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-200-v-50-hz-singlephase-induction_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-200-v-50-hz-singlephase-induction_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "37414874-e5e7-46a1-befc-b1df29dc27a3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-200-v-50-hz-singlephase-induction_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-200-v-50-hz-singlephase-induction_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "37414874-e5e7-46a1-befc-b1df29dc27a3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-200-v-50-hz-singlephase-induction_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-200-v-50-hz-singlephase-induction_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "37414874-e5e7-46a1-befc-b1df29dc27a3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-load-is-supplied-by-a-230-v-50-hz_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-load-is-supplied-by-a-230-v-50-hz_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "37985ccf-376c-4fb4-8fe2-e2fec624f6c7"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-circuit-shown-below-the-swit_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-circuit-shown-below-the-swit_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "391fdf62-30c3-4c76-9512-a495c3feabf7"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-nominal-pi-circuit-of-a-transmi_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-nominal-pi-circuit-of-a-transmi_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "3d6eb615-03e9-4376-8fcc-91d936c1cb22"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-nominal-pi-circuit-of-a-transmi_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-nominal-pi-circuit-of-a-transmi_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "3d6eb615-03e9-4376-8fcc-91d936c1cb22"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-stator-winding-of-an-alt_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-stator-winding-of-an-alt_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "3d9f2102-105c-4548-a356-5c321b86186c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-stator-winding-of-an-alt_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-stator-winding-of-an-alt_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "3d9f2102-105c-4548-a356-5c321b86186c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-cylinder-rotor-generator-delivers_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-cylinder-rotor-generator-delivers_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "3e8b4b23-c4dc-44dd-9cd7-13e4eec4edbb"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-3phase-10-kw-400-v-4pole-50hz-sta_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-3phase-10-kw-400-v-4pole-50hz-sta_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4103216c-f054-4698-9662-c616d7414c95"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-speedtorque-regimes-in-a-dc-mot_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-speedtorque-regimes-in-a-dc-mot_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4eeaa5ca-298c-45d8-b8e6-3fcb753188dd"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-speedtorque-regimes-in-a-dc-mot_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-speedtorque-regimes-in-a-dc-mot_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4eeaa5ca-298c-45d8-b8e6-3fcb753188dd"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/two-threephase-transformers-are-rea_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/two-threephase-transformers-are-rea_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "49de9b1f-fb7f-422b-a9a5-ea1ca6cfbff3"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-below-shows-a-three-phas_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-below-shows-a-three-phas_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4aedda9e-ca36-4050-a34d-c2aaa82a8168"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-threecore-threephase-50_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-threecore-threephase-50_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4d2225af-3ac3-4611-8575-327c122a21de"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-threecore-threephase-50_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-threecore-threephase-50_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4d2225af-3ac3-4611-8575-327c122a21de"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-threecore-threephase-50_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-threecore-threephase-50_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "4d2225af-3ac3-4611-8575-327c122a21de"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-system-shown-below-the-gener_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-system-shown-below-the-gener_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5717c8b1-9ac6-4330-9911-75dff23f2bd6"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-the-system-shown-below-the-gener_exp_img2.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-the-system-shown-below-the-gener_exp_img2.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5717c8b1-9ac6-4330-9911-75dff23f2bd6"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5acae56b-e5d3-4981-924b-90ceed85a59f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img2.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img2.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5acae56b-e5d3-4981-924b-90ceed85a59f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img3.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img3.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5acae56b-e5d3-4981-924b-90ceed85a59f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img4.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img4.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5acae56b-e5d3-4981-924b-90ceed85a59f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img5.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img5.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5acae56b-e5d3-4981-924b-90ceed85a59f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-figure-shows-the-single-line-di_exp_img6.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-figure-shows-the-single-line-di_exp_img6.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "5acae56b-e5d3-4981-924b-90ceed85a59f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Fluid Mechanics & Hydraulics/ce_a-cylinder-20-m-diameter-30-m-long_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Fluid_Mechanics_and_Hydraulics/ce_a-cylinder-20-m-diameter-30-m-long_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "85e156d6-b730-4702-9e06-b63a70f272f8"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-single-phase-induction-motor-is-p_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-single-phase-induction-motor-is-p_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "960ff7b2-db78-4116-8d77-0ef9ff2c64ac"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/for-a-linear-electromagnetic-circui_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/for-a-linear-electromagnetic-circui_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "8ceabbdf-09af-4b3c-bde9-d0ddb8fbd9c4"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-bus-admittance-matrix-for-a-pow_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-bus-admittance-matrix-for-a-pow_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "90555822-c881-4818-9ddb-46b4cdaab6b1"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-bus-admittance-matrix-for-a-pow_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-bus-admittance-matrix-for-a-pow_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "90555822-c881-4818-9ddb-46b4cdaab6b1"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-propped-cantilever-beam-ef-is-sub_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-propped-cantilever-beam-ef-is-sub_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "91048cdd-0e7e-486c-b712-7554bd8a3237"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-propped-cantilever-beam-ef-is-sub_opta_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-propped-cantilever-beam-ef-is-sub_opta_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "91048cdd-0e7e-486c-b712-7554bd8a3237"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-propped-cantilever-beam-ef-is-sub_optb_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-propped-cantilever-beam-ef-is-sub_optb_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "91048cdd-0e7e-486c-b712-7554bd8a3237"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-propped-cantilever-beam-ef-is-sub_optc_img4.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-propped-cantilever-beam-ef-is-sub_optc_img4.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "91048cdd-0e7e-486c-b712-7554bd8a3237"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Structural Analysis/ce_a-propped-cantilever-beam-ef-is-sub_optd_img5.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Structural_Analysis/ce_a-propped-cantilever-beam-ef-is-sub_optd_img5.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "91048cdd-0e7e-486c-b712-7554bd8a3237"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-distribution-feeder-of-1-km-lengt_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-distribution-feeder-of-1-km-lengt_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "90e947d6-ef69-4df8-8071-23708ed6f353"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-distribution-feeder-of-1-km-lengt_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-distribution-feeder-of-1-km-lengt_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "90e947d6-ef69-4df8-8071-23708ed6f353"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-3phase-star-connected-slip-ring-i_exp_img1.webp"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-3phase-star-connected-slip-ring-i_exp_img1.webp?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "91dfceae-4754-48a7-b2ea-6b95c82ba0cf"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/an-electric-motor-with-constant-out_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/an-electric-motor-with-constant-out_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "95f87ffb-dbc0-4f1c-afcc-f5d5d294c241"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/when-the-winding-cd-of-the-singleph_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/when-the-winding-cd-of-the-singleph_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9639d962-82b6-4766-b878-eefa931b15af"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-stand-alone-engine-driven-synchro_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-stand-alone-engine-driven-synchro_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "974ce98f-5d0f-4125-8e8c-92115e521a32"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-stand-alone-engine-driven-synchro_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-stand-alone-engine-driven-synchro_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "974ce98f-5d0f-4125-8e8c-92115e521a32"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-two-machine-power-system-is-shown_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-two-machine-power-system-is-shown_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "97a84eaf-72d7-4b1b-b4b8-2b831208fbe9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a3phase-transmission-line-is-shown_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a3phase-transmission-line-is-shown_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9be5bdcf-8bab-4118-b995-a69ac772543b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-system-below-s_d1-and-s_d2_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-system-below-s_d1-and-s_d2_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9cadb157-bbef-43c4-bcad-a49abefbf7d5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-system-below-s_d1-and-s_d2_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-system-below-s_d1-and-s_d2_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9cadb157-bbef-43c4-bcad-a49abefbf7d5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-3phase-50-hz-generator-supplies-p_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-3phase-50-hz-generator-supplies-p_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9d7ce78f-3e41-42a5-ba1a-cfb253671d68"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-the-protection-system-show_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-the-protection-system-show_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "9fcd3036-6d4a-48bd-a43c-11f33cd9a23d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-armature-resistance-of-a-perman_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-armature-resistance-of-a-perman_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a0422445-c98d-41e9-b767-af8bcded720a"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-2bus-system-and-corresponding-zer_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-2bus-system-and-corresponding-zer_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a614215b-ba0e-418d-be92-d267170ec853"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-2bus-system-and-corresponding-zer_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-2bus-system-and-corresponding-zer_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a614215b-ba0e-418d-be92-d267170ec853"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-2bus-system-and-corresponding-zer_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-2bus-system-and-corresponding-zer_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a614215b-ba0e-418d-be92-d267170ec853"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-220-v-dc-shunt-motor-is-operating_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-220-v-dc-shunt-motor-is-operating_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a8a9fd99-a81e-40f2-be44-10ad8274e380"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-two-bus-power-system-shown-in-the_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-two-bus-power-system-shown-in-the_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "a8c62378-6c5a-4a20-8992-5f4eb4f1518f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-conducting-square-loop-of-side-le_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-conducting-square-loop-of-side-le_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ac515654-88b2-4eb1-9f02-8ec6d87132ce"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-power-system-shown-in-the-f_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-power-system-shown-in-the-f_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b3392914-cc09-4dc4-81ec-3aab4377753f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/for-the-power-system-shown-in-the-f_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/for-the-power-system-shown-in-the-f_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b3392914-cc09-4dc4-81ec-3aab4377753f"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/considered-a-bundled-conductor-of-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/considered-a-bundled-conductor-of-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b3cdcd7a-14e7-4b59-a50f-b14157313983"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/considered-a-bundled-conductor-of-a_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/considered-a-bundled-conductor-of-a_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b3cdcd7a-14e7-4b59-a50f-b14157313983"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-transmission-line-has-a-total-ser_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-transmission-line-has-a-total-ser_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b4517304-3303-4d90-bbe4-1b872b8d834c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-synchronous-generator-is-feeding_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-synchronous-generator-is-feeding_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b487941e-33c2-4822-9402-0435014f8968"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "q7_n_images_content_2024_05_02_image1_a585f6861714635597010_gif.gif"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/q7_n_images_content_2024_05_02_image1_a585f6861714635597010_gif.gif?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b6e7e5c9-45bf-48b4-a9fd-093c4d66f5fd"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "q7_n_images_content_2024_05_02_image2_2ca934371714635597016_gif.gif"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/q7_n_images_content_2024_05_02_image2_2ca934371714635597016_gif.gif?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "b6e7e5c9-45bf-48b4-a9fd-093c4d66f5fd"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-network-shown-in-the-given-figu_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-network-shown-in-the-given-figu_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "bb79c89a-715b-401a-8697-0b5377631072"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/a-110-kv-single-core-coaxial-xlpe-i_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/a-110-kv-single-core-coaxial-xlpe-i_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "bc2086ff-f30b-4a85-8877-fc86da12ff13"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-geometric-mean-radius-of-a-cond_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-geometric-mean-radius-of-a-cond_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "be53762f-2990-494f-8c83-6e5756ad88a5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-geometric-mean-radius-of-a-cond_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-geometric-mean-radius-of-a-cond_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "be53762f-2990-494f-8c83-6e5756ad88a5"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/power-is-transferred-from-system-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/power-is-transferred-from-system-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "bd41fccd-d8ad-490b-a81e-d4cf01523d35"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-power-system-shown-below_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-power-system-shown-below_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c0ffbc3f-204d-4f35-ba84-495bb8dd147e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/consider-a-power-system-shown-below_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/consider-a-power-system-shown-below_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "c0ffbc3f-204d-4f35-ba84-495bb8dd147e"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/figure-shows-the-extended-view-of-a_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/figure-shows-the-extended-view-of-a_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ed8dfe90-6370-4e43-bf6a-6913c585b45b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/figure-shows-the-extended-view-of-a_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/figure-shows-the-extended-view-of-a_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ed8dfe90-6370-4e43-bf6a-6913c585b45b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/figure-shows-the-extended-view-of-a_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/figure-shows-the-extended-view-of-a_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "ed8dfe90-6370-4e43-bf6a-6913c585b45b"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-figure-shows-the-perphase-equiv_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-figure-shows-the-perphase-equiv_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f3aac3a2-9904-4329-88ac-cc14722d8c6c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-figure-shows-the-perphase-equiv_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-figure-shows-the-perphase-equiv_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f3aac3a2-9904-4329-88ac-cc14722d8c6c"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-single-line-diagram-of-a-balanc_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-single-line-diagram-of-a-balanc_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f3de6d6b-5fc7-42ea-ab42-b982d5c6c6d9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-single-line-diagram-of-a-balanc_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-single-line-diagram-of-a-balanc_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f3de6d6b-5fc7-42ea-ab42-b982d5c6c6d9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/the-single-line-diagram-of-a-balanc_exp_img3.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/the-single-line-diagram-of-a-balanc_exp_img3.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f3de6d6b-5fc7-42ea-ab42-b982d5c6c6d9"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-120-v-dc-shunt-motor-takes-2-a-at_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-120-v-dc-shunt-motor-takes-2-a-at_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f692e385-4eeb-4c1d-a48e-f3573c9ddb04"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/a-120-v-dc-shunt-motor-takes-2-a-at_exp_img2.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/a-120-v-dc-shunt-motor-takes-2-a-at_exp_img2.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f692e385-4eeb-4c1d-a48e-f3573c9ddb04"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Power_Systems/in-a-biased-differential-relay-the_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Power_Systems/in-a-biased-differential-relay-the_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f7e29214-bb47-4b1c-8d1c-21a7593be72d"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/to-conduct-load-test-on-a-dc-shunt_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/to-conduct-load-test-on-a-dc-shunt_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "f8e14bbc-4fec-4b5f-bb3e-49cdf9995ec8"
+        }
+      ]
+    },
+    {
+      "refs": [
+        "Electrical_Machines/the-speed-of-a-4pole-induction-moto_exp_img1.jpg"
+      ],
+      "url": "https://ik.imagekit.io/kdm0ytilx/pattern-master/Electrical_Machines/the-speed-of-a-4pole-induction-moto_exp_img1.jpg?tr=f-auto,q-auto",
+      "count": 1,
+      "ids": [
+        {
+          "model": "pYQ",
+          "id": "fe402335-821e-47d4-b7d7-f52245916418"
+        }
+      ]
+    }
+  ],
+  "errored": [],
+  "external": []
+}

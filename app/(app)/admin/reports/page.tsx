@@ -167,7 +167,10 @@ export default async function AdminReportsPage() {
     details: `AI thinks correct answer is "${row.question.ai_detected_answer}" but stored answer is "${row.question.correct_answer}". Test: "${row.title}"`
   }));
 
-  // Convert them into "virtual reports" so they show up in the UI
+  // Convert them into "virtual reports" so they show up in the UI.
+  // Note: AI-detected mismatches for PYQ/GeneratedQuestion are persisted as
+  // real QuestionReport rows (see generateAIExplanation) — they flow in via
+  // the `manualReports` query above, no virtual entry needed.
   const autoReports = [
     ...flaggedMockQuestions,
     ...missingPYQs.map(q => ({

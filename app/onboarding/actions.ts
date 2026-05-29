@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function saveUserPreference(exam: string, branch: string | null) {
   const { userId } = await auth();
@@ -18,6 +18,7 @@ export async function saveUserPreference(exam: string, branch: string | null) {
     },
   });
 
+  revalidateTag(`user-${userId}`, "max");
   revalidatePath("/");
   revalidatePath("/dashboard");
   return { success: true };

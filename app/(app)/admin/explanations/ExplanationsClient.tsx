@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { generateAIExplanation, getGateCsePyqsMissingExplanation, getTopicsForExam } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { displayBranch } from "@/lib/seo";
+import { getImageUrl } from "@/lib/imageUtils";
+
+// Canonical image shape stored in DB JSONB — matches the practice page renderer.
+type QuestionImage = { index: number; filename: string; type?: string };
 
 type QuestionRow = {
   id: string;
@@ -15,7 +19,52 @@ type QuestionRow = {
   questionType: "PYQ";
   subject: string;
   topic?: string;
+  images?: QuestionImage[] | null;
 };
+
+// Shared renderer used by the card list, both popups, and the result panels.
+// Mirrors components/test/QuestionPane.tsx so admin previews match what
+// students see. Filters explanation-type images (these previews are for the
+// question). `compact` shrinks the layout for the list view.
+function QuestionImages({ images, compact = false }: { images?: QuestionImage[] | null; compact?: boolean }) {
+  if (!images || !Array.isArray(images) || images.length === 0) return null;
+  const questionImages = images.filter(img => img && img.filename && img.type !== "explanation");
+  if (questionImages.length === 0) return null;
+
+  if (compact) {
+    return (
+      <div className="mt-2 flex gap-2 flex-wrap">
+        {questionImages.map((img) => (
+          <img
+            key={img.index}
+            src={getImageUrl(img.filename)}
+            alt=""
+            className="rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-black/30 object-contain"
+            style={{ maxHeight: 96, maxWidth: 160 }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      {questionImages.map((img) => (
+        <div
+          key={img.index}
+          className="flex justify-center rounded-xl p-3 border border-gray-200 dark:border-zinc-800 bg-white dark:bg-black/30 overflow-hidden"
+        >
+          <img
+            src={getImageUrl(img.filename)}
+            alt=""
+            className="rounded-lg object-contain w-full"
+            style={{ maxHeight: 400, height: "auto" }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type InitialData = Awaited<ReturnType<typeof getGateCsePyqsMissingExplanation>>;
 type ExamTypeOption = { examType: string; branch: string | null };
@@ -101,20 +150,21 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
 
   const [batchDetailEntry, setBatchDetailEntry] = useState<null | typeof batchLog[0]>(null);
   const [batchRunning, setBatchRunning] = useState(false);
-  const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0, failed: 0 });
+  const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0, failed: 0, mismatches: 0 });
   type BatchEntry = {
     id: string;
     label: string;
     status: "ok" | "fail";
     tokens?: { input: number; output: number; thoughts: number };
     explanation?: string;
+    verifyText?: string;
     isMismatch?: boolean;
     aiDetectedAnswer?: string | null;
     question?: QuestionRow;
   };
   const [batchLog, setBatchLog] = useState<BatchEntry[]>([]);
   const [batchDone, setBatchDone] = useState(false);
-  const [aiModel, setAiModel] = useState<"gemini" | "gpt-4o-mini">("gemini");
+  const [aiModel, setAiModel] = useState<"gemini" | "gpt-4o-mini" | "vertex-2.5-pro">("gemini");
   const [previewId, setPreviewId] = useState<string | null>(null);
 
   // Remove a question from local state once it gets an explanation
@@ -148,10 +198,11 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
     setBatchRunning(true);
     setBatchDone(false);
     setBatchLog([]);
-    setBatchProgress({ done: 0, total: questions.length, failed: 0 });
+    setBatchProgress({ done: 0, total: questions.length, failed: 0, mismatches: 0 });
 
     let done = 0;
     let failed = 0;
+    let mismatches = 0;
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -160,12 +211,14 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
       try {
         const result = await generateAIExplanation(q.id, q.questionType, undefined, aiModel);
         done++;
+        if (result.isMismatch) mismatches++;
         setBatchLog(prev => [...prev, {
           id: q.id,
           label,
           status: "ok",
           tokens: { input: result.usage.input, output: result.usage.output, thoughts: result.usage.thoughts },
           explanation: result.explanation,
+          verifyText: result.verifyText,
           isMismatch: result.isMismatch,
           aiDetectedAnswer: result.aiDetectedAnswer,
           question: q,
@@ -176,7 +229,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
         setBatchLog(prev => [...prev, { id: q.id, label, status: "fail" }]);
       }
 
-      setBatchProgress({ done: done + failed, total: questions.length, failed });
+      setBatchProgress({ done: done + failed, total: questions.length, failed, mismatches });
 
       // Stay well within 30 RPM free tier: ~2.2 sec gap = ~27 RPM
       if (i < questions.length - 1) {
@@ -214,6 +267,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
             <div className="p-4 flex flex-col gap-3">
               <div className="p-3 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-sm">
                 <MathRenderer content={previewQuestion.question_text} />
+                <QuestionImages images={previewQuestion.images} />
               </div>
               {Object.keys(previewQuestion.options as Record<string, string>).length > 0 ? (
                 <div className="grid grid-cols-1 gap-1">
@@ -270,6 +324,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
                 <span className="flex gap-3">
                   <span className="text-green-500">✅ {batchProgress.done - batchProgress.failed}</span>
                   {batchProgress.failed > 0 && <span className="text-red-500">❌ {batchProgress.failed}</span>}
+                  {batchProgress.mismatches > 0 && <span className="text-amber-500">⚠️ {batchProgress.mismatches} mismatch</span>}
                 </span>
               </div>
               <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -288,6 +343,11 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
                   className={`w-full flex items-center gap-2 text-[10px] text-gray-500 py-1.5 px-2 rounded border dark:border-zinc-800 bg-gray-50 dark:bg-black/20 text-left transition-colors ${entry.status === "ok" ? "hover:bg-indigo-50 dark:hover:bg-indigo-500/10 cursor-pointer" : "cursor-default"}`}
                 >
                   <span className="flex-shrink-0">{entry.status === "ok" ? "✅" : "❌"}</span>
+                  {entry.isMismatch && (
+                    <span className="flex-shrink-0 text-[9px] font-black bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 px-1.5 py-0.5 rounded">
+                      ⚠️ MISMATCH
+                    </span>
+                  )}
                   <span className="truncate flex-1">{entry.label}</span>
                   {entry.tokens && (
                     <span className="flex-shrink-0 text-[8px] flex gap-1">
@@ -352,6 +412,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
                 {/* Question */}
                 <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
                   <MathRenderer content={e.question!.question_text} />
+                  <QuestionImages images={e.question!.images} />
                 </div>
 
                 {/* Options or NAT */}
@@ -401,9 +462,26 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
                   </div>
                 )}
 
-                {/* Explanation */}
+                {/* Independent verification (AI's own answer, without being told the target) */}
+                {e.verifyText && (
+                  <div>
+                    <div className="text-xs font-bold text-purple-500 uppercase mb-2 flex items-center gap-2">
+                      <span>🧠 Independent Solution</span>
+                      {e.aiDetectedAnswer && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${e.isMismatch ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400" : "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400"}`}>
+                          answer: {e.aiDetectedAnswer}
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4 rounded-xl bg-purple-50/40 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/20 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <MathRenderer content={e.verifyText} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Explanation (derivation to the stored target answer) */}
                 <div>
-                  <div className="text-xs font-bold text-blue-500 uppercase mb-2">Generated Explanation</div>
+                  <div className="text-xs font-bold text-blue-500 uppercase mb-2">📖 Derivation to Stored Answer</div>
                   <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border dark:border-zinc-800 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                     <MathRenderer content={e.explanation!} />
                   </div>
@@ -488,6 +566,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
           >
             <option value="gemini">Gemini Flash (Free)</option>
             <option value="gpt-4o-mini">GPT-4o Mini</option>
+            <option value="vertex-2.5-pro">Vertex Gemini 2.5 Pro</option>
           </select>
           <button
             onClick={handleBatchRun}
@@ -544,21 +623,21 @@ function QuestionCard({
   onPreview,
 }: {
   question: QuestionRow;
-  aiModel: "gemini" | "gpt-4o-mini";
+  aiModel: "gemini" | "gpt-4o-mini" | "vertex-2.5-pro";
   onDone: () => void;
   onPreview: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ explanation: string; isMismatch: boolean; aiDetectedAnswer: string | null; usage: { input: number; output: number; thoughts: number } } | null>(null);
+  const [result, setResult] = useState<{ explanation: string; verifyText: string; isMismatch: boolean; aiDetectedAnswer: string | null; usage: { input: number; output: number; thoughts: number } } | null>(null);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (useSearch: boolean = false) => {
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const res = await generateAIExplanation(question.id, question.questionType, undefined, aiModel);
-      setResult({ explanation: res.explanation, isMismatch: res.isMismatch, aiDetectedAnswer: res.aiDetectedAnswer, usage: res.usage });
+      const res = await generateAIExplanation(question.id, question.questionType, undefined, aiModel, useSearch);
+      setResult({ explanation: res.explanation, verifyText: res.verifyText, isMismatch: res.isMismatch, aiDetectedAnswer: res.aiDetectedAnswer, usage: res.usage });
     } catch (err: any) {
       setError(err?.message || "Failed");
     } finally {
@@ -582,26 +661,48 @@ function QuestionCard({
             <span className="text-[10px] font-bold text-gray-500 truncate">{question.subject}</span>
             {question.topic && <span className="text-[10px] text-gray-400 truncate">{question.topic}</span>}
             <span className="text-[9px] text-gray-300 dark:text-zinc-600 font-mono">{question.questionType}</span>
+            {result?.isMismatch && (
+              <span className="text-[10px] font-black uppercase bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400 px-2 py-0.5 rounded">
+                ⚠️ Mismatch · AI: {result.aiDetectedAnswer} / Stored: {question.correct_answer}
+              </span>
+            )}
           </div>
           <button onClick={onPreview} className="text-left text-xs text-gray-700 dark:text-gray-300 line-clamp-2 hover:text-blue-500 transition-colors">
             <MathRenderer content={question.question_text} />
           </button>
+          <QuestionImages images={question.images} compact />
         </div>
         <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
-              loading
-                ? "bg-amber-100 text-amber-600 dark:bg-amber-500/10 animate-pulse"
-                : result
-                ? "bg-gray-100 text-gray-500 dark:bg-zinc-800 hover:bg-amber-50"
-                : "bg-amber-500 text-white hover:bg-amber-600 shadow shadow-amber-500/20"
-            }`}
-          >
-            {loading ? "Generating..." : result ? "Regenerate" : "Generate"}
-          </button>
-          {error && <span className="text-[9px] text-red-500 max-w-[120px] text-right">{error}</span>}
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => handleGenerate(false)}
+              disabled={loading}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                loading
+                  ? "bg-amber-100 text-amber-600 dark:bg-amber-500/10 animate-pulse"
+                  : result
+                  ? "bg-gray-100 text-gray-500 dark:bg-zinc-800 hover:bg-amber-50"
+                  : "bg-amber-500 text-white hover:bg-amber-600 shadow shadow-amber-500/20"
+              }`}
+            >
+              {loading ? "Generating..." : result ? "Regenerate" : "Generate"}
+            </button>
+            <button
+              onClick={() => handleGenerate(true)}
+              disabled={loading || aiModel === "gpt-4o-mini"}
+              title={aiModel === "gpt-4o-mini" ? "Search grounding is only available on Gemini/Vertex" : "Generate with Google Search grounding"}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                loading
+                  ? "bg-sky-100 text-sky-600 dark:bg-sky-500/10 animate-pulse"
+                  : aiModel === "gpt-4o-mini"
+                  ? "bg-gray-100 text-gray-300 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed"
+                  : "bg-sky-500 text-white hover:bg-sky-600 shadow shadow-sky-500/20"
+              }`}
+            >
+              🌐 Search
+            </button>
+          </div>
+          {error && <span className="text-[9px] text-red-500 max-w-[140px] text-right">{error}</span>}
         </div>
       </div>
 
@@ -666,9 +767,26 @@ function QuestionCard({
             )}
           </div>
 
-          {/* Generated explanation */}
+          {/* Independent verification (AI's own answer, without being told the target) */}
+          {result.verifyText && (
+            <div>
+              <div className="text-[10px] font-bold text-purple-500 uppercase mb-1.5 flex items-center gap-1.5">
+                <span>🧠 Independent Solution</span>
+                {result.aiDetectedAnswer && (
+                  <span className={`px-1.5 py-0.5 rounded font-mono ${result.isMismatch ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400" : "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400"}`}>
+                    answer: {result.aiDetectedAnswer}
+                  </span>
+                )}
+              </div>
+              <div className="p-3 rounded-xl bg-purple-50/40 dark:bg-purple-500/5 border border-purple-100 dark:border-purple-500/20 text-xs text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                <MathRenderer content={result.verifyText} />
+              </div>
+            </div>
+          )}
+
+          {/* Generated explanation (derivation to the stored target answer) */}
           <div>
-            <div className="text-[10px] font-bold text-blue-500 uppercase mb-1.5">Generated Explanation</div>
+            <div className="text-[10px] font-bold text-blue-500 uppercase mb-1.5">📖 Derivation to Stored Answer</div>
             <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border dark:border-zinc-800 text-xs text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
               <MathRenderer content={result.explanation} />
             </div>

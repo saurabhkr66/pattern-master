@@ -97,19 +97,63 @@ export default function PatternTable({
 
   const rawPatterns = data?.topics ?? initialPatterns;
 
-  // ── Client-side progress hydration ──
+  // ── Client-side progress hydration (persisted across refresh) ──
   // Keyed on exam+branch only — stable across subject tab switches so the result
   // is fetched once and reused for the full session (staleTime: 6 h).
+  //
+  // We mirror the progress map into localStorage so optimistic solved-count bumps
+  // (written in PracticeButton) SURVIVE a page refresh without re-hitting the
+  // server. We restore the data along with its original server-fetch timestamp,
+  // so React Query's 6 h staleTime is measured from the last *server* read — the
+  // server is contacted at most once per 6 h, never on a plain refresh.
+  const PROGRESS_TTL = 6 * 60 * 60 * 1000;
+  const progressStorageKey = `be_progress_${exam}_${branch}`;
+  const [progressReady, setProgressReady] = useState(false);
+
+  // Seed the query cache from localStorage before enabling the fetch, so fresh
+  // cached data (incl. persisted bumps) skips the network call entirely.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(progressStorageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.data && typeof parsed.fetchedAt === "number") {
+          queryClient.setQueryData(["practiceProgress", exam, branch], parsed.data, {
+            updatedAt: parsed.fetchedAt,
+          });
+        }
+      }
+    } catch { /* ignore corrupt/blocked storage */ }
+    setProgressReady(true);
+  }, [exam, branch, progressStorageKey, queryClient]);
+
   const { data: progressData } = useQuery({
     queryKey: ["practiceProgress", exam, branch],
     queryFn: async () => {
       const params = new URLSearchParams({ exam, branch });
       const res = await fetch(`/api/practice/progress?${params.toString()}`);
-      return res.json();
+      const json = await res.json();
+      try {
+        localStorage.setItem(progressStorageKey, JSON.stringify({ data: json, fetchedAt: Date.now() }));
+      } catch { /* ignore */ }
+      return json;
     },
-    staleTime: 6 * 60 * 60 * 1000,  // 6 hours
-    gcTime:    6 * 60 * 60 * 1000,
+    staleTime: PROGRESS_TTL,  // 6 hours
+    gcTime:    PROGRESS_TTL,
+    enabled: progressReady,   // wait for the seed so fresh cached data skips the fetch
   });
+
+  // Persist in-memory changes (optimistic bumps) WITHOUT advancing the server-fetch
+  // timestamp, so answering questions doesn't reset the 6 h refetch timer.
+  useEffect(() => {
+    if (!progressData) return;
+    try {
+      const raw = localStorage.getItem(progressStorageKey);
+      const prev = raw ? JSON.parse(raw) : null;
+      const fetchedAt = prev && typeof prev.fetchedAt === "number" ? prev.fetchedAt : Date.now();
+      localStorage.setItem(progressStorageKey, JSON.stringify({ data: progressData, fetchedAt }));
+    } catch { /* ignore */ }
+  }, [progressData, progressStorageKey]);
 
   const progress: Record<string, number> = progressData?.progress ?? {};
 
