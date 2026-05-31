@@ -26,7 +26,13 @@ export interface SubmitAnswer {
   timeSpentSecs: number;
 }
 
-export type QStatus = "unseen" | "answered" | "skipped" | "review";
+// GATE 5-state model:
+//  unseen         → Not Visited (no entry)
+//  skipped        → Visited but Not Answered
+//  answered       → Answered (no flag)
+//  review         → Marked for Review, NOT answered
+//  answeredReview → Answered AND Marked for Review (counted for evaluation)
+export type QStatus = "unseen" | "answered" | "skipped" | "review" | "answeredReview";
 
 export interface DraftState {
   mcqAnswers?: Record<string, string>;

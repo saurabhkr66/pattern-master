@@ -22,8 +22,9 @@ interface PatternRowProps {
 }
 
 
-const fetchPatternQuestions = async (patternId: string, skip = 0, take = 0) => {
+const fetchPatternQuestions = async (patternId: string, lang = "en", skip = 0, take = 0) => {
   const params = new URLSearchParams();
+  if (lang !== "en") params.set("lang", lang);
   if (skip > 0) params.set("skip", String(skip));
   if (take > 0) params.set("take", String(take));
   const qs = params.toString();
@@ -113,11 +114,12 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
 
   // Fetch all questions at once for both subject and regular patterns
   const { data, isLoading: isLoadingAll } = useQuery({
-    queryKey: ["patternQuestions", pattern.id],
-    queryFn: () => fetchPatternQuestions(pattern.id),
+    queryKey: ["patternQuestions", pattern.id, language],
+    queryFn: () => fetchPatternQuestions(pattern.id, language),
     enabled: isOpen,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const isLoadingQuestions = isLoadingAll;

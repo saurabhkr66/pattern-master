@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     );
 
     const progress = await getCached();
-    return NextResponse.json({ progress }, { headers: { "Cache-Control": "private, max-age=30" } });
+    return NextResponse.json({ progress }, { headers: { "Cache-Control": "private, max-age=3600, stale-while-revalidate=300" } });
   } catch (err) {
     console.error("[GET /api/practice/progress]", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

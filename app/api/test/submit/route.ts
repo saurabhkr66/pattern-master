@@ -11,7 +11,7 @@ interface BreakdownItem {
   questionId: string; source: string; sectionIndex: number; sectionName: string;
   questionType: string; marks: number; isOptional: boolean; counted: boolean;
   userAnswer: string | null; correctAnswer: string;
-  isCorrect: boolean; isSkipped: boolean; explanation: string;
+  isCorrect: boolean; isSkipped: boolean; awardedMarks: number; explanation: string;
   questionText: string; options: string[] | null; subject?: string; topic?: string;
   timeSpentSecs: number;
 }
@@ -59,6 +59,30 @@ function isAnswerCorrect(questionType: string, userAnswer: string, correctAnswer
 function negativeScore(questionType: string, marks: number, negativePerMark: number): number {
   if (questionType !== "MCQ") return 0; // MSQ and NAT have no negative marking
   return marks * negativePerMark;
+}
+
+function parseOptionSet(answer: string): string[] {
+  return answer.split(/[;,]/).map((s) => s.trim().toUpperCase()).filter(Boolean);
+}
+
+/**
+ * JEE Advanced MSQ partial marking (2019+ scheme):
+ *  - Any wrong option chosen  → −2
+ *  - All correct options chosen (none wrong) → full marks
+ *  - Some (but not all) correct options chosen, none wrong → +1 per correct option chosen
+ *  - Nothing chosen → 0
+ */
+function scoreAdvancedMsq(userAnswer: string, correctAnswer: string, marks: number): number {
+  const selected = parseOptionSet(userAnswer);
+  if (selected.length === 0) return 0;
+  const correct = parseOptionSet(correctAnswer);
+  const correctSet = new Set(correct);
+  const anyWrong = selected.some((l) => !correctSet.has(l));
+  if (anyWrong) return -2;
+  const selectedSet = new Set(selected);
+  const chosenCorrect = correct.filter((l) => selectedSet.has(l)).length;
+  if (chosenCorrect === correct.length) return marks; // full marks
+  return chosenCorrect; // +1 per correct option (partial)
 }
 
 export async function POST(req: NextRequest) {
@@ -151,28 +175,45 @@ export async function POST(req: NextRequest) {
       const isSkipped = !ans.userAnswer || ans.userAnswer.trim() === "";
       const isCounted = true;
 
+      const isAdvancedMsq = ans.questionType === "MSQ" && examType === "JEE_ADVANCED";
+
       let isCorrect = false;
       if (!isSkipped) {
         isCorrect = isAnswerCorrect(ans.questionType, ans.userAnswer!, qData.correct_answer);
+      }
+
+      // Marks awarded for this question (can be negative). For JEE Advanced
+      // MSQ we award partial credit; everything else is all-or-nothing with
+      // MCQ negative marking.
+      let awardedMarks = 0;
+      if (!isSkipped) {
+        if (isAdvancedMsq) {
+          awardedMarks = scoreAdvancedMsq(ans.userAnswer!, qData.correct_answer, ans.marks);
+        } else if (isCorrect) {
+          awardedMarks = ans.marks;
+        } else {
+          awardedMarks = -negativeScore(ans.questionType, ans.marks, negPerMark);
+        }
       }
 
       // Score delta
       if (isCounted) {
         maxScore += ans.marks;
         const secT = sectionTrackers.get(ans.sectionIndex);
+        score += awardedMarks;
+        if (secT) secT.score += awardedMarks;
 
         if (isSkipped) {
           skippedCount++;
           if (secT) secT.skipped++;
         } else if (isCorrect) {
           correctCount++;
-          score += ans.marks;
-          if (secT) { secT.correct++; secT.score += ans.marks; }
+          if (secT) secT.correct++;
         } else {
+          // Partial-but-positive (Advanced MSQ) still counts as "wrong" for the
+          // correct/wrong tally; the awarded marks above capture the credit.
           wrongCount++;
-          const penalty = negativeScore(ans.questionType, ans.marks, negPerMark);
-          score -= penalty;
-          if (secT) { secT.wrong++; secT.score -= penalty; }
+          if (secT) secT.wrong++;
         }
       }
 
@@ -191,6 +232,7 @@ export async function POST(req: NextRequest) {
         correctAnswer: qData.correct_answer,
         isCorrect: isCorrect && isCounted,
         isSkipped,
+        awardedMarks: Math.round(awardedMarks * 100) / 100,
         explanation: qData.explanation,
         questionText: qData.question_text,
         options: Array.isArray(qData.options) ? (qData.options as string[]) : null,

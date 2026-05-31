@@ -20,7 +20,7 @@ export interface ResultData {
   questions: {
     id: string; question_text: string; options: string[] | null; question_type: string;
     correct_answer: string; user_answer: string | null; is_correct: boolean | null;
-    marks: number; subject: string; topic?: string; explanation?: string; timeSpentSecs: number;
+    marks: number; awarded?: number; subject: string; topic?: string; explanation?: string; timeSpentSecs: number;
   }[];
 }
 

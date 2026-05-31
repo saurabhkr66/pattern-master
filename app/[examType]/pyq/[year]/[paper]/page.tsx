@@ -266,6 +266,7 @@ export default async function PaperPage({
             </span>
             <Link
               href={`/mock-tests/${toSlug(exam.examType)}/${toSlug(exam.branch || "all-subjects")}/${mock.id}`}
+              prefetch={false}
               className="ml-auto px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
             >
               Take as Timed Mock →
@@ -356,6 +357,7 @@ export default async function PaperPage({
           </Link>
           <Link
             href={`/mock-tests/${toSlug(exam.examType)}/${toSlug(exam.branch || "all-subjects")}/${mock.id}`}
+            prefetch={false}
             className="px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
           >
             Take as Timed Mock →

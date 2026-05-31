@@ -238,6 +238,7 @@ export default async function YearPYQPage({
                 <Link
                   key={p.id}
                   href={`/${examType}/pyq/${year}/${p.slug}`}
+                  prefetch={false}
                   className="flex items-center justify-between gap-4 p-5 rounded-2xl border hover:border-indigo-500/50 transition-colors"
                   style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
                 >
@@ -272,6 +273,7 @@ export default async function YearPYQPage({
                 </h2>
                 <Link
                   href={`/${examType}/${toSlug(group.subject)}`}
+                  prefetch={false}
                   className="text-xs font-bold text-indigo-400 hover:underline"
                 >
                   All {group.subject} topics →
@@ -283,6 +285,7 @@ export default async function YearPYQPage({
                   <Link
                     key={q.id}
                     href={`/${examType}/${toSlug(q.pattern.subject)}/${toSlug(q.pattern.topic_name)}`}
+                    prefetch={false}
                     className="block p-4 rounded-xl border hover:border-indigo-500/50 transition-colors"
                     style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
                   >

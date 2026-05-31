@@ -151,13 +151,17 @@ export default function MockTestPage() {
   const pathname = usePathname();
   const targetPhaseRef = useRef<Phase>("loading");
 
-  const goTo = useCallback((p: Phase, replace = false, mockId?: string) => {
+  const goTo = useCallback((p: Phase, replace = false, mockId?: string, sessionId?: string) => {
     const stepMap: Partial<Record<Phase, number>> = { setup: 1, brief: 2, test: 3, results: 4 };
     const step = stepMap[p];
     targetPhaseRef.current = p;
     const params = new URLSearchParams();
     if (step && step > 1) params.set("step", String(step));
     if (mockId) params.set("id", mockId);
+    // Stamp the session id on the results URL so a remount (e.g. navigating to
+    // /review and pressing Back) re-hydrates straight into the analysis page
+    // instead of falling through to the Brief step.
+    if (sessionId && !sessionId.startsWith("local-")) params.set("sessionId", sessionId);
     const query = params.toString();
     const url = query ? `${pathname}?${query}` : pathname;
     if (replace) router.replace(url, { scroll: false });
@@ -207,7 +211,7 @@ export default function MockTestPage() {
               correctCount: s.correct_count, wrongCount: s.wrong_count,
               skippedCount: s.skipped_count, timeTakenSecs: s.time_taken_secs,
             }, { examType: s.exam_type, mockTestId: s.mock_test_id ?? null }));
-            goTo("results", true, s.mock_test_id ?? undefined);
+            goTo("results", true, s.mock_test_id ?? undefined, urlSessionId);
             return;
           }
         } catch {}
@@ -392,7 +396,7 @@ export default function MockTestPage() {
         correctCount: sessionScore.correctCount, wrongCount: sessionScore.wrongCount,
         skippedCount: sessionScore.skippedCount, timeTakenSecs: sessionScore.timeTakenSecs,
       }, { examType: selectedExam ?? undefined, mockTestId }));
-      goTo("results", false, mockTestId ?? undefined);
+      goTo("results", false, mockTestId ?? undefined, data.sessionId);
     } catch (err: any) {
       setSubmitError(err.message);
     } finally {
@@ -424,7 +428,7 @@ export default function MockTestPage() {
         correctCount: s.correct_count, wrongCount: s.wrong_count,
         skippedCount: s.skipped_count, timeTakenSecs: s.time_taken_secs,
       }, { examType: s.exam_type, mockTestId: s.mock_test_id ?? mock.id ?? null }));
-      goTo("results", false, mock.id);
+      goTo("results", false, mock.id, mock.session.id);
     } catch (e: any) {
       setError(e.message);
       goTo("setup", true);

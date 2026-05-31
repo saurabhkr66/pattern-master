@@ -64,7 +64,8 @@ export function buildResultData(
       id: q.questionId, question_text: q.questionText, options: q.options,
       question_type: q.questionType, correct_answer: q.correctAnswer,
       user_answer: q.userAnswer, is_correct: q.isCorrect,
-      marks: q.marks, subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
+      marks: q.marks, awarded: typeof q.awardedMarks === "number" ? q.awardedMarks : undefined,
+      subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
       timeSpentSecs: q.timeSpentSecs || 0,
     })),
   };

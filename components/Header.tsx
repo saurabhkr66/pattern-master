@@ -150,19 +150,22 @@ export default function Header() {
           {/* Auth */}
           <Show when="signed-out">
             <div className="hidden sm:flex gap-2">
-              <Link href="/sign-in">
-                <button
-                  className="border px-4 py-2 rounded-lg text-sm"
-                  style={{ color: "var(--text-secondary)", borderColor: "var(--border-strong)" }}
-                >
-                  Sign In
-                </button>
+              {/* Style the Link itself — a <button> nested inside <a> is invalid
+                  HTML and the browser hoists it out of the anchor, so clicks
+                  don't navigate. */}
+              <Link
+                href="/sign-in"
+                className="border px-4 py-2 rounded-lg text-sm inline-flex items-center transition-colors"
+                style={{ color: "var(--text-secondary)", borderColor: "var(--border-strong)" }}
+              >
+                Sign In
               </Link>
 
-              <Link href="/sign-up">
-                <button className="bg-gradient-to-br from-amber-500 to-orange-500 px-4 py-2 rounded-lg text-white text-sm">
-                  Get Started
-                </button>
+              <Link
+                href="/sign-up"
+                className="bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 px-4 py-2 rounded-lg text-white text-sm font-medium inline-flex items-center transition-colors"
+              >
+                Get Started
               </Link>
             </div>
           </Show>
@@ -253,22 +256,20 @@ export default function Header() {
 
               <Show when="signed-out">
                 <div className="border-t my-2" style={{ borderColor: "var(--border)" }} />
-                <Link href="/sign-in">
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-full text-left px-4 py-3 rounded-xl text-sm nav-item"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    Sign In
-                  </button>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block w-full px-4 py-3 rounded-xl text-sm nav-item"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Sign In
                 </Link>
-                <Link href="/sign-up">
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-full bg-amber-500 text-white px-4 py-3 rounded-xl mt-1 font-semibold text-sm"
-                  >
-                    Get Started — Free
-                  </button>
+                <Link
+                  href="/sign-up"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block w-full bg-amber-500 text-white px-4 py-3 rounded-xl mt-1 font-semibold text-sm text-center"
+                >
+                  Get Started — Free
                 </Link>
               </Show>
 

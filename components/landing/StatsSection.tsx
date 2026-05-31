@@ -1,5 +1,5 @@
 const STATS = [
-  { value: "50+", label: "GATE Topics" },
+  { value: "50+", label: "Topics Covered" },
   { value: "6", label: "Exams Covered" },
   { value: "∞", label: "Unique Questions" },
   { value: "0 ₹", label: "Core Practice" },

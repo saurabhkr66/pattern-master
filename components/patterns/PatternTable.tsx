@@ -93,6 +93,7 @@ export default function PatternTable({
     initialData: localSubject === initialSubject ? { topics: initialPatterns } : undefined,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const rawPatterns = data?.topics ?? initialPatterns;
@@ -141,6 +142,7 @@ export default function PatternTable({
     staleTime: PROGRESS_TTL,  // 6 hours
     gcTime:    PROGRESS_TTL,
     enabled: progressReady,   // wait for the seed so fresh cached data skips the fetch
+    refetchOnWindowFocus: false,
   });
 
   // Persist in-memory changes (optimistic bumps) WITHOUT advancing the server-fetch

@@ -15,8 +15,6 @@ interface Props {
   isReviewed: boolean;
   isBookmarked: boolean;
   submitError: string | null;
-  currentIdx: number;
-  sectionQsLength: number;
   onMcq: (q: TestQuestion, letter: string) => void;
   onMsq: (q: TestQuestion, letter: string) => void;
   onNat: (q: TestQuestion, val: string) => void;
@@ -31,7 +29,6 @@ interface Props {
 export default function QuestionPane({
   question: currentQ, globalIdx, totalQuestions,
   curMcq, curMsq, curNat, isReviewed, isBookmarked, submitError,
-  currentIdx, sectionQsLength,
   onMcq, onMsq, onNat,
   onToggleBookmark, onToggleReview, onClearResponse, onMarkReviewAndNext,
   onPrev, onNext,
@@ -166,9 +163,9 @@ export default function QuestionPane({
       }}>
         <button
           onClick={onPrev}
-          disabled={currentIdx === 0}
+          disabled={globalIdx === 0}
           className="be-btn"
-          style={{ opacity: currentIdx === 0 ? 0.35 : 1 }}
+          style={{ opacity: globalIdx === 0 ? 0.35 : 1 }}
         >
           ← Previous
         </button>
@@ -184,9 +181,9 @@ export default function QuestionPane({
         </button>
         <button
           onClick={onNext}
-          disabled={currentIdx === sectionQsLength - 1}
+          disabled={globalIdx === totalQuestions - 1}
           className="be-btn be-btn-primary"
-          style={{ padding: "8px 16px", opacity: currentIdx === sectionQsLength - 1 ? 0.35 : 1 }}
+          style={{ padding: "8px 16px", opacity: globalIdx === totalQuestions - 1 ? 0.35 : 1 }}
         >
           Save &amp; next →
         </button>

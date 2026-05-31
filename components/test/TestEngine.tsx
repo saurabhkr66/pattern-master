@@ -6,8 +6,8 @@ import QuestionPane from "./QuestionPane";
 import PalettePanel from "./PalettePanel";
 import MobilePaletteOverlay from "./MobilePaletteOverlay";
 import SubmitConfirmModal from "./SubmitConfirmModal";
+import InstructionsModal from "./InstructionsModal";
 import {
-  sectionQuestions,
   type QStatus,
   type TestQuestion,
   type SubmitAnswer,
@@ -64,6 +64,7 @@ export default function TestEngine({
     return config.durationSecs;
   });
   const [showPalette, setShowPalette] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [timeSpent, setTimeSpent] = useState<Record<string, number>>(s.timeSpentMap ?? {});
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error" | null>(null);
@@ -116,8 +117,6 @@ export default function TestEngine({
   }), []);
 
   const currentQ = questions.find((q) => q.id === currentQId) ?? questions[0];
-  const sectionQs = sectionQuestions(questions, activeSectionIdx);
-  const currentIdx = sectionQs.findIndex((q) => q.id === currentQId);
   const globalIdx = questions.findIndex((q) => q.id === currentQId);
 
   const buildAnswers = useCallback((): SubmitAnswer[] =>
@@ -212,24 +211,36 @@ export default function TestEngine({
     };
   }, [draftId, buildDraftState]);
 
+  // Stamp a question as "visited but not answered" once the user leaves it
+  // without recording an answer — distinguishes Not Answered from Not Visited.
+  const markVisitedIfUnseen = (id: string) => {
+    if (!id) return;
+    setStatuses((prev) => (prev[id] ? prev : { ...prev, [id]: "skipped" }));
+  };
+
   const goTo = (q: TestQuestion) => {
+    markVisitedIfUnseen(currentQIdRef.current);
     setActiveSectionIdx(q.sectionIndex);
     setCurrentQId(q.id);
     setShowPalette(false);
   };
 
-  const goToIdx = (idx: number) => {
-    const clamped = Math.max(0, Math.min(sectionQs.length - 1, idx));
-    const target = sectionQs[clamped];
+  // Navigate across the whole paper (not just the active section), so
+  // "Save & next" at the end of a section rolls into the next section.
+  const goByGlobal = (delta: number) => {
+    const gIdx = questions.findIndex((q) => q.id === currentQIdRef.current);
+    const target = questions[gIdx + delta];
     if (target) goTo(target);
   };
 
   const recordAnswer = (q: TestQuestion, answer: string | null) => {
+    const answered = !!answer && answer.trim() !== "";
+    const marked = markedReview.has(q.id);
     setStatuses((prev) => ({
       ...prev,
-      [q.id]: !answer || answer.trim() === ""
-        ? (markedReview.has(q.id) ? "review" : "skipped")
-        : (markedReview.has(q.id) ? "review" : "answered"),
+      [q.id]: answered
+        ? (marked ? "answeredReview" : "answered")
+        : (marked ? "review" : "skipped"),
     }));
   };
 
@@ -259,25 +270,26 @@ export default function TestEngine({
 
   const toggleReview = (q: TestQuestion) => {
     const newSet = new Set(markedReview);
+    const hasAnswer = !!(mcqSelected[q.id] || msqSelected[q.id]?.length || natValues[q.id]);
     if (newSet.has(q.id)) {
       newSet.delete(q.id);
-      const hasAnswer = !!(mcqSelected[q.id] || msqSelected[q.id]?.length || natValues[q.id]);
       setStatuses((prev) => ({ ...prev, [q.id]: hasAnswer ? "answered" : "skipped" }));
     } else {
       newSet.add(q.id);
-      setStatuses((prev) => ({ ...prev, [q.id]: "review" }));
+      setStatuses((prev) => ({ ...prev, [q.id]: hasAnswer ? "answeredReview" : "review" }));
     }
     setMarkedReview(newSet);
   };
 
   const markForReviewAndNext = (q: TestQuestion) => {
+    const hasAnswer = !!(mcqSelected[q.id] || msqSelected[q.id]?.length || natValues[q.id]);
     if (!markedReview.has(q.id)) {
       const newSet = new Set(markedReview);
       newSet.add(q.id);
       setMarkedReview(newSet);
-      setStatuses((prev) => ({ ...prev, [q.id]: "review" }));
     }
-    goToIdx(currentIdx + 1);
+    setStatuses((prev) => ({ ...prev, [q.id]: hasAnswer ? "answeredReview" : "review" }));
+    goByGlobal(1);
   };
 
   const toggleBookmark = (q: TestQuestion) => {
@@ -293,11 +305,20 @@ export default function TestEngine({
     onSubmit(buildAnswers(), Math.round((Date.now() - startTimeRef.current) / 1000));
   }, [buildAnswers, timeLeft, config.durationSecs, onSubmit]);
 
-  const answeredCount = Object.values(statuses).filter((s) => s === "answered").length;
-  const reviewCount = Object.values(statuses).filter((s) => s === "review").length;
-  const visitedCount = Object.values(statuses).filter((s) => s === "skipped").length;
-  const notVisitedCount = questions.length - answeredCount - reviewCount - visitedCount;
-  const counts = { answered: answeredCount, review: reviewCount, visited: visitedCount, notVisited: notVisitedCount };
+  const statusVals = Object.values(statuses);
+  const answeredCount = statusVals.filter((s) => s === "answered").length;
+  const answeredReviewCount = statusVals.filter((s) => s === "answeredReview").length;
+  const reviewCount = statusVals.filter((s) => s === "review").length;
+  const notAnsweredCount = statusVals.filter((s) => s === "skipped").length;
+  const notVisitedCount =
+    questions.length - answeredCount - answeredReviewCount - reviewCount - notAnsweredCount;
+  const counts = {
+    answered: answeredCount,
+    answeredReview: answeredReviewCount,
+    review: reviewCount,
+    notAnswered: notAnsweredCount,
+    notVisited: notVisitedCount,
+  };
 
   const curMcq = currentQ ? (mcqSelected[currentQ.id] ?? null) : null;
   const curMsq = currentQ ? (msqSelected[currentQ.id] ?? []) : [];
@@ -320,6 +341,7 @@ export default function TestEngine({
         questions={questions}
         activeSectionIdx={activeSectionIdx}
         onSectionChange={(i, firstQId) => {
+          markVisitedIfUnseen(currentQIdRef.current);
           setActiveSectionIdx(i);
           if (firstQId) setCurrentQId(firstQId);
         }}
@@ -327,6 +349,7 @@ export default function TestEngine({
         saveStatus={saveStatus}
         timeLeft={timeLeft}
         onTogglePalette={() => setShowPalette(!showPalette)}
+        onOpenInstructions={() => setShowInstructions(true)}
       />
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
@@ -340,8 +363,6 @@ export default function TestEngine({
           isReviewed={isReviewed}
           isBookmarked={isBookmarked}
           submitError={submitError}
-          currentIdx={currentIdx}
-          sectionQsLength={sectionQs.length}
           onMcq={handleMcq}
           onMsq={handleMsq}
           onNat={handleNat}
@@ -349,8 +370,8 @@ export default function TestEngine({
           onToggleReview={toggleReview}
           onClearResponse={clearResponse}
           onMarkReviewAndNext={markForReviewAndNext}
-          onPrev={() => goToIdx(currentIdx - 1)}
-          onNext={() => goToIdx(currentIdx + 1)}
+          onPrev={() => goByGlobal(-1)}
+          onNext={() => goByGlobal(1)}
         />
 
         <PalettePanel
@@ -380,10 +401,18 @@ export default function TestEngine({
         />
       )}
 
+      {showInstructions && (
+        <InstructionsModal
+          config={config}
+          examType={config.examType}
+          onClose={() => setShowInstructions(false)}
+        />
+      )}
+
       {confirmSubmit && (
         <SubmitConfirmModal
           totalQuestions={questions.length}
-          answeredCount={answeredCount}
+          answeredCount={answeredCount + answeredReviewCount}
           reviewCount={reviewCount}
           submitting={submitting}
           onCancel={() => setConfirmSubmit(false)}

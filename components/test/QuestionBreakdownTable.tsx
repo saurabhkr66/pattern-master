@@ -7,18 +7,57 @@ import ExpandedQuestion from "./ExpandedQuestion";
 import { shortAns, fmtTime, plainPreview, COL_STYLE, type ResultData } from "./testAnalysisHelpers";
 
 type Filter = "all" | "correct" | "incorrect" | "skipped" | "slow";
+type Q = ResultData["questions"][number];
 
 interface Props {
   questions: ResultData["questions"];
+  // Bumped by the parent (e.g. the "Review wrong answers" action) to force the
+  // table to jump to the "Wrong" filter. Ignored on first render.
+  jumpToWrong?: number;
 }
 
 const MOBILE_PAGE = 15;
 
-export default function QuestionBreakdownTable({ questions }: Props) {
+// Marks actually awarded for a question. Prefers the server-reported value
+// (handles partial credit); falls back to all-or-nothing for legacy sessions.
+function marksLabel(q: Q, status: "correct" | "incorrect" | "skipped"): string {
+  const trim = (n: number) => n.toFixed(2).replace(/\.?0+$/, "");
+  if (typeof q.awarded === "number") {
+    if (q.awarded > 0) return `+${trim(q.awarded)}`;
+    if (q.awarded < 0) return `−${trim(Math.abs(q.awarded))}`;
+    return "0";
+  }
+  if (status === "correct") return `+${q.marks}`;
+  if (status === "incorrect" && q.question_type === "MCQ") return `−${trim(q.marks / 3)}`;
+  return "0";
+}
+
+export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [activeSubject, setActiveSubject] = useState<string>("All");
   const [expandedQId, setExpandedQId] = useState<string | null>(null);
   const [mobileVisible, setMobileVisible] = useState(MOBILE_PAGE);
+
+  // Stable paper position (1-indexed) per question id — the breakdown arrives
+  // in paper order, so this is the real Q number regardless of filtering.
+  const orderMap = useMemo(() => {
+    const m = new Map<string, number>();
+    questions.forEach((q, idx) => m.set(q.id, idx + 1));
+    return m;
+  }, [questions]);
+
+  // Jump to the "Wrong" filter when the parent bumps `jumpToWrong`. Handled
+  // during render (React's "adjust state when a prop changes" pattern) rather
+  // than in an effect, which avoids a cascading-render lint error.
+  const [prevJump, setPrevJump] = useState(jumpToWrong);
+  if (jumpToWrong !== prevJump) {
+    setPrevJump(jumpToWrong);
+    if (jumpToWrong && jumpToWrong > 0) {
+      setActiveSubject("All");
+      setFilter("incorrect");
+      setMobileVisible(MOBILE_PAGE);
+    }
+  }
 
   const subjects = useMemo(() => {
     const set = new Set<string>();
@@ -263,12 +302,8 @@ export default function QuestionBreakdownTable({ questions }: Props) {
               const userShort = shortAns(q.user_answer, q.question_type);
               const corrShort = shortAns(q.correct_answer, q.question_type);
               const preview = plainPreview(q.question_text);
-              const marksVal = status === "correct"
-                ? `+${q.marks}`
-                : status === "incorrect" && q.question_type === "MCQ"
-                ? `-${(q.marks / 3).toFixed(2).replace(/\.00$/, "")}`
-                : "0";
-              const marksColor = status === "correct" ? BE.good : status === "incorrect" ? BE.bad : BE.textMute;
+              const marksVal = marksLabel(q, status);
+              const marksColor = marksVal.startsWith("+") ? BE.good : marksVal.startsWith("−") ? BE.bad : BE.textMute;
 
               return (
                 <div
@@ -286,7 +321,7 @@ export default function QuestionBreakdownTable({ questions }: Props) {
                       alignItems: "center",
                     }}
                   >
-                    <div style={{ color: BE.textMute, fontFamily: BE.mono, fontWeight: 600, fontSize: 12 }}>#{i + 1}</div>
+                    <div style={{ color: BE.textMute, fontFamily: BE.mono, fontWeight: 600, fontSize: 12 }}>#{orderMap.get(q.id) ?? i + 1}</div>
                     <div style={{ color: BE.textMute, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                       {q.subject.slice(0, 10)}
                     </div>
@@ -402,11 +437,7 @@ export default function QuestionBreakdownTable({ questions }: Props) {
             const userShort = shortAns(q.user_answer, q.question_type);
             const corrShort = shortAns(q.correct_answer, q.question_type);
             const preview = plainPreview(q.question_text);
-            const marksVal = status === "correct"
-              ? `+${q.marks}`
-              : status === "incorrect" && q.question_type === "MCQ"
-              ? `-${(q.marks / 3).toFixed(2).replace(/\.00$/, "")}`
-              : "0";
+            const marksVal = marksLabel(q, status);
             const isExpanded = expandedQId === q.id;
 
             return (
@@ -420,7 +451,7 @@ export default function QuestionBreakdownTable({ questions }: Props) {
                   {/* Card header */}
                   <div className="qbd-card-head">
                     <div className="left">
-                      <span className="qnum">Q{i + 1}</span>
+                      <span className="qnum">Q{orderMap.get(q.id) ?? i + 1}</span>
                       <span className="sep">·</span>
                       <span className="sec">
                         {(q.topic && q.topic !== "Uncategorized" && q.topic !== "General")
@@ -458,7 +489,7 @@ export default function QuestionBreakdownTable({ questions }: Props) {
                     </span>
                     <span className="item">
                       <span className="k">Marks</span>
-                      <span className={`v${status === "correct" ? " good" : status === "incorrect" ? " bad" : ""}`}>
+                      <span className={`v${marksVal.startsWith("+") ? " good" : marksVal.startsWith("−") ? " bad" : ""}`}>
                         {marksVal}
                       </span>
                     </span>

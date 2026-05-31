@@ -22,7 +22,7 @@ export default function FinalCTASection() {
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/25 bg-orange-500/8 mb-6">
           <Flame size={12} className="text-orange-400" />
           <span className="text-xs font-bold text-orange-400">
-            GATE 2027 prep window is now
+            Your 2026 / 2027 prep window is now
           </span>
         </div>
 
@@ -30,7 +30,7 @@ export default function FinalCTASection() {
           className="text-3xl md:text-5xl font-black mb-4 leading-tight"
           style={{ color: "var(--text-primary)" }}
         >
-          Your GATE rank is decided
+          Your rank is decided
           <br />
           <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
             by how you practice.

@@ -10,10 +10,14 @@ const MOCK_OPTIONS = [
 
 const HERO_TAGS = [
   "100% free to start",
-  "GATE 2026 & 2027 syllabus",
+  "Aligned to the latest syllabus",
   "Instant explanations",
   "PYQs included",
 ];
+
+// Every exam BattleExam delivers — given equal billing in the hero so no
+// single exam (GATE) overshadows the rest.
+const HERO_EXAMS = ["GATE", "JEE Main", "JEE Advanced", "NEET", "UGC-NET"];
 
 export default function HeroSection() {
   return (
@@ -32,7 +36,7 @@ export default function HeroSection() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/25 bg-indigo-500/8 mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
               <span className="text-xs font-bold text-indigo-400 tracking-wide">
-                Pattern-Based · GATE 2026 / 2027
+                Pattern-Based · GATE · JEE · NEET · UGC-NET
               </span>
             </div>
 
@@ -52,8 +56,25 @@ export default function HeroSection() {
               style={{ color: "var(--text-secondary)" }}
             >
               BattleExam shows you the <strong style={{ color: "var(--text-primary)" }}>one core pattern</strong> each
-              GATE topic tests — then drills it with infinite fresh questions until you own it.
+              exam topic tests — then drills it with infinite fresh questions until you own it.
             </p>
+
+            {/* Exam lineup — equal billing for every exam we cover */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {HERO_EXAMS.map((e) => (
+                <span
+                  key={e}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold border"
+                  style={{
+                    color: "var(--text-secondary)",
+                    borderColor: "var(--border-strong)",
+                    background: "var(--bg-surface-2)",
+                  }}
+                >
+                  {e}
+                </span>
+              ))}
+            </div>
 
             <HeroCTAs />
 

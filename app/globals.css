@@ -129,4 +129,57 @@ body {
   min-height: 100dvh;
 }
 
+/* ===== Button primitives =====
+   These classes are used throughout the app (test engine, dashboard, review,
+   etc.). Tailwind's preflight strips native button chrome, so without these
+   rules a `.be-btn` with no inline background renders as bare text.
+
+   Scoped to `@layer components` so Tailwind utility classes (e.g. `hidden`,
+   `sm:flex`, `w-full`) — which live in the `utilities` layer — still override
+   layout here, while these rules still beat preflight (`base` layer). Inline
+   `style` props also win over these (intended — e.g. the red submit button). */
+@layer components {
+  .be-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.1;
+    font-family: inherit;
+    white-space: nowrap;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+  .be-btn:hover:not(:disabled) {
+    background: var(--nav-hover-bg);
+    border-color: var(--text-faint);
+  }
+  .be-btn:active:not(:disabled) { transform: translateY(0.5px); }
+  .be-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+
+  .be-btn-primary {
+    background: #ff8f00;
+    border-color: #ff8f00;
+    color: #fff;
+    font-weight: 600;
+  }
+  .be-btn-primary:hover:not(:disabled) {
+    background: #e68200;
+    border-color: #e68200;
+  }
+
+  .be-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+}
+
 

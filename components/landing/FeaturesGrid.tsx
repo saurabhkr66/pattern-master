@@ -11,7 +11,7 @@ const FEATURES = [
   {
     icon: Brain,
     title: "Pattern-first learning",
-    body: "We don't dump questions at you. We teach the exact mental model each GATE topic tests — then reinforce it with targeted questions.",
+    body: "We don't dump questions at you. We teach the exact mental model each exam topic tests — then reinforce it with targeted questions.",
     accent: "text-indigo-400",
     bg: "bg-indigo-500/8",
     border: "border-indigo-500/15",
@@ -43,15 +43,15 @@ const FEATURES = [
   {
     icon: Star,
     title: "PYQ bank included",
-    body: "Real Previous Year Questions are tagged to every topic so you can cross-check your practice against official GATE paper patterns.",
+    body: "Real Previous Year Questions are tagged to every topic so you can cross-check your practice against official exam paper patterns.",
     accent: "text-amber-400",
     bg: "bg-amber-500/8",
     border: "border-amber-500/15",
   },
   {
     icon: Trophy,
-    title: "Built for GATE rank, not just pass",
-    body: "Questions are calibrated to GATE scoring patterns. Hard mode questions are genuinely AIR-100 level — not artificially inflated.",
+    title: "Built for top ranks, not just a pass",
+    body: "Questions are calibrated to real exam scoring patterns. Hard mode is genuinely top-rank level — not artificially inflated.",
     accent: "text-cyan-400",
     bg: "bg-cyan-500/8",
     border: "border-cyan-500/15",
@@ -70,7 +70,7 @@ export default function FeaturesGrid() {
             className="text-2xl md:text-3xl font-black"
             style={{ color: "var(--text-primary)" }}
           >
-            Everything you need to crack GATE
+            Everything you need to crack your exam
           </h2>
         </div>
 

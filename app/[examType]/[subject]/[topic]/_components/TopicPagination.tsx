@@ -17,6 +17,7 @@ export default function TopicPagination({ pageNum, totalPages, basePath }: Props
       {pageNum > 1 ? (
         <Link
           href={pageNum === 2 ? basePath : `${basePath}/page/${pageNum - 1}`}
+          prefetch={false}
           className="px-4 py-2 rounded-xl text-sm font-bold border hover:border-indigo-500/40 transition-colors"
           style={{
             background: "var(--bg-surface)",
@@ -38,6 +39,7 @@ export default function TopicPagination({ pageNum, totalPages, basePath }: Props
       {pageNum < totalPages ? (
         <Link
           href={`${basePath}/page/${pageNum + 1}`}
+          prefetch={false}
           className="px-4 py-2 rounded-xl text-sm font-bold border hover:border-indigo-500/40 transition-colors"
           style={{
             background: "var(--bg-surface)",

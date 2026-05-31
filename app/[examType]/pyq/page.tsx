@@ -197,6 +197,7 @@ export default async function PYQPage({
                 <Link
                   key={row.year}
                   href={`/${examType}/pyq/${row.year}`}
+                  prefetch={false}
                   className="flex items-center justify-between p-4 rounded-xl border hover:border-indigo-500/60 transition-colors"
                   style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
                 >
@@ -240,6 +241,7 @@ export default async function PYQPage({
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link
                         href={practiceUrl}
+                        prefetch={false}
                         className="px-4 py-2 rounded-xl font-bold text-sm border hover:border-indigo-500/60 transition-colors"
                         style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
                       >
@@ -247,6 +249,7 @@ export default async function PYQPage({
                       </Link>
                       <Link
                         href={`/mock-tests/${examSlug}/${branchSlug}/${paper.id}`}
+                        prefetch={false}
                         className="px-4 py-2 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
                       >
                         Take Mock Test →

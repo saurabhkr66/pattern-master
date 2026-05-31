@@ -171,7 +171,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { topics: mergedTopics },
-      { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
+      { headers: { "Cache-Control": "private, s-maxage=60, max-age=300, stale-while-revalidate=60" } }
     );
   } catch (err) {
     console.error("[GET /api/practice/topics]", err);

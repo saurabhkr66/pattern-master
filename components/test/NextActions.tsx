@@ -8,9 +8,10 @@ import { fmtTime, type ResultData } from "./testAnalysisHelpers";
 interface Props {
   result: ResultData;
   onRestart: () => void;
+  onReviewWrong?: () => void;
 }
 
-export default function NextActions({ result, onRestart }: Props) {
+export default function NextActions({ result, onRestart, onReviewWrong }: Props) {
   const wrongCount = result.incorrect;
   const wrongQs = result.questions.filter(q => q.is_correct === false && q.user_answer !== null);
   const slowQs  = result.questions.filter(q => q.timeSpentSecs > 180);
@@ -27,6 +28,8 @@ export default function NextActions({ result, onRestart }: Props) {
     href: string | null;
     onClick?: () => void;
     primary?: boolean;
+    secondaryHref?: string;
+    secondaryLabel?: string;
   }[] = [
     {
       k: "Next attempt",
@@ -43,10 +46,13 @@ export default function NextActions({ result, onRestart }: Props) {
         ? <><em style={{ fontStyle: "italic", color: "#fbcb6a" }}>{displayWrong} wrong</em> answers</>
         : <>Review <em style={{ fontStyle: "italic", color: "#fbcb6a" }}>all answers</em></>,
       d: displayWrong > 0
-        ? "Walk through your errors with full solutions and the concept page for each."
-        : "Review all questions with full solutions and concept pages.",
+        ? "Walk through this paper's errors with full solutions, right here."
+        : "Walk through every question in this paper with full solutions.",
       action: "Review now →",
-      href: "/review",
+      href: null,
+      onClick: onReviewWrong,
+      secondaryHref: "/review",
+      secondaryLabel: "Open spaced-repetition deck →",
     },
     slowQs.length > 0 ? {
       k: "Speed practice",
@@ -121,6 +127,11 @@ export default function NextActions({ result, onRestart }: Props) {
             >
               {card.action}
             </button>
+          )}
+          {card.secondaryHref && (
+            <Link href={card.secondaryHref} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: BE.textMute, marginTop: 2 }}>
+              {card.secondaryLabel}
+            </Link>
           )}
         </div>
       ))}

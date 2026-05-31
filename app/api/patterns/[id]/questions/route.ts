@@ -153,6 +153,13 @@ async function getUserState(userId: string, questionIds: string[], pyqIds: strin
   return { attemptMap, bookmarkSet };
 }
 
+// Strip Hindi-only fields when the client requests English (default).
+// Cuts ~40–50 % off the response for the majority of users.
+function stripHindi(q: any) {
+  const { question_text_hindi, options_hindi, explanation_hindi, ...rest } = q;
+  return rest;
+}
+
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -163,6 +170,7 @@ export async function GET(
         const { searchParams } = new URL(request.url);
         const skip = parseInt(searchParams.get("skip") || "0", 10);
         const take = parseInt(searchParams.get("take") || "0", 10);
+        const lang = searchParams.get("lang") || "en";
 
         // 1. Get static question content from global cache
         const result = await getStaticQuestions(id, skip, take);
@@ -174,6 +182,8 @@ export async function GET(
         const { questions, pyqs } = result.data!;
         const total = (result.data as any).total ?? 0;
 
+        const transform = lang === "hi" ? (q: any) => q : stripHindi;
+
         // 2. If user is logged in, overlay their attempt/bookmark state
         if (userId) {
           const isMock = id.startsWith("mock-");
@@ -182,7 +192,7 @@ export async function GET(
 
           const { attemptMap, bookmarkSet } = await getUserState(userId, questionIds, pyqIds);
 
-          const hydrate = (q: any) => ({
+          const hydrate = (q: any) => transform({
             ...q,
             attempts: attemptMap[q.id] ? [{ id: q.id, is_correct: attemptMap[q.id].is_correct, created_at: attemptMap[q.id].created_at }] : [],
             isBookmarked: bookmarkSet.has(q.id),
@@ -194,10 +204,10 @@ export async function GET(
           );
         }
 
-        // 3. Guest — return static data as-is
+        // 3. Guest — long browser cache since there's no user state
         return NextResponse.json(
-          { questions, pyqs, total },
-          { headers: { "Cache-Control": "public, s-maxage=3600, max-age=0" } }
+          { questions: questions.map(transform), pyqs: pyqs.map(transform), total },
+          { headers: { "Cache-Control": "public, s-maxage=86400, max-age=3600" } }
         );
 
     } catch (error) {

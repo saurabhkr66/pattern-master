@@ -16,12 +16,13 @@ interface Props {
   saveStatus: "saved" | "saving" | "error" | null;
   timeLeft: number;
   onTogglePalette: () => void;
+  onOpenInstructions: () => void;
 }
 
 export default function TestHeaderBar({
   mockTestTitle, config, branch, questions,
   activeSectionIdx, onSectionChange,
-  draftId, saveStatus, timeLeft, onTogglePalette,
+  draftId, saveStatus, timeLeft, onTogglePalette, onOpenInstructions,
 }: Props) {
   const sections = config.sections;
   const multiSection = sections.length > 1;
@@ -65,8 +66,17 @@ export default function TestHeaderBar({
         </div>
       )}
 
-      <button className="be-btn hidden sm:flex" style={{ padding: "5px 10px", fontSize: 11.5 }}>Calculator</button>
-      <button className="be-btn hidden sm:flex" style={{ padding: "5px 10px", fontSize: 11.5 }}>Instructions</button>
+      {/* Calculator intentionally omitted for now — no trustworthy maintained
+          virtual-calculator package exists, and we avoid iframing an external
+          one during a timed test. A custom scientific calculator can be added
+          later. */}
+      <button
+        onClick={onOpenInstructions}
+        className="be-btn hidden sm:flex"
+        style={{ padding: "5px 10px", fontSize: 11.5 }}
+      >
+        Instructions
+      </button>
 
       <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: `${timerColor}15`, border: `1px solid ${timerColor}33`, borderRadius: 8, flexShrink: 0 }}>
         <Clock size={12} style={{ color: timerColor }} />

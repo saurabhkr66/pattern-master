@@ -6,8 +6,9 @@ import { type QStatus, type TestQuestion } from "./testEngineTypes";
 
 interface Counts {
   answered: number;
+  answeredReview: number;
   review: number;
-  visited: number;
+  notAnswered: number;
   notVisited: number;
 }
 
@@ -36,8 +37,9 @@ export default function MobilePaletteOverlay({
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>
           <PalCount n={counts.answered} l="Answered" c={BE.good} />
-          <PalCount n={counts.review} l="Review" c={BE.warn} />
-          <PalCount n={counts.visited} l="Visited" c={BE.textDim} />
+          <PalCount n={counts.notAnswered} l="Not answered" c={BE.text} />
+          <PalCount n={counts.review} l="Marked" c={BE.warn} />
+          <PalCount n={counts.answeredReview} l="Ans + marked" c={BE.warn} dot />
           <PalCount n={counts.notVisited} l="Not visited" c={BE.textMute} />
         </div>
         <PaletteGrid
