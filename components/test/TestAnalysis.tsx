@@ -13,9 +13,24 @@ import type { ResultData } from "./testAnalysisHelpers";
 
 export type { ResultData } from "./testAnalysisHelpers";
 
-interface Props { result: ResultData; onRestart: () => void; }
+interface Props {
+  result: ResultData;
+  onRestart: () => void;
+  /** Where "Finish & exit" links. Default: consumer dashboard. */
+  exitHref?: string;
+  /** Show consumer "what next" suggestions (retake/next mock). Default: true. */
+  showNextActions?: boolean;
+  /** Show the "Retake test" button in ScoreOverview. Default: true. */
+  showRestart?: boolean;
+}
 
-export default function TestAnalysis({ result, onRestart }: Props) {
+export default function TestAnalysis({
+  result,
+  onRestart,
+  exitHref = "/dashboard",
+  showNextActions = true,
+  showRestart = true,
+}: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [jumpToWrong, setJumpToWrong] = useState(0);
 
@@ -38,7 +53,7 @@ export default function TestAnalysis({ result, onRestart }: Props) {
           Analysis
         </span>
         <Link
-          href="/dashboard"
+          href={exitHref}
           className="be-btn"
           style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12.5 }}
         >
@@ -48,10 +63,12 @@ export default function TestAnalysis({ result, onRestart }: Props) {
       </div>
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-6 md:p-10 space-y-10">
-        <ScoreOverview result={result} onRestart={onRestart} />
+        <ScoreOverview result={result} onRestart={onRestart} showRestart={showRestart} />
         <QuestionTimingStrip questions={result.questions} />
         <SectionBreakdown sections={result.sectionBreakdown || []} questions={result.questions} />
-        <NextActions result={result} onRestart={onRestart} onReviewWrong={handleReviewWrong} />
+        {showNextActions && (
+          <NextActions result={result} onRestart={onRestart} onReviewWrong={handleReviewWrong} />
+        )}
         <div className="max-md:-mx-6" ref={tableRef}>
           <QuestionBreakdownTable questions={result.questions} jumpToWrong={jumpToWrong} />
         </div>

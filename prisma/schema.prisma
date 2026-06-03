@@ -73,6 +73,13 @@ model PYQ {
   explanation_html_hindi String?
   options_html_hindi    Json?
   render_version        Int            @default(0)
+  // AI answer-review pass (admin/ai-review). Null reviewed_at = not yet reviewed,
+  // so the review queue surfaces it. ai_answer_mismatch mirrors the QuestionReport
+  // flag for fast filtering/display without joining.
+  ai_reviewed_at        DateTime?
+  ai_answer_mismatch    Boolean?
+  ai_detected_answer    String?
+  ai_review_model       String?
   attempts            Attempt[]
   bookmarks           Bookmark[]
   pattern             Pattern          @relation(fields: [pattern_id], references: [id])
@@ -82,6 +89,7 @@ model PYQ {
   @@unique([pattern_id, question_hash], name: "pyq_hash_identifier")
   @@index([pattern_id, year(sort: Desc)])
   @@index([pattern_id])
+  @@index([ai_reviewed_at])
 }
 
 model GeneratedQuestion {
@@ -110,6 +118,11 @@ model GeneratedQuestion {
   explanation_html_hindi String?
   options_html_hindi    Json?
   render_version        Int            @default(0)
+  // AI answer-review pass (admin/ai-review) — see PYQ for semantics.
+  ai_reviewed_at        DateTime?
+  ai_answer_mismatch    Boolean?
+  ai_detected_answer    String?
+  ai_review_model       String?
   attempts            Attempt[]
   bookmarks           Bookmark[]
   pattern             Pattern          @relation(fields: [pattern_id], references: [id])
@@ -117,6 +130,7 @@ model GeneratedQuestion {
 
   @@index([pattern_id, created_at(sort: Desc)])
   @@index([pattern_id])
+  @@index([ai_reviewed_at])
 }
 
 model Attempt {
@@ -277,4 +291,192 @@ model QuestionReport {
   @@index([status])
   @@index([question_id])
   @@index([pyq_id])
+}
+
+// ─── B2B Coaching Layer ───────────────────────────────────────────────────────
+
+model Coaching {
+  id           String           @id @default(uuid())
+  name         String
+  slug         String           @unique
+  city         String?
+  exam_types   String[]         @default([])
+  join_code    String           @unique
+  owner_email  String?          // set at creation; first Clerk login with this email claims the coaching
+  // Application lifecycle. Super-admin-created coachings default to "approved";
+  // public self-serve applications (/for-coachings) start "pending" and stay
+  // inactive until a super admin approves (or rejects) them.
+  status       String           @default("approved")  // pending | approved | rejected
+  applicant_name  String?       // contact person from a public application
+  applicant_phone String?       // contact phone from a public application
+  billing_mode String           @default("per_test")  // per_test | monthly
+  price_per_test Int            @default(15)           // used when billing_mode = per_test
+  monthly_fee  Int              @default(0)            // flat ₹/month when billing_mode = monthly
+  active       Boolean          @default(true)
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+  admins       CoachingAdmin[]
+  batches      Batch[]
+  students     Student[]
+  questions    CoachingQuestion[]
+  tests        CoachingTest[]
+  billing      BillingEvent[]
+  billing_periods BillingPeriod[]
+
+  @@index([slug])
+  @@index([city])
+  @@index([active])
+}
+
+model CoachingAdmin {
+  id          String   @id @default(uuid())
+  coaching_id String
+  clerk_id    String   @unique
+  role        String   @default("admin")  // admin | owner
+  created_at  DateTime @default(now())
+  coaching    Coaching @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+
+  @@index([coaching_id])
+}
+
+model Batch {
+  id          String    @id @default(uuid())
+  coaching_id String
+  name        String
+  created_at  DateTime  @default(now())
+  coaching    Coaching  @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  students    Student[]
+
+  @@unique([coaching_id, name])
+  @@index([coaching_id])
+}
+
+model Student {
+  id            String        @id @default(uuid())
+  coaching_id   String
+  batch_id      String?
+  name          String
+  phone         String
+  active        Boolean       @default(true)
+  // Single active session enforcement ("newest login wins"): each login writes a
+  // fresh token here and into the cookie; a session whose token != this is dead.
+  session_token String?
+  // Login secret: scrypt hash of the student's PIN (salt:hash). Set at join; phone
+  // alone can't log in. Null = not set yet (must join with code to set one).
+  pin_hash      String?
+  joined_at     DateTime      @default(now())
+  coaching    Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  batch       Batch?        @relation(fields: [batch_id], references: [id])
+  attempts    TestAttempt[]
+
+  @@unique([coaching_id, phone])
+  @@index([coaching_id])
+  @@index([batch_id])
+}
+
+model CoachingQuestion {
+  id            String   @id @default(uuid())
+  coaching_id   String?
+  question_text String
+  question_html String?
+  options       Json
+  correct_answer String
+  solution      String?
+  solution_html String?
+  question_type String   @default("mcq")  // mcq | nat | subjective
+  max_marks     Int      @default(1)
+  nat_tolerance Float?
+  subject       String?
+  topic         String?
+  difficulty    String?
+  images        Json?
+  created_at    DateTime @default(now())
+  coaching      Coaching? @relation(fields: [coaching_id], references: [id], onDelete: SetNull)
+
+  @@index([coaching_id])
+  @@index([coaching_id, subject])
+}
+
+model CoachingTest {
+  id           String        @id @default(uuid())
+  coaching_id  String
+  title        String
+  description  String?
+  questions    Json          // [{ id, source: "coaching"|"pyq"|"generated", marks, neg_marks }]
+  duration_secs Int          @default(3600)
+  start_at     DateTime?
+  end_at       DateTime?
+  shuffle      Boolean       @default(true)
+  pool_size    Int?          // if set, each student gets pool_size random questions
+  status       String        @default("draft")  // draft | active | closed
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  coaching     Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  attempts     TestAttempt[]
+
+  @@index([coaching_id])
+  @@index([coaching_id, status])
+}
+
+model TestAttempt {
+  id             String       @id @default(uuid())
+  coaching_id    String
+  test_id        String
+  student_id     String
+  status         String       @default("in_progress")  // in_progress | submitted
+  answers        Json         @default("{}")
+  score          Float?
+  max_score      Float?
+  time_taken_secs Int?                                  // total time spent (analysis)
+  question_times Json?                                  // { questionId: secondsSpent }
+  tab_switches   Int          @default(0)
+  manual_scores  Json?        // { question_id: marks } for subjective questions
+  graded_by      String?      // coach admin id
+  graded_at      DateTime?
+  billed         Boolean      @default(false)
+  started_at     DateTime     @default(now())
+  submitted_at   DateTime?
+  test           CoachingTest @relation(fields: [test_id], references: [id])
+  student        Student      @relation(fields: [student_id], references: [id])
+  billing_event  BillingEvent?
+
+  @@unique([test_id, student_id])
+  @@index([coaching_id])
+  @@index([test_id])
+  @@index([student_id])
+  @@index([coaching_id, billed])
+}
+
+// Per-month bill status a super admin toggles (due | paid). Amounts are derived
+// from the coaching's billing_mode: submissions × price_per_test (per_test) or the
+// flat monthly_fee (monthly). This row persists the status (and a snapshot of
+// submissions/amount when it was marked). One row per (coaching, month).
+model BillingPeriod {
+  id          String    @id @default(uuid())
+  coaching_id String
+  period      DateTime  // first day of the billed month (00:00 UTC)
+  submissions Int       @default(0)
+  amount      Int       @default(0)
+  status      String    @default("due")  // due | paid
+  paid_at     DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  coaching    Coaching  @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+
+  @@unique([coaching_id, period])
+  @@index([coaching_id])
+}
+
+model BillingEvent {
+  id          String      @id @default(uuid())
+  coaching_id String
+  attempt_id  String      @unique
+  amount      Int
+  status      String      @default("pending")  // pending | paid
+  created_at  DateTime    @default(now())
+  coaching    Coaching    @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  attempt     TestAttempt @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+
+  @@index([coaching_id])
+  @@index([coaching_id, status])
 }

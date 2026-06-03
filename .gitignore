@@ -47,3 +47,6 @@ next-env.d.ts
 /scrapers/
 
 .claude/scheduled_tasks.lock
+
+# clerk configuration (can include secrets)
+/.clerk/

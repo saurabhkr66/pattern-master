@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
 import Header from "@/components/Header";
 import MobileNav from "@/components/MobileNav";
+// import CoachingRail from "@/components/CoachingRail"; // rail hidden for now
 import ThemeProvider from "@/components/ThemeProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
@@ -21,6 +22,7 @@ const geistMono = Geist_Mono({
 
 import { buildOrganizationSchema, joinExamLabels } from "@/lib/seo";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -173,11 +175,14 @@ export default function RootLayout({
             }} />
           )}
           <ServiceWorkerRegistration />
+          <InstallPrompt />
           <NativeMobileBridge />
           <LanguageProvider>
             <ThemeProvider>
               <QueryProvider>
                 <Header />
+                {/* CoachingRail hidden for now — keep mounted-out until we want the desktop rail back. */}
+                {/* <CoachingRail /> */}
                 <Suspense fallback={null}>
                   <GlobalAnalyticsTracker />
                 </Suspense>

@@ -2,7 +2,7 @@ import type { ExamConfig, ExamType, QType } from "@/lib/examConfigs";
 import type { ResultData } from "@/components/test/TestAnalysis";
 
 type SectionAcc = {
-  name: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number;
+  name: string; score: number; max: number; correct: number; wrong: number; skipped: number; total: number; timeSpentSecs: number;
   topics: Record<string, { topic: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number }>;
 };
 type SubjectAcc = { subject: string; score: number; max: number; correct: number; total: number; timeSpentSecs: number };
@@ -16,12 +16,15 @@ export function buildResultData(
   const subjectMap: Record<string, SubjectAcc> = {};
 
   for (const q of breakdown) {
+    const answered = q.userAnswer != null && String(q.userAnswer).trim() !== "";
     const secName = q.sectionName || "Section";
-    if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0, topics: {} };
+    if (!sectionMap[secName]) sectionMap[secName] = { name: secName, score: 0, max: 0, correct: 0, wrong: 0, skipped: 0, total: 0, timeSpentSecs: 0, topics: {} };
     const sec = sectionMap[secName];
     sec.max += q.marks; sec.total += 1;
     sec.timeSpentSecs += q.timeSpentSecs || 0;
     if (q.isCorrect) { sec.score += q.marks; sec.correct += 1; }
+    else if (answered) { sec.wrong += 1; }
+    else { sec.skipped += 1; }
 
     const topName = q.topic || "Uncategorized";
     if (!sec.topics[topName]) sec.topics[topName] = { topic: topName, score: 0, max: 0, correct: 0, total: 0, timeSpentSecs: 0 };
@@ -49,7 +52,7 @@ export function buildResultData(
     attempted: scores.correctCount + scores.wrongCount,
     correct: scores.correctCount, incorrect: scores.wrongCount, unattempted: scores.skippedCount,
     sectionBreakdown: Object.values(sectionMap).map(s => ({
-      name: s.name, score: s.score, max: s.max, correct: s.correct, total: s.total, timeSpentSecs: s.timeSpentSecs,
+      name: s.name, score: s.score, max: s.max, correct: s.correct, wrong: s.wrong, skipped: s.skipped, total: s.total, timeSpentSecs: s.timeSpentSecs,
       accuracy: s.total > 0 ? (s.correct / s.total) * 100 : 0,
       topics: Object.values(s.topics).map(t => ({
         topic: t.topic, score: t.score, max: t.max, correct: t.correct, total: t.total, timeSpentSecs: t.timeSpentSecs,

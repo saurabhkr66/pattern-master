@@ -11,6 +11,7 @@ export interface ResultData {
   unattempted: number;
   sectionBreakdown?: {
     name: string; score: number; max: number; correct: number; total: number;
+    wrong?: number; skipped?: number;
     accuracy: number; timeSpentSecs: number;
     topics: { topic: string; score: number; max: number; correct: number; total: number; accuracy: number; timeSpentSecs: number; }[];
   }[];

@@ -9,6 +9,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import { getImageUrl } from "@/lib/imageUtils";
+import { redis, isRedisConfigured } from "@/lib/redis";
 
 // In-process cache: userId → email. Avoids a DB round-trip on every action
 // call during batch processing. TTL is process lifetime (fine for admin use).
@@ -16,8 +17,10 @@ const userEmailCache = new Map<string, string>();
 
 async function getAdminEmail(userId: string): Promise<string | undefined> {
   if (userEmailCache.has(userId)) return userEmailCache.get(userId);
-  const dbUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-  const email = dbUser?.email?.toLowerCase();
+  // Read the email from the Clerk session, not a DB row — the Clerk userId
+  // varies per instance, but the email is the actual admin credential.
+  const user = await currentUser();
+  const email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
   if (email) userEmailCache.set(userId, email);
   return email;
 }
@@ -218,6 +221,8 @@ const GEMINI_TOPIC_MODEL = "gemini-3.1-flash-lite"; // Specific model for faster
 // Canonical reason string for auto-flagged QuestionReports from generateAIExplanation.
 // Kept as a constant so the read-side query (and any future cleanup logic) can filter on it.
 const AI_MISMATCH_REASON = "⚠️ AI Answer Mismatch";
+// Auto-flag reason for stored explanations the AI grader judged wrong/incomplete.
+const AI_EXPLANATION_REASON = "⚠️ AI Explanation Issue";
 import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
@@ -288,6 +293,112 @@ async function getImageBase64(filename: string) {
   }
 }
 
+type AIModel = "gemini" | "gpt-4o-mini" | "vertex-2.5-pro";
+type AIUsage = { input: number; output: number; thoughts: number };
+
+/**
+ * Dispatches a single prompt (+ optional inline images) to the chosen model and
+ * returns the text + token usage. Shared by generateAIExplanation and
+ * reviewQuestionAnswer so the three-provider branching lives in one place.
+ * `grounded` enables Google Search (Gemini/Vertex only; ignored for OpenAI).
+ */
+async function dispatchAIModel(
+  aiModel: AIModel,
+  prompt: string,
+  fetchedImages: Array<{ data: string; mimeType: string }>,
+  grounded: boolean,
+  label: string,
+): Promise<{ text: string; usage: AIUsage }> {
+  const contentParts: any[] = [prompt];
+  for (const im of fetchedImages) {
+    contentParts.push({ inlineData: { data: im.data, mimeType: im.mimeType } });
+  }
+
+  if (aiModel === "gpt-4o-mini" && openai) {
+    const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
+    for (const im of fetchedImages) {
+      messages[0].content.push({
+        type: "image_url",
+        image_url: { url: `data:${im.mimeType};base64,${im.data}`, detail: "low" },
+      });
+    }
+    const response = await openai.chat.completions.create({ model: "gpt-4o-mini", messages });
+    const text = response.choices[0].message.content || "";
+    if (!text.trim()) throw new Error(`GPT-4o-mini returned empty for ${label}`);
+    return {
+      text,
+      usage: {
+        input: response.usage?.prompt_tokens ?? 0,
+        output: response.usage?.completion_tokens ?? 0,
+        thoughts: 0,
+      },
+    };
+  }
+
+  if (aiModel === "vertex-2.5-pro") {
+    console.log(`[AI] 🚀 Vertex AI - Model: ${VERTEX_MODEL}${grounded ? " (grounded)" : ""}`);
+    const model = vertexAI.getGenerativeModel({
+      model: VERTEX_MODEL,
+      // @ts-ignore — googleSearch tool type isn't in the Vertex SDK's published types yet
+      ...(grounded ? { tools: [{ googleSearch: {} }] } : {}),
+    });
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: contentParts.map(p => (typeof p === "string" ? { text: p } : p)) }],
+    });
+    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!text.trim()) throw new Error(`Vertex returned empty for ${label}`);
+    const usage = result.response.usageMetadata;
+    return {
+      text,
+      usage: {
+        input: usage?.promptTokenCount ?? 0,
+        output: usage?.candidatesTokenCount ?? 0,
+        thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
+      },
+    };
+  }
+
+  // Default: Gemini AI Studio. Flash-lite can't ground, so swap to full Flash when grounded.
+  const activeModel = grounded ? GEMINI_SEARCH_MODEL : GEMINI_MODEL;
+  console.log(`[AI] 🚀 Gemini API - Model: ${activeModel}${grounded ? " (grounded)" : ""}`);
+  const model = genAI!.getGenerativeModel({
+    model: activeModel,
+    // @ts-ignore
+    tools: grounded ? [{ googleSearch: {} }] : [],
+    generationConfig: {
+      // @ts-ignore
+      thinkingConfig: { thinkingLevel: "HIGH" },
+    },
+  });
+  const result = await model.generateContent(contentParts);
+  const text = result.response.text();
+  if (!text.trim()) throw new Error(`Gemini returned empty for ${label}`);
+  const usage = result.response.usageMetadata;
+  return {
+    text,
+    usage: {
+      input: usage?.promptTokenCount ?? 0,
+      output: usage?.candidatesTokenCount ?? 0,
+      thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
+    },
+  };
+}
+
+// Normalize answers for compare: uppercase, split on comma/semicolon, sort,
+// rejoin. Handles MCQ ("A"), MSQ ("A,C" === "C,A"), and NAT ("12.5") uniformly.
+function normalizeAnswer(s: string): string {
+  return s.toUpperCase().split(/[,;]/).map(x => x.trim()).filter(Boolean).sort().join(",");
+}
+
+// Builds the format instruction for the independent-solve prompt based on type.
+function answerFormatHint(qType: string): string {
+  return qType === "MSQ"
+    ? `This question is MSQ (multiple-select). The answer is one OR more letters. End with [ANSWER: A,C] (comma-separated, any order).`
+    : qType === "NAT"
+    ? `This question is NAT (numeric answer, no options). End with [ANSWER: 12.5] (just the numeric value).`
+    : `This question is MCQ (single-select). End with [ANSWER: X] where X is a single letter A, B, C, or D.`;
+}
+
 /**
  * Generates an AI explanation for a single question and saves it to the DB.
  */
@@ -337,12 +448,7 @@ export async function generateAIExplanation(
   // format. Without this, MSQs throw false mismatches because the AI defaults
   // to a single-letter answer when the question text doesn't say "select all".
   const qType = (questionData.question_type || "MCQ").toUpperCase();
-  const formatHint =
-    qType === "MSQ"
-      ? `This question is MSQ (multiple-select). The answer is one OR more letters. End with [ANSWER: A,C] (comma-separated, any order).`
-      : qType === "NAT"
-      ? `This question is NAT (numeric answer, no options). End with [ANSWER: 12.5] (just the numeric value).`
-      : `This question is MCQ (single-select). End with [ANSWER: X] where X is a single letter A, B, C, or D.`;
+  const formatHint = answerFormatHint(qType);
 
   // === PROMPT 1: Independent verification (no target answer revealed) ===
   // Used purely to detect whether our stored `correct_answer` may be wrong.
@@ -389,86 +495,10 @@ Rules:
   }
   console.log(`[AI] Successfully loaded ${fetchedImages.length} / ${questionImages.length} images for the model`);
 
-  // Helper: dispatches to the chosen model. Always called twice — once for
-  // verification (grounded=false, fast) and once for explanation.
-  async function callAIModel(
-    prompt: string,
-    grounded: boolean
-  ): Promise<{ text: string; usage: { input: number; output: number; thoughts: number } }> {
-    const contentParts: any[] = [prompt];
-    for (const im of fetchedImages) {
-      contentParts.push({ inlineData: { data: im.data, mimeType: im.mimeType } });
-    }
-
-    if (aiModel === "gpt-4o-mini" && openai) {
-      const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
-      for (const im of fetchedImages) {
-        messages[0].content.push({
-          type: "image_url",
-          image_url: { url: `data:${im.mimeType};base64,${im.data}`, detail: "low" },
-        });
-      }
-      const response = await openai.chat.completions.create({ model: "gpt-4o-mini", messages });
-      const text = response.choices[0].message.content || "";
-      if (!text.trim()) throw new Error(`GPT-4o-mini returned empty for ${questionId}`);
-      return {
-        text,
-        usage: {
-          input: response.usage?.prompt_tokens ?? 0,
-          output: response.usage?.completion_tokens ?? 0,
-          thoughts: 0,
-        },
-      };
-    }
-
-    if (aiModel === "vertex-2.5-pro") {
-      console.log(`[AI] 🚀 Vertex AI - Model: ${VERTEX_MODEL}${grounded ? " (grounded)" : ""}`);
-      const model = vertexAI.getGenerativeModel({
-        model: VERTEX_MODEL,
-        // @ts-ignore — googleSearch tool type isn't in the Vertex SDK's published types yet
-        ...(grounded ? { tools: [{ googleSearch: {} }] } : {}),
-      });
-      const result = await model.generateContent({
-        contents: [{ role: "user", parts: contentParts.map(p => (typeof p === "string" ? { text: p } : p)) }],
-      });
-      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      if (!text.trim()) throw new Error(`Vertex returned empty for ${questionId}`);
-      const usage = result.response.usageMetadata;
-      return {
-        text,
-        usage: {
-          input: usage?.promptTokenCount ?? 0,
-          output: usage?.candidatesTokenCount ?? 0,
-          thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
-        },
-      };
-    }
-
-    // Default: Gemini AI Studio. Flash-lite can't ground, so swap to full Flash when grounded.
-    const activeModel = grounded ? GEMINI_SEARCH_MODEL : GEMINI_MODEL;
-    console.log(`[AI] 🚀 Gemini API - Model: ${activeModel}${grounded ? " (grounded)" : ""}`);
-    const model = genAI!.getGenerativeModel({
-      model: activeModel,
-      // @ts-ignore
-      tools: grounded ? [{ googleSearch: {} }] : [],
-      generationConfig: {
-        // @ts-ignore
-        thinkingConfig: { thinkingLevel: "HIGH" },
-      },
-    });
-    const result = await model.generateContent(contentParts);
-    const text = result.response.text();
-    if (!text.trim()) throw new Error(`Gemini returned empty for ${questionId}`);
-    const usage = result.response.usageMetadata;
-    return {
-      text,
-      usage: {
-        input: usage?.promptTokenCount ?? 0,
-        output: usage?.candidatesTokenCount ?? 0,
-        thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
-      },
-    };
-  }
+  // Dispatches to the chosen model — see module-level dispatchAIModel. Called
+  // twice: verification (grounded=false, fast) and explanation.
+  const callAIModel = (prompt: string, grounded: boolean) =>
+    dispatchAIModel(aiModel, prompt, fetchedImages, grounded, questionId);
 
   // --- Fire verification + explanation in parallel (no data dependency). ---
   // Verification is never grounded (would waste search quota); explanation
@@ -482,10 +512,6 @@ Rules:
   const verifyMatch = verifyCall.text.match(/\[ANSWER:\s*([^\]\n]+)\]/i);
   const rawAiAnswer = verifyMatch?.[1].trim() ?? null;
 
-  // Normalize answers for compare: uppercase, split on comma/semicolon, sort,
-  // rejoin. Handles MCQ ("A"), MSQ ("A,C" === "C,A"), and NAT ("12.5") uniformly.
-  const normalizeAnswer = (s: string): string =>
-    s.toUpperCase().split(/[,;]/).map(x => x.trim()).filter(Boolean).sort().join(",");
   const aiNorm = rawAiAnswer ? normalizeAnswer(rawAiAnswer) : "";
   const targetNorm = questionData.correct_answer ? normalizeAnswer(questionData.correct_answer) : "";
   const aiDetectedAnswer = rawAiAnswer;
@@ -521,16 +547,33 @@ Rules:
     console.warn(`[AI] ⚠️ High thinking tokens: ${totalThoughts} for ${questionId}`);
   }
 
-  // Save back to DB
+  // Save back to DB. Generating an explanation runs the same independent
+  // verification the /admin/ai-review flow does, so we also persist the review
+  // markers (ai_reviewed_at etc.) here — a freshly generated question counts as
+  // already reviewed and won't reappear in the ai-review queue. Mismatches are
+  // still surfaced into Reports below, exactly like the review flow.
+  const reviewedAt = new Date();
+  const reviewMarkers = {
+    ai_reviewed_at: reviewedAt,
+    ai_answer_mismatch: isMismatch,
+    ai_detected_answer: aiDetectedAnswer,
+    ai_review_model: aiModel,
+  };
   if (questionType === "PYQ") {
-    await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
+    await prisma.pYQ.update({ where: { id: questionId }, data: { explanation: cleanExplanation, ...reviewMarkers } });
   } else if (questionType === "GeneratedQuestion") {
-    await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation: cleanExplanation } });
+    await prisma.generatedQuestion.update({ where: { id: questionId }, data: { explanation: cleanExplanation, ...reviewMarkers } });
   } else if (questionType === "MockQuestion" && mockTestId) {
     await patchMockQuestion(mockTestId, questionId, {
       explanation: cleanExplanation,
       ai_answer_mismatch: isMismatch,
       ai_detected_answer: aiDetectedAnswer,
+      ai_review_model: aiModel,
+      ai_reviewed_at: reviewedAt.toISOString(),
+      // The explanation was just generated to derive the stored answer, so the
+      // explanation check is "ok" by construction — no separate grading needed.
+      ai_explanation_verdict: "ok",
+      ai_explanation_issue: null,
       high_thinking_flag: highThinkingFlag,
     });
   }
@@ -1023,6 +1066,720 @@ export async function getTopicsForExam(examType: string, branch: string | null) 
   });
 
   return rows.map(r => ({ topic: r.topic_name, subject: r.subject }));
+}
+
+// ─── AI Answer Review (admin/ai-review) ───────────────────────────────────────
+// Distinct from admin/explanations: that page fills MISSING explanations; this
+// one re-checks the stored correct_answer of ALREADY-answered questions by
+// solving them blind and comparing. Reviewed rows are marked so they don't
+// reappear; mismatches are flagged into QuestionReport (PYQ/Generated) or inline
+// JSON (Mock), exactly like generateAIExplanation does.
+
+type ReviewSource = "PYQ" | "GeneratedQuestion" | "Mock";
+
+type ReviewRow = {
+  id: string;
+  question_text: string;
+  options: any;
+  correct_answer: string;
+  question_type: string;
+  explanation: string | null;
+  questionType: ReviewSource;
+  subject: string;
+  topic?: string;
+  year?: number | null;
+  images?: { index: number; filename: string; type?: string }[] | null;
+  mockTestId: string | null;
+};
+
+const stripBase64Text = (text: string) =>
+  (text || "").replace(/data:image\/[^;]+;base64,[^"'\s)]{100,}/g, "[image]");
+
+type ExplanationVerdict = "ok" | "error" | "no_derive" | "incomplete" | "skipped";
+
+type ReviewChecks = {
+  // Answer check (blind solve)
+  rawAiAnswer: string | null;
+  isMismatch: boolean;
+  verifyText: string;
+  // Explanation check (grader pass; "skipped" when there's no stored explanation)
+  explanationVerdict: ExplanationVerdict;
+  explanationIssue: string | null;
+  explanationReviewText: string;
+  explanationFlagged: boolean;
+  usage: { input: number; output: number; thoughts: number };
+};
+
+/**
+ * Runs the two review checks for one question, in parallel:
+ *  1. Blind answer-solve (no stored answer/explanation shown) → mismatch signal.
+ *  2. Strict grade of the STORED explanation (sees the answer) → ok/error/
+ *     no_derive/incomplete. Skipped when the explanation is empty.
+ * Shared by reviewQuestionAnswer (single card) and solveReviewQuestion (batch).
+ */
+async function runReviewChecks(
+  q: { id: string; question_text: string; options: any; correct_answer: string; question_type?: string | null; explanation?: string | null; images?: any },
+  aiModel: AIModel,
+): Promise<ReviewChecks> {
+  const cleanQuestionText = stripBase64Text(q.question_text).replace(
+    /data:image\/[^;]+;base64,[^"'\s)]+/g,
+    "[IMAGE_REMOVED_FROM_TEXT]",
+  );
+  const qType = (q.question_type || "MCQ").toUpperCase();
+  const optionsJson = JSON.stringify(q.options);
+
+  // Prompt 1 — independent blind solve (answer is NOT revealed).
+  const verifyPrompt = `You are solving an exam question independently. Decide the correct answer using only your own reasoning — do not assume any answer has been provided.
+
+Question type: ${qType}
+Question: ${cleanQuestionText}
+Options: ${optionsJson}
+
+Rules:
+- Reason briefly (under 4 lines), then output your final answer.
+- ${answerFormatHint(qType)}
+- The [ANSWER: ...] tag is REQUIRED on the last line.`;
+
+  // Prompt 2 — strict grade of the stored explanation (only if one exists).
+  const storedExplanation = stripBase64Text((q.explanation || "").trim());
+  const gradePrompt = storedExplanation
+    ? `You are a STRICT grader checking a worked solution for mistakes. Assume it MAY be wrong — do not rubber-stamp it.
+
+Question type: ${qType}
+Question: ${cleanQuestionText}
+Options: ${optionsJson}
+Stated correct answer: ${q.correct_answer}
+Provided explanation:
+"""
+${storedExplanation}
+"""
+
+Check, in order:
+1. Does any step contain a mathematical or logical ERROR?
+2. Does the reasoning actually DERIVE the stated correct answer (not just assert it)?
+3. Is it INCOMPLETE — skips essential steps, or too thin to justify the answer?
+
+Reason briefly (under 4 lines), then output EXACTLY these two lines:
+[VERDICT: ok | error | no_derive | incomplete]
+[ISSUE: one concise sentence describing the problem, or "none"]`
+    : null;
+
+  // Load question images once; reuse for both calls (skip explanation-type images).
+  const rawImages = Array.isArray(q.images) ? (q.images as Array<{ index?: number; filename?: string; type?: string }>) : [];
+  const fetchedImages: Array<{ data: string; mimeType: string }> = [];
+  for (const img of rawImages.filter(i => i && i.filename && i.type !== "explanation")) {
+    const r = await getImageBase64(img.filename!);
+    if (r) fetchedImages.push(r);
+  }
+
+  const [verify, grade] = await Promise.all([
+    dispatchAIModel(aiModel, verifyPrompt, fetchedImages, false, q.id),
+    gradePrompt ? dispatchAIModel(aiModel, gradePrompt, fetchedImages, false, `${q.id}:expl`) : Promise.resolve(null),
+  ]);
+
+  // Parse answer check.
+  const rawAiAnswer = verify.text.match(/\[ANSWER:\s*([^\]\n]+)\]/i)?.[1].trim() ?? null;
+  const isMismatch =
+    !!rawAiAnswer && normalizeAnswer(rawAiAnswer) !== (q.correct_answer ? normalizeAnswer(q.correct_answer) : "");
+  const verifyText = verify.text
+    .replace(/\[ANSWER:\s*[^\]\n]+\]/gi, "")
+    .replace(/^```(markdown|latex)?\s*/i, "")
+    .replace(/```\s*$/, "")
+    .trim();
+
+  // Parse explanation grade.
+  let explanationVerdict: ExplanationVerdict = "skipped";
+  let explanationIssue: string | null = null;
+  let explanationReviewText = "";
+  if (grade) {
+    const raw = (grade.text.match(/\[VERDICT:\s*([^\]\n]+)\]/i)?.[1] ?? "ok").trim().toLowerCase();
+    explanationVerdict = (["ok", "error", "no_derive", "incomplete"].includes(raw) ? raw : "ok") as ExplanationVerdict;
+    const issueRaw = grade.text.match(/\[ISSUE:\s*([^\]]+)\]/i)?.[1]?.trim() ?? "";
+    explanationIssue = !issueRaw || /^none$/i.test(issueRaw) ? null : issueRaw;
+    explanationReviewText = grade.text
+      .replace(/\[VERDICT:[^\]]*\]/gi, "")
+      .replace(/\[ISSUE:[^\]]*\]/gi, "")
+      .replace(/^```(markdown|latex)?\s*/i, "")
+      .replace(/```\s*$/, "")
+      .trim();
+  }
+  const explanationFlagged = explanationVerdict !== "ok" && explanationVerdict !== "skipped";
+
+  return {
+    rawAiAnswer, isMismatch, verifyText,
+    explanationVerdict, explanationIssue, explanationReviewText, explanationFlagged,
+    usage: {
+      input: verify.usage.input + (grade?.usage.input ?? 0),
+      output: verify.usage.output + (grade?.usage.output ?? 0),
+      thoughts: verify.usage.thoughts + (grade?.usage.thoughts ?? 0),
+    },
+  };
+}
+
+/**
+ * Solves ONE question blind (no stored answer revealed) and records the review.
+ * Cheaper than generateAIExplanation — runs a single verification call, never
+ * regenerates the explanation. On mismatch it flags via QuestionReport (PYQ /
+ * Generated) or inline JSON (Mock), and always stamps the reviewed marker so the
+ * queue skips it next time.
+ */
+export async function reviewQuestionAnswer(
+  questionId: string,
+  source: ReviewSource,
+  mockTestId: string | null = null,
+  aiModel: AIModel = "gemini",
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+  if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+
+  // Fetch the question.
+  const qSelect = { id: true, question_text: true, options: true, correct_answer: true, question_type: true, explanation: true, images: true };
+  let q: any = null;
+  if (source === "PYQ") {
+    q = await prisma.pYQ.findUnique({ where: { id: questionId }, select: qSelect });
+  } else if (source === "GeneratedQuestion") {
+    q = await prisma.generatedQuestion.findUnique({ where: { id: questionId }, select: qSelect });
+  } else if (source === "Mock") {
+    if (!mockTestId) throw new Error("mockTestId required for Mock questions");
+    const rows = await prisma.$queryRaw<{ question: any }[]>`
+      SELECT elem AS question
+      FROM "MockTestTemplate", jsonb_array_elements(questions) AS elem
+      WHERE id = ${mockTestId} AND elem->>'id' = ${questionId}
+      LIMIT 1
+    `;
+    q = rows[0]?.question ?? null;
+  }
+  if (!q) throw new Error("Question not found");
+
+  const checks = await runReviewChecks(q, aiModel);
+  const { rawAiAnswer, isMismatch, verifyText } = checks;
+  console.log(`[AI Review] ${source} ${questionId} → AI: ${rawAiAnswer ?? "(none)"}, stored: ${q.correct_answer}, mismatch: ${isMismatch}, explanation: ${checks.explanationVerdict}`);
+
+  const reviewedAt = new Date();
+  const explDetails = `Explanation graded "${checks.explanationVerdict}": ${checks.explanationIssue ?? "see AI review"}.`;
+
+  // Persist the reviewed marker + flag mismatches/explanation issues.
+  if (source === "PYQ" || source === "GeneratedQuestion") {
+    const markerData = {
+      ai_reviewed_at: reviewedAt,
+      ai_answer_mismatch: isMismatch,
+      ai_detected_answer: rawAiAnswer,
+      ai_review_model: aiModel,
+    };
+    if (source === "PYQ") {
+      await prisma.pYQ.update({ where: { id: questionId }, data: markerData });
+    } else {
+      await prisma.generatedQuestion.update({ where: { id: questionId }, data: markerData });
+    }
+
+    const idKey = source === "PYQ" ? "pyq_id" : "question_id";
+    // Clear stale answer + explanation flags first, then re-create what still applies.
+    await prisma.questionReport.deleteMany({
+      where: { [idKey]: questionId, reason: { in: [AI_MISMATCH_REASON, AI_EXPLANATION_REASON] }, status: "pending" },
+    });
+    const toCreate: any[] = [];
+    if (isMismatch) {
+      toCreate.push({ [idKey]: questionId, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId,
+        details: `AI's independent solution arrived at "${rawAiAnswer}" but the stored correct_answer is "${q.correct_answer}". Verify which one is right.` });
+    }
+    if (checks.explanationFlagged) {
+      toCreate.push({ [idKey]: questionId, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails });
+    }
+    if (toCreate.length > 0) await prisma.questionReport.createMany({ data: toCreate });
+    revalidatePath("/admin/reports");
+  } else if (source === "Mock" && mockTestId) {
+    // Mock questions have no relational row → all flags live inline in JSON.
+    await patchMockQuestion(mockTestId, questionId, {
+      ai_reviewed_at: reviewedAt.toISOString(),
+      ai_answer_mismatch: isMismatch,
+      ai_detected_answer: rawAiAnswer,
+      ai_review_model: aiModel,
+      ai_explanation_verdict: checks.explanationVerdict,
+      ai_explanation_issue: checks.explanationFlagged ? checks.explanationIssue : null,
+    });
+  }
+
+  return {
+    verifyText,
+    aiDetectedAnswer: rawAiAnswer,
+    correctAnswer: q.correct_answer as string,
+    isMismatch,
+    explanationVerdict: checks.explanationVerdict,
+    explanationIssue: checks.explanationIssue,
+    explanationReviewText: checks.explanationReviewText,
+    explanationFlagged: checks.explanationFlagged,
+    usage: checks.usage,
+  };
+}
+
+/**
+ * Resolves an answer mismatch the admin reviewed: either keep the stored answer
+ * (AI was wrong) or overwrite correct_answer with the AI's independent answer.
+ * Either way the mismatch flag is cleared and its QuestionReport removed.
+ */
+export async function resolveReviewMismatch(
+  questionId: string,
+  source: ReviewSource,
+  mockTestId: string | null,
+  decision: "use_ai" | "keep_stored",
+  aiAnswer: string | null,
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+  if (decision === "use_ai" && !aiAnswer) throw new Error("No AI answer available to apply.");
+
+  if (source === "PYQ" || source === "GeneratedQuestion") {
+    const data: Record<string, unknown> = { ai_answer_mismatch: false };
+    if (decision === "use_ai") data.correct_answer = aiAnswer;
+    if (source === "PYQ") {
+      await prisma.pYQ.update({ where: { id: questionId }, data });
+      await prisma.questionReport.deleteMany({ where: { pyq_id: questionId, reason: AI_MISMATCH_REASON, status: "pending" } });
+    } else {
+      await prisma.generatedQuestion.update({ where: { id: questionId }, data });
+      await prisma.questionReport.deleteMany({ where: { question_id: questionId, reason: AI_MISMATCH_REASON, status: "pending" } });
+    }
+    revalidatePath("/admin/reports");
+  } else if (source === "Mock" && mockTestId) {
+    const patch: Record<string, unknown> = { ai_answer_mismatch: false };
+    if (decision === "use_ai") patch.correct_answer = aiAnswer;
+    await patchMockQuestion(mockTestId, questionId, patch);
+  } else {
+    throw new Error("mockTestId required for Mock questions");
+  }
+
+  return { ok: true, decision, newAnswer: decision === "use_ai" ? aiAnswer : null };
+}
+
+/**
+ * Resolves a flagged explanation: keep the stored explanation as-is, or replace
+ * it with the AI's independent solution text. Either way the explanation flag is
+ * cleared (QuestionReport removed for PYQ/Generated; JSON verdict reset for Mock).
+ */
+export async function resolveExplanation(
+  questionId: string,
+  source: ReviewSource,
+  mockTestId: string | null,
+  decision: "use_ai" | "keep_stored",
+  newExplanation: string | null,
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+  if (decision === "use_ai" && !newExplanation?.trim()) throw new Error("No AI solution text to store as the explanation.");
+
+  if (source === "PYQ" || source === "GeneratedQuestion") {
+    const data: Record<string, unknown> = {};
+    if (decision === "use_ai") data.explanation = newExplanation;
+    if (source === "PYQ") {
+      if (decision === "use_ai") await prisma.pYQ.update({ where: { id: questionId }, data });
+      await prisma.questionReport.deleteMany({ where: { pyq_id: questionId, reason: AI_EXPLANATION_REASON, status: "pending" } });
+    } else {
+      if (decision === "use_ai") await prisma.generatedQuestion.update({ where: { id: questionId }, data });
+      await prisma.questionReport.deleteMany({ where: { question_id: questionId, reason: AI_EXPLANATION_REASON, status: "pending" } });
+    }
+    revalidatePath("/admin/reports");
+  } else if (source === "Mock" && mockTestId) {
+    const patch: Record<string, unknown> = { ai_explanation_verdict: "ok", ai_explanation_issue: null };
+    if (decision === "use_ai") patch.explanation = newExplanation;
+    await patchMockQuestion(mockTestId, questionId, patch);
+  } else {
+    throw new Error("mockTestId required for Mock questions");
+  }
+
+  return { ok: true, decision };
+}
+
+// ── Batched review (Redis-staged, single Neon commit) ─────────────────────────
+// The "Review All" batch uses this pair instead of reviewQuestionAnswer so Neon
+// is untouched DURING the run: solveReviewQuestion does only the AI call and
+// stages the verdict in Redis; commitReviewBatch flushes all verdicts to Neon in
+// a handful of bulk statements at the end. Reviewing a single card still uses
+// reviewQuestionAnswer (one question → an immediate write is cheap).
+
+const reviewBatchKey = (batchId: string) => `aireview:batch:${batchId}`;
+const REVIEW_BATCH_TTL = 60 * 60 * 6; // 6h — abandoned batches self-expire.
+
+// Verdict shape staged in Redis between solve and commit.
+type ReviewVerdict = {
+  id: string;
+  source: ReviewSource;
+  mockTestId: string | null;
+  correctAnswer: string;
+  aiDetectedAnswer: string | null;
+  isMismatch: boolean;
+  explanationVerdict: ExplanationVerdict;
+  explanationIssue: string | null;
+  explanationFlagged: boolean;
+  reviewedAt: string; // ISO
+  model: AIModel;
+};
+
+// Minimal question payload the client already holds (from getQuestionsForReview),
+// so the solver never re-reads the row from Neon.
+type ReviewSolveInput = {
+  id: string;
+  source: ReviewSource;
+  mockTestId: string | null;
+  question_text: string;
+  options: any;
+  correct_answer: string;
+  question_type?: string | null;
+  explanation?: string | null;
+  images?: { index?: number; filename?: string; type?: string }[] | null;
+};
+
+/**
+ * Blind-solves ONE question using client-supplied data (no Neon read) and stages
+ * the verdict in Redis under batchId. Returns the verdict for live UI display.
+ * Does NOT write to Neon — that happens once in commitReviewBatch.
+ */
+export async function solveReviewQuestion(batchId: string, input: ReviewSolveInput, aiModel: AIModel = "gemini") {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+  if (!isRedisConfigured()) throw new Error("Redis is not configured — batch review requires Upstash Redis.");
+  if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+
+  const checks = await runReviewChecks(input, aiModel);
+
+  const verdict: ReviewVerdict = {
+    id: input.id,
+    source: input.source,
+    mockTestId: input.mockTestId,
+    correctAnswer: input.correct_answer,
+    aiDetectedAnswer: checks.rawAiAnswer,
+    isMismatch: checks.isMismatch,
+    explanationVerdict: checks.explanationVerdict,
+    explanationIssue: checks.explanationIssue,
+    explanationFlagged: checks.explanationFlagged,
+    reviewedAt: new Date().toISOString(),
+    model: aiModel,
+  };
+
+  // Stage in Redis (rpush + refresh TTL in one round-trip).
+  const key = reviewBatchKey(batchId);
+  await redis.pipeline().rpush(key, verdict).expire(key, REVIEW_BATCH_TTL).exec();
+
+  return {
+    verifyText: checks.verifyText,
+    aiDetectedAnswer: checks.rawAiAnswer,
+    isMismatch: checks.isMismatch,
+    explanationVerdict: checks.explanationVerdict,
+    explanationIssue: checks.explanationIssue,
+    explanationReviewText: checks.explanationReviewText,
+    explanationFlagged: checks.explanationFlagged,
+    usage: checks.usage,
+  };
+}
+
+/**
+ * Flushes a staged batch from Redis to Neon in as few statements as possible:
+ * one bulk UPDATE per relational source for the reviewed markers, one
+ * deleteMany + createMany for QuestionReport flags, and one JSON patch per mock
+ * template. Clears the Redis key. Returns a summary.
+ */
+export async function commitReviewBatch(batchId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+  if (!isRedisConfigured()) throw new Error("Redis is not configured.");
+
+  const key = reviewBatchKey(batchId);
+  const verdicts = (await redis.lrange<ReviewVerdict>(key, 0, -1)) ?? [];
+  if (verdicts.length === 0) return { committed: 0, flagged: 0 };
+
+  const pyq = verdicts.filter(v => v.source === "PYQ");
+  const gen = verdicts.filter(v => v.source === "GeneratedQuestion");
+  const mock = verdicts.filter(v => v.source === "Mock");
+
+  // Relational sources: one VALUES-join UPDATE for markers, then flag mismatches.
+  const commitRelational = async (rows: ReviewVerdict[], source: "PYQ" | "GeneratedQuestion") => {
+    if (rows.length === 0) return;
+    const table = source === "PYQ" ? '"PYQ"' : '"GeneratedQuestion"';
+    // Explicit casts on every column so a NULL in the first VALUES row doesn't
+    // leave Postgres unable to infer the column type.
+    const values = Prisma.join(
+      rows.map(v => Prisma.sql`(${v.id}::text, ${v.reviewedAt}::timestamptz, ${v.isMismatch}::boolean, ${v.aiDetectedAnswer}::text, ${v.model}::text)`),
+    );
+    await prisma.$executeRaw`
+      UPDATE ${Prisma.raw(table)} AS t SET
+        ai_reviewed_at = v.reviewed_at,
+        ai_answer_mismatch = v.mismatch,
+        ai_detected_answer = v.detected,
+        ai_review_model = v.model
+      FROM (VALUES ${values}) AS v(id, reviewed_at, mismatch, detected, model)
+      WHERE t.id = v.id
+    `;
+    // Clear stale answer + explanation flags for every reviewed row, then
+    // re-create whichever still apply (answer mismatch and/or explanation issue).
+    const ids = rows.map(v => v.id);
+    const answerDetails = (v: ReviewVerdict) =>
+      `AI's independent solution arrived at "${v.aiDetectedAnswer}" but the stored correct_answer is "${v.correctAnswer}". Verify which one is right.`;
+    const explDetails = (v: ReviewVerdict) =>
+      `Explanation graded "${v.explanationVerdict}": ${v.explanationIssue ?? "see AI review"}.`;
+
+    if (source === "PYQ") {
+      await prisma.questionReport.deleteMany({ where: { pyq_id: { in: ids }, reason: { in: [AI_MISMATCH_REASON, AI_EXPLANATION_REASON] }, status: "pending" } });
+      const data = [
+        ...rows.filter(v => v.isMismatch).map(v => ({ pyq_id: v.id, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId, details: answerDetails(v) })),
+        ...rows.filter(v => v.explanationFlagged).map(v => ({ pyq_id: v.id, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails(v) })),
+      ];
+      if (data.length > 0) await prisma.questionReport.createMany({ data });
+    } else {
+      await prisma.questionReport.deleteMany({ where: { question_id: { in: ids }, reason: { in: [AI_MISMATCH_REASON, AI_EXPLANATION_REASON] }, status: "pending" } });
+      const data = [
+        ...rows.filter(v => v.isMismatch).map(v => ({ question_id: v.id, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId, details: answerDetails(v) })),
+        ...rows.filter(v => v.explanationFlagged).map(v => ({ question_id: v.id, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails(v) })),
+      ];
+      if (data.length > 0) await prisma.questionReport.createMany({ data });
+    }
+  };
+
+  await commitRelational(pyq, "PYQ");
+  await commitRelational(gen, "GeneratedQuestion");
+
+  // Mock: group by template, apply all its question patches in one UPDATE.
+  const byTemplate = new Map<string, ReviewVerdict[]>();
+  for (const v of mock) {
+    if (!v.mockTestId) continue;
+    (byTemplate.get(v.mockTestId) ?? byTemplate.set(v.mockTestId, []).get(v.mockTestId)!).push(v);
+  }
+  for (const [mockTestId, vs] of byTemplate) {
+    const patchMap: Record<string, unknown> = {};
+    for (const v of vs) {
+      patchMap[v.id] = {
+        ai_reviewed_at: v.reviewedAt,
+        ai_answer_mismatch: v.isMismatch,
+        ai_detected_answer: v.aiDetectedAnswer,
+        ai_review_model: v.model,
+        ai_explanation_verdict: v.explanationVerdict,
+        ai_explanation_issue: v.explanationFlagged ? v.explanationIssue : null,
+      };
+    }
+    const mapJson = JSON.stringify(patchMap);
+    await prisma.$executeRaw`
+      UPDATE "MockTestTemplate"
+      SET questions = (
+        SELECT jsonb_agg(
+          CASE WHEN ${mapJson}::jsonb ? (elem->>'id')
+          THEN elem || (${mapJson}::jsonb -> (elem->>'id'))
+          ELSE elem END
+        )
+        FROM jsonb_array_elements(questions) AS elem
+      )
+      WHERE id = ${mockTestId}
+    `;
+  }
+
+  await redis.del(key);
+  revalidatePath("/admin/reports");
+
+  return {
+    committed: verdicts.length,
+    flagged: verdicts.filter(v => v.isMismatch).length,
+    explanationFlagged: verdicts.filter(v => v.explanationFlagged).length,
+  };
+}
+
+/**
+ * Lists unreviewed questions for a source + filter, 50 per page. Mirrors
+ * getGateCsePyqsMissingExplanation but keys on `ai_reviewed_at IS NULL` instead
+ * of an empty explanation, and supports PYQ / Generated / Mock.
+ */
+export async function getQuestionsForReview(
+  source: ReviewSource,
+  page = 0,
+  pageSize = 50,
+  examType = "GATE",
+  branch: string | null = "CSE",
+  subject: string | null = null,
+  topic: string | null = null,
+  // Mock-only filters (templates are papers, so filter by title/year not subject/topic).
+  mockTitle: string | null = null,
+  mockYear: number | null = null,
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+
+  const offset = page * pageSize;
+
+  if (source === "PYQ" || source === "GeneratedQuestion") {
+    const where = {
+      pattern: {
+        exam_type: examType,
+        branch: branch || undefined,
+        ...(topic ? { topic_name: topic } : {}),
+        ...(subject && !topic ? { subject } : {}),
+      },
+      ai_reviewed_at: null,
+    } as const;
+    const select = {
+      id: true,
+      question_text: true,
+      options: true,
+      correct_answer: true,
+      question_type: true,
+      explanation: true,
+      images: true,
+      pattern: { select: { subject: true, topic_name: true } },
+    };
+
+    if (source === "PYQ") {
+      const [rows, total] = await Promise.all([
+        prisma.pYQ.findMany({ where, select: { ...select, year: true }, orderBy: { year: "desc" }, skip: offset, take: pageSize }),
+        prisma.pYQ.count({ where }),
+      ]);
+      return {
+        rows: rows.map(r => ({
+          id: r.id, question_text: stripBase64Text(r.question_text), options: r.options, correct_answer: r.correct_answer,
+          question_type: r.question_type, explanation: r.explanation ? stripBase64Text(r.explanation) : null,
+          questionType: "PYQ" as const, subject: r.pattern.subject, topic: r.pattern.topic_name, year: r.year,
+          images: r.images as ReviewRow["images"], mockTestId: null,
+        })) satisfies ReviewRow[],
+        total, page, pageSize,
+      };
+    }
+
+    const [rows, total] = await Promise.all([
+      prisma.generatedQuestion.findMany({ where, select, orderBy: { created_at: "desc" }, skip: offset, take: pageSize }),
+      prisma.generatedQuestion.count({ where }),
+    ]);
+    return {
+      rows: rows.map(r => ({
+        id: r.id, question_text: stripBase64Text(r.question_text), options: r.options, correct_answer: r.correct_answer,
+        question_type: r.question_type, explanation: r.explanation ? stripBase64Text(r.explanation) : null,
+        questionType: "GeneratedQuestion" as const, subject: r.pattern.subject, topic: r.pattern.topic_name, year: null,
+        images: r.images as ReviewRow["images"], mockTestId: null,
+      })) satisfies ReviewRow[],
+      total, page, pageSize,
+    };
+  }
+
+  // Mock: flatten MockTestTemplate.questions JSONB and skip already-reviewed
+  // elems. Filtered by template title/year (a mock is a paper), not subject/topic.
+  const rows = await prisma.$queryRaw<{ mock_test_id: string; question: any }[]>`
+    SELECT t.id AS mock_test_id, elem AS question
+    FROM "MockTestTemplate" t, jsonb_array_elements(t.questions) AS elem
+    WHERE t.exam_type = ${examType}
+      AND (${branch}::text IS NULL OR t.branch = ${branch})
+      AND (${mockYear}::int IS NULL OR t.paper_year = ${mockYear})
+      AND (${mockTitle}::text IS NULL OR t.title = ${mockTitle})
+      AND (elem->>'ai_reviewed_at') IS NULL
+    ORDER BY t.id, elem->>'id'
+    OFFSET ${offset} LIMIT ${pageSize}
+  `;
+  const countRows = await prisma.$queryRaw<{ count: bigint }[]>`
+    SELECT count(*) AS count
+    FROM "MockTestTemplate" t, jsonb_array_elements(t.questions) AS elem
+    WHERE t.exam_type = ${examType}
+      AND (${branch}::text IS NULL OR t.branch = ${branch})
+      AND (${mockYear}::int IS NULL OR t.paper_year = ${mockYear})
+      AND (${mockTitle}::text IS NULL OR t.title = ${mockTitle})
+      AND (elem->>'ai_reviewed_at') IS NULL
+  `;
+  return {
+    rows: rows.map(({ mock_test_id, question }) => ({
+      id: String(question.id),
+      question_text: stripBase64Text(question.question_text),
+      options: question.options,
+      correct_answer: question.correct_answer,
+      question_type: question.question_type ?? "MCQ",
+      explanation: question.explanation ? stripBase64Text(question.explanation) : null,
+      questionType: "Mock" as const,
+      subject: question.subject ?? "—",
+      topic: question.topic ?? undefined,
+      year: null,
+      images: (Array.isArray(question.images) ? question.images : null) as ReviewRow["images"],
+      mockTestId: mock_test_id,
+    })) satisfies ReviewRow[],
+    total: Number(countRows[0]?.count ?? 0),
+    page, pageSize,
+  };
+}
+
+/** Exam types + branches that still have unreviewed questions for a source. */
+export async function getReviewExamTypes(source: ReviewSource) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+
+  if (source === "Mock") {
+    const rows = await prisma.$queryRaw<{ exam_type: string; branch: string | null }[]>`
+      SELECT DISTINCT t.exam_type, t.branch
+      FROM "MockTestTemplate" t, jsonb_array_elements(t.questions) AS elem
+      WHERE (elem->>'ai_reviewed_at') IS NULL
+      ORDER BY t.exam_type ASC
+    `;
+    return rows.map(r => ({ examType: r.exam_type, branch: r.branch }));
+  }
+
+  const unreviewed = { some: { ai_reviewed_at: null } };
+  const rows = await prisma.pattern.findMany({
+    where: source === "PYQ" ? { pyqs: unreviewed } : { questions: unreviewed },
+    select: { exam_type: true, branch: true },
+    distinct: ["exam_type", "branch"],
+    orderBy: { exam_type: "asc" },
+  });
+  return rows.map(r => ({ examType: r.exam_type, branch: r.branch }));
+}
+
+/** Subject + topic pairs that still have unreviewed questions for a source/exam. */
+export async function getReviewTopics(source: ReviewSource, examType: string, branch: string | null) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+
+  if (source === "Mock") {
+    const rows = await prisma.$queryRaw<{ subject: string | null; topic: string | null }[]>`
+      SELECT DISTINCT elem->>'subject' AS subject, elem->>'topic' AS topic
+      FROM "MockTestTemplate" t, jsonb_array_elements(t.questions) AS elem
+      WHERE t.exam_type = ${examType}
+        AND (${branch}::text IS NULL OR t.branch = ${branch})
+        AND (elem->>'ai_reviewed_at') IS NULL
+        AND elem->>'subject' IS NOT NULL
+      ORDER BY subject ASC, topic ASC
+    `;
+    return rows.map(r => ({ subject: r.subject ?? "—", topic: r.topic ?? "" }));
+  }
+
+  const unreviewed = { some: { ai_reviewed_at: null } };
+  const rows = await prisma.pattern.findMany({
+    where: {
+      exam_type: examType,
+      ...(branch ? { branch } : {}),
+      ...(source === "PYQ" ? { pyqs: unreviewed } : { questions: unreviewed }),
+    },
+    select: { topic_name: true, subject: true },
+    orderBy: [{ subject: "asc" }, { topic_name: "asc" }],
+  });
+  return rows.map(r => ({ subject: r.subject, topic: r.topic_name }));
+}
+
+/**
+ * Mock-paper filter options: distinct title + year for templates (matching the
+ * exam/branch) that still have unreviewed questions. The client derives the year
+ * dropdown from these and narrows the title list by the chosen year.
+ */
+export async function getMockReviewFilters(examType: string, branch: string | null) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+
+  const rows = await prisma.$queryRaw<{ title: string; year: number | null }[]>`
+    SELECT DISTINCT t.title AS title, t.paper_year AS year
+    FROM "MockTestTemplate" t, jsonb_array_elements(t.questions) AS elem
+    WHERE t.exam_type = ${examType}
+      AND (${branch}::text IS NULL OR t.branch = ${branch})
+      AND (elem->>'ai_reviewed_at') IS NULL
+    ORDER BY year DESC NULLS LAST, title ASC
+  `;
+  return rows.map(r => ({ title: r.title, year: r.year }));
 }
 
 export async function getMockTestQuestions(mockTestId: string) {

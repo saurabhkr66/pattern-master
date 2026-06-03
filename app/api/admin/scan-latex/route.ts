@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { isAdmin } from "@/lib/admin";
 import katex from "katex";
 
 export const dynamic = "force-dynamic";
@@ -46,11 +47,10 @@ export async function GET(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-    const userEmail = dbUser?.email?.toLowerCase();
-    const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-    
-    if (!userEmail || (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com")) {
+    const user = await currentUser();
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
+
+    if (!isAdmin(userEmail)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

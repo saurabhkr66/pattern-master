@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  allowedDevOrigins: ['192.168.1.8'],
+  allowedDevOrigins: ['192.168.1.8', '192.168.1.10'],
 
   // Use standard build to support dynamic API routes and Prisma
   // (Switching to 'export' requires refactoring all Server Components to Client Components)
@@ -32,6 +32,20 @@ const nextConfig: NextConfig = {
   // branchless exams (JEE Main, NEET, SSC, etc.). We now hide "Common" from
   // URLs entirely — these permanent redirects fold the indexed `-common`
   // variants into the cleaner form so Google consolidates ranking signal.
+  // Keep the service worker script out of the HTTP cache so PWA updates ship
+  // immediately on the next visit instead of being pinned to a stale version.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       // Legacy ?page=N topic pagination → path-based /page/N (ISR-compatible)

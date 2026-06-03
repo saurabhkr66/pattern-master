@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { isAdmin } from "@/lib/admin";
 
 const genAI = process.env.GEMINI_API_KEY
@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  if (!isAdmin(dbUser?.email?.toLowerCase())) {
+  const user = await currentUser();
+  if (!isAdmin(user?.emailAddresses?.[0]?.emailAddress?.toLowerCase())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

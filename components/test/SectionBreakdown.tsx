@@ -74,14 +74,20 @@ export default function SectionBreakdown({ sections, questions = [] }: Props) {
           const accColor = sec.accuracy > 70 ? BE.good : sec.accuracy > 40 ? BE.warn : BE.bad;
           const isExpanded = expandedSec === sec.name;
           const correctPct = sec.total > 0 ? (sec.correct / sec.total) * 100 : 0;
-          // Count actual wrong (answered incorrectly) vs skipped from questions data
+          // Count actual wrong (answered incorrectly), NOT counting skipped.
+          // Prefer the builder's per-section count; otherwise derive from the
+          // question rows; only as a last resort use total-correct (which would
+          // otherwise lump skipped in with wrong).
           const secQs = questions.filter(q => {
             const name = (q as any).sectionName || q.subject;
             return name === sec.name;
           });
-          const wrongCount = secQs.length > 0
-            ? secQs.filter(q => q.is_correct === false && q.user_answer !== null).length
-            : sec.total - sec.correct; // fallback if no question-level data
+          const wrongCount =
+            typeof sec.wrong === "number"
+              ? sec.wrong
+              : secQs.length > 0
+              ? secQs.filter(q => q.is_correct === false && q.user_answer !== null).length
+              : sec.total - sec.correct; // fallback if no question-level data
           const wrongPct = sec.total > 0 ? (wrongCount / sec.total) * 100 : 0;
 
           return (

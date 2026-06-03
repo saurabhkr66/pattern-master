@@ -7,6 +7,9 @@ export default function MobileNav() {
   const pathname = usePathname();
 
   if (pathname === "/test") return null;
+  // The coaching layer (/coaching-admin, /c/[slug]) has its own nav — hide the
+  // consumer mobile bar there.
+  if (pathname.startsWith("/coaching-admin") || pathname.startsWith("/c/")) return null;
 
   const tabs = [
     { id: 'Practice', href: '/practice', icon: 'book' },

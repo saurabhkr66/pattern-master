@@ -1,22 +1,11 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getGateCsePyqsMissingExplanation, getExamTypesWithMissingExplanations } from "@/app/actions/admin";
 import ExplanationsClient from "./ExplanationsClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminExplanationsPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-
-  if (!userEmail || (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com")) {
-    redirect("/");
-  }
+  await requireAdmin();
 
   const [data, examTypes] = await Promise.all([
     getGateCsePyqsMissingExplanation(0, 50, "GATE", "CSE", null),

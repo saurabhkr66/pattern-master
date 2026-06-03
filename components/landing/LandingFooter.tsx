@@ -45,6 +45,7 @@ export default function LandingFooter() {
           <div className="flex items-center gap-5 text-xs" style={{ color: "var(--text-muted)" }}>
             <Link href="/sign-in" className="hover:text-indigo-400 transition-colors">Sign in</Link>
             <Link href="/sign-up" className="hover:text-indigo-400 transition-colors">Sign up</Link>
+            <Link href="/for-coachings" className="hover:text-amber-400 transition-colors">For Coachings</Link>
           </div>
         </div>
 

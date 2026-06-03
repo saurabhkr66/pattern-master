@@ -1,27 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/requireAdmin";
 import ReportsClient from "./ReportsClient";
 
 export const revalidate = 120;
 
 export default async function AdminReportsPage() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
-  // Get email from our own database to avoid Clerk API timeouts
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
-  const userEmail = dbUser?.email?.toLowerCase();
-
-  // SECURE ADMIN CHECK
-  const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",");
-
-  if (!userEmail || (!adminEmails.includes(userEmail) && userEmail !== "sauravkum4200@gmail.com")) {
-    redirect("/");
-  }
+  // Admin check keys off the Clerk session email, not a DB row — the Clerk
+  // userId differs per instance, but the email is the real credential.
+  await requireAdmin();
 
   const EXAMS = ["GATE", "JEE_MAIN", "JEE_ADVANCED", "NEET"];
 

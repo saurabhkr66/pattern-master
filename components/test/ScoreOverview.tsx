@@ -8,9 +8,11 @@ import { fmtTime } from "./testAnalysisHelpers";
 interface Props {
   result: ResultData;
   onRestart: () => void;
+  /** Show the "Retake test" button. Default: true (consumer). Coaching sets false. */
+  showRestart?: boolean;
 }
 
-export default function ScoreOverview({ result, onRestart }: Props) {
+export default function ScoreOverview({ result, onRestart, showRestart = true }: Props) {
   const scorePercent = result.maxScore > 0 ? (result.score / result.maxScore) * 100 : 0;
   const circleColor = scorePercent >= 66 ? BE.good : scorePercent >= 33 ? BE.warn : BE.bad;
 
@@ -31,6 +33,19 @@ export default function ScoreOverview({ result, onRestart }: Props) {
 
   const weakest = result.subjectBreakdown?.sort((a, b) => a.accuracy - b.accuracy)[0]?.subject ?? "N/A";
   const slowQs = result.questions.filter(q => q.timeSpentSecs > 180);
+
+  // Marks gained/lost from the ACTUAL per-question awards, not from counts: a
+  // count-based "-wrong" wrongly penalises NAT/MSQ wrongs (which have no negative
+  // marking) and ignores per-question mark/penalty differences. When awarded
+  // marks aren't available (legacy sessions) fall back to the count estimate.
+  const trim = (n: number) => (Math.round(n * 100) / 100).toString();
+  const hasAwarded = result.questions.length > 0 && result.questions.every(q => typeof q.awarded === "number");
+  const marksGained = hasAwarded
+    ? result.questions.reduce((s, q) => s + (q.awarded! > 0 ? q.awarded! : 0), 0)
+    : correct * (result.questions[0]?.marks ?? 1);
+  const marksLost = hasAwarded
+    ? result.questions.reduce((s, q) => s + (q.awarded! < 0 ? q.awarded! : 0), 0) // ≤ 0
+    : -wrong;
 
   return (
     <section>
@@ -160,8 +175,8 @@ export default function ScoreOverview({ result, onRestart }: Props) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
               {[
-                { color: BE.good, label: "Correct", sub: `marks gained`, count: correct, marks: `+${correct * (result.questions[0]?.marks ?? 1)}` },
-                { color: BE.bad, label: "Wrong", sub: "marks lost", count: wrong, marks: `-${wrong}` },
+                { color: BE.good, label: "Correct", sub: `marks gained`, count: correct, marks: `+${trim(marksGained)}` },
+                { color: BE.bad, label: "Wrong", sub: "marks lost", count: wrong, marks: marksLost < 0 ? trim(marksLost) : "0" },
                 { color: "#6b635a", label: "Skipped", sub: "No penalty", count: skipped, marks: "0" },
                 { color: BE.warn, label: "Net score", sub: "", count: null, marks: `${result.score.toFixed(1)} / ${result.maxScore}`, isTotal: true },
               ].map((row, i) => (
@@ -234,18 +249,20 @@ export default function ScoreOverview({ result, onRestart }: Props) {
               </div>
             ))}
           </div>
-          <button onClick={onRestart} style={{
-            marginTop: 20, width: "100%", padding: "10px 0",
-            border: `1px solid ${BE.line}`, borderRadius: 4,
-            background: "transparent", color: BE.textDim, fontSize: 13,
-            fontFamily: BE.mono, cursor: "pointer", letterSpacing: "0.04em",
-            transition: "background 0.15s, color 0.15s",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = BE.text; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = BE.textDim; }}
-          >
-            ↺ Retake test
-          </button>
+          {showRestart && (
+            <button onClick={onRestart} style={{
+              marginTop: 20, width: "100%", padding: "10px 0",
+              border: `1px solid ${BE.line}`, borderRadius: 4,
+              background: "transparent", color: BE.textDim, fontSize: 13,
+              fontFamily: BE.mono, cursor: "pointer", letterSpacing: "0.04em",
+              transition: "background 0.15s, color 0.15s",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = BE.text; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = BE.textDim; }}
+            >
+              ↺ Retake test
+            </button>
+          )}
         </div>
       </div>
 

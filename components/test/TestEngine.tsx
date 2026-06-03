@@ -29,6 +29,10 @@ interface Props {
   serverExpiresAt: string | null;
   initialState: DraftState | null;
   userName?: string;
+  // Autosave target. Defaults to the consumer Redis-draft endpoint; coaching
+  // tests point this at their own (attempt-scoped) save route.
+  saveEndpoint?: string;
+  autosaveIntervalMs?: number;
 }
 
 export default function TestEngine({
@@ -44,6 +48,8 @@ export default function TestEngine({
   serverExpiresAt,
   initialState,
   userName,
+  saveEndpoint = "/api/test/session/save",
+  autosaveIntervalMs = 1_200_000,
 }: Props) {
   const s = initialState ?? {};
 
@@ -145,7 +151,9 @@ export default function TestEngine({
           clearInterval(timerRef.current!);
           if (!autoSubmittedRef.current) {
             autoSubmittedRef.current = true;
-            setTimeout(() => { onSubmit(buildAnswers(), Math.round((Date.now() - startTimeRef.current) / 1000)); }, 100);
+            // Random 0–3 s jitter so a full batch of students doesn't hit the
+            // submit endpoint simultaneously when their timers all reach zero.
+            setTimeout(() => { onSubmit(buildAnswers(), Math.round((Date.now() - startTimeRef.current) / 1000)); }, Math.random() * 5000);
           }
           return 0;
         }
@@ -170,7 +178,7 @@ export default function TestEngine({
     const id = setInterval(async () => {
       setSaveStatus("saving");
       try {
-        const res = await fetch("/api/test/session/save", {
+        const res = await fetch(saveEndpoint, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ draftId, state: buildDraftState() }),
@@ -178,9 +186,9 @@ export default function TestEngine({
         const data = await res.json();
         setSaveStatus(data.ok ? "saved" : "error");
       } catch { setSaveStatus("error"); }
-    }, 1_200_000);
+    }, autosaveIntervalMs);
     return () => clearInterval(id);
-  }, [draftId, buildDraftState]);
+  }, [draftId, buildDraftState, saveEndpoint, autosaveIntervalMs]);
 
   // ── Safety net: flush state on tab close / app background ──
   // Catches the common failure modes (user closes tab, switches apps on
@@ -190,7 +198,7 @@ export default function TestEngine({
     if (!draftId) return;
     const flush = () => {
       try {
-        fetch("/api/test/session/save", {
+        fetch(saveEndpoint, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ draftId, state: buildDraftState() }),
@@ -209,7 +217,7 @@ export default function TestEngine({
       window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [draftId, buildDraftState]);
+  }, [draftId, buildDraftState, saveEndpoint]);
 
   // Stamp a question as "visited but not answered" once the user leaves it
   // without recording an answer — distinguishes Not Answered from Not Visited.

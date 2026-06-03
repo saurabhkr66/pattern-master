@@ -19,6 +19,8 @@ import {
   ClipboardList,
   Bookmark,
   Trash2,
+  GraduationCap,
+  Building2,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import GlobalSearch from "./search/GlobalSearch";
@@ -47,6 +49,8 @@ export default function Header() {
   }, []);
 
   if (pathname === "/test") return null;
+  // Coaching layer has its own header/nav — hide the consumer header there.
+  if (pathname.startsWith("/coaching-admin") || pathname.startsWith("/c/")) return null;
 
   return (
     <header
@@ -182,17 +186,17 @@ export default function Header() {
             </UserButton>
           </Show>
 
-          {/* Hamburger (only shown if not signed in or as a fallback) */}
-          <Show when="signed-out">
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 z-[120]"
-              style={{ color: "var(--text-primary)" }}
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </Show>
+          {/* Hamburger — always available on mobile (signed-in users reach the
+              coaching entry through this menu, since they have no other menu). */}
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 z-[120]"
+            style={{ color: "var(--text-primary)" }}
+            aria-label="Menu"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
@@ -213,6 +217,43 @@ export default function Header() {
           >
 
             <nav className="flex flex-col p-4 gap-2">
+
+              {/* Coaching entry — always available, for both signed-in and
+                  signed-out users (coaching students may not have a Clerk account). */}
+              <Link
+                href="/coaching"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl nav-item ${
+                  pathname.startsWith("/coaching") ? "nav-item-active" : ""
+                }`}
+                style={
+                  pathname.startsWith("/coaching")
+                    ? undefined
+                    : { color: "var(--text-secondary)" }
+                }
+              >
+                <GraduationCap size={18} />
+                My Coaching
+              </Link>
+
+              {/* Teacher entry — sits next to the student "My Coaching" door. */}
+              <Link
+                href="/for-coachings"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl nav-item ${
+                  pathname.startsWith("/for-coachings") ? "nav-item-active" : ""
+                }`}
+                style={
+                  pathname.startsWith("/for-coachings")
+                    ? undefined
+                    : { color: "var(--text-secondary)" }
+                }
+              >
+                <Building2 size={18} />
+                For Coachings
+              </Link>
+
+              <div className="border-t my-1" style={{ borderColor: "var(--border)" }} />
 
               {navLinks.map(({ href, label, icon: Icon, disabled, prefetch }) => {
                 const content = (
