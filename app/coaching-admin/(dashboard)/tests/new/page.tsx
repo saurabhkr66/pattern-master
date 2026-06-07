@@ -32,12 +32,21 @@ export default async function NewTestPage() {
       id: true,
       question_text: true,
       question_type: true,
+      grade: true,
       subject: true,
+      topic: true,
+      set_name: true,
       max_marks: true,
+      created_at: true,
     },
     orderBy: { created_at: "desc" },
     take: 1000,
   });
 
-  return <TestWizard questions={questions} isSuperAdmin={!!actor?.isSuperAdmin} />;
+  return (
+    <TestWizard
+      questions={questions.map((q) => ({ ...q, created_at: q.created_at.toISOString() }))}
+      isSuperAdmin={!!actor?.isSuperAdmin}
+    />
+  );
 }

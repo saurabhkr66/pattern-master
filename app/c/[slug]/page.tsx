@@ -1,17 +1,25 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { Card, LogoBadge, AMBER_GRAD, AMBER_GLOW, display } from "@/components/coaching/ui";
 
-export const dynamic = "force-dynamic";
+// Public landing page (Join / Sign in) — its content (name, city, exam types)
+// changes almost never, so it's cached/ISR instead of rendered per request.
+// First hit renders + caches; subsequent hits for the window serve with zero
+// DB. Busted immediately on coaching edit via revalidatePath("/c/<slug>") in
+// the admin update/delete route; this is just the backstop.
+export const revalidate = 3600;
 
-async function getCoaching(slug: string) {
-  return prisma.coaching.findUnique({
+// cache() dedupes the lookup across generateMetadata + the page within one
+// render (they'd otherwise both query on an uncached render).
+const getCoaching = cache(async (slug: string) =>
+  prisma.coaching.findUnique({
     where: { slug },
     select: { id: true, name: true, city: true, exam_types: true, active: true },
-  });
-}
+  })
+);
 
 export async function generateMetadata({
   params,

@@ -43,12 +43,23 @@ export interface NormalizedQuestion {
   subject: string | null;
   topic: string | null;
   images: { index: number; filename: string }[] | null;
+  // Bilingual: Hindi counterparts (null/[] → render falls back to English).
+  question_text_hindi: string | null;
+  question_html_hindi: string | null;
+  options_hindi: string[];
+  solution_hindi: string | null;
+  solution_html_hindi: string | null;
 }
 
 /** Client-safe question — answers/solutions stripped. Safe to send mid-test. */
 export type ClientQuestion = Omit<
   NormalizedQuestion,
-  "correct_answer" | "solution" | "solution_html" | "nat_tolerance"
+  | "correct_answer"
+  | "solution"
+  | "solution_html"
+  | "solution_hindi"
+  | "solution_html_hindi"
+  | "nat_tolerance"
 >;
 
 type StoredOption = { label: string; text: string };
@@ -109,6 +120,11 @@ export async function resolveQuestions(
     marks: true,
     topic: true,
     images: true,
+    question_text_hindi: true,
+    question_html_hindi: true,
+    options_hindi: true,
+    explanation_hindi: true,
+    explanation_html_hindi: true,
   } as const;
 
   const [coachingRows, pyqRows, generatedRows] = await Promise.all([
@@ -130,6 +146,11 @@ export async function resolveQuestions(
             subject: true,
             topic: true,
             images: true,
+            question_text_hindi: true,
+            question_html_hindi: true,
+            options_hindi: true,
+            solution_hindi: true,
+            solution_html_hindi: true,
           },
         })
       : Promise.resolve([]),
@@ -185,6 +206,11 @@ export async function resolveQuestions(
         subject: r.subject ?? null,
         topic: r.topic ?? null,
         images: asImages(r.images),
+        question_text_hindi: r.question_text_hindi ?? null,
+        question_html_hindi: r.question_html_hindi ?? null,
+        options_hindi: normalizeCoachingOptions(r.options_hindi),
+        solution_hindi: r.solution_hindi ?? null,
+        solution_html_hindi: r.solution_html_hindi ?? null,
       });
     } else {
       const r =
@@ -208,6 +234,11 @@ export async function resolveQuestions(
         subject: pattern?.subject ?? r.topic ?? null,
         topic: pattern?.topic_name ?? r.topic ?? null,
         images: asImages(r.images),
+        question_text_hindi: r.question_text_hindi ?? null,
+        question_html_hindi: r.question_html_hindi ?? null,
+        options_hindi: normalizeConsumerOptions(r.options_hindi),
+        solution_hindi: r.explanation_hindi ?? null,
+        solution_html_hindi: r.explanation_html_hindi ?? null,
       });
     }
   }
@@ -217,10 +248,20 @@ export async function resolveQuestions(
 
 /** Strip answers/solutions so a question is safe to send to the browser mid-test. */
 export function stripAnswers(q: NormalizedQuestion): ClientQuestion {
-  const { correct_answer, solution, solution_html, nat_tolerance, ...safe } = q;
+  const {
+    correct_answer,
+    solution,
+    solution_html,
+    solution_hindi,
+    solution_html_hindi,
+    nat_tolerance,
+    ...safe
+  } = q;
   void correct_answer;
   void solution;
   void solution_html;
+  void solution_hindi;
+  void solution_html_hindi;
   void nat_tolerance;
   return safe;
 }

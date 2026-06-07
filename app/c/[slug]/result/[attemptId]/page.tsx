@@ -1,12 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
-import { scoreQuestion } from "@/lib/resolveQuestions";
-import { getResolvedTestQuestions, studentQuestionsFromBase } from "@/lib/coachingQuestionCache";
 import { finalizeOverdueAttempts, isPastDeadline } from "@/lib/coachingFinalize";
 import { getCachedCoachingBySlug } from "@/lib/coachingCache";
-import { buildResultData } from "@/components/test/mockTestUtils";
+import { getAttemptResultData } from "@/lib/coachingResult";
+import { getAttemptPeerStats } from "@/lib/coachingPeerStats";
 import CoachingResultAnalysis from "@/components/coaching/CoachingResultAnalysis";
+import StudentPerformanceContext from "@/components/coaching/StudentPerformanceContext";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,7 @@ export default async function ResultPage({
         max_score: true,
         time_taken_secs: true,
         question_times: true,
+        student_id: true,
         test: {
           select: {
             id: true,
@@ -72,66 +73,24 @@ export default async function ResultPage({
     }
   }
 
-  // Rebuild the student's set from the cached base, WITH answers (correct answers
-  // + solutions). Options shown in ORIGINAL order — stored answers were de-shuffled.
-  const runtimeTest = {
-    id: attempt.test.id,
-    questions: attempt.test.questions,
-    shuffle: attempt.test.shuffle,
-    pool_size: attempt.test.pool_size,
-  };
-  const base = await getResolvedTestQuestions(runtimeTest, coaching.id);
-  const resolved = studentQuestionsFromBase(base, runtimeTest, student.id);
-  const studentAnswers = (attempt.answers ?? {}) as Record<string, string>;
-  const times = (attempt.question_times ?? {}) as Record<string, number>;
-
-  // Map into the breakdown shape buildResultData expects (same as the consumer
-  // mock flow), so the identical analysis UI renders.
-  let correctCount = 0;
-  let wrongCount = 0;
-  let skippedCount = 0;
-
-  const breakdown = resolved.map((q) => {
-    const ua = (studentAnswers[q.id] ?? "").trim();
-    const answered = ua !== "";
-    const awarded = scoreQuestion(q, ua) ?? 0;
-    const isCorrect = !answered ? null : awarded > 0;
-    if (!answered) skippedCount++;
-    else if (isCorrect) correctCount++;
-    else wrongCount++;
-
-    return {
-      questionId: q.id,
-      questionText: q.question_text,
-      options: q.options.length ? q.options : null,
-      questionType: q.question_type.toUpperCase(),
-      correctAnswer: q.correct_answer,
-      userAnswer: answered ? ua : null,
-      isCorrect,
-      marks: q.marks,
-      awardedMarks: awarded,
-      subject: q.subject || "General",
-      topic: q.topic || undefined,
-      explanation: q.solution || undefined,
-      timeSpentSecs: times[q.id] ?? 0,
-    };
-  });
-
-  const result = buildResultData(
-    breakdown,
-    {
-      score: attempt.score ?? 0,
-      maxScore: attempt.max_score ?? resolved.reduce((s, q) => s + q.marks, 0),
-      correctCount,
-      wrongCount,
-      skippedCount,
-      timeTakenSecs: attempt.time_taken_secs ?? 0,
-    },
-    { examType: "GATE", mockTestId: null }
-  );
+  // Cached, shared builder (Redis, immutable per submitted attempt) — rebuilds the
+  // student's set from the cached base WITH answers and grades it. Same logic the
+  // coaching-admin per-attempt analysis uses, so both render identically.
+  // Peer stats (rank/percentile/class-avg/trend) come from the same leaderboard
+  // cohort the student sees on the leaderboard page — fetched alongside in parallel.
+  const [result, peer] = await Promise.all([
+    getAttemptResultData(attempt, coaching.id),
+    getAttemptPeerStats({
+      attemptId: attempt.id,
+      testId: attempt.test.id,
+      studentId: attempt.student_id,
+      coachingId: coaching.id,
+    }),
+  ]);
 
   return (
-    <div className="h-screen">
+    <div className="flex min-h-screen flex-col" style={{ background: "var(--bg-base)" }}>
+      {peer && <StudentPerformanceContext stats={peer} />}
       <CoachingResultAnalysis result={result} dashboardHref={`/c/${slug}/dashboard`} />
     </div>
   );

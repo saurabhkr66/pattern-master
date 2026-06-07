@@ -37,10 +37,17 @@ export async function POST(
     // enforce the deadline server-side. The test's runtime config comes from
     // Redis (warmed by the test page on render), so we don't join the test row
     // into every submit during a batch's auto-submit spike.
-    const attempt = await prisma.testAttempt.findFirst({
-      where: { id: attemptId, test_id: testId, student_id: sid, coaching_id: cid },
-      select: { id: true, status: true, started_at: true },
-    });
+    // The attempt row (Neon) and the runtime config (Redis) are independent —
+    // both keyed only by the student/test — so fetch them in parallel. This
+    // overlaps the DB read with the cache read during a batch's auto-submit
+    // spike. The cheap Redis read on the rare already-submitted path is harmless.
+    const [attempt, test] = await Promise.all([
+      prisma.testAttempt.findFirst({
+        where: { id: attemptId, test_id: testId, student_id: sid, coaching_id: cid },
+        select: { id: true, status: true, started_at: true },
+      }),
+      getCachedTestConfig(testId, cid),
+    ]);
     if (!attempt) return NextResponse.json({ error: "attempt not found" }, { status: 404 });
 
     // Idempotent: already submitted → just return.
@@ -48,7 +55,6 @@ export async function POST(
       return NextResponse.json({ ok: true, attemptId, alreadySubmitted: true });
     }
 
-    const test = await getCachedTestConfig(testId, cid);
     if (!test) return NextResponse.json({ error: "test not found" }, { status: 404 });
 
     // Server-authoritative deadline (live-test integrity): the timer lived in the
@@ -80,7 +86,7 @@ export async function POST(
     }
 
     const totalTime = Number(timeTakenSecs);
-    const { score, maxScore } = await gradeAndWrite({
+    const { score, maxScore, updated } = await gradeAndWrite({
       attemptId,
       studentId: sid,
       test,
@@ -89,6 +95,16 @@ export async function POST(
       times: questionTimes,
       timeTakenSecs: Number.isFinite(totalTime) ? totalTime : null,
     });
+    // gradeAndWrite guards on status: "in_progress", so the status read above is
+    // just a fast path — the write itself is the gate. A double-click / retry /
+    // second tab (or a replay after the on-view finalizer already graded this)
+    // gets updated: false here instead of clobbering the stored submission.
+
+    // Lost the race / already finalized — the winning write owns the score, so
+    // report it as a no-op submit rather than returning this attempt's recompute.
+    if (!updated) {
+      return NextResponse.json({ ok: true, attemptId, alreadySubmitted: true });
+    }
 
     return NextResponse.json({ ok: true, attemptId, score, maxScore });
   } catch (err) {

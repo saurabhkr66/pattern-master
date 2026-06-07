@@ -137,3 +137,47 @@ export async function invalidateActiveTests(coachingId: string): Promise<void> {
     redis.del(activeTestsKey(coachingId))
   );
 }
+
+// ── Coaching name by id (admin shell) ───────────────────────────────────────
+// The admin layout renders the coaching's name in the sidebar/header on EVERY
+// /coaching-admin/* navigation, but the name effectively never changes. Cache
+// it by id to drop one DB read per admin page load. Long TTL; busted via
+// invalidateCoachingName if the name ever becomes editable.
+
+const NAME_TTL = 3600;
+const nameKey = (coachingId: string) => `coaching:${coachingId}:name:v1`;
+
+export async function getCachedCoachingName(coachingId: string): Promise<string | null> {
+  if (isRedisConfigured()) {
+    try {
+      const c = await redis.get<string>(nameKey(coachingId));
+      if (c) return c;
+    } catch {
+      /* fall through to DB */
+    }
+  }
+
+  const c = await withDbRetry(() =>
+    prisma.coaching.findUnique({
+      where: { id: coachingId },
+      select: { name: true },
+    })
+  );
+
+  if (c?.name && isRedisConfigured()) {
+    try {
+      await redis.set(nameKey(coachingId), c.name, { ex: NAME_TTL });
+    } catch {
+      /* best-effort */
+    }
+  }
+  return c?.name ?? null;
+}
+
+/** Drop the cached coaching name (call if the name becomes editable). */
+export async function invalidateCoachingName(coachingId: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+  await bestEffortInvalidate(`coaching-name:${coachingId}`, () =>
+    redis.del(nameKey(coachingId))
+  );
+}

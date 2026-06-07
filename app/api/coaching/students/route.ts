@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
 
-// GET /api/coaching/students?q=&batch=
+// One page of students — keeps the initial render and each "load more" small.
+export const STUDENTS_PAGE_SIZE = 50;
+
+// GET /api/coaching/students?q=&batch=&limit=&offset=
 // List students for the current coaching, with optional name/phone search and
 // batch filter. Always scoped to coachingId by the wrapper.
 export const GET = withCoachingContext(async (req, { coachingId }) => {
-  const q = req.nextUrl.searchParams.get("q")?.trim();
-  const batch = req.nextUrl.searchParams.get("batch")?.trim();
+  const sp = req.nextUrl.searchParams;
+  const q = sp.get("q")?.trim();
+  const batch = sp.get("batch")?.trim();
+  const limit = Math.min(Math.max(Number(sp.get("limit")) || STUDENTS_PAGE_SIZE, 1), 100);
+  const offset = Math.max(Number(sp.get("offset")) || 0, 0);
 
-  const students = await prisma.student.findMany({
+  // One extra row tells us whether a next page exists, without a count() query.
+  const rows = await prisma.student.findMany({
     where: {
       coaching_id: coachingId,
       ...(batch ? { batch_id: batch } : {}),
@@ -32,10 +39,12 @@ export const GET = withCoachingContext(async (req, { coachingId }) => {
       batch: { select: { id: true, name: true } },
     },
     orderBy: { joined_at: "desc" },
-    take: 500,
+    skip: offset,
+    take: limit + 1,
   });
 
-  return NextResponse.json({ students });
+  const hasMore = rows.length > limit;
+  return NextResponse.json({ students: hasMore ? rows.slice(0, limit) : rows, hasMore });
 });
 
 // POST /api/coaching/students  { name, phone, batchId? }

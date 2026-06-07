@@ -20,6 +20,36 @@ const VERSION = "v2";
 const TTL_SECONDS = 60 * 60; // 1h; also busted explicitly on test edit
 const key = (testId: string) => `coaching:test:${testId}:resolved:${VERSION}`;
 const configKey = (testId: string) => `coaching:test:${testId}:config:${VERSION}`;
+// Full static test row the student test page renders from. Same lifecycle as the
+// resolved/config caches (changes only on edit), but carries every field the
+// page reads — so the open path never reads the (identical, immutable-in-window)
+// test row from Neon per student. The per-student attempt is read separately.
+const fullKey = (testId: string) => `coaching:test:${testId}:full:${VERSION}`;
+// Permanent marker (no TTL): set once a test's window has closed AND no attempt
+// is left in_progress. finalizeOverdueAttempts (lib/coachingFinalize) checks it
+// first so repeat views of a finished test's results/leaderboard/result pages
+// skip its two DB reads. Cleared on test edit (end_at may be extended).
+const finalizedKey = (testId: string) => `coaching:test:${testId}:finalized:v1`;
+
+/** True once a test is fully finalized (window closed, nothing in progress). */
+export async function isTestFinalized(testId: string): Promise<boolean> {
+  if (!isRedisConfigured()) return false;
+  try {
+    return (await redis.get(finalizedKey(testId))) != null;
+  } catch {
+    return false; // Redis hiccup — fall back to the normal (DB) finalize path.
+  }
+}
+
+/** Mark a test fully finalized so finalize-on-view can short-circuit. */
+export async function markTestFinalized(testId: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+  try {
+    await redis.set(finalizedKey(testId), 1);
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * Full resolved question set for a test (original order, WITH answers). Served
@@ -102,6 +132,78 @@ export async function getCachedTestConfig(
 }
 
 /**
+ * The full static test row the student test page renders from (status, window,
+ * title/description, runtime fields, and the questions JSON). Identical for every
+ * student of a test and immutable while the window is open, so it's Redis-cached
+ * — this removes the densest per-student uncached Neon read on the open path
+ * (8,000 students opening = 1 cold read per test, not per student).
+ *
+ * Dates round-trip through Redis as ISO strings; we revive them to Date so the
+ * page's `testWindowState` / `toLocaleString` / `getTime` calls behave the same
+ * whether the value came from cache or the DB.
+ */
+export type CachedFullTest = {
+  id: string;
+  status: string;
+  title: string;
+  description: string | null;
+  start_at: Date | null;
+  end_at: Date | null;
+  duration_secs: number;
+  shuffle: boolean;
+  pool_size: number | null;
+  questions: unknown;
+};
+
+const reviveTestDates = (t: CachedFullTest): CachedFullTest => ({
+  ...t,
+  start_at: t.start_at ? new Date(t.start_at) : null,
+  end_at: t.end_at ? new Date(t.end_at) : null,
+});
+
+export async function getCachedFullTest(
+  testId: string,
+  coachingId: string
+): Promise<CachedFullTest | null> {
+  if (isRedisConfigured()) {
+    try {
+      const cached = await redis.get<CachedFullTest>(fullKey(testId));
+      if (cached) return reviveTestDates(cached);
+    } catch {
+      // Redis hiccup — fall through to DB.
+    }
+  }
+
+  const test = await withDbRetry(() =>
+    prisma.coachingTest.findFirst({
+      where: { id: testId, coaching_id: coachingId },
+      select: {
+        id: true,
+        status: true,
+        title: true,
+        description: true,
+        start_at: true,
+        end_at: true,
+        duration_secs: true,
+        shuffle: true,
+        pool_size: true,
+        questions: true,
+      },
+    })
+  );
+  if (!test) return null;
+
+  if (isRedisConfigured()) {
+    try {
+      await redis.set(fullKey(testId), test, { ex: TTL_SECONDS });
+    } catch {
+      // Non-fatal: caching is best-effort.
+    }
+  }
+  return test;
+}
+
+/**
  * Warm the config cache from an already-loaded test row (no DB read). The test
  * page calls this on render, so by the time a batch reaches auto-submit the
  * config is already hot and the submit path never touches the DB for it.
@@ -130,7 +232,14 @@ export async function primeTestConfig(test: RuntimeTest): Promise<void> {
 export async function invalidateTestQuestionCache(testId: string): Promise<void> {
   if (!isRedisConfigured()) return;
   await bestEffortInvalidate(`test:${testId}`, () =>
-    Promise.all([redis.del(key(testId)), redis.del(configKey(testId))])
+    // Also drop the finalized marker: an edit may extend end_at (reopen the
+    // window), after which new attempts must be finalizable again.
+    Promise.all([
+      redis.del(key(testId)),
+      redis.del(configKey(testId)),
+      redis.del(fullKey(testId)),
+      redis.del(finalizedKey(testId)),
+    ])
   );
 }
 

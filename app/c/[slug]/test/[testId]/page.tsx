@@ -11,6 +11,7 @@ import {
   getResolvedTestQuestions,
   studentQuestionsFromBase,
   primeTestConfig,
+  getCachedFullTest,
 } from "@/lib/coachingQuestionCache";
 import { getCachedCoachingBySlug } from "@/lib/coachingCache";
 import { getCoachingDraft } from "@/lib/coachingDraft";
@@ -33,17 +34,11 @@ export default async function StudentTestPage({
   const student = await getCurrentStudent(coaching.id);
   if (!student) redirect(`/c/${slug}/login`);
 
-  // Test + THIS student's attempt in ONE query (merged read).
-  const test = await prisma.coachingTest.findFirst({
-    where: { id: testId, coaching_id: coaching.id },
-    include: {
-      attempts: {
-        where: { student_id: student.id },
-        select: { id: true, status: true, started_at: true },
-        take: 1,
-      },
-    },
-  });
+  // Static test row (status/window/questions) is identical for every student and
+  // immutable while the window is open, so it's Redis-cached — this removes the
+  // densest per-student uncached Neon read on the open path. THIS student's
+  // attempt is read separately below, only once the gates pass.
+  const test = await getCachedFullTest(testId, coaching.id);
   if (!test) notFound();
 
   if (test.status !== "active") {
@@ -71,9 +66,15 @@ export default async function StudentTestPage({
   // which the Neon HTTP adapter rejects ("Transactions are not supported in HTTP
   // mode"). Find-then-create, with the unique (test_id, student_id) constraint
   // catching the race.
+  // Per-student attempt: a cheap point read on the (test_id, student_id) unique
+  // index. Reached only after the gates above, so closed/not-started views never
+  // pay it.
   const attemptSelect = { id: true, status: true, started_at: true };
   let attempt: { id: string; status: string; started_at: Date } | null =
-    test.attempts[0] ?? null; // from the merged query above
+    await prisma.testAttempt.findUnique({
+      where: { test_id_student_id: { test_id: test.id, student_id: student.id } },
+      select: attemptSelect,
+    });
   if (!attempt) {
     // Spread concurrent attempt-creates over a short window to avoid a Neon
     // write spike when an entire batch starts the exam at the same moment.
@@ -104,7 +105,10 @@ export default async function StudentTestPage({
   // shuffle) is derived from it in memory — no per-student question DB read.
   // Also warm the runtime-config cache so the eventual submit never reads the
   // test row from the DB (the submit spike stays fully on Redis).
-  const [base] = await Promise.all([
+  // savedDraft (autosaved answers for resume) only needs attempt.id + student.id,
+  // both known here — fetch it alongside the question/config reads instead of
+  // serially after, shaving one round trip off the test-start path.
+  const [base, , savedDraft] = await Promise.all([
     getResolvedTestQuestions(test, coaching.id),
     primeTestConfig({
       id: test.id,
@@ -114,6 +118,7 @@ export default async function StudentTestPage({
       duration_secs: test.duration_secs,
       end_at: test.end_at,
     }),
+    getCoachingDraft(attempt.id, student.id),
   ]);
   const resolved = studentQuestionsFromBase(base, test, student.id);
   if (resolved.length === 0) {
@@ -121,19 +126,35 @@ export default async function StudentTestPage({
   }
   const safe = resolved.map(stripAnswers);
 
+  // Group the paper into sections by the question's subject (its section). Order
+  // follows first-appearance; a single-subject paper collapses to one section
+  // (the engine only shows section tabs when there's more than one).
+  const sectionOrder: string[] = [];
+  for (const q of safe) {
+    const s = q.subject ?? "General";
+    if (!sectionOrder.includes(s)) sectionOrder.push(s);
+  }
+
   const engineQuestions: TestQuestion[] = safe.map((q) => {
     // Per-student option shuffle (MCQ only). The submit endpoint applies the
     // same permutation in reverse to grade — see optionPermutation.
     let options = q.options.length ? q.options : null;
+    // Hindi options kept in the SAME order as English so the answer letter maps;
+    // apply the identical per-student permutation to both.
+    let optionsHi = q.options_hindi.length ? q.options_hindi : null;
     if (test.shuffle && q.question_type === "mcq" && options) {
       const perm = optionPermutation(optionSeed(student.id, test.id, q.id), options.length);
       options = perm.map((p) => options![p]);
+      if (optionsHi && optionsHi.length === perm.length) {
+        optionsHi = perm.map((p) => optionsHi![p]);
+      }
     }
+    const secName = q.subject ?? "General";
     return {
       id: q.id,
       source: "template" as const, // engine union is pyq|template; coaching maps to template
-      sectionIndex: 0,
-      sectionName: "Questions",
+      sectionIndex: sectionOrder.indexOf(secName),
+      sectionName: secName,
       isOptional: false,
       question_text: q.question_text,
       options,
@@ -143,6 +164,8 @@ export default async function StudentTestPage({
       subject: q.subject ?? "General",
       topic: q.topic ?? undefined,
       images: q.images ?? null,
+      question_text_hindi: q.question_text_hindi,
+      options_hindi: optionsHi,
     };
   });
 
@@ -153,9 +176,8 @@ export default async function StudentTestPage({
   if (test.end_at) expiresMs = Math.min(expiresMs, test.end_at.getTime());
   const serverExpiresAt = new Date(expiresMs).toISOString();
 
-  // Restore any autosaved answers (resume after reload / crash). Stored in the
-  // same display space the engine uses, so it drops straight back into state.
-  const savedDraft = await getCoachingDraft(attempt.id, student.id);
+  // savedDraft (autosaved answers, for resume after reload/crash) was fetched in
+  // the Promise.all above. Stored in the engine's display space → drops back in.
 
   const config: ExamConfig = {
     examType: "GATE",
@@ -166,17 +188,18 @@ export default async function StudentTestPage({
     durationSecs: test.duration_secs,
     totalQuestions: engineQuestions.length,
     maxScore,
-    sections: [
-      {
-        name: "Questions",
+    sections: sectionOrder.map((name) => {
+      const secQs = engineQuestions.filter((q) => q.sectionName === name);
+      return {
+        name,
         subjects: null,
-        totalQuestions: engineQuestions.length,
-        maxScore,
-        questionTypes: ["MCQ", "NAT"],
+        totalQuestions: secQs.length,
+        maxScore: secQs.reduce((s, q) => s + q.marks, 0),
+        questionTypes: ["MCQ", "NAT"] as ("MCQ" | "MSQ" | "NAT")[],
         markDistribution: [],
         negativePerMark: 0,
-      },
-    ],
+      };
+    }),
     themeColor: "#6366f1",
     instructions: [
       "Do not switch tabs or leave the page — switches are recorded.",

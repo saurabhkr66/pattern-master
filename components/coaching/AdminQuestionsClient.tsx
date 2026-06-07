@@ -39,7 +39,10 @@ export default function AdminQuestionsClient({
   const [type, setType] = useState("");
   const [coachingId, setCoachingId] = useState("");
   const [loading, setLoading] = useState(false);
-  const firstLoad = useRef(true);
+  // Filter signature the current list already reflects (initially the SSR query:
+  // all blank). Refetch only when it changes — robust against React StrictMode's
+  // double-mount, which made a "skip first render" ref refetch and flash the list.
+  const loadedKey = useRef("|||");
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -59,11 +62,12 @@ export default function AdminQuestionsClient({
   }, [q, subject, type, coachingId]);
 
   useEffect(() => {
-    if (firstLoad.current) {
-      firstLoad.current = false;
-      return;
-    }
-    const t = setTimeout(refetch, 300);
+    const key = `${q}|${subject}|${type}|${coachingId}`;
+    if (loadedKey.current === key) return;
+    const t = setTimeout(() => {
+      loadedKey.current = key;
+      refetch();
+    }, 300);
     return () => clearTimeout(t);
   }, [q, subject, type, coachingId, refetch]);
 
@@ -121,7 +125,8 @@ export default function AdminQuestionsClient({
         </select>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-800">
+      {/* Desktop: table. Mobile: stacked cards (below). */}
+      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
         <table className="w-full min-w-[700px] text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
@@ -175,6 +180,34 @@ export default function AdminQuestionsClient({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-3 md:hidden">
+        {loading ? (
+          <p className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-slate-500">Loading…</p>
+        ) : questions.length === 0 ? (
+          <p className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-slate-500">No questions found.</p>
+        ) : (
+          questions.map((qq) => (
+            <div key={qq.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+              <p className="line-clamp-3 text-sm text-slate-200">{qq.question_text}</p>
+              {qq.topic && <p className="mt-0.5 text-xs text-slate-500">{qq.topic}</p>}
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-slate-300">
+                  {TYPE_LABELS[qq.question_type] ?? qq.question_type}
+                </span>
+                {qq.coaching ? (
+                  <span>{qq.coaching.name}</span>
+                ) : (
+                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-slate-500">Deleted coaching</span>
+                )}
+                {qq.subject && <span>{qq.subject}</span>}
+                <span>{qq.max_marks} marks</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

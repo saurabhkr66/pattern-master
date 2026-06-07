@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 
 const inputCls =
@@ -11,8 +11,12 @@ type BankQuestion = {
   id: string;
   question_text: string;
   question_type: string;
+  grade: string | null;
   subject: string | null;
+  topic: string | null;
+  set_name: string | null;
   max_marks: number;
+  created_at: string;
 };
 
 type PyqQuestion = {
@@ -31,10 +35,15 @@ const keyOf = (source: string, id: string) => `${source}:${id}`;
 
 export default function TestWizard({ questions, isSuperAdmin = false }: { questions: BankQuestion[]; isSuperAdmin?: boolean }) {
   const router = useRouter();
+  // "Create test from set" deep-link: /tests/new?exam=SSC&set=Mock%205 prefills the
+  // title and pre-filters the coaching picker to that exam+set.
+  const sp = useSearchParams();
+  const initExam = sp.get("exam") ?? "";
+  const initSet = sp.get("set") ?? "";
   const [step, setStep] = useState(0);
 
   // Step 1 — basics
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initSet ? `${initExam} ${initSet}`.trim() : "");
   const [description, setDescription] = useState("");
   const [durationMins, setDurationMins] = useState("60");
   const [startAt, setStartAt] = useState("");
@@ -202,9 +211,14 @@ export default function TestWizard({ questions, isSuperAdmin = false }: { questi
             {tab === "coaching" ? (
               <CoachingPicker
                 questions={questions}
+                initialGrade={initExam}
+                initialSet={initSet}
                 isSelected={(id) => isSelected("coaching", id)}
                 onToggle={(q) =>
                   toggle({ id: q.id, source: "coaching", marks: q.max_marks, title: q.question_text })
+                }
+                onAddMany={(qs) =>
+                  addMany(qs.map((q) => ({ id: q.id, source: "coaching", marks: q.max_marks, title: q.question_text })))
                 }
               />
             ) : tab === "pyq" ? (
@@ -280,29 +294,150 @@ export default function TestWizard({ questions, isSuperAdmin = false }: { questi
   );
 }
 
+// "__null__" represents the Uncategorized bucket (grade/subject/topic IS NULL)
+// as a selectable dropdown value, distinct from "" meaning "all".
+const NULL_OPT = "__null__";
+const optValue = (v: string | null) => (v === null ? NULL_OPT : v);
+const labelOf = (v: string | null, nullLabel: string) => v ?? nullLabel;
+
+// Distinct values (preserving null) from a list, sorted with nulls last.
+function distinct(values: (string | null)[]): (string | null)[] {
+  const out = [...new Set(values)];
+  return out.sort((a, b) => {
+    if (a === b) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return a.localeCompare(b);
+  });
+}
+
+const RECENT_DAYS = 7;
+
 function CoachingPicker({
   questions,
   isSelected,
   onToggle,
+  onAddMany,
+  initialGrade = "",
+  initialSet = "",
 }: {
   questions: BankQuestion[];
   isSelected: (id: string) => boolean;
   onToggle: (q: BankQuestion) => void;
+  onAddMany: (qs: BankQuestion[]) => void;
+  initialGrade?: string;
+  initialSet?: string;
 }) {
   const [search, setSearch] = useState("");
+  // "" = all; NULL_OPT = the Uncategorized bucket; else the literal value.
+  const [grade, setGrade] = useState(initialGrade);
+  const [subject, setSubject] = useState("");
+  const [set, setSet] = useState(initialSet);
+  const [recentOnly, setRecentOnly] = useState(false);
+
+  const matchSel = (sel: string, v: string | null) =>
+    sel === "" || (sel === NULL_OPT ? v === null : v === sel);
+
+  // Cascade option lists: sections narrow to the chosen exam, sets to exam+section.
+  const gradeOpts = useMemo(() => distinct(questions.map((x) => x.grade)), [questions]);
+  const subjectOpts = useMemo(
+    () => distinct(questions.filter((x) => matchSel(grade, x.grade)).map((x) => x.subject)),
+    [questions, grade]
+  );
+  const setOpts = useMemo(
+    () =>
+      distinct(
+        questions
+          .filter((x) => matchSel(grade, x.grade) && matchSel(subject, x.subject))
+          .map((x) => x.set_name)
+      ),
+    [questions, grade, subject]
+  );
+
+  const recentCutoff = Date.now() - RECENT_DAYS * 86400_000;
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
-    if (!s) return questions;
-    return questions.filter((x) => x.question_text.toLowerCase().includes(s));
-  }, [questions, search]);
+    return questions.filter(
+      (x) =>
+        matchSel(grade, x.grade) &&
+        matchSel(subject, x.subject) &&
+        matchSel(set, x.set_name) &&
+        (!recentOnly || new Date(x.created_at).getTime() >= recentCutoff) &&
+        (!s || x.question_text.toLowerCase().includes(s))
+    );
+  }, [questions, search, grade, subject, set, recentOnly, recentCutoff]);
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((qq) => isSelected(qq.id));
+  const selectCls = `${inputCls} max-w-[12rem]`;
 
   return (
     <div>
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search questions" className={`${inputCls} mb-3 max-w-xs`} />
+      <div className="mb-3 flex flex-wrap gap-2">
+        <select
+          value={grade}
+          onChange={(e) => {
+            setGrade(e.target.value);
+            setSubject("");
+            setSet("");
+          }}
+          className={selectCls}
+        >
+          <option value="">All exams/classes</option>
+          {gradeOpts.map((g) => (
+            <option key={optValue(g)} value={optValue(g)}>
+              {labelOf(g, "Uncategorized")}
+            </option>
+          ))}
+        </select>
+        <select
+          value={subject}
+          onChange={(e) => {
+            setSubject(e.target.value);
+            setSet("");
+          }}
+          className={selectCls}
+        >
+          <option value="">All sections</option>
+          {subjectOpts.map((s) => (
+            <option key={optValue(s)} value={optValue(s)}>
+              {labelOf(s, "No section")}
+            </option>
+          ))}
+        </select>
+        <select value={set} onChange={(e) => setSet(e.target.value)} className={selectCls}>
+          <option value="">All sets</option>
+          {setOpts.map((t) => (
+            <option key={optValue(t)} value={optValue(t)}>
+              {labelOf(t, "No set")}
+            </option>
+          ))}
+        </select>
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search questions" className={`${inputCls} max-w-xs`} />
+        <button
+          type="button"
+          onClick={() => setRecentOnly((r) => !r)}
+          className={`rounded-lg border px-3 py-2 text-sm ${recentOnly ? "border-amber-500 bg-amber-500/10 text-amber-300" : "border-slate-700 text-slate-300 hover:bg-slate-800"}`}
+        >
+          Recently added
+        </button>
+      </div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs text-slate-500">{filtered.length} shown</span>
+        {filtered.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onAddMany(filtered)}
+            disabled={allFilteredSelected}
+            className="rounded-lg border border-amber-700 px-3 py-1.5 text-xs text-amber-300 hover:bg-slate-800 disabled:opacity-40"
+          >
+            {allFilteredSelected ? "All added" : `Select all (${filtered.length})`}
+          </button>
+        )}
+      </div>
       <div className="max-h-96 space-y-2 overflow-y-auto">
         {filtered.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">
-            No mcq/nat questions in your bank. Add some in Question Bank, or use the PYQ tab.
+            No matching mcq/nat questions. Adjust the filters, add some in Question Bank, or use the PYQ tab.
           </p>
         ) : (
           filtered.map((q) => (
@@ -311,7 +446,7 @@ function CoachingPicker({
               checked={isSelected(q.id)}
               onToggle={() => onToggle(q)}
               text={q.question_text}
-              meta={[q.question_type.toUpperCase(), q.subject, `${q.max_marks} marks`].filter(Boolean) as string[]}
+              meta={[q.question_type.toUpperCase(), q.grade, q.subject, q.set_name, `${q.max_marks} marks`].filter(Boolean) as string[]}
             />
           ))
         )}

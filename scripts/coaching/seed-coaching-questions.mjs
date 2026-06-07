@@ -10,6 +10,11 @@
 // validated with the same rules as the admin "Add Question" form; invalid rows
 // are skipped and reported, valid ones inserted. No transactions/upsert (the
 // Neon HTTP adapter rejects both) — plain create() per row.
+//
+// Per-question fields: question_type (mcq|nat|subjective), question_text,
+// options, correct_answer, solution, max_marks, nat_tolerance, grade, subject,
+// topic, difficulty, images (optional). `grade` feeds the bank's grade → subject
+// → topic folder tree, so set it on every row you want organised by class.
 
 import { readFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
@@ -87,9 +92,16 @@ function normalize(raw, i) {
       question_type: type,
       max_marks: maxMarks,
       nat_tolerance: natTol,
+      // `grade` drives the bank's grade → subject → topic folder tree (mirrors the
+      // admin Add-Question form). Omit it and every seeded row lands in the
+      // "Uncategorized" grade bucket.
+      grade: raw.grade ? String(raw.grade).trim() : null,
       subject: raw.subject ? String(raw.subject).trim() : null,
       topic: raw.topic ? String(raw.topic).trim() : null,
       difficulty: raw.difficulty ? String(raw.difficulty).trim() : null,
+      // Optional diagram/image refs (CoachingQuestion.images, Json?). Passed
+      // through as-is when provided; left null otherwise (parity with admin-add).
+      ...(Array.isArray(raw.images) && raw.images.length ? { images: raw.images } : {}),
     },
   };
 }
@@ -139,6 +151,14 @@ async function main() {
   if (skipped.length) {
     console.log(`✖ Skipped: ${skipped.length}`);
     skipped.forEach((s) => console.log(`   - ${s}`));
+  }
+  if (inserted > 0) {
+    // The grade→subject→topic folder tree is a cached taxonomy (lib/coachingTaxonomy)
+    // busted via revalidateTag — which only works inside the Next runtime, not this
+    // standalone script. Its 600s revalidate self-heals the tree, so new questions
+    // surface in the bank/test-wizard folders within ~10 min. To see them at once,
+    // add or edit any question in the admin UI (that bust is immediate).
+    console.log("\nℹ Folder tree refreshes within ~10 min (or edit a question in admin to refresh now).");
   }
   console.log("");
 }

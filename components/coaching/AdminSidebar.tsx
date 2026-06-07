@@ -8,12 +8,14 @@ import {
   Users,
   FileQuestion,
   ClipboardList,
+  TrendingUp,
   LogOut,
   ArrowLeftRight,
 } from "lucide-react";
 
 const NAV = [
   { href: "/coaching-admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/coaching-admin/insights", label: "Insights", icon: TrendingUp },
   { href: "/coaching-admin/students", label: "Students", icon: Users },
   { href: "/coaching-admin/questions", label: "Question Bank", icon: FileQuestion },
   { href: "/coaching-admin/tests", label: "Tests", icon: ClipboardList },
@@ -23,15 +25,19 @@ export default function AdminSidebar({
   coachingName,
   subtitle,
   impersonating = false,
+  isSuperAdmin = false,
 }: {
   coachingName: string;
   subtitle: string;
   impersonating?: boolean;
+  isSuperAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  async function exitImpersonation() {
+  // Exit the coaching-admin shell back to the platform panel. Clears the
+  // impersonation cookie if set (no-op otherwise); never ends the Clerk session.
+  async function exitToPlatform() {
     await fetch("/api/admin/impersonate", { method: "DELETE" });
     router.push("/admin/coachings");
     router.refresh();
@@ -65,13 +71,16 @@ export default function AdminSidebar({
       </nav>
 
       <div className="border-t border-slate-800 px-3 py-4">
-        {impersonating ? (
+        {/* Super admins always exit to the platform panel (their Clerk account
+            lives in the consumer app) — never a sign-out that boots them to the
+            admin login. Real coaching admins/owners get Sign Out. */}
+        {isSuperAdmin ? (
           <button
-            onClick={exitImpersonation}
+            onClick={exitToPlatform}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-amber-400 transition hover:bg-slate-800"
           >
             <ArrowLeftRight className="h-4 w-4 shrink-0" />
-            Exit — back to coachings
+            {impersonating ? "Exit — back to coachings" : "Back to coachings"}
           </button>
         ) : (
           <SignOutButton redirectUrl="/coaching-admin/login">

@@ -12,13 +12,18 @@ export default function AdminMobileHeader({
   coachingName,
   subtitle,
   impersonating,
+  isSuperAdmin,
 }: {
   coachingName: string;
   subtitle: string;
   impersonating: boolean;
+  isSuperAdmin: boolean;
 }) {
   const router = useRouter();
-  async function exitImpersonation() {
+  // Leave the coaching-admin shell back to the platform panel. Clears the
+  // impersonation cookie if one is set (no-op otherwise) — never touches the
+  // super admin's Clerk session.
+  async function exitToPlatform() {
     await fetch("/api/admin/impersonate", { method: "DELETE" });
     router.push("/admin/coachings");
     router.refresh();
@@ -38,11 +43,15 @@ export default function AdminMobileHeader({
           <p className="truncate text-[11px] text-slate-400">{subtitle}</p>
         </div>
       </div>
-      {impersonating ? (
+      {/* A super admin's real account lives in the consumer app, so the top-right
+          control always exits to the platform panel — NEVER a Clerk sign-out (which
+          would log them out and bounce to the admin login). Only true coaching
+          admins/owners get Sign Out here. */}
+      {isSuperAdmin ? (
         <button
-          onClick={exitImpersonation}
+          onClick={exitToPlatform}
           className="rounded-lg border border-white/10 bg-white/[0.03] p-2 text-amber-400"
-          title="Exit — back to coachings"
+          title={impersonating ? "Exit — back to coachings" : "Back to coachings"}
         >
           <ArrowLeftRight className="h-4 w-4" />
         </button>

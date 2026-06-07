@@ -46,87 +46,91 @@ model Pattern {
 }
 
 model PYQ {
-  id                  String           @id @default(uuid())
-  pattern_id          String
-  question_text       String
-  options             Json
-  correct_answer      String
-  explanation         String
-  year                Int
-  exam_type           String
-  created_at          DateTime         @default(now())
-  question_type       String           @default("MCQ")
-  images              Json?
-  marks               Int              @default(1)
-  explanation_hindi   String?
-  options_hindi       Json?
-  question_text_hindi String?
-  topic               String?
-  content_hash        String?
-  question_hash       String?
+  id                     String           @id @default(uuid())
+  pattern_id             String
+  question_text          String
+  options                Json
+  correct_answer         String
+  explanation            String
+  year                   Int
+  exam_type              String
+  created_at             DateTime         @default(now())
+  question_type          String           @default("MCQ")
+  images                 Json?
+  marks                  Int              @default(1)
+  explanation_hindi      String?
+  options_hindi          Json?
+  question_text_hindi    String?
+  topic                  String?
+  content_hash           String?
+  question_hash          String?
   // Option B: pre-rendered KaTeX/markdown HTML (see lib/math/renderHtml).
   // Null = not yet backfilled → MathHtml falls back to live rendering.
-  question_html         String?
-  explanation_html      String?
-  options_html          Json?
-  question_html_hindi   String?
+  question_html          String?
+  explanation_html       String?
+  options_html           Json?
+  question_html_hindi    String?
   explanation_html_hindi String?
-  options_html_hindi    Json?
-  render_version        Int            @default(0)
+  options_html_hindi     Json?
+  render_version         Int              @default(0)
   // AI answer-review pass (admin/ai-review). Null reviewed_at = not yet reviewed,
   // so the review queue surfaces it. ai_answer_mismatch mirrors the QuestionReport
   // flag for fast filtering/display without joining.
-  ai_reviewed_at        DateTime?
-  ai_answer_mismatch    Boolean?
-  ai_detected_answer    String?
-  ai_review_model       String?
-  attempts            Attempt[]
-  bookmarks           Bookmark[]
-  pattern             Pattern          @relation(fields: [pattern_id], references: [id])
-  questionReports     QuestionReport[]
+  ai_reviewed_at         DateTime?
+  ai_answer_mismatch     Boolean?
+  ai_detected_answer     String?
+  ai_review_model        String?
+  attempts               Attempt[]
+  bookmarks              Bookmark[]
+  pattern                Pattern          @relation(fields: [pattern_id], references: [id])
+  questionReports        QuestionReport[]
 
   @@unique([pattern_id, question_text], name: "pyq_identifier")
   @@unique([pattern_id, question_hash], name: "pyq_hash_identifier")
   @@index([pattern_id, year(sort: Desc)])
   @@index([pattern_id])
   @@index([ai_reviewed_at])
+  // Serves the unfiltered sitemap groupBy by ["exam_type","year"]
+  // (lib/sitemap-data.ts) as an index-only scan instead of a full-table
+  // seq scan + hash aggregate.
+  @@index([exam_type, year])
 }
 
 model GeneratedQuestion {
-  id                  String           @id @default(uuid())
-  pattern_id          String
-  question_text       String
-  options             Json
-  correct_answer      String
-  explanation         String
-  difficulty_level    String
-  semantic_hash       String           @unique
-  created_at          DateTime         @default(now())
-  question_type       String           @default("MCQ")
-  images              Json?
-  marks               Int              @default(1)
-  explanation_hindi   String?
-  options_hindi       Json?
-  question_text_hindi String?
-  topic               String?
+  id                     String           @id @default(uuid())
+  pattern_id             String
+  question_text          String
+  options                Json
+  correct_answer         String
+  explanation            String
+  difficulty_level       String
+  semantic_hash          String           @unique
+  created_at             DateTime         @default(now())
+  question_type          String           @default("MCQ")
+  images                 Json?
+  marks                  Int              @default(1)
+  explanation_hindi      String?
+  options_hindi          Json?
+  question_text_hindi    String?
+  topic                  String?
   // Option B: pre-rendered KaTeX/markdown HTML (see lib/math/renderHtml).
   // Null = not yet backfilled → MathHtml falls back to live rendering.
-  question_html         String?
-  explanation_html      String?
-  options_html          Json?
-  question_html_hindi   String?
+  question_html          String?
+  explanation_html       String?
+  options_html           Json?
+  question_html_hindi    String?
   explanation_html_hindi String?
-  options_html_hindi    Json?
-  render_version        Int            @default(0)
+  options_html_hindi     Json?
+  render_version         Int              @default(0)
   // AI answer-review pass (admin/ai-review) — see PYQ for semantics.
-  ai_reviewed_at        DateTime?
-  ai_answer_mismatch    Boolean?
-  ai_detected_answer    String?
-  ai_review_model       String?
-  attempts            Attempt[]
-  bookmarks           Bookmark[]
-  pattern             Pattern          @relation(fields: [pattern_id], references: [id])
-  questionReports     QuestionReport[]
+  ai_reviewed_at         DateTime?
+  ai_answer_mismatch     Boolean?
+  ai_detected_answer     String?
+  ai_review_model        String?
+  attempts               Attempt[]
+  bookmarks              Bookmark[]
+  pattern                Pattern          @relation(fields: [pattern_id], references: [id])
+  questionReports        QuestionReport[]
 
   @@index([pattern_id, created_at(sort: Desc)])
   @@index([pattern_id])
@@ -296,31 +300,31 @@ model QuestionReport {
 // ─── B2B Coaching Layer ───────────────────────────────────────────────────────
 
 model Coaching {
-  id           String           @id @default(uuid())
-  name         String
-  slug         String           @unique
-  city         String?
-  exam_types   String[]         @default([])
-  join_code    String           @unique
-  owner_email  String?          // set at creation; first Clerk login with this email claims the coaching
+  id              String             @id @default(uuid())
+  name            String
+  slug            String             @unique
+  city            String?
+  exam_types      String[]           @default([])
+  join_code       String             @unique
+  owner_email     String? // set at creation; first Clerk login with this email claims the coaching
   // Application lifecycle. Super-admin-created coachings default to "approved";
   // public self-serve applications (/for-coachings) start "pending" and stay
   // inactive until a super admin approves (or rejects) them.
-  status       String           @default("approved")  // pending | approved | rejected
-  applicant_name  String?       // contact person from a public application
-  applicant_phone String?       // contact phone from a public application
-  billing_mode String           @default("per_test")  // per_test | monthly
-  price_per_test Int            @default(15)           // used when billing_mode = per_test
-  monthly_fee  Int              @default(0)            // flat ₹/month when billing_mode = monthly
-  active       Boolean          @default(true)
-  created_at   DateTime         @default(now())
-  updated_at   DateTime         @updatedAt
-  admins       CoachingAdmin[]
-  batches      Batch[]
-  students     Student[]
-  questions    CoachingQuestion[]
-  tests        CoachingTest[]
-  billing      BillingEvent[]
+  status          String             @default("approved") // pending | approved | rejected
+  applicant_name  String? // contact person from a public application
+  applicant_phone String? // contact phone from a public application
+  billing_mode    String             @default("per_test") // per_test | monthly
+  price_per_test  Int                @default(15) // used when billing_mode = per_test
+  monthly_fee     Int                @default(0) // flat ₹/month when billing_mode = monthly
+  active          Boolean            @default(true)
+  created_at      DateTime           @default(now())
+  updated_at      DateTime           @updatedAt
+  admins          CoachingAdmin[]
+  batches         Batch[]
+  students        Student[]
+  questions       CoachingQuestion[]
+  tests           CoachingTest[]
+  billing         BillingEvent[]
   billing_periods BillingPeriod[]
 
   @@index([slug])
@@ -332,7 +336,7 @@ model CoachingAdmin {
   id          String   @id @default(uuid())
   coaching_id String
   clerk_id    String   @unique
-  role        String   @default("admin")  // admin | owner
+  role        String   @default("admin") // admin | owner
   created_at  DateTime @default(now())
   coaching    Coaching @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
 
@@ -365,83 +369,127 @@ model Student {
   // alone can't log in. Null = not set yet (must join with code to set one).
   pin_hash      String?
   joined_at     DateTime      @default(now())
-  coaching    Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
-  batch       Batch?        @relation(fields: [batch_id], references: [id])
-  attempts    TestAttempt[]
+  coaching      Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  batch         Batch?        @relation(fields: [batch_id], references: [id])
+  attempts      TestAttempt[]
 
   @@unique([coaching_id, phone])
-  @@index([coaching_id])
+  // Students list is WHERE coaching_id ORDER BY joined_at DESC (+ pagination);
+  // the composite serves that ordered scan and coaching_id-only lookups (prefix).
+  @@index([coaching_id, joined_at(sort: Desc)])
   @@index([batch_id])
 }
 
 model CoachingQuestion {
-  id            String   @id @default(uuid())
-  coaching_id   String?
-  question_text String
-  question_html String?
-  options       Json
+  id             String    @id @default(uuid())
+  coaching_id    String?
+  question_text  String
+  question_html  String?
+  options        Json
   correct_answer String
-  solution      String?
-  solution_html String?
-  question_type String   @default("mcq")  // mcq | nat | subjective
-  max_marks     Int      @default(1)
-  nat_tolerance Float?
-  subject       String?
-  topic         String?
-  difficulty    String?
-  images        Json?
-  created_at    DateTime @default(now())
-  coaching      Coaching? @relation(fields: [coaching_id], references: [id], onDelete: SetNull)
+  solution       String?
+  solution_html  String?
+  question_type  String    @default("mcq") // mcq | nat | subjective
+  max_marks      Int       @default(1)
+  nat_tolerance  Float?
+  // grade = exam/class ("SSC", "Class 8"); subject = section (from the ExamSection
+  // catalog, e.g. "Quant"); set_name = the set/mock/chapter the question belongs to
+  // ("Mock 5") — the grouping that keeps newly-added questions from getting lost;
+  // topic = optional fine-grained concept tag (nullable).
+  grade          String?
+  subject        String?
+  topic          String?
+  set_name       String?
+  difficulty     String?
+  images         Json?
+  // Bilingual: Hindi counterparts (null → fall back to the English column).
+  question_text_hindi String?
+  question_html_hindi String?
+  options_hindi       Json?
+  solution_hindi      String?
+  solution_html_hindi String?
+  created_at     DateTime  @default(now())
+  coaching       Coaching? @relation(fields: [coaching_id], references: [id], onDelete: SetNull)
 
-  @@index([coaching_id])
+  // Bank list is WHERE coaching_id ORDER BY created_at DESC (+ pagination).
+  @@index([coaching_id, created_at(sort: Desc)])
   @@index([coaching_id, subject])
+  // Folder hierarchy browse/filter: group by grade → subject → set_name.
+  @@index([coaching_id, grade, subject])
+  @@index([coaching_id, grade, set_name])
+}
+
+// Light, one-level catalog of the sections each exam/class has (JEE = Physics/
+// Chemistry/Math; SSC = Quant/Reasoning/English/GA; Class 8 = Science/Math/SST…).
+// coaching_id = null → a global seeded default visible to everyone; coaching_id set
+// → a coaching's own override/custom section. The question's `subject` is chosen
+// from this list, so full tests + section analytics stay consistent.
+model ExamSection {
+  id            String   @id @default(uuid())
+  coaching_id   String? // null = global seeded; set = coaching-owned
+  exam          String // "SSC", "JEE", "Class 8"
+  name          String // "Quant", "Physics", "Science"
+  sort_order    Int      @default(0)
+  default_marks Int?
+  created_at    DateTime @default(now())
+
+  @@unique([coaching_id, exam, name])
+  @@index([coaching_id, exam])
+  @@index([exam])
 }
 
 model CoachingTest {
-  id           String        @id @default(uuid())
-  coaching_id  String
-  title        String
-  description  String?
-  questions    Json          // [{ id, source: "coaching"|"pyq"|"generated", marks, neg_marks }]
-  duration_secs Int          @default(3600)
-  start_at     DateTime?
-  end_at       DateTime?
-  shuffle      Boolean       @default(true)
-  pool_size    Int?          // if set, each student gets pool_size random questions
-  status       String        @default("draft")  // draft | active | closed
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-  coaching     Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
-  attempts     TestAttempt[]
+  id            String        @id @default(uuid())
+  coaching_id   String
+  title         String
+  description   String?
+  questions     Json // [{ id, source: "coaching"|"pyq"|"generated", marks, neg_marks, section? }]
+  duration_secs Int           @default(3600)
+  start_at      DateTime?
+  end_at        DateTime?
+  shuffle       Boolean       @default(true)
+  pool_size     Int? // if set, each student gets pool_size random questions
+  // Ordered section names this test renders/scoring by (null = single flat section).
+  sections      Json?
+  status        String        @default("draft") // draft | active | closed
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  coaching      Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  attempts      TestAttempt[]
 
-  @@index([coaching_id])
+  // Tests list is WHERE coaching_id ORDER BY created_at DESC.
+  @@index([coaching_id, created_at(sort: Desc)])
   @@index([coaching_id, status])
 }
 
 model TestAttempt {
-  id             String       @id @default(uuid())
-  coaching_id    String
-  test_id        String
-  student_id     String
-  status         String       @default("in_progress")  // in_progress | submitted
-  answers        Json         @default("{}")
-  score          Float?
-  max_score      Float?
-  time_taken_secs Int?                                  // total time spent (analysis)
-  question_times Json?                                  // { questionId: secondsSpent }
-  tab_switches   Int          @default(0)
-  manual_scores  Json?        // { question_id: marks } for subjective questions
-  graded_by      String?      // coach admin id
-  graded_at      DateTime?
-  billed         Boolean      @default(false)
-  started_at     DateTime     @default(now())
-  submitted_at   DateTime?
-  test           CoachingTest @relation(fields: [test_id], references: [id])
-  student        Student      @relation(fields: [student_id], references: [id])
-  billing_event  BillingEvent?
+  id              String        @id @default(uuid())
+  coaching_id     String
+  test_id         String
+  student_id      String
+  status          String        @default("in_progress") // in_progress | submitted
+  answers         Json          @default("{}")
+  score           Float?
+  max_score       Float?
+  time_taken_secs Int? // total time spent (analysis)
+  question_times  Json? // { questionId: secondsSpent }
+  tab_switches    Int           @default(0)
+  manual_scores   Json? // { question_id: marks } for subjective questions
+  // Per-section results: [{ name, score, maxScore, correct, wrong, skipped }] (null = unsectioned).
+  section_scores  Json?
+  graded_by       String? // coach admin id
+  graded_at       DateTime?
+  billed          Boolean       @default(false)
+  started_at      DateTime      @default(now())
+  submitted_at    DateTime?
+  test            CoachingTest  @relation(fields: [test_id], references: [id])
+  student         Student       @relation(fields: [student_id], references: [id])
+  billing_event   BillingEvent?
 
   @@unique([test_id, student_id])
-  @@index([coaching_id])
+  // Dashboard "recent" + monthly aggregates are WHERE coaching_id ORDER BY
+  // submitted_at DESC; the composite serves that and coaching_id-only (prefix).
+  @@index([coaching_id, submitted_at(sort: Desc)])
   @@index([test_id])
   @@index([student_id])
   @@index([coaching_id, billed])
@@ -454,10 +502,10 @@ model TestAttempt {
 model BillingPeriod {
   id          String    @id @default(uuid())
   coaching_id String
-  period      DateTime  // first day of the billed month (00:00 UTC)
+  period      DateTime // first day of the billed month (00:00 UTC)
   submissions Int       @default(0)
   amount      Int       @default(0)
-  status      String    @default("due")  // due | paid
+  status      String    @default("due") // due | paid
   paid_at     DateTime?
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
@@ -472,7 +520,7 @@ model BillingEvent {
   coaching_id String
   attempt_id  String      @unique
   amount      Int
-  status      String      @default("pending")  // pending | paid
+  status      String      @default("pending") // pending | paid
   created_at  DateTime    @default(now())
   coaching    Coaching    @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
   attempt     TestAttempt @relation(fields: [attempt_id], references: [id], onDelete: Cascade)

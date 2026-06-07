@@ -4,9 +4,11 @@ import type { ReactNode, CSSProperties } from "react";
 // mockup (admin.jsx). Dark near-black surfaces, translucent bordered cards,
 // amber accent (brand #ff8f00, not the mockup's purple), big display numerals.
 
-export const sans = "'Manrope', ui-sans-serif, system-ui, sans-serif";
-export const display = "'Space Grotesk', 'Manrope', ui-sans-serif, sans-serif";
-export const mono = "'JetBrains Mono', ui-monospace, monospace";
+// Reference the next/font CSS variables (set on the coaching layout wrappers via
+// coachingFontVars), with web-safe fallbacks for any render outside that scope.
+export const sans = "var(--font-manrope), ui-sans-serif, system-ui, sans-serif";
+export const display = "var(--font-space-grotesk), var(--font-manrope), ui-sans-serif, sans-serif";
+export const mono = "var(--font-jetbrains-mono), ui-monospace, monospace";
 
 // Amber brand gradient (replaces the mockup's purple). Used for the logo badge
 // and student-facing primary buttons.
@@ -203,6 +205,45 @@ export function StatCard({
         </div>
       </div>
     </Card>
+  );
+}
+
+// ── Skeleton (loading shimmer) ─────────────────────────────────────────────────
+// Single shimmer block. Used by the route-level loading.tsx files so a click
+// swaps to a skeleton instantly (Next renders this at the Suspense boundary
+// while the dynamic page's auth + DB queries run on the server).
+export function Skeleton({ className = "", style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <div className={`animate-pulse rounded-md bg-white/[0.06] ${className}`} style={style} />
+  );
+}
+
+// Generic list-page skeleton: a title + action button, then a stack of table
+// rows. Matches the p-8 / table layout of StudentsClient, TestsClient, etc.
+export function ListSkeleton({ rows = 8 }: { rows?: number }) {
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-10 w-32 rounded-lg" />
+      </div>
+      <div className="mt-6 overflow-hidden rounded-xl border border-slate-800">
+        <div className="bg-slate-900 px-4 py-3.5">
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <div className="divide-y divide-slate-800 bg-slate-950">
+          {Array.from({ length: rows }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between px-4 py-4">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-1/4" />
+              </div>
+              <Skeleton className="h-8 w-20 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

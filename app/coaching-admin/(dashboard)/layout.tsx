@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
+import { getCachedCoachingName } from "@/lib/coachingCache";
+import { coachingFontVars } from "@/lib/coachingFonts";
 import AdminSidebar from "@/components/coaching/AdminSidebar";
 import AdminMobileHeader from "@/components/coaching/AdminMobileHeader";
 import AdminBottomNav from "@/components/coaching/AdminBottomNav";
@@ -53,33 +55,22 @@ export default async function CoachingAdminLayout({
   let subtitle = "Coaching Admin";
 
   if (actor.coachingId) {
-    const coaching = await prisma.coaching.findUnique({
-      where: { id: actor.coachingId },
-      select: { name: true },
-    });
-    coachingName = coaching?.name ?? "Coaching";
+    coachingName = (await getCachedCoachingName(actor.coachingId)) ?? "Coaching";
     subtitle = impersonating ? "Super admin · managing" : actor.role === "owner" ? "Owner" : "Admin";
   } else if (actor.isSuperAdmin) {
     subtitle = "Platform Super Admin";
   }
 
   return (
-    <>
-      {/* Redesign fonts — Space Grotesk (display) + JetBrains Mono. Next hoists these. */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      />
-      <div className="flex min-h-screen" style={{ background: "#06060c" }}>
+      <div className={`${coachingFontVars} flex min-h-screen`} style={{ background: "#06060c" }}>
         {/* Desktop sidebar (hidden on mobile) */}
-        <AdminSidebar coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} />
+        <AdminSidebar coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} isSuperAdmin={actor.isSuperAdmin} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           {/* Mobile-only top bar; bottom nav handles navigation on mobile */}
-          <AdminMobileHeader coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} />
+          <AdminMobileHeader coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} isSuperAdmin={actor.isSuperAdmin} />
           <main className="min-w-0 flex-1 overflow-y-auto pb-24 md:pb-0">{children}</main>
         </div>
         <AdminBottomNav />
       </div>
-    </>
   );
 }

@@ -12,6 +12,10 @@ export interface TestQuestion {
   subject: string;
   topic?: string;
   images?: { index: number; filename: string }[] | null;
+  // Bilingual: Hindi counterparts (absent/null → render falls back to English).
+  // Kept in the same A/B/C order as `options` so the answer letter still maps.
+  question_text_hindi?: string | null;
+  options_hindi?: string[] | null;
 }
 
 export interface SubmitAnswer {

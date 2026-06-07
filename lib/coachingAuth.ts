@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -38,25 +39,31 @@ export type CoachingActor = {
  * `claimCoachingIfPending` for that path).
  */
 export async function getCoachingActor(): Promise<CoachingActor | null> {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   if (!userId) return null;
 
-  // Email lives in our own User table for consumer accounts (super admins use
-  // the consumer app). Looking it up here avoids a Clerk API round-trip on the
-  // hot path. Coaching admins won't have a User row, so this returns null for
-  // them and the super-admin branch is simply skipped.
-  const [dbUser, admin] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    }),
-    prisma.coachingAdmin.findUnique({
-      where: { clerk_id: userId },
-      select: { id: true, coaching_id: true, role: true },
-    }),
-  ]);
+  // Super-admin status keys off the Clerk session EMAIL — the stable credential
+  // across Clerk instances — NOT a DB User row keyed by userId. The dev and prod
+  // Clerk instances issue different userIds for the same person, so the old
+  // `User.findUnique({ id: userId })` lookup matched in prod (where User.id was
+  // synced to the prod userId) but returned null in dev, bouncing super admins
+  // off /admin/coachings. Mirrors lib/requireAdmin: fast path is the `email`
+  // session claim (Clerk Dashboard → Sessions); fall back to the Clerk API only
+  // when the claim is absent AND the user isn't a linked coaching admin.
+  const claimEmail = (sessionClaims as { email?: string } | null)?.email?.toLowerCase();
 
-  if (isAdmin(dbUser?.email)) {
+  const admin = await prisma.coachingAdmin.findUnique({
+    where: { clerk_id: userId },
+    select: { id: true, coaching_id: true, role: true },
+  });
+
+  let email = claimEmail;
+  if (!email && !admin) {
+    const user = await currentUser();
+    email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
+  }
+
+  if (isAdmin(email)) {
     // If the super admin picked a coaching to manage, surface it as coachingId
     // so the normal coaching-admin pages scope to it automatically.
     const jar = await cookies();
@@ -142,11 +149,18 @@ export async function claimCoachingIfPending(): Promise<string | null> {
  * actor, attempting a claim first for pending owners. Returns the actor or
  * null — callers decide whether to redirect (pages) or 401 (APIs).
  */
-export async function resolveCoachingAdmin(): Promise<CoachingActor | null> {
-  const actor = await getCoachingActor();
-  if (actor) return actor;
-  // Pending owner on first login: try to claim, then re-resolve.
-  const claimed = await claimCoachingIfPending();
-  if (claimed) return getCoachingActor();
-  return null;
-}
+// Wrapped in React cache() so the coaching-admin layout AND the page it renders
+// (both call this) resolve the actor ONCE per request instead of duplicating the
+// auth + CoachingAdmin lookup + possible Clerk currentUser() round-trip. Only the
+// outer entry is cached — the inner getCoachingActor stays uncached so the
+// claim-then-re-resolve path below still sees the freshly created admin row.
+export const resolveCoachingAdmin = cache(
+  async (): Promise<CoachingActor | null> => {
+    const actor = await getCoachingActor();
+    if (actor) return actor;
+    // Pending owner on first login: try to claim, then re-resolve.
+    const claimed = await claimCoachingIfPending();
+    if (claimed) return getCoachingActor();
+    return null;
+  }
+);

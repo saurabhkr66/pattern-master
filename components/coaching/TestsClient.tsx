@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, X, MoreVertical } from "lucide-react";
+import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar } from "lucide-react";
 
 type TestRow = {
   id: string;
@@ -20,7 +20,21 @@ const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-800 text-slate-300",
   active: "bg-green-900/50 text-green-400",
   closed: "bg-amber-900/40 text-amber-400",
+  scheduled: "bg-sky-900/40 text-sky-400",
 };
+
+// A test marked "active" is only really open inside its time window. Once end_at
+// passes it's effectively closed (the admin may not have flipped the status yet);
+// before start_at it's scheduled. This drives the badge + filter so a finished
+// test never shows "active".
+function effectiveStatus(t: TestRow): "draft" | "active" | "closed" | "scheduled" {
+  if (t.status === "draft") return "draft";
+  if (t.status === "closed") return "closed";
+  const now = Date.now();
+  if (t.end_at && new Date(t.end_at).getTime() < now) return "closed";
+  if (t.start_at && new Date(t.start_at).getTime() > now) return "scheduled";
+  return "active";
+}
 
 const inputCls =
   "mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
@@ -38,17 +52,24 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
   const [tests, setTests] = useState(initialTests);
   const [busy, setBusy] = useState<string | null>(null);
   const [editing, setEditing] = useState<TestRow | null>(null);
+  const [filter, setFilter] = useState<"all" | "active" | "closed">("all");
 
-  async function setStatus(id: string, status: string) {
+  const shown = tests.filter((t) => filter === "all" || effectiveStatus(t) === filter);
+
+  // clearEnd: also wipe a past end_at so reopening a window-ended test actually
+  // makes it open again (flipping status alone wouldn't — the window stays shut).
+  async function setStatus(id: string, status: string, clearEnd = false) {
     setBusy(id);
     const res = await fetch(`/api/coaching/tests/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(clearEnd ? { status, endAt: null } : { status }),
     });
     setBusy(null);
     if (res.ok) {
-      setTests((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+      setTests((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status, ...(clearEnd ? { end_at: null } : {}) } : t))
+      );
     }
   }
 
@@ -64,7 +85,26 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
         </button>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-800">
+      {/* Status filter chips */}
+      <div className="mt-5 flex gap-2">
+        {(["all", "active", "closed"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`rounded-full px-3 py-1.5 text-sm capitalize transition ${
+              filter === f
+                ? "bg-amber-500 font-semibold text-slate-950"
+                : "border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop: table. Mobile: stacked cards (below) — the wide table can't
+          fit a phone without horizontal scroll. */}
+      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
@@ -78,19 +118,19 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800 bg-slate-950">
-            {tests.length === 0 ? (
+            {shown.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                   No tests yet.
                 </td>
               </tr>
             ) : (
-              tests.map((t) => (
+              shown.map((t) => (
                 <tr key={t.id} className="text-slate-200">
                   <td className="px-4 py-3">{t.title}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[t.status] ?? "bg-slate-800 text-slate-300"}`}>
-                      {t.status}
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[effectiveStatus(t)]}`}>
+                      {effectiveStatus(t)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-400">{t.questionCount}</td>
@@ -111,6 +151,41 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-3 md:hidden">
+        {shown.length === 0 ? (
+          <p className="rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 py-8 text-center text-slate-500">
+            No tests yet.
+          </p>
+        ) : (
+          shown.map((t) => (
+            <article key={t.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h3 className="truncate font-semibold text-white">{t.title}</h3>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[effectiveStatus(t)]}`}>
+                    {effectiveStatus(t)}
+                  </span>
+                </div>
+                <RowMenu test={t} busy={busy === t.id} onStatus={setStatus} onEdit={setEditing} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-400">
+                <span className="inline-flex items-center gap-1.5"><Hash className="h-3.5 w-3.5" />{t.questionCount} questions</span>
+                <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{Math.round(t.duration_secs / 60)} min</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5" />{t.submissions} subs</span>
+              </div>
+              {t.end_at && (
+                <div className="mt-3 flex items-center gap-1.5 border-t border-white/[0.06] pt-3 text-xs text-slate-500">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Closes {new Date(t.end_at).toLocaleDateString([], { day: "numeric", month: "short" })},{" "}
+                  {new Date(t.end_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              )}
+            </article>
+          ))
+        )}
       </div>
 
       {editing && (
@@ -136,9 +211,10 @@ function RowMenu({
 }: {
   test: TestRow;
   busy: boolean;
-  onStatus: (id: string, status: string) => void;
+  onStatus: (id: string, status: string, clearEnd?: boolean) => void;
   onEdit: (t: TestRow) => void;
 }) {
+  const es = effectiveStatus(test);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -165,18 +241,27 @@ function RowMenu({
       </button>
       {open && (
         <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
-          {test.status === "draft" && (
+          {es === "draft" && (
             <button disabled={busy} className={`${itemCls} text-green-400`} onClick={() => { setOpen(false); onStatus(test.id, "active"); }}>
               Publish
             </button>
           )}
-          {test.status === "active" && (
+          {(es === "active" || es === "scheduled") && (
             <button disabled={busy} className={`${itemCls} text-amber-400`} onClick={() => { setOpen(false); onStatus(test.id, "closed"); }}>
               Close
             </button>
           )}
-          {test.status === "closed" && (
-            <button disabled={busy} className={`${itemCls} text-green-400`} onClick={() => { setOpen(false); onStatus(test.id, "active"); }}>
+          {es === "closed" && (
+            <button
+              disabled={busy}
+              className={`${itemCls} text-green-400`}
+              onClick={() => {
+                setOpen(false);
+                // If the window already ended, clear end_at so it truly reopens.
+                const endPassed = !!test.end_at && new Date(test.end_at).getTime() < Date.now();
+                onStatus(test.id, "active", endPassed);
+              }}
+            >
               Reopen
             </button>
           )}

@@ -3,6 +3,7 @@
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { optionLetters, type TestQuestion } from "./testEngineTypes";
 
 interface Props {
@@ -37,6 +38,21 @@ export default function QuestionPane({
     ? `−${(currentQ.marks / 3).toFixed(2)} if wrong`
     : null;
 
+  // Bilingual: show the EN/हिन्दी toggle only when this question carries Hindi.
+  // Empty Hindi fields fall back to English (mirrors QuestionViewer).
+  const { language, setLanguage } = useLanguage();
+  const useHi = language === "hi";
+  const hasHindi = !!(
+    currentQ.question_text_hindi ||
+    (currentQ.options_hindi && currentQ.options_hindi.length)
+  );
+  const displayText =
+    useHi && currentQ.question_text_hindi ? currentQ.question_text_hindi : currentQ.question_text;
+  const displayOptions =
+    useHi && currentQ.options_hindi && currentQ.options_hindi.length
+      ? currentQ.options_hindi
+      : currentQ.options;
+
   return (
     <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div className="qp-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", padding: "22px 28px" }}>
@@ -54,6 +70,24 @@ export default function QuestionPane({
           </span>
           {negMarking && (
             <span style={{ fontSize: 11, color: BE.textMute }}>{negMarking}</span>
+          )}
+          {hasHindi && (
+            <span style={{ display: "inline-flex", gap: 2, padding: 2, borderRadius: 7, background: "rgba(255,255,255,0.05)", border: `1px solid ${BE.line}` }}>
+              {(["en", "hi"] as const).map((lng) => (
+                <button
+                  key={lng}
+                  onClick={() => setLanguage(lng)}
+                  style={{
+                    padding: "2px 8px", fontSize: 10, fontWeight: 700, borderRadius: 5,
+                    textTransform: "uppercase", letterSpacing: "0.04em",
+                    background: language === lng ? BE.accent : "transparent",
+                    color: language === lng ? "#fff" : BE.textDim,
+                  }}
+                >
+                  {lng === "en" ? "EN" : "हिन्दी"}
+                </button>
+              ))}
+            </span>
           )}
           <span style={{ flex: 1 }} />
           <button
@@ -100,7 +134,7 @@ export default function QuestionPane({
               ))}
             </div>
           )}
-          <MathRenderer content={currentQ.question_text} />
+          <MathRenderer content={displayText} />
         </div>
 
         {/* Options */}
@@ -117,7 +151,7 @@ export default function QuestionPane({
               <div className="mt-2 text-[11px]" style={{ color: BE.textMute }}>Enter exact numeric value.</div>
             </div>
           ) : (
-            currentQ.options?.map((opt, oi) => {
+            displayOptions?.map((opt, oi) => {
               const letter = optionLetters[oi];
               const isMSQ = currentQ.question_type === "MSQ";
               const selected = isMSQ ? curMsq.includes(letter) : curMcq === letter;

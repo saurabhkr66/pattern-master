@@ -142,7 +142,8 @@ export default function BillsClient({
         </div>
       )}
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-800">
+      {/* Desktop: table. Mobile: stacked cards (below). */}
+      <div className="mt-6 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
         <table className="w-full min-w-[680px] text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
             <tr>
@@ -207,6 +208,54 @@ export default function BillsClient({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="mt-6 space-y-3 md:hidden">
+        {loading ? (
+          <p className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-slate-500">Loading…</p>
+        ) : bills.length === 0 ? (
+          <p className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-8 text-center text-slate-500">
+            No submissions billed yet.
+          </p>
+        ) : (
+          bills.map((b) => (
+            <div key={b.period} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium text-white">{MONTH_FMT.format(new Date(b.period))}</p>
+                  <p className="mt-0.5 font-mono text-xs text-slate-400">
+                    {b.submissions} submissions · <span className="font-semibold text-white">₹{b.amount}</span>
+                  </p>
+                </div>
+                {b.status === "paid" ? (
+                  <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400">Paid</span>
+                ) : (
+                  <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-400">Due</span>
+                )}
+              </div>
+              <div className="mt-3 text-right">
+                {b.status === "due" ? (
+                  <button
+                    disabled={busy === b.period}
+                    onClick={() => setStatus(b.period, "paid")}
+                    className="text-sm font-semibold text-emerald-400 hover:underline disabled:opacity-50"
+                  >
+                    Mark paid
+                  </button>
+                ) : (
+                  <button
+                    disabled={busy === b.period}
+                    onClick={() => setStatus(b.period, "due")}
+                    className="text-sm font-semibold text-amber-400 hover:underline disabled:opacity-50"
+                  >
+                    Mark due
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

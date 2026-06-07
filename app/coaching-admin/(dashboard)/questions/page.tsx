@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
+import { getCoachingTaxonomy } from "@/lib/coachingTaxonomy";
 import QuestionsClient from "@/components/coaching/QuestionsClient";
 
 export const dynamic = "force-dynamic";
+
+// Matches QUESTIONS_PAGE_SIZE in the questions API route — the first page is
+// server-rendered; the client pulls subsequent pages from that endpoint.
+const PAGE_SIZE = 50;
 
 export default async function QuestionsPage() {
   const actor = await resolveCoachingAdmin();
@@ -25,37 +30,43 @@ export default async function QuestionsPage() {
 
   const coachingId = actor!.coachingId!;
 
-  const [questions, subjects] = await Promise.all([
+  const [questions, taxonomy] = await Promise.all([
+    // Fetch one extra row to know if a "Load more" page exists (no count query).
+    // This first page feeds the flat search/type fallback view.
     prisma.coachingQuestion.findMany({
       where: { coaching_id: coachingId },
       select: {
         id: true,
         question_text: true,
         question_type: true,
+        grade: true,
         subject: true,
         topic: true,
+        set_name: true,
         difficulty: true,
         max_marks: true,
         correct_answer: true,
         created_at: true,
       },
       orderBy: { created_at: "desc" },
-      take: 500,
+      take: PAGE_SIZE + 1,
     }),
-    prisma.coachingQuestion.findMany({
-      where: { coaching_id: coachingId, subject: { not: null } },
-      select: { subject: true },
-      distinct: ["subject"],
-    }),
+    // Folder tree (grade → subject → set + counts) for the browse view.
+    getCoachingTaxonomy(coachingId),
   ]);
+
+  const hasMore = questions.length > PAGE_SIZE;
+  const firstPage = hasMore ? questions.slice(0, PAGE_SIZE) : questions;
 
   return (
     <QuestionsClient
-      initialQuestions={questions.map((q) => ({
+      initialQuestions={firstPage.map((q) => ({
         ...q,
         created_at: q.created_at.toISOString(),
       }))}
-      subjects={subjects.map((s) => s.subject!).filter(Boolean)}
+      initialHasMore={hasMore}
+      taxonomy={taxonomy}
+      isSuperAdmin={!!actor!.isSuperAdmin}
     />
   );
 }

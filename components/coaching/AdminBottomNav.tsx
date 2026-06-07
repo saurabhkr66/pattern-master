@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, FileQuestion, ClipboardList } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, FileQuestion, ClipboardList } from "lucide-react";
 
 // Mobile bottom tab nav (replaces the sidebar on small screens). Desktop hides it.
 const NAV = [
   { href: "/coaching-admin", label: "Home", icon: LayoutDashboard, exact: true },
+  { href: "/coaching-admin/insights", label: "Insights", icon: TrendingUp },
   { href: "/coaching-admin/students", label: "Students", icon: Users },
   { href: "/coaching-admin/questions", label: "Bank", icon: FileQuestion },
   { href: "/coaching-admin/tests", label: "Tests", icon: ClipboardList },

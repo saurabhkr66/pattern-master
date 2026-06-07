@@ -6,8 +6,8 @@ import { getCachedCoachingBySlug, getCachedActiveTests } from "@/lib/coachingCac
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import StudentHeader from "@/components/coaching/StudentHeader";
 import RememberCoaching from "@/components/coaching/RememberCoaching";
-import { Card, Pill, AMBER_GRAD, AMBER_GLOW, display, mono } from "@/components/coaching/ui";
-import { ClipboardList } from "lucide-react";
+import { Card, AMBER_GRAD, AMBER_GLOW, display, mono } from "@/components/coaching/ui";
+import { ClipboardList, Inbox, Trophy } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -27,21 +27,23 @@ export default async function StudentDashboard({
   // Active-tests list is shared across all students → Redis-cached per coaching.
   // This student's own attempts stay a live read (must reflect a just-submitted
   // result immediately, and it's per-student so there's little to share).
-  const tests = await getCachedActiveTests(coaching.id);
-
-  const attempts = await prisma.testAttempt.findMany({
-    where: { student_id: student.id, coaching_id: coaching.id },
-    select: {
-      id: true,
-      test_id: true,
-      status: true,
-      score: true,
-      max_score: true,
-      submitted_at: true,
-      test: { select: { title: true } },
-    },
-    orderBy: { submitted_at: "desc" },
-  });
+  // The two are independent → fetch in parallel.
+  const [tests, attempts] = await Promise.all([
+    getCachedActiveTests(coaching.id),
+    prisma.testAttempt.findMany({
+      where: { student_id: student.id, coaching_id: coaching.id },
+      select: {
+        id: true,
+        test_id: true,
+        status: true,
+        score: true,
+        max_score: true,
+        submitted_at: true,
+        test: { select: { title: true } },
+      },
+      orderBy: { submitted_at: "desc" },
+    }),
+  ]);
 
   const attemptByTest = new Map(attempts.map((a) => [a.test_id, a]));
 
@@ -77,16 +79,38 @@ export default async function StudentDashboard({
       <RememberCoaching slug={slug} name={coaching.name} />
       <StudentHeader coachingName={coaching.name} studentName={student.name} slug={slug} />
 
-      <main className="relative grid gap-8 p-6 sm:p-12 lg:grid-cols-[1.3fr_1fr]">
+      <main className="relative grid gap-6 p-5 sm:gap-8 sm:p-12 lg:grid-cols-[1.3fr_1fr]">
+        {/* Greeting */}
+        <div className="flex items-center justify-between lg:col-span-2">
+          <div>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl" style={{ fontFamily: display }}>
+              Hello, {student.name}
+            </h1>
+            <p className="mt-1 text-sm text-slate-400">Ready for your next test?</p>
+          </div>
+          <span
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-amber-500/15 text-lg font-bold text-amber-400"
+            style={{ fontFamily: display }}
+          >
+            {student.name.charAt(0).toUpperCase()}
+          </span>
+        </div>
+
         {/* Available tests */}
         <section>
-          <h2 className="mb-4 text-2xl font-bold text-white" style={{ fontFamily: display }}>
+          <h2 className="mb-4 text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: display }}>
             Available tests
           </h2>
           <div className="space-y-4">
             {available.length === 0 ? (
               <Card>
-                <p className="px-6 py-8 text-center text-sm text-slate-500">No tests available right now.</p>
+                <div className="flex flex-col items-center px-6 py-10 text-center">
+                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/[0.04] text-slate-500">
+                    <Inbox className="h-7 w-7" />
+                  </span>
+                  <p className="mt-4 font-semibold text-white">No tests available</p>
+                  <p className="mt-1 text-sm text-slate-500">New tests show up here when your tutor assigns them.</p>
+                </div>
               </Card>
             ) : (
               available.map((t) => (
@@ -132,9 +156,16 @@ export default async function StudentDashboard({
 
         {/* Past results */}
         <section>
-          <h2 className="mb-4 text-2xl font-bold text-white" style={{ fontFamily: display }}>
-            Past results
-          </h2>
+          <div className="mb-4 flex items-center gap-3">
+            <h2 className="text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: display }}>
+              Past results
+            </h2>
+            {past.length > 0 && (
+              <span className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-xs font-semibold text-slate-300">
+                {past.length}
+              </span>
+            )}
+          </div>
           <div className="space-y-4">
             {past.length === 0 ? (
               <Card>
@@ -144,38 +175,68 @@ export default async function StudentDashboard({
               past.map((a) => {
                 const max = a.max_score ?? 0;
                 const pct = max > 0 ? Math.round(((a.score ?? 0) / max) * 100) : 0;
-                const tone = pct >= 66 ? "success" : pct >= 33 ? "amber" : "danger";
+                const ringColor = pct >= 66 ? "#34d399" : pct >= 33 ? "#fbbf24" : "#f87171";
                 return (
-                  <Link key={a.id} href={`/c/${slug}/result/${a.id}`} className="block">
-                    <Card>
-                      <div className="flex items-center justify-between px-6 py-5">
-                        <div>
-                          <div className="text-[16px] font-bold text-white">{a.test.title}</div>
-                          <div className="mt-1.5 text-[12.5px] text-slate-400" style={{ fontFamily: mono }}>
+                  // Two sibling links inside one card (never nested — invalid HTML):
+                  // the body opens the result, the footer opens the leaderboard.
+                  <Card key={a.id}>
+                    <Link href={`/c/${slug}/result/${a.id}`} className="block">
+                      <div className="flex items-center gap-4 px-5 py-4 sm:px-6">
+                        <Ring pct={pct} color={ringColor} />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[16px] font-bold text-white">{a.test.title}</div>
+                          <div className="mt-1 text-xs text-slate-400" style={{ fontFamily: mono }}>
                             {a.submitted_at ? new Date(a.submitted_at).toLocaleString() : ""}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-bold text-white" style={{ fontFamily: display, fontSize: 26 }}>
+                        <div className="shrink-0 text-right">
+                          <span className="font-bold text-white" style={{ fontFamily: display, fontSize: 24 }}>
                             {a.score ?? 0}
-                            <span className="text-[17px] text-slate-400"> / {max}</span>
-                          </div>
-                          <div className="mt-1">
-                            <Pill tone={tone}>{pct}%</Pill>
-                          </div>
+                          </span>
+                          <span className="text-[15px] text-slate-400"> / {max}</span>
                         </div>
                       </div>
-                      <div className="h-1.5 bg-white/[0.05]">
-                        <div className="h-full" style={{ width: `${pct}%`, background: AMBER_GRAD }} />
-                      </div>
-                    </Card>
-                  </Link>
+                    </Link>
+                    <Link
+                      href={`/c/${slug}/leaderboard/${a.test_id}`}
+                      className="flex items-center justify-center gap-1.5 border-t py-2.5 text-xs font-semibold text-amber-400 transition hover:bg-amber-500/[0.06]"
+                      style={{ borderColor: "rgba(255,255,255,0.07)" }}
+                    >
+                      <Trophy className="h-3.5 w-3.5" /> Leaderboard
+                    </Link>
+                  </Card>
                 );
               })
             )}
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+// Circular progress ring for a result score (mobile redesign).
+function Ring({ pct, color }: { pct: number; color: string }) {
+  const r = 18;
+  const c = 2 * Math.PI * r;
+  const off = c - (Math.max(0, Math.min(100, pct)) / 100) * c;
+  return (
+    <div className="relative grid h-12 w-12 shrink-0 place-items-center">
+      <svg width="48" height="48" viewBox="0 0 48 48" className="-rotate-90">
+        <circle cx="24" cy="24" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+        <circle
+          cx="24"
+          cy="24"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={off}
+        />
+      </svg>
+      <span className="absolute text-[11px] font-bold text-white">{pct}%</span>
     </div>
   );
 }

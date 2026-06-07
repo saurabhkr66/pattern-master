@@ -5,6 +5,10 @@ import StudentsClient from "@/components/coaching/StudentsClient";
 
 export const dynamic = "force-dynamic";
 
+// Matches STUDENTS_PAGE_SIZE in the students API route — first page is
+// server-rendered; the client pulls more from that endpoint.
+const PAGE_SIZE = 50;
+
 export default async function StudentsPage() {
   const actor = await resolveCoachingAdmin();
 
@@ -28,6 +32,7 @@ export default async function StudentsPage() {
   const coachingId = actor!.coachingId!;
 
   const [students, batches] = await Promise.all([
+    // One extra row to detect a "Load more" page (no count query).
     prisma.student.findMany({
       where: { coaching_id: coachingId },
       select: {
@@ -40,7 +45,7 @@ export default async function StudentsPage() {
         batch: { select: { id: true, name: true } },
       },
       orderBy: { joined_at: "desc" },
-      take: 500,
+      take: PAGE_SIZE + 1,
     }),
     prisma.batch.findMany({
       where: { coaching_id: coachingId },
@@ -49,12 +54,16 @@ export default async function StudentsPage() {
     }),
   ]);
 
+  const hasMore = students.length > PAGE_SIZE;
+  const firstPage = hasMore ? students.slice(0, PAGE_SIZE) : students;
+
   return (
     <StudentsClient
-      initialStudents={students.map((s) => ({
+      initialStudents={firstPage.map((s) => ({
         ...s,
         joined_at: s.joined_at.toISOString(),
       }))}
+      initialHasMore={hasMore}
       initialBatches={batches}
     />
   );

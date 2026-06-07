@@ -1,0 +1,19 @@
+{
+  "_comment": "Global seeded section catalog: exam/class -> ordered section names. Seeded with coaching_id = null (visible to every coaching). A coaching can add/override its own sections in-app. Adding a new exam = add an entry here and re-run scripts/coaching/seed-exam-sections.mjs.",
+  "exams": {
+    "JEE Main": ["Physics", "Chemistry", "Mathematics"],
+    "JEE Advanced": ["Physics", "Chemistry", "Mathematics"],
+    "NEET": ["Physics", "Chemistry", "Biology"],
+    "SSC CGL": ["Quantitative Aptitude", "Reasoning", "English", "General Awareness"],
+    "SSC CHSL": ["Quantitative Aptitude", "Reasoning", "English", "General Awareness"],
+    "RRB NTPC": ["Mathematics", "Reasoning", "General Awareness"],
+    "RRB Group D": ["Mathematics", "Reasoning", "General Science", "General Awareness"],
+    "Class 6": ["Mathematics", "Science", "Social Science", "English", "Hindi"],
+    "Class 7": ["Mathematics", "Science", "Social Science", "English", "Hindi"],
+    "Class 8": ["Mathematics", "Science", "Social Science", "English", "Hindi"],
+    "Class 9": ["Mathematics", "Science", "Social Science", "English", "Hindi"],
+    "Class 10": ["Mathematics", "Science", "Social Science", "English", "Hindi"],
+    "Class 11": ["Physics", "Chemistry", "Mathematics", "Biology", "English"],
+    "Class 12": ["Physics", "Chemistry", "Mathematics", "Biology", "English"]
+  }
+}

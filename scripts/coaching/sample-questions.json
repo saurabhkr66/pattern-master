@@ -6,6 +6,7 @@
     "correct_answer": "A",
     "solution": "$\\int_0^1 x\\,dx = \\frac{x^2}{2}\\Big|_0^1 = \\frac{1}{2}$.",
     "max_marks": 1,
+    "grade": "Class 12",
     "subject": "Calculus",
     "topic": "Definite Integrals",
     "difficulty": "easy"
@@ -21,6 +22,7 @@
     ],
     "correct_answer": "A",
     "max_marks": 2,
+    "grade": "Class 11",
     "subject": "Digital Logic",
     "topic": "Logic Gates"
   },
@@ -30,6 +32,7 @@
     "correct_answer": "40",
     "nat_tolerance": 0,
     "max_marks": 2,
+    "grade": "Class 10",
     "subject": "Networks",
     "topic": "Power"
   }

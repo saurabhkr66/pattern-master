@@ -59,7 +59,11 @@ export function getCachedStatsActivity(userId: string) {
       return { totalAttempted, correctAttempts, currentMistakesCount, activityData, currentStreak };
     },
     [`dashboard-stats-activity-${userId}`],
-    { revalidate: false, tags: [`dashboard-${userId}`, `mistakes-${userId}`] }
+    // TTL safety net: tag invalidation (on new attempts) is the primary refresh,
+    // but `revalidate: false` froze stale-empty entries forever when no attempt
+    // followed — the all-zero dashboard bug. 300s caps how long any stale entry
+    // (incl. an empty one cached during a DB switch) can survive.
+    { revalidate: 300, tags: [`dashboard-${userId}`, `mistakes-${userId}`] }
   )();
 }
 
@@ -104,7 +108,7 @@ export function getCachedWeakTopic(userId: string) {
         : null;
     },
     [`dashboard-weak-topic-${userId}`],
-    { revalidate: false, tags: [`dashboard-${userId}`] }
+    { revalidate: 300, tags: [`dashboard-${userId}`] }
   )();
 }
 
@@ -157,6 +161,6 @@ export function getCachedRecentAttempts(userId: string) {
       };
     },
     [`dashboard-recent-attempts-${userId}`],
-    { revalidate: false, tags: [`dashboard-${userId}`] }
+    { revalidate: 300, tags: [`dashboard-${userId}`] }
   )();
 }

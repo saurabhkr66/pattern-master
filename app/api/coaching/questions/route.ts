@@ -1,103 +1,89 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
+import { invalidateCoachingTaxonomy } from "@/lib/coachingTaxonomy";
+import { validateCoachingQuestion } from "@/lib/coachingQuestionValidate";
 
 const TYPES = new Set(["mcq", "nat", "subjective"]);
 
-// Shape stored in CoachingQuestion.options (JSON): [{ label, text }]
-type Option = { label: string; text: string };
-
-function validate(body: any): { error?: string; data?: any } {
-  const type = String(body.question_type ?? "mcq");
-  if (!TYPES.has(type)) return { error: "invalid question_type" };
-  if (!body.question_text?.trim()) return { error: "question_text is required" };
-
-  const maxMarks = Number(body.max_marks ?? 1);
-  if (!Number.isFinite(maxMarks) || maxMarks <= 0) return { error: "invalid max_marks" };
-
-  let options: Option[] = [];
-  let correct_answer = "";
-  let nat_tolerance: number | null = null;
-
-  if (type === "mcq") {
-    options = Array.isArray(body.options)
-      ? body.options
-          .map((o: any) => ({ label: String(o.label).trim(), text: String(o.text ?? "").trim() }))
-          .filter((o: Option) => o.text)
-      : [];
-    if (options.length < 2) return { error: "mcq needs at least 2 options" };
-    correct_answer = String(body.correct_answer ?? "").trim();
-    if (!options.some((o) => o.label === correct_answer)) {
-      return { error: "correct_answer must match one of the option labels" };
-    }
-  } else if (type === "nat") {
-    correct_answer = String(body.correct_answer ?? "").trim();
-    if (correct_answer === "" || !Number.isFinite(Number(correct_answer))) {
-      return { error: "nat correct_answer must be a number" };
-    }
-    nat_tolerance = body.nat_tolerance != null ? Number(body.nat_tolerance) : 0;
-    if (!Number.isFinite(nat_tolerance) || nat_tolerance < 0) {
-      return { error: "invalid nat_tolerance" };
-    }
-  }
-  // subjective: no options, no correct_answer; solution acts as model answer.
-
-  return {
-    data: {
-      question_type: type,
-      question_text: String(body.question_text).trim(),
-      options,
-      correct_answer,
-      solution: body.solution?.trim() || null,
-      max_marks: maxMarks,
-      nat_tolerance,
-      subject: body.subject?.trim() || null,
-      topic: body.topic?.trim() || null,
-      difficulty: body.difficulty?.trim() || null,
-    },
-  };
+// Folder filters carry "__null__" to mean "the Uncategorized bucket" (grade /
+// subject / set_name IS NULL), distinct from the param being absent (no filter).
+const NULL_SENTINEL = "__null__";
+function folderWhere(value: string | undefined): string | null | undefined {
+  if (value === undefined) return undefined; // no filter
+  if (value === NULL_SENTINEL) return null; // IS NULL
+  return value;
 }
 
-// GET /api/coaching/questions?q=&subject=&type=
-export const GET = withCoachingContext(async (req, { coachingId }) => {
-  const q = req.nextUrl.searchParams.get("q")?.trim();
-  const subject = req.nextUrl.searchParams.get("subject")?.trim();
-  const type = req.nextUrl.searchParams.get("type")?.trim();
+// One page of the question bank. Kept small so neither the initial server
+// render nor a "load more" fetch ships the whole (potentially huge) bank.
+export const QUESTIONS_PAGE_SIZE = 50;
 
-  const questions = await prisma.coachingQuestion.findMany({
+// GET /api/coaching/questions?q=&grade=&subject=&set=&type=&days=&limit=&offset=
+export const GET = withCoachingContext(async (req, { coachingId }) => {
+  const sp = req.nextUrl.searchParams;
+  const q = sp.get("q")?.trim();
+  const subjectParam = sp.get("subject")?.trim() || undefined;
+  const gradeParam = sp.get("grade")?.trim() || undefined;
+  const setParam = sp.get("set")?.trim() || undefined;
+  const type = sp.get("type")?.trim();
+  // Recency filter: ?days=7 → only questions added in the last 7 days (the
+  // "recently added" view so newly-added questions never get lost in the bank).
+  const days = Number(sp.get("days"));
+  const limit = Math.min(Math.max(Number(sp.get("limit")) || QUESTIONS_PAGE_SIZE, 1), 100);
+  const offset = Math.max(Number(sp.get("offset")) || 0, 0);
+
+  const grade = folderWhere(gradeParam);
+  const subject = folderWhere(subjectParam);
+  const set_name = folderWhere(setParam);
+  const since =
+    Number.isFinite(days) && days > 0 ? new Date(Date.now() - days * 86400_000) : undefined;
+
+  // Fetch one extra row to learn whether a next page exists — avoids a separate
+  // count() round trip just to drive the "Load more" button.
+  const rows = await prisma.coachingQuestion.findMany({
     where: {
       coaching_id: coachingId,
-      ...(subject ? { subject } : {}),
+      ...(grade !== undefined ? { grade } : {}),
+      ...(subject !== undefined ? { subject } : {}),
+      ...(set_name !== undefined ? { set_name } : {}),
       ...(type && TYPES.has(type) ? { question_type: type } : {}),
-      ...(q ? { question_text: { contains: q, mode: "insensitive" } } : {}),
+      ...(since ? { created_at: { gte: since } } : {}),
+      ...(q ? { question_text: { contains: q, mode: "insensitive" as const } } : {}),
     },
     select: {
       id: true,
       question_text: true,
       question_type: true,
+      grade: true,
       subject: true,
       topic: true,
+      set_name: true,
       difficulty: true,
       max_marks: true,
       correct_answer: true,
       created_at: true,
     },
     orderBy: { created_at: "desc" },
-    take: 500,
+    skip: offset,
+    take: limit + 1,
   });
 
-  return NextResponse.json({ questions });
+  const hasMore = rows.length > limit;
+  return NextResponse.json({ questions: hasMore ? rows.slice(0, limit) : rows, hasMore });
 });
 
 // POST /api/coaching/questions
 export const POST = withCoachingContext(async (req, { coachingId }) => {
   const body = await req.json();
-  const { error, data } = validate(body);
-  if (error) return NextResponse.json({ error }, { status: 400 });
+  const { error, data } = validateCoachingQuestion(body);
+  if (error || !data) return NextResponse.json({ error: error ?? "invalid" }, { status: 400 });
 
   const created = await prisma.coachingQuestion.create({
     data: { coaching_id: coachingId, ...data },
     select: { id: true },
   });
+  // A new question adds a node/count to the folder tree — bust the cached taxonomy.
+  invalidateCoachingTaxonomy(coachingId);
   return NextResponse.json({ ok: true, id: created.id });
 });

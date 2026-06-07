@@ -63,7 +63,9 @@ export async function GET(request: Request) {
     const getCached = unstable_cache(
       () => queryProgress(userId, exam, branch),
       [`practice-progress-${userId}-${exam}-${branch || "all"}`],
-      { revalidate: false, tags: [`dashboard-${userId}`] }
+      // 300s TTL safety net — see dashboard/_lib/queries.ts: `revalidate: false`
+      // froze stale-empty entries forever when no new attempt followed.
+      { revalidate: 300, tags: [`dashboard-${userId}`] }
     );
 
     const progress = await getCached();

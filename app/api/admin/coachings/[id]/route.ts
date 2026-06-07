@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCoachingActor } from "@/lib/coachingAuth";
 import { invalidateCoachingSlug } from "@/lib/coachingCache";
@@ -60,7 +61,8 @@ export async function PATCH(
   const exists = await prisma.coaching.findUnique({ where: { id }, select: { id: true, slug: true } });
   if (!exists) return NextResponse.json({ error: "not found" }, { status: 404 });
   await prisma.coaching.update({ where: { id }, data });
-  await invalidateCoachingSlug(exists.slug); // drop the cached coaching record
+  await invalidateCoachingSlug(exists.slug); // drop the cached coaching record (Redis)
+  revalidatePath(`/c/${exists.slug}`); // drop the ISR-cached public profile page
   return NextResponse.json({ ok: true });
 }
 
@@ -80,5 +82,6 @@ export async function DELETE(
 
   await prisma.coaching.delete({ where: { id } });
   await invalidateCoachingSlug(exists.slug);
+  revalidatePath(`/c/${exists.slug}`); // drop the ISR-cached public profile page
   return NextResponse.json({ ok: true });
 }
