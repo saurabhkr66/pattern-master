@@ -21,12 +21,14 @@ if [ -z "${LOCAL_URL:-}" ]; then
   echo "$(date -Is) ERROR: DATABASE_URL not found in .env" >>"$LOG"
   exit 1
 fi
+# Strip Prisma-only query params (?schema, &connection_limit) for pg_dump (libpq).
+LOCAL_PG="${LOCAL_URL%%\?*}"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 FILE="/tmp/battleexam-${STAMP}.sql.gz"
 
 echo "$(date -Is) starting backup -> ${FILE}" >>"$LOG"
-pg_dump "$LOCAL_URL" | gzip -9 >"$FILE"
+pg_dump "$LOCAL_PG" | gzip -9 >"$FILE"
 
 echo "$(date -Is) uploading to ${R2_REMOTE}:${R2_BUCKET}/" >>"$LOG"
 rclone copy "$FILE" "${R2_REMOTE}:${R2_BUCKET}/" >>"$LOG" 2>&1

@@ -17,6 +17,8 @@ if [ -z "${LOCAL_URL:-}" ]; then
   echo "!! DATABASE_URL (local source) not found in .env." >&2
   exit 1
 fi
+# Strip Prisma-only query params (?schema, &connection_limit) for libpq tools.
+LOCAL_PG="${LOCAL_URL%%\?*}"
 
 read -r -p "Neon DIRECT (non-pooler) URL to copy TO: " NEON_URL
 if [ -z "${NEON_URL:-}" ]; then echo "!! No Neon URL given." >&2; exit 1; fi
@@ -24,7 +26,7 @@ if [ -z "${NEON_URL:-}" ]; then echo "!! No Neon URL given." >&2; exit 1; fi
 DUMP="/tmp/vps-to-neon-$(date +%Y%m%d-%H%M%S).dump"
 
 echo ">> Dumping local Postgres..."
-pg_dump "$LOCAL_URL" --no-owner --no-privileges -Fc -f "$DUMP"
+pg_dump "$LOCAL_PG" --no-owner --no-privileges -Fc -f "$DUMP"
 
 echo ">> Restoring into Neon..."
 pg_restore --no-owner --no-privileges --clean --if-exists -d "$NEON_URL" "$DUMP" || true

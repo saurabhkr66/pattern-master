@@ -18,6 +18,9 @@ if [ -z "${LOCAL_URL:-}" ]; then
   echo "!! DATABASE_URL not found in .env — fill it in first." >&2
   exit 1
 fi
+# Strip Prisma-only query params (?schema, &connection_limit) — the libpq tools
+# (pg_restore/psql) reject them with "invalid URI query parameter".
+LOCAL_PG="${LOCAL_URL%%\?*}"
 
 read -r -p "Neon DIRECT (non-pooler) prod URL to copy FROM: " NEON_URL
 if [ -z "${NEON_URL:-}" ]; then echo "!! No Neon URL given." >&2; exit 1; fi
@@ -28,14 +31,14 @@ echo ">> Dumping Neon prod (custom format, no owner/privileges)..."
 pg_dump "$NEON_URL" --no-owner --no-privileges -Fc -f "$DUMP"
 
 echo ">> Restoring into local Postgres..."
-# --clean --if-exists makes this re-runnable; remove if restoring into an empty db.
-pg_restore --no-owner --no-privileges --clean --if-exists -d "$LOCAL_URL" "$DUMP" || true
-
-echo ">> Confirming schema matches Prisma..."
-npx prisma db push
+# The dump carries the full Neon schema + data, so we do NOT run `prisma db push`
+# (it can't recreate some defaults from scratch and isn't needed here).
+# --clean --if-exists makes this re-runnable. Errors on missing extensions are
+# non-fatal (|| true); the row counts below are the real success check.
+pg_restore --no-owner --no-privileges --clean --if-exists -d "$LOCAL_PG" "$DUMP" || true
 
 echo ">> Row-count sanity check (local):"
-psql "$LOCAL_URL" -c 'SELECT
+psql "$LOCAL_PG" -c 'SELECT
   (SELECT count(*) FROM "Question") AS questions,
   (SELECT count(*) FROM "Pattern")  AS patterns,
   (SELECT count(*) FROM "User")     AS users;'
