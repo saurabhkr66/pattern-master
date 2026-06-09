@@ -70,8 +70,10 @@ on your laptop against the Neon **dev** branch:
 
 Visit `https://yourdomain.com` — you're live on the VPS.
 
-> **Private repo:** `setup.sh`'s clone step fails on a private GitHub repo. Either make it
-> public, or run `gh auth login` / add a deploy key on the server first, then clone manually.
+> **Repo must be public:** the bootstrap fetches `setup.sh` from GitHub and clones the repo
+> over HTTPS without auth, so the repo needs to be **public** (it is). No `.env` secrets are in
+> the repo or its history — only the source code is exposed. If you make it private later,
+> switch the clone to a deploy key or token.
 
 ---
 
