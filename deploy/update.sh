@@ -12,7 +12,7 @@ echo ">> Pulling latest from GitHub..."
 git pull origin master
 
 echo ">> Installing dependencies..."
-npm ci
+npm install
 
 echo ">> Applying any schema changes (Prisma)..."
 npx prisma db push

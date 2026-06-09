@@ -50,7 +50,7 @@ on your laptop against the Neon **dev** branch:
                                   #   the local DATABASE_URL/DIRECT_URL (with the setup password),
                                   #   and all prod SaaS keys (Clerk pk_live_/sk_live_)
    rclone config                  # set up the r2: remote — see deploy/r2-and-cron.md
-   npm ci
+   npm install
    bash deploy/migrate-from-neon.sh   # paste the Neon DIRECT url; copies data -> local PG
    ```
    Check the printed row counts match Neon.
