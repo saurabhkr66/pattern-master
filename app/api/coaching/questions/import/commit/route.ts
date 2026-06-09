@@ -38,6 +38,12 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
       subject: r.section ?? r.subject ?? null,
     });
     if (error || !data) {
+      console.warn(`[import/commit] skipped row ${i}: ${error ?? "invalid"}`, {
+        type: r.question_type,
+        correct_answer: r.correct_answer,
+        options: Array.isArray(r.options) ? r.options.length : r.options,
+        max_marks: r.max_marks,
+      });
       skipped.push({ index: i, reason: error ?? "invalid" });
       continue;
     }

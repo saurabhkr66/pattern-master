@@ -438,6 +438,27 @@ model ExamSection {
   @@index([exam])
 }
 
+// One level below ExamSection: the fixed syllabus topics each (exam/class, section)
+// has — Class 11 / Mathematics = Sets, Relations & Functions, … Integrals. School
+// classes (CBSE 6-12) have a standardized syllabus, so topics are a constrained
+// catalog here rather than free text; competitive exams with no rows fall back to
+// the admin-typed topic list at import time. coaching_id = null → global seeded;
+// set → a coaching's own topic. A question's `topic` is chosen from this list, so
+// chapter-wise filtering + analytics stay consistent.
+model SyllabusTopic {
+  id          String   @id @default(uuid())
+  coaching_id String? // null = global seeded; set = coaching-owned
+  exam        String // "Class 11"  (matches CoachingQuestion.grade / ExamSection.exam)
+  section     String // "Mathematics" (matches an ExamSection.name)
+  name        String // "Integrals"
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now())
+
+  @@unique([coaching_id, exam, section, name])
+  @@index([coaching_id, exam])
+  @@index([exam, section])
+}
+
 model CoachingTest {
   id            String        @id @default(uuid())
   coaching_id   String

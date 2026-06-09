@@ -1,0 +1,116 @@
+{
+  "_comment": "Global seeded syllabus catalog: exam/class -> section -> ordered topic (chapter) names. Seeded with coaching_id = null (visible to every coaching). One level below data/exam-sections.json: every section key here MUST match an ExamSection.name for that exam. CBSE classes 6-12 have a fixed syllabus, so topics live here as a constrained catalog the importer + review modal read from; competitive exams (SSC/JEE) with no entry fall back to the admin-typed topic list at import. Adding/extending a class = edit here and re-run scripts/coaching/seed-syllabus-topics.mjs.",
+  "exams": {
+    "Class 10": {
+      "Mathematics": [
+        "Real Numbers",
+        "Polynomials",
+        "Pair of Linear Equations in Two Variables",
+        "Quadratic Equations",
+        "Arithmetic Progressions",
+        "Triangles",
+        "Coordinate Geometry",
+        "Introduction to Trigonometry",
+        "Some Applications of Trigonometry",
+        "Circles",
+        "Areas Related to Circles",
+        "Surface Areas and Volumes",
+        "Statistics",
+        "Probability"
+      ],
+      "Science": [
+        "Chemical Reactions and Equations",
+        "Acids, Bases and Salts",
+        "Metals and Non-metals",
+        "Carbon and its Compounds",
+        "Life Processes",
+        "Control and Coordination",
+        "How do Organisms Reproduce",
+        "Heredity and Evolution",
+        "Light - Reflection and Refraction",
+        "The Human Eye and the Colourful World",
+        "Electricity",
+        "Magnetic Effects of Electric Current",
+        "Our Environment"
+      ]
+    },
+    "Class 11": {
+      "Mathematics": [
+        "Sets",
+        "Relations and Functions",
+        "Trigonometric Functions",
+        "Complex Numbers and Quadratic Equations",
+        "Linear Inequalities",
+        "Permutations and Combinations",
+        "Binomial Theorem",
+        "Sequences and Series",
+        "Straight Lines",
+        "Conic Sections",
+        "Introduction to Three Dimensional Geometry",
+        "Limits and Derivatives",
+        "Statistics",
+        "Probability"
+      ],
+      "Physics": [
+        "Units and Measurements",
+        "Motion in a Straight Line",
+        "Motion in a Plane",
+        "Laws of Motion",
+        "Work, Energy and Power",
+        "System of Particles and Rotational Motion",
+        "Gravitation",
+        "Mechanical Properties of Solids",
+        "Mechanical Properties of Fluids",
+        "Thermal Properties of Matter",
+        "Thermodynamics",
+        "Kinetic Theory",
+        "Oscillations",
+        "Waves"
+      ],
+      "Chemistry": [
+        "Some Basic Concepts of Chemistry",
+        "Structure of Atom",
+        "Classification of Elements and Periodicity in Properties",
+        "Chemical Bonding and Molecular Structure",
+        "Thermodynamics",
+        "Equilibrium",
+        "Redox Reactions",
+        "Organic Chemistry - Some Basic Principles and Techniques",
+        "Hydrocarbons"
+      ]
+    },
+    "Class 12": {
+      "Mathematics": [
+        "Relations and Functions",
+        "Inverse Trigonometric Functions",
+        "Matrices",
+        "Determinants",
+        "Continuity and Differentiability",
+        "Application of Derivatives",
+        "Integrals",
+        "Application of Integrals",
+        "Differential Equations",
+        "Vector Algebra",
+        "Three Dimensional Geometry",
+        "Linear Programming",
+        "Probability"
+      ],
+      "Physics": [
+        "Electric Charges and Fields",
+        "Electrostatic Potential and Capacitance",
+        "Current Electricity",
+        "Moving Charges and Magnetism",
+        "Magnetism and Matter",
+        "Electromagnetic Induction",
+        "Alternating Current",
+        "Electromagnetic Waves",
+        "Ray Optics and Optical Instruments",
+        "Wave Optics",
+        "Dual Nature of Radiation and Matter",
+        "Atoms",
+        "Nuclei",
+        "Semiconductor Electronics"
+      ]
+    }
+  }
+}

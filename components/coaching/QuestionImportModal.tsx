@@ -21,6 +21,7 @@ type ParsedQ = {
   section?: string | null;
   topic?: string | null;
   images?: { index: number; filename: string }[] | null;
+  answer_derived?: boolean;
   _include?: boolean;
 };
 
@@ -41,6 +42,7 @@ export default function QuestionImportModal({
   const [error, setError] = useState<string | null>(null);
 
   const [sections, setSections] = useState<string[]>([]);
+  const [topicsBySection, setTopicsBySection] = useState<Record<string, string[]>>({});
   const [questions, setQuestions] = useState<ParsedQ[]>([]);
   const [result, setResult] = useState<{ created: number; skipped: { index: number; reason: string }[] } | null>(null);
 
@@ -63,6 +65,7 @@ export default function QuestionImportModal({
         return;
       }
       setSections(data.sections ?? []);
+      setTopicsBySection(data.topicsBySection ?? {});
       setQuestions((data.questions ?? []).map((q: ParsedQ) => ({ ...q, _include: true })));
       setPhase("review");
     } finally {
@@ -177,7 +180,18 @@ export default function QuestionImportModal({
                     <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{q.question_type.toUpperCase()}</span>
                     <select
                       value={q.section ?? ""}
-                      onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, section: e.target.value || null } : x)))}
+                      onChange={(e) => {
+                        const section = e.target.value || null;
+                        // Drop a topic that doesn't belong to the newly chosen section.
+                        const valid = section ? topicsBySection[section] ?? [] : [];
+                        setQuestions((qs) =>
+                          qs.map((x, j) =>
+                            j === i
+                              ? { ...x, section, topic: valid.includes(x.topic ?? "") ? x.topic : null }
+                              : x
+                          )
+                        );
+                      }}
                       className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
                     >
                       <option value="">{sections.length ? "— Unsectioned —" : "No sections"}</option>
@@ -185,15 +199,94 @@ export default function QuestionImportModal({
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                    {(topicsBySection[q.section ?? ""]?.length ?? 0) > 0 && (
+                      <select
+                        value={q.topic ?? ""}
+                        onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, topic: e.target.value || null } : x)))}
+                        className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
+                      >
+                        <option value="">— Topic —</option>
+                        {topicsBySection[q.section ?? ""].map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    )}
                     {q.images && q.images.length > 0 && <span className="text-xs text-emerald-400">+ diagram</span>}
+                    {q.answer_derived && (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-400" title="Answer was AI-solved (not found in the paper) — verify it">
+                        AI-solved · verify
+                      </span>
+                    )}
                     <span className="ml-auto text-xs text-slate-500">{q.max_marks ?? 1} mk · ans {q.correct_answer || "—"}</span>
                   </div>
+                  {/* Snapshot of a figure question (cropped from the page) — verify it captured the whole question + options. */}
+                  {q.images && q.images.length > 0 && (
+                    <div className="mb-2 overflow-hidden rounded-lg border border-slate-700 bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={q.images[0].filename} alt="question figure" className="mx-auto max-h-80 w-auto object-contain" />
+                    </div>
+                  )}
                   <textarea
                     value={q.question_text}
                     onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, question_text: e.target.value } : x)))}
                     rows={2}
                     className={`${inputCls} font-mono text-xs`}
                   />
+
+                  {/* Answer editor — options/correct answer are the most-missed fields,
+                      so they must be reviewable/fixable here before saving. */}
+                  {q.question_type === "mcq" && (
+                    <div className="mt-2 space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] uppercase text-slate-500">Options · select the correct one</p>
+                        <button
+                          type="button"
+                          onClick={() => setQuestions((qs) => qs.map((x, j) => {
+                            if (j !== i) return x;
+                            const opts = x.options ?? [];
+                            const label = String.fromCharCode(65 + opts.length); // A, B, C…
+                            return { ...x, options: [...opts, { label, text: "" }] };
+                          }))}
+                          className="text-[11px] text-amber-400 hover:underline"
+                        >
+                          + option
+                        </button>
+                      </div>
+                      {(q.options ?? []).length === 0 && (
+                        <p className="text-[11px] text-red-400">No options extracted — add them and pick the answer, or untick this question.</p>
+                      )}
+                      {(q.options ?? []).map((opt, oi) => (
+                        <div key={oi} className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`correct-${i}`}
+                            checked={q.correct_answer === opt.label}
+                            onChange={() => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, correct_answer: opt.label } : x)))}
+                            className="h-3.5 w-3.5 accent-amber-500"
+                          />
+                          <span className="w-4 text-xs text-slate-400">{opt.label}</span>
+                          <input
+                            value={opt.text}
+                            onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, options: (x.options ?? []).map((o, k) => (k === oi ? { ...o, text: e.target.value } : o)) } : x)))}
+                            placeholder={`Option ${opt.label}`}
+                            className="flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {q.question_type === "nat" && (
+                    <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
+                      <span className="text-[10px] uppercase text-slate-500">Numeric answer</span>
+                      <input
+                        value={q.correct_answer ?? ""}
+                        onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, correct_answer: e.target.value } : x)))}
+                        placeholder="e.g. 42"
+                        className="w-28 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
+                      />
+                    </div>
+                  )}
+
                   <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div className="rounded-lg border border-slate-800 bg-slate-900 px-2 py-1.5">
                       <p className="mb-1 text-[10px] uppercase text-slate-500">EN preview</p>

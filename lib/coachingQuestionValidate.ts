@@ -47,6 +47,30 @@ const str = (v: unknown): string | null => {
   return s || null;
 };
 
+/**
+ * Map a free-form MCQ answer to one of the option labels. AI import (and humans)
+ * may return "Option A", "(A)", "A.", "a", or the full option *text* instead of
+ * the bare label "A" — normalize all of those to the matching label so a correct
+ * answer isn't silently rejected. Returns "" if nothing matches.
+ */
+function normalizeMcqAnswer(raw: string, options: Option[]): string {
+  const s = raw.trim();
+  if (!s) return "";
+  // Exact label, then case-insensitive label.
+  const exact = options.find((o) => o.label === s);
+  if (exact) return exact.label;
+  const ci = options.find((o) => o.label.toLowerCase() === s.toLowerCase());
+  if (ci) return ci.label;
+  // Full option text (e.g. Gemini returned the answer string, not the letter).
+  const byText = options.find((o) => o.text.toLowerCase() === s.toLowerCase());
+  if (byText) return byText.label;
+  // Leading letter inside decoration: "A)", "A.", "(A)", "Option A", "Ans: A".
+  const m = s.match(/(?:option|ans(?:wer)?[:.\s]*)?\(?\s*([A-Za-z0-9]+)\s*[).:\-]/i);
+  const lead = m?.[1] ?? (/^[A-Za-z0-9]+$/.test(s) ? s : "");
+  const byLead = lead && options.find((o) => o.label.toLowerCase() === lead.toLowerCase());
+  return byLead ? byLead.label : "";
+}
+
 export function validateCoachingQuestion(
   body: Record<string, unknown>
 ): { error?: string; data?: ValidatedQuestion } {
@@ -65,9 +89,11 @@ export function validateCoachingQuestion(
   if (type === "mcq") {
     options = normOptions(body.options);
     if (options.length < 2) return { error: "mcq needs at least 2 options" };
-    correct_answer = String(body.correct_answer ?? "").trim();
-    if (!options.some((o) => o.label === correct_answer)) {
-      return { error: "correct_answer must match one of the option labels" };
+    correct_answer = normalizeMcqAnswer(String(body.correct_answer ?? ""), options);
+    if (!correct_answer) {
+      return {
+        error: `correct_answer "${String(body.correct_answer ?? "")}" matches no option label`,
+      };
     }
   } else if (type === "nat") {
     correct_answer = String(body.correct_answer ?? "").trim();

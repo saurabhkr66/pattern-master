@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { createEach } from "@/lib/dbHttp";
 import { Prisma } from "@prisma/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { VertexAI } from '@google-cloud/vertexai';
@@ -1288,7 +1289,7 @@ export async function reviewQuestionAnswer(
     if (checks.explanationFlagged) {
       toCreate.push({ [idKey]: questionId, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails });
     }
-    if (toCreate.length > 0) await prisma.questionReport.createMany({ data: toCreate });
+    if (toCreate.length > 0) await createEach(toCreate, (data) => prisma.questionReport.create({ data, select: { id: true } }));
     revalidatePath("/admin/reports");
   } else if (source === "Mock" && mockTestId) {
     // Mock questions have no relational row → all flags live inline in JSON.
@@ -1529,14 +1530,14 @@ export async function commitReviewBatch(batchId: string) {
         ...rows.filter(v => v.isMismatch).map(v => ({ pyq_id: v.id, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId, details: answerDetails(v) })),
         ...rows.filter(v => v.explanationFlagged).map(v => ({ pyq_id: v.id, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails(v) })),
       ];
-      if (data.length > 0) await prisma.questionReport.createMany({ data });
+      if (data.length > 0) await createEach(data, (d) => prisma.questionReport.create({ data: d, select: { id: true } }));
     } else {
       await prisma.questionReport.deleteMany({ where: { question_id: { in: ids }, reason: { in: [AI_MISMATCH_REASON, AI_EXPLANATION_REASON] }, status: "pending" } });
       const data = [
         ...rows.filter(v => v.isMismatch).map(v => ({ question_id: v.id, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId, details: answerDetails(v) })),
         ...rows.filter(v => v.explanationFlagged).map(v => ({ question_id: v.id, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails(v) })),
       ];
-      if (data.length > 0) await prisma.questionReport.createMany({ data });
+      if (data.length > 0) await createEach(data, (d) => prisma.questionReport.create({ data: d, select: { id: true } }));
     }
   };
 

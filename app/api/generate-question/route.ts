@@ -1,6 +1,7 @@
 // app/api/generate-question/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createEach } from "@/lib/dbHttp";
 import { geminiModel } from "@/lib/gemini";
 import { generateQuestionsWithDeepSeek } from "@/lib/deepseek";
 import { generateQuestionsWithOpenRouter } from "@/lib/openrouter";
@@ -149,10 +150,13 @@ export async function POST(req: NextRequest) {
             })),
         );
 
-        await prisma.generatedQuestion.createMany({
-            data: rows,
-            skipDuplicates: true,
-        });
+        // createMany() needs a transaction (unsupported on the Neon HTTP adapter) —
+        // insert per row instead. skipDuplicates → swallow P2002.
+        await createEach(
+            rows,
+            (data) => prisma.generatedQuestion.create({ data, select: { id: true } }),
+            { skipDuplicates: true }
+        );
 
         const savedQuestions = await prisma.generatedQuestion.findMany({
             where: {

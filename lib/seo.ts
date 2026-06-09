@@ -424,7 +424,7 @@ export function buildQuestionSchema(q: {
     "url": "https://battleexam.com",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://battleexam.com/logo.png"
+      "url": "https://battleexam.com/icon.png"
     }
   };
 

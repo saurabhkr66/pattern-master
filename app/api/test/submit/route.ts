@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createEach } from "@/lib/dbHttp";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getExamConfig, type ExamType } from "@/lib/examConfigs";
@@ -314,7 +315,13 @@ export async function POST(req: NextRequest) {
       });
 
     if (attemptData.length > 0) {
-      await prisma.attempt.createMany({ data: attemptData, skipDuplicates: true });
+      // createMany() needs a transaction (unsupported on the Neon HTTP adapter) —
+      // insert per row instead. skipDuplicates → swallow P2002.
+      await createEach(
+        attemptData,
+        (data) => prisma.attempt.create({ data, select: { id: true } }),
+        { skipDuplicates: true }
+      );
     }
 
     // Real-time leaderboard: push to Redis + trigger Pusher event.

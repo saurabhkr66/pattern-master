@@ -139,11 +139,13 @@ export default async function ReviewPage() {
           interval:    srs.interval,
           easeFactor:  srs.ease_factor,
           repetitions: srs.repetitions,
-          nextReview:  srs.next_review.toISOString(),
+          // unstable_cache JSON-serializes Dates to strings on cache hits, so
+          // coerce before formatting (it's a real Date only on a cache miss).
+          nextReview:  new Date(srs.next_review).toISOString(),
           status:      srs.status,
           lastGrade:   srs.last_grade ?? null,
         } : null,
-        isDue: !srs || srs.next_review <= now,
+        isDue: !srs || new Date(srs.next_review) <= now,
       };
     })
     .filter(Boolean) as any[];

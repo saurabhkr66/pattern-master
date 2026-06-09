@@ -1,5 +1,5 @@
 import "server-only";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { scoreQuestion, type NormalizedQuestion } from "@/lib/resolveQuestions";
 import { optionPermutation, optionSeed, type RuntimeTest } from "@/lib/coachingTestRuntime";
@@ -169,34 +169,40 @@ export async function gradeAndWrite(opts: {
   // Redis was unavailable, so the count lives in the DB column already — don't
   // clobber it.
   const tabSwitches = await readTabSwitches(studentId, attemptId);
-  const data = {
-    status: "submitted",
-    answers: storedAnswers,
-    score,
-    max_score: maxScore,
-    time_taken_secs:
-      timeTakenSecs != null && Number.isFinite(timeTakenSecs) && timeTakenSecs >= 0
-        ? Math.round(timeTakenSecs)
-        : null,
-    question_times: times,
-    submitted_at: new Date(),
-    ...(tabSwitches != null ? { tab_switches: tabSwitches } : {}),
-    ...(sectionScores
-      ? { section_scores: sectionScores as unknown as Prisma.InputJsonValue }
-      : {}),
-  };
+  const timeTaken =
+    timeTakenSecs != null && Number.isFinite(timeTakenSecs) && timeTakenSecs >= 0
+      ? Math.round(timeTakenSecs)
+      : null;
+  // JSON columns are written as parameterized text cast to jsonb.
+  const answersJson = JSON.stringify(storedAnswers);
+  const timesJson = JSON.stringify(times);
+  const sectionJson = sectionScores ? JSON.stringify(sectionScores) : null;
 
   let updated = true;
   // Retry the score write — a transient Neon blip here must not lose a submission.
   await withDbRetry(async () => {
-    // Guarded on status so exactly one finalize wins: a no-op if a real
-    // submission already landed (status flipped) — never overwrite it with a
-    // racing submit or the possibly-staler autosaved draft.
-    const r = await prisma.testAttempt.updateMany({
-      where: { id: attemptId, status: "in_progress" },
-      data,
-    });
-    updated = r.count > 0;
+    // Guarded on status so exactly one finalize wins: a no-op if a real submission
+    // already landed (status flipped) — never overwrite it with a racing submit or
+    // the possibly-staler autosaved draft. Implemented as a SINGLE guarded UPDATE,
+    // NOT updateMany — the Neon HTTP adapter runs updateMany via a transaction,
+    // which HTTP mode forbids ("Transactions are not supported in HTTP mode"); a
+    // lone UPDATE statement needs no transaction and is atomic on its own.
+    // tab_switches uses COALESCE so a null (Redis-unavailable) read keeps the
+    // existing DB-side counter instead of clobbering it.
+    const count = await prisma.$executeRaw(Prisma.sql`
+      UPDATE "TestAttempt"
+      SET status = 'submitted',
+          answers = ${answersJson}::jsonb,
+          score = ${score},
+          max_score = ${maxScore},
+          time_taken_secs = ${timeTaken},
+          question_times = ${timesJson}::jsonb,
+          submitted_at = ${new Date()},
+          tab_switches = COALESCE(${tabSwitches}::int, tab_switches),
+          section_scores = ${sectionJson}::jsonb
+      WHERE id = ${attemptId} AND status = 'in_progress'
+    `);
+    updated = count > 0;
   });
 
   // Counter persisted — drop the Redis key (best-effort).

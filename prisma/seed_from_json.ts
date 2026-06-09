@@ -4,12 +4,38 @@
  * Seeds PYQs directly from scraper JSON files.
  */
 
+import { config } from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import { PrismaNeonHTTP } from '@prisma/adapter-neon';
 import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const prisma = new PrismaClient();
+// Always seed the PRODUCTION Neon branch. `.env` holds the prod connection
+// string; `.env.local` points at the dev branch. Loading `.env` with
+// override:true means this script targets prod no matter how it's launched
+// (`tsx`, `prisma db seed`, or a shell with stray DATABASE_URL set).
+config({ path: '.env', override: true });
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL is not set — expected the production Neon string in .env');
+}
+
+// Use the Neon HTTP adapter, same as the app (lib/prisma.ts). Note: this
+// adapter does NOT support transactions, so createMany()/updateMany() throw
+// "Transactions are not supported in HTTP mode" — we use single create()s below.
+const prisma = new PrismaClient({
+  adapter: new PrismaNeonHTTP(databaseUrl, {}),
+});
+
+// A unique-constraint violation surfaces as Prisma's "P2002" on most paths, but
+// the Neon HTTP adapter sometimes throws the RAW Postgres SQLSTATE "23505"
+// instead — accept either so skipDuplicates is reliable. (See lib/dbHttp.ts.)
+function isUniqueViolation(e: unknown): boolean {
+  const code = (e as { code?: string } | null)?.code;
+  return code === 'P2002' || code === '23505';
+}
 
 function normalizeText(s: string): string {
   return (s ?? '').replace(/\s+/g, ' ').trim();
@@ -68,75 +94,28 @@ const FILE_TOPIC_MAP: Array<{
     // ── GATE CSE → Computer Organization & Architecture ─────────────────────
     // Restoring PYQs that were lost when the ISRO exam was deleted (cascade
     // removed COA-subject rows across exam_types, not just ISRO).
+    
     {
-      file: 'scratch/jeemains/gate_cse_pipeline_processor.json',
-      topic_name: 'Pipeline Processor',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
+      file: '../exam-scraper/extractor/jee_alternating_current_part_1.json',
+      topic_name: 'Alternating Current',
+      exam_type: 'JEE_MAIN',
+      branch: 'Common',
+      subject: 'Physics',
     },
     {
-      file: 'scratch/jeemains/gate_cse_cache_memory.json',
-      topic_name: 'Cache Memory',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_alu_data_path_and_control_unit.json',
-      topic_name: 'ALU Data Path and Control Unit',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_machine_instruction.json',
-      topic_name: 'Machine Instruction',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_memory_chip_design.json',
-      topic_name: 'Memory Chip Design',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_secondary_storage.json',
-      topic_name: 'Secondary Storage',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_io_interface.json',
-      topic_name: 'IO Interface',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_interrupt.json',
-      topic_name: 'Interrupt',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
-    },
-    {
-      file: 'scratch/jeemains/gate_cse_addressing_modes.json',
-      topic_name: 'Addressing Modes',
-      exam_type: 'GATE',
-      branch: 'CSE',
-      subject: 'Computer Organization & Architecture',
+      file: '../exam-scraper/extractor/jee_alternating_current_part_2.json',
+      topic_name: 'Alternating Current',
+      exam_type: 'JEE_MAIN',
+      branch: 'Common',
+      subject: 'Physics',
     },
   ];
 
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
   console.log(`${colors.bright}📂 Seeding JEE Main PYQs from JSON files${colors.reset}`);
-  console.log(`${colors.cyan}Source: ${SCRAPER_OUTPUT_DIR}${colors.reset}`);
+  const dbHost = (() => { try { return new URL(databaseUrl!).host; } catch { return '(unparseable)'; } })();
+  console.log(`${colors.yellow}🎯 Target DB: ${dbHost}${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}\n`);
 
   const totalFiles = FILE_TOPIC_MAP.length;
@@ -258,12 +237,22 @@ async function main() {
         }
       }
 
-      // Bulk create new records in one DB call
+      // Create new records. The Neon HTTP adapter has no transactions, so we
+      // can't use createMany — run the inserts concurrently as single create()s,
+      // swallowing unique-constraint violations to mimic skipDuplicates.
       if (toCreate.length > 0) {
-        await prisma.pYQ.createMany({
-          data: toCreate.map(q => ({ ...q, pattern_id: pattern.id })),
-          skipDuplicates: true,
-        });
+        await Promise.all(
+          toCreate.map(q =>
+            prisma.pYQ
+              .create({ data: { ...q, pattern_id: pattern.id }, select: { id: true } })
+              .catch((err: any) => {
+                if (isUniqueViolation(err)) return; // duplicate — skip
+                console.log(`${colors.red}  ❌ Error inserting question: ${q.question_text?.substring(0, 100)}...${colors.reset}`);
+                console.error(`     Reason: ${err.message}`);
+                errors++;
+              })
+          )
+        );
       }
 
       // Updates: only changed rows. select:{id:true} prevents echoing the heavy row back.

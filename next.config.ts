@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ['192.168.1.8', '192.168.1.10'],
 
+  // mupdf ships a WASM module that must not be webpack-bundled — load it from
+  // node_modules at runtime (used by lib/pdfRaster for figure-question cropping).
+  serverExternalPackages: ['mupdf'],
+
   // Use standard build to support dynamic API routes and Prisma
   // (Switching to 'export' requires refactoring all Server Components to Client Components)
 

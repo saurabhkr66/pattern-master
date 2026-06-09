@@ -14,6 +14,10 @@ export default function robots(): MetadataRoute.Robots {
     "/review",
     "/mistakes",
     "/api/",
+    "/sign-in",
+    "/sign-up",
+    "/sso-callback",
+    "/account",
   ];
 
   return {

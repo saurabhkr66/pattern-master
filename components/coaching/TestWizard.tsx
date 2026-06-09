@@ -370,6 +370,34 @@ function CoachingPicker({
   const allFilteredSelected = filtered.length > 0 && filtered.every((qq) => isSelected(qq.id));
   const selectCls = `${inputCls} max-w-[12rem]`;
 
+  // Folder quick-add: once an exam/class is chosen, group the questions of the
+  // current folder (grade + set, ignoring the section filter) by section so the
+  // admin can add a whole section or the whole paper in one click.
+  const sectionGroups = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const base = questions.filter(
+      (x) =>
+        matchSel(grade, x.grade) &&
+        matchSel(set, x.set_name) &&
+        (!recentOnly || new Date(x.created_at).getTime() >= recentCutoff) &&
+        (!s || x.question_text.toLowerCase().includes(s))
+    );
+    const map = new Map<string | null, BankQuestion[]>();
+    for (const x of base) {
+      const list = map.get(x.subject) ?? [];
+      list.push(x);
+      map.set(x.subject, list);
+    }
+    return [...map.entries()].sort((a, b) => {
+      if (a[0] === b[0]) return 0;
+      if (a[0] === null) return 1;
+      if (b[0] === null) return -1;
+      return a[0].localeCompare(b[0]);
+    });
+  }, [questions, grade, set, search, recentOnly, recentCutoff]);
+  const folderTotal = sectionGroups.reduce((n, [, qs]) => n + qs.length, 0);
+  const allInGroupSelected = (qs: BankQuestion[]) => qs.length > 0 && qs.every((q) => isSelected(q.id));
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap gap-2">
@@ -421,6 +449,34 @@ function CoachingPicker({
           Recently added
         </button>
       </div>
+
+      {/* Folder quick-add — add a whole section or the whole paper in one click. */}
+      {grade && folderTotal > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 p-2.5">
+          <span className="text-xs font-medium text-slate-400">Quick add:</span>
+          <button
+            type="button"
+            onClick={() => onAddMany(sectionGroups.flatMap(([, qs]) => qs))}
+            disabled={allInGroupSelected(sectionGroups.flatMap(([, qs]) => qs))}
+            className="rounded-full bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500 disabled:opacity-40"
+          >
+            {set ? "Whole paper" : "All shown"} ({folderTotal})
+          </button>
+          {sectionGroups.length > 1 &&
+            sectionGroups.map(([subj, qs]) => (
+              <button
+                key={subj ?? "__none__"}
+                type="button"
+                onClick={() => onAddMany(qs)}
+                disabled={allInGroupSelected(qs)}
+                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+              >
+                {labelOf(subj, "No section")} ({qs.length})
+              </button>
+            ))}
+        </div>
+      )}
+
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs text-slate-500">{filtered.length} shown</span>
         {filtered.length > 0 && (

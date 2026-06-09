@@ -88,7 +88,7 @@ export async function listSitemapIds(): Promise<string[]> {
 
 // Static pages don't change on every request — use a real deploy date so
 // Googlebot doesn't treat a rotating `lastmod` as noise and ignore it.
-const STATIC_LASTMOD = "2025-05-01";
+const STATIC_LASTMOD = "2026-06-08";
 
 export async function buildHubSitemap(): Promise<UrlEntry[]> {
   const staticPages: UrlEntry[] = [
@@ -295,7 +295,7 @@ ${urls}
 }
 
 export function renderSitemapIndex(ids: string[]): string {
-  const lastmod = new Date().toISOString();
+  const lastmod = STATIC_LASTMOD;
   const entries = ids
     .map(
       (id) =>
