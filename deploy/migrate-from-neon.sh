@@ -39,9 +39,11 @@ pg_restore --no-owner --no-privileges --clean --if-exists -d "$LOCAL_PG" "$DUMP"
 
 echo ">> Row-count sanity check (local):"
 psql "$LOCAL_PG" -c 'SELECT
-  (SELECT count(*) FROM "Question") AS questions,
-  (SELECT count(*) FROM "Pattern")  AS patterns,
-  (SELECT count(*) FROM "User")     AS users;'
+  (SELECT count(*) FROM "Pattern")           AS patterns,
+  (SELECT count(*) FROM "PYQ")               AS pyqs,
+  (SELECT count(*) FROM "GeneratedQuestion") AS generated_q,
+  (SELECT count(*) FROM "User")              AS users,
+  (SELECT count(*) FROM "Attempt")           AS attempts;'
 
 rm -f "$DUMP"
 echo ">> Migration complete. Compare the counts above against Neon."

@@ -33,9 +33,11 @@ pg_restore --no-owner --no-privileges --clean --if-exists -d "$NEON_URL" "$DUMP"
 
 echo ">> Row-count sanity check (Neon):"
 psql "$NEON_URL" -c 'SELECT
-  (SELECT count(*) FROM "Question") AS questions,
-  (SELECT count(*) FROM "Pattern")  AS patterns,
-  (SELECT count(*) FROM "User")     AS users;'
+  (SELECT count(*) FROM "Pattern")           AS patterns,
+  (SELECT count(*) FROM "PYQ")               AS pyqs,
+  (SELECT count(*) FROM "GeneratedQuestion") AS generated_q,
+  (SELECT count(*) FROM "User")              AS users,
+  (SELECT count(*) FROM "Attempt")           AS attempts;'
 
 rm -f "$DUMP"
 echo ">> Reverse migration complete. Now set DB_DRIVER=neon-http + Neon URLs and repoint DNS."
