@@ -1,0 +1,18 @@
+# BattleExam reverse proxy + automatic HTTPS.
+# Copy this to /etc/caddy/Caddyfile on the server, then:  systemctl reload caddy
+#
+# Replace battleexam.example.com with your REAL domain (its DNS A record
+# must already point at this VPS's IP). Caddy fetches + renews the TLS
+# cert for you automatically — no certbot, no cron.
+
+battleexam.example.com {
+    encode gzip zstd
+    reverse_proxy localhost:3000
+}
+
+# To also serve the bare apex + www, use this form instead:
+#
+# battleexam.com, www.battleexam.com {
+#     encode gzip zstd
+#     reverse_proxy localhost:3000
+# }
