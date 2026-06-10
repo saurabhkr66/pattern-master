@@ -12,8 +12,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # --- Config (override via env if needed) ---
-R2_REMOTE="${R2_REMOTE:-r2}"                       # rclone remote name
-R2_BUCKET="${R2_BUCKET:-battleexam-backups}"       # R2 bucket
+# Backups share the app's R2 bucket (battle-exam) under a backups/ prefix, kept
+# separate from the answers/ prefix the app writes. Distinct var name so it never
+# clashes with the app's R2_BUCKET that may be exported from .env.
+R2_REMOTE="${R2_REMOTE:-r2}"                          # rclone remote name
+R2_BACKUP_BUCKET="${R2_BACKUP_BUCKET:-battle-exam}"   # shared R2 bucket
+R2_BACKUP_PREFIX="${R2_BACKUP_PREFIX:-backups}"       # folder inside the bucket
 LOG="/home/battle/backup.log"
 
 LOCAL_URL="$(grep -E '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '"')"
@@ -30,8 +34,8 @@ FILE="/tmp/battleexam-${STAMP}.sql.gz"
 echo "$(date -Is) starting backup -> ${FILE}" >>"$LOG"
 pg_dump "$LOCAL_PG" | gzip -9 >"$FILE"
 
-echo "$(date -Is) uploading to ${R2_REMOTE}:${R2_BUCKET}/" >>"$LOG"
-rclone copy "$FILE" "${R2_REMOTE}:${R2_BUCKET}/" >>"$LOG" 2>&1
+echo "$(date -Is) uploading to ${R2_REMOTE}:${R2_BACKUP_BUCKET}/${R2_BACKUP_PREFIX}/" >>"$LOG"
+rclone copy "$FILE" "${R2_REMOTE}:${R2_BACKUP_BUCKET}/${R2_BACKUP_PREFIX}/" >>"$LOG" 2>&1
 
 SIZE="$(du -h "$FILE" | cut -f1)"
 rm -f "$FILE"

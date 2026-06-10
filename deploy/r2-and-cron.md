@@ -3,11 +3,15 @@
 Set this up once, on the VPS, as the `battle` user. It makes `deploy/backup.sh`
 ship a nightly database dump to Cloudflare R2 (off-server = survives a dead VPS).
 
-## 1. Create the R2 bucket + API token (Cloudflare dashboard)
-1. Cloudflare dashboard → **R2** → **Create bucket** → name it `battleexam-backups`.
-2. R2 → **Manage R2 API Tokens** → **Create API token** → permission **Object Read & Write**,
-   scoped to that bucket. Copy the **Access Key ID**, **Secret Access Key**, and your
-   **Account ID** (the S3 endpoint is `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`).
+## 1. Reuse the app's R2 bucket + API token (Cloudflare dashboard)
+Backups share the SAME `battle-exam` bucket the app uses for answer photos — they
+just live under a `backups/` prefix (answers live under `answers/`). No second
+bucket needed.
+1. If not already done, R2 → **Create bucket** → `battle-exam`.
+2. R2 → **Manage R2 API Tokens** → **Create API token** → permission **Object Read & Write**
+   on `battle-exam`. Copy the **Access Key ID**, **Secret Access Key**, and your
+   **Account ID** (S3 endpoint = `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`).
+   You can reuse the same token the app uses (`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`).
 
 ## 2. Configure rclone for R2 (on the VPS)
 ```bash
@@ -24,14 +28,14 @@ rclone config
 ```
 Verify:
 ```bash
-rclone lsd r2:            # should list the battleexam-backups bucket
+rclone lsd r2:            # should list the battle-exam bucket
 ```
 
 ## 3. Test the backup once, by hand
 ```bash
 cd ~/pattern-master
 bash deploy/backup.sh
-rclone ls r2:battleexam-backups/      # confirm a *.sql.gz object appears
+rclone ls r2:battle-exam/backups/      # confirm a *.sql.gz object appears
 tail ~/backup.log
 ```
 
@@ -44,10 +48,13 @@ Add this line (runs 02:00 server time daily):
 0 2 * * * /home/battle/pattern-master/deploy/backup.sh
 ```
 
-## 5. 30-day retention (R2 lifecycle rule)
-Cloudflare dashboard → R2 → `battleexam-backups` → **Settings** → **Object lifecycle rules**
-→ add a rule: **delete objects older than 30 days**. This prunes old dumps automatically so
-storage stays within R2's free tier.
+## 5. Retention (R2 lifecycle rules — two prefixes, one bucket)
+Cloudflare dashboard → R2 → `battle-exam` → **Settings** → **Object lifecycle rules**.
+Add TWO prefix-scoped rules so backups and answer photos expire on their own schedules:
+- prefix `backups/` → **delete after 30 days** (DB dumps)
+- prefix `answers/` → **delete after 180 days** (student answer photos)
+
+Both prefixes share the 10 GB free tier; dumps are a few MB each so they're negligible.
 
 ## Notes
 - 500 MB of data dumps to a few MB gzipped; 30 days of nightly dumps is well under R2's
