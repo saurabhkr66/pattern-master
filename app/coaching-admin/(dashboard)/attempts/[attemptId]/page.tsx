@@ -4,6 +4,7 @@ import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
 import { finalizeOverdueAttempts, isPastDeadline } from "@/lib/coachingFinalize";
 import { getAttemptResultData } from "@/lib/coachingResult";
+import { isR2Configured, presignAnswerGets } from "@/lib/r2";
 import CoachingResultAnalysis from "@/components/coaching/CoachingResultAnalysis";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +52,7 @@ export default async function AdminAttemptAnalysisPage({
         max_score: true,
         time_taken_secs: true,
         question_times: true,
+        grading_status: true,
         student_id: true,
         student: { select: { name: true } },
         test: {
@@ -110,12 +112,41 @@ export default async function AdminAttemptAnalysisPage({
   // student-facing result page.
   const result = await getAttemptResultData(attempt, coachingId);
 
+  // Sign photo URLs fresh per request (the cached ResultData only carries keys).
+  const photoKeys = result.questions.flatMap((q) => q.subjective?.imageKeys ?? []);
+  const imageUrlMap =
+    photoKeys.length && isR2Configured() ? await presignAnswerGets(photoKeys) : undefined;
+
+  const hasSubjective = attempt.grading_status !== "none";
+
   return (
-    <div className="h-screen">
-      <CoachingResultAnalysis
-        result={result}
-        dashboardHref={`/coaching-admin/students/${attempt.student_id}`}
-      />
+    <div className="flex h-screen flex-col">
+      {hasSubjective && (
+        <div className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900 px-4 py-2.5">
+          <span className="text-sm text-slate-300">
+            {attempt.grading_status === "review" && (
+              <span className="text-amber-400">Some written answers need your review.</span>
+            )}
+            {attempt.grading_status === "pending" && (
+              <span className="text-amber-400">AI grading in progress…</span>
+            )}
+            {attempt.grading_status === "done" && "All written answers graded."}
+          </span>
+          <Link
+            href={`/coaching-admin/attempts/${attempt.id}/review`}
+            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-500"
+          >
+            Review written answers →
+          </Link>
+        </div>
+      )}
+      <div className="min-h-0 flex-1">
+        <CoachingResultAnalysis
+          result={result}
+          dashboardHref={`/coaching-admin/students/${attempt.student_id}`}
+          imageUrlMap={imageUrlMap}
+        />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, XCircle, Brain } from "lucide-react";
+import { CheckCircle2, XCircle, Brain, Hourglass, Camera } from "lucide-react";
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
 import type { ResultData } from "./testAnalysisHelpers";
@@ -10,9 +10,12 @@ interface Props {
   status: string;
   statusColor: string;
   compact?: boolean;
+  // Signed GET URLs for subjective answer photos, keyed by R2 object key.
+  // Provided fresh per page render (URLs expire; keys are what's stored).
+  imageUrlMap?: Record<string, string>;
 }
 
-export default function ExpandedQuestion({ q, status, compact }: Props) {
+export default function ExpandedQuestion({ q, status, compact, imageUrlMap }: Props) {
   const optionLetters = ["A", "B", "C", "D", "E", "F"];
   const correctLetters = new Set(
     (q.correct_answer || "").split(/[;,]/).map(l => l.trim().toUpperCase()).filter(Boolean)
@@ -70,6 +73,74 @@ export default function ExpandedQuestion({ q, status, compact }: Props) {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {q.question_type === "SUBJECTIVE" && q.subjective && (
+          <div className="space-y-4">
+            {/* The student's photographed answer */}
+            {q.subjective.imageKeys.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2" style={{ fontSize: 11, fontWeight: 700, color: BE.textMute, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  <Camera size={13} /> Answer photos
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {q.subjective.imageKeys.map((k, i) =>
+                    imageUrlMap?.[k] ? (
+                      <a key={k} href={imageUrlMap[k]} target="_blank" rel="noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imageUrlMap[k]}
+                          alt={`Answer page ${i + 1}`}
+                          className="rounded-lg border object-cover"
+                          style={{ width: 140, height: 190, borderColor: BE.line }}
+                        />
+                      </a>
+                    ) : (
+                      <div
+                        key={k}
+                        className="flex items-center justify-center rounded-lg border text-xs"
+                        style={{ width: 140, height: 190, borderColor: BE.line, color: BE.textMute }}
+                      >
+                        Page {i + 1}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Grading state */}
+            {q.subjective.pending ? (
+              <div className="flex items-center gap-2.5 p-4 rounded-xl border" style={{ borderColor: BE.warn + "55", background: BE.warn + "10" }}>
+                <Hourglass size={15} style={{ color: BE.warn }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: BE.warn }}>Pending teacher review</div>
+                  <div style={{ fontSize: 12, color: BE.textDim }}>
+                    Marks for this answer will be added once it is reviewed.
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl border" style={{ borderColor: BE.line, background: "rgba(255,255,255,0.03)" }}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span style={{ fontSize: 10, fontWeight: 700, color: BE.textMute, textTransform: "uppercase" }}>
+                    Marks awarded
+                  </span>
+                  <span style={{ fontSize: 10, color: BE.textMute }}>
+                    {q.subjective.gradedBy ? "Graded by teacher" : "AI graded"}
+                  </span>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: BE.mono, color: (q.subjective.marks ?? 0) > 0 ? BE.good : BE.bad }}>
+                  {q.subjective.marks ?? 0} / {q.marks}
+                </div>
+                {q.subjective.feedback && (
+                  <p style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6, color: BE.textDim }}>
+                    {q.subjective.feedback}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 

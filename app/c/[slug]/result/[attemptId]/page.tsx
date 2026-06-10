@@ -1,10 +1,12 @@
 import { notFound, redirect } from "next/navigation";
+import { Hourglass } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
 import { finalizeOverdueAttempts, isPastDeadline } from "@/lib/coachingFinalize";
 import { getCachedCoachingBySlug } from "@/lib/coachingCache";
 import { getAttemptResultData } from "@/lib/coachingResult";
 import { getAttemptPeerStats } from "@/lib/coachingPeerStats";
+import { isR2Configured, presignAnswerGets } from "@/lib/r2";
 import CoachingResultAnalysis from "@/components/coaching/CoachingResultAnalysis";
 import StudentPerformanceContext from "@/components/coaching/StudentPerformanceContext";
 
@@ -35,6 +37,7 @@ export default async function ResultPage({
         max_score: true,
         time_taken_secs: true,
         question_times: true,
+        grading_status: true,
         student_id: true,
         test: {
           select: {
@@ -88,10 +91,30 @@ export default async function ResultPage({
     }),
   ]);
 
+  // Signed photo URLs are signed FRESH per request — the cached ResultData only
+  // carries R2 keys (signed URLs expire in 1h; the cache lives 24h).
+  const photoKeys = result.questions.flatMap((q) => q.subjective?.imageKeys ?? []);
+  const imageUrlMap =
+    photoKeys.length && isR2Configured() ? await presignAnswerGets(photoKeys) : undefined;
+
+  const gradingInProgress =
+    attempt.grading_status === "pending" || attempt.grading_status === "review";
+
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--bg-base)" }}>
+      {gradingInProgress && (
+        <div className="flex items-center gap-2.5 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-300">
+          <Hourglass className="h-4 w-4 shrink-0" />
+          Your written answers are being graded — your score may increase once grading
+          completes.
+        </div>
+      )}
       {peer && <StudentPerformanceContext stats={peer} />}
-      <CoachingResultAnalysis result={result} dashboardHref={`/c/${slug}/dashboard`} />
+      <CoachingResultAnalysis
+        result={result}
+        dashboardHref={`/c/${slug}/dashboard`}
+        imageUrlMap={imageUrlMap}
+      />
     </div>
   );
 }

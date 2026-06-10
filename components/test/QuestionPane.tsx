@@ -4,6 +4,7 @@ import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { getCloudinaryUrl } from "@/lib/imageUtils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import SubjectiveAnswerInput from "./SubjectiveAnswerInput";
 import { optionLetters, type TestQuestion } from "./testEngineTypes";
 
 interface Props {
@@ -13,12 +14,16 @@ interface Props {
   curMcq: string | null;
   curMsq: string[];
   curNat: string;
+  curSubj?: string[];
   isReviewed: boolean;
   isBookmarked: boolean;
   submitError: string | null;
   onMcq: (q: TestQuestion, letter: string) => void;
   onMsq: (q: TestQuestion, letter: string) => void;
   onNat: (q: TestQuestion, val: string) => void;
+  onSubjPhotos?: (q: TestQuestion, keys: string[]) => void;
+  // Present only for coaching tests with subjective questions.
+  subjectiveUpload?: { endpoint: string; attemptId: string };
   onToggleBookmark: (q: TestQuestion) => void;
   onToggleReview: (q: TestQuestion) => void;
   onClearResponse: (q: TestQuestion) => void;
@@ -29,8 +34,8 @@ interface Props {
 
 export default function QuestionPane({
   question: currentQ, globalIdx, totalQuestions,
-  curMcq, curMsq, curNat, isReviewed, isBookmarked, submitError,
-  onMcq, onMsq, onNat,
+  curMcq, curMsq, curNat, curSubj = [], isReviewed, isBookmarked, submitError,
+  onMcq, onMsq, onNat, onSubjPhotos, subjectiveUpload,
   onToggleBookmark, onToggleReview, onClearResponse, onMarkReviewAndNext,
   onPrev, onNext,
 }: Props) {
@@ -139,7 +144,21 @@ export default function QuestionPane({
 
         {/* Options */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 720 }}>
-          {currentQ.question_type === "NAT" ? (
+          {currentQ.question_type === "SUBJECTIVE" ? (
+            subjectiveUpload && onSubjPhotos ? (
+              <SubjectiveAnswerInput
+                question={currentQ}
+                attemptId={subjectiveUpload.attemptId}
+                uploadEndpoint={subjectiveUpload.endpoint}
+                keys={curSubj}
+                onChange={onSubjPhotos}
+              />
+            ) : (
+              <p style={{ fontSize: 13, color: BE.textMute }}>
+                Written-answer question — answer on paper as instructed.
+              </p>
+            )
+          ) : currentQ.question_type === "NAT" ? (
             <div className="max-w-[200px]">
               <input
                 type="number" step="any" autoFocus

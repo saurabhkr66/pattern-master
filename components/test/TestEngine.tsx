@@ -33,6 +33,9 @@ interface Props {
   // tests point this at their own (attempt-scoped) save route.
   saveEndpoint?: string;
   autosaveIntervalMs?: number;
+  // Photo-answer upload config for SUBJECTIVE questions (coaching tests only).
+  // undefined → consumer flow, engine behavior unchanged.
+  subjectiveUpload?: { endpoint: string; attemptId: string };
 }
 
 export default function TestEngine({
@@ -50,6 +53,7 @@ export default function TestEngine({
   userName,
   saveEndpoint = "/api/test/session/save",
   autosaveIntervalMs = 1_200_000,
+  subjectiveUpload,
 }: Props) {
   const s = initialState ?? {};
 
@@ -61,6 +65,8 @@ export default function TestEngine({
   const [mcqSelected, setMcqSelected] = useState<Record<string, string>>(s.mcqAnswers ?? {});
   const [msqSelected, setMsqSelected] = useState<Record<string, string[]>>(s.msqAnswers ?? {});
   const [natValues, setNatValues] = useState<Record<string, string>>(s.natValues ?? {});
+  // Subjective answers = uploaded photo R2 keys (the photos are already in R2).
+  const [subjPhotos, setSubjPhotos] = useState<Record<string, string[]>>(s.subjPhotos ?? {});
   const [markedReview, setMarkedReview] = useState<Set<string>>(new Set(s.markedReview ?? []));
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState<number>(() => {
@@ -83,6 +89,7 @@ export default function TestEngine({
   const mcqRef = useRef(mcqSelected);
   const msqRef = useRef(msqSelected);
   const natRef = useRef(natValues);
+  const subjRef = useRef(subjPhotos);
   const statusRef = useRef(statuses);
   const reviewRef = useRef(markedReview);
   const timeSpentRef = useRef(timeSpent);
@@ -107,6 +114,7 @@ export default function TestEngine({
   useEffect(() => { mcqRef.current = mcqSelected; }, [mcqSelected]);
   useEffect(() => { msqRef.current = msqSelected; }, [msqSelected]);
   useEffect(() => { natRef.current = natValues; }, [natValues]);
+  useEffect(() => { subjRef.current = subjPhotos; }, [subjPhotos]);
   useEffect(() => { statusRef.current = statuses; }, [statuses]);
   useEffect(() => { reviewRef.current = markedReview; }, [markedReview]);
   useEffect(() => { timeSpentRef.current = timeSpent; }, [timeSpent]);
@@ -115,6 +123,7 @@ export default function TestEngine({
     mcqAnswers: mcqRef.current,
     msqAnswers: msqRef.current,
     natValues: natRef.current,
+    subjPhotos: subjRef.current,
     statuses: statusRef.current,
     markedReview: [...reviewRef.current],
     timeSpentMap: timeSpentRef.current,
@@ -140,6 +149,10 @@ export default function TestEngine({
           ? (msqRef.current[q.id]?.sort().join(";") ?? null) || null
           : q.question_type === "NAT"
           ? natRef.current[q.id]?.trim() || null
+          : q.question_type === "SUBJECTIVE"
+          // Photo R2 keys joined with ";" — keys are server-minted and never
+          // contain ";", so the existing string answer plumbing carries them.
+          ? subjRef.current[q.id]?.join(";") || null
           : mcqRef.current[q.id] ?? null,
     })), [questions]);
 
@@ -269,16 +282,25 @@ export default function TestEngine({
     recordAnswer(q, val || null);
   };
 
+  const handleSubjPhotos = (q: TestQuestion, keys: string[]) => {
+    setSubjPhotos((prev) => ({ ...prev, [q.id]: keys }));
+    recordAnswer(q, keys.join(";") || null); // answered = ≥1 photo
+  };
+
   const clearResponse = (q: TestQuestion) => {
     setMcqSelected((prev) => { const n = { ...prev }; delete n[q.id]; return n; });
     setMsqSelected((prev) => { const n = { ...prev }; delete n[q.id]; return n; });
     setNatValues((prev) => { const n = { ...prev }; delete n[q.id]; return n; });
+    setSubjPhotos((prev) => { const n = { ...prev }; delete n[q.id]; return n; });
     setStatuses((prev) => ({ ...prev, [q.id]: markedReview.has(q.id) ? "review" : "skipped" }));
   };
 
+  const hasAnswerFor = (qId: string) =>
+    !!(mcqSelected[qId] || msqSelected[qId]?.length || natValues[qId] || subjPhotos[qId]?.length);
+
   const toggleReview = (q: TestQuestion) => {
     const newSet = new Set(markedReview);
-    const hasAnswer = !!(mcqSelected[q.id] || msqSelected[q.id]?.length || natValues[q.id]);
+    const hasAnswer = hasAnswerFor(q.id);
     if (newSet.has(q.id)) {
       newSet.delete(q.id);
       setStatuses((prev) => ({ ...prev, [q.id]: hasAnswer ? "answered" : "skipped" }));
@@ -290,7 +312,7 @@ export default function TestEngine({
   };
 
   const markForReviewAndNext = (q: TestQuestion) => {
-    const hasAnswer = !!(mcqSelected[q.id] || msqSelected[q.id]?.length || natValues[q.id]);
+    const hasAnswer = hasAnswerFor(q.id);
     if (!markedReview.has(q.id)) {
       const newSet = new Set(markedReview);
       newSet.add(q.id);
@@ -331,6 +353,7 @@ export default function TestEngine({
   const curMcq = currentQ ? (mcqSelected[currentQ.id] ?? null) : null;
   const curMsq = currentQ ? (msqSelected[currentQ.id] ?? []) : [];
   const curNat = currentQ ? (natValues[currentQ.id] ?? "") : "";
+  const curSubj = currentQ ? (subjPhotos[currentQ.id] ?? []) : [];
   const isReviewed = currentQ ? markedReview.has(currentQ.id) : false;
   const isBookmarked = currentQ ? bookmarkedIds.has(currentQ.id) : false;
 
@@ -368,12 +391,15 @@ export default function TestEngine({
           curMcq={curMcq}
           curMsq={curMsq}
           curNat={curNat}
+          curSubj={curSubj}
           isReviewed={isReviewed}
           isBookmarked={isBookmarked}
           submitError={submitError}
           onMcq={handleMcq}
           onMsq={handleMsq}
           onNat={handleNat}
+          onSubjPhotos={handleSubjPhotos}
+          subjectiveUpload={subjectiveUpload}
           onToggleBookmark={toggleBookmark}
           onToggleReview={toggleReview}
           onClearResponse={clearResponse}

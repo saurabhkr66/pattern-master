@@ -407,6 +407,11 @@ function Coverage() {
               <span className="topic" key={i}>{name} <span className="pyq">{pyq}</span></span>
             ))}
           </div>
+          <div style={{ marginTop: 20 }}>
+            <a href={cur.pyqHref} className="btn btn-ghost">
+              Practice {cur.label} previous year questions <I.arrow />
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -502,6 +507,14 @@ function Footer() {
             <div className="foot-col">
               <h5>More topics</h5>
               {FOOTER_TOPICS.slice(5).map((t) => <a key={t} href="#coverage">{t}</a>)}
+            </div>
+            <div className="foot-col">
+              <h5>Previous year questions</h5>
+              <Link href="/gate-cse/pyq">GATE CSE PYQs</Link>
+              <Link href="/jee-main/pyq">JEE Main PYQs</Link>
+              <Link href="/jee-advanced/pyq">JEE Advanced PYQs</Link>
+              <Link href="/neet/pyq">NEET PYQs</Link>
+              <Link href="/ugc-net-p1/pyq">UGC NET PYQs</Link>
             </div>
             <div className="foot-col">
               <h5>Platform</h5>

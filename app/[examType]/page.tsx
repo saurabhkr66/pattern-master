@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toSlug, parseExamSlug, buildExamSlug, branchWhereClause } from "@/lib/seo";
+import { EXAM_CONFIGS } from "@/lib/examConfigs";
 import FeatureBanner from "@/components/ui/FeatureBanner";
 
 const BASE = "https://battleexam.com";
@@ -126,6 +127,7 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
   const totalQuestions = subjects.reduce((acc, s) => acc + s.questions + s.pyqs, 0);
   const canonical = `${BASE}/${examType}`;
   const year = new Date().getFullYear() + 1;
+  const pyqUnit = EXAM_CONFIGS.find((c) => c.examType === exam.examType)?.pyqUnit ?? "topic";
 
   const programSchema = {
     "@context": "https://schema.org",
@@ -240,6 +242,24 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
             </Link>
           ))}
         </div>
+
+        {/* PYQ hub link */}
+        <Link
+          href={`/${examType}/pyq`}
+          prefetch={false}
+          className="flex flex-wrap items-center justify-between gap-3 p-5 rounded-2xl border mb-10 hover:border-indigo-500/60 transition-colors"
+          style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
+        >
+          <div>
+            <p className="font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+              Practice {exam.fullLabel} previous year questions
+            </p>
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              {pyqUnit === "chapter" ? "Chapter" : "Topic"}-wise PYQs with solutions, year-wise papers and timed mock mode — free.
+            </p>
+          </div>
+          <span className="text-sm font-bold text-indigo-400">View PYQs →</span>
+        </Link>
 
         {/* Previous year papers */}
         {seededPapers.length > 0 && (

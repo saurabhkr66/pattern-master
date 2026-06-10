@@ -9,9 +9,12 @@ import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
 export default function CoachingResultAnalysis({
   result,
   dashboardHref,
+  imageUrlMap,
 }: {
   result: ResultData;
   dashboardHref: string;
+  // Signed GET URLs for subjective answer photos, signed by the server page.
+  imageUrlMap?: Record<string, string>;
 }) {
   return (
     <TestAnalysis
@@ -20,6 +23,7 @@ export default function CoachingResultAnalysis({
       exitHref={dashboardHref}
       showNextActions={false}
       showRestart={false}
+      imageUrlMap={imageUrlMap}
     />
   );
 }

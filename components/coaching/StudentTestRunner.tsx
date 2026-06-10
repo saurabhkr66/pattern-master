@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TestEngine, { type SubmitAnswer } from "@/components/test/TestEngine";
 import type { TestQuestion, DraftState } from "@/components/test/testEngineTypes";
+import { isTabSwitchSuppressed } from "@/components/test/tabSwitchSuppress";
 import type { ExamConfig } from "@/lib/examConfigs";
 
 // Wraps the existing consumer TestEngine for coaching tests. We reuse the
@@ -37,8 +38,11 @@ export default function StudentTestRunner({
 
   // Tab-switch detection: count each time the page is hidden (tab change,
   // minimise, app switch). Fire-and-forget; the admin sees the count in results.
+  // Suppressed while the native camera is open (photographing a subjective
+  // answer hides the page too — that's not cheating).
   useEffect(() => {
     function onHidden() {
+      if (isTabSwitchSuppressed()) return;
       if (document.visibilityState === "hidden") {
         navigator.sendBeacon?.(
           `/api/student/test/${testId}/tab-switch`,
@@ -123,6 +127,7 @@ export default function StudentTestRunner({
       draftId={attemptId}
       saveEndpoint={`/api/student/test/${testId}/save`}
       autosaveIntervalMs={120_000}
+      subjectiveUpload={{ endpoint: `/api/student/test/${testId}/upload-answer`, attemptId }}
       serverExpiresAt={serverExpiresAt}
       initialState={initialState}
       userName={studentName}

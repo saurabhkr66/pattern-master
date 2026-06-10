@@ -6,8 +6,9 @@ import { getCachedCoachingBySlug, getCachedActiveTests } from "@/lib/coachingCac
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import StudentHeader from "@/components/coaching/StudentHeader";
 import RememberCoaching from "@/components/coaching/RememberCoaching";
+import TrendChart from "@/components/coaching/TrendChart";
 import { Card, AMBER_GRAD, AMBER_GLOW, display, mono } from "@/components/coaching/ui";
-import { ClipboardList, Inbox, Trophy } from "lucide-react";
+import { ClipboardList, Inbox, TrendingUp, Trophy } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,19 @@ export default async function StudentDashboard({
     .filter((t) => !t.submitted && t.windowState !== "after");
 
   const past = attempts.filter((a) => a.status === "submitted");
+
+  // Performance trend: per-test % chronologically (attempts come newest-first),
+  // capped to the last 8 so the chart's x-labels stay legible. Same shape as the
+  // admin student-detail page so both views tell the same story.
+  const pctOf = (score: number | null, max: number | null) =>
+    max != null && max > 0 ? Math.round(((score ?? 0) / max) * 100) : 0;
+  const chrono = [...past].reverse();
+  const trendPoints = chrono
+    .slice(-8)
+    .map((a, i) => ({ label: `Test ${chrono.length - Math.min(chrono.length, 8) + i + 1}`, pct: pctOf(a.score, a.max_score) }));
+  const percents = past.map((a) => pctOf(a.score, a.max_score));
+  const avgPct = percents.length ? Math.round(percents.reduce((s, p) => s + p, 0) / percents.length) : 0;
+  const bestPct = percents.length ? Math.max(...percents) : 0;
 
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: "#06060c" }}>
@@ -156,6 +170,33 @@ export default async function StudentDashboard({
 
         {/* Past results */}
         <section>
+          {/* Performance trend — needs ≥2 submitted tests to be a trend. */}
+          {trendPoints.length >= 2 && (
+            <div className="mb-8">
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: display }}>
+                <TrendingUp className="h-5 w-5 text-amber-400" /> Performance trend
+              </h2>
+              <Card>
+                <div className="px-5 pt-4 sm:px-6">
+                  <div className="flex gap-5 text-[13px] text-slate-400" style={{ fontFamily: mono }}>
+                    <span>
+                      Tests <span className="font-bold text-white">{past.length}</span>
+                    </span>
+                    <span>
+                      Average <span className="font-bold text-white">{avgPct}%</span>
+                    </span>
+                    <span>
+                      Best <span className="font-bold text-amber-400">{bestPct}%</span>
+                    </span>
+                  </div>
+                  <div className="pb-2 pt-3">
+                    <TrendChart points={trendPoints} height={140} />
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+
           <div className="mb-4 flex items-center gap-3">
             <h2 className="text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: display }}>
               Past results

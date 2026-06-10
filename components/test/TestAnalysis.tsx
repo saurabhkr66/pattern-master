@@ -22,6 +22,8 @@ interface Props {
   showNextActions?: boolean;
   /** Show the "Retake test" button in ScoreOverview. Default: true. */
   showRestart?: boolean;
+  /** Signed GET URLs for subjective answer photos (key → url). Coaching only. */
+  imageUrlMap?: Record<string, string>;
 }
 
 export default function TestAnalysis({
@@ -30,6 +32,7 @@ export default function TestAnalysis({
   exitHref = "/dashboard",
   showNextActions = true,
   showRestart = true,
+  imageUrlMap,
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [jumpToWrong, setJumpToWrong] = useState(0);
@@ -70,7 +73,7 @@ export default function TestAnalysis({
           <NextActions result={result} onRestart={onRestart} onReviewWrong={handleReviewWrong} />
         )}
         <div className="max-md:-mx-6" ref={tableRef}>
-          <QuestionBreakdownTable questions={result.questions} jumpToWrong={jumpToWrong} />
+          <QuestionBreakdownTable questions={result.questions} jumpToWrong={jumpToWrong} imageUrlMap={imageUrlMap} />
         </div>
       </main>
     </div>

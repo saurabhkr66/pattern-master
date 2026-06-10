@@ -43,8 +43,33 @@ export type ParsedQuestion = {
   confidence?: number;
 };
 
+// What the admin declared the paper contains. Pre-declaring focuses the
+// extraction prompt (far more accurate than per-question guessing); "mixed"
+// keeps auto-detection for papers with an objective section + a written section.
+export type ImportQType = "objective" | "subjective" | "mixed";
+
+function qtypeInstructions(qtype: ImportQType): string[] {
+  if (qtype === "objective") {
+    return [
+      'EVERY question in this paper is objective: "mcq" (has answer choices) or "nat" (the answer is a single number). NEVER use "subjective".',
+    ];
+  }
+  if (qtype === "subjective") {
+    return [
+      'EVERY question in this paper is "subjective" (written/long-form answer). NEVER use "mcq" or "nat"; leave "options" empty and "correct_answer" as "".',
+      'For each question, capture its model answer / worked solution into "solution" (and "solution_hindi") if the paper has one — it is what the AI grader marks student answers against.',
+      'If a question shows its marks (e.g. "[3 marks]", "(5)", "2M"), set "max_marks" to that number; otherwise use 5.',
+    ];
+  }
+  return [
+    'If a question has no choices at all: use "nat" when the answer is a single number, otherwise "subjective". If unsure between nat and subjective, prefer "subjective". Do NOT label something "mcq" unless you captured its options.',
+    'For subjective questions, capture the model answer into "solution" and any printed marks (e.g. "[3 marks]") into "max_marks".',
+  ];
+}
+
 function buildPrompt(
   sections: string[],
+  qtype: ImportQType,
   topics?: string[],
   topicsBySection?: Record<string, string[]>
 ): string {
@@ -94,7 +119,7 @@ function buildPrompt(
     // so don't force answer hunting here — just capture options and the number.
     'For question_type "mcq" you MUST capture EVERY answer choice into "options" (labels A, B, C, D… in the order shown). The answer choices are part of the question — do NOT drop them or fold them into question_text.',
     'Always include the printed question "number". If the correct answer is shown right next to the question, set "correct_answer" to its option label; otherwise leave "correct_answer" null (answers are resolved in a separate step).',
-    'If a question has no choices at all: use "nat" when the answer is a single number, otherwise "subjective". Do NOT label something "mcq" unless you captured its options.',
+    ...qtypeInstructions(qtype),
     // Figure questions (non-verbal reasoning etc.) — capture the whole thing as an image.
     'FIGURE QUESTIONS: many questions (non-verbal reasoning, series, geometry/diagrams, or where the OPTIONS themselves are figures) cannot be answered from text alone. For ANY such question set "is_figure"=true, set "page" to its 0-based page, and set "crop_box" to a TIGHT box ([ymin,xmin,ymax,xmax], normalized 0..1000 for that page) enclosing the ENTIRE question — its stem, all figures, AND all option figures. That whole region is snapshotted as the question image.',
     'For a figure question still fill "question_text" with the stem and "options" with the labels A, B, C, D (use "" for an option whose content is purely a figure). NEVER write placeholder option text like "Figure a"/"Figure b" — leave it "" since the figure is in the image.',
@@ -197,6 +222,7 @@ function buildAnswerKeyPrompt(): string {
   "derived": boolean            // true if YOU solved it (not found in the paper), false if read from the paper
 }`,
     "PREFER the paper's own answer/solution and read it verbatim (set derived=false). ONLY when a question's answer is NOT present anywhere in the document, solve it yourself: work out the correct answer and write a clear step-by-step solution, and set derived=true.",
+    'For a written/subjective question (no answer choices, answer is not a single number) put the FULL model answer into "solution" and set "answer" to "" — the model answer is what matters for these.',
     "Return an entry for EVERY question number — never leave a question without an answer. Do not stop early.",
     "Output ONLY the JSON array, no prose.",
   ].join("\n");
@@ -255,11 +281,13 @@ export async function extractQuestions(opts: {
   images?: UploadImage[];
   pdf?: UploadImage;
   sections: string[];
+  qtype?: ImportQType;
   topics?: string[];
   topicsBySection?: Record<string, string[]>;
 }): Promise<ParsedQuestion[]> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("Missing GEMINI_API_KEY");
+  const qtype = opts.qtype ?? "mixed";
 
   // Resolve media once (PDF via File API, images inline) and reuse across passes.
   const media: Part[] = [];
@@ -270,7 +298,7 @@ export async function extractQuestions(opts: {
 
   // Pass 1 — questions + options + printed number.
   const qParts: Part[] = [
-    { text: buildPrompt(opts.sections, opts.topics, opts.topicsBySection) },
+    { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection) },
     ...media,
   ];
   const questions = (await callGeminiJsonArray(key, RESPONSE_SCHEMA, qParts)) as ParsedQuestion[];
@@ -278,7 +306,13 @@ export async function extractQuestions(opts: {
   // Pass 2 — answer key (number → label [+ solution]) from the solutions section,
   // matched back onto the questions. Only run if answers are still missing. Best-
   // effort: on failure the questions still import; the admin fills answers in review.
-  if (questions.some((q) => !q.correct_answer)) {
+  // For subjective questions the "answer" is the model solution — run the pass when
+  // any of those still lack one.
+  if (
+    questions.some((q) =>
+      q.question_type === "subjective" ? !q.solution : !q.correct_answer
+    )
+  ) {
     try {
       const akParts: Part[] = [{ text: buildAnswerKeyPrompt() }, ...media];
       const answers = (await callGeminiJsonArray(key, ANSWER_KEY_SCHEMA, akParts)) as AnswerKeyEntry[];
@@ -375,14 +409,25 @@ function mergeAnswers(questions: ParsedQuestion[], key: AnswerKeyEntry[]): void 
     if (Number.isFinite(n)) byNumber.set(n, e);
   }
   questions.forEach((q, i) => {
-    if (q.correct_answer) return; // pass 1 already had an inline answer
     const entry = byNumber.get(typeof q.number === "number" ? q.number : i + 1);
-    const ans = entry?.answer ? String(entry.answer).trim() : "";
+    if (!entry) return;
+    // Subjective: there is no "correct answer" — the prize is the model solution
+    // (what the AI grader marks against). Never write an answer letter onto it.
+    if (q.question_type === "subjective") {
+      if (entry.solution && !q.solution) {
+        q.solution = entry.solution;
+        if (entry.derived) q.answer_derived = true;
+      }
+      if (entry.solution_hindi && !q.solution_hindi) q.solution_hindi = entry.solution_hindi;
+      return;
+    }
+    if (q.correct_answer) return; // pass 1 already had an inline answer
+    const ans = entry.answer ? String(entry.answer).trim() : "";
     if (!ans) return;
     q.correct_answer = q.question_type === "mcq" ? resolveMcqLabel(ans, q.options) ?? ans : ans;
-    if (entry?.solution && !q.solution) q.solution = entry.solution;
-    if (entry?.solution_hindi && !q.solution_hindi) q.solution_hindi = entry.solution_hindi;
-    if (entry?.derived) q.answer_derived = true;
+    if (entry.solution && !q.solution) q.solution = entry.solution;
+    if (entry.solution_hindi && !q.solution_hindi) q.solution_hindi = entry.solution_hindi;
+    if (entry.derived) q.answer_derived = true;
   });
 }
 

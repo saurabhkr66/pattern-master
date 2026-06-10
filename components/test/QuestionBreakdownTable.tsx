@@ -14,14 +14,26 @@ interface Props {
   // Bumped by the parent (e.g. the "Review wrong answers" action) to force the
   // table to jump to the "Wrong" filter. Ignored on first render.
   jumpToWrong?: number;
+  // Signed GET URLs for subjective answer photos (key → url), signed per request.
+  imageUrlMap?: Record<string, string>;
 }
 
 const MOBILE_PAGE = 15;
 
+// A question's display status. Subjective answers awaiting AI/teacher grading
+// get their own "pending" state — neither right nor wrong yet.
+type QDisplayStatus = "correct" | "incorrect" | "skipped" | "pending";
+function statusOf(q: Q): QDisplayStatus {
+  if (q.subjective?.pending) return "pending";
+  if (q.user_answer === null) return "skipped";
+  return q.is_correct ? "correct" : "incorrect";
+}
+
 // Marks actually awarded for a question. Prefers the server-reported value
 // (handles partial credit); falls back to all-or-nothing for legacy sessions.
-function marksLabel(q: Q, status: "correct" | "incorrect" | "skipped"): string {
+function marksLabel(q: Q, status: QDisplayStatus): string {
   const trim = (n: number) => n.toFixed(2).replace(/\.?0+$/, "");
+  if (status === "pending") return "—";
   if (typeof q.awarded === "number") {
     if (q.awarded > 0) return `+${trim(q.awarded)}`;
     if (q.awarded < 0) return `−${trim(Math.abs(q.awarded))}`;
@@ -32,7 +44,7 @@ function marksLabel(q: Q, status: "correct" | "incorrect" | "skipped"): string {
   return "0";
 }
 
-export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props) {
+export default function QuestionBreakdownTable({ questions, jumpToWrong, imageUrlMap }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [activeSubject, setActiveSubject] = useState<string>("All");
   const [expandedQId, setExpandedQId] = useState<string | null>(null);
@@ -162,6 +174,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
         .qbd-status.correct { background: rgba(110,231,160,.12); color: ${BE.good}; }
         .qbd-status.wrong   { background: rgba(244,114,114,.12); color: ${BE.bad}; }
         .qbd-status.skipped { background: rgba(107,99,90,.18);   color: ${BE.textDim}; }
+        .qbd-status.pending { background: rgba(251,191,36,.12);  color: ${BE.warn}; }
 
         /* Question text */
         .qbd-qtext {
@@ -296,8 +309,9 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
               <div className="py-16 text-center" style={{ color: BE.textMute, fontSize: 13 }}>No questions match this filter.</div>
             )}
             {filteredQs.map((q, i) => {
-              const status = q.user_answer === null ? "skipped" : q.is_correct ? "correct" : "incorrect";
-              const statusColor = status === "correct" ? BE.good : status === "incorrect" ? BE.bad : BE.textMute;
+              const status = statusOf(q);
+              const statusColor =
+                status === "correct" ? BE.good : status === "incorrect" ? BE.bad : status === "pending" ? BE.warn : BE.textMute;
               const isExpanded = expandedQId === q.id;
               const userShort = shortAns(q.user_answer, q.question_type);
               const corrShort = shortAns(q.correct_answer, q.question_type);
@@ -329,7 +343,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
                       {preview.slice(0, 120)}{preview.length > 120 ? "…" : ""}
                     </div>
                     <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", color: statusColor, letterSpacing: "0.04em" }}>
-                      {status === "correct" ? "CORRECT" : status === "incorrect" ? "WRONG" : "SKIPPED"}
+                      {status === "correct" ? "CORRECT" : status === "incorrect" ? "WRONG" : status === "pending" ? "PENDING" : "SKIPPED"}
                     </div>
                     <div style={{ color: BE.textMute, fontFamily: BE.mono, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ color: status === "incorrect" ? BE.bad : BE.textMute }}>{userShort}</span>
@@ -357,7 +371,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
                   </div>
 
                   {isExpanded && (
-                    <ExpandedQuestion q={q} status={status} statusColor={statusColor} />
+                    <ExpandedQuestion q={q} status={status} statusColor={statusColor} imageUrlMap={imageUrlMap} />
                   )}
                 </div>
               );
@@ -432,8 +446,9 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
           )}
 
           {mobileQs.map((q, i) => {
-            const status = q.user_answer === null ? "skipped" : q.is_correct ? "correct" : "incorrect";
-            const statusColor = status === "correct" ? BE.good : status === "incorrect" ? BE.bad : BE.textMute;
+            const status = statusOf(q);
+            const statusColor =
+              status === "correct" ? BE.good : status === "incorrect" ? BE.bad : status === "pending" ? BE.warn : BE.textMute;
             const userShort = shortAns(q.user_answer, q.question_type);
             const corrShort = shortAns(q.correct_answer, q.question_type);
             const preview = plainPreview(q.question_text);
@@ -460,8 +475,8 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span className={`qbd-status ${status === "correct" ? "correct" : status === "incorrect" ? "wrong" : "skipped"}`}>
-                        {status === "correct" ? "Correct" : status === "incorrect" ? "Wrong" : "Skipped"}
+                      <span className={`qbd-status ${status === "correct" ? "correct" : status === "incorrect" ? "wrong" : status === "pending" ? "pending" : "skipped"}`}>
+                        {status === "correct" ? "Correct" : status === "incorrect" ? "Wrong" : status === "pending" ? "Pending" : "Skipped"}
                       </span>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12"
                         style={{ color: BE.textMute, transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "none", flexShrink: 0 }}>
@@ -498,7 +513,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong }: Props
 
                 {/* Expanded: full question + options + explanation */}
                 {isExpanded && (
-                  <ExpandedQuestion q={q} status={status} statusColor={statusColor} compact />
+                  <ExpandedQuestion q={q} status={status} statusColor={statusColor} compact imageUrlMap={imageUrlMap} />
                 )}
               </div>
             );

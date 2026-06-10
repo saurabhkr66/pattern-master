@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
 import {
@@ -7,6 +8,10 @@ import {
   getCachedTestConfig,
 } from "@/lib/coachingQuestionCache";
 import { gradeAndWrite, isPastDeadline } from "@/lib/coachingFinalize";
+
+// Headroom for the after() grading worker on serverless (no-op on the VPS node
+// server): Gemini grades a full subjective paper in well under this.
+export const maxDuration = 120;
 
 /**
  * Submit a coaching test attempt: score it server-side and mark it submitted.
@@ -86,9 +91,10 @@ export async function POST(
     }
 
     const totalTime = Number(timeTakenSecs);
-    const { score, maxScore, updated } = await gradeAndWrite({
+    const { score, maxScore, updated, needsGrading } = await gradeAndWrite({
       attemptId,
       studentId: sid,
+      coachingId: cid,
       test,
       resolved,
       answers: answerMap,
@@ -104,6 +110,18 @@ export async function POST(
     // report it as a no-op submit rather than returning this attempt's recompute.
     if (!updated) {
       return NextResponse.json({ ok: true, attemptId, alreadySubmitted: true });
+    }
+
+    // Photo answers (if any) are graded by Gemini AFTER this response flushes —
+    // the student sees "Submitted" instantly, never waits on the AI. A failure
+    // here leaves grading_status = "pending"; the admin's "Grade ungraded"
+    // button on the results page is the retry net.
+    if (needsGrading) {
+      after(() =>
+        import("@/lib/subjectiveGrading")
+          .then((m) => m.gradeAttemptSubjectives({ attemptId, coachingId: cid, trigger: "auto" }))
+          .catch((err) => console.error(`[submit] grading ${attemptId} failed:`, err))
+      );
     }
 
     return NextResponse.json({ ok: true, attemptId, score, maxScore });

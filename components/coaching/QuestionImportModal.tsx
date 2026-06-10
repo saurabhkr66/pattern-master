@@ -35,6 +35,7 @@ export default function QuestionImportModal({
   const [phase, setPhase] = useState<"upload" | "review" | "done">("upload");
   const [exam, setExam] = useState("");
   const [set, setSet] = useState("");
+  const [qtype, setQtype] = useState<"objective" | "subjective" | "mixed">("objective");
   const [topics, setTopics] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [pdf, setPdf] = useState<File | null>(null);
@@ -55,6 +56,7 @@ export default function QuestionImportModal({
       const fd = new FormData();
       fd.set("exam", exam.trim());
       fd.set("set", set.trim());
+      fd.set("qtype", qtype);
       if (topics.trim()) fd.set("topics", topics.trim());
       images.forEach((f) => fd.append("images", f));
       if (pdf) fd.set("pdf", pdf);
@@ -138,6 +140,34 @@ export default function QuestionImportModal({
               </label>
             </div>
 
+            {/* Pre-declared question type → focused (more accurate) extraction. */}
+            <div>
+              <span className="text-sm text-slate-300">What does this paper contain?</span>
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {(
+                  [
+                    { v: "objective", label: "MCQ / Numerical", hint: "options or numeric answers" },
+                    { v: "subjective", label: "Subjective", hint: "written answers + model solutions" },
+                    { v: "mixed", label: "Mixed — auto-detect", hint: "AI classifies each question" },
+                  ] as const
+                ).map((o) => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    onClick={() => setQtype(o.v)}
+                    className={`rounded-lg border px-3 py-2 text-left text-sm ${
+                      qtype === o.v
+                        ? "border-amber-500 bg-amber-500/10 text-amber-300"
+                        : "border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    <span className="block font-medium">{o.label}</span>
+                    <span className="block text-[11px] text-slate-500">{o.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-6 text-center hover:border-amber-500">
                 <ImageIcon className="h-6 w-6 text-slate-500" />
@@ -177,7 +207,22 @@ export default function QuestionImportModal({
                       onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, _include: e.target.checked } : x)))}
                       className="h-4 w-4 accent-amber-500"
                     />
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">{q.question_type.toUpperCase()}</span>
+                    {/* Type is correctable here — the safety net for misclassification. */}
+                    <select
+                      value={q.question_type}
+                      onChange={(e) =>
+                        setQuestions((qs) =>
+                          qs.map((x, j) =>
+                            j === i ? { ...x, question_type: e.target.value as ParsedQ["question_type"] } : x
+                          )
+                        )
+                      }
+                      className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
+                    >
+                      <option value="mcq">MCQ</option>
+                      <option value="nat">NAT</option>
+                      <option value="subjective">Subjective</option>
+                    </select>
                     <select
                       value={q.section ?? ""}
                       onChange={(e) => {
@@ -217,7 +262,21 @@ export default function QuestionImportModal({
                         AI-solved · verify
                       </span>
                     )}
-                    <span className="ml-auto text-xs text-slate-500">{q.max_marks ?? 1} mk · ans {q.correct_answer || "—"}</span>
+                    <span className="ml-auto flex items-center gap-1 text-xs text-slate-500">
+                      <input
+                        type="number"
+                        min={1}
+                        value={q.max_marks ?? 1}
+                        onChange={(e) =>
+                          setQuestions((qs) =>
+                            qs.map((x, j) => (j === i ? { ...x, max_marks: Number(e.target.value) || 1 } : x))
+                          )
+                        }
+                        className="w-14 rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-xs text-white"
+                        title="Max marks"
+                      />
+                      mk{q.question_type !== "subjective" && <> · ans {q.correct_answer || "—"}</>}
+                    </span>
                   </div>
                   {/* Snapshot of a figure question (cropped from the page) — verify it captured the whole question + options. */}
                   {q.images && q.images.length > 0 && (
@@ -283,6 +342,25 @@ export default function QuestionImportModal({
                         onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, correct_answer: e.target.value } : x)))}
                         placeholder="e.g. 42"
                         className="w-28 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
+                      />
+                    </div>
+                  )}
+                  {q.question_type === "subjective" && (
+                    <div className="mt-2 space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
+                      <p className="text-[10px] uppercase text-slate-500">
+                        Model answer — the AI grades student photos against this
+                      </p>
+                      {!String(q.solution ?? "").trim() && (
+                        <p className="text-[11px] text-amber-400">
+                          No model answer extracted — add one for accurate AI grading.
+                        </p>
+                      )}
+                      <textarea
+                        value={q.solution ?? ""}
+                        onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, solution: e.target.value } : x)))}
+                        rows={3}
+                        placeholder="Expected answer / marking points…"
+                        className={`${inputCls} font-mono text-xs`}
                       />
                     </div>
                   )}

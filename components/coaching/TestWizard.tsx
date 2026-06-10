@@ -493,7 +493,7 @@ function CoachingPicker({
       <div className="max-h-96 space-y-2 overflow-y-auto">
         {filtered.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">
-            No matching mcq/nat questions. Adjust the filters, add some in Question Bank, or use the PYQ tab.
+            No matching questions. Adjust the filters, add some in Question Bank, or use the PYQ tab.
           </p>
         ) : (
           filtered.map((q) => (
@@ -768,6 +768,7 @@ function AllCoachingsPicker({
           <option value="">All types</option>
           <option value="mcq">MCQ</option>
           <option value="nat">Numerical</option>
+          <option value="subjective">Subjective</option>
         </select>
       </div>
 
@@ -778,7 +779,8 @@ function AllCoachingsPicker({
           <p className="py-6 text-center text-sm text-slate-500">No questions found.</p>
         ) : (
           questions
-            .filter((qq) => qq.question_type === "mcq" || qq.question_type === "nat")
+            // This picker is super-admin only, so subjective is allowed here.
+            .filter((qq) => ["mcq", "nat", "subjective"].includes(qq.question_type))
             .map((qq) => (
               <QuestionRow
                 key={qq.id}

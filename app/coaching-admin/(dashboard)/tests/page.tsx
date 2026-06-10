@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
 import TestsClient from "@/components/coaching/TestsClient";
@@ -24,21 +25,29 @@ export default async function TestsPage() {
   }
 
   const coachingId = actor!.coachingId!;
-  const tests = await prisma.coachingTest.findMany({
-    where: { coaching_id: coachingId },
-    select: {
-      id: true,
-      title: true,
-      status: true,
-      duration_secs: true,
-      start_at: true,
-      end_at: true,
-      questions: true,
-      _count: { select: { attempts: true } },
-    },
-    orderBy: { created_at: "desc" },
-    take: 200,
-  });
+  const [tests, coaching] = await Promise.all([
+    prisma.coachingTest.findMany({
+      where: { coaching_id: coachingId },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        duration_secs: true,
+        start_at: true,
+        end_at: true,
+        questions: true,
+        pool_size: true,
+        _count: { select: { attempts: true } },
+      },
+      orderBy: { created_at: "desc" },
+      take: 200,
+    }),
+    prisma.coaching.findUnique({
+      where: { id: coachingId },
+      select: { name: true, slug: true, join_code: true },
+    }),
+  ]);
+  if (!coaching) notFound();
 
   return (
     <TestsClient
@@ -50,8 +59,15 @@ export default async function TestsPage() {
         start_at: t.start_at?.toISOString() ?? null,
         end_at: t.end_at?.toISOString() ?? null,
         questionCount: Array.isArray(t.questions) ? t.questions.length : 0,
+        // Pooled tests give each student a random subset, so a fixed total
+        // doesn't exist — null makes the share message fall back to question count.
+        total_marks:
+          t.pool_size == null && Array.isArray(t.questions)
+            ? (t.questions as { marks?: number }[]).reduce((s, q) => s + (q?.marks ?? 1), 0)
+            : null,
         submissions: t._count.attempts,
       }))}
+      coaching={{ name: coaching.name, slug: coaching.slug, joinCode: coaching.join_code }}
     />
   );
 }

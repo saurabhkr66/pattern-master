@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar } from "lucide-react";
+import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar, MessageCircle } from "lucide-react";
+import { buildTestInviteMessage, openWhatsApp } from "@/lib/whatsappShare";
 
 type TestRow = {
   id: string;
@@ -13,8 +14,11 @@ type TestRow = {
   start_at: string | null;
   end_at: string | null;
   questionCount: number;
+  total_marks: number | null;
   submissions: number;
 };
+
+type CoachingInfo = { name: string; slug: string; joinCode: string };
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-800 text-slate-300",
@@ -47,7 +51,13 @@ function toLocalInput(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function TestsClient({ initialTests }: { initialTests: TestRow[] }) {
+export default function TestsClient({
+  initialTests,
+  coaching,
+}: {
+  initialTests: TestRow[];
+  coaching: CoachingInfo;
+}) {
   const router = useRouter();
   const [tests, setTests] = useState(initialTests);
   const [busy, setBusy] = useState<string | null>(null);
@@ -142,7 +152,8 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
                   </td>
                   <td className="px-4 py-3 text-slate-400">{t.submissions}</td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end">
+                    <div className="flex items-center justify-end gap-1">
+                      <ShareTestButton test={t} coaching={coaching} />
                       <RowMenu test={t} busy={busy === t.id} onStatus={setStatus} onEdit={setEditing} />
                     </div>
                   </td>
@@ -169,7 +180,10 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
                     {effectiveStatus(t)}
                   </span>
                 </div>
-                <RowMenu test={t} busy={busy === t.id} onStatus={setStatus} onEdit={setEditing} />
+                <div className="flex shrink-0 items-center gap-1">
+                  <ShareTestButton test={t} coaching={coaching} />
+                  <RowMenu test={t} busy={busy === t.id} onStatus={setStatus} onEdit={setEditing} />
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-400">
                 <span className="inline-flex items-center gap-1.5"><Hash className="h-3.5 w-3.5" />{t.questionCount} questions</span>
@@ -199,6 +213,39 @@ export default function TestsClient({ initialTests }: { initialTests: TestRow[] 
         />
       )}
     </div>
+  );
+}
+
+// One-click WhatsApp invite: test details + direct link for enrolled students,
+// plus the coaching join code/link so new students can onboard from the same
+// message. Only shown while the test can still be taken (active/scheduled).
+function ShareTestButton({ test, coaching }: { test: TestRow; coaching: CoachingInfo }) {
+  const es = effectiveStatus(test);
+  if (es !== "active" && es !== "scheduled") return null;
+  return (
+    <button
+      onClick={() => {
+        const origin = window.location.origin;
+        openWhatsApp(
+          buildTestInviteMessage({
+            testTitle: test.title,
+            coachingName: coaching.name,
+            durationMins: Math.round(test.duration_secs / 60),
+            totalMarks: test.total_marks,
+            questionCount: test.questionCount,
+            startAt: test.start_at,
+            endAt: test.end_at,
+            testUrl: `${origin}/c/${coaching.slug}/test/${test.id}`,
+            joinCode: coaching.joinCode,
+            joinUrl: `${origin}/join/${coaching.joinCode}`,
+          })
+        );
+      }}
+      title="Share on WhatsApp"
+      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-green-400"
+    >
+      <MessageCircle className="h-4 w-4" />
+    </button>
   );
 }
 

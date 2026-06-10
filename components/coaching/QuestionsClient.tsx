@@ -872,18 +872,23 @@ function QuestionFormModal({
 
             {type === "subjective" && (
               <p className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                Subjective questions are graded manually after submission. The solution
-                below is shown to graders as the model answer.
+                Students answer on paper and photograph it; AI grades the photo against
+                the model answer below, and you can review or override the marks.
               </p>
             )}
 
             {/* Solution / model answer + preview */}
             <PreviewField
-              label={type === "subjective" ? "Model answer (for graders)" : "Solution (optional)"}
+              label={type === "subjective" ? "Model answer (AI grades against this)" : "Solution (optional)"}
               value={solution}
               onChange={setSolution}
               rows={3}
             />
+            {type === "subjective" && !solution.trim() && (
+              <p className="-mt-3 text-xs text-amber-400">
+                Add a model answer for accurate AI grading.
+              </p>
+            )}
 
             {/* Optional fine-grained topic tag + difficulty */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

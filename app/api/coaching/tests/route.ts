@@ -28,8 +28,9 @@ export const GET = withCoachingContext(async (_req, { coachingId }) => {
 // POST /api/coaching/tests — create a test.
 // Body: { title, description?, durationMins, startAt?, endAt?, shuffle?, poolSize?,
 //         negMarks?, status?, questions: [{id, source, marks}] }
-// v1: only coaching-source mcq/nat questions are accepted (subjective excluded).
-export const POST = withCoachingContext(async (req, { coachingId }) => {
+// Coaching-source mcq/nat for everyone; subjective (photo answers, AI-graded) is
+// super-admin only while the grading pipeline is being proven.
+export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const body = await req.json();
   const {
     title,
@@ -57,12 +58,13 @@ export const POST = withCoachingContext(async (req, { coachingId }) => {
   const coachingIds = incoming.filter((q) => (q.source ?? "coaching") === "coaching").map((q) => q.id);
   const pyqIds = incoming.filter((q) => q.source === "pyq").map((q) => q.id);
 
-  // Coaching-source: tenant-scoped, mcq/nat only (subjective excluded).
+  // Coaching-source: tenant-scoped; subjective allowed for super admins only.
   // PYQ-source: shared bank, mcq/msq/nat allowed (pre-vetted real questions).
+  const allowedTypes = actor.isSuperAdmin ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
   const [coachingValid, pyqValid] = await Promise.all([
     coachingIds.length
       ? prisma.coachingQuestion.findMany({
-          where: { id: { in: coachingIds }, coaching_id: coachingId, question_type: { in: ["mcq", "nat"] } },
+          where: { id: { in: coachingIds }, coaching_id: coachingId, question_type: { in: allowedTypes } },
           select: { id: true, max_marks: true },
         })
       : Promise.resolve([]),

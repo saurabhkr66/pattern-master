@@ -22,8 +22,12 @@ export function buildResultData(
     const sec = sectionMap[secName];
     sec.max += q.marks; sec.total += 1;
     sec.timeSpentSecs += q.timeSpentSecs || 0;
-    if (q.isCorrect) { sec.score += q.marks; sec.correct += 1; }
-    else if (answered) { sec.wrong += 1; }
+    // Pending subjective answers (AI/teacher grading not final) are undecided —
+    // counted as skipped, not wrong. Awarded marks (partial credit) win over the
+    // full question marks when present.
+    const pending = !!q.subjective?.pending;
+    if (q.isCorrect) { sec.score += (typeof q.awardedMarks === "number" ? q.awardedMarks : q.marks); sec.correct += 1; }
+    else if (answered && !pending) { sec.wrong += 1; }
     else { sec.skipped += 1; }
 
     const topName = q.topic || "Uncategorized";
@@ -70,6 +74,7 @@ export function buildResultData(
       marks: q.marks, awarded: typeof q.awardedMarks === "number" ? q.awardedMarks : undefined,
       subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
       timeSpentSecs: q.timeSpentSecs || 0,
+      subjective: q.subjective || undefined,
     })),
   };
 }

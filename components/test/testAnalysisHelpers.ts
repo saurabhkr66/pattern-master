@@ -22,11 +22,22 @@ export interface ResultData {
     id: string; question_text: string; options: string[] | null; question_type: string;
     correct_answer: string; user_answer: string | null; is_correct: boolean | null;
     marks: number; awarded?: number; subject: string; topic?: string; explanation?: string; timeSpentSecs: number;
+    // Photo-answer (SUBJECTIVE) extras — coaching tests only. imageKeys are R2
+    // object keys; pages sign them fresh per request (never cache signed URLs).
+    subjective?: {
+      pending: boolean;
+      feedback: string | null;
+      confidence: string | null;
+      marks: number | null;
+      imageKeys: string[];
+      gradedBy: string | null;
+    };
   }[];
 }
 
 export function shortAns(answer: string | null, type: string): string {
   if (!answer) return "—";
+  if (type === "SUBJECTIVE") return answer; // "N photo answer(s)" label — not a letter
   if (type === "NAT") return answer;
   if (type === "MSQ") return answer.split(";").map(l => l.trim().toUpperCase()).join(", ");
   return answer.trim().toUpperCase();

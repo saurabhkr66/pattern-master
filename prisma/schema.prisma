@@ -500,6 +500,10 @@ model TestAttempt {
   section_scores  Json?
   graded_by       String? // coach admin id
   graded_at       DateTime?
+  // Subjective AI-grading lifecycle: none (no subjective on paper) | pending
+  // (submitted, awaiting Gemini) | review (AI pass done, ≥1 answer needs the
+  // teacher: low confidence or grading failure) | done (every answer final).
+  grading_status  String        @default("none")
   billed          Boolean       @default(false)
   started_at      DateTime      @default(now())
   submitted_at    DateTime?
@@ -514,6 +518,8 @@ model TestAttempt {
   @@index([test_id])
   @@index([student_id])
   @@index([coaching_id, billed])
+  // Admin results page: "which attempts of this test still need grading/review".
+  @@index([test_id, grading_status])
 }
 
 // Per-month bill status a super admin toggles (due | paid). Amounts are derived

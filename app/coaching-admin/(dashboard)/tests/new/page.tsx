@@ -25,9 +25,11 @@ export default async function NewTestPage() {
 
   const coachingId = actor!.coachingId!;
 
-  // Only mcq/nat questions are eligible for the v1 test flow (subjective excluded).
+  // mcq/nat for everyone; subjective (photo answers, AI-graded) is super-admin
+  // only while the grading pipeline is being proven — drop the gate to roll out.
+  const allowedTypes = actor?.isSuperAdmin ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
   const questions = await prisma.coachingQuestion.findMany({
-    where: { coaching_id: coachingId, question_type: { in: ["mcq", "nat"] } },
+    where: { coaching_id: coachingId, question_type: { in: allowedTypes } },
     select: {
       id: true,
       question_text: true,

@@ -1,7 +1,11 @@
 import "server-only";
+import { after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { scoreQuestion, type NormalizedQuestion } from "@/lib/resolveQuestions";
+import type { NormalizedQuestion } from "@/lib/resolveQuestions";
+import { computeAttemptScore, computeGradingStatus, type StoredAnswers } from "@/lib/coachingScore";
+import { newSubjectiveEntry, MAX_SUBJECTIVE_PHOTOS } from "@/lib/subjectiveTypes";
+import { answerKeyPrefix } from "@/lib/r2";
 import { optionPermutation, optionSeed, type RuntimeTest } from "@/lib/coachingTestRuntime";
 import {
   getResolvedTestQuestions,
@@ -73,11 +77,16 @@ export function answersFromDraft(
   const mcq = draft?.mcqAnswers ?? {};
   const msq = draft?.msqAnswers ?? {};
   const nat = draft?.natValues ?? {};
+  const subj = draft?.subjPhotos ?? {};
   const tmap = draft?.timeSpentMap ?? {};
   for (const q of resolved) {
     let ua = "";
     if (q.question_type === "msq") ua = msq[q.id]?.slice().sort().join(";") || "";
     else if (q.question_type === "nat") ua = (nat[q.id] ?? "").trim();
+    // Subjective: the draft carries the uploaded photos' R2 keys — without this
+    // branch a never-submitted student would silently lose their photo answers
+    // on force-finalize.
+    else if (q.question_type === "subjective") ua = (subj[q.id] ?? []).join(";");
     else ua = mcq[q.id] ?? ""; // mcq
     answers.set(q.id, ua);
     const t = Number(tmap[q.id]);
@@ -101,13 +110,14 @@ export function answersFromDraft(
 export async function gradeAndWrite(opts: {
   attemptId: string;
   studentId: string;
+  coachingId: string;
   test: Pick<RuntimeTest, "id" | "shuffle">;
   resolved: NormalizedQuestion[];
   answers: Map<string, string>;
   times: Record<string, number>;
   timeTakenSecs: number | null;
-}): Promise<{ score: number; maxScore: number; updated: boolean }> {
-  const { attemptId, studentId, test, resolved, answers, times, timeTakenSecs } = opts;
+}): Promise<{ score: number; maxScore: number; updated: boolean; needsGrading: boolean }> {
+  const { attemptId, studentId, coachingId, test, resolved, answers, times, timeTakenSecs } = opts;
 
   // When options were shuffled for display, the student's answer is a DISPLAY
   // letter — map it back to the original option letter so grading (which compares
@@ -119,51 +129,33 @@ export async function gradeAndWrite(opts: {
     return String.fromCharCode(65 + perm[d]);
   };
 
-  let score = 0;
-  let maxScore = 0;
-  const storedAnswers: Record<string, string> = {};
-  // Per-section tally (keyed by the question's subject = its section). Mirrors the
-  // consumer mock section_scores shape so the existing SectionBreakdown renders it.
-  type SecAcc = { score: number; maxScore: number; correct: number; wrong: number; skipped: number };
-  const sectionMap = new Map<string, SecAcc>();
+  // Build the STORED answers (original option space). Objective answers stay
+  // strings; a subjective answer becomes a SubjectiveAnswerEntry holding its
+  // photos' R2 keys (graded asynchronously after this write).
+  const keyPrefix = answerKeyPrefix(coachingId, test.id, attemptId);
+  const storedAnswers: StoredAnswers = {};
   for (const q of resolved) {
-    maxScore += q.marks;
     let ua = answers.get(q.id) ?? "";
+    if (q.question_type === "subjective") {
+      // The submit payload carries the photo keys joined with ";". Keep only
+      // keys minted for THIS attempt (prefix check = ownership), max 3.
+      const keys = ua
+        .split(";")
+        .map((k) => k.trim())
+        .filter((k) => k.startsWith(keyPrefix))
+        .slice(0, MAX_SUBJECTIVE_PHOTOS);
+      storedAnswers[q.id] = keys.length ? newSubjectiveEntry(keys) : "";
+      continue;
+    }
     if (test.shuffle && q.question_type === "mcq" && ua && q.options.length) {
       ua = toOriginalLetter(q, ua);
     }
     storedAnswers[q.id] = ua;
-    const s = scoreQuestion(q, ua);
-    if (s != null) score += s; // null = subjective (not in v1 tests), skip
-
-    const secName = q.subject;
-    if (secName) {
-      const t = sectionMap.get(secName) ?? { score: 0, maxScore: 0, correct: 0, wrong: 0, skipped: 0 };
-      t.maxScore += q.marks;
-      if (s != null) t.score += s;
-      const answered = ua.trim() !== "";
-      if (!answered || s == null) t.skipped++;
-      else if (s > 0) t.correct++;
-      else t.wrong++;
-      sectionMap.set(secName, t);
-    }
   }
-  // Floor the total at 0 — negative marking can push the raw sum below zero, but
-  // a test score should never display negative (matches the consumer mock flow).
-  score = Math.max(0, score);
 
-  // Only emit section_scores when the paper is actually sectioned (>1 section).
-  const sectionScores =
-    sectionMap.size > 1
-      ? [...sectionMap.entries()].map(([name, t]) => ({
-          name,
-          score: Math.max(0, Math.round(t.score * 100) / 100),
-          maxScore: t.maxScore,
-          correct: t.correct,
-          wrong: t.wrong,
-          skipped: t.skipped,
-        }))
-      : null;
+  // One shared formula for submit-time, post-AI, and post-override scoring.
+  const { score, maxScore, sectionScores } = computeAttemptScore(resolved, storedAnswers);
+  const gradingStatus = computeGradingStatus(resolved, storedAnswers);
 
   // Flush the Redis-accumulated tab-switch counter into this one write. null =
   // Redis was unavailable, so the count lives in the DB column already — don't
@@ -199,7 +191,8 @@ export async function gradeAndWrite(opts: {
           question_times = ${timesJson}::jsonb,
           submitted_at = ${new Date()},
           tab_switches = COALESCE(${tabSwitches}::int, tab_switches),
-          section_scores = ${sectionJson}::jsonb
+          section_scores = ${sectionJson}::jsonb,
+          grading_status = ${gradingStatus}
       WHERE id = ${attemptId} AND status = 'in_progress'
     `);
     updated = count > 0;
@@ -212,7 +205,8 @@ export async function gradeAndWrite(opts: {
   // leaderboard so the next view recomputes. Single choke point: covers live
   // submits, batch auto-submits, and on-view force-finalized attempts alike.
   if (updated) await invalidateTestLeaderboard(test.id);
-  return { score, maxScore, updated };
+  // pending = ≥1 photo answer awaiting AI — the caller fires the async grader.
+  return { score, maxScore, updated, needsGrading: updated && gradingStatus === "pending" };
 }
 
 /**
@@ -298,6 +292,7 @@ export async function finalizeOverdueAttempts(
       const res = await gradeAndWrite({
         attemptId: a.id,
         studentId: a.student_id,
+        coachingId,
         test: runtimeTest,
         resolved,
         answers,
@@ -305,6 +300,18 @@ export async function finalizeOverdueAttempts(
         timeTakenSecs: timeTaken,
       });
       if (res.updated) finalized++;
+      // Photo answers recovered from the draft still need AI grading — fire it
+      // after the response flushes (works in the server-component render paths
+      // that call this on-view). Failures leave grading_status = pending; the
+      // admin's "Grade ungraded" button is the retry net.
+      if (res.needsGrading) {
+        const attemptId = a.id;
+        after(() =>
+          import("@/lib/subjectiveGrading")
+            .then((m) => m.gradeAttemptSubjectives({ attemptId, coachingId, trigger: "auto" }))
+            .catch((err) => console.error(`[finalize] grading ${attemptId} failed:`, err))
+        );
+      }
     } catch (err) {
       console.error(`[finalize] attempt ${a.id} failed:`, err);
     }

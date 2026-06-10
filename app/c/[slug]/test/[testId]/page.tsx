@@ -159,7 +159,13 @@ export default async function StudentTestPage({
       question_text: q.question_text,
       options,
       question_type:
-        q.question_type === "nat" ? "NAT" : q.question_type === "msq" ? "MSQ" : "MCQ",
+        q.question_type === "nat"
+          ? "NAT"
+          : q.question_type === "msq"
+            ? "MSQ"
+            : q.question_type === "subjective"
+              ? "SUBJECTIVE"
+              : "MCQ",
       marks: q.marks,
       subject: q.subject ?? "General",
       topic: q.topic ?? undefined,
@@ -184,6 +190,7 @@ export default async function StudentTestPage({
     label: test.title,
     description: test.description ?? "",
     emoji: "📝",
+    pyqUnit: "topic",
     hasBranches: false,
     durationSecs: test.duration_secs,
     totalQuestions: engineQuestions.length,

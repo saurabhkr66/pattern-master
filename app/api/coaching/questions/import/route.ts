@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
-import { extractQuestions, cropQuestionImage, type UploadImage } from "@/lib/coachingImport";
+import { extractQuestions, cropQuestionImage, type UploadImage, type ImportQType } from "@/lib/coachingImport";
 import { pdfPageRenderer } from "@/lib/pdfRaster";
 
 // sharp + Gemini SDK need the Node runtime (not edge).
@@ -30,6 +30,12 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   if (!exam || !set) {
     return NextResponse.json({ error: "exam and set are required" }, { status: 400 });
   }
+  // Admin pre-declares what the paper contains so the extraction prompt is
+  // focused; "mixed" keeps per-question auto-detection.
+  const qtypeRaw = String(form.get("qtype") ?? "mixed");
+  const qtype: ImportQType = ["objective", "subjective", "mixed"].includes(qtypeRaw)
+    ? (qtypeRaw as ImportQType)
+    : "mixed";
 
   const imageFiles = form.getAll("images").filter((f): f is File => f instanceof File).slice(0, MAX_IMAGES);
   const pdfEntry = form.get("pdf");
@@ -73,6 +79,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
       images,
       pdf,
       sections,
+      qtype,
       // Catalog wins when present (school classes); else the typed list.
       topicsBySection: hasCatalog ? topicsBySection : undefined,
       topics: hasCatalog ? undefined : topics,

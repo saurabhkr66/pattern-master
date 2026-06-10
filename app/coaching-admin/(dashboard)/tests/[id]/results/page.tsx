@@ -4,7 +4,42 @@ import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
 import { finalizeOverdueAttempts } from "@/lib/coachingFinalize";
 import { compareLeaderboard } from "@/lib/coachingLeaderboard";
+import { getCachedCoachingName } from "@/lib/coachingCache";
+import { ShareRankListButton, ShareResultButton } from "@/components/coaching/ResultShareButtons";
+import GradeUngradedButton from "@/components/coaching/GradeUngradedButton";
 import { ArrowLeft } from "lucide-react";
+
+// Grading-state chip for the subjective AI pipeline (— for objective-only tests).
+function GradingChip({ status, attemptId }: { status: string; attemptId: string }) {
+  if (status === "pending") {
+    return (
+      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-400">
+        AI grading…
+      </span>
+    );
+  }
+  if (status === "review") {
+    return (
+      <Link
+        href={`/coaching-admin/attempts/${attemptId}/review`}
+        className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-400 hover:underline"
+      >
+        Needs review
+      </Link>
+    );
+  }
+  if (status === "done") {
+    return (
+      <Link
+        href={`/coaching-admin/attempts/${attemptId}/review`}
+        className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-400 hover:underline"
+      >
+        Graded
+      </Link>
+    );
+  }
+  return <span className="text-slate-600">—</span>;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -44,11 +79,12 @@ export default async function TestResultsPage({
   // autosaved Redis answers. Runs on-view so the table below reflects them.
   // Independent of the test-metadata read → run both in parallel; the attempts
   // query below must still wait for finalize to land.
-  const [test] = await Promise.all([
+  const [test, coachingName] = await Promise.all([
     prisma.coachingTest.findFirst({
       where: { id, coaching_id: coachingId },
       select: { id: true, title: true, status: true },
     }),
+    getCachedCoachingName(coachingId),
     finalizeOverdueAttempts(id, coachingId),
   ]);
   if (!test) notFound();
@@ -62,6 +98,7 @@ export default async function TestResultsPage({
       max_score: true,
       time_taken_secs: true,
       tab_switches: true,
+      grading_status: true,
       started_at: true,
       submitted_at: true,
       student: { select: { name: true, phone: true } },
@@ -101,6 +138,12 @@ export default async function TestResultsPage({
     { label: "Top score", value: maxScore ? `${topScore} / ${maxScore}` : topScore },
   ];
 
+  // Subjective AI-grading pipeline state across the test.
+  const hasSubjective = attempts.some((a) => a.grading_status !== "none");
+  const ungradedIds = submitted
+    .filter((a) => a.grading_status === "pending" || a.grading_status === "review")
+    .map((a) => a.id);
+
   return (
     <div className="p-8">
       <Link
@@ -110,8 +153,34 @@ export default async function TestResultsPage({
         <ArrowLeft className="h-4 w-4" /> Back to tests
       </Link>
 
-      <h1 className="mt-3 text-2xl font-semibold text-white">{test.title}</h1>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-white">{test.title}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+        {ungradedIds.length > 0 && <GradeUngradedButton attemptIds={ungradedIds} />}
+        {submissions > 0 && (
+          <ShareRankListButton
+            testTitle={test.title}
+            coachingName={coachingName ?? "Your coaching"}
+            entries={ranked.slice(0, 10).map((a) => ({
+              rank: a.rank,
+              name: a.student.name,
+              score: a.score ?? 0,
+            }))}
+            totalAppeared={submissions}
+            avgScore={avgScore}
+            maxScore={maxScore}
+          />
+        )}
+        </div>
+      </div>
       <p className="mt-1 text-sm text-slate-400">Results &amp; submissions</p>
+      {ungradedIds.length > 0 && (
+        <p className="mt-1 text-xs text-amber-400">
+          {ungradedIds.length} submission{ungradedIds.length > 1 ? "s" : ""} still have
+          ungraded/unreviewed written answers — grade before sharing the rank list (ranks may
+          shift as marks land).
+        </p>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
@@ -132,15 +201,17 @@ export default async function TestResultsPage({
               <th className="px-4 py-3 font-medium">Phone</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Score</th>
+              {hasSubjective && <th className="px-4 py-3 font-medium">Grading</th>}
               <th className="px-4 py-3 font-medium">Time</th>
               <th className="px-4 py-3 font-medium">Tab switches</th>
               <th className="px-4 py-3 font-medium">Submitted</th>
+              <th className="px-4 py-3 font-medium">Share</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800 bg-slate-950">
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={hasSubjective ? 10 : 9} className="px-4 py-8 text-center text-slate-500">
                   No attempts yet.
                 </td>
               </tr>
@@ -179,6 +250,15 @@ export default async function TestResultsPage({
                       ? `${a.score ?? 0}${a.max_score ? ` / ${a.max_score}` : ""}`
                       : "—"}
                   </td>
+                  {hasSubjective && (
+                    <td className="px-4 py-3">
+                      {a.status === "submitted" ? (
+                        <GradingChip status={a.grading_status} attemptId={a.id} />
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-3 font-mono text-slate-400">
                     {a.status === "submitted" ? fmtTime(a.time_taken_secs) : "—"}
                   </td>
@@ -193,6 +273,23 @@ export default async function TestResultsPage({
                   </td>
                   <td className="px-4 py-3 text-slate-400">
                     {a.submitted_at ? new Date(a.submitted_at).toLocaleString() : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {a.status === "submitted" && a.rank != null ? (
+                      <ShareResultButton
+                        studentName={a.student.name}
+                        phone={a.student.phone}
+                        testTitle={test.title}
+                        coachingName={coachingName ?? "Your coaching"}
+                        score={a.score ?? 0}
+                        maxScore={a.max_score ?? 0}
+                        rank={a.rank}
+                        totalStudents={submissions}
+                        timeTakenSecs={a.time_taken_secs}
+                      />
+                    ) : (
+                      <span className="text-slate-600">—</span>
+                    )}
                   </td>
                 </tr>
               ))
@@ -229,11 +326,26 @@ export default async function TestResultsPage({
                     <p className="mt-0.5 font-mono text-xs text-slate-400">{a.student.phone}</p>
                   </div>
                 </div>
-                {a.status === "submitted" ? (
-                  <span className="rounded-full bg-green-900/50 px-2 py-0.5 text-xs text-green-400">Submitted</span>
-                ) : (
-                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">In progress</span>
-                )}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {a.status === "submitted" ? (
+                    <span className="rounded-full bg-green-900/50 px-2 py-0.5 text-xs text-green-400">Submitted</span>
+                  ) : (
+                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">In progress</span>
+                  )}
+                  {a.status === "submitted" && a.rank != null && (
+                    <ShareResultButton
+                      studentName={a.student.name}
+                      phone={a.student.phone}
+                      testTitle={test.title}
+                      coachingName={coachingName ?? "Your coaching"}
+                      score={a.score ?? 0}
+                      maxScore={a.max_score ?? 0}
+                      rank={a.rank}
+                      totalStudents={submissions}
+                      timeTakenSecs={a.time_taken_secs}
+                    />
+                  )}
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
                 <span>
@@ -243,6 +355,9 @@ export default async function TestResultsPage({
                   </span>
                 </span>
                 {a.status === "submitted" && <span>Time: {fmtTime(a.time_taken_secs)}</span>}
+                {a.status === "submitted" && a.grading_status !== "none" && (
+                  <GradingChip status={a.grading_status} attemptId={a.id} />
+                )}
                 <span className={a.tab_switches > 0 ? "text-amber-400" : ""}>Tab switches: {a.tab_switches}</span>
                 {a.submitted_at && <span>{new Date(a.submitted_at).toLocaleString()}</span>}
               </div>

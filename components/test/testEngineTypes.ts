@@ -6,7 +6,9 @@ export interface TestQuestion {
   isOptional: boolean;
   question_text: string;
   options: string[] | null;
-  question_type: "MCQ" | "MSQ" | "NAT";
+  // SUBJECTIVE = written-on-paper answer photographed by the student (coaching
+  // tests only; the consumer mock flow never emits it).
+  question_type: "MCQ" | "MSQ" | "NAT" | "SUBJECTIVE";
   marks: number;
   year?: number;
   subject: string;
@@ -42,6 +44,10 @@ export interface DraftState {
   mcqAnswers?: Record<string, string>;
   msqAnswers?: Record<string, string[]>;
   natValues?: Record<string, string>;
+  // Subjective: uploaded answer-photo R2 keys per question (already in R2 by the
+  // time they land here — the draft only carries the keys, so a force-finalized
+  // student keeps their photos).
+  subjPhotos?: Record<string, string[]>;
   statuses?: Record<string, string>;
   markedReview?: string[];
   timeSpentMap?: Record<string, number>;

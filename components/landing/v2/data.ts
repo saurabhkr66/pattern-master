@@ -217,6 +217,8 @@ export type CoverageTab = {
   title: string;
   meta: string[];
   topics: [string, string][];
+  // PYQ landing page for this exam — keyword-anchored internal link for SEO
+  pyqHref: string;
 };
 
 export const COVERAGE: CoverageTab[] = [
@@ -225,6 +227,7 @@ export const COVERAGE: CoverageTab[] = [
     label: "GATE",
     title: "GATE — all 8 branches",
     meta: ["8 branches", "50+ topics", "PYQs 2010 → 2025"],
+    pyqHref: "/gate-cse/pyq",
     topics: [
       ["Algorithms", "240+"], ["Data Structures", "180+"], ["Operating Systems", "160+"],
       ["DBMS", "150+"], ["Computer Networks", "140+"], ["Theory of Computation", "120+"],
@@ -237,6 +240,7 @@ export const COVERAGE: CoverageTab[] = [
     label: "JEE Main",
     title: "JEE Main — PCM",
     meta: ["3 subjects", "Class XI + XII", "Pattern-tagged"],
+    pyqHref: "/jee-main/pyq",
     topics: [
       ["Mechanics", "210+"], ["Electrostatics", "150+"], ["Modern Physics", "120+"],
       ["Organic Chemistry", "190+"], ["Physical Chemistry", "170+"], ["Inorganic Chemistry", "140+"],
@@ -248,6 +252,7 @@ export const COVERAGE: CoverageTab[] = [
     label: "JEE Advanced",
     title: "JEE Advanced — top-rank tier",
     meta: ["Multi-concept", "Hard-mode default", "Real exam timing"],
+    pyqHref: "/jee-advanced/pyq",
     topics: [
       ["Rotational Dynamics", "Hard"], ["Thermodynamics", "Hard"], ["Electromagnetism", "Hard"],
       ["Reaction Mechanisms", "Hard"], ["Equilibrium", "Hard"], ["Coordination Chem.", "Hard"],
@@ -259,6 +264,7 @@ export const COVERAGE: CoverageTab[] = [
     label: "NEET",
     title: "NEET UG — Biology-heavy",
     meta: ["Bio · Phy · Chem", "NCERT-aligned", "PYQs included"],
+    pyqHref: "/neet/pyq",
     topics: [
       ["Human Physiology", "220+"], ["Genetics", "160+"], ["Ecology", "130+"],
       ["Cell Biology", "150+"], ["Plant Physiology", "140+"], ["Mechanics", "120+"],
@@ -270,6 +276,7 @@ export const COVERAGE: CoverageTab[] = [
     label: "UGC NET",
     title: "UGC NET — Paper 1 & 2",
     meta: ["Teaching aptitude", "Research method", "Subject paper"],
+    pyqHref: "/ugc-net-p1/pyq",
     topics: [
       ["Teaching Aptitude", "120+"], ["Research Aptitude", "110+"], ["Logical Reasoning", "140+"],
       ["Data Interpretation", "100+"], ["Comm. & ICT", "90+"], ["Higher Education", "80+"],

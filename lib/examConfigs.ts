@@ -1,5 +1,6 @@
 export type ExamType = "GATE" | "JEE_MAIN" | "JEE_ADVANCED" | "NEET" | "UGC_NET_P1" | "UGC_NET_P2";
-export type QType = "MCQ" | "MSQ" | "NAT";
+// SUBJECTIVE is coaching-test only (photo answers); consumer exams never use it.
+export type QType = "MCQ" | "MSQ" | "NAT" | "SUBJECTIVE";
 
 export interface MarkBand {
   marks: number;
@@ -24,6 +25,9 @@ export interface ExamConfig {
   label: string;
   description: string;
   emoji: string;
+  // SEO wording for PYQ surfaces: JEE/NEET searchers say "chapter-wise",
+  // GATE/UGC NET searchers say "topic-wise".
+  pyqUnit: "chapter" | "topic";
   hasBranches: boolean;
   branches?: { id: string; label: string }[];
   durationSecs: number;
@@ -120,6 +124,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     label: "GATE",
     description: "Graduate Aptitude Test in Engineering",
     emoji: "🎓",
+    pyqUnit: "topic",
     hasBranches: true,
     branches: GATE_BRANCHES as unknown as { id: string; label: string }[],
     durationSecs: 10800,
@@ -140,6 +145,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     label: "JEE Main",
     description: "Joint Entrance Examination (Main)",
     emoji: "⚡",
+    pyqUnit: "chapter",
     hasBranches: false,
     durationSecs: 10800,
     totalQuestions: 90,
@@ -162,6 +168,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     label: "JEE Advanced",
     description: "Joint Entrance Examination (Advanced)",
     emoji: "🔬",
+    pyqUnit: "chapter",
     hasBranches: false,
     durationSecs: 10800,
     totalQuestions: 54,
@@ -185,6 +192,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     label: "NEET UG",
     description: "National Eligibility cum Entrance Test (UG)",
     emoji: "🧬",
+    pyqUnit: "chapter",
     hasBranches: false,
     durationSecs: 12000, // 3h 20min
     totalQuestions: 200,
@@ -220,6 +228,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     label: "UGC NET Paper 1",
     description: "General Paper on Teaching and Research Aptitude",
     emoji: "📚",
+    pyqUnit: "topic",
     hasBranches: false,
     durationSecs: 3600, // 1 hour
     totalQuestions: 50,
@@ -249,6 +258,7 @@ export const EXAM_CONFIGS: ExamConfig[] = [
     label: "UGC NET Paper 2",
     description: "Subject Specific Paper",
     emoji: "📖",
+    pyqUnit: "topic",
     hasBranches: false,
     durationSecs: 7200, // 2 hours
     totalQuestions: 100,
