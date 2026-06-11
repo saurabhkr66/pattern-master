@@ -62,13 +62,35 @@ export default function SSOCallbackPage() {
         await clerk.setActive({ session: res.createdSessionId });
         if (cancelled) return;
 
-        // Force a fresh session JWT so clerk-js definitely (re)writes the
-        // __session cookie before we navigate.
+        // --- Diagnostics + manual cookie fallback -------------------------
+        // In this WebView clerk-js completes sign-in but the __session cookie
+        // never appears. Capture exactly which link breaks, and if we can get
+        // a session JWT ourselves, write the cookie manually — that's all the
+        // server-side auth() needs.
+        const diag: string[] = [];
+        let jwt: string | null = null;
         try {
-          await clerk.session?.getToken({ skipCache: true });
-        } catch {
-          /* non-fatal — the poll below is the real gate */
+          jwt = (await clerk.session?.getToken({ skipCache: true })) ?? null;
+          diag.push(jwt ? "getToken OK" : "getToken returned NULL");
+        } catch (e) {
+          diag.push(
+            `getToken FAILED: ${e instanceof Error ? e.message : String(e)}`,
+          );
         }
+
+        document.cookie = "__sso_test=1; path=/; secure; samesite=lax";
+        diag.push(
+          document.cookie.includes("__sso_test=1")
+            ? "JS cookie write OK"
+            : "JS cookie write BLOCKED",
+        );
+
+        if (jwt) {
+          // Host-only cookie on www.battleexam.com — clerkMiddleware accepts
+          // the unsuffixed __session name.
+          document.cookie = `__session=${jwt}; path=/; secure; samesite=lax`;
+        }
+        // ------------------------------------------------------------------
 
         // Don't navigate until the SERVER confirms it can see the session.
         // The Android WebView flushes document.cookie writes lazily, so an
@@ -100,6 +122,7 @@ export default function SSOCallbackPage() {
           .filter((n) => n.startsWith("__session") || n.startsWith("__client"));
         setDebug(
           `Signed in on this device, but the server never saw the session (8s). ` +
+            `Diag: ${diag.join(" | ")}. ` +
             `Client-visible auth cookies: [${cookieNames.join(", ") || "NONE"}]. ` +
             `Tap Continue — if you land back at sign-in, send me this whole message.`,
         );
