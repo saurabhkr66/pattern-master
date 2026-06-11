@@ -5,9 +5,17 @@ import { useEffect, useState } from "react";
 
 /**
  * Hit by the in-app WebView after the deep-link return from the external
- * browser OAuth flow. The URL carries a `__clerk_handshake` token (or similar
- * Clerk transfer token) which the Clerk frontend SDK automatically consumes
- * on mount and exchanges for a real session cookie.
+ * browser sign-in flow.
+ *
+ * Current flow: the system browser completes the normal web sign-in at
+ * /mobile-auth-start and deep-links back with a single-use sign-in `ticket`
+ * (Clerk sign-in token minted by /api/mobile/handoff). We redeem it here via
+ * signIn.create({ strategy: "ticket" }) so the session is created on the
+ * WebView's OWN Clerk client — Clerk's oauth_callback no longer allows
+ * completing an attempt created in a different browser.
+ *
+ * Legacy path (no ticket param): wait for a `__clerk_handshake` in the URL to
+ * be consumed by the SDK/middleware. Kept as a fallback.
  *
  * Previously we used <AuthenticateWithRedirectCallback /> here, but that
  * component eagerly navigated to /dashboard before the handshake API call
@@ -29,6 +37,7 @@ export default function SSOCallbackPage() {
     if (typeof window === "undefined") return;
 
     const parsed = new URLSearchParams(window.location.search);
+    const ticket = parsed.get("ticket");
     const params: string[] = [];
     parsed.forEach((v, k) => {
       params.push(`${k}=${v.length > 80 ? v.slice(0, 77) + "..." : v}`);
@@ -37,7 +46,33 @@ export default function SSOCallbackPage() {
     console.log("[SSOCallback] mount, url=", window.location.href);
 
     let cancelled = false;
+    let redeeming = false;
     const startTime = Date.now();
+
+    const redeemTicket = async (token: string) => {
+      try {
+        setDebug("Redeeming sign-in ticket...");
+        const signIn = clerk.client?.signIn;
+        if (!signIn) throw new Error("Clerk client unavailable");
+        const res = await signIn.create({ strategy: "ticket", ticket: token });
+        if (res.status !== "complete" || !res.createdSessionId) {
+          throw new Error(`unexpected sign-in status: ${res.status}`);
+        }
+        await clerk.setActive({ session: res.createdSessionId });
+        if (cancelled) return;
+        setDebug("Session live — redirecting to /dashboard...");
+        // Hard reload (not router.replace) so the new HTTP request to
+        // /dashboard definitely includes the freshly set session cookie.
+        window.location.replace("/dashboard");
+      } catch (e) {
+        console.error("[SSOCallback] ticket redemption failed", e);
+        if (!cancelled) {
+          setDebug(
+            `Ticket sign-in failed: ${e instanceof Error ? e.message : String(e)}. Go back and try again.`,
+          );
+        }
+      }
+    };
 
     const tick = () => {
       if (cancelled) return;
@@ -60,6 +95,14 @@ export default function SSOCallbackPage() {
         // /dashboard definitely includes the Clerk session cookie that was
         // just set. router.replace can fire before the cookie is in the jar.
         window.location.replace("/dashboard");
+        return;
+      }
+
+      if (ticket) {
+        if (!redeeming) {
+          redeeming = true;
+          void redeemTicket(ticket);
+        }
         return;
       }
 

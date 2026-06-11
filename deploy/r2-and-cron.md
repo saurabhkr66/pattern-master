@@ -26,9 +26,22 @@ rclone config
 # endpoint> https://<ACCOUNT_ID>.r2.cloudflarestorage.com
 # (leave the rest default, y to save)
 ```
-Verify:
+
+### Critical R2 Bucket Scoping Fix:
+If your API token is scoped to the specific bucket (using `Object Read & Write` permissions), `rclone` will fail with an `AccessDenied` error during copy operations because it tries to check if the bucket exists. 
+
+To bypass this check, run this command to update your configuration:
 ```bash
-rclone lsd r2:            # should list the battle-exam bucket
+rclone config update r2 no_check_bucket true
+```
+
+Verify (note that `rclone lsd r2:` will return `AccessDenied` because a scoped token is restricted from listing all buckets; this is expected):
+```bash
+# Test file upload
+echo "test" > /tmp/test.txt
+rclone copy /tmp/test.txt r2:battle-exam -vv
+# List files inside the bucket to verify
+rclone ls r2:battle-exam/
 ```
 
 ## 3. Test the backup once, by hand

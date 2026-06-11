@@ -1,68 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { useClerk } from "@clerk/nextjs";
 import { Browser } from "@capacitor/browser";
 
-// Clerk does not accept custom URL schemes (battleexam://) in its mobile SSO
-// allowlist — only http/https. We point Clerk at the hosted bridge page below,
-// which itself forwards the OAuth params on to battleexam://oauth-callback,
-// where Android's intent filter routes them back into the native app.
-function getRedirectUrl(): string {
-  if (typeof window === "undefined") return "";
-  return `${window.location.origin}/native-sso-callback`;
-}
-
 /**
- * Native-only "Continue with Google" button. Opens the OAuth flow in the
- * system browser (Chrome Custom Tabs) instead of the in-app WebView, so the
- * user's device Google accounts appear as one-tap options. After auth, Google
- * redirects back to Clerk's callback, Clerk redirects to battleexam://oauth-callback,
- * Android opens the app via the deep link intent filter, and NativeMobileBridge
- * routes to /sso-callback to complete the session.
+ * Native-only "Continue with Google" button.
+ *
+ * The old flow created the OAuth sign-in attempt on the WebView's Clerk
+ * client and completed it in the system browser — Clerk's oauth_callback now
+ * rejects that cross-client handoff (err_code=authorization_invalid). So the
+ * WebView no longer touches Clerk at all here: we open /mobile-auth-start in
+ * the system browser (Chrome Custom Tab), where the normal, working web
+ * sign-in runs end-to-end in ONE cookie jar. That page then deep-links back
+ * with a single-use sign-in ticket, which /sso-callback redeems on the
+ * WebView's own Clerk client. See app/mobile-auth-start/page.tsx.
  */
 export default function MobileGoogleSignIn() {
-  const clerk = useClerk();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleGoogleSignIn() {
     setIsLoading(true);
     setError(null);
-
     try {
-      // Wait up to 8s for Clerk to finish bootstrapping. Reading `clerk.loaded`
-      // imperatively avoids the React closure problem we'd hit with useSignIn().
-      const deadline = Date.now() + 8000;
-      while (!clerk?.loaded && Date.now() < deadline) {
-        await new Promise((r) => setTimeout(r, 200));
-      }
-      const signIn = clerk?.client?.signIn;
-      if (!clerk?.loaded || !signIn) {
-        setError(
-          "Sign-in service didn't finish loading. Check your connection and try again.",
-        );
-        return;
-      }
-      const redirectUrl = getRedirectUrl();
-      await signIn.create({
-        strategy: "oauth_google",
-        redirectUrl,
-        actionCompleteRedirectUrl: redirectUrl,
+      await Browser.open({
+        url: `${window.location.origin}/mobile-auth-start`,
+        presentationStyle: "fullscreen",
       });
-
-      const verification = signIn.firstFactorVerification as
-        | { externalVerificationRedirectURL?: URL | string | null }
-        | undefined;
-      const raw = verification?.externalVerificationRedirectURL;
-      const oauthUrl = raw ? raw.toString() : null;
-
-      if (!oauthUrl) {
-        setError("Could not retrieve Google sign-in URL from Clerk.");
-        return;
-      }
-
-      await Browser.open({ url: oauthUrl, presentationStyle: "fullscreen" });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Google sign-in failed to start.";
