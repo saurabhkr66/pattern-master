@@ -27,9 +27,13 @@ if (!SLUG || (!TEST_ID && !ALL)) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient({
-  adapter: new PrismaNeonHTTP(process.env.DATABASE_URL, {}),
-});
+// Mirror lib/prisma.ts: standard TCP client on the VPS (DB_DRIVER=standard,
+// local Postgres), Neon HTTP adapter otherwise. Run on the VPS with
+// DB_DRIVER=standard — the Neon adapter can't reach a localhost Postgres.
+const prisma =
+  (process.env.DB_DRIVER ?? "neon-http") === "standard"
+    ? new PrismaClient()
+    : new PrismaClient({ adapter: new PrismaNeonHTTP(process.env.DATABASE_URL, {}) });
 
 const coaching = await prisma.coaching.findUnique({
   where: { slug: SLUG },

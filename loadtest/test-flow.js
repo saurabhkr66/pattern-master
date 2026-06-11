@@ -138,6 +138,16 @@ export default function () {
       if (res.status === 429) fail(`rate limited at phone ${phone} — seed more students`);
       fail(`login failed (${res.status}) for ${phone}`);
     }
+    // `next start` runs NODE_ENV=production, so studentAuth sets the session
+    // cookie with `Secure` — which k6 (like a browser) will NOT send over plain
+    // http://localhost, so the next request looks unauthenticated and the page
+    // redirects to /login (no attemptId). Prod is HTTPS where Secure is correct;
+    // this only bites local http load tests. Re-set the same cookie WITHOUT
+    // Secure so the rest of the journey is authenticated. No-op over https.
+    if (BASE_URL.startsWith("http://")) {
+      const sc = res.cookies && res.cookies.student_session;
+      if (sc && sc[0]) jar.set(BASE_URL, "student_session", sc[0].value, { path: "/" });
+    }
   });
 
   // 2) OPEN ─ GET the test page. This is the uncached coachingTest.findFirst +

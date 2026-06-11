@@ -18,6 +18,17 @@ import crypto from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { PrismaNeonHTTP } from "@prisma/adapter-neon";
 
+// Mirror lib/prisma.ts: pick the DB transport from DB_DRIVER so this seeder
+// works both against the Neon dev branch (default "neon-http") AND against the
+// self-hosted VPS's local Postgres ("standard" plain-TCP client). The Neon HTTP
+// adapter cannot speak to a vanilla localhost Postgres, so on the VPS you MUST
+// run this with DB_DRIVER=standard (its .env already sets that).
+const DB_DRIVER = process.env.DB_DRIVER ?? "neon-http";
+const makePrisma = () =>
+  DB_DRIVER === "standard"
+    ? new PrismaClient()
+    : new PrismaClient({ adapter: new PrismaNeonHTTP(process.env.DATABASE_URL, {}) });
+
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
     const [k, v] = a.replace(/^--/, "").split("=");
@@ -49,9 +60,7 @@ if (!args.force && /prod|main/i.test(process.env.DATABASE_URL) && !/dev|staging|
   process.exit(1);
 }
 
-const prisma = new PrismaClient({
-  adapter: new PrismaNeonHTTP(process.env.DATABASE_URL, {}),
-});
+const prisma = makePrisma();
 
 function hashPin(pin) {
   const salt = crypto.randomBytes(16).toString("hex");
