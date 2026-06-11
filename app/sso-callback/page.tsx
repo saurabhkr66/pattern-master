@@ -32,6 +32,7 @@ export default function SSOCallbackPage() {
   const clerk = useClerk();
   const [debug, setDebug] = useState("Initializing...");
   const [urlParams, setUrlParams] = useState<string[]>([]);
+  const [showContinue, setShowContinue] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -89,10 +90,20 @@ export default function SSOCallbackPage() {
           }
           await new Promise((r) => setTimeout(r, 400));
         }
+        // Diagnostic: which Clerk cookies can this page actually see?
+        // __session* / __client_uat* are JS-visible; if NONE appear, the
+        // cookies were never written (WebView cookie policy); if they appear
+        // but the server still saw nothing, they aren't being SENT.
+        const cookieNames = document.cookie
+          .split(";")
+          .map((c) => c.split("=")[0].trim())
+          .filter((n) => n.startsWith("__session") || n.startsWith("__client"));
         setDebug(
-          "Signed in, but the server never saw the session cookie (8s). " +
-            "This means cookies from the sign-in aren't reaching the server — report this message.",
+          `Signed in on this device, but the server never saw the session (8s). ` +
+            `Client-visible auth cookies: [${cookieNames.join(", ") || "NONE"}]. ` +
+            `Tap Continue — if you land back at sign-in, send me this whole message.`,
         );
+        setShowContinue(true);
       } catch (e) {
         console.error("[SSOCallback] ticket redemption failed", e);
         if (!cancelled) {
@@ -155,6 +166,15 @@ export default function SSOCallbackPage() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-neutral-950 p-6 text-center text-neutral-200">
       <p className="text-lg font-medium">Completing sign-in...</p>
       <p className="max-w-md break-all text-sm text-neutral-400">{debug}</p>
+      {showContinue && (
+        <button
+          type="button"
+          onClick={() => window.location.replace("/dashboard")}
+          className="mt-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-500"
+        >
+          Continue to dashboard
+        </button>
+      )}
       {urlParams.length > 0 && (
         <div className="mt-6 w-full max-w-md rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-left text-xs">
           <p className="mb-1 font-semibold text-neutral-200">
