@@ -63,6 +63,7 @@ export default async function StudentProfilePage({
         test: { select: { title: true } },
       },
       orderBy: { submitted_at: "desc" },
+      take: 100, // cap to prevent unbounded fetch
     }),
   ]);
 

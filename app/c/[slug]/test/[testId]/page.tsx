@@ -62,38 +62,17 @@ export default async function StudentTestPage({
   }
 
   // Idempotent attempt: resume in-progress, redirect if already submitted.
-  // NOTE: no prisma.upsert here — Prisma runs upsert as an internal transaction,
-  // which the Neon HTTP adapter rejects ("Transactions are not supported in HTTP
-  // mode"). Find-then-create, with the unique (test_id, student_id) constraint
-  // catching the race.
-  // Per-student attempt: a cheap point read on the (test_id, student_id) unique
-  // index. Reached only after the gates above, so closed/not-started views never
-  // pay it.
+  // upsert is a single atomic operation on the (test_id, student_id) unique
+  // index — creates if absent, returns existing if present. Works on the VPS
+  // standard driver (Prisma runs it as an internal transaction which TCP
+  // Postgres handles natively). No artificial sleep needed.
   const attemptSelect = { id: true, status: true, started_at: true };
-  let attempt: { id: string; status: string; started_at: Date } | null =
-    await prisma.testAttempt.findUnique({
-      where: { test_id_student_id: { test_id: test.id, student_id: student.id } },
-      select: attemptSelect,
-    });
-  if (!attempt) {
-    // Spread concurrent attempt-creates over a short window to avoid a Neon
-    // write spike when an entire batch starts the exam at the same moment.
-    // (Server component, not a React render — the per-request jitter is intended.)
-    // eslint-disable-next-line react-hooks/purity
-    await new Promise((r) => setTimeout(r, Math.random() * 5000));
-    try {
-      attempt = await prisma.testAttempt.create({
-        data: { coaching_id: coaching.id, test_id: test.id, student_id: student.id },
-        select: attemptSelect,
-      });
-    } catch {
-      // Concurrent create won the unique constraint — re-read it.
-      attempt = await prisma.testAttempt.findUnique({
-        where: { test_id_student_id: { test_id: test.id, student_id: student.id } },
-        select: attemptSelect,
-      });
-    }
-  }
+  const attempt = await prisma.testAttempt.upsert({
+    where: { test_id_student_id: { test_id: test.id, student_id: student.id } },
+    create: { coaching_id: coaching.id, test_id: test.id, student_id: student.id },
+    update: {}, // no-op — keeps existing row as-is
+    select: attemptSelect,
+  });
   if (!attempt) {
     return <Centered title="Could not start">Please try again.</Centered>;
   }

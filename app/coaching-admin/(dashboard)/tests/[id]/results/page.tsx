@@ -103,6 +103,8 @@ export default async function TestResultsPage({
       submitted_at: true,
       student: { select: { name: true, phone: true } },
     },
+    orderBy: { started_at: "desc" },
+    take: 500, // cap to prevent unbounded fetch on large batches
   });
 
   const submitted = attempts.filter((a) => a.status === "submitted");

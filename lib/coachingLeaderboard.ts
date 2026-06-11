@@ -2,7 +2,6 @@ import "server-only";
 import { redis, isRedisConfigured } from "@/lib/redis";
 import { withDbRetry } from "@/lib/dbRetry";
 import { prisma } from "@/lib/prisma";
-import { bestEffortInvalidate } from "@/lib/cacheInvalidation";
 
 // Per-test leaderboard for the coaching area. Scoped to a single test: every
 // submitted attempt ranked by score (then by speed). A whole batch reloads this
@@ -104,8 +103,27 @@ export async function getTestLeaderboard(
   return shaped;
 }
 
-/** Drop the cached board (call whenever an attempt of the test is graded). */
+/**
+ * Drop the cached board (call whenever an attempt of the test is graded).
+ *
+ * Debounced: during a batch submit spike (100 students in 5s) only the FIRST
+ * call within a 10s window actually deletes the cache. Subsequent calls during
+ * the cooldown are no-ops — the leaderboard is rebuilt once by the first reader
+ * AFTER the spike settles, capturing all submissions in one query instead of
+ * rebuilding 100 times.
+ */
+const INVALIDATE_COOLDOWN = 10; // seconds
+const cooldownKey = (testId: string) => `coaching:leaderboard:${testId}:invalidating`;
+
 export async function invalidateTestLeaderboard(testId: string): Promise<void> {
   if (!isRedisConfigured()) return;
-  await bestEffortInvalidate(`coaching-leaderboard:${testId}`, () => redis.del(key(testId)));
+  try {
+    // SET NX EX = atomic "set if not exists with expiry". Returns truthy only
+    // for the first caller within the cooldown window.
+    const acquired = await redis.set(cooldownKey(testId), "1", { nx: true, ex: INVALIDATE_COOLDOWN });
+    if (!acquired) return; // another submit already invalidated within the window
+    await redis.del(key(testId));
+  } catch {
+    // Best-effort: TTL on the leaderboard cache bounds staleness.
+  }
 }

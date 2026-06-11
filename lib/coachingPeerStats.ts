@@ -50,17 +50,20 @@ async function getStudentTrend(
     }
   }
 
+  // Fetch only the most recent TREND_LIMIT (desc + take), then flip back to
+  // oldest → newest for the chart — instead of reading the student's entire
+  // attempt history just to keep the last few.
   const attempts = await withDbRetry(() =>
     prisma.testAttempt.findMany({
       where: { student_id: studentId, coaching_id: coachingId, status: "submitted" },
       select: { score: true, max_score: true, submitted_at: true, test: { select: { title: true } } },
-      orderBy: { submitted_at: "asc" },
+      orderBy: { submitted_at: "desc" },
+      take: TREND_LIMIT,
     })
   );
 
-  // Keep the most recent TREND_LIMIT, still oldest → newest for the chart.
   const trend: TrendPoint[] = attempts
-    .slice(-TREND_LIMIT)
+    .reverse()
     .map((a) => ({
       testTitle: a.test.title,
       pct: pctOf(a.score ?? 0, a.max_score ?? 0),

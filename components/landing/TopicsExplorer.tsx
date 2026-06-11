@@ -2,6 +2,8 @@
 
 import { useClerk, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
+import { launchNativeSignIn } from "@/lib/nativeAuth";
 import { Cpu, Globe, Zap, Settings, Wrench, BookOpen, type LucideIcon } from "lucide-react";
 
 const BRANCH_ICONS: Record<string, LucideIcon> = {
@@ -82,6 +84,13 @@ export default function TopicsExplorer({ data }: TopicsExplorerProps) {
       sessionStorage.setItem("battleexam_post_login_redirect", dest);
     } catch {
       // ignore storage errors (private browsing etc.)
+    }
+
+    // Native app: Clerk's modal is a dead end in the WebView — route the tap
+    // through the system-browser Google flow instead.
+    if (Capacitor.isNativePlatform()) {
+      void launchNativeSignIn();
+      return;
     }
 
     openSignUp({});

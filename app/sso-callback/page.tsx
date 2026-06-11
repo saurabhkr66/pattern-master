@@ -7,52 +7,40 @@ import { useEffect, useState } from "react";
  * Hit by the in-app WebView after the deep-link return from the external
  * browser sign-in flow.
  *
- * Current flow: the system browser completes the normal web sign-in at
+ * Flow: the system browser completes the normal web sign-in at
  * /mobile-auth-start and deep-links back with a single-use sign-in `ticket`
  * (Clerk sign-in token minted by /api/mobile/handoff). We redeem it here via
  * signIn.create({ strategy: "ticket" }) so the session is created on the
- * WebView's OWN Clerk client — Clerk's oauth_callback no longer allows
+ * WebView's OWN Clerk client — Clerk's oauth_callback does not allow
  * completing an attempt created in a different browser.
  *
  * Legacy path (no ticket param): wait for a `__clerk_handshake` in the URL to
  * be consumed by the SDK/middleware. Kept as a fallback.
  *
- * Previously we used <AuthenticateWithRedirectCallback /> here, but that
- * component eagerly navigated to /dashboard before the handshake API call
- * finished. The (app)/layout.tsx server-side `auth()` then saw no session
- * cookie and bounced the user to /sign-in. By the time the user came back
- * (minimize/reopen) the cookie was in place and everything worked — classic
- * race condition.
- *
- * Now we just wait for `clerk.session` to actually exist, then do a *hard*
- * window.location reload to /dashboard so the next HTTP request definitely
- * carries the new cookie.
+ * Hard-won invariants — do not "simplify":
+ * - Never navigate with router.replace here; only window.location.replace,
+ *   so the next HTTP request definitely carries the fresh session cookie.
+ * - After redeeming, poll /api/mobile/whoami until the SERVER confirms the
+ *   session. The Android WebView flushes cookie writes lazily; navigating
+ *   immediately bounces off (app)/layout's auth() gate back to /sign-in.
+ * - Don't reintroduce <AuthenticateWithRedirectCallback /> — it navigates
+ *   before the handshake finishes (same race).
  */
 export default function SSOCallbackPage() {
   const clerk = useClerk();
-  const [debug, setDebug] = useState("Initializing...");
-  const [urlParams, setUrlParams] = useState<string[]>([]);
-  const [showContinue, setShowContinue] = useState(false);
+  const [status, setStatus] = useState("Completing sign-in...");
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const parsed = new URLSearchParams(window.location.search);
-    const ticket = parsed.get("ticket");
-    const params: string[] = [];
-    parsed.forEach((v, k) => {
-      params.push(`${k}=${v.length > 80 ? v.slice(0, 77) + "..." : v}`);
-    });
-    setUrlParams(params);
-    console.log("[SSOCallback] mount, url=", window.location.href);
-
+    const ticket = new URLSearchParams(window.location.search).get("ticket");
     let cancelled = false;
     let redeeming = false;
     const startTime = Date.now();
 
     const redeemTicket = async (token: string) => {
       try {
-        setDebug("Redeeming sign-in ticket...");
         const signIn = clerk.client?.signIn;
         if (!signIn) throw new Error("Clerk client unavailable");
         const res = await signIn.create({ strategy: "ticket", ticket: token });
@@ -62,80 +50,23 @@ export default function SSOCallbackPage() {
         await clerk.setActive({ session: res.createdSessionId });
         if (cancelled) return;
 
-        // --- Diagnostics + manual cookie fallback -------------------------
-        // In this WebView clerk-js completes sign-in but the __session cookie
-        // never appears. Capture exactly which link breaks, and if we can get
-        // a session JWT ourselves, write the cookie manually — that's all the
-        // server-side auth() needs.
-        const diag: string[] = [];
-        let jwt: string | null = null;
+        // Belt-and-braces: write the session cookie ourselves too, in case
+        // clerk-js's own write lags behind the navigation below.
         try {
-          jwt = (await clerk.session?.getToken({ skipCache: true })) ?? null;
-          diag.push(jwt ? "getToken OK" : "getToken returned NULL");
+          const jwt = await clerk.session?.getToken({ skipCache: true });
+          if (jwt) {
+            document.cookie = `__session=${jwt}; path=/; secure; samesite=lax`;
+          }
         } catch (e) {
-          diag.push(
-            `getToken FAILED: ${e instanceof Error ? e.message : String(e)}`,
-          );
+          console.warn("[SSOCallback] session token refresh failed", e);
         }
 
-        document.cookie = "__sso_test=1; path=/; secure; samesite=lax";
-        diag.push(
-          document.cookie.includes("__sso_test=1")
-            ? "JS cookie write OK"
-            : "JS cookie write BLOCKED",
-        );
-
-        // Does the WebView persist Clerk's __client cookie between requests?
-        // Two back-to-back FAPI calls: if the client id changes (or is null),
-        // Set-Cookie from clerk.battleexam.com is being dropped and every
-        // request arrives as a brand-new anonymous client — which is exactly
-        // what "You are signed out" right after a successful sign-in means.
-        try {
-          // Probe through the FAPI proxy when configured, else direct FAPI —
-          // must match whatever clerk-js itself is using.
-          const fapiBase =
-            process.env.NEXT_PUBLIC_CLERK_PROXY_URL ||
-            "https://clerk.battleexam.com";
-          const probe = async () => {
-            const r = await fetch(
-              `${fapiBase}/v1/client?_clerk_js_version=5.125.13`,
-              { credentials: "include" },
-            );
-            const j = (await r.json()) as { response?: { id?: string } | null };
-            return j?.response?.id ?? "null";
-          };
-          const id1 = await probe();
-          const id2 = await probe();
-          diag.push(
-            id1 !== "null" && id1 === id2
-              ? `FAPI client persists (${id1.slice(-6)})`
-              : `FAPI client NOT persisting (${id1.slice(-6)} vs ${id2.slice(-6)})`,
-          );
-        } catch (e) {
-          diag.push(
-            `FAPI probe failed: ${e instanceof Error ? e.message : String(e)}`,
-          );
-        }
-
-        if (jwt) {
-          // Host-only cookie on www.battleexam.com — clerkMiddleware accepts
-          // the unsuffixed __session name.
-          document.cookie = `__session=${jwt}; path=/; secure; samesite=lax`;
-        }
-        // ------------------------------------------------------------------
-
-        // Don't navigate until the SERVER confirms it can see the session.
-        // The Android WebView flushes document.cookie writes lazily, so an
-        // immediate navigation can reach (app)/layout's auth() gate without
-        // the cookie and bounce straight back to /sign-in.
-        setDebug("Confirming session with server...");
         for (let i = 0; i < 20; i++) {
           if (cancelled) return;
           try {
             const who = await fetch("/api/mobile/whoami", { cache: "no-store" });
             const { userId } = (await who.json()) as { userId: string | null };
             if (userId) {
-              setDebug("Session confirmed — redirecting to /dashboard...");
               window.location.replace("/dashboard");
               return;
             }
@@ -144,27 +75,14 @@ export default function SSOCallbackPage() {
           }
           await new Promise((r) => setTimeout(r, 400));
         }
-        // Diagnostic: which Clerk cookies can this page actually see?
-        // __session* / __client_uat* are JS-visible; if NONE appear, the
-        // cookies were never written (WebView cookie policy); if they appear
-        // but the server still saw nothing, they aren't being SENT.
-        const cookieNames = document.cookie
-          .split(";")
-          .map((c) => c.split("=")[0].trim())
-          .filter((n) => n.startsWith("__session") || n.startsWith("__client"));
-        setDebug(
-          `Signed in on this device, but the server never saw the session (8s). ` +
-            `Diag: ${diag.join(" | ")}. ` +
-            `Client-visible auth cookies: [${cookieNames.join(", ") || "NONE"}]. ` +
-            `Tap Continue — if you land back at sign-in, send me this whole message.`,
-        );
-        setShowContinue(true);
+        console.error("[SSOCallback] server never confirmed the session");
+        setStatus("Sign-in could not be completed.");
+        setFailed(true);
       } catch (e) {
         console.error("[SSOCallback] ticket redemption failed", e);
         if (!cancelled) {
-          setDebug(
-            `Ticket sign-in failed: ${e instanceof Error ? e.message : String(e)}. Go back and try again.`,
-          );
+          setStatus("Sign-in could not be completed. Please try again.");
+          setFailed(true);
         }
       }
     };
@@ -174,9 +92,9 @@ export default function SSOCallbackPage() {
       const elapsed = Date.now() - startTime;
 
       if (!clerk?.loaded) {
-        setDebug(`Waiting for Clerk SDK to bootstrap (${elapsed}ms)...`);
         if (elapsed > 10000) {
-          setDebug("Timed out: Clerk SDK never finished loading.");
+          setStatus("Sign-in took too long. Check your connection and try again.");
+          setFailed(true);
           return;
         }
         setTimeout(tick, 200);
@@ -184,11 +102,6 @@ export default function SSOCallbackPage() {
       }
 
       if (clerk.session) {
-        setDebug("Session live — redirecting to /dashboard...");
-        console.log("[SSOCallback] session live, hard-reloading to /dashboard");
-        // Hard reload (not router.replace) so the new HTTP request to
-        // /dashboard definitely includes the Clerk session cookie that was
-        // just set. router.replace can fire before the cookie is in the jar.
         window.location.replace("/dashboard");
         return;
       }
@@ -201,11 +114,9 @@ export default function SSOCallbackPage() {
         return;
       }
 
-      setDebug(`Clerk loaded, waiting for handshake to set session (${elapsed}ms)...`);
       if (elapsed > 15000) {
-        setDebug(
-          "Timed out: handshake never produced a session. Check the params below.",
-        );
+        setStatus("Sign-in took too long. Please try again.");
+        setFailed(true);
         return;
       }
       setTimeout(tick, 200);
@@ -219,30 +130,21 @@ export default function SSOCallbackPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-neutral-950 p-6 text-center text-neutral-200">
-      <p className="text-lg font-medium">Completing sign-in...</p>
-      <p className="max-w-md break-all text-sm text-neutral-400">{debug}</p>
-      {showContinue && (
+      <p className="text-lg font-medium">{status}</p>
+      {!failed && (
+        <div
+          className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-700 border-t-blue-500"
+          aria-hidden
+        />
+      )}
+      {failed && (
         <button
           type="button"
-          onClick={() => window.location.replace("/dashboard")}
+          onClick={() => window.location.replace("/sign-in")}
           className="mt-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-500"
         >
-          Continue to dashboard
+          Back to sign-in
         </button>
-      )}
-      {urlParams.length > 0 && (
-        <div className="mt-6 w-full max-w-md rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-left text-xs">
-          <p className="mb-1 font-semibold text-neutral-200">
-            Query params ({urlParams.length}):
-          </p>
-          <ul className="space-y-1">
-            {urlParams.map((p, i) => (
-              <li key={i} className="break-all font-mono text-neutral-300">
-                {p}
-              </li>
-            ))}
-          </ul>
-        </div>
       )}
     </div>
   );

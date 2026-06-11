@@ -1,6 +1,5 @@
-import { ListSkeleton } from "@/components/coaching/ui";
+import LoadingLogo from "@/components/ui/LoadingLogo";
 
-// Instant skeleton while TestsPage resolves auth + loads coaching tests.
-export default function TestsLoading() {
-  return <ListSkeleton rows={8} />;
+export default function Loading() {
+  return <LoadingLogo />;
 }

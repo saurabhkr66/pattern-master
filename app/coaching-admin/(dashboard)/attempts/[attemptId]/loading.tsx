@@ -1,7 +1,5 @@
-import { ListSkeleton } from "@/components/coaching/ui";
+import LoadingLogo from "@/components/ui/LoadingLogo";
 
-// Instant skeleton while the attempt analysis resolves auth + resolves the
-// question set + builds the result data.
-export default function AttemptAnalysisLoading() {
-  return <ListSkeleton rows={8} />;
+export default function Loading() {
+  return <LoadingLogo />;
 }

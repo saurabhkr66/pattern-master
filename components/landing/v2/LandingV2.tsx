@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SignUpButton } from "@clerk/nextjs";
+import SignUpButton from "@/components/auth/NativeAwareSignUpButton";
 import { I } from "./icons";
 import {
   QUESTIONS,
@@ -151,7 +151,7 @@ function LivePractice() {
 /* ---------- shared CTA: real Clerk sign-up modal ---------- */
 function StartFree({ className, children }: { className: string; children: React.ReactNode }) {
   return (
-    <SignUpButton mode="modal">
+    <SignUpButton>
       <button type="button" className={className}>
         {children}
       </button>

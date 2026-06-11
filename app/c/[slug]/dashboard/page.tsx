@@ -43,6 +43,7 @@ export default async function StudentDashboard({
         test: { select: { title: true } },
       },
       orderBy: { submitted_at: "desc" },
+      take: 50, // cap to prevent unbounded fetch as test history grows
     }),
   ]);
 

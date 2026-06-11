@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Browser } from "@capacitor/browser";
+import { launchNativeSignIn } from "@/lib/nativeAuth";
 
 /**
  * Native-only "Continue with Google" button.
@@ -23,10 +23,7 @@ export default function MobileGoogleSignIn() {
     setIsLoading(true);
     setError(null);
     try {
-      await Browser.open({
-        url: `${window.location.origin}/mobile-auth-start`,
-        presentationStyle: "fullscreen",
-      });
+      await launchNativeSignIn();
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Google sign-in failed to start.";

@@ -278,43 +278,62 @@ export async function finalizeOverdueAttempts(
   const deadlineMs = (startedAt: Date) =>
     attemptDeadlineMs(startedAt, test.duration_secs, test.end_at);
 
-  let finalized = 0;
-  for (const a of overdue) {
-    try {
-      const resolved = studentQuestionsFromBase(base, runtimeTest, a.student_id);
-      const draft = await getCoachingDraft(a.id, a.student_id);
-      const { answers, times } = answersFromDraft(draft, resolved);
-      // The student worked from start until the deadline (they never submitted),
-      // so record time taken as the full window up to the deadline.
-      const timeTaken = Math.round(
-        (deadlineMs(a.started_at) - new Date(a.started_at).getTime()) / 1000
-      );
-      const res = await gradeAndWrite({
-        attemptId: a.id,
-        studentId: a.student_id,
-        coachingId,
-        test: runtimeTest,
-        resolved,
-        answers,
-        times,
-        timeTakenSecs: timeTaken,
-      });
-      if (res.updated) finalized++;
-      // Photo answers recovered from the draft still need AI grading — fire it
-      // after the response flushes (works in the server-component render paths
-      // that call this on-view). Failures leave grading_status = pending; the
-      // admin's "Grade ungraded" button is the retry net.
-      if (res.needsGrading) {
-        const attemptId = a.id;
-        after(() =>
-          import("@/lib/subjectiveGrading")
-            .then((m) => m.gradeAttemptSubjectives({ attemptId, coachingId, trigger: "auto" }))
-            .catch((err) => console.error(`[finalize] grading ${attemptId} failed:`, err))
+  // Batch all Redis draft reads in parallel — each is one Redis GET, and they
+  // are independent. This replaces the sequential per-attempt loop that caused
+  // ~500 serial I/O operations when 100 students' attempts expired at once.
+  const draftsAndResolved = await Promise.all(
+    overdue.map(async (a) => ({
+      attempt: a,
+      resolved: studentQuestionsFromBase(base, runtimeTest, a.student_id),
+      draft: await getCoachingDraft(a.id, a.student_id),
+    }))
+  );
+
+  // Grade + write all in parallel. Each gradeAndWrite is independently guarded
+  // by `WHERE status = 'in_progress'` so concurrent writes are safe.
+  const results = await Promise.all(
+    draftsAndResolved.map(async ({ attempt: a, resolved, draft }) => {
+      try {
+        const { answers, times } = answersFromDraft(draft, resolved);
+        const timeTaken = Math.round(
+          (deadlineMs(a.started_at) - new Date(a.started_at).getTime()) / 1000
         );
+        const res = await gradeAndWrite({
+          attemptId: a.id,
+          studentId: a.student_id,
+          coachingId,
+          test: runtimeTest,
+          resolved,
+          answers,
+          times,
+          timeTakenSecs: timeTaken,
+        });
+        // Photo answers recovered from the draft still need AI grading — fire it
+        // after the response flushes (works in the server-component render paths
+        // that call this on-view). Failures leave grading_status = pending; the
+        // admin's "Grade ungraded" button is the retry net.
+        if (res.needsGrading) {
+          const attemptId = a.id;
+          after(() =>
+            import("@/lib/subjectiveGrading")
+              .then((m) => m.gradeAttemptSubjectives({ attemptId, coachingId, trigger: "auto" }))
+              .catch((err) => console.error(`[finalize] grading ${attemptId} failed:`, err))
+          );
+        }
+        return res.updated ? 1 : 0;
+      } catch (err) {
+        console.error(`[finalize] attempt ${a.id} failed:`, err);
+        return 0;
       }
-    } catch (err) {
-      console.error(`[finalize] attempt ${a.id} failed:`, err);
-    }
-  }
+    })
+  );
+
+  const finalized = results.reduce<number>((s, n) => s + n, 0);
+
+  // Invalidate the leaderboard ONCE for the whole batch, not per-attempt.
+  // The debounced invalidateTestLeaderboard handles dedup, but calling once
+  // here is cleaner and avoids even the Redis check per attempt.
+  if (finalized > 0) await invalidateTestLeaderboard(test.id);
+
   return finalized;
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createEach } from "@/lib/dbHttp";
+import { createEach, isStandardDriver } from "@/lib/dbHttp";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getExamConfig, type ExamType } from "@/lib/examConfigs";
@@ -315,13 +315,20 @@ export async function POST(req: NextRequest) {
       });
 
     if (attemptData.length > 0) {
-      // createMany() needs a transaction (unsupported on the Neon HTTP adapter) —
-      // insert per row instead. skipDuplicates → swallow P2002.
-      await createEach(
-        attemptData,
-        (data) => prisma.attempt.create({ data, select: { id: true } }),
-        { skipDuplicates: true }
-      );
+      if (isStandardDriver) {
+        // TCP driver: one multi-row INSERT. The per-row fan-out below would issue
+        // ~|answers| parallel statements per submit and starve the connection
+        // pool during an exam-day spike.
+        await prisma.attempt.createMany({ data: attemptData, skipDuplicates: true });
+      } else {
+        // Neon HTTP: createMany() needs a transaction (unsupported) — insert per
+        // row instead. skipDuplicates → swallow P2002.
+        await createEach(
+          attemptData,
+          (data) => prisma.attempt.create({ data, select: { id: true } }),
+          { skipDuplicates: true }
+        );
+      }
     }
 
     // Real-time leaderboard: push to Redis + trigger Pusher event.
