@@ -25,5 +25,9 @@ import { createFrontendApiProxyHandlers } from "@clerk/nextjs/server";
  *
  * Must stay OUT of the middleware matcher — Clerk traffic must not recurse
  * through clerkMiddleware.
+ *
+ * Folder is named %5F%5Fclerk because app-router folders starting with a
+ * literal underscore are "private" (excluded from routing); %5F is the
+ * documented escape that decodes to "_", yielding the /__clerk URL.
  */
 export const { GET, POST, PUT, DELETE, PATCH } = createFrontendApiProxyHandlers();
