@@ -129,7 +129,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    // proxyUrl: serve Clerk's Frontend API first-party via /__clerk (see
+    // app/__clerk/[[...rest]]/route.ts). Unset in dev → no proxy, normal FAPI.
+    <ClerkProvider proxyUrl={process.env.NEXT_PUBLIC_CLERK_PROXY_URL}>
       <html
         lang="en"
         suppressHydrationWarning
