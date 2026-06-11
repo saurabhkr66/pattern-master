@@ -60,10 +60,39 @@ export default function SSOCallbackPage() {
         }
         await clerk.setActive({ session: res.createdSessionId });
         if (cancelled) return;
-        setDebug("Session live — redirecting to /dashboard...");
-        // Hard reload (not router.replace) so the new HTTP request to
-        // /dashboard definitely includes the freshly set session cookie.
-        window.location.replace("/dashboard");
+
+        // Force a fresh session JWT so clerk-js definitely (re)writes the
+        // __session cookie before we navigate.
+        try {
+          await clerk.session?.getToken({ skipCache: true });
+        } catch {
+          /* non-fatal — the poll below is the real gate */
+        }
+
+        // Don't navigate until the SERVER confirms it can see the session.
+        // The Android WebView flushes document.cookie writes lazily, so an
+        // immediate navigation can reach (app)/layout's auth() gate without
+        // the cookie and bounce straight back to /sign-in.
+        setDebug("Confirming session with server...");
+        for (let i = 0; i < 20; i++) {
+          if (cancelled) return;
+          try {
+            const who = await fetch("/api/mobile/whoami", { cache: "no-store" });
+            const { userId } = (await who.json()) as { userId: string | null };
+            if (userId) {
+              setDebug("Session confirmed — redirecting to /dashboard...");
+              window.location.replace("/dashboard");
+              return;
+            }
+          } catch {
+            /* transient network error — keep polling */
+          }
+          await new Promise((r) => setTimeout(r, 400));
+        }
+        setDebug(
+          "Signed in, but the server never saw the session cookie (8s). " +
+            "This means cookies from the sign-in aren't reaching the server — report this message.",
+        );
       } catch (e) {
         console.error("[SSOCallback] ticket redemption failed", e);
         if (!cancelled) {
