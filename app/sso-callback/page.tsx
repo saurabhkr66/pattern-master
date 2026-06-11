@@ -91,9 +91,14 @@ export default function SSOCallbackPage() {
         // request arrives as a brand-new anonymous client — which is exactly
         // what "You are signed out" right after a successful sign-in means.
         try {
+          // Probe through the FAPI proxy when configured, else direct FAPI —
+          // must match whatever clerk-js itself is using.
+          const fapiBase =
+            process.env.NEXT_PUBLIC_CLERK_PROXY_URL ||
+            "https://clerk.battleexam.com";
           const probe = async () => {
             const r = await fetch(
-              "https://clerk.battleexam.com/v1/client?_clerk_js_version=5.125.13",
+              `${fapiBase}/v1/client?_clerk_js_version=5.125.13`,
               { credentials: "include" },
             );
             const j = (await r.json()) as { response?: { id?: string } | null };
