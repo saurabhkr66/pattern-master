@@ -4,9 +4,12 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaNeonHTTP } from "@prisma/adapter-neon";
 
-const prisma = new PrismaClient({
-  adapter: new PrismaNeonHTTP(process.env.DATABASE_URL, {}),
-});
+// Mirror lib/prisma.ts: standard TCP client on the VPS (DB_DRIVER=standard,
+// local Postgres), Neon HTTP adapter otherwise.
+const prisma =
+  (process.env.DB_DRIVER ?? "neon-http") === "standard"
+    ? new PrismaClient()
+    : new PrismaClient({ adapter: new PrismaNeonHTTP(process.env.DATABASE_URL, {}) });
 
 const host = (process.env.DATABASE_URL || "").match(/@([^/]+)/)?.[1] ?? "?";
 console.log(`DB host: ${host}\n`);
