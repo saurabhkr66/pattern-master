@@ -85,6 +85,33 @@ export default function SSOCallbackPage() {
             : "JS cookie write BLOCKED",
         );
 
+        // Does the WebView persist Clerk's __client cookie between requests?
+        // Two back-to-back FAPI calls: if the client id changes (or is null),
+        // Set-Cookie from clerk.battleexam.com is being dropped and every
+        // request arrives as a brand-new anonymous client — which is exactly
+        // what "You are signed out" right after a successful sign-in means.
+        try {
+          const probe = async () => {
+            const r = await fetch(
+              "https://clerk.battleexam.com/v1/client?_clerk_js_version=5.125.13",
+              { credentials: "include" },
+            );
+            const j = (await r.json()) as { response?: { id?: string } | null };
+            return j?.response?.id ?? "null";
+          };
+          const id1 = await probe();
+          const id2 = await probe();
+          diag.push(
+            id1 !== "null" && id1 === id2
+              ? `FAPI client persists (${id1.slice(-6)})`
+              : `FAPI client NOT persisting (${id1.slice(-6)} vs ${id2.slice(-6)})`,
+          );
+        } catch (e) {
+          diag.push(
+            `FAPI probe failed: ${e instanceof Error ? e.message : String(e)}`,
+          );
+        }
+
         if (jwt) {
           // Host-only cookie on www.battleexam.com — clerkMiddleware accepts
           // the unsuffixed __session name.
