@@ -22,11 +22,22 @@ import {
   GraduationCap,
   Building2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import GlobalSearch from "./search/GlobalSearch";
 import { useLanguage } from "./providers/LanguageProvider";
 
-const navLinks = [
+// disabled is optional ("coming soon" links) — no current entry sets it, but the
+// render path supports it, so it must exist on the type for the destructure.
+type NavLink = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  prefetch: boolean;
+  disabled?: boolean;
+};
+
+const navLinks: NavLink[] = [
   { href: "/practice", label: "Practice", icon: BookOpen, prefetch: false },
   { href: "/test", label: "Mock Test", icon: ClipboardList, prefetch: false },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, prefetch: false },

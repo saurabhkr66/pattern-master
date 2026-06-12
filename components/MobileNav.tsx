@@ -11,7 +11,9 @@ export default function MobileNav() {
   // consumer mobile bar there.
   if (pathname.startsWith("/coaching-admin") || pathname.startsWith("/c/")) return null;
 
-  const tabs = [
+  // disabled is optional ("coming soon" tabs) — the render path below supports
+  // it, so it must exist on the type even though no current tab sets it.
+  const tabs: { id: string; href: string; icon: string; disabled?: boolean }[] = [
     { id: 'Practice', href: '/practice', icon: 'book' },
     { id: 'Mock', href: '/test', icon: 'timer' },
     { id: 'Stats', href: '/dashboard', icon: 'chart' },
