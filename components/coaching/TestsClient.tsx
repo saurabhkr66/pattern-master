@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar, MessageCircle } from "lucide-react";
@@ -137,7 +138,14 @@ export default function TestsClient({
             ) : (
               shown.map((t) => (
                 <tr key={t.id} className="text-slate-200">
-                  <td className="px-4 py-3">{t.title}</td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/coaching-admin/tests/${t.id}/results`}
+                      className="font-medium text-white hover:text-amber-400 hover:underline"
+                    >
+                      {t.title}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[effectiveStatus(t)]}`}>
                       {effectiveStatus(t)}
@@ -175,7 +183,12 @@ export default function TestsClient({
             <article key={t.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  <h3 className="truncate font-semibold text-white">{t.title}</h3>
+                  <Link
+                    href={`/coaching-admin/tests/${t.id}/results`}
+                    className="truncate font-semibold text-white hover:text-amber-400"
+                  >
+                    {t.title}
+                  </Link>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[effectiveStatus(t)]}`}>
                     {effectiveStatus(t)}
                   </span>
@@ -263,64 +276,100 @@ function RowMenu({
 }) {
   const es = effectiveStatus(test);
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const MENU_W = 160; // w-40
+  const MENU_H = 168; // generous estimate (≤4 items) for flip decision
+
+  // Anchor the menu to the button with fixed positioning. The table lives in an
+  // `overflow-x-auto` container, which clips absolutely-positioned children — so
+  // the menu is portaled to <body> instead to escape that clip box.
+  const place = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const left = Math.max(8, r.right - MENU_W); // right-align, clamp to viewport
+    const openUp = r.bottom + 4 + MENU_H > window.innerHeight && r.top - MENU_H - 4 > 0;
+    const top = openUp ? r.top - 4 - MENU_H : r.bottom + 4;
+    setCoords({ top, left });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    place();
+    const reposition = () => place();
+    const onPointer = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
     };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [open]);
+    // capture-phase scroll so we follow any scrolling ancestor, not just window
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [open, place]);
 
   const itemCls =
     "block w-full px-4 py-2.5 text-left text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50";
 
   return (
-    <div ref={ref} className="relative inline-block text-left">
+    <>
       <button
+        ref={btnRef}
         onClick={() => setOpen((o) => !o)}
         className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
         title="Actions"
       >
         <MoreVertical className="h-4 w-4" />
       </button>
-      {open && (
-        <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
-          {es === "draft" && (
-            <button disabled={busy} className={`${itemCls} text-green-400`} onClick={() => { setOpen(false); onStatus(test.id, "active"); }}>
-              Publish
+      {open && coords &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{ position: "fixed", top: coords.top, left: coords.left, width: MENU_W }}
+            className="z-[60] overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl"
+          >
+            {es === "draft" && (
+              <button disabled={busy} className={`${itemCls} text-green-400`} onClick={() => { setOpen(false); onStatus(test.id, "active"); }}>
+                Publish
+              </button>
+            )}
+            {(es === "active" || es === "scheduled") && (
+              <button disabled={busy} className={`${itemCls} text-amber-400`} onClick={() => { setOpen(false); onStatus(test.id, "closed"); }}>
+                Close
+              </button>
+            )}
+            {es === "closed" && (
+              <button
+                disabled={busy}
+                className={`${itemCls} text-green-400`}
+                onClick={() => {
+                  setOpen(false);
+                  // If the window already ended, clear end_at so it truly reopens.
+                  const endPassed = !!test.end_at && new Date(test.end_at).getTime() < Date.now();
+                  onStatus(test.id, "active", endPassed);
+                }}
+              >
+                Reopen
+              </button>
+            )}
+            <button className={itemCls} onClick={() => { setOpen(false); onEdit(test); }}>
+              Edit
             </button>
-          )}
-          {(es === "active" || es === "scheduled") && (
-            <button disabled={busy} className={`${itemCls} text-amber-400`} onClick={() => { setOpen(false); onStatus(test.id, "closed"); }}>
-              Close
-            </button>
-          )}
-          {es === "closed" && (
-            <button
-              disabled={busy}
-              className={`${itemCls} text-green-400`}
-              onClick={() => {
-                setOpen(false);
-                // If the window already ended, clear end_at so it truly reopens.
-                const endPassed = !!test.end_at && new Date(test.end_at).getTime() < Date.now();
-                onStatus(test.id, "active", endPassed);
-              }}
-            >
-              Reopen
-            </button>
-          )}
-          <button className={itemCls} onClick={() => { setOpen(false); onEdit(test); }}>
-            Edit
-          </button>
-          <Link href={`/coaching-admin/tests/${test.id}/results`} className={itemCls} onClick={() => setOpen(false)}>
-            Results
-          </Link>
-        </div>
-      )}
-    </div>
+            <Link href={`/coaching-admin/tests/${test.id}/results`} className={itemCls} onClick={() => setOpen(false)}>
+              Results
+            </Link>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
 

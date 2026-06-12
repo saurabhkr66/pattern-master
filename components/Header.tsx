@@ -28,7 +28,7 @@ import { useLanguage } from "./providers/LanguageProvider";
 
 const navLinks = [
   { href: "/practice", label: "Practice", icon: BookOpen, prefetch: false },
-  { href: "/test", label: "Mock Test", icon: ClipboardList, disabled: true },
+  { href: "/test", label: "Mock Test", icon: ClipboardList, prefetch: false },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, prefetch: false },
   { href: "/review", label: "Review", icon: RotateCcw, prefetch: false },
   { href: "/mistakes", label: "Mistakes", icon: XCircle, prefetch: false },

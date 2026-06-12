@@ -13,7 +13,7 @@ export default function MobileNav() {
 
   const tabs = [
     { id: 'Practice', href: '/practice', icon: 'book' },
-    { id: 'Mock', href: '/test', icon: 'timer', disabled: true },
+    { id: 'Mock', href: '/test', icon: 'timer' },
     { id: 'Stats', href: '/dashboard', icon: 'chart' },
     { id: 'Review', href: '/review', icon: 'flip' },
     { id: 'Mistakes', href: '/mistakes', icon: 'user' },

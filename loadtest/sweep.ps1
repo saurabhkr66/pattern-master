@@ -105,6 +105,8 @@ foreach ($n in $Waves) {
       Wave          = $n
       LoginP95ms    = [math]::Round($m.phase_login_ms.'p(95)')
       OpenP95ms     = [math]::Round($m.phase_open_ms.'p(95)')
+      PaperP95ms    = [math]::Round($m.phase_paper_ms.'p(95)')
+      StartP95ms    = [math]::Round($m.phase_start_ms.'p(95)')
       SubmitP95ms   = [math]::Round($m.phase_submit_ms.'p(95)')
       HttpFailPct   = [math]::Round($m.http_req_failed.rate * 100, 2)
       FlowErrPct    = [math]::Round($m.flow_errors.rate * 100, 2)

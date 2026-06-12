@@ -7,6 +7,8 @@ import { compareLeaderboard } from "@/lib/coachingLeaderboard";
 import { getCachedCoachingName } from "@/lib/coachingCache";
 import { ShareRankListButton, ShareResultButton } from "@/components/coaching/ResultShareButtons";
 import GradeUngradedButton from "@/components/coaching/GradeUngradedButton";
+import { getTestClassAnalytics } from "@/lib/coachingTestAnalytics";
+import TestAnalytics from "@/components/coaching/TestAnalytics";
 import { ArrowLeft } from "lucide-react";
 
 // Grading-state chip for the subjective AI pipeline (— for objective-only tests).
@@ -52,10 +54,14 @@ function fmtTime(secs: number | null): string {
 
 export default async function TestResultsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
+  const { tab } = await searchParams;
+  const showAnalytics = tab === "analytics";
   const actor = await resolveCoachingAdmin();
 
   if (actor?.isSuperAdmin && !actor.coachingId) {
@@ -88,6 +94,10 @@ export default async function TestResultsPage({
     finalizeOverdueAttempts(id, coachingId),
   ]);
   if (!test) notFound();
+
+  // Class report is computed only when its tab is open — keeps the default
+  // Submissions view free of the extra resolve + per-question scoring pass.
+  const analytics = showAnalytics ? await getTestClassAnalytics(id, coachingId) : null;
 
   const attempts = await prisma.testAttempt.findMany({
     where: { test_id: id, coaching_id: coachingId },
@@ -184,6 +194,39 @@ export default async function TestResultsPage({
         </p>
       )}
 
+      {/* Submissions ↔ Analytics (admin-only; students never reach this route) */}
+      <div className="mt-5 flex gap-2">
+        {([
+          { key: "submissions", label: "Submissions", href: `/coaching-admin/tests/${id}/results` },
+          { key: "analytics", label: "Analytics", href: `/coaching-admin/tests/${id}/results?tab=analytics` },
+        ] as const).map((t) => {
+          const active = (t.key === "analytics") === showAnalytics;
+          return (
+            <Link
+              key={t.key}
+              href={t.href}
+              className={`rounded-full px-3 py-1.5 text-sm transition ${
+                active
+                  ? "bg-amber-500 font-semibold text-slate-950"
+                  : "border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              {t.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {showAnalytics ? (
+        analytics ? (
+          <TestAnalytics data={analytics} />
+        ) : (
+          <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 px-4 py-10 text-center text-slate-500">
+            No analytics available.
+          </div>
+        )
+      ) : (
+        <>
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border border-slate-800 bg-slate-900 p-5">
@@ -367,6 +410,8 @@ export default async function TestResultsPage({
           ))
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

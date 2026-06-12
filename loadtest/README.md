@@ -1,7 +1,9 @@
 # Coaching test engine — load test (k6)
 
 Answers "can it take 500 students opening + submitting at once?" by driving the
-**real** student journey: `login → open test page → autosave → submit`.
+**real** student journey: `login → open gate page → paper → start → autosave →
+submit` (the pre-stage split: paper is downloaded encrypted, start releases the
+key + creates the attempt).
 
 No Clerk is involved — students authenticate with a signed cookie minted by
 `/api/student/login` (phone + PIN). k6's per-VU cookie jar carries it through.
@@ -11,14 +13,16 @@ No Clerk is involved — students authenticate with a signed cookie minted by
 | Phase    | Server cost per student                                   | File |
 |----------|-----------------------------------------------------------|------|
 | login    | scrypt PIN verify (CPU-heavy) + 2 DB reads + session write | `app/api/student/login/route.ts` |
-| open     | **uncached** `coachingTest.findFirst` + jittered attempt create | `app/c/[slug]/test/[testId]/page.tsx` |
+| open     | gate shell SSR — Redis-cached reads only, no paper, no attempt | `app/c/[slug]/test/[testId]/page.tsx` |
+| paper    | Redis-cached question set + in-memory derivation + AES encrypt | `app/api/student/test/[testId]/paper/route.ts` |
+| start    | **THE T-0 spike**: single-statement attempt upsert + key release | `app/api/student/test/[testId]/start/route.ts` |
 | autosave | single Redis SET (zero DB)                                | `app/api/student/test/[testId]/save/route.ts` |
 | submit   | grade + DB write + leaderboard cache bust                 | `app/api/student/test/[testId]/submit/route.ts` |
 
-The architecture is already batch-aware (Redis-cached questions/config, jittered
-attempt creates, Redis-only autosave). The unknowns a load test settles are the
-**login scrypt spike**, the **uncached open read**, and your infra ceilings
-(serverless concurrency, Neon compute, Upstash req/s) — none visible from code.
+In production the waiting room spreads `paper` over 10 minutes with jitter; this
+script fires paper+start back-to-back per VU, so it measures a HARSHER shape
+than reality. The numbers that decide capacity are `phase_start_ms` (T-0) and
+`phase_submit_ms` (the synchronized timer-expiry spike).
 
 ## Prerequisites
 
@@ -91,11 +95,16 @@ already-submitted students.
 Per-phase trends are emitted separately:
 
 - `phase_login_ms` — watch p95 here first; scrypt is the likeliest bottleneck.
-- `phase_open_ms` — the uncached read; rises with Neon compute saturation.
+- `phase_open_ms` — the gate page shell; Redis-cached reads, should stay cheap.
+- `phase_paper_ms` — the encrypted pre-stage download. In production this
+  spreads over the 10-min waiting room; the script fires it back-to-back with
+  start, so treat it as worst-case.
+- `phase_start_ms` — THE number that decides simultaneous capacity: the T-0
+  attempt upsert + key release. Should stay small even at high VU counts.
 - `phase_submit_ms` — the write + leaderboard bust.
 - `http_req_failed`, `flow_errors` — keep under 2%.
-- `attempt_id_not_found` — non-zero means the page rendered a shell (test not
-  active / window closed) and no attempt was created. Fix the test state.
+- `attempt_id_not_found` — non-zero means `start` answered 200 without an
+  attemptId. Check the test state (active? inside its window?).
 
 Thresholds in `options.thresholds` are starting points — set them to your SLO.
 
@@ -113,9 +122,12 @@ can also just reset the branch.)
 - **Empty answers still test the write path.** `submit` grades over the full
   resolved set regardless, so the DB write + leaderboard invalidation run even
   with `answers: []` (score 0). Realistic answers don't change server load.
-- **`attemptId` is scraped from the rendered page** (`"attemptId":"<uuid>"` in
-  the RSC stream). If a future refactor changes how it's serialized, update
-  `extractAttemptId()` in `test-flow.js`.
+- **`attemptId` comes from `POST /api/student/test/<id>/start`** (JSON), which
+  also releases the paper decryption key. The page no longer SSRs the paper or
+  creates the attempt — that's the pre-stage split.
+- **The paper/start gates are window-aware**: `paper` only serves from
+  `start_at − 10min` and `start` only from `start_at` (both until `end_at`).
+  A 425/410 in the run means the target test's window is wrong, not a bug.
 - **First-batch cold starts** inflate p95 on serverless. Either pre-warm or read
   the steady-state (hold) window, not the ramp's leading edge.
 - This measures *your* app + Neon + Redis. It cannot raise platform concurrency

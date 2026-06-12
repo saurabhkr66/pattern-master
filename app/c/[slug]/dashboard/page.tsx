@@ -146,13 +146,32 @@ export default async function StudentDashboard({
                         {t.windowState === "before" && t.startAt && (
                           <>
                             <span>·</span>
-                            <span>opens {new Date(t.startAt).toLocaleDateString()}</span>
+                            {/* Explicit IST: server renders in the VPS timezone (UTC),
+                                which would otherwise shift the displayed time. */}
+                            <span>
+                              opens{" "}
+                              {new Date(t.startAt).toLocaleString("en-IN", {
+                                timeZone: "Asia/Kolkata",
+                                day: "numeric",
+                                month: "short",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}
+                            </span>
                           </>
                         )}
                       </div>
                     </div>
                     {t.windowState === "before" ? (
-                      <span className="rounded-xl bg-white/[0.06] px-4 py-2.5 text-sm text-slate-400">Not started</span>
+                      // Pre-start is ENTERABLE: the test page is a waiting room
+                      // that prefetches the paper and auto-starts at T-0. Getting
+                      // students in here early is what flattens the start spike.
+                      <Link
+                        href={`/c/${slug}/test/${t.id}`}
+                        className="grid h-11 place-items-center rounded-xl border border-amber-500/30 bg-amber-500/10 px-6 text-[15px] font-bold text-amber-400"
+                      >
+                        Waiting room
+                      </Link>
                     ) : (
                       <Link
                         href={`/c/${slug}/test/${t.id}`}

@@ -1,26 +1,20 @@
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
-import { stripAnswers } from "@/lib/resolveQuestions";
-import {
-  testWindowState,
-  optionPermutation,
-  optionSeed,
-} from "@/lib/coachingTestRuntime";
-import {
-  getResolvedTestQuestions,
-  studentQuestionsFromBase,
-  primeTestConfig,
-  getCachedFullTest,
-} from "@/lib/coachingQuestionCache";
+import { testWindowState } from "@/lib/coachingTestRuntime";
+import { getCachedFullTest } from "@/lib/coachingQuestionCache";
 import { getCachedCoachingBySlug } from "@/lib/coachingCache";
-import { getCoachingDraft } from "@/lib/coachingDraft";
-import type { ExamConfig } from "@/lib/examConfigs";
-import type { TestQuestion } from "@/components/test/testEngineTypes";
-import StudentTestRunner from "@/components/coaching/StudentTestRunner";
+import TestGate from "@/components/coaching/TestGate";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Thin gate shell — deliberately CHEAP to render. The paper itself is never
+ * SSR'd here: TestGate prefetches it encrypted during the waiting room (the
+ * `paper` endpoint) and the attempt is created at T-0 (the `start` endpoint),
+ * so a whole batch opening this page costs Redis-cached reads only. This page
+ * just authenticates, gates on the test's existence/status, and hands the
+ * window schedule to the client.
+ */
 export default async function StudentTestPage({
   params,
 }: {
@@ -34,10 +28,8 @@ export default async function StudentTestPage({
   const student = await getCurrentStudent(coaching.id);
   if (!student) redirect(`/c/${slug}/login`);
 
-  // Static test row (status/window/questions) is identical for every student and
-  // immutable while the window is open, so it's Redis-cached — this removes the
-  // densest per-student uncached Neon read on the open path. THIS student's
-  // attempt is read separately below, only once the gates pass.
+  // Static test row (status/window) is identical for every student and Redis-
+  // cached. Per-student work (attempt, paper) happens behind the gate endpoints.
   const test = await getCachedFullTest(testId, coaching.id);
   if (!test) notFound();
 
@@ -49,160 +41,19 @@ export default async function StudentTestPage({
     );
   }
 
-  const windowState = testWindowState(test.start_at, test.end_at);
-  if (windowState === "before") {
-    return (
-      <Centered title="Not started yet">
-        This test opens at {test.start_at?.toLocaleString()}.
-      </Centered>
-    );
-  }
-  if (windowState === "after") {
+  // Closed is terminal — render it server-side. "before" is NOT handled here:
+  // the gate runs the countdown and flips into the test without a reload.
+  if (testWindowState(test.start_at, test.end_at) === "after") {
     return <Centered title="Test closed">The submission window has ended.</Centered>;
   }
 
-  // Idempotent attempt: resume in-progress, redirect if already submitted.
-  // upsert is a single atomic operation on the (test_id, student_id) unique
-  // index — creates if absent, returns existing if present. Works on the VPS
-  // standard driver (Prisma runs it as an internal transaction which TCP
-  // Postgres handles natively). No artificial sleep needed.
-  const attemptSelect = { id: true, status: true, started_at: true };
-  const attempt = await prisma.testAttempt.upsert({
-    where: { test_id_student_id: { test_id: test.id, student_id: student.id } },
-    create: { coaching_id: coaching.id, test_id: test.id, student_id: student.id },
-    update: {}, // no-op — keeps existing row as-is
-    select: attemptSelect,
-  });
-  if (!attempt) {
-    return <Centered title="Could not start">Please try again.</Centered>;
-  }
-  if (attempt.status === "submitted") {
-    redirect(`/c/${slug}/result/${attempt.id}`);
-  }
-
-  // Resolved set is cached in Redis per test; this student's paper (pool +
-  // shuffle) is derived from it in memory — no per-student question DB read.
-  // Also warm the runtime-config cache so the eventual submit never reads the
-  // test row from the DB (the submit spike stays fully on Redis).
-  // savedDraft (autosaved answers for resume) only needs attempt.id + student.id,
-  // both known here — fetch it alongside the question/config reads instead of
-  // serially after, shaving one round trip off the test-start path.
-  const [base, , savedDraft] = await Promise.all([
-    getResolvedTestQuestions(test, coaching.id),
-    primeTestConfig({
-      id: test.id,
-      questions: test.questions,
-      shuffle: test.shuffle,
-      pool_size: test.pool_size,
-      duration_secs: test.duration_secs,
-      end_at: test.end_at,
-    }),
-    getCoachingDraft(attempt.id, student.id),
-  ]);
-  const resolved = studentQuestionsFromBase(base, test, student.id);
-  if (resolved.length === 0) {
-    return <Centered title="No questions">This test has no available questions.</Centered>;
-  }
-  const safe = resolved.map(stripAnswers);
-
-  // Group the paper into sections by the question's subject (its section). Order
-  // follows first-appearance; a single-subject paper collapses to one section
-  // (the engine only shows section tabs when there's more than one).
-  const sectionOrder: string[] = [];
-  for (const q of safe) {
-    const s = q.subject ?? "General";
-    if (!sectionOrder.includes(s)) sectionOrder.push(s);
-  }
-
-  const engineQuestions: TestQuestion[] = safe.map((q) => {
-    // Per-student option shuffle (MCQ only). The submit endpoint applies the
-    // same permutation in reverse to grade — see optionPermutation.
-    let options = q.options.length ? q.options : null;
-    // Hindi options kept in the SAME order as English so the answer letter maps;
-    // apply the identical per-student permutation to both.
-    let optionsHi = q.options_hindi.length ? q.options_hindi : null;
-    if (test.shuffle && q.question_type === "mcq" && options) {
-      const perm = optionPermutation(optionSeed(student.id, test.id, q.id), options.length);
-      options = perm.map((p) => options![p]);
-      if (optionsHi && optionsHi.length === perm.length) {
-        optionsHi = perm.map((p) => optionsHi![p]);
-      }
-    }
-    const secName = q.subject ?? "General";
-    return {
-      id: q.id,
-      source: "template" as const, // engine union is pyq|template; coaching maps to template
-      sectionIndex: sectionOrder.indexOf(secName),
-      sectionName: secName,
-      isOptional: false,
-      question_text: q.question_text,
-      options,
-      question_type:
-        q.question_type === "nat"
-          ? "NAT"
-          : q.question_type === "msq"
-            ? "MSQ"
-            : q.question_type === "subjective"
-              ? "SUBJECTIVE"
-              : "MCQ",
-      marks: q.marks,
-      subject: q.subject ?? "General",
-      topic: q.topic ?? undefined,
-      images: q.images ?? null,
-      question_text_hindi: q.question_text_hindi,
-      options_hindi: optionsHi,
-    };
-  });
-
-  const maxScore = engineQuestions.reduce((s, q) => s + q.marks, 0);
-
-  // Server-anchored timer: started_at + duration, capped by the test's close time.
-  let expiresMs = attempt.started_at.getTime() + test.duration_secs * 1000;
-  if (test.end_at) expiresMs = Math.min(expiresMs, test.end_at.getTime());
-  const serverExpiresAt = new Date(expiresMs).toISOString();
-
-  // savedDraft (autosaved answers, for resume after reload/crash) was fetched in
-  // the Promise.all above. Stored in the engine's display space → drops back in.
-
-  const config: ExamConfig = {
-    examType: "GATE",
-    label: test.title,
-    description: test.description ?? "",
-    emoji: "📝",
-    pyqUnit: "topic",
-    hasBranches: false,
-    durationSecs: test.duration_secs,
-    totalQuestions: engineQuestions.length,
-    maxScore,
-    sections: sectionOrder.map((name) => {
-      const secQs = engineQuestions.filter((q) => q.sectionName === name);
-      return {
-        name,
-        subjects: null,
-        totalQuestions: secQs.length,
-        maxScore: secQs.reduce((s, q) => s + q.marks, 0),
-        questionTypes: ["MCQ", "NAT"] as ("MCQ" | "MSQ" | "NAT")[],
-        markDistribution: [],
-        negativePerMark: 0,
-      };
-    }),
-    themeColor: "#6366f1",
-    instructions: [
-      "Do not switch tabs or leave the page — switches are recorded.",
-      "Your answers are submitted when you click Submit or when time runs out.",
-    ],
-  };
-
   return (
-    <StudentTestRunner
+    <TestGate
       slug={slug}
       testId={test.id}
-      attemptId={attempt.id}
-      questions={engineQuestions}
-      config={config}
-      serverExpiresAt={serverExpiresAt}
+      testTitle={test.title}
       studentName={student.name}
-      initialState={savedDraft}
+      startAt={test.start_at ? test.start_at.toISOString() : null}
     />
   );
 }
