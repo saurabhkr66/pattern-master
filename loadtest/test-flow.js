@@ -64,7 +64,15 @@ const SMOKE = __ENV.SMOKE === "1";
 const BATCH_VUS = Number(__ENV.BATCH_VUS || 500);
 const SEEDED_COUNT = Number(__ENV.COUNT || 500);
 
+// Optional DNS pin: a big VU burst can overwhelm the LOCAL machine's DNS
+// resolver ("lookup ...: no such host" at t=0 — load-generator artifact, the
+// server never sees those). Pass -e PIN_IP=<ip from nslookup> to skip DNS
+// entirely; TLS/SNI/Host still use the real hostname, so the origin/proxy
+// routes normally.
+const HOSTNAME = BASE_URL.replace(/^https?:\/\//, "").split("/")[0].split(":")[0];
+
 export const options = {
+  ...(__ENV.PIN_IP ? { hosts: { [HOSTNAME]: __ENV.PIN_IP } } : {}),
   scenarios: SMOKE
     ? {
         smoke: {

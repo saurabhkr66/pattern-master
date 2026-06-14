@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createStudentSession, hashPin, isValidPin } from "@/lib/studentAuth";
+import { rateLimit } from "@/lib/rateLimit";
 
 // Public. First-time student onboarding (also the "set/reset my PIN" path) via a
 // coaching's join code. Body: { slug, joinCode, name, phone, pin }
@@ -9,6 +10,18 @@ import { createStudentSession, hashPin, isValidPin } from "@/lib/studentAuth";
 export async function POST(req: NextRequest) {
   try {
     const { slug, joinCode, name, phone, pin } = await req.json();
+
+    // Throttle the public join route: caps join-code guessing and pending-queue
+    // spam. Keyed by IP + coaching so a whole class joining at once (different
+    // IPs) isn't throttled, but one attacker hammering a coaching's code is.
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+    const limit = await rateLimit(`join:${ip}:${slug ?? "_"}`, 10, 600);
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "too many attempts — please wait a few minutes and try again" },
+        { status: 429 }
+      );
+    }
 
     if (!slug || !joinCode || !name || !phone) {
       return NextResponse.json(
@@ -51,12 +64,19 @@ export async function POST(req: NextRequest) {
     const pinHash = await hashPin(pin);
     let student = await prisma.student.findUnique({
       where: whereKey,
-      select: { id: true },
+      select: { id: true, status: true, active: true },
     });
     if (student) {
+      // Keep an already-enrolled student enrolled (an owner-added student setting
+      // their PIN, or an approved student self-resetting it stay "approved").
+      // Everyone else — a pending re-submit, a rejected student re-requesting, or
+      // a removed (deactivated) student returning — (re)enters as "pending" so the
+      // owner decides. active is reset true since this is an intentional re-join.
+      const nextStatus =
+        student.active && student.status === "approved" ? "approved" : "pending";
       await prisma.student.update({
         where: whereKey,
-        data: { name: String(name).trim(), active: true, pin_hash: pinHash },
+        data: { name: String(name).trim(), active: true, pin_hash: pinHash, status: nextStatus },
       });
     } else {
       try {
@@ -66,12 +86,16 @@ export async function POST(req: NextRequest) {
             name: String(name).trim(),
             phone: normalizedPhone,
             pin_hash: pinHash,
+            status: "pending",
           },
-          select: { id: true },
+          select: { id: true, status: true, active: true },
         });
       } catch {
         // Race: created concurrently — re-read.
-        student = await prisma.student.findUnique({ where: whereKey, select: { id: true } });
+        student = await prisma.student.findUnique({
+          where: whereKey,
+          select: { id: true, status: true, active: true },
+        });
       }
     }
     if (!student) {

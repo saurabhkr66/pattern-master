@@ -11,23 +11,28 @@ import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Always seed the PRODUCTION Neon branch. `.env` holds the prod connection
-// string; `.env.local` points at the dev branch. Loading `.env` with
+// Seed PRODUCTION. `.env` holds the prod connection; loading it with
 // override:true means this script targets prod no matter how it's launched
-// (`tsx`, `prisma db seed`, or a shell with stray DATABASE_URL set).
+// (`tsx`, `prisma db seed`, or a shell with a stray DATABASE_URL set).
 config({ path: '.env', override: true });
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
-  throw new Error('DATABASE_URL is not set — expected the production Neon string in .env');
+  throw new Error('DATABASE_URL is not set — expected the production connection string in .env');
 }
 
-// Use the Neon HTTP adapter, same as the app (lib/prisma.ts). Note: this
-// adapter does NOT support transactions, so createMany()/updateMany() throw
-// "Transactions are not supported in HTTP mode" — we use single create()s below.
-const prisma = new PrismaClient({
-  adapter: new PrismaNeonHTTP(databaseUrl, {}),
-});
+// Respect DB_DRIVER exactly like lib/prisma.ts so this seed follows prod
+// wherever it lives:
+//   "standard"  -> plain TCP PrismaClient (the self-hosted VPS + localhost
+//                  Postgres). Full feature set; updateMany/transactions work.
+//   "neon-http" -> Neon HTTP adapter (serverless/Neon). No transactions, so
+//                  the create path uses single create()s.
+// Without this, the hardcoded Neon adapter would force every write to Neon even
+// when .env says DB_DRIVER=standard — which silently lands seeds on the wrong DB.
+const driver = process.env.DB_DRIVER ?? 'neon-http';
+const prisma = driver === 'standard'
+  ? new PrismaClient()
+  : new PrismaClient({ adapter: new PrismaNeonHTTP(databaseUrl, {}) });
 
 // A unique-constraint violation surfaces as Prisma's "P2002" on most paths, but
 // the Neon HTTP adapter sometimes throws the RAW Postgres SQLSTATE "23505"
@@ -89,31 +94,52 @@ const FILE_TOPIC_MAP: Array<{
   exam_type: string;
   branch: string;
   subject: string;
+  // imagesOnly: match each scraped question to an EXISTING PYQ (by question hash/
+  // text, scoped to this pattern) and update ONLY its `images` field. Never
+  // creates rows and never touches any other column. Used to restore the GATE-EE
+  // images whose files were truly missing from ImageKit (re-scraped fresh).
+  imagesOnly?: boolean;
 }> = [
-    
-    // ── GATE CSE → Computer Organization & Architecture ─────────────────────
-    // Restoring PYQs that were lost when the ISRO exam was deleted (cascade
-    // removed COA-subject rows across exam_types, not just ISRO).
-    
-    {
-      file: '../exam-scraper/extractor/jee_alternating_current_part_1.json',
-      topic_name: 'Alternating Current',
-      exam_type: 'JEE_MAIN',
-      branch: 'Common',
-      subject: 'Physics',
-    },
-    {
-      file: '../exam-scraper/extractor/jee_alternating_current_part_2.json',
-      topic_name: 'Alternating Current',
-      exam_type: 'JEE_MAIN',
-      branch: 'Common',
-      subject: 'Physics',
-    },
+    // ── GATE EE → Power Systems (11) + Electrical Machines (5) ───────────────
+    // Re-scraped from practicepaper.in to restore missing images. images-only.
+    { file: 'prisma/seed-data/gate-ee/ee_compensation-techniques-and-voltage-profile-control.json',
+      topic_name: 'Compensation Techniques and Voltage Profile Control', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_distribution-systems-cables-and-insulators.json',
+      topic_name: 'Distribution Systems, Cables and Insulators', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_economic-power-generation-and-load-dispatch.json',
+      topic_name: 'Economic Power Generation and Load Dispatch', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_fault-analysis.json',
+      topic_name: 'Fault Analysis', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_high-voltage-dc-transmission.json',
+      topic_name: 'High Voltage DC Transmission', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_load-flow-studies.json',
+      topic_name: 'Load Flow Studies', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_per-unit-system.json',
+      topic_name: 'Per Unit System', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_performance-of-transmission-lines-line-parameters-and-corona.json',
+      topic_name: 'Performance of Transmission Lines, Line Parameters and Corona', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_power-system-stability.json',
+      topic_name: 'Power System Stability', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_power-system-transients.json',
+      topic_name: 'Power System Transients', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_switch-gear-and-protection.json',
+      topic_name: 'Switch Gear and Protection', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+
+    { file: 'prisma/seed-data/gate-ee/ee_dc-machines.json',
+      topic_name: 'DC Machines', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_transformers.json',
+      topic_name: 'Transformers', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_synchronous-machines.json',
+      topic_name: 'Synchronous Machines', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_three-phase-induction-machines.json',
+      topic_name: 'Three Phase Induction Machines', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
+    { file: 'prisma/seed-data/gate-ee/ee_single-phase-induction-motors-emec.json',
+      topic_name: 'Single Phase Induction Motors & EMEC', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
   ];
 
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
-  console.log(`${colors.bright}📂 Seeding JEE Main PYQs from JSON files${colors.reset}`);
+  console.log(`${colors.bright}📂 Seeding PYQ images from JSON files (DB_DRIVER=${driver})${colors.reset}`);
   const dbHost = (() => { try { return new URL(databaseUrl!).host; } catch { return '(unparseable)'; } })();
   console.log(`${colors.yellow}🎯 Target DB: ${dbHost}${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}\n`);
@@ -165,8 +191,10 @@ async function main() {
       });
 
       // On the first run after migration we need question_text once, to match
-      // pre-existing rows and backfill their hashes. After that we only fetch hashes.
-      const existing = missingHashCount > 0
+      // pre-existing rows and backfill their hashes. After that we only fetch
+      // hashes — EXCEPT in imagesOnly mode, which always needs question_text for
+      // its exact/normalized text fallback matching.
+      const existing = (missingHashCount > 0 || entry.imagesOnly)
         ? await prisma.pYQ.findMany({
           where: { pattern_id: pattern.id },
           select: { id: true, question_text: true, question_hash: true, content_hash: true },
@@ -221,6 +249,46 @@ async function main() {
           content_hash: questionContentHash(row),
         };
       });
+
+      // ── images-only mode ────────────────────────────────────────────────
+      // Match each scraped question to an existing PYQ of this pattern and write
+      // ONLY its images. No creates, no other columns. Matches by question_hash,
+      // then exact text, then alphanumeric-normalized text (LaTeX/whitespace-safe).
+      if (entry.imagesOnly) {
+        const normAlnum = (s: string) =>
+          (s ?? '').toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]/g, '');
+        const byTextNorm = new Map<string, string>();
+        const byTextExact = new Map<string, string>();
+        for (const r of existing as any[]) {
+          if (r.question_text) {
+            byTextExact.set(r.question_text, r.id);
+            byTextNorm.set(normAlnum(r.question_text), r.id);
+          }
+        }
+        let updated = 0, notFound = 0, noImg = 0;
+        const seen = new Set<string>();
+        const toFix: Array<{ id: string; images: unknown }> = [];
+        for (const q of cleaned) {
+          if (!q.images || (q.images as any[]).length === 0) { noImg++; continue; }
+          const id = byHash.get(q.question_hash)?.id
+            ?? byTextExact.get(q.question_text)
+            ?? byTextNorm.get(normAlnum(q.question_text));
+          if (!id) { notFound++; continue; }
+          if (seen.has(id)) continue;
+          seen.add(id);
+          toFix.push({ id, images: q.images });
+        }
+        const IMG_BATCH = 50;
+        for (let i = 0; i < toFix.length; i += IMG_BATCH) {
+          await Promise.all(toFix.slice(i, i + IMG_BATCH).map(t =>
+            prisma.pYQ.update({ where: { id: t.id }, data: { images: t.images as any }, select: { id: true } })
+              .then(() => { updated++; })
+              .catch((err: any) => { errors++; console.error(`     ${err.message}`); })));
+        }
+        totalQuestions += updated;
+        console.log(`${colors.green}✅ ${progress} ${colors.bright}${entry.topic_name}${colors.reset}${colors.green}: ${updated} images updated, ${colors.yellow}${notFound} not found, ${noImg} no-image${colors.reset}`);
+        continue;
+      }
 
       const toCreate: typeof cleaned = [];
       const toUpdate: Array<typeof cleaned[number] & { _existing_id: string }> = [];

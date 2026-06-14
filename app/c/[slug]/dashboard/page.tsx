@@ -8,7 +8,7 @@ import StudentHeader from "@/components/coaching/StudentHeader";
 import RememberCoaching from "@/components/coaching/RememberCoaching";
 import TrendChart from "@/components/coaching/TrendChart";
 import { Card, AMBER_GRAD, AMBER_GLOW, display, mono } from "@/components/coaching/ui";
-import { ClipboardList, Inbox, TrendingUp, Trophy } from "lucide-react";
+import { ClipboardList, Clock, Inbox, TrendingUp, Trophy, XCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,44 @@ export default async function StudentDashboard({
 
   const student = await getCurrentStudent(coaching.id);
   if (!student) redirect(`/c/${slug}/login`);
+
+  // Enrollment gate: a code-joined student is "pending" until the tutor approves.
+  // Show a status screen (no tests) instead of the dashboard until then. The same
+  // gate is enforced server-side on the test start/paper/submit routes.
+  if (student.status !== "approved") {
+    const rejected = student.status === "rejected";
+    return (
+      <div className="relative min-h-screen overflow-hidden" style={{ background: "#06060c" }}>
+        <div
+          className="pointer-events-none absolute right-0 top-[-150px] h-[380px] w-[600px]"
+          style={{ background: "radial-gradient(60% 100% at 70% 0%, rgba(255,143,0,0.13), transparent 70%)" }}
+        />
+        <RememberCoaching slug={slug} name={coaching.name} />
+        <StudentHeader coachingName={coaching.name} studentName={student.name} slug={slug} />
+        <main className="relative grid place-items-center p-5 sm:p-12">
+          <Card>
+            <div className="flex max-w-md flex-col items-center px-8 py-12 text-center">
+              <span
+                className={`grid h-16 w-16 place-items-center rounded-2xl ${
+                  rejected ? "bg-red-500/10 text-red-400" : "bg-amber-500/15 text-amber-400"
+                }`}
+              >
+                {rejected ? <XCircle className="h-8 w-8" /> : <Clock className="h-8 w-8" />}
+              </span>
+              <h1 className="mt-5 text-xl font-bold text-white" style={{ fontFamily: display }}>
+                {rejected ? "Request declined" : "Awaiting approval"}
+              </h1>
+              <p className="mt-2 text-sm text-slate-400">
+                {rejected
+                  ? `Your request to join ${coaching.name} was declined. Please check with your tutor.`
+                  : `Your request to join ${coaching.name} is waiting for your tutor's approval. You'll be able to take tests once you're approved.`}
+              </p>
+            </div>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   // Active-tests list is shared across all students → Redis-cached per coaching.
   // This student's own attempts stay a live read (must reflect a just-submitted

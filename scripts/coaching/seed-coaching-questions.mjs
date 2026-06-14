@@ -37,7 +37,13 @@ if (!slug || !file) {
 const url = process.env.DATABASE_URL;
 if (!url) fail("DATABASE_URL not set. Run with: node --env-file=.env ...");
 
-const prisma = new PrismaClient({ adapter: new PrismaNeonHTTP(url, {}) });
+// Follow DB_DRIVER like lib/prisma.ts: "standard" = plain TCP client (the
+// self-hosted VPS + localhost Postgres), otherwise the Neon HTTP adapter.
+// Without this the seed would always write to Neon, even when .env says the VPS.
+const driver = process.env.DB_DRIVER ?? "neon-http";
+const prisma = driver === "standard"
+  ? new PrismaClient()
+  : new PrismaClient({ adapter: new PrismaNeonHTTP(url, {}) });
 
 // Normalize + validate one raw question into CoachingQuestion data, or return
 // { error } describing why it's invalid.

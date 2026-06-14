@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Plus, Search, Trash2, Pencil, X, KeyRound, LayoutGrid } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, X, KeyRound, LayoutGrid, Check } from "lucide-react";
 import { display } from "@/components/coaching/ui";
 
 const inputCls =
@@ -14,6 +14,7 @@ type Student = {
   name: string;
   phone: string;
   active: boolean;
+  status: string; // pending | approved | rejected
   joined_at: string;
   batch_id: string | null;
   batch: { id: string; name: string } | null;
@@ -94,6 +95,11 @@ export default function StudentsClient({
     if (res.ok) setBatches(data.batches);
   }
 
+  // Pending = code-joined students awaiting approval. Filtered from what's loaded
+  // (they're the newest rows, so the first page covers a class-time burst);
+  // "Approve all" still approves every pending row in the DB, loaded or not.
+  const pending = students.filter((s) => s.status === "pending");
+
   return (
     <div className="p-5 sm:p-8">
       {/* Header: title + compact Add */}
@@ -122,6 +128,11 @@ export default function StudentsClient({
           {hasMore ? "+" : ""} total
         </span>
       </div>
+
+      {/* Pending approvals — code-joined students the owner hasn't admitted yet. */}
+      {pending.length > 0 && (
+        <PendingApprovals pending={pending} onReload={refetch} />
+      )}
 
       {/* Search (full width) */}
       <div className="relative mt-4">
@@ -189,15 +200,7 @@ export default function StudentsClient({
                   <td className="px-4 py-3 font-mono text-slate-400">{s.phone}</td>
                   <td className="px-4 py-3 text-slate-400">{s.batch?.name ?? "—"}</td>
                   <td className="px-4 py-3">
-                    {s.active ? (
-                      <span className="rounded-full bg-green-900/50 px-2 py-0.5 text-xs text-green-400">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
-                        Inactive
-                      </span>
-                    )}
+                    <StatusBadge s={s} />
                   </td>
                   <td className="px-4 py-3">
                     <StudentActions s={s} onEdit={setEditing} onReload={refetch} />
@@ -229,11 +232,7 @@ export default function StudentsClient({
                   >
                     {s.name}
                   </Link>
-                  {s.active ? (
-                    <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-400">Active</span>
-                  ) : (
-                    <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400">Inactive</span>
-                  )}
+                  <StatusBadge s={s} compact />
                 </div>
                 <div className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-slate-400">
                   <span className="font-mono">{s.phone}</span>
@@ -339,6 +338,101 @@ function StudentActions({
       >
         <Trash2 className="h-4 w-4" />
       </button>
+    </div>
+  );
+}
+
+// Enrollment badge. status is orthogonal to `active`: pending/rejected take
+// precedence; an approved student falls back to the Active/Inactive distinction
+// (a deactivated-but-approved student reads "Inactive").
+function StatusBadge({ s, compact }: { s: Student; compact?: boolean }) {
+  const base = compact
+    ? "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
+    : "rounded-full px-2 py-0.5 text-xs";
+  if (s.status === "pending")
+    return <span className={`${base} bg-amber-500/15 text-amber-400`}>Pending</span>;
+  if (s.status === "rejected")
+    return <span className={`${base} bg-red-500/15 text-red-400`}>Rejected</span>;
+  return s.active ? (
+    <span className={`${base} bg-emerald-500/15 text-emerald-400`}>Active</span>
+  ) : (
+    <span className={`${base} bg-slate-800 text-slate-400`}>Inactive</span>
+  );
+}
+
+// Top-of-page queue: code-joined students awaiting the owner's approval. Mirrors
+// the super-admin coaching-approval pattern (amber-bordered card + Approve/Reject
+// + a bulk Approve all for the class-time burst).
+function PendingApprovals({
+  pending,
+  onReload,
+}: {
+  pending: Student[];
+  onReload: () => void;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function decide(id: string, status: "approved" | "rejected") {
+    setBusy(id);
+    const res = await fetch(`/api/coaching/students/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setBusy(null);
+    if (res.ok) onReload();
+  }
+
+  async function approveAll() {
+    setBusy("__all__");
+    const res = await fetch("/api/coaching/students/approve-all", { method: "POST" });
+    setBusy(null);
+    if (res.ok) onReload();
+  }
+
+  return (
+    <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/[0.04] p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-amber-400">
+          Pending approvals ({pending.length})
+        </h2>
+        <button
+          disabled={busy != null}
+          onClick={approveAll}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+        >
+          <Check className="h-4 w-4" /> {busy === "__all__" ? "Approving…" : "Approve all"}
+        </button>
+      </div>
+      <div className="space-y-2">
+        {pending.map((s) => (
+          <div
+            key={s.id}
+            className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950 p-3"
+          >
+            <div className="min-w-0">
+              <div className="truncate font-medium text-white">{s.name}</div>
+              <div className="truncate font-mono text-xs text-slate-400">{s.phone}</div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                disabled={busy != null}
+                onClick={() => decide(s.id, "rejected")}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+              >
+                Reject
+              </button>
+              <button
+                disabled={busy != null}
+                onClick={() => decide(s.id, "approved")}
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+              >
+                Approve
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

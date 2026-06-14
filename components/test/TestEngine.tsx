@@ -164,9 +164,16 @@ export default function TestEngine({
           clearInterval(timerRef.current!);
           if (!autoSubmittedRef.current) {
             autoSubmittedRef.current = true;
-            // Random 0–3 s jitter so a full batch of students doesn't hit the
-            // submit endpoint simultaneously when their timers all reach zero.
-            setTimeout(() => { onSubmit(buildAnswers(), Math.round((Date.now() - startTimeRef.current) / 1000)); }, Math.random() * 5000);
+            // Random 0–20 s jitter so a full batch of students doesn't hit the
+            // submit endpoint simultaneously when their timers all reach zero
+            // (1000 students / 20 s ≈ 50 submits/s — comfortable for the box).
+            // The budget must stay inside SUBMIT_GRACE_SECS (60 s): 20 s jitter
+            // + retry backoff + network slack. Answers are snapshotted NOW, at
+            // expiry — the jitter delays only the network call, so the wait
+            // grants no extra answering time.
+            const answersAtExpiry = buildAnswers();
+            const elapsedSecs = Math.round((Date.now() - startTimeRef.current) / 1000);
+            setTimeout(() => { onSubmit(answersAtExpiry, elapsedSecs); }, Math.random() * 20000);
           }
           return 0;
         }

@@ -27,6 +27,10 @@ export default async function StudentTestPage({
 
   const student = await getCurrentStudent(coaching.id);
   if (!student) redirect(`/c/${slug}/login`);
+  // Not yet approved → bounce to the dashboard, which shows the pending/rejected
+  // status. The start/paper endpoints also 403, so this is just UX (no waiting
+  // room for a student who can't take the test).
+  if (student.status !== "approved") redirect(`/c/${slug}/dashboard`);
 
   // Static test row (status/window) is identical for every student and Redis-
   // cached. Per-student work (attempt, paper) happens behind the gate endpoints.

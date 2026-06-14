@@ -5,7 +5,12 @@
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
       "Bash(python3 fix_analysis_math.py)",
       "Bash(npx tsc *)",
-      "Read(//c/Users/saura/.claude/skills/graphify/**)"
+      "Read(//c/Users/saura/.claude/skills/graphify/**)",
+      "Read(//c/Users/saura/Desktop/images/topicwise/**)",
+      "Read(//c/Users/saura/Desktop/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\saura\\Desktop\\projects\\practicepaper-scraper"
     ]
   }
 }

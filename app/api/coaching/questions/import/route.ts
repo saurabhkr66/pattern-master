@@ -83,10 +83,20 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
       // Catalog wins when present (school classes); else the typed list.
       topicsBySection: hasCatalog ? topicsBySection : undefined,
       topics: hasCatalog ? undefined : topics,
+      // Stop firing Gemini calls (and burning the rate-limited quota) the moment
+      // the client navigates away — a page refresh aborts the fetch, but the
+      // handler would otherwise run every batch to completion for nothing.
+      signal: req.signal,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "extraction failed";
     return NextResponse.json({ error: msg }, { status: 502 });
+  }
+
+  // Client already gone — skip the figure cropping / ImageKit uploads too; the
+  // response will be discarded anyway.
+  if (req.signal.aborted) {
+    return NextResponse.json({ error: "client disconnected" }, { status: 499 });
   }
 
   // Snapshot figure questions to an image (rasterized PDF page or source image) and
@@ -100,8 +110,16 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
     }
   }
   const cropCtx = { images, renderer };
+  // Diagnostics: figures the MODEL flagged vs. crops we actually produced. If
+  // flagged>0 but cropped==0 the crop step is broken (renderer/sharp/bbox); if
+  // flagged==0 the model isn't identifying the figures (prompt/model side).
+  let flagged = 0;
+  let cropped = 0;
   for (const q of questions) {
+    const hasBox = Array.isArray(q.crop_box) && q.crop_box.length === 4;
+    if (q.is_figure || hasBox || q.has_diagram) flagged++;
     q.images = await cropQuestionImage(cropCtx, q, coachingId);
+    if (q.images?.length) cropped++;
     // Figure MCQs have their choices inside the image, so option text is empty —
     // which the validator would drop. Use each option's label as its text so the
     // A/B/C/D choices survive and render as selectable buttons next to the figure.
@@ -117,6 +135,10 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
     delete q.bbox;
     delete q.source_image;
   }
+  console.log(
+    `[import] figures: ${flagged} flagged by model, ${cropped} cropped ` +
+      `(source: ${pdf ? (renderer ? "PDF+renderer" : "PDF, renderer FAILED") : `${images.length} image(s)`})`
+  );
 
   return NextResponse.json({ exam, set, sections, topicsBySection, questions });
 });

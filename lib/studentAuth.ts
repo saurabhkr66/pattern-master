@@ -189,6 +189,7 @@ export async function getCurrentStudent(coachingId?: string) {
         batch_id: true,
         name: true,
         phone: true,
+        status: true,
         session_token: true,
       },
     });

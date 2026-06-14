@@ -22,6 +22,11 @@ export async function POST(
   const { testId } = await params;
   const student = await getCurrentStudent();
   if (!student) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Enrollment gate (primary chokepoint): this route creates the TestAttempt, so
+  // a non-approved student blocked here can never generate a billable attempt.
+  if (student.status !== "approved") {
+    return NextResponse.json({ error: "enrollment not approved" }, { status: 403 });
+  }
 
   const test = await getCachedFullTest(testId, student.coaching_id);
   if (!test) return NextResponse.json({ error: "test not found" }, { status: 404 });

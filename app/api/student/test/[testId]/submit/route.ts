@@ -30,6 +30,11 @@ export async function POST(
     // getCurrentStudent enforces the single-session token (a kicked session 401s here).
     const student = await getCurrentStudent();
     if (!student) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    // Enrollment gate on the billable event (belt-and-suspenders: start already
+    // blocks attempt creation, so a non-approved student should have none to submit).
+    if (student.status !== "approved") {
+      return NextResponse.json({ error: "enrollment not approved" }, { status: 403 });
+    }
     const sid = student.id;
     const cid = student.coaching_id;
 

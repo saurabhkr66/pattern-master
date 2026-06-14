@@ -23,11 +23,17 @@ export type CachedStudent = {
   batch_id: string | null;
   name: string;
   phone: string;
+  // Enrollment approval — read on every gated request so a pending/rejected
+  // student is blocked from tests with no extra DB hit. An owner's approve/reject
+  // calls invalidateStudent(), so the change takes effect on the next request.
+  status: string;
   session_token: string | null;
 };
 
 const TTL = 600; // 10 min — bounds the stale-session window if a del is dropped
-const key = (studentId: string) => `student:rec:${studentId}:v1`;
+// v2: added `status`. A pre-deploy v1 record lacks it; bumping the key forces a
+// fresh DB read so a cached student is never mistaken for not-approved.
+const key = (studentId: string) => `student:rec:${studentId}:v2`;
 
 export async function getCachedStudent(studentId: string): Promise<CachedStudent | null> {
   if (!isRedisConfigured()) return null;

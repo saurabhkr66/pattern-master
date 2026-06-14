@@ -35,6 +35,66 @@ import { invalidateAttemptResult } from "@/lib/coachingResult";
 const MODEL = process.env.SUBJECTIVE_GRADER_MODEL || "gemini-3.1-flash-lite";
 const CONCURRENCY = 3; // parallel Gemini calls per attempt
 
+// PROCESS-WIDE rate limiter for grading calls. Each submitted attempt fires its
+// OWN after() grader (no shared queue), so the per-attempt CONCURRENCY cap can't
+// bound total load: 100 students × 15 subjective Qs all auto-submitting at the
+// buzzer = ~1,500 calls bursting at once, blowing past Gemini's per-minute quota
+// (throttled calls would land as flagged → teacher review). This module-level
+// limiter smoothly spaces EVERY call across all concurrent attempts at
+// 60000/RPM ms, so the spike drains at a steady safe rate instead of bursting.
+//
+// The VPS runs a single Node process, so this is a true global cap there. On a
+// multi-instance/serverless host it limits per-instance only.
+//
+// Default 250 = paid Gemini Tier 1 (300 RPM / 1M TPM for flash-lite) with
+// headroom for retry calls, which also draw a slot. At 250/min a 100-student ×
+// 15-question paper (~1,500 calls) drains in ~6 min, and 250 calls × ~2K tokens
+// each stays well under the 1M TPM ceiling. Bump SUBJECTIVE_GRADER_RPM if you
+// upgrade to a higher tier; drop it to ~20 if you fall back to the free tier.
+const RPM = Number(process.env.SUBJECTIVE_GRADER_RPM) || 250;
+const MIN_INTERVAL_MS = Math.ceil(60_000 / Math.max(1, RPM));
+const MAX_RETRIES = Number(process.env.SUBJECTIVE_GRADER_RETRIES) || 4;
+
+// Next free dispatch slot (epoch ms). Each acquire reserves max(now, nextSlot)
+// and pushes the cursor forward by one interval, so callers are served FIFO at a
+// fixed cadence regardless of which attempt they belong to.
+let nextSlotMs = 0;
+function rateLimitSlot(): Promise<void> {
+  const now = Date.now();
+  const slot = Math.max(now, nextSlotMs);
+  nextSlotMs = slot + MIN_INTERVAL_MS;
+  const wait = slot - now;
+  return wait > 0 ? new Promise((r) => setTimeout(r, wait)) : Promise.resolve();
+}
+
+// Gemini 429 (RESOURCE_EXHAUSTED) / 503 (overloaded) are transient — back off
+// and retry rather than flagging the answer for a human. Everything else (bad
+// JSON, auth, schema) throws straight through to the caller's flag path.
+function isRetryable(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /\b429\b|\b503\b|RESOURCE_EXHAUSTED|overloaded|rate.?limit|too many requests|unavailable/i.test(
+    msg
+  );
+}
+
+/** Rate-limited Gemini call with exponential backoff on transient errors. */
+async function callGeminiWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    await rateLimitSlot(); // a retry is another API call → it consumes a slot too
+    try {
+      return await fn();
+    } catch (err) {
+      if (!isRetryable(err) || attempt >= MAX_RETRIES) throw err;
+      const backoff = Math.min(30_000, 1000 * 2 ** attempt) + Math.random() * 500;
+      console.warn(
+        `[grade] transient Gemini error (retry ${attempt + 1}/${MAX_RETRIES}, backoff ${Math.round(backoff)}ms):`,
+        err instanceof Error ? err.message : err
+      );
+      await new Promise((r) => setTimeout(r, backoff));
+    }
+  }
+}
+
 const GRADE_SCHEMA: ResponseSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -45,6 +105,9 @@ const GRADE_SCHEMA: ResponseSchema = {
       format: "enum",
       enum: ["high", "medium", "low"],
     },
+    // Only filled when no model answer was provided: the ideal answer Gemini
+    // wrote itself and graded against. Empty string otherwise.
+    model_answer: { type: SchemaType.STRING },
   },
   required: ["marks_awarded", "feedback", "confidence"],
 };
@@ -65,17 +128,21 @@ function graderModel() {
 }
 
 function buildGradingPrompt(q: NormalizedQuestion): string {
-  const modelAnswer =
-    q.solution?.trim() ||
-    "No model answer was provided — grade on the correctness of the concepts using standard subject knowledge.";
+  const hasModelAnswer = !!q.solution?.trim();
   return [
     "You are an experienced school teacher grading ONE student's handwritten answer, photographed and attached as image(s) (multiple images = pages of the same answer, in order).",
     "",
     `QUESTION:\n${q.question_text}`,
     q.question_text_hindi ? `\nQUESTION (Hindi):\n${q.question_text_hindi}` : "",
-    `\nMODEL ANSWER:\n${modelAnswer}`,
+    hasModelAnswer
+      ? `\nMODEL ANSWER:\n${q.solution!.trim()}`
+      : "\nMODEL ANSWER:\n(none provided — no model answer exists for this question)",
     `\nMAXIMUM MARKS: ${q.marks}`,
     "",
+    hasModelAnswer
+      ? null
+      : "FIRST, before grading, write the ideal correct answer to this question yourself, using standard subject knowledge, to the depth a full-marks response would have. Grade the student against THAT answer. Return it in the model_answer field so the teacher can see what you graded against. Wrap every mathematical expression in LaTeX delimiters — inline $...$, display $$...$$ — e.g. write `$2^2 \\cdot 3^x$`, never bare `2^2 * 3^x`.",
+    hasModelAnswer ? null : "",
     "GRADING RULES:",
     "- Award marks for correct concepts even if the phrasing differs from the model answer.",
     "- Do NOT penalise extra correct information, grammar, spelling, or handwriting style unless it changes the meaning.",
@@ -86,10 +153,13 @@ function buildGradingPrompt(q: NormalizedQuestion): string {
     "",
     "feedback: 1–3 sentences addressed to the student (what was right, what was missing).",
     'confidence: "high" = clearly readable and unambiguous against the model answer; "medium" = readable but the marks involve judgement; "low" = hard to read, ambiguous, or you are unsure.',
+    hasModelAnswer
+      ? "model_answer: leave as an empty string (a model answer was already provided)."
+      : "model_answer: the ideal answer you wrote and graded against (required here, since none was provided).",
     "",
     "Return ONLY the JSON object.",
   ]
-    .filter(Boolean)
+    .filter((line) => line !== null && line !== undefined)
     .join("\n");
 }
 
@@ -97,26 +167,36 @@ function buildGradingPrompt(q: NormalizedQuestion): string {
 export async function gradeSubjectiveAnswer(
   q: NormalizedQuestion,
   images: { data: string; mimeType: string }[]
-): Promise<{ marks: number; feedback: string; confidence: SubjectiveConfidence }> {
+): Promise<{
+  marks: number;
+  feedback: string;
+  confidence: SubjectiveConfidence;
+  /** Set only when the question had no model answer and Gemini wrote one. */
+  generatedModelAnswer: string | null;
+}> {
+  const hasModelAnswer = !!q.solution?.trim();
   const model = graderModel();
-  const res = await model.generateContent({
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { text: buildGradingPrompt(q) },
-          ...images.map((img) => ({
-            inlineData: { mimeType: img.mimeType, data: img.data },
-          })),
-        ],
-      },
-    ],
-  });
+  const res = await callGeminiWithRetry(() =>
+    model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: buildGradingPrompt(q) },
+            ...images.map((img) => ({
+              inlineData: { mimeType: img.mimeType, data: img.data },
+            })),
+          ],
+        },
+      ],
+    })
+  );
   const text = res.response.text();
   const parsed = JSON.parse(text) as {
     marks_awarded?: unknown;
     feedback?: unknown;
     confidence?: unknown;
+    model_answer?: unknown;
   };
 
   const raw = Number(parsed.marks_awarded);
@@ -128,7 +208,12 @@ export async function gradeSubjectiveAnswer(
       ? parsed.confidence
       : "low"; // unknown confidence → treat as low (teacher reviews)
   const feedback = typeof parsed.feedback === "string" ? parsed.feedback.slice(0, 1000) : "";
-  return { marks, feedback, confidence };
+  // Keep the written answer only when the question genuinely lacked one.
+  const written =
+    typeof parsed.model_answer === "string" ? parsed.model_answer.trim() : "";
+  const generatedModelAnswer =
+    !hasModelAnswer && written ? written.slice(0, 4000) : null;
+  return { marks, feedback, confidence, generatedModelAnswer };
 }
 
 /** Bounded-concurrency map (no p-limit dep). */
@@ -230,6 +315,7 @@ export async function gradeAttemptSubjectives(opts: {
           gemini_marks: g.marks,
           gemini_feedback: g.feedback,
           gemini_confidence: g.confidence,
+          generated_model_answer: g.generatedModelAnswer,
           flagged: false,
         } as Partial<SubjectiveAnswerEntry>,
       };

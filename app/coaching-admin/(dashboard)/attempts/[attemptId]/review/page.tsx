@@ -98,6 +98,7 @@ export default async function SubjectiveReviewPage({
       questionText: q.question_text,
       questionHtml: q.question_html,
       modelAnswer: q.solution,
+      generatedModelAnswer: entry?.generated_model_answer ?? null,
       maxMarks: q.marks,
       answered: !!entry && entry.image_keys.length > 0,
       imageUrls: entry ? entry.image_keys.map((k) => imageUrlMap[k]).filter(Boolean) : [],

@@ -15,6 +15,8 @@ export type ReviewQuestion = {
   questionText: string;
   questionHtml: string | null;
   modelAnswer: string | null;
+  /** Answer Gemini wrote itself because none existed in the source. */
+  generatedModelAnswer: string | null;
   maxMarks: number;
   answered: boolean;
   imageUrls: string[];
@@ -205,8 +207,9 @@ function ReviewCard({
         <MathRenderer content={q.questionText} />
       </div>
 
-      {/* Model answer (collapsible) */}
-      {q.modelAnswer && (
+      {/* Model answer (collapsible). Falls back to the answer Gemini wrote
+          itself when the question had no model answer in its source. */}
+      {(q.modelAnswer || q.generatedModelAnswer) && (
         <div className="mt-3 rounded-lg border border-slate-800">
           <button
             type="button"
@@ -217,10 +220,15 @@ function ReviewCard({
               className={`h-3.5 w-3.5 transition-transform ${showModel ? "" : "-rotate-90"}`}
             />
             Model answer
+            {!q.modelAnswer && q.generatedModelAnswer && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] text-amber-400">
+                <Sparkles className="h-2.5 w-2.5" /> AI-written
+              </span>
+            )}
           </button>
           {showModel && (
             <div className="border-t border-slate-800 px-3 py-2 text-sm text-slate-300">
-              <MathRenderer content={q.modelAnswer} />
+              <MathRenderer content={q.modelAnswer || q.generatedModelAnswer!} />
             </div>
           )}
         </div>

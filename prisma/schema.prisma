@@ -362,6 +362,12 @@ model Student {
   name          String
   phone         String
   active        Boolean       @default(true)
+  // Enrollment approval (orthogonal to `active`, which is the session/soft-delete
+  // gate). Code-joined students land "pending" until the owner approves; an
+  // approved student can take tests. Owner-added students default "approved" — the
+  // owner adding you IS the authorization. Default "approved" also keeps every
+  // pre-existing row enrolled on migration.
+  status        String        @default("approved") // pending | approved | rejected
   // Single active session enforcement ("newest login wins"): each login writes a
   // fresh token here and into the cookie; a session whose token != this is dead.
   session_token String?
@@ -378,6 +384,8 @@ model Student {
   // the composite serves that ordered scan and coaching_id-only lookups (prefix).
   @@index([coaching_id, joined_at(sort: Desc)])
   @@index([batch_id])
+  // Serves the owner's "pending approvals" list: WHERE coaching_id AND status.
+  @@index([coaching_id, status])
 }
 
 model CoachingQuestion {

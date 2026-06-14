@@ -28,6 +28,10 @@ export async function GET(
   const { testId } = await params;
   const student = await getCurrentStudent();
   if (!student) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Enrollment gate: don't even pre-stage the paper for a non-approved student.
+  if (student.status !== "approved") {
+    return NextResponse.json({ error: "enrollment not approved" }, { status: 403 });
+  }
 
   const test = await getCachedFullTest(testId, student.coaching_id);
   if (!test) return NextResponse.json({ error: "test not found" }, { status: 404 });

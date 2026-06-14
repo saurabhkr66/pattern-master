@@ -256,7 +256,12 @@ export default function QuestionImportModal({
                         ))}
                       </select>
                     )}
-                    {q.images && q.images.length > 0 && <span className="text-xs text-emerald-400">+ diagram</span>}
+                    {q.images && q.images.length > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-400">
+                        <ImageIcon className="h-3 w-3" />
+                        {q.images.length} image{q.images.length > 1 ? "s" : ""}
+                      </span>
+                    )}
                     {q.answer_derived && (
                       <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-400" title="Answer was AI-solved (not found in the paper) — verify it">
                         AI-solved · verify
@@ -278,11 +283,20 @@ export default function QuestionImportModal({
                       mk{q.question_type !== "subjective" && <> · ans {q.correct_answer || "—"}</>}
                     </span>
                   </div>
-                  {/* Snapshot of a figure question (cropped from the page) — verify it captured the whole question + options. */}
+                  {/* Snapshot(s) of a figure question (cropped from the page) — verify they
+                      captured the whole question + options. All attached images preview. */}
                   {q.images && q.images.length > 0 && (
-                    <div className="mb-2 overflow-hidden rounded-lg border border-slate-700 bg-white">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={q.images[0].filename} alt="question figure" className="mx-auto max-h-80 w-auto object-contain" />
+                    <div className="mb-2 space-y-2">
+                      {q.images.map((img, ii) => (
+                        <div key={ii} className="overflow-hidden rounded-lg border border-slate-700 bg-white">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={img.filename}
+                            alt={`question image ${ii + 1}`}
+                            className="mx-auto max-h-80 w-auto object-contain"
+                          />
+                        </div>
+                      ))}
                     </div>
                   )}
                   <textarea
@@ -362,6 +376,33 @@ export default function QuestionImportModal({
                         placeholder="Expected answer / marking points…"
                         className={`${inputCls} font-mono text-xs`}
                       />
+                      {String(q.solution ?? "").trim() && (
+                        <MathRenderer content={q.solution!} className="text-xs text-slate-300" />
+                      )}
+                      {String(q.solution_hindi ?? "").trim() && (
+                        <MathRenderer content={q.solution_hindi!} className="text-xs text-slate-400" />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Worked solution for objective questions — extracted from the
+                      answer key and SAVED, so it must be reviewable here too. */}
+                  {q.question_type !== "subjective" && (
+                    <div className="mt-2 space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
+                      <p className="text-[10px] uppercase text-slate-500">Solution / explanation</p>
+                      <textarea
+                        value={q.solution ?? ""}
+                        onChange={(e) => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, solution: e.target.value } : x)))}
+                        rows={2}
+                        placeholder="Worked solution (optional)…"
+                        className={`${inputCls} font-mono text-xs`}
+                      />
+                      {String(q.solution ?? "").trim() && (
+                        <MathRenderer content={q.solution!} className="text-xs text-slate-300" />
+                      )}
+                      {String(q.solution_hindi ?? "").trim() && (
+                        <MathRenderer content={q.solution_hindi!} className="text-xs text-slate-400" />
+                      )}
                     </div>
                   )}
 

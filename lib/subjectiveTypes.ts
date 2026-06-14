@@ -21,6 +21,12 @@ export interface SubjectiveAnswerEntry {
   gemini_marks: number | null;
   gemini_feedback: string | null;
   gemini_confidence: SubjectiveConfidence | null;
+  /**
+   * Model answer Gemini wrote itself because none was found in the question's
+   * source (the answer-key PDF). null = a real model answer existed, so grading
+   * used that instead.
+   */
+  generated_model_answer: string | null;
   /** Grading failed (image fetch / Gemini error) — needs teacher / retry. */
   flagged: boolean;
   /** Teacher's final marks — always wins over gemini_marks. */
@@ -50,6 +56,7 @@ export function newSubjectiveEntry(imageKeys: string[]): SubjectiveAnswerEntry {
     gemini_marks: null,
     gemini_feedback: null,
     gemini_confidence: null,
+    generated_model_answer: null,
     flagged: false,
     manual_override: null,
     graded_by: null,

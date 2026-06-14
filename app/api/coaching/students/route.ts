@@ -34,6 +34,7 @@ export const GET = withCoachingContext(async (req, { coachingId }) => {
       name: true,
       phone: true,
       active: true,
+      status: true,
       joined_at: true,
       batch_id: true,
       batch: { select: { id: true, name: true } },

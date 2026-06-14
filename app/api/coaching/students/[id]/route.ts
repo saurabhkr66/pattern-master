@@ -13,6 +13,16 @@ export const PATCH = withCoachingContext(async (req, { coachingId }, { params })
   const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
   if (typeof body.active === "boolean") data.active = body.active;
+  // Approve / reject a (pending) enrollment. Approve admits them; reject takes
+  // them off the roster AND deactivates so the session is killed below and a
+  // re-join with the code returns them to "pending".
+  if (body.status === "approved") {
+    data.status = "approved";
+    data.active = true;
+  } else if (body.status === "rejected") {
+    data.status = "rejected";
+    data.active = false;
+  }
   // Reset a forgotten PIN: clear it (student re-joins with the code to set a new
   // one) and kill any active session so the old device can't keep acting.
   if (body.resetPin === true) {
