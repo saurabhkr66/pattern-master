@@ -25,11 +25,15 @@ export default function StudentAuthForm({
   const [joinCode, setJoinCode] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // True when the join endpoint reports the phone already has an account (409,
+  // code: "exists"). We then nudge the user to sign in instead of dead-ending.
+  const [alreadyExists, setAlreadyExists] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setAlreadyExists(false);
     setLoading(true);
     try {
       const endpoint = mode === "join" ? "/api/student/join" : "/api/student/login";
@@ -44,6 +48,11 @@ export default function StudentAuthForm({
       const data = await res.json();
 
       if (!res.ok) {
+        // Phone already has an account: the join code can't re-credential it
+        // (security). Steer the user to sign in instead of showing a dead-end.
+        if (res.status === 409 && data.code === "exists") {
+          setAlreadyExists(true);
+        }
         setError(data.error ?? "Something went wrong");
         return;
       }
@@ -96,7 +105,7 @@ export default function StudentAuthForm({
 
             <div>
               <label className="block text-sm font-medium text-slate-300">
-                {mode === "join" ? "Set a PIN (4–6 digits)" : "PIN"}
+                {mode === "join" ? "Set a PIN (6 digits)" : "PIN"}
               </label>
               <input
                 type="password"
@@ -105,9 +114,9 @@ export default function StudentAuthForm({
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 required
-                minLength={4}
+                minLength={mode === "join" ? 6 : 4}
                 maxLength={6}
-                placeholder="••••"
+                placeholder="••••••"
                 className={`${fieldCls} tracking-widest`}
               />
               {mode === "join" && (
@@ -115,7 +124,19 @@ export default function StudentAuthForm({
               )}
             </div>
 
-            {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && (
+              <div className="text-sm text-red-400">
+                <p>{error}</p>
+                {alreadyExists && (
+                  <Link
+                    href={`/c/${slug}/login`}
+                    className="mt-1 inline-block font-semibold text-amber-400 hover:underline"
+                  >
+                    Sign in instead →
+                  </Link>
+                )}
+              </div>
+            )}
 
             <button
               type="submit"

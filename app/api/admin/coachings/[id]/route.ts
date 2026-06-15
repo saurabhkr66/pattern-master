@@ -80,6 +80,11 @@ export async function DELETE(
   const exists = await prisma.coaching.findUnique({ where: { id }, select: { id: true, slug: true } });
   if (!exists) return NextResponse.json({ error: "not found" }, { status: 404 });
 
+  // TestAttempt has required FKs to CoachingTest and Student with no onDelete
+  // cascade, so the coaching delete's cascade to those rows would hit a FK
+  // restriction. Clear attempts first (this also cascades to their BillingEvent
+  // rows); the coaching delete then cascades the rest.
+  await prisma.testAttempt.deleteMany({ where: { coaching_id: id } });
   await prisma.coaching.delete({ where: { id } });
   await invalidateCoachingSlug(exists.slug);
   revalidatePath(`/c/${exists.slug}`); // drop the ISR-cached public profile page

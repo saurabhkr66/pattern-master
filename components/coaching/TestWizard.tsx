@@ -29,11 +29,20 @@ type PyqQuestion = {
 };
 
 type Selected = { id: string; source: "coaching" | "pyq"; marks: number; title: string };
+type Batch = { id: string; name: string };
 
 const STEPS = ["Basics", "Questions", "Settings"];
 const keyOf = (source: string, id: string) => `${source}:${id}`;
 
-export default function TestWizard({ questions, isSuperAdmin = false }: { questions: BankQuestion[]; isSuperAdmin?: boolean }) {
+export default function TestWizard({
+  questions,
+  batches = [],
+  isSuperAdmin = false,
+}: {
+  questions: BankQuestion[];
+  batches?: Batch[];
+  isSuperAdmin?: boolean;
+}) {
   const router = useRouter();
   // "Create test from set" deep-link: /tests/new?exam=SSC&set=Mock%205 prefills the
   // title and pre-filters the coaching picker to that exam+set.
@@ -48,6 +57,14 @@ export default function TestWizard({ questions, isSuperAdmin = false }: { questi
   const [durationMins, setDurationMins] = useState("60");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
+  // Batch targeting — empty set means "visible to every student".
+  const [batchIds, setBatchIds] = useState<Set<string>>(new Set());
+  const toggleBatch = (id: string) =>
+    setBatchIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   // Step 2 — questions (mixed sources, keyed by source:id)
   const [selected, setSelected] = useState<Map<string, Selected>>(new Map());
@@ -116,6 +133,7 @@ export default function TestWizard({ questions, isSuperAdmin = false }: { questi
           negMarks: Math.abs(Number(negMarks) || 0),
           status: publishNow ? "active" : "draft",
           questions: [...selected.values()].map((s) => ({ id: s.id, source: s.source, marks: s.marks })),
+          batchIds: [...batchIds],
         }),
       });
       const data = await res.json();
@@ -176,6 +194,35 @@ export default function TestWizard({ questions, isSuperAdmin = false }: { questi
                 <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className={`mt-1 ${inputCls}`} />
               </label>
             </div>
+
+            {batches.length > 0 && (
+              <div className="block">
+                <span className="text-sm text-slate-300">Assign to batches</span>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Leave empty to make this test available to everyone. Selecting batches
+                  limits it to students in those batches.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {batches.map((b) => {
+                    const on = batchIds.has(b.id);
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => toggleBatch(b.id)}
+                        className={`rounded-full border px-3 py-1 text-sm ${
+                          on
+                            ? "border-amber-500 bg-amber-500/10 text-amber-300"
+                            : "border-slate-700 text-slate-300 hover:bg-slate-800"
+                        }`}
+                      >
+                        {b.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

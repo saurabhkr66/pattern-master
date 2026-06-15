@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentStudent } from "@/lib/studentAuth";
 import { getCachedFullTest, primeTestConfig } from "@/lib/coachingQuestionCache";
+import { studentInTestBatches } from "@/lib/coachingBatch";
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import { buildStudentPaper } from "@/lib/coachingPaper";
 import { encryptPaper } from "@/lib/paperCrypto";
@@ -36,6 +37,11 @@ export async function GET(
   const test = await getCachedFullTest(testId, student.coaching_id);
   if (!test) return NextResponse.json({ error: "test not found" }, { status: 404 });
   if (test.status !== "active") {
+    return NextResponse.json({ error: "test not available" }, { status: 403 });
+  }
+  // Per-batch targeting: don't pre-stage a batch-scoped paper for a student who
+  // isn't in one of its batches.
+  if (!studentInTestBatches(test.batch_ids, student.batch_id)) {
     return NextResponse.json({ error: "test not available" }, { status: 403 });
   }
 

@@ -9,7 +9,7 @@ export default async function AdminQuestionsPage() {
   const actor = await getCoachingActor();
   if (!actor?.isSuperAdmin) redirect("/");
 
-  const [questions, coachings, subjectRows] = await Promise.all([
+  const [questions, coachings, subjectRows, setRows, gradeRows] = await Promise.all([
     prisma.coachingQuestion.findMany({
       select: {
         id: true,
@@ -36,6 +36,18 @@ export default async function AdminQuestionsPage() {
       distinct: ["subject"],
       orderBy: { subject: "asc" },
     }),
+    prisma.coachingQuestion.findMany({
+      where: { set_name: { not: null } },
+      select: { set_name: true },
+      distinct: ["set_name"],
+      orderBy: { set_name: "asc" },
+    }),
+    prisma.coachingQuestion.findMany({
+      where: { grade: { not: null } },
+      select: { grade: true },
+      distinct: ["grade"],
+      orderBy: { grade: "asc" },
+    }),
   ]);
 
   return (
@@ -46,6 +58,8 @@ export default async function AdminQuestionsPage() {
       }))}
       coachings={coachings}
       subjects={subjectRows.map((s) => s.subject!).filter(Boolean)}
+      sets={setRows.map((s) => s.set_name!).filter(Boolean)}
+      grades={gradeRows.map((g) => g.grade!).filter(Boolean)}
     />
   );
 }

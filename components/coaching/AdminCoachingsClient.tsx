@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, X, ExternalLink, Trash2 } from "lucide-react";
+import { Plus, X, ExternalLink, Trash2, FileQuestion } from "lucide-react";
 
 const inputCls =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
@@ -127,12 +127,20 @@ export default function AdminCoachingsClient({
     <div className="p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-white">Coachings</h1>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-500"
-        >
-          <Plus className="h-4 w-4" /> New Coaching
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/questions"
+            className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+          >
+            <FileQuestion className="h-4 w-4" /> All questions
+          </Link>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-500"
+          >
+            <Plus className="h-4 w-4" /> New Coaching
+          </button>
+        </div>
       </div>
 
       {/* Pending applications — self-serve signups awaiting approval */}

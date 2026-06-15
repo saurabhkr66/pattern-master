@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { unstable_cache } from "next/cache";
-import { Users, ClipboardList, CheckCircle2, IndianRupee, ArrowRight } from "lucide-react";
+import { Users, ClipboardList, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
 import { Card, PageHead, Pill, display, mono } from "@/components/coaching/ui";
@@ -36,7 +36,8 @@ type DashboardData = {
   students: number;
   tests: number;
   submissionsThisMonth: number;
-  amountDue: number;
+  // Billing is super-admin-only — the owner dashboard shows operational KPIs, not money.
+  pendingApprovals: number;
   series: number[];
   buckets: { label: string; count: number }[];
   acts: Activity[];
@@ -58,14 +59,18 @@ const getDashboardData = (coachingId: string) =>
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const [students, tests, submissionsThisMonth, coaching, monthly, recentAttempts, recentStudents, recentTests] =
+      const [students, tests, submissionsThisMonth, pendingApprovals, monthly, recentAttempts, recentStudents, recentTests] =
         await Promise.all([
           prisma.student.count({ where: { coaching_id: coachingId, active: true } }),
           prisma.coachingTest.count({ where: { coaching_id: coachingId } }),
           prisma.testAttempt.count({
             where: { coaching_id: coachingId, status: "submitted", submitted_at: { gte: monthStart } },
           }),
-          prisma.coaching.findUnique({ where: { id: coachingId }, select: { price_per_test: true } }),
+          // Owner-actionable KPI in place of the (super-admin-only) billing tile:
+          // how many code-joined students are waiting for the owner to approve.
+          prisma.student.count({
+            where: { coaching_id: coachingId, active: true, status: "pending" },
+          }),
           prisma.$queryRaw<{ month: Date; submissions: number }[]>`
             SELECT date_trunc('month', submitted_at) AS month, count(*)::int AS submissions
             FROM "TestAttempt"
@@ -90,8 +95,6 @@ const getDashboardData = (coachingId: string) =>
             take: 3,
           }),
         ]);
-
-      const price = coaching?.price_per_test ?? 0;
 
       // Build a 6-month series (oldest → newest), zero-filling gaps.
       const buckets: { label: string; count: number }[] = [];
@@ -133,7 +136,7 @@ const getDashboardData = (coachingId: string) =>
         students,
         tests,
         submissionsThisMonth,
-        amountDue: submissionsThisMonth * price,
+        pendingApprovals,
         series,
         buckets,
         acts,
@@ -166,7 +169,7 @@ export default async function CoachingAdminHome() {
   const coachingId = actor!.coachingId!;
   const now = new Date();
 
-  const { students, tests, submissionsThisMonth, amountDue, series, buckets, acts } =
+  const { students, tests, submissionsThisMonth, pendingApprovals, series, buckets, acts } =
     await getDashboardData(coachingId);
 
   return (
@@ -178,7 +181,7 @@ export default async function CoachingAdminHome() {
         <StatTile icon={<Users className="h-4 w-4" />} tone="orange" value={students} label="Active Students" spark={series} />
         <StatTile icon={<ClipboardList className="h-4 w-4" />} tone="blue" value={tests} label="Tests" spark={series} />
         <StatTile icon={<CheckCircle2 className="h-4 w-4" />} tone="green" value={submissionsThisMonth} label="Submissions" sub="this month" spark={series} />
-        <StatTile icon={<IndianRupee className="h-4 w-4" />} tone="amber" value={`₹${amountDue}`} label="Amount Due" sub="this month" />
+        <StatTile icon={<Clock className="h-4 w-4" />} tone="amber" value={pendingApprovals} label="Pending Approvals" sub="awaiting you" />
       </div>
 
       <div className="mt-4 flex flex-col gap-4 lg:mt-5 lg:flex-row lg:gap-5">

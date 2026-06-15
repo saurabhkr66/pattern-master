@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
 import { invalidateTestQuestionCache } from "@/lib/coachingQuestionCache";
 import { invalidateActiveTests } from "@/lib/coachingCache";
+import { resolveBatchIds } from "@/lib/coachingBatch";
 
 // GET single test (full body, for the edit/detail view).
 export const GET = withCoachingContext(async (_req, { coachingId }, { params }) => {
@@ -74,6 +75,11 @@ export const PATCH = withCoachingContext(async (req, { coachingId }, { params })
   if (body.startAt !== undefined) data.start_at = body.startAt ? new Date(body.startAt) : null;
   if (body.endAt !== undefined) data.end_at = body.endAt ? new Date(body.endAt) : null;
   if (typeof body.shuffle === "boolean") data.shuffle = body.shuffle;
+  // Batch targeting: an explicit (possibly empty) list replaces the assignment;
+  // [] means "everyone". Only real batches of this coaching survive validation.
+  if (body.batchIds !== undefined) {
+    data.batch_ids = await resolveBatchIds(body.batchIds, coachingId);
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "nothing to update" }, { status: 400 });

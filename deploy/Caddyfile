@@ -7,12 +7,20 @@
 
 battleexam.example.com {
     encode gzip zstd
-    reverse_proxy localhost:3000
+    reverse_proxy localhost:3000 {
+        # Flush every write straight through instead of buffering. The question
+        # import endpoint streams whitespace heartbeats during long (>100s) Gemini
+        # extractions so Cloudflare doesn't 524 the origin; buffering here would
+        # hold those back and defeat the keep-alive.
+        flush_interval -1
+    }
 }
 
 # To also serve the bare apex + www, use this form instead:
 #
 # battleexam.com, www.battleexam.com {
 #     encode gzip zstd
-#     reverse_proxy localhost:3000
+#     reverse_proxy localhost:3000 {
+#         flush_interval -1
+#     }
 # }

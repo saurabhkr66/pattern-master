@@ -7,7 +7,9 @@ import { prisma } from "@/lib/prisma";
 export const GET = withCoachingContext(async (_req, { coachingId, actor }) => {
   const coaching = await prisma.coaching.findUnique({
     where: { id: coachingId },
-    select: { id: true, name: true, slug: true, price_per_test: true, active: true },
+    // Billing (price_per_test / monthly_fee) is super-admin-only — never expose it
+    // to the coaching owner. This endpoint returns identity/operational fields only.
+    select: { id: true, name: true, slug: true, active: true },
   });
 
   return NextResponse.json({

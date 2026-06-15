@@ -4,7 +4,8 @@
 // Handles downloading the card + sharing to Twitter/X and WhatsApp.
 
 import { useState } from "react";
-import { Share2, Download, X, MessageCircle, Link2, Check } from "lucide-react";
+import { Share2, Download, X, Link2, Check } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 
 interface ShareCardButtonProps {
   userId: string;
@@ -168,7 +169,7 @@ export default function ShareCardButton({ userId }: ShareCardButtonProps) {
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/5"
                 style={{ color: "var(--text-secondary)" }}
               >
-                <MessageCircle size={15} className="shrink-0" />
+                <WhatsAppIcon size={15} className="shrink-0" />
                 Share on WhatsApp
               </a>
             </div>

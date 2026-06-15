@@ -79,10 +79,14 @@ export type CachedActiveTest = {
   end_at: string | null;
   pool_size: number | null;
   question_count: number;
+  // Per-batch targeting: empty = visible to all; else only students whose
+  // batch_id is in this list. The dashboard filters on it per-student.
+  batch_ids: string[];
 };
 
 const ACTIVE_TESTS_TTL = 300;
-const activeTestsKey = (coachingId: string) => `coaching:${coachingId}:activeTests:v1`;
+// v2: payload now carries batch_ids. Bump drops any v1-shaped entry.
+const activeTestsKey = (coachingId: string) => `coaching:${coachingId}:activeTests:v2`;
 
 export async function getCachedActiveTests(coachingId: string): Promise<CachedActiveTest[]> {
   if (isRedisConfigured()) {
@@ -104,6 +108,7 @@ export async function getCachedActiveTests(coachingId: string): Promise<CachedAc
         start_at: true,
         end_at: true,
         pool_size: true,
+        batch_ids: true,
         questions: true,
       },
       orderBy: { created_at: "desc" },
@@ -118,6 +123,7 @@ export async function getCachedActiveTests(coachingId: string): Promise<CachedAc
     end_at: t.end_at ? t.end_at.toISOString() : null,
     pool_size: t.pool_size,
     question_count: Array.isArray(t.questions) ? (t.questions as unknown[]).length : 0,
+    batch_ids: t.batch_ids,
   }));
 
   if (isRedisConfigured()) {

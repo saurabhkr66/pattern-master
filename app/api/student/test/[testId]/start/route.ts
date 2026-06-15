@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
 import { getCachedFullTest } from "@/lib/coachingQuestionCache";
+import { studentInTestBatches } from "@/lib/coachingBatch";
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import { getCoachingDraft } from "@/lib/coachingDraft";
 import { paperKeyB64 } from "@/lib/paperCrypto";
@@ -31,6 +32,11 @@ export async function POST(
   const test = await getCachedFullTest(testId, student.coaching_id);
   if (!test) return NextResponse.json({ error: "test not found" }, { status: 404 });
   if (test.status !== "active") {
+    return NextResponse.json({ error: "test not available" }, { status: 403 });
+  }
+  // Per-batch targeting: a batch-scoped test is only takeable by students in one
+  // of its batches. This is the authoritative gate — it creates the attempt.
+  if (!studentInTestBatches(test.batch_ids, student.batch_id)) {
     return NextResponse.json({ error: "test not available" }, { status: 403 });
   }
 

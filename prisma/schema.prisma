@@ -478,6 +478,11 @@ model CoachingTest {
   end_at        DateTime?
   shuffle       Boolean       @default(true)
   pool_size     Int? // if set, each student gets pool_size random questions
+  // Batch targeting: empty = visible to every approved student (default);
+  // non-empty = only students whose batch_id is in this list. A student with no
+  // batch is excluded from any batch-targeted test. Array column (no join table),
+  // matching the Coaching.exam_types convention.
+  batch_ids     String[]      @default([])
   // Ordered section names this test renders/scoring by (null = single flat section).
   sections      Json?
   status        String        @default("draft") // draft | active | closed

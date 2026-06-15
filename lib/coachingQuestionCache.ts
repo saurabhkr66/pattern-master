@@ -15,8 +15,9 @@ import { bestEffortInvalidate } from "@/lib/cacheInvalidation";
 // edited. Cache holds answers/solutions — server-side only, never sent raw.
 
 // v2: config now also carries duration_secs + end_at (for the server-side
-// submit deadline). Bump drops any v1-shaped entry so the new fields are present.
-const VERSION = "v2";
+// submit deadline). v3: full test row now carries batch_ids (per-batch test
+// targeting). Bumping drops older-shaped entries so the new fields are present.
+const VERSION = "v3";
 const TTL_SECONDS = 60 * 60; // 1h; also busted explicitly on test edit
 const key = (testId: string) => `coaching:test:${testId}:resolved:${VERSION}`;
 const configKey = (testId: string) => `coaching:test:${testId}:config:${VERSION}`;
@@ -152,6 +153,7 @@ export type CachedFullTest = {
   duration_secs: number;
   shuffle: boolean;
   pool_size: number | null;
+  batch_ids: string[];
   questions: unknown;
 };
 
@@ -187,6 +189,7 @@ export async function getCachedFullTest(
         duration_secs: true,
         shuffle: true,
         pool_size: true,
+        batch_ids: true,
         questions: true,
       },
     })

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
 import { getCachedCoachingBySlug, getCachedActiveTests } from "@/lib/coachingCache";
+import { studentInTestBatches } from "@/lib/coachingBatch";
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import StudentHeader from "@/components/coaching/StudentHeader";
 import RememberCoaching from "@/components/coaching/RememberCoaching";
@@ -87,8 +88,12 @@ export default async function StudentDashboard({
 
   const attemptByTest = new Map(attempts.map((a) => [a.test_id, a]));
 
-  // Available = active test, window open or upcoming, not yet submitted.
+  // Available = active test, window open or upcoming, not yet submitted, AND
+  // (if the test targets specific batches) this student is in one of them. The
+  // server start/paper routes enforce the same rule — this just hides what the
+  // student can't open.
   const available = tests
+    .filter((t) => studentInTestBatches(t.batch_ids, student.batch_id))
     .map((t) => {
       const startAt = t.start_at ? new Date(t.start_at) : null;
       const endAt = t.end_at ? new Date(t.end_at) : null;

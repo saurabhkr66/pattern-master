@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { Search, PencilLine } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
   mcq: "MCQ",
@@ -28,28 +29,36 @@ export default function AdminQuestionsClient({
   initialQuestions,
   coachings,
   subjects,
+  sets,
+  grades,
 }: {
   initialQuestions: QuestionRow[];
   coachings: CoachingOption[];
   subjects: string[];
+  sets: string[];
+  grades: string[];
 }) {
   const [questions, setQuestions] = useState<QuestionRow[]>(initialQuestions);
   const [q, setQ] = useState("");
+  const [grade, setGrade] = useState("");
   const [subject, setSubject] = useState("");
   const [type, setType] = useState("");
+  const [setName, setSetName] = useState("");
   const [coachingId, setCoachingId] = useState("");
   const [loading, setLoading] = useState(false);
   // Filter signature the current list already reflects (initially the SSR query:
   // all blank). Refetch only when it changes — robust against React StrictMode's
   // double-mount, which made a "skip first render" ref refetch and flash the list.
-  const loadedKey = useRef("|||");
+  const loadedKey = useRef("|||||");
 
   const refetch = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (grade) params.set("grade", grade);
     if (subject) params.set("subject", subject);
     if (type) params.set("type", type);
+    if (setName) params.set("set", setName);
     if (coachingId === "__orphaned__") {
       params.set("orphaned", "1");
     } else if (coachingId) {
@@ -59,24 +68,48 @@ export default function AdminQuestionsClient({
     const data = await res.json();
     if (res.ok) setQuestions(data.questions);
     setLoading(false);
-  }, [q, subject, type, coachingId]);
+  }, [q, grade, subject, type, setName, coachingId]);
 
   useEffect(() => {
-    const key = `${q}|${subject}|${type}|${coachingId}`;
+    const key = `${q}|${grade}|${subject}|${type}|${setName}|${coachingId}`;
     if (loadedKey.current === key) return;
     const t = setTimeout(() => {
       loadedKey.current = key;
       refetch();
     }, 300);
     return () => clearTimeout(t);
-  }, [q, subject, type, coachingId, refetch]);
+  }, [q, grade, subject, type, setName, coachingId, refetch]);
+
+  // Carry the active filters into the review editor so it opens the same slice.
+  const reviewHref = (() => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (grade) params.set("grade", grade);
+    if (subject) params.set("subject", subject);
+    if (type) params.set("type", type);
+    if (setName) params.set("set", setName);
+    if (coachingId === "__orphaned__") params.set("orphaned", "1");
+    else if (coachingId) params.set("coachingId", coachingId);
+    const qs = params.toString();
+    return qs ? `/admin/questions/review?${qs}` : "/admin/questions/review";
+  })();
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-semibold text-white">All Questions</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        {questions.length} question{questions.length !== 1 ? "s" : ""} across all coachings
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">All Questions</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            {questions.length} question{questions.length !== 1 ? "s" : ""} across all coachings
+          </p>
+        </div>
+        <Link
+          href={reviewHref}
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500"
+        >
+          <PencilLine className="h-4 w-4" /> Review &amp; edit
+        </Link>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
@@ -102,12 +135,36 @@ export default function AdminQuestionsClient({
           <option value="__orphaned__">Deleted coachings</option>
         </select>
         <select
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+        >
+          <option value="">All exams / classes</option>
+          {grades.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+        <select
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
         >
           <option value="">All subjects</option>
           {subjects.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <select
+          value={setName}
+          onChange={(e) => setSetName(e.target.value)}
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+        >
+          <option value="">All sets / mocks</option>
+          {sets.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>

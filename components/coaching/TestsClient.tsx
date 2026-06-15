@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar, MessageCircle } from "lucide-react";
+import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { buildTestInviteMessage, openWhatsApp } from "@/lib/whatsappShare";
 
 type TestRow = {
@@ -257,7 +258,7 @@ function ShareTestButton({ test, coaching }: { test: TestRow; coaching: Coaching
       title="Share on WhatsApp"
       className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-green-400"
     >
-      <MessageCircle className="h-4 w-4" />
+      <WhatsAppIcon className="h-4 w-4" />
     </button>
   );
 }

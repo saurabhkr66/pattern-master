@@ -43,23 +43,24 @@ export async function POST(req: NextRequest) {
       select: { id: true, pin_hash: true },
     });
 
-    if (!student) {
-      return NextResponse.json(
-        { error: "no student found with that phone — please join with your coaching's code first" },
-        { status: 404 }
-      );
-    }
+    // SECURITY: every authentication failure returns the SAME 401 so the response
+    // can't be used to enumerate the roster. An unknown phone, a phone with no PIN
+    // set yet, and a wrong PIN are indistinguishable to the caller — otherwise an
+    // attacker could probe phone numbers to learn who is enrolled (and which
+    // accounts are PIN-less) and feed that into a brute-force. The "haven't set a
+    // PIN yet / new here" nudge lives on the join screen, not here.
+    //
+    // We deliberately short-circuit verifyPin for unknown / PIN-less phones rather
+    // than running a dummy hash to equalize timing: scrypt is intentionally heavy,
+    // and running it on every unauthenticated probe is a CPU-amplification DoS.
+    // The (small, rate-limited) timing signal is an acceptable trade vs. that.
+    const valid =
+      student?.pin_hash != null && (await verifyPin(String(pin), student.pin_hash));
 
-    if (!student.pin_hash) {
-      return NextResponse.json(
-        { error: "no PIN set yet — join with your coaching's code to set one" },
-        { status: 403 }
-      );
-    }
-
-    // Generic message — don't reveal whether it was phone or PIN that was wrong.
-    if (!(await verifyPin(String(pin), student.pin_hash))) {
-      await recordFailedLogin(coaching.id, normalizedPhone);
+    if (!student || !student.pin_hash || !valid) {
+      // Only count attempts against a real, credentialed account so a flood of
+      // unknown-phone probes can't lock out (or inflate the counter for) a victim.
+      if (student?.pin_hash) await recordFailedLogin(coaching.id, normalizedPhone);
       return NextResponse.json({ error: "incorrect phone or PIN" }, { status: 401 });
     }
 

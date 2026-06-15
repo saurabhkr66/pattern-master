@@ -176,7 +176,7 @@ export type ParsedQuestion = {
   answer_derived?: boolean; // answer was AI-solved (not found in the paper) → flag for review
   is_figure?: boolean; // question relies on figures/diagrams → snapshot it as an image
   page?: number | null; // 0-based PDF page the question is on (for cropping)
-  crop_box?: number[] | null; // [ymin,xmin,ymax,xmax] normalized 0..1000, around the WHOLE question
+  crop_box?: number[] | null; // [ymin,xmin,ymax,xmax] normalized 0..1000, TIGHT around ONLY the figure(s) — excludes stem text & any printed solution
   has_diagram?: boolean;
   bbox?: BBox | null;
   source_image?: number;
@@ -275,7 +275,7 @@ function buildPrompt(
   "source_image": number,             // index of the image the question came from (0-based; 0 for PDF)
   "is_figure": boolean,               // true if the question NEEDS its figures to be answered (non-verbal reasoning, diagrams, figure options)
   "page": integer | null,             // 0-based PDF page this question is on (null for image uploads)
-  "crop_box": [ymin, xmin, ymax, xmax] | null,  // normalized 0..1000 box around the WHOLE question incl. its figures AND option figures
+  "crop_box": [ymin, xmin, ymax, xmax] | null,  // normalized 0..1000 TIGHT box around ONLY the drawn figure(s)/option-figures — exclude stem text, text options, and any printed solution/working/answer
   "confidence": number                // 0..1 extraction confidence
 }`,
     "Preserve the source language verbatim and faithfully translate the other side; keep math/numbers identical across languages.",
@@ -285,9 +285,12 @@ function buildPrompt(
     'For question_type "mcq" you MUST capture EVERY answer choice into "options" (labels A, B, C, D… in the order shown). The answer choices are part of the question — do NOT drop them or fold them into question_text.',
     'Always include the printed question "number". If the correct answer is shown right next to the question, set "correct_answer" to its option label; otherwise leave "correct_answer" null (answers are resolved in a separate step).',
     ...qtypeInstructions(qtype),
-    // Figure questions (non-verbal reasoning etc.) — capture the whole thing as an image.
+    // Figure questions — snapshot ONLY the drawn figure as an image (the stem and
+    // text options are already captured as text). Crucially, NEVER let the box
+    // bleed into a printed solution/working below the figure.
     'A question that is FULLY readable as text — word problems, ratios, equations, "find X", numeric/algebra/reasoning-in-words — is NOT a figure question, even if it sits in a box on the page. For these set "is_figure"=false, "has_diagram"=false, and "crop_box"=null. Do NOT snapshot plain text.',
-    'ONLY treat a question as a figure when it contains an ACTUAL drawn figure that text cannot convey: a geometry diagram, graph/chart, circuit, map, table-as-image, or options that are themselves pictures. For THOSE set "is_figure"=true and "has_diagram"=true, set "page" to its 0-based page, and set "crop_box" to a TIGHT box ([ymin,xmin,ymax,xmax], normalized 0..1000 for that page) enclosing the ENTIRE question — its stem, all figures, AND all option figures. That whole region is snapshotted as the question image.',
+    'ONLY treat a question as a figure when it contains an ACTUAL drawn figure that text cannot convey: a geometry diagram, graph/chart, circuit, map, table-as-image, or options that are themselves pictures. For THOSE set "is_figure"=true and "has_diagram"=true, set "page" to its 0-based page, and set "crop_box" to a TIGHT box ([ymin,xmin,ymax,xmax], normalized 0..1000 for that page) enclosing ONLY the drawn figure(s) themselves (plus any option-figures) — JUST the diagram artwork, cropped to its own edges.',
+    'The crop_box must contain the FIGURE AND NOTHING ELSE. Do NOT include the question stem text or text options (already captured as text). ABOVE ALL, do NOT include any printed solution, working, derivation, construction steps, or answer that appears below, beside, or around the figure — these papers print the worked solution right under the question, and it must be EXCLUDED from the crop. If a figure and its solution touch, cut the box at the bottom edge of the figure drawing.',
     'For a figure question still fill "question_text" with the stem and "options" with the labels A, B, C, D (use "" for an option whose content is purely a figure). NEVER write placeholder option text like "Figure a"/"Figure b" — leave it "" since the figure is in the image.',
     sectionList,
     topicList,
@@ -781,7 +784,8 @@ async function uploadCrop(png: Buffer, coachingId: string): Promise<string | nul
 
 /**
  * Capture a question's figure(s) as an image. For figure questions Gemini returns
- * a normalized crop_box (0..1000, [ymin,xmin,ymax,xmax]) around the WHOLE question;
+ * a normalized crop_box (0..1000, [ymin,xmin,ymax,xmax]) tight around ONLY the
+ * figure(s) (excludes the stem text and any printed solution below it);
  * we crop it from the rasterized PDF page (or the source image for image uploads)
  * and upload it. Falls back to the legacy single-diagram bbox path. Best-effort:
  * any failure returns null so the question still imports (just without the image).

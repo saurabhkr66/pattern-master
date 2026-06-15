@@ -61,8 +61,11 @@ export default function QuestionImportModal({
       images.forEach((f) => fd.append("images", f));
       if (pdf) fd.set("pdf", pdf);
       const res = await fetch("/api/coaching/questions/import", { method: "POST", body: fd });
+      // The import streams its response (heartbeats keep Cloudflare from 524-ing on
+      // long extractions), so the status is always 200 and failures arrive in the
+      // body as { error } — check that too, not just res.ok.
       const data = await res.json();
-      if (!res.ok) {
+      if (!res.ok || data.error) {
         setError(data.error ?? "Extraction failed");
         return;
       }

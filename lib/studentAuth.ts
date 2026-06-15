@@ -90,9 +90,14 @@ const scryptAsync = promisify(crypto.scrypt) as (
   keylen: number
 ) => Promise<Buffer>;
 
-/** True if the value is a 4–6 digit PIN. */
+// Gate for SETTING a PIN (join / reset) only — never for login, which just runs
+// verifyPin against the stored hash regardless of length. So existing 4–5 digit
+// PINs keep working and silently upgrade to 6 the next time the student resets.
+// 6 digits (1,000,000 combos) keeps brute-force impractical under the 5-fails/
+// 15-min per-account lockout in lib/studentLoginRateLimit (4 digits = only 10k).
+/** True if the value is a 6-digit PIN (the minimum for a newly set PIN). */
 export function isValidPin(pin: unknown): pin is string {
-  return typeof pin === "string" && /^\d{4,6}$/.test(pin);
+  return typeof pin === "string" && /^\d{6}$/.test(pin);
 }
 
 export async function hashPin(pin: string): Promise<string> {

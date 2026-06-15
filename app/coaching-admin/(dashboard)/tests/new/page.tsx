@@ -28,26 +28,34 @@ export default async function NewTestPage() {
   // mcq/nat for everyone; subjective (photo answers, AI-graded) is super-admin
   // only while the grading pipeline is being proven — drop the gate to roll out.
   const allowedTypes = actor?.isSuperAdmin ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
-  const questions = await prisma.coachingQuestion.findMany({
-    where: { coaching_id: coachingId, question_type: { in: allowedTypes } },
-    select: {
-      id: true,
-      question_text: true,
-      question_type: true,
-      grade: true,
-      subject: true,
-      topic: true,
-      set_name: true,
-      max_marks: true,
-      created_at: true,
-    },
-    orderBy: { created_at: "desc" },
-    take: 1000,
-  });
+  const [questions, batches] = await Promise.all([
+    prisma.coachingQuestion.findMany({
+      where: { coaching_id: coachingId, question_type: { in: allowedTypes } },
+      select: {
+        id: true,
+        question_text: true,
+        question_type: true,
+        grade: true,
+        subject: true,
+        topic: true,
+        set_name: true,
+        max_marks: true,
+        created_at: true,
+      },
+      orderBy: { created_at: "desc" },
+      take: 1000,
+    }),
+    prisma.batch.findMany({
+      where: { coaching_id: coachingId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <TestWizard
       questions={questions.map((q) => ({ ...q, created_at: q.created_at.toISOString() }))}
+      batches={batches}
       isSuperAdmin={!!actor?.isSuperAdmin}
     />
   );

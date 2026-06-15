@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import {
   buildRankListMessage,
   buildResultMessage,
@@ -26,7 +26,7 @@ export function ShareResultButton(props: {
   if (!waPhone) {
     return (
       <span title="Invalid phone number" className="inline-block cursor-not-allowed p-1.5 opacity-40">
-        <MessageCircle className="h-4 w-4 text-slate-400" />
+        <WhatsAppIcon className="h-4 w-4 text-slate-400" />
       </span>
     );
   }
@@ -36,7 +36,7 @@ export function ShareResultButton(props: {
       title="Share result on WhatsApp"
       className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-green-400"
     >
-      <MessageCircle className="h-4 w-4" />
+      <WhatsAppIcon className="h-4 w-4" />
     </button>
   );
 }
@@ -56,7 +56,7 @@ export function ShareRankListButton(props: {
       onClick={() => openWhatsApp(buildRankListMessage(props))}
       className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-500"
     >
-      <MessageCircle className="h-4 w-4" /> Share Rank List
+      <WhatsAppIcon className="h-4 w-4" /> Share Rank List
     </button>
   );
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
 import { invalidateActiveTests } from "@/lib/coachingCache";
+import { resolveBatchIds } from "@/lib/coachingBatch";
 
 type IncomingRef = { id: string; source?: string; marks?: number; neg_marks?: number };
 
@@ -43,6 +44,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
     negMarks = 0,
     status = "draft",
     questions,
+    batchIds,
   } = body;
 
   if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -110,6 +112,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
     );
   }
 
+  // Batch targeting: keep only ids that are real batches of THIS coaching (an
+  // empty/invalid list means "visible to everyone"). Same tenant-scoped filter
+  // pattern as the question validation above.
+  const batch_ids = await resolveBatchIds(batchIds, coachingId);
+
   const test = await prisma.coachingTest.create({
     data: {
       coaching_id: coachingId,
@@ -121,6 +128,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
       end_at: endAt ? new Date(endAt) : null,
       shuffle: !!shuffle,
       pool_size: pool,
+      batch_ids,
       status: status === "active" ? "active" : "draft",
     },
     select: { id: true },
