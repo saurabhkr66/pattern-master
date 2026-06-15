@@ -9,10 +9,17 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo ">> Pulling latest from GitHub..."
+# `npm ci` below installs strictly from the committed lockfile and never
+# rewrites it, so the server stays clean. But older deploys used `npm install`,
+# which rewrote package-lock.json on Linux and then blocked the next pull
+# ("local changes would be overwritten by merge"). Discard any such tracked
+# drift before pulling so the merge is always clean. (.env etc. are gitignored
+# and untouched.)
+git checkout -- package-lock.json 2>/dev/null || true
 git pull origin master
 
 echo ">> Installing dependencies..."
-npm install
+npm ci
 
 echo ">> Applying any schema changes (Prisma)..."
 npx prisma db push
