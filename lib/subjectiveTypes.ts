@@ -35,6 +35,11 @@ export interface SubjectiveAnswerEntry {
   graded_by: string | null;
   /** ISO timestamp of the manual grade. */
   graded_at: string | null;
+  /** Tokens the AI grading call used (for the super-admin cost view). Optional —
+   *  absent on entries graded before token accounting, or graded manually. */
+  gemini_input_tokens?: number | null;
+  gemini_output_tokens?: number | null;
+  gemini_thinking_tokens?: number | null;
 }
 
 export const MAX_SUBJECTIVE_PHOTOS = 3;

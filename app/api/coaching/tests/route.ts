@@ -60,9 +60,19 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const coachingIds = incoming.filter((q) => (q.source ?? "coaching") === "coaching").map((q) => q.id);
   const pyqIds = incoming.filter((q) => q.source === "pyq").map((q) => q.id);
 
-  // Coaching-source: tenant-scoped; subjective allowed for super admins only.
+  // Coaching-source: tenant-scoped; subjective is opt-in per coaching (off by
+  // default) so paid Gemini grading can't be triggered by a coaching that hasn't
+  // been granted it. Super admins always allowed.
   // PYQ-source: shared bank, mcq/msq/nat allowed (pre-vetted real questions).
-  const allowedTypes = actor.isSuperAdmin ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
+  let allowSubjective = actor.isSuperAdmin;
+  if (!allowSubjective) {
+    const coaching = await prisma.coaching.findUnique({
+      where: { id: coachingId },
+      select: { subjective_enabled: true },
+    });
+    allowSubjective = !!coaching?.subjective_enabled;
+  }
+  const allowedTypes = allowSubjective ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
   const [coachingValid, pyqValid] = await Promise.all([
     coachingIds.length
       ? prisma.coachingQuestion.findMany({

@@ -23,6 +23,7 @@ export default async function AdminCoachingsPage() {
       billing_mode: true,
       price_per_test: true,
       monthly_fee: true,
+      subjective_enabled: true,
       active: true,
       created_at: true,
       _count: { select: { students: true, tests: true } },

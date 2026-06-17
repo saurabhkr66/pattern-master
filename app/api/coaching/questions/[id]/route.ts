@@ -16,7 +16,7 @@ export const GET = withCoachingContext(async (_req, { coachingId }, { params }) 
 });
 
 // PATCH — full replace of editable fields (same rules as create, shared validator).
-export const PATCH = withCoachingContext(async (req, { coachingId }, { params }) => {
+export const PATCH = withCoachingContext(async (req, { coachingId, actor }, { params }) => {
   const { id } = await params;
   const body = await req.json();
   const { error, data } = validateCoachingQuestion(body);
@@ -27,9 +27,24 @@ export const PATCH = withCoachingContext(async (req, { coachingId }, { params })
   // Tenant check then singular update (updateMany is rejected by Neon HTTP).
   const owned = await prisma.coachingQuestion.findFirst({
     where: { id, coaching_id: coachingId },
-    select: { id: true },
+    select: { id: true, question_type: true },
   });
   if (!owned) return NextResponse.json({ error: "not found" }, { status: 404 });
+
+  // Coaching admins MAY edit an existing subjective question — fix a wrong model
+  // answer or question text they know to be off. They may NOT *convert* a regular
+  // (mcq/nat) question INTO subjective: authoring subjective is super-admin-only
+  // (AI import). So block the type change to subjective, not edits in place.
+  if (
+    data.question_type === "subjective" &&
+    owned.question_type !== "subjective" &&
+    !actor.isSuperAdmin
+  ) {
+    return NextResponse.json(
+      { error: "subjective questions can only be created by super-admin import" },
+      { status: 403 }
+    );
+  }
   await prisma.coachingQuestion.update({ where: { id }, data });
   // The answer/text may have changed — bust the cached question set of every
   // live test using it so students aren't graded on the stale cached answer.

@@ -21,6 +21,7 @@ type Coaching = {
   billing_mode: string; // "per_test" | "monthly"
   price_per_test: number;
   monthly_fee: number;
+  subjective_enabled: boolean;
   active: boolean;
   created_at: string;
   _count: { students: number; tests: number };
@@ -119,6 +120,22 @@ export default function AdminCoachingsClient({
     if (res.ok) {
       setCoachings((prev) =>
         prev.map((x) => (x.id === c.id ? { ...x, active: !c.active } : x))
+      );
+    }
+  }
+
+  // Grant/revoke subjective (photo-answer, AI-graded) tests for a coaching. Off
+  // by default; flip on only for coachings that ask, since each subjective
+  // submission costs paid Gemini grading.
+  async function toggleSubjective(c: Coaching) {
+    const res = await fetch(`/api/admin/coachings/${c.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subjectiveEnabled: !c.subjective_enabled }),
+    });
+    if (res.ok) {
+      setCoachings((prev) =>
+        prev.map((x) => (x.id === c.id ? { ...x, subjective_enabled: !c.subjective_enabled } : x))
       );
     }
   }
@@ -242,6 +259,17 @@ export default function AdminCoachingsClient({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-4">
+                      <button
+                        onClick={() => toggleSubjective(c)}
+                        title={c.subjective_enabled ? "Subjective grading enabled — click to disable" : "Enable subjective (AI-graded) tests for this coaching"}
+                        className={`rounded-full px-2 py-0.5 text-xs ${
+                          c.subjective_enabled
+                            ? "bg-amber-500/15 text-amber-400"
+                            : "bg-slate-800 text-slate-500"
+                        }`}
+                      >
+                        Subjective {c.subjective_enabled ? "on" : "off"}
+                      </button>
                       <Link
                         href={`/admin/coachings/${c.id}/bills`}
                         className="text-sm text-slate-300 hover:text-amber-400 hover:underline"
@@ -312,6 +340,17 @@ export default function AdminCoachingsClient({
                 <div className="text-right text-slate-300">{c._count.students}</div>
                 <div className="text-slate-500">Pricing</div>
                 <div className="text-right text-slate-300">{priceLabel(c)}</div>
+                <div className="text-slate-500">Subjective</div>
+                <div className="text-right">
+                  <button
+                    onClick={() => toggleSubjective(c)}
+                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      c.subjective_enabled ? "bg-amber-500/15 text-amber-400" : "bg-white/[0.06] text-slate-400"
+                    }`}
+                  >
+                    {c.subjective_enabled ? "On" : "Off"}
+                  </button>
+                </div>
               </div>
 
               <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3">

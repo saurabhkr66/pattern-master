@@ -42,7 +42,9 @@ export interface NormalizedQuestion {
   nat_tolerance: number | null;
   subject: string | null;
   topic: string | null;
-  images: { index: number; filename: string }[] | null;
+  // `type` follows the PYQ convention: omitted/"question" → shown with the
+  // question; "explanation" → shown in the worked-solution block.
+  images: { index: number; filename: string; type?: "question" | "explanation" }[] | null;
   // Bilingual: Hindi counterparts (null/[] → render falls back to English).
   question_text_hindi: string | null;
   question_html_hindi: string | null;

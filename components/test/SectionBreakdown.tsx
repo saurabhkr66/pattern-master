@@ -12,6 +12,13 @@ interface Props {
 export default function SectionBreakdown({ sections, questions = [] }: Props) {
   const [expandedSec, setExpandedSec] = useState<string | null>(null);
 
+  // Show marks with their real precision — subjective partial credit produces
+  // halves (2.5). toFixed(0) was rounding 2.5 → "3", so the section header read
+  // "3/3" while the question card correctly showed 2.5/3. Trim trailing zeros so
+  // integers still render clean (3, not 3.00).
+  const fmtMarks = (n: number | undefined) =>
+    typeof n === "number" ? n.toFixed(2).replace(/\.?0+$/, "") : String(n ?? "");
+
   if (!sections?.length) return null;
 
   return (
@@ -115,7 +122,7 @@ export default function SectionBreakdown({ sections, questions = [] }: Props) {
                     </div>
                     {/* Score — visible on mobile in r1, hidden in desktop grid position */}
                     <div className="sb-row-score" style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 500, color: accColor, letterSpacing: "-0.02em" }}>
-                      {sec.score?.toFixed?.(0) ?? sec.score}
+                      {fmtMarks(sec.score)}
                       <span style={{ fontSize: 13, color: BE.textMute, fontFamily: BE.mono }}>/{sec.max}</span>
                     </div>
                   </div>
@@ -147,7 +154,7 @@ export default function SectionBreakdown({ sections, questions = [] }: Props) {
                     </div>
                     {/* Score — desktop grid item */}
                     <div style={{ fontFamily: BE.serif, fontSize: 24, fontWeight: 500, color: accColor, minWidth: 64, textAlign: "right", letterSpacing: "-0.02em" }}>
-                      {sec.score?.toFixed?.(0) ?? sec.score}
+                      {fmtMarks(sec.score)}
                       <span style={{ fontSize: 13, color: BE.textMute, fontFamily: BE.mono }}>/{sec.max}</span>
                     </div>
                     {/* Toggle chevron */}
@@ -199,7 +206,7 @@ export default function SectionBreakdown({ sections, questions = [] }: Props) {
                   {/* Summary sidebar */}
                   <div className="sb-summary-border" style={{ borderLeft: `1px solid ${BE.line}`, paddingLeft: 28 }}>
                     {[
-                      { k: "Marks", v: `${sec.score?.toFixed?.(0) ?? sec.score} / ${sec.max}` },
+                      { k: "Marks", v: `${fmtMarks(sec.score)} / ${sec.max}` },
                       { k: "Accuracy", v: `${sec.accuracy?.toFixed(1)}%` },
                       { k: "Avg time / Q", v: fmtTime(Math.round(sec.timeSpentSecs / Math.max(sec.total, 1))) },
                       { k: "Time spent", v: fmtTime(sec.timeSpentSecs) },

@@ -3,7 +3,7 @@ import { GoogleGenerativeAI, SchemaType, type ResponseSchema, type Schema } from
 import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 import { VertexAI } from "@google-cloud/vertexai";
 import sharp from "sharp";
-import ImageKit, { toFile } from "@imagekit/nodejs";
+import { uploadCoachingImage } from "@/lib/coachingImageUpload";
 
 // Gemini-powered bulk import: extract questions from photos / a PDF, translate to
 // the other language, and crop any diagrams. The admin supplies Exam + Set (applied
@@ -17,27 +17,59 @@ import ImageKit, { toFile } from "@imagekit/nodejs";
 //   gcloud auth application-default login
 // (or set GOOGLE_APPLICATION_CREDENTIALS to a service-account key).
 const USE_VERTEX = process.env.GEMINI_USE_VERTEX === "1";
+const VERTEX_LOCATION = process.env.VERTEX_LOCATION || "us-central1";
 const vertexAI = USE_VERTEX
   ? new VertexAI({
       project: process.env.VERTEX_PROJECT || "project-27ed127f-554a-419a-b39",
-      location: process.env.VERTEX_LOCATION || "us-central1",
+      location: VERTEX_LOCATION,
+      // Gemini 3.x (e.g. gemini-3.1-flash-lite) is served to this project ONLY via
+      // the GLOBAL endpoint — the regional host (us-central1) 404s on 3.x. The
+      // global endpoint lives at aiplatform.googleapis.com, NOT
+      // global-aiplatform.googleapis.com, which is what older @google-cloud/vertexai
+      // builds from location:"global" (→ DNS failure). Pin the host so the swap to
+      // location="global" actually reaches Gemini 3.x.
+      ...(VERTEX_LOCATION === "global"
+        ? { apiEndpoint: "aiplatform.googleapis.com" }
+        : {}),
     })
   : null;
 
-// On Vertex (high quota) default to gemini-2.5-pro — strongest reasoning, the least
-// loop-prone, best at bilingual LaTeX. On the Developer API default to 2.5-flash
-// (Pro's free-tier quota is tiny). COACHING_IMPORT_MODEL overrides either.
+// Extraction model. On the Developer API default to gemini-3.1-flash-lite —
+// fast/cheap and fine for pulling structured questions out of a paper. On Vertex
+// default to gemini-2.5-flash for every pass (stronger reader, and flash-lite
+// isn't reliably served there). COACHING_IMPORT_MODEL overrides either.
 const MODEL =
-  process.env.COACHING_IMPORT_MODEL || (USE_VERTEX ? "gemini-2.5-pro" : "gemini-2.5-flash");
-// Pro REQUIRES thinking (rejects thinkingBudget:0); flash/lite are told to skip it
-// so the whole token budget goes to the JSON answer. Pro's thinking is the main
-// per-call time cost — extraction/short-answer work doesn't need 4k tokens of it,
-// so cap it modestly (tunable). Bump COACHING_IMPORT_THINKING if derived answers
-// to hard questions need more reasoning.
-const IS_PRO = /pro/i.test(MODEL);
-const THINKING_BUDGET = IS_PRO
-  ? Math.max(128, Number(process.env.COACHING_IMPORT_THINKING || 1024))
-  : 0;
+  process.env.COACHING_IMPORT_MODEL || (USE_VERTEX ? "gemini-2.5-flash" : "gemini-3.1-flash-lite");
+// The answer-key pass is accuracy-critical: it must LOCATE and READ the printed
+// answers rather than solve questions itself. Defaults to gemini-3.1-flash-lite
+// — cheap/fast and reliable for reading printed answers (Pro's thinking tokens
+// would be wasted on a reading task). The blind VERIFY pass below catches the
+// rare misread. Override with COACHING_IMPORT_ANSWER_MODEL.
+const ANSWER_MODEL = process.env.COACHING_IMPORT_ANSWER_MODEL || "gemini-3.1-flash-lite";
+// Figure detection is a pure spatial-localization task — a flash model with
+// thinking OFF is ideal (and Google recommends thinkingBudget=0 for it). It must
+// NOT inherit COACHING_IMPORT_MODEL: pointing it at Pro both wastes Pro on a
+// non-reasoning task AND breaks it, because Pro rejects thinkingBudget:0 — every
+// detect call would throw and crop 0 figures. So it gets its own flash default.
+const FIGURE_MODEL =
+  process.env.COACHING_IMPORT_FIGURE_MODEL || (USE_VERTEX ? "gemini-2.5-flash" : "gemini-3.1-flash-lite");
+// Thinking config differs by model GENERATION, and mixing the dialects errors:
+//  - Gemini 3.x controls thinking by LEVEL (MINIMAL|LOW|MEDIUM|HIGH) — a numeric
+//    thinkingBudget is REJECTED. Default LOW: a light reasoning pass that helps the
+//    blind VERIFY solve (and answer derivation) without much cost; dial down to
+//    MINIMAL for cost at scale or up to MEDIUM/HIGH if disagreements look weak, via
+//    COACHING_IMPORT_THINKING_LEVEL.
+//  - Gemini 2.5 Pro REQUIRES a numeric budget (rejects 0); flash/lite take 0 to
+//    skip thinking so the whole output budget goes to the JSON answer.
+const G3_THINKING_LEVEL = process.env.COACHING_IMPORT_THINKING_LEVEL || "LOW";
+const thinkingConfigFor = (modelId: string) =>
+  /gemini-3/i.test(modelId)
+    ? { thinkingLevel: G3_THINKING_LEVEL }
+    : {
+        thinkingBudget: /pro/i.test(modelId)
+          ? Math.max(128, Number(process.env.COACHING_IMPORT_THINKING || 2048))
+          : 0,
+      };
 
 // Long papers can't be extracted in one call — the bilingual question schema
 // overflows the output-token limit and truncates. So we enumerate the question
@@ -45,25 +77,26 @@ const THINKING_BUDGET = IS_PRO
 // 15 requests/MINUTE, so tiny batches (many requests) hit the rate limit hard —
 // the batch size is a balance: big enough to keep request count low, small enough
 // to avoid truncation/loops (which callResilient also recovers from by reheating).
-// 38 questions ÷ 8 ≈ 5 batches × 2 passes + enumerate ≈ 11 requests — under 15/min.
-const BATCH_SIZE = Math.max(1, Number(process.env.COACHING_IMPORT_BATCH || 8));
+// Defaults to 1 (one question per call) for maximum extraction accuracy and zero
+// truncation risk; this leans on CONCURRENCY to stay fast and assumes a paid tier
+// (the free 15-req/min cap punishes the resulting request count). Raise
+// COACHING_IMPORT_BATCH to cut request count on rate-limited tiers.
+const BATCH_SIZE = Math.max(1, Number(process.env.COACHING_IMPORT_BATCH || 1));
 
 // Bound the output so a runaway repetition loop is cut off in seconds instead of
 // filling the full 65k-token budget (which is what produced the bogus "output
 // limit" errors on tiny batches). Scales with batch size so legit multi-item
-// output still fits: ~2.5k tokens per question + headroom.
-const MAX_OUTPUT_TOKENS = Math.min(65536, 4000 + BATCH_SIZE * 2500);
+// output still fits: ~3.5k tokens per question (bilingual + LaTeX + solution) + headroom.
+const MAX_OUTPUT_TOKENS = Math.min(65536, 4000 + BATCH_SIZE * 3500);
 
-// How many batches run at once. The Developer free tier's 15-req/min cap punishes
-// bursts, so it stays at 2; Vertex has ample quota, so default much higher there —
-// running every batch in parallel is what makes a 38-question paper finish fast
-// instead of waiting on serial Pro calls. Override via env.
+// How many batches run at once. Defaults to 16 — with BATCH=1 this is what keeps
+// a whole paper fast (16 single-question calls in flight) instead of crawling
+// serially. Assumes a paid Developer tier or Vertex; the free 15-req/min cap will
+// throttle this hard, so drop COACHING_IMPORT_CONCURRENCY there. Override via env.
 const CONCURRENCY = Math.max(
   1,
-  Number(process.env.COACHING_IMPORT_CONCURRENCY || (USE_VERTEX ? 8 : 2))
+  Number(process.env.COACHING_IMPORT_CONCURRENCY || 16)
 );
-
-const ik = new ImageKit({ privateKey: process.env.IMAGEKIT_PRIVATE_KEY! });
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -111,7 +144,8 @@ async function callResilient(
   label: string,
   schema: ResponseSchema,
   parts: Part[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  modelId: string = MODEL
 ): Promise<unknown[]> {
   let lastErr: unknown;
   let tempIdx = 0;
@@ -119,7 +153,7 @@ async function callResilient(
     if (signal?.aborted) throw new Error("aborted: client disconnected");
     const temp = ESCALATING_TEMPS[Math.min(tempIdx, ESCALATING_TEMPS.length - 1)];
     try {
-      return await callGeminiJsonArray(apiKey, schema, parts, temp, signal);
+      return await callGeminiJsonArray(apiKey, schema, parts, temp, signal, modelId);
     } catch (e) {
       lastErr = e;
       const msg = e instanceof Error ? e.message : String(e);
@@ -154,8 +188,10 @@ async function callResilient(
 }
 
 export type UploadImage = { mimeType: string; base64: string };
-type StoredImage = { index: number; filename: string };
-type BBox = { x: number; y: number; w: number; h: number };
+// One stored figure. `type` follows the PYQ convention: omitted/"question" → shown
+// with the question; "explanation" → shown in the worked-solution block. A single
+// images array holds both, filtered by type at render (no separate column).
+type StoredImage = { index: number; filename: string; type?: "question" | "explanation" };
 
 export type ParsedQuestion = {
   question_type: "mcq" | "nat" | "subjective";
@@ -174,11 +210,20 @@ export type ParsedQuestion = {
   // Transit-only hints from Gemini (never stored):
   number?: number | null; // printed question number — join key for the answer-key pass
   answer_derived?: boolean; // answer was AI-solved (not found in the paper) → flag for review
+  answer_disputed?: boolean; // an INDEPENDENT verification solve disagreed with correct_answer → flag for review
+  verify_answer?: string; // the answer the independent verifier arrived at (shown in the review UI)
+  solution_answer?: string | null; // the answer the worked SOLUTION concludes (the extractor's own reasoning)
+  solution_mismatch?: boolean; // solution concludes a different answer than the ticked correct_answer → flag
+  solution_review_flag?: boolean; // SUBJECTIVE: an independent quality review judged the model answer wrong/incomplete → flag for review
+  solution_review_note?: string; // SUBJECTIVE: the reviewer-facing reason the model answer was flagged
   is_figure?: boolean; // question relies on figures/diagrams → snapshot it as an image
-  page?: number | null; // 0-based PDF page the question is on (for cropping)
-  crop_box?: number[] | null; // [ymin,xmin,ymax,xmax] normalized 0..1000, TIGHT around ONLY the figure(s) — excludes stem text & any printed solution
-  has_diagram?: boolean;
-  bbox?: BBox | null;
+  page?: number | null; // 0-based PDF page the question is on (for figure detection)
+  has_diagram?: boolean; // a drawn figure/diagram is present → trigger figure detection pass
+  options_are_figures?: boolean; // the answer CHOICES are pictures (mirror-image / non-verbal) → capture the whole question
+  figure_missing?: boolean; // a figure was expected (flagged) but no image was captured → flag for review
+  solution_has_diagram?: boolean; // the WORKED SOLUTION contains a drawn figure → crop it as an explanation image
+  solution_page?: number | null; // 0-based PDF page the solution figure is on
+  solution_figure_missing?: boolean; // a solution figure was expected but none was captured → flag for review
   source_image?: number;
   confidence?: number;
 };
@@ -263,35 +308,43 @@ function buildPrompt(
   "question_type": "mcq" | "nat" | "subjective",
   "options": [{"label":"A","text":string}, ...],        // English (mcq only)
   "options_hindi": [{"label":"A","text":string}, ...],  // Hindi, same labels/order (mcq only)
-  "correct_answer": string,           // option label for mcq, number for nat, "" for subjective
+  "solution": string | null,          // English worked solution — WRITE THIS FIRST, before deciding the answer
+  "solution_hindi": string | null,    // Hindi
+  "solution_answer": string | null,   // the option label (mcq) / number (nat) your "solution" above arrives at
+  "correct_answer": string,           // the PRINTED answer if the paper prints one; else copy "solution_answer"
   "max_marks": number,
   "nat_tolerance": number | null,
-  "solution": string | null,          // English
-  "solution_hindi": string | null,    // Hindi
   "section": string | null,
   "topic": string | null,
-  "has_diagram": boolean,             // true if the question has a figure/diagram
-  "bbox": {"x":number,"y":number,"w":number,"h":number} | null,  // figure box in PIXELS of source_image (image uploads only)
+  "has_diagram": boolean,             // true if the question contains a drawn figure/diagram/graph/chart
+  "options_are_figures": boolean,     // true if the ANSWER CHOICES are pictures (mirror-image / non-verbal reasoning) that can't be written as text
+  "solution_has_diagram": boolean,    // true if the WORKED SOLUTION/explanation itself contains a drawn figure/diagram/graph the explanation relies on
+  "solution_page": integer | null,    // 0-based PDF page the SOLUTION figure is on (null for image uploads)
   "source_image": number,             // index of the image the question came from (0-based; 0 for PDF)
   "is_figure": boolean,               // true if the question NEEDS its figures to be answered (non-verbal reasoning, diagrams, figure options)
   "page": integer | null,             // 0-based PDF page this question is on (null for image uploads)
-  "crop_box": [ymin, xmin, ymax, xmax] | null,  // normalized 0..1000 TIGHT box around ONLY the drawn figure(s)/option-figures — exclude stem text, text options, and any printed solution/working/answer
   "confidence": number                // 0..1 extraction confidence
 }`,
     "Preserve the source language verbatim and faithfully translate the other side; keep math/numbers identical across languages.",
     LATEX_RULES,
-    // Pass 1 is questions + options + number. Answers are matched in a separate pass,
-    // so don't force answer hunting here — just capture options and the number.
+    // Pass 1 captures questions + options + number AND any answers visible in the
+    // document (inline or from a printed answer key). The more answers we grab now,
+    // the fewer questions need the separate (costlier) answer-key pass.
     'For question_type "mcq" you MUST capture EVERY answer choice into "options" (labels A, B, C, D… in the order shown). The answer choices are part of the question — do NOT drop them or fold them into question_text.',
-    'Always include the printed question "number". If the correct answer is shown right next to the question, set "correct_answer" to its option label; otherwise leave "correct_answer" null (answers are resolved in a separate step).',
+    'Always include the printed question "number".',
+    'REASON BEFORE ANSWERING (order matters): for every objective question, FIRST write the worked "solution", THEN set "solution_answer" to the option label (mcq) / number (nat) that your solution arrives at. Never pick the answer before working it out — fill these fields in this order.',
+    '"solution_answer" is ALWAYS your own reasoned answer — fill it even when the paper prints an answer key; it is how we cross-check the printed key.',
+    'ANSWERS for "correct_answer": scan the ENTIRE document — answer key, solutions section, end tables (e.g. "1-B 2-C") — for the PRINTED answer. If you find one, set "correct_answer" to it (and if a worked solution is printed, use it for "solution"). If NO printed answer exists anywhere, leave "correct_answer" null (a separate pass handles it). Do NOT force "correct_answer" to match "solution_answer": if the printed key differs from your reasoning, KEEP the printed value — the disagreement is recorded for human review.',
     ...qtypeInstructions(qtype),
-    // Figure questions — snapshot ONLY the drawn figure as an image (the stem and
-    // text options are already captured as text). Crucially, NEVER let the box
-    // bleed into a printed solution/working below the figure.
-    'A question that is FULLY readable as text — word problems, ratios, equations, "find X", numeric/algebra/reasoning-in-words — is NOT a figure question, even if it sits in a box on the page. For these set "is_figure"=false, "has_diagram"=false, and "crop_box"=null. Do NOT snapshot plain text.',
-    'ONLY treat a question as a figure when it contains an ACTUAL drawn figure that text cannot convey: a geometry diagram, graph/chart, circuit, map, table-as-image, or options that are themselves pictures. For THOSE set "is_figure"=true and "has_diagram"=true, set "page" to its 0-based page, and set "crop_box" to a TIGHT box ([ymin,xmin,ymax,xmax], normalized 0..1000 for that page) enclosing ONLY the drawn figure(s) themselves (plus any option-figures) — JUST the diagram artwork, cropped to its own edges.',
-    'The crop_box must contain the FIGURE AND NOTHING ELSE. Do NOT include the question stem text or text options (already captured as text). ABOVE ALL, do NOT include any printed solution, working, derivation, construction steps, or answer that appears below, beside, or around the figure — these papers print the worked solution right under the question, and it must be EXCLUDED from the crop. If a figure and its solution touch, cut the box at the bottom edge of the figure drawing.',
+    // Figure detection: the extraction pass identifies WHETHER a question has a
+    // figure and WHICH page it's on; a separate per-question pass locates the
+    // exact figure region on that page's rasterized image (far more accurate than
+    // asking for coordinates during the multi-page extraction).
+    'A question that is FULLY readable as text — word problems, ratios, equations, "find X", numeric/algebra/reasoning-in-words — is NOT a figure question, even if it sits in a box on the page. For these set "is_figure"=false, "has_diagram"=false, AND "options_are_figures"=false. Set "has_diagram"=true ONLY when you can actually SEE a drawn figure — never on a hunch that one might exist.',
+    'ONLY flag a question as a figure when it contains an ACTUAL drawn figure that text cannot convey: a geometry diagram, graph/chart, circuit, map, table-as-image, or options that are themselves pictures. For THOSE set "is_figure"=true, "has_diagram"=true, and "page" to its 0-based page index. The figure will be cropped in a separate step — do NOT try to estimate coordinates here.',
     'For a figure question still fill "question_text" with the stem and "options" with the labels A, B, C, D (use "" for an option whose content is purely a figure). NEVER write placeholder option text like "Figure a"/"Figure b" — leave it "" since the figure is in the image.',
+    'OPTIONS THAT ARE PICTURES: when the answer CHOICES themselves are figures the student must SEE to pick (mirror-image, water-image, rotation, "which figure comes next", embedded-figure) and cannot be put into words, set "options_are_figures"=true, ALSO set "has_diagram"=true and "page" to its 0-based page index (so the image can be captured), and leave every option\'s "text" as "". The ENTIRE question — stem plus all four option pictures — is captured as ONE image, and the student answers by picking A/B/C/D.',
+    'SOLUTION FIGURES: separately from the question, judge whether the WORKED SOLUTION/explanation itself contains an ACTUAL drawn figure (a construction diagram, graph, or labelled sketch the explanation refers to). If so set "solution_has_diagram"=true and "solution_page" to its 0-based page index (the page the solution figure is on, which may differ from the question\'s page); it will be cropped separately and shown with the solution. Set "solution_has_diagram"=false when the solution is text/equations only — most solutions have NO figure.',
     sectionList,
     topicList,
     "Output ONLY the JSON array, no prose.",
@@ -323,29 +376,26 @@ const RESPONSE_SCHEMA: ResponseSchema = {
       question_type: { type: SchemaType.STRING, format: "enum", enum: ["mcq", "nat", "subjective"] },
       options: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true },
       options_hindi: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true },
+      // Reasoning-first: solution + the answer the solution concludes are emitted
+      // BEFORE correct_answer, so the model works the problem out before committing
+      // to an answer (structured output generates fields top-to-bottom and can't
+      // revise an earlier field). correct_answer then either reads the printed key
+      // or follows solution_answer — and a disagreement between them is the flag.
+      solution: { type: SchemaType.STRING, nullable: true },
+      solution_hindi: { type: SchemaType.STRING, nullable: true },
+      solution_answer: { type: SchemaType.STRING, nullable: true },
       correct_answer: { type: SchemaType.STRING, nullable: true },
       max_marks: { type: SchemaType.NUMBER },
       nat_tolerance: { type: SchemaType.NUMBER, nullable: true },
-      solution: { type: SchemaType.STRING, nullable: true },
-      solution_hindi: { type: SchemaType.STRING, nullable: true },
       section: { type: SchemaType.STRING, nullable: true },
       topic: { type: SchemaType.STRING, nullable: true },
       has_diagram: { type: SchemaType.BOOLEAN, nullable: true },
-      bbox: {
-        type: SchemaType.OBJECT,
-        nullable: true,
-        properties: {
-          x: { type: SchemaType.NUMBER },
-          y: { type: SchemaType.NUMBER },
-          w: { type: SchemaType.NUMBER },
-          h: { type: SchemaType.NUMBER },
-        },
-        required: ["x", "y", "w", "h"],
-      },
+      options_are_figures: { type: SchemaType.BOOLEAN, nullable: true },
+      solution_has_diagram: { type: SchemaType.BOOLEAN, nullable: true },
+      solution_page: { type: SchemaType.INTEGER, nullable: true },
       source_image: { type: SchemaType.INTEGER, nullable: true },
       is_figure: { type: SchemaType.BOOLEAN, nullable: true },
       page: { type: SchemaType.INTEGER, nullable: true },
-      crop_box: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER }, nullable: true },
       confidence: { type: SchemaType.NUMBER, nullable: true },
     },
     required: ["question_text", "question_type", "max_marks"],
@@ -377,10 +427,14 @@ const ANSWER_KEY_SCHEMA: ResponseSchema = {
     type: SchemaType.OBJECT,
     properties: {
       number: { type: SchemaType.INTEGER },
-      answer: { type: SchemaType.STRING }, // option label (A/B/…) for mcq, or the numeric answer
+      // Reasoning-first: solution + the answer it concludes precede the printed answer.
       solution: { type: SchemaType.STRING, nullable: true },
       solution_hindi: { type: SchemaType.STRING, nullable: true },
+      solution_answer: { type: SchemaType.STRING, nullable: true }, // the answer the solution concludes (own reasoning)
+      answer: { type: SchemaType.STRING }, // the PRINTED answer (option label/number); else = solution_answer
       derived: { type: SchemaType.BOOLEAN, nullable: true }, // true = AI-solved, not from the paper
+      solution_has_diagram: { type: SchemaType.BOOLEAN, nullable: true }, // the printed solution contains a drawn figure
+      solution_page: { type: SchemaType.INTEGER, nullable: true }, // 0-based page the solution figure is on
     },
     required: ["number", "answer"],
   },
@@ -391,7 +445,10 @@ type AnswerKeyEntry = {
   answer: string;
   solution?: string | null;
   solution_hindi?: string | null;
+  solution_answer?: string | null; // the answer the solution concludes (own reasoning) — for the cross-check
   derived?: boolean | null; // true = AI solved it (not found in the paper)
+  solution_has_diagram?: boolean | null; // the printed worked solution contains a drawn figure
+  solution_page?: number | null; // 0-based page the solution figure is on
 };
 
 function buildAnswerKeyPrompt(onlyNumbers?: number[]): string {
@@ -402,16 +459,20 @@ function buildAnswerKeyPrompt(onlyNumbers?: number[]): string {
     : "Provide the correct answer + worked solution for EVERY question in it.";
   return [
     `You are given an exam paper. ${scope}`,
-    "Answers/solutions may be ANYWHERE and in ANY format: inline next to each question, in an answer key, in a separate solutions section, at the end, after each section, or in a table. Look across the WHOLE document and match each answer to its question by number.",
+    "These papers almost always PRINT the answers — your PRIMARY job is to FIND and READ them, not to solve the questions. The printed answers/solutions may be ANYWHERE and in ANY format: inline next to each question, in an answer key, in a separate solutions section, at the very end, after each section, or in a table (often a compact grid like '1-B 2-C 3-A'). Before deciding an answer is missing, scan the ENTIRE document end to end — including the last pages — for an answer key or solutions section.",
     "Return STRICT JSON: an array where each element is one question's answer:",
     `{
   "number": integer,            // the question number this answer belongs to
-  "answer": string,             // the CORRECT option label (A, B, C, D…) for an mcq; the numeric value for a numeric answer
-  "solution": string | null,    // worked explanation in English, with all math in $...$ / $$...$$ LaTeX
+  "solution": string | null,    // worked explanation in English — WRITE FIRST, all math in $...$ / $$...$$ LaTeX
   "solution_hindi": string | null, // Hindi translation of the solution (math identical)
-  "derived": boolean            // true if YOU solved it (not found in the paper), false if read from the paper
+  "solution_answer": string | null, // the option label / number your "solution" above concludes (your own reasoning)
+  "answer": string,             // the PRINTED answer (option label A/B/C… for mcq, numeric value for nat); if none is printed, copy "solution_answer"
+  "derived": boolean,           // true if YOU solved it (not found in the paper), false if read from the paper
+  "solution_has_diagram": boolean, // true if the PRINTED worked solution contains a drawn figure/diagram/graph the explanation refers to
+  "solution_page": integer | null  // 0-based page the solution figure is on (null for image uploads)
 }`,
-    "PREFER the paper's own answer/solution and read it verbatim (set derived=false). ONLY when a question's answer is NOT present anywhere in the document, solve it yourself: work out the correct answer and write a clear step-by-step solution, and set derived=true.",
+    'REASON BEFORE ANSWERING (order matters): FIRST write the worked "solution", THEN set "solution_answer" to what it concludes, THEN set "answer". Fill "solution_answer" ALWAYS from your own reasoning (even when a printed answer exists) — it cross-checks the printed key.',
+    'CRITICAL — for "answer": do NOT solve a question whose answer is printed in the paper. Read the printed answer verbatim and set derived=false. If the printed key differs from your "solution_answer", KEEP the printed value in "answer" (the disagreement is flagged for review). Set derived=true ONLY as a genuine last resort: after scanning the entire document you are certain the answer is printed NOWHERE — then set "answer" = "solution_answer". derived=true should be RARE; if you are setting it for most questions, you have not located the answer key yet — look again.',
     "LENGTH LIMIT: keep each worked solution concise — at most ~80 words / 6 lines. Stop once the key reasoning is clear; do NOT repeat steps, restate the question, or pad. The Hindi solution is just a translation of the same length.",
     LATEX_RULES,
     'The LaTeX rule above applies ONLY to "solution"/"solution_hindi". The "answer" field is NOT math: emit a plain option label (A, B, C…) or a plain number with NO $ signs, backticks, or LaTeX — e.g. "B" or "42", never "$42$".',
@@ -470,6 +531,18 @@ async function uploadPdf(pdf: UploadImage, apiKey: string): Promise<{ mimeType: 
 }
 
 /** Call Gemini to extract + translate questions from the uploaded media. */
+/**
+ * Live progress events emitted during extraction so the UI can show what's
+ * happening instead of one long spinner. `questions` events carry the freshly
+ * extracted (pre-answer-key, pre-crop) questions of a batch as they land, so the
+ * client can render them immediately; the route sends the fully enriched set in
+ * its final `done` event.
+ */
+export type ImportEvent =
+  | { t: "phase"; phase: "enumerate" | "extract" | "answers" | "verify" | "review"; total?: number }
+  | { t: "questions"; items: ParsedQuestion[]; done: number; total: number }
+  | { t: "usage"; rows: TokenUsageRow[] };
+
 export async function extractQuestions(opts: {
   images?: UploadImage[];
   pdf?: UploadImage;
@@ -480,6 +553,8 @@ export async function extractQuestions(opts: {
   /** Aborts the whole pipeline when the client disconnects (page refresh/close),
    *  so we stop firing Gemini calls instead of burning quota on a dead request. */
   signal?: AbortSignal;
+  /** Optional live-progress sink. Called synchronously as phases/batches finish. */
+  onEvent?: (ev: ImportEvent) => void;
 }): Promise<ParsedQuestion[]> {
   // Vertex authenticates via ADC, not the API key — only require the key on the
   // Developer API path.
@@ -489,14 +564,21 @@ export async function extractQuestions(opts: {
   // Always log the backend so "it's still using the API key" is obvious at a glance.
   console.log(
     USE_VERTEX
-      ? `[import] backend: Vertex AI (${process.env.VERTEX_LOCATION || "us-central1"}) — model ${MODEL}`
-      : `[import] backend: Developer API (GEMINI_API_KEY) — model ${MODEL}  [set GEMINI_USE_VERTEX=1 + restart for Vertex]`
+      ? `[import] backend: Vertex AI (${process.env.VERTEX_LOCATION || "us-central1"}) — extract ${MODEL}, answers ${ANSWER_MODEL}`
+      : `[import] backend: Developer API (GEMINI_API_KEY) — extract ${MODEL}, answers ${ANSWER_MODEL}  [set GEMINI_USE_VERTEX=1 + restart for Vertex]`
   );
   const signal = opts.signal;
+  const emit = opts.onEvent ?? (() => {});
 
   // Resolve media once and reuse across passes. PDFs: the Developer API uploads
   // via the File API (handles big multi-page papers); Vertex has no File API, so
   // inline the PDF as base64 (fine for typical request sizes). Images: inline.
+  //
+  // IMPORTANT — media parts are placed BEFORE the text prompt in every call's
+  // `parts` array. Gemini 2.5+ models have IMPLICIT context caching: when
+  // consecutive requests share the same prefix (the media), the server caches it
+  // automatically and charges the discounted "cached read" rate (~90% off input)
+  // for all batches after the first. Keeping media first maximizes cache hits.
   const media: Part[] = [];
   if (opts.pdf) {
     media.push(
@@ -514,8 +596,9 @@ export async function extractQuestions(opts: {
   // answer key) so a big solutions section can't inflate the count. Best-effort:
   // on failure we fall back to a single, un-batched extraction call below.
   let numbers: number[] = [];
+  emit({ t: "phase", phase: "enumerate" });
   try {
-    const enumParts: Part[] = [{ text: buildEnumeratePrompt() }, ...media];
+    const enumParts: Part[] = [...media, { text: buildEnumeratePrompt() }];
     const raw = await callResilient(key, "enumerate", ENUM_SCHEMA, enumParts, signal);
     numbers = [...new Set(raw.map((n) => Number(n)).filter((n) => Number.isFinite(n)))].sort(
       (a, b) => a - b
@@ -531,14 +614,20 @@ export async function extractQuestions(opts: {
   if (numbers.length > BATCH_SIZE) {
     const groups = chunk(numbers, BATCH_SIZE);
     console.log(`[import] extracting ${numbers.length} questions in ${groups.length} batch(es) of ${BATCH_SIZE}, ${CONCURRENCY} at a time`);
+    emit({ t: "phase", phase: "extract", total: numbers.length });
+    let extracted = 0;
     const batched = await mapLimit(groups, CONCURRENCY, async (group) => {
       if (signal?.aborted) return [] as ParsedQuestion[]; // client gone — don't fire
       const label = `pass-1 batch ${group[0]}–${group[group.length - 1]}`;
       try {
-        return (await callResilient(key, label, RESPONSE_SCHEMA, [
-          { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group) },
+        const got = (await callResilient(key, label, RESPONSE_SCHEMA, [
           ...media,
+          { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group) },
         ], signal)) as ParsedQuestion[];
+        // Stream this batch the moment it lands so the UI fills in live.
+        extracted += got.length;
+        emit({ t: "questions", items: got, done: extracted, total: numbers.length });
+        return got;
       } catch (e) {
         // One batch giving up after retries shouldn't lose the rest of the paper —
         // skip its questions (admin can re-import that range) and keep going.
@@ -549,10 +638,12 @@ export async function extractQuestions(opts: {
     // Parallel batches return out of order — sort the flattened list by number.
     questions = batched.flat().sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
   } else {
+    emit({ t: "phase", phase: "extract", total: numbers.length });
     questions = (await callResilient(key, "pass-1", RESPONSE_SCHEMA, [
-      { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection) },
       ...media,
+      { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection) },
     ], signal)) as ParsedQuestion[];
+    emit({ t: "questions", items: questions, done: questions.length, total: questions.length });
   }
   // Client disconnected during pass 1 — stop now, skip the answer-key pass.
   if (signal?.aborted) {
@@ -561,14 +652,17 @@ export async function extractQuestions(opts: {
   }
   console.log(`[import] pass 1 extracted ${questions.length} question(s)`);
 
-  // Pass 2 — answer key (number → label [+ solution]), matched back onto the
-  // questions. Only for those still missing an answer/solution, batched over their
-  // numbers so a long paper's solutions don't truncate. Best-effort per batch: a
-  // failed batch leaves those answers blank (filled in review), never blocks import.
+  // Pass 2 — answer key (number → label [+ solution]) for questions whose answers
+  // Pass 1 didn't capture. Now that Pass 1 actively hunts the answer key, this
+  // fallback pass fires only for the stragglers — typically few or zero questions,
+  // drastically reducing API calls vs the old approach where EVERY answer came here.
   const missing = questions.filter((q) =>
     q.question_type === "subjective" ? !q.solution : !q.correct_answer
   );
+  const answered = questions.length - missing.length;
+  console.log(`[import] pass 1 answered ${answered}/${questions.length} — ${missing.length} need answer-key pass`);
   if (missing.length) {
+    emit({ t: "phase", phase: "answers", total: missing.length });
     const missingNumbers = [
       ...new Set(
         missing.map((q, i) => (typeof q.number === "number" ? q.number : i + 1))
@@ -580,9 +674,9 @@ export async function extractQuestions(opts: {
       const label = `answer-key batch ${group[0]}–${group[group.length - 1]}`;
       try {
         return (await callResilient(key, label, ANSWER_KEY_SCHEMA, [
-          { text: buildAnswerKeyPrompt(group) },
           ...media,
-        ], signal)) as AnswerKeyEntry[];
+          { text: buildAnswerKeyPrompt(group) },
+        ], signal, ANSWER_MODEL)) as AnswerKeyEntry[];
       } catch (e) {
         console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
         return [] as AnswerKeyEntry[];
@@ -592,6 +686,8 @@ export async function extractQuestions(opts: {
     console.log(`[import] answer-key pass returned ${answers.length} answer(s) across ${groups.length} batch(es)`);
     mergeAnswers(questions, answers);
   }
+  // Cross-check each objective answer against what its own solution concludes.
+  flagSolutionMismatches(questions);
   return questions;
 }
 
@@ -599,6 +695,94 @@ type Part =
   | { text: string }
   | { inlineData: { mimeType: string; data: string } }
   | { fileData: { mimeType: string; fileUri: string } };
+
+// ─── Token-usage accounting ──────────────────────────────────────────────────
+// Every Gemini response carries usageMetadata (prompt / candidates / thoughts
+// token counts). We accumulate it PER MODEL across one import run so the route can
+// report roughly how many tokens — and at current prices, how much money — the
+// extraction + verify/review passes burned, giving the admin a real cost feel.
+// Module-level + reset per run: imports are super-admin and effectively serial, so
+// cross-request mixing isn't a concern in practice.
+export type TokenUsageRow = {
+  model: string;
+  calls: number;
+  inputTokens: number; // total prompt tokens (INCLUDES the cached portion below)
+  cachedTokens: number; // of inputTokens, the part served from the implicit cache (~90% off)
+  outputTokens: number; // visible answer tokens (excludes thinking)
+  thinkingTokens: number;
+  costUsd: number | null; // rough estimate at the prices below; null if unpriced
+};
+
+// Implicit-cache reads bill at ~10% of the input rate (Gemini discounts a repeated
+// prefix ~90%). The big media prefix re-sent on every batch lands here after call 1.
+const CACHED_INPUT_FACTOR = 0.1;
+
+// USD per 1M tokens (input, output). The output price ALSO bills thinking tokens.
+// Verified against Google's published pricing Jun 2026; edit as prices change.
+// A model not listed reports tokens only.
+const TOKEN_PRICES: Record<string, { in: number; out: number }> = {
+  "gemini-3-flash-preview": { in: 0.5, out: 3.0 },
+  "gemini-3.5-flash": { in: 1.5, out: 9.0 },
+  "gemini-3.1-flash-lite": { in: 0.25, out: 1.5 }, // was wrongly 0.1/0.4 — corrected
+  "gemini-2.5-flash": { in: 0.3, out: 2.5 },
+  "gemini-2.5-pro": { in: 1.25, out: 10.0 },
+};
+
+type UsageAcc = { calls: number; input: number; cached: number; output: number; thinking: number };
+const _tokenUsage = new Map<string, UsageAcc>();
+
+/** Clear the per-run accumulator — the route calls this before an import starts. */
+export function resetTokenUsage(): void {
+  _tokenUsage.clear();
+}
+
+/** Fold one response's usageMetadata into the per-model running totals. */
+function recordUsage(modelId: string, res: any): void {
+  const u = res?.response?.usageMetadata;
+  if (!u) return;
+  const acc = _tokenUsage.get(modelId) ?? { calls: 0, input: 0, cached: 0, output: 0, thinking: 0 };
+  acc.calls += 1;
+  acc.input += Number(u.promptTokenCount ?? 0);
+  acc.cached += Number(u.cachedContentTokenCount ?? 0);
+  acc.output += Number(u.candidatesTokenCount ?? 0);
+  acc.thinking += Number(u.thoughtsTokenCount ?? 0);
+  _tokenUsage.set(modelId, acc);
+}
+
+/** Snapshot the accumulated usage as priced rows (most expensive first). */
+export function getTokenUsage(): TokenUsageRow[] {
+  const rows: TokenUsageRow[] = [];
+  for (const [model, a] of _tokenUsage) {
+    const p = TOKEN_PRICES[model];
+    // Split input into full-rate (uncached) and discounted cached reads.
+    const uncached = Math.max(0, a.input - a.cached);
+    const costUsd = p
+      ? (uncached * p.in + a.cached * p.in * CACHED_INPUT_FACTOR + (a.output + a.thinking) * p.out) /
+        1_000_000
+      : null;
+    rows.push({
+      model,
+      calls: a.calls,
+      inputTokens: a.input,
+      cachedTokens: a.cached,
+      outputTokens: a.output,
+      thinkingTokens: a.thinking,
+      costUsd,
+    });
+  }
+  return rows.sort((x, y) => (y.costUsd ?? 0) - (x.costUsd ?? 0));
+}
+
+/** Print the per-model token/cost breakdown to the server log. */
+export function logTokenUsage(): void {
+  for (const r of getTokenUsage()) {
+    console.log(
+      `[import] tokens · ${r.model}: ${r.calls} call(s) · ` +
+        `in=${r.inputTokens} (cached ${r.cachedTokens}) out=${r.outputTokens} thinking=${r.thinkingTokens}` +
+        (r.costUsd != null ? ` ≈ $${r.costUsd.toFixed(4)}` : " (unpriced)")
+    );
+  }
+}
 
 /**
  * Run one Gemini call constrained to a JSON-array schema and return the parsed
@@ -610,7 +794,8 @@ async function callGeminiJsonArray(
   schema: ResponseSchema,
   parts: Part[],
   temperature = 0.3,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  modelId: string = MODEL
 ): Promise<unknown[]> {
   if (signal?.aborted) throw new Error("aborted: client disconnected");
   const generationConfig = {
@@ -621,21 +806,21 @@ async function callGeminiJsonArray(
     // that fill the whole token budget and trip a bogus "output limit" error.
     // callResilient raises this further if a loop still slips through.
     temperature,
-    // Pro must think (it rejects budget 0); cap it so thinking can't starve the
-    // JSON output and to keep calls fast. flash/lite: disable thinking (budget 0).
-    thinkingConfig: { thinkingBudget: THINKING_BUDGET },
+    // Per-generation thinking config: thinkingLevel for Gemini 3, numeric budget
+    // for Gemini 2.5 (Pro must think; flash/lite disable it). See thinkingConfigFor.
+    thinkingConfig: thinkingConfigFor(modelId),
   };
   // Vertex (ADC, high quota) for local dev when GEMINI_USE_VERTEX=1; otherwise the
   // Developer API (GEMINI_API_KEY). Both SDKs share the generateContent shape and
   // the candidate/finishReason fields the parsing below reads.
   const model = USE_VERTEX
     ? vertexAI!.getGenerativeModel({
-        model: MODEL,
+        model: modelId,
         // @ts-ignore — Vertex's generationConfig type differs slightly but accepts these at runtime.
         generationConfig,
       })
     : new GoogleGenerativeAI(apiKey).getGenerativeModel({
-        model: MODEL,
+        model: modelId,
         // @ts-ignore — thinkingConfig isn't in the Developer SDK's type yet.
         generationConfig,
       });
@@ -663,6 +848,7 @@ async function callGeminiJsonArray(
       await new Promise((r) => setTimeout(r, 3000));
     }
   }
+  recordUsage(modelId, res); // token accounting for the cost summary
 
   // Surface why the model stopped (blocked prompt / truncation) before parsing,
   // so it doesn't collapse into a misleading "invalid JSON".
@@ -730,6 +916,11 @@ function mergeAnswers(questions: ParsedQuestion[], key: AnswerKeyEntry[]): void 
         if (entry.derived) q.answer_derived = true;
       }
       if (entry.solution_hindi && !q.solution_hindi) q.solution_hindi = entry.solution_hindi;
+      // The answer-key pass may be the one that spotted a figure in the solution.
+      if (entry.solution_has_diagram && !q.solution_has_diagram) {
+        q.solution_has_diagram = true;
+        if (typeof entry.solution_page === "number") q.solution_page = entry.solution_page;
+      }
       return;
     }
     if (q.correct_answer) return; // pass 1 already had an inline answer
@@ -740,8 +931,35 @@ function mergeAnswers(questions: ParsedQuestion[], key: AnswerKeyEntry[]): void 
     q.correct_answer = q.question_type === "mcq" ? resolveMcqLabel(ans, q.options) ?? ans : ans;
     if (entry.solution && !q.solution) q.solution = entry.solution;
     if (entry.solution_hindi && !q.solution_hindi) q.solution_hindi = entry.solution_hindi;
+    if (entry.solution_answer && !q.solution_answer)
+      q.solution_answer = String(entry.solution_answer).replace(/[$`]/g, "").trim();
     if (entry.derived) q.answer_derived = true;
+    if (entry.solution_has_diagram && !q.solution_has_diagram) {
+      q.solution_has_diagram = true;
+      if (typeof entry.solution_page === "number") q.solution_page = entry.solution_page;
+    }
   });
+}
+
+/**
+ * Internal consistency check: flag any objective question whose worked solution
+ * concludes a DIFFERENT answer than the ticked correct_answer. This is a near-free,
+ * high-precision error signal — the extractor contradicting itself usually means
+ * either a misread printed key, a wrong key in the paper, or a bad answer pick.
+ * Distinct from the (independent, different-model) verify pass: this compares the
+ * extractor's OWN reasoning to its OWN ticked answer. Mutates in place.
+ */
+function flagSolutionMismatches(questions: ParsedQuestion[]): void {
+  let flagged = 0;
+  for (const q of questions) {
+    if (q.question_type === "subjective") continue;
+    if (!q.correct_answer || !q.solution_answer) continue;
+    if (answersDisagree(q, String(q.solution_answer))) {
+      q.solution_mismatch = true;
+      flagged++;
+    }
+  }
+  if (flagged) console.log(`[import] solution≠ticked: ${flagged} question(s) flagged for review`);
 }
 
 /**
@@ -760,6 +978,247 @@ function resolveMcqLabel(raw: string, options?: { label: string; text: string }[
   return byLead ? byLead.label : null;
 }
 
+// ─── Pass 3: independent answer verification ─────────────────────────────────
+// A SECOND, independent opinion on each objective answer. The verifier re-solves
+// the question FROM SCRATCH — it is shown only the stem, the options, and (for a
+// figure question) the cropped figure; it never sees the answer pass 1/2
+// captured, nor the paper's printed answer key. So when its answer DISAGREES
+// with the stored correct_answer, that's a real signal the stored answer may be
+// wrong. Disagreements are flagged (answer_disputed) for the mandatory human
+// review — they are NEVER auto-corrected. Mirrors the admin/ai-review blind solve.
+//
+// Use a DIFFERENT model than extraction (COACHING_IMPORT_VERIFY_MODEL) for a
+// genuinely independent second opinion — Gemini 3 Flash. Stronger solver than the
+// flash-lite extraction/answer passes (so its blind solve is a meaningful check)
+// without Pro's thinking-token bill. Model choice is constrained: there is no
+// plain "gemini-3.1-flash", and "gemini-3.5-flash" is priced like 2.5-pro — so the
+// only cheap general Gemini-3 Flash is "gemini-3-flash-preview", which is served on
+// BOTH the Developer API key and Vertex global. One id covers both transports; the
+// trade-off is it's a preview (watch for deprecation). As a Gemini 3 model it runs
+// via thinkingConfigFor with thinkingLevel (default LOW) — a numeric budget would
+// throw. Bump COACHING_IMPORT_THINKING_LEVEL if the blind solve is too weak.
+const VERIFY_MODEL = process.env.COACHING_IMPORT_VERIFY_MODEL || "gemini-3-flash-preview";
+
+const VERIFY_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      answer: { type: SchemaType.STRING },
+      confidence: { type: SchemaType.NUMBER, nullable: true },
+    },
+    required: ["answer"],
+  },
+};
+
+function buildVerifyPrompt(q: ParsedQuestion): string {
+  const opts =
+    q.question_type === "mcq" && q.options?.length
+      ? `Options:\n${q.options.map((o) => `${o.label}. ${o.text || "(see figure)"}`).join("\n")}`
+      : "";
+  return [
+    "You are independently solving ONE exam question to VERIFY its answer. Decide the correct answer using ONLY your own reasoning.",
+    "Do NOT assume any answer has been provided. Do NOT look for or rely on any printed answer key — solve the question yourself from first principles.",
+    `Question type: ${q.question_type.toUpperCase()}`,
+    `Question: ${q.question_text}`,
+    opts,
+    q.images?.length ? "The figure this question refers to is attached as an image." : "",
+    'Return STRICT JSON: a one-element array [{"answer": string, "confidence": number}].',
+    q.question_type === "mcq"
+      ? 'For "answer" output ONLY the correct option label (A, B, C, D…) — a single letter, no text, no $, no punctuation.'
+      : 'For "answer" output ONLY the numeric value — digits (and a sign/decimal if needed), no units, no $, no words.',
+    '"confidence" is your 0..1 certainty in that answer.',
+    "Output ONLY the JSON array, no prose.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/** Fetch a question's cropped figure(s) back as inline image parts for the blind
+ *  solve. Best-effort — a figure that won't load just leaves the verifier with
+ *  text only (it will likely abstain, which we treat as "no disagreement"). */
+async function figureParts(q: ParsedQuestion): Promise<Part[]> {
+  if (!q.images?.length) return [];
+  const parts: Part[] = [];
+  for (const img of q.images) {
+    try {
+      const res = await fetch(img.filename);
+      if (!res.ok) continue;
+      const buf = Buffer.from(await res.arrayBuffer());
+      const mime = res.headers.get("content-type") || "image/png";
+      parts.push({ inlineData: { mimeType: mime, data: buf.toString("base64") } });
+    } catch {
+      /* skip this image */
+    }
+  }
+  return parts;
+}
+
+/** True when the independently-solved answer contradicts the stored one. Returns
+ *  false when either side can't be resolved (don't flag on ambiguity). */
+function answersDisagree(q: ParsedQuestion, aiRaw: string): boolean {
+  const stored = (q.correct_answer ?? "").trim();
+  if (!stored || !aiRaw.trim()) return false;
+  if (q.question_type === "mcq") {
+    const ai = resolveMcqLabel(aiRaw, q.options);
+    const cur = resolveMcqLabel(stored, q.options);
+    if (!ai || !cur) return false; // couldn't pin either to a label → don't flag
+    return ai.toUpperCase() !== cur.toUpperCase();
+  }
+  // NAT — numeric compare within the question's tolerance.
+  const a = Number((aiRaw.match(/-?\d+(?:\.\d+)?/) ?? [])[0]);
+  const b = Number((stored.match(/-?\d+(?:\.\d+)?/) ?? [])[0]);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) {
+    return aiRaw.replace(/[$`\s]/g, "") !== stored.replace(/[$`\s]/g, "");
+  }
+  const tol = typeof q.nat_tolerance === "number" ? Math.abs(q.nat_tolerance) : 0;
+  return Math.abs(a - b) > tol + 1e-9;
+}
+
+/** Resolve the verifier's raw answer to the value we show in the review badge. */
+function verifyDisplay(q: ParsedQuestion, aiRaw: string): string {
+  if (q.question_type === "mcq") return resolveMcqLabel(aiRaw, q.options) ?? aiRaw.trim().toUpperCase();
+  return aiRaw.replace(/[$`]/g, "").trim();
+}
+
+/**
+ * Cross-check every objective answer with an independent blind solve and mark
+ * disagreements (q.answer_disputed + q.verify_answer) for the review UI. Mutates
+ * the questions in place. Best-effort and concurrent; a failed check just leaves
+ * a question unflagged. Subjective questions have no single answer to compare, so
+ * they're skipped. Call AFTER cropping so figure questions carry their figure.
+ */
+export async function verifyAnswers(opts: {
+  questions: ParsedQuestion[];
+  signal?: AbortSignal;
+  onEvent?: (ev: ImportEvent) => void;
+}): Promise<void> {
+  const key = process.env.GEMINI_API_KEY ?? "";
+  if (!USE_VERTEX && !key) return;
+  const { questions, signal } = opts;
+  const emit = opts.onEvent ?? (() => {});
+
+  // Only objective questions that actually have a captured answer can be cross-checked.
+  const targets = questions.filter(
+    (q) => (q.question_type === "mcq" || q.question_type === "nat") && !!q.correct_answer
+  );
+  if (!targets.length) return;
+  console.log(`[import] verifying ${targets.length} objective answer(s) with ${VERIFY_MODEL}`);
+  emit({ t: "phase", phase: "verify", total: targets.length });
+
+  let disputes = 0;
+  await mapLimit(targets, CONCURRENCY, async (q) => {
+    if (signal?.aborted) return;
+    const label = `verify q${q.number ?? "?"}`;
+    try {
+      const parts: Part[] = [...(await figureParts(q)), { text: buildVerifyPrompt(q) }];
+      const got = (await callResilient(key, label, VERIFY_SCHEMA, parts, signal, VERIFY_MODEL)) as {
+        answer?: string;
+        confidence?: number;
+      }[];
+      const aiRaw = got[0]?.answer ? String(got[0].answer) : "";
+      if (aiRaw && answersDisagree(q, aiRaw)) {
+        q.answer_disputed = true;
+        q.verify_answer = verifyDisplay(q, aiRaw);
+        disputes++;
+      }
+    } catch (e) {
+      // Verification is best-effort — a failed check leaves the question unflagged.
+      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
+    }
+  });
+  console.log(`[import] verification flagged ${disputes}/${targets.length} answer(s) as disputed`);
+}
+
+// ─── Subjective quality review ───────────────────────────────────────────────
+// Subjective questions have no single answer to cross-check, so verifyAnswers
+// skips them. Instead we review the QUALITY of the extracted model answer: a
+// stronger model judges whether it is correct and complete enough to grade
+// students against (the subjective grader compares student photos to it). Wrong
+// or thin model answers are flagged (solution_review_flag + a short note) for the
+// mandatory human review — never auto-edited. Best-effort and concurrent.
+const SUBJECTIVE_REVIEW_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      ok: { type: SchemaType.BOOLEAN },
+      issue: { type: SchemaType.STRING, nullable: true },
+    },
+    required: ["ok"],
+  },
+};
+
+function buildSubjectiveReviewPrompt(q: ParsedQuestion): string {
+  return [
+    "You are reviewing the QUALITY of a model answer / marking scheme for ONE subjective exam question. This model answer is what students will be graded against, so it must be factually correct and cover the key points needed to mark.",
+    `Question: ${q.question_text}`,
+    q.images?.length ? "The figure this question refers to is attached as an image." : "",
+    `Model answer to review:\n${(q.solution ?? "").trim() || "(empty)"}`,
+    "Judge ONLY whether the model answer is factually correct and adequate to grade against. Do NOT rewrite or expand it; do NOT solve the question yourself unless needed to spot an error.",
+    'Return STRICT JSON: a one-element array [{"ok": boolean, "issue": string|null}].',
+    '"ok" = true if the model answer is correct and reasonably complete; false if it is wrong, empty, or missing key marking points.',
+    'When "ok" is false, "issue" is a SHORT (≤15 words) reviewer-facing note on what is wrong or missing. When true, "issue" is null.',
+    "Output ONLY the JSON array, no prose.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * Quality-review every subjective model answer with an independent solve and mark
+ * the weak/incorrect ones (q.solution_review_flag + q.solution_review_note) for
+ * the review UI. Mutates the questions in place. Best-effort and concurrent; a
+ * failed check just leaves a question unflagged. Objective questions are handled
+ * by verifyAnswers instead. Call AFTER cropping so figure questions carry their figure.
+ */
+export async function reviewSubjectiveAnswers(opts: {
+  questions: ParsedQuestion[];
+  signal?: AbortSignal;
+  onEvent?: (ev: ImportEvent) => void;
+}): Promise<void> {
+  const key = process.env.GEMINI_API_KEY ?? "";
+  if (!USE_VERTEX && !key) return;
+  const { questions, signal } = opts;
+  const emit = opts.onEvent ?? (() => {});
+
+  // Only subjective questions that actually have a model answer can be reviewed.
+  const targets = questions.filter(
+    (q) => q.question_type === "subjective" && !!String(q.solution ?? "").trim()
+  );
+  if (!targets.length) return;
+  console.log(`[import] reviewing ${targets.length} subjective model answer(s) with ${VERIFY_MODEL}`);
+  emit({ t: "phase", phase: "review", total: targets.length });
+
+  let flagged = 0;
+  await mapLimit(targets, CONCURRENCY, async (q) => {
+    if (signal?.aborted) return;
+    const label = `review q${q.number ?? "?"}`;
+    try {
+      const parts: Part[] = [...(await figureParts(q)), { text: buildSubjectiveReviewPrompt(q) }];
+      const got = (await callResilient(
+        key,
+        label,
+        SUBJECTIVE_REVIEW_SCHEMA,
+        parts,
+        signal,
+        VERIFY_MODEL
+      )) as { ok?: boolean; issue?: string | null }[];
+      const r = got[0];
+      if (r && r.ok === false) {
+        q.solution_review_flag = true;
+        q.solution_review_note =
+          String(r.issue ?? "").trim() || "Model answer may be incorrect or incomplete.";
+        flagged++;
+      }
+    } catch (e) {
+      // Best-effort — a failed review leaves the model answer unflagged.
+      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
+    }
+  });
+  console.log(`[import] subjective review flagged ${flagged}/${targets.length} model answer(s)`);
+}
+
 // A rasterized PDF page source, shaped to avoid leaking mupdf types here (the
 // renderer lives in lib/pdfRaster and is passed in by the route).
 type PageRenderer = { render(pageIndex: number): { png: Buffer; width: number; height: number } | null };
@@ -767,111 +1226,254 @@ export type CropContext = { images: UploadImage[]; renderer?: PageRenderer | nul
 
 /** Upload a PNG crop to ImageKit; returns its URL (passed through by getImageUrl) or null. */
 async function uploadCrop(png: Buffer, coachingId: string): Promise<string | null> {
+  return uploadCoachingImage(png, coachingId, "png");
+}
+
+/**
+ * Dedicated figure detection: send a SINGLE page image to Gemini and ask it to
+ * locate the figure for a specific question. This is far more accurate than
+ * asking for crop_box coordinates during the multi-page extraction pass because:
+ *
+ *  1. The model sees ONE page at a time (not a 30-page PDF), so spatial
+ *     awareness is much sharper.
+ *  2. The prompt focuses exclusively on object localization — no competing
+ *     extraction / translation / section-classification work.
+ *  3. We explicitly say "question N" so it knows exactly what to look for.
+ *  4. thinkingBudget=0 is recommended for spatial tasks (per Google docs).
+ *
+ * Returns [ymin, xmin, ymax, xmax] normalized 0..1000, or null if no figure
+ * is found or the call fails. Best-effort: never throws.
+ */
+const FIGURE_DETECT_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    box: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER }, nullable: true },
+  },
+  required: ["box"],
+};
+
+async function locateFigure(
+  pageImage: Buffer,
+  questionNumber: number | null | undefined,
+  questionText: string,
+  apiKey: string,
+  signal?: AbortSignal,
+  // What to box:
+  //  - "tight":    the question's own figure, excluding stem/options/solution (default)
+  //  - "whole":    the whole question + every answer-option PICTURE (options_are_figures)
+  //  - "solution": the figure drawn inside this question's WORKED SOLUTION/explanation
+  mode: "tight" | "whole" | "solution" = "tight"
+): Promise<number[] | null> {
+  if (signal?.aborted) return null;
+  const qRef = typeof questionNumber === "number"
+    ? `question ${questionNumber}`
+    : `the question whose text begins: "${questionText.slice(0, 120)}"`;
+  const prompt = (mode === "whole"
+    ? [
+        `Look at this exam paper page. Draw ONE box around the ENTIRE ${qRef} — its stem/figure AND all of its answer-option pictures (A, B, C, D) — because the options are figures the student must see, so they MUST stay inside the box.`,
+        "Return a JSON object with a single field \"box\": [ymin, xmin, ymax, xmax], each an integer 0..1000 normalized to the image dimensions.",
+        "Include everything needed to answer: the question figure(s) AND every option picture. EXCLUDE only other questions and any printed answer key / solution.",
+        "If the page does NOT contain this question, return {\"box\": null}.",
+      ]
+    : mode === "solution"
+    ? [
+        `Look at this exam paper page. Find the drawn FIGURE (diagram, graph, chart, circuit, geometric construction, labelled sketch) that appears inside the WORKED SOLUTION / explanation for ${qRef} — NOT the figure in the question itself.`,
+        "Return a JSON object with a single field \"box\": [ymin, xmin, ymax, xmax], each an integer 0..1000 normalized to the image dimensions.",
+        "The box must be TIGHT around the solution's figure itself — EXCLUDE the surrounding solution text/equations, the question stem, and any other question.",
+        "If the solution for this question has NO drawn figure on this page, return {\"box\": null}.",
+      ]
+    : [
+        `Look at this exam paper page. Find the drawn FIGURE (diagram, graph, chart, circuit, geometric shape, table-as-image) that belongs to ${qRef}.`,
+        "Return a JSON object with a single field \"box\": [ymin, xmin, ymax, xmax] where each value is an integer 0..1000 normalized to the image dimensions.",
+        "The box must be TIGHT around the figure itself — include the complete drawing but EXCLUDE:",
+        "  • The question stem text (already captured separately)",
+        "  • Any printed solution / working / answer below or beside the figure",
+        "  • Text answer options (A, B, C, D) unless the options ARE figures themselves",
+        "If the page does NOT contain a figure for this question, return {\"box\": null}.",
+      ]
+  ).join("\n");
+
   try {
-    const fileName = `q-${globalThis.crypto.randomUUID()}.png`;
-    const file = await toFile(png, fileName);
-    const result = await ik.files.upload({
-      file,
-      fileName,
-      folder: `/pattern-master/coaching/${coachingId}`,
-      useUniqueFileName: true,
-    });
-    return result.url ?? null;
-  } catch {
+    const parts: Part[] = [
+      { inlineData: { mimeType: "image/png", data: pageImage.toString("base64") } },
+      { text: prompt },
+    ];
+
+    // Use the dedicated FIGURE_MODEL (flash) for figure detection — a visual
+    // localization task, not reasoning. thinkingConfigFor derives the right thinking
+    // dialect from the model: thinkingLevel for Gemini 3, budget 0 for 2.5 flash, a
+    // valid positive budget for a 2.5 Pro FIGURE_MODEL (which rejects 0).
+    const generationConfig = {
+      responseMimeType: "application/json" as const,
+      responseSchema: FIGURE_DETECT_SCHEMA,
+      maxOutputTokens: 256,
+      temperature: 0.1,
+      thinkingConfig: thinkingConfigFor(FIGURE_MODEL),
+    };
+    const model = USE_VERTEX
+      ? vertexAI!.getGenerativeModel({
+          model: FIGURE_MODEL, // flash — cheap, fast, spatial
+          // @ts-ignore
+          generationConfig,
+        })
+      : new GoogleGenerativeAI(apiKey).getGenerativeModel({
+          model: FIGURE_MODEL,
+          // @ts-ignore
+          generationConfig,
+        });
+
+    const res: any = USE_VERTEX
+      // @ts-ignore
+      ? await model.generateContent({ contents: [{ role: "user", parts }] })
+      // @ts-ignore
+      : await model.generateContent({ contents: [{ role: "user", parts }] }, { signal });
+    recordUsage(FIGURE_MODEL, res); // token accounting for the cost summary
+
+    let text = "";
+    try {
+      text = typeof res.response.text === "function" ? res.response.text() : "";
+    } catch {
+      text = "";
+    }
+    if (!text) {
+      text = res.response.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p?.text ?? "").join("") ?? "";
+    }
+    text = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    if (!text) return null;
+
+    const parsed = JSON.parse(text);
+    const box = parsed?.box;
+    if (!Array.isArray(box) || box.length !== 4) return null;
+    const nums = box.map(Number);
+    if (nums.some((n) => !Number.isFinite(n) || n < 0 || n > 1000)) return null;
+    return nums;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Rate limited — wait and return null (don't block the import for a figure)
+    if (/429|quota|rate limit|RESOURCE_EXHAUSTED/i.test(msg)) {
+      console.warn(`[import] figure detection rate-limited — skipping figure for ${qRef}`);
+    } else {
+      console.warn(`[import] figure detection failed for ${qRef}: ${msg.slice(0, 100)}`);
+    }
     return null;
   }
 }
 
 /**
- * Capture a question's figure(s) as an image. For figure questions Gemini returns
- * a normalized crop_box (0..1000, [ymin,xmin,ymax,xmax]) tight around ONLY the
- * figure(s) (excludes the stem text and any printed solution below it);
- * we crop it from the rasterized PDF page (or the source image for image uploads)
- * and upload it. Falls back to the legacy single-diagram bbox path. Best-effort:
- * any failure returns null so the question still imports (just without the image).
+ * Capture a question's figure by sending the specific page to Gemini for
+ * focused object detection. Steps:
+ *  1. Rasterize the page (PDF) or grab the source image
+ *  2. Send just that page image to Gemini with "find the figure for question N"
+ *  3. Crop using the returned coordinates and upload
+ *
+ * Falls back to null (question imports without an image) on any failure.
  */
 export async function cropQuestionImage(
   ctx: CropContext,
   q: ParsedQuestion,
-  coachingId: string
+  coachingId: string,
+  apiKey?: string,
+  signal?: AbortSignal
 ): Promise<StoredImage[] | null> {
-  // Only snapshot questions that actually contain a figure. has_diagram is the
-  // direct "a figure is present" signal; the model sometimes sets is_figure=true
-  // (and a crop_box) on plain text questions (word problems, ratios), which would
-  // otherwise snapshot a useless image of the question's own text.
-  if (!q.has_diagram) return null;
+  // Snapshot questions that contain a drawn figure OR whose answer choices are
+  // pictures (mirror-image / non-verbal reasoning). has_diagram = "a figure is
+  // present"; options_are_figures = "the choices are pictures" — either needs an
+  // image. Plain text questions (where the model sometimes mis-sets is_figure)
+  // have neither, so we skip them and never snapshot a useless image of text.
+  if (!q.has_diagram && !q.options_are_figures) return null;
 
-  const box = Array.isArray(q.crop_box) && q.crop_box.length === 4 ? q.crop_box.map(Number) : null;
-  if (!box || box.some((n) => !Number.isFinite(n))) {
-    return cropDiagram(ctx.images, q, coachingId);
-  }
+  const src = await resolveSourcePage(ctx, q.page, q.source_image);
+  if (!src) return null;
+  const key = apiKey ?? process.env.GEMINI_API_KEY ?? "";
+  if (!USE_VERTEX && !key) return null;
 
-  // Resolve the source bitmap + its pixel dimensions: a rasterized PDF page, or
-  // the originating uploaded image.
+  // Figure-option questions (mirror-image etc.) need the WHOLE question captured,
+  // options included — pass that mode through so the box doesn't exclude the choices.
+  const box = await locateFigure(src.png, q.number, q.question_text, key, signal, q.options_are_figures ? "whole" : "tight");
+  if (!box) return null;
+  const url = await cropBoxAndUpload(src, box, coachingId);
+  return url ? [{ index: 0, filename: url }] : null;
+}
+
+/**
+ * Capture a figure drawn inside the WORKED SOLUTION (not the question). Same
+ * machinery as cropQuestionImage but located on the SOLUTION's page and tagged
+ * type:"explanation" so it renders in the solution block, never with the question.
+ * Returns one StoredImage or null (best-effort, like the question crop).
+ */
+export async function cropSolutionImage(
+  ctx: CropContext,
+  q: ParsedQuestion,
+  coachingId: string,
+  apiKey?: string,
+  signal?: AbortSignal
+): Promise<StoredImage | null> {
+  if (!q.solution_has_diagram) return null;
+
+  // Prefer the solution's own page; fall back to the question's page (the
+  // solution is often printed right under the question on the same page).
+  const page = typeof q.solution_page === "number" ? q.solution_page : q.page;
+  const src = await resolveSourcePage(ctx, page, q.source_image);
+  if (!src) return null;
+  const key = apiKey ?? process.env.GEMINI_API_KEY ?? "";
+  if (!USE_VERTEX && !key) return null;
+
+  const box = await locateFigure(src.png, q.number, q.question_text, key, signal, "solution");
+  if (!box) return null;
+  const url = await cropBoxAndUpload(src, box, coachingId);
+  return url ? { index: 0, filename: url, type: "explanation" } : null;
+}
+
+type PageSource = { png: Buffer; W: number; H: number };
+
+/**
+ * Resolve the source bitmap + its pixel dimensions for a figure crop: a rasterized
+ * PDF page (when a renderer + page index are available), else the originating
+ * uploaded image. Returns null if nothing usable.
+ */
+async function resolveSourcePage(
+  ctx: CropContext,
+  page: number | null | undefined,
+  sourceImage: number | undefined
+): Promise<PageSource | null> {
   let srcPng: Buffer | null = null;
   let W = 0;
   let H = 0;
-  if (ctx.renderer && typeof q.page === "number") {
-    const r = ctx.renderer.render(q.page);
+  if (ctx.renderer && typeof page === "number") {
+    const r = ctx.renderer.render(page);
     if (r) ({ png: srcPng, width: W, height: H } = r);
   }
   if (!srcPng && ctx.images.length) {
-    const src = ctx.images[q.source_image ?? 0];
-    if (src) {
-      srcPng = Buffer.from(src.base64, "base64");
+    const img = ctx.images[sourceImage ?? 0];
+    if (img) {
+      srcPng = Buffer.from(img.base64, "base64");
       const meta = await sharp(srcPng).metadata();
       W = meta.width ?? 0;
       H = meta.height ?? 0;
     }
   }
   if (!srcPng || W === 0 || H === 0) return null;
+  return { png: srcPng, W, H };
+}
 
+/** Crop the normalized [ymin,xmin,ymax,xmax] (0..1000) box out of a page and upload it. */
+async function cropBoxAndUpload(src: PageSource, box: number[], coachingId: string): Promise<string | null> {
   try {
     const [ymin, xmin, ymax, xmax] = box;
-    const pad = 0.012; // a little breathing room so figure edges aren't clipped
+    const { W, H } = src;
+    const pad = 0.015; // breathing room so figure edges aren't clipped
     const left = Math.max(0, Math.round((Math.min(xmin, xmax) / 1000 - pad) * W));
     const top = Math.max(0, Math.round((Math.min(ymin, ymax) / 1000 - pad) * H));
     const right = Math.min(W, Math.round((Math.max(xmin, xmax) / 1000 + pad) * W));
     const bottom = Math.min(H, Math.round((Math.max(ymin, ymax) / 1000 + pad) * H));
     const width = right - left;
     const height = bottom - top;
-    if (width <= 2 || height <= 2) return null;
+    if (width <= 10 || height <= 10) return null; // too small = bad detection
 
-    const cropped = await sharp(srcPng).extract({ left, top, width, height }).png().toBuffer();
-    const url = await uploadCrop(cropped, coachingId);
-    return url ? [{ index: 0, filename: url }] : null;
+    const cropped = await sharp(src.png).extract({ left, top, width, height }).png().toBuffer();
+    return await uploadCrop(cropped, coachingId);
   } catch {
     return null;
   }
 }
 
-/**
- * Legacy single-diagram crop from an uploaded image's pixel bbox. Kept as the
- * fallback when no normalized crop_box is present.
- */
-export async function cropDiagram(
-  images: UploadImage[],
-  q: ParsedQuestion,
-  coachingId: string
-): Promise<StoredImage[] | null> {
-  if (!q.has_diagram || !q.bbox || images.length === 0) return null;
-  const src = images[q.source_image ?? 0];
-  if (!src) return null;
-  try {
-    const buf = Buffer.from(src.base64, "base64");
-    const meta = await sharp(buf).metadata();
-    const imgW = meta.width ?? 0;
-    const imgH = meta.height ?? 0;
-    const left = Math.max(0, Math.round(q.bbox.x));
-    const top = Math.max(0, Math.round(q.bbox.y));
-    const width = Math.min(imgW - left, Math.round(q.bbox.w));
-    const height = Math.min(imgH - top, Math.round(q.bbox.h));
-    if (width <= 1 || height <= 1) return null;
-
-    const cropped = await sharp(buf).extract({ left, top, width, height }).png().toBuffer();
-    const url = await uploadCrop(cropped, coachingId);
-    return url ? [{ index: 0, filename: url }] : null;
-  } catch {
-    return null;
-  }
-}

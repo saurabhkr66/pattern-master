@@ -74,10 +74,21 @@ export const GET = withCoachingContext(async (req, { coachingId }) => {
 });
 
 // POST /api/coaching/questions
-export const POST = withCoachingContext(async (req, { coachingId }) => {
+export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const body = await req.json();
   const { error, data } = validateCoachingQuestion(body);
   if (error || !data) return NextResponse.json({ error: error ?? "invalid" }, { status: 400 });
+
+  // Subjective questions are created ONLY by super admins via the AI import
+  // pipeline (vetted for grading accuracy). Enabling subjective for a coaching
+  // lets it build tests from those questions — it does NOT let its admins author
+  // subjective questions by hand. mcq/nat manual creation stays open.
+  if (data.question_type === "subjective" && !actor.isSuperAdmin) {
+    return NextResponse.json(
+      { error: "subjective questions can only be created by super-admin import" },
+      { status: 403 }
+    );
+  }
 
   const created = await prisma.coachingQuestion.create({
     data: { coaching_id: coachingId, ...data },

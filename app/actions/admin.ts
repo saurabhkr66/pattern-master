@@ -396,8 +396,8 @@ function answerFormatHint(qType: string): string {
   return qType === "MSQ"
     ? `This question is MSQ (multiple-select). The answer is one OR more letters. End with [ANSWER: A,C] (comma-separated, any order).`
     : qType === "NAT"
-    ? `This question is NAT (numeric answer, no options). End with [ANSWER: 12.5] (just the numeric value).`
-    : `This question is MCQ (single-select). End with [ANSWER: X] where X is a single letter A, B, C, or D.`;
+      ? `This question is NAT (numeric answer, no options). End with [ANSWER: 12.5] (just the numeric value).`
+      : `This question is MCQ (single-select). End with [ANSWER: X] where X is a single letter A, B, C, or D.`;
 }
 
 /**
@@ -733,7 +733,7 @@ Rules:
             model: GEMINI_MODEL,
             tools: [],
             generationConfig: {
-            
+
               // @ts-ignore
               thinkingConfig: { thinkingLevel: "HIGH" },
             }
@@ -1283,8 +1283,10 @@ export async function reviewQuestionAnswer(
     });
     const toCreate: any[] = [];
     if (isMismatch) {
-      toCreate.push({ [idKey]: questionId, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId,
-        details: `AI's independent solution arrived at "${rawAiAnswer}" but the stored correct_answer is "${q.correct_answer}". Verify which one is right.` });
+      toCreate.push({
+        [idKey]: questionId, reason: AI_MISMATCH_REASON, status: "pending", user_id: userId,
+        details: `AI's independent solution arrived at "${rawAiAnswer}" but the stored correct_answer is "${q.correct_answer}". Verify which one is right.`
+      });
     }
     if (checks.explanationFlagged) {
       toCreate.push({ [idKey]: questionId, reason: AI_EXPLANATION_REASON, status: "pending", user_id: userId, details: explDetails });

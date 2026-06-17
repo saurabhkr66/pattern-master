@@ -2,6 +2,7 @@ import "server-only";
 import {
   GoogleGenerativeAI,
   SchemaType,
+  type GenerationConfig,
   type ResponseSchema,
 } from "@google/generative-ai";
 import { prisma } from "@/lib/prisma";
@@ -34,6 +35,12 @@ import { invalidateAttemptResult } from "@/lib/coachingResult";
 
 const MODEL = process.env.SUBJECTIVE_GRADER_MODEL || "gemini-3.1-flash-lite";
 const CONCURRENCY = 3; // parallel Gemini calls per attempt
+
+// Thinking level for the grader. Gemini 3.x flash-lite controls thinking by
+// LEVEL (MINIMAL | LOW | MEDIUM | HIGH), not a numeric budget. Component-wise
+// marking benefits from a reasoning pass, so default it on at LOW. Env-overridable
+// to dial up accuracy (MEDIUM/HIGH) or down for cost (MINIMAL) at scale.
+const THINKING_LEVEL = process.env.SUBJECTIVE_GRADER_THINKING_LEVEL || "LOW";
 
 // PROCESS-WIDE rate limiter for grading calls. Each submitted attempt fires its
 // OWN after() grader (no shared queue), so the per-attempt CONCURRENCY cap can't
@@ -98,8 +105,13 @@ async function callGeminiWithRetry<T>(fn: () => Promise<T>): Promise<T> {
 const GRADE_SCHEMA: ResponseSchema = {
   type: SchemaType.OBJECT,
   properties: {
-    marks_awarded: { type: SchemaType.NUMBER },
+    // feedback is emitted BEFORE marks_awarded on purpose: the grader writes its
+    // per-component marking breakdown first, then marks_awarded follows as the SUM.
+    // Structured output generates top-to-bottom, so this makes it mark each part
+    // and reason before committing to a number — instead of guessing a holistic
+    // score up front and rationalising it (which over-credited wrong parts).
     feedback: { type: SchemaType.STRING },
+    marks_awarded: { type: SchemaType.NUMBER },
     confidence: {
       type: SchemaType.STRING,
       format: "enum",
@@ -122,8 +134,15 @@ function graderModel() {
       temperature: 0,
       responseMimeType: "application/json",
       responseSchema: GRADE_SCHEMA,
-      maxOutputTokens: 1024,
-    },
+      // Bumped to 4096 so thinking tokens (which count against the output
+      // budget) don't starve the JSON answer and truncate it.
+      maxOutputTokens: 4096,
+      // thinkingConfig isn't in the legacy SDK's GenerationConfig type yet, but
+      // the SDK forwards generationConfig verbatim to the REST API, which
+      // accepts it. includeThoughts stays false — we only parse the JSON result,
+      // so thought parts would just pollute the response.
+      thinkingConfig: { thinkingLevel: THINKING_LEVEL, includeThoughts: false },
+    } as GenerationConfig,
   });
 }
 
@@ -144,14 +163,27 @@ function buildGradingPrompt(q: NormalizedQuestion): string {
       : "FIRST, before grading, write the ideal correct answer to this question yourself, using standard subject knowledge, to the depth a full-marks response would have. Grade the student against THAT answer. Return it in the model_answer field so the teacher can see what you graded against. Wrap every mathematical expression in LaTeX delimiters — inline $...$, display $$...$$ — e.g. write `$2^2 \\cdot 3^x$`, never bare `2^2 * 3^x`.",
     hasModelAnswer ? null : "",
     "GRADING RULES:",
+    "- FATAL CONCEPTUAL FLAW CHECK (do this FIRST, before any keyword/component credit): for each part, judge whether the student's claim is actually CORRECT in meaning, not just whether it contains the right words. A fatal flaw is when the student uses correct terminology but fundamentally contradicts the core mechanism — e.g. calls a permanent state temporary (or vice versa), swaps a cause for an effect, describes a solution as the problem, reverses a direction/sign, or inverts a relationship (proportional vs inversely proportional). If a part contains a fatal flaw, award 0 for THAT part regardless of how many correct keywords overlap with the model answer. Keyword presence NEVER overrides a wrong meaning.",
     "- Award marks for correct concepts even if the phrasing differs from the model answer.",
+    // When a model answer is supplied, stop the grader from treating it as the ONLY
+    // acceptable answer — many questions have more than one valid answer/method, and
+    // the stored model answer usually captures just one. Without this, a student who
+    // gives a different-but-correct response gets under-marked. Only added when a
+    // model answer exists (the no-model-answer branch already grades on own knowledge).
+    hasModelAnswer
+      ? "- The MODEL ANSWER is ONE correct reference, NOT the only acceptable answer. If the student reaches a valid result by a different correct method, or gives a different but equally valid answer to a question that admits more than one, award full credit using your own subject knowledge — do NOT mark it down merely for differing from the model answer. Penalise only genuine errors."
+      : null,
     "- Do NOT penalise extra correct information, grammar, spelling, or handwriting style unless it changes the meaning.",
     "- The student may answer in English, Hindi, or a mix — grade the content, not the language.",
-    "- Partial credit is expected: award proportionally for partially correct answers.",
+    "- MARK BY COMPONENT, not holistically: infer the parts the marks are split across from the MODEL ANSWER and the MAXIMUM MARKS (board questions allocate marks per part — e.g. a 3-mark question = definition 1 + reason 1 + balanced equation 1).",
+    "- Mark each part INDEPENDENTLY: give a part its full marks only if that part is correct and complete; give that part 0 if it is missing, wrong, or built on a fundamentally incorrect concept/law/formula — EVEN IF the student names a related or 'nearby' idea. Do NOT give a consolation half-mark for being in the right topic area (e.g. citing the WRONG conservation law earns 0 for the reason, not 0.5).",
+    "- marks_awarded is the SUM of the per-part marks. Partial credit comes ONLY from parts that are fully correct — never from half-crediting an incorrect part.",
+    "- METHOD / STEP MARKING: the working/concept and the final answer are SEPARATE parts. Award the marks for correct method, setup, and concepts EVEN IF the final answer is wrong — a careless slip or arithmetic error at the end loses only the final-answer mark, not the marks already earned for correct reasoning. A right concept with a wrong final value keeps the concept/method marks; zero a part only when THAT part is itself wrong or rests on a wrong concept.",
+    "- Do NOT penalise the same mistake twice: if the student makes one error and then carries it correctly through the later steps, give credit for those later steps (error carried forward).",
     `- marks_awarded must be between 0 and ${q.marks}, in steps of 0.5.`,
     "- If the image is blank, unreadable, or not an answer to this question, award 0 and say why in the feedback.",
     "",
-    "feedback: 1–3 sentences addressed to the student (what was right, what was missing).",
+    "feedback: FIRST a brief per-part breakdown showing each part's marks (e.g. 'Definition ✓ 1/1; Reason ✗ 0/1 — wrong law, cites X but should be Y; Equation ✓ 1/1'), THEN one short sentence of guidance for the student. Write this breakdown BEFORE deciding marks_awarded, and make marks_awarded equal the total of your breakdown.",
     'confidence: "high" = clearly readable and unambiguous against the model answer; "medium" = readable but the marks involve judgement; "low" = hard to read, ambiguous, or you are unsure.',
     hasModelAnswer
       ? "model_answer: leave as an empty string (a model answer was already provided)."
@@ -161,6 +193,19 @@ function buildGradingPrompt(q: NormalizedQuestion): string {
   ]
     .filter((line) => line !== null && line !== undefined)
     .join("\n");
+}
+
+// USD per 1M tokens for the grader model. Output rate ALSO bills thinking tokens.
+// Verified against Google's published pricing Jun 2026. Keep in sync with MODEL.
+const GRADER_TOKEN_PRICES: Record<string, { in: number; out: number }> = {
+  "gemini-3.1-flash-lite": { in: 0.25, out: 1.5 },
+  "gemini-2.5-flash": { in: 0.3, out: 2.5 },
+};
+
+/** Rough USD cost of grading usage at the current grader model's price (null if unpriced). */
+export function gradingCostUsd(input: number, output: number, thinking: number): number | null {
+  const p = GRADER_TOKEN_PRICES[MODEL];
+  return p ? (input * p.in + (output + thinking) * p.out) / 1_000_000 : null;
 }
 
 /** Grade one answer's image(s) against its question. Throws on Gemini failure. */
@@ -173,6 +218,8 @@ export async function gradeSubjectiveAnswer(
   confidence: SubjectiveConfidence;
   /** Set only when the question had no model answer and Gemini wrote one. */
   generatedModelAnswer: string | null;
+  /** Tokens this call used — for the super-admin cost view. */
+  usage: { input: number; output: number; thinking: number };
 }> {
   const hasModelAnswer = !!q.solution?.trim();
   const model = graderModel();
@@ -191,6 +238,12 @@ export async function gradeSubjectiveAnswer(
       ],
     })
   );
+  const um = (res.response as { usageMetadata?: Record<string, unknown> }).usageMetadata ?? {};
+  const usage = {
+    input: Number(um.promptTokenCount ?? 0),
+    output: Number(um.candidatesTokenCount ?? 0),
+    thinking: Number(um.thoughtsTokenCount ?? 0),
+  };
   const text = res.response.text();
   const parsed = JSON.parse(text) as {
     marks_awarded?: unknown;
@@ -213,7 +266,7 @@ export async function gradeSubjectiveAnswer(
     typeof parsed.model_answer === "string" ? parsed.model_answer.trim() : "";
   const generatedModelAnswer =
     !hasModelAnswer && written ? written.slice(0, 4000) : null;
-  return { marks, feedback, confidence, generatedModelAnswer };
+  return { marks, feedback, confidence, generatedModelAnswer, usage };
 }
 
 /** Bounded-concurrency map (no p-limit dep). */
@@ -316,6 +369,9 @@ export async function gradeAttemptSubjectives(opts: {
           gemini_feedback: g.feedback,
           gemini_confidence: g.confidence,
           generated_model_answer: g.generatedModelAnswer,
+          gemini_input_tokens: g.usage.input,
+          gemini_output_tokens: g.usage.output,
+          gemini_thinking_tokens: g.usage.thinking,
           flagged: false,
         } as Partial<SubjectiveAnswerEntry>,
       };

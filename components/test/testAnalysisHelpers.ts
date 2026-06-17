@@ -22,6 +22,9 @@ export interface ResultData {
     id: string; question_text: string; options: string[] | null; question_type: string;
     correct_answer: string; user_answer: string | null; is_correct: boolean | null;
     marks: number; awarded?: number; subject: string; topic?: string; explanation?: string; timeSpentSecs: number;
+    // Figures: `type === "explanation"` renders with the solution, the rest with
+    // the question (PYQ convention). Coaching tests only; absent elsewhere.
+    images?: { index: number; filename: string; type?: string }[];
     // Photo-answer (SUBJECTIVE) extras — coaching tests only. imageKeys are R2
     // object keys; pages sign them fresh per request (never cache signed URLs).
     subjective?: {

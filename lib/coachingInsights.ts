@@ -11,9 +11,9 @@ import { prisma } from "@/lib/prisma";
 // for every test), so it means: an active student who never submitted a test
 // whose window has CLOSED (status "closed" OR end_at in the past).
 
-export type InsightStudent = { id: string; name: string; avgPct: number; testsTaken: number };
-export type TrendStudent = { id: string; name: string; delta: number; from: number; to: number };
-export type AbsentStudent = { id: string; name: string; missed: number; lastMissedTitle: string };
+export type InsightStudent = { id: string; name: string; avgPct: number; testsTaken: number; scores: number[] };
+export type TrendStudent = { id: string; name: string; delta: number; from: number; to: number; scores: number[] };
+export type AbsentStudent = { id: string; name: string; missed: number; lastMissedTitle: string; missedTitles: string[] };
 
 export type InsightsData = {
   weak: InsightStudent[];
@@ -24,6 +24,7 @@ export type InsightsData = {
 const TOP_N = 10;
 const ATTEMPT_WINDOW_DAYS = 90; // bound the weak/improving scan to recent activity
 const CLOSED_TESTS_SCAN = 30; // how many recent closed tests feed the absent calc
+const SPARK_CAP = 8; // most-recent scores kept per student for the sparkline + chips
 
 function pctOf(score: number | null, max: number | null): number {
   if (max == null || max <= 0 || score == null) return 0;
@@ -87,6 +88,7 @@ export function getCoachingInsights(coachingId: string): Promise<InsightsData> {
           name: e.name,
           testsTaken: e.pcts.length,
           avgPct: Math.round(e.pcts.reduce((s, p) => s + p, 0) / e.pcts.length),
+          scores: e.pcts.slice(-SPARK_CAP),
         }))
         .sort((a, b) => a.avgPct - b.avgPct)
         .slice(0, TOP_N);
@@ -96,7 +98,7 @@ export function getCoachingInsights(coachingId: string): Promise<InsightsData> {
         .map(([id, e]) => {
           const from = e.pcts[0];
           const to = e.pcts[e.pcts.length - 1];
-          return { id, name: e.name, from, to, delta: to - from };
+          return { id, name: e.name, from, to, delta: to - from, scores: e.pcts.slice(-SPARK_CAP) };
         })
         .filter((t) => t.delta > 0)
         .sort((a, b) => b.delta - a.delta)
@@ -126,15 +128,15 @@ export function getCoachingInsights(coachingId: string): Promise<InsightsData> {
         absent = activeStudents
           .map((s) => {
             let missed = 0;
-            let lastMissedTitle = "";
+            const missedTitles: string[] = [];
             // closedTests is newest-first, so the first miss is the latest one.
             for (const t of closedTests) {
               if (!tookByTest.get(t.id)?.has(s.id)) {
                 missed++;
-                if (!lastMissedTitle) lastMissedTitle = t.title;
+                if (missedTitles.length < SPARK_CAP) missedTitles.push(t.title);
               }
             }
-            return { id: s.id, name: s.name, missed, lastMissedTitle };
+            return { id: s.id, name: s.name, missed, lastMissedTitle: missedTitles[0] ?? "", missedTitles };
           })
           .filter((s) => s.missed > 0)
           .sort((a, b) => b.missed - a.missed)

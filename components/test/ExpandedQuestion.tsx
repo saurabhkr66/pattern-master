@@ -3,6 +3,7 @@
 import { CheckCircle2, XCircle, Brain, Hourglass, Camera } from "lucide-react";
 import { BE } from "@/lib/theme";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { getCloudinaryUrl } from "@/lib/cloudinary";
 import type { ResultData } from "./testAnalysisHelpers";
 
 interface Props {
@@ -15,8 +16,35 @@ interface Props {
   imageUrlMap?: Record<string, string>;
 }
 
+// Figures attached to the question vs. its worked solution (PYQ convention:
+// type "explanation" → solution block, everything else → with the question).
+function FigureGrid({ images }: { images: NonNullable<ResultData["questions"][number]["images"]> }) {
+  if (images.length === 0) return null;
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {images.map((img) => (
+        <div
+          key={img.index}
+          className="flex justify-center rounded-xl p-3 border overflow-hidden"
+          style={{ background: BE.surface, borderColor: BE.line }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getCloudinaryUrl(img.filename)}
+            alt=""
+            className="rounded-lg object-contain w-full"
+            style={{ maxHeight: 400, height: "auto" }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ExpandedQuestion({ q, status, compact, imageUrlMap }: Props) {
   const optionLetters = ["A", "B", "C", "D", "E", "F"];
+  const questionImages = (q.images ?? []).filter((img) => img.type !== "explanation");
+  const solutionImages = (q.images ?? []).filter((img) => img.type === "explanation");
   const correctLetters = new Set(
     (q.correct_answer || "").split(/[;,]/).map(l => l.trim().toUpperCase()).filter(Boolean)
   );
@@ -31,6 +59,9 @@ export default function ExpandedQuestion({ q, status, compact, imageUrlMap }: Pr
         <div style={{ fontSize: 15, lineHeight: 1.7, color: BE.text }}>
           <MathRenderer content={q.question_text} />
         </div>
+
+        {/* Question figure(s) */}
+        <FigureGrid images={questionImages} />
 
         {q.options && q.question_type !== "NAT" && (
           <div className="space-y-2">
@@ -157,14 +188,18 @@ export default function ExpandedQuestion({ q, status, compact, imageUrlMap }: Pr
           </div>
         )}
 
-        {q.explanation && (
+        {(q.explanation || solutionImages.length > 0) && (
           <div className="p-5 rounded-xl border-l-4" style={{ background: BE.accentSoft, borderColor: BE.accent }}>
             <div className="flex items-center gap-2 mb-2" style={{ fontSize: 11, fontWeight: 700, color: BE.accent, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               <Brain size={13} /> Solution
             </div>
-            <div style={{ fontSize: 13.5, lineHeight: 1.65, color: BE.textDim }}>
-              <MathRenderer content={q.explanation} />
-            </div>
+            {q.explanation && (
+              <div style={{ fontSize: 13.5, lineHeight: 1.65, color: BE.textDim }}>
+                <MathRenderer content={q.explanation} />
+              </div>
+            )}
+            {/* Solution figure(s) */}
+            <FigureGrid images={solutionImages} />
           </div>
         )}
       </div>

@@ -121,9 +121,9 @@ export default function QuestionPane({
 
         {/* Question text */}
         <div className="qp-qtext" style={{ fontFamily: BE.serif, fontSize: 19, lineHeight: 1.55, color: BE.text, marginBottom: 22 }}>
-          {currentQ.images && Array.isArray(currentQ.images) && currentQ.images.length > 0 && (
+          {currentQ.images && Array.isArray(currentQ.images) && (currentQ.images as { type?: string }[]).some((img) => img?.type !== "explanation") && (
             <div className="mb-6 flex flex-col gap-4">
-              {(currentQ.images as { index: number; filename: string }[]).map((img) => (
+              {(currentQ.images as { index: number; filename: string; type?: string }[]).filter((img) => img?.type !== "explanation").map((img) => (
                 <div
                   key={img.index}
                   className="flex justify-center rounded-xl p-3 border shadow-sm overflow-hidden"

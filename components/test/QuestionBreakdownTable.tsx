@@ -20,13 +20,19 @@ interface Props {
 
 const MOBILE_PAGE = 15;
 
+// Distinct colour for partial credit (positive but not full marks).
+const PARTIAL_COLOR = "#f3a05a";
+
 // A question's display status. Subjective answers awaiting AI/teacher grading
-// get their own "pending" state — neither right nor wrong yet.
-type QDisplayStatus = "correct" | "incorrect" | "skipped" | "pending";
+// get their own "pending" state; "partial" = answered with positive-but-not-full
+// marks (subjective partial credit, or MSQ partial) — so it isn't labelled CORRECT.
+type QDisplayStatus = "correct" | "partial" | "incorrect" | "skipped" | "pending";
 function statusOf(q: Q): QDisplayStatus {
   if (q.subjective?.pending) return "pending";
   if (q.user_answer === null) return "skipped";
-  return q.is_correct ? "correct" : "incorrect";
+  if (!q.is_correct) return "incorrect";
+  if (typeof q.awarded === "number" && q.awarded > 0 && q.awarded < q.marks) return "partial";
+  return "correct";
 }
 
 // Marks actually awarded for a question. Prefers the server-reported value
@@ -172,6 +178,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong, imageUr
           letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
         }
         .qbd-status.correct { background: rgba(110,231,160,.12); color: ${BE.good}; }
+        .qbd-status.partial { background: rgba(243,160,90,.12);  color: ${PARTIAL_COLOR}; }
         .qbd-status.wrong   { background: rgba(244,114,114,.12); color: ${BE.bad}; }
         .qbd-status.skipped { background: rgba(107,99,90,.18);   color: ${BE.textDim}; }
         .qbd-status.pending { background: rgba(251,191,36,.12);  color: ${BE.warn}; }
@@ -311,7 +318,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong, imageUr
             {filteredQs.map((q, i) => {
               const status = statusOf(q);
               const statusColor =
-                status === "correct" ? BE.good : status === "incorrect" ? BE.bad : status === "pending" ? BE.warn : BE.textMute;
+                status === "correct" ? BE.good : status === "partial" ? PARTIAL_COLOR : status === "incorrect" ? BE.bad : status === "pending" ? BE.warn : BE.textMute;
               const isExpanded = expandedQId === q.id;
               const userShort = shortAns(q.user_answer, q.question_type);
               const corrShort = shortAns(q.correct_answer, q.question_type);
@@ -343,7 +350,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong, imageUr
                       {preview.slice(0, 120)}{preview.length > 120 ? "…" : ""}
                     </div>
                     <div style={{ fontWeight: 700, fontSize: 11, textTransform: "uppercase", color: statusColor, letterSpacing: "0.04em" }}>
-                      {status === "correct" ? "CORRECT" : status === "incorrect" ? "WRONG" : status === "pending" ? "PENDING" : "SKIPPED"}
+                      {status === "correct" ? "CORRECT" : status === "partial" ? "PARTIAL" : status === "incorrect" ? "WRONG" : status === "pending" ? "PENDING" : "SKIPPED"}
                     </div>
                     <div style={{ color: BE.textMute, fontFamily: BE.mono, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
                       <span style={{ color: status === "incorrect" ? BE.bad : BE.textMute }}>{userShort}</span>
@@ -448,7 +455,7 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong, imageUr
           {mobileQs.map((q, i) => {
             const status = statusOf(q);
             const statusColor =
-              status === "correct" ? BE.good : status === "incorrect" ? BE.bad : status === "pending" ? BE.warn : BE.textMute;
+              status === "correct" ? BE.good : status === "partial" ? PARTIAL_COLOR : status === "incorrect" ? BE.bad : status === "pending" ? BE.warn : BE.textMute;
             const userShort = shortAns(q.user_answer, q.question_type);
             const corrShort = shortAns(q.correct_answer, q.question_type);
             const preview = plainPreview(q.question_text);
@@ -475,8 +482,8 @@ export default function QuestionBreakdownTable({ questions, jumpToWrong, imageUr
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span className={`qbd-status ${status === "correct" ? "correct" : status === "incorrect" ? "wrong" : status === "pending" ? "pending" : "skipped"}`}>
-                        {status === "correct" ? "Correct" : status === "incorrect" ? "Wrong" : status === "pending" ? "Pending" : "Skipped"}
+                      <span className={`qbd-status ${status === "correct" ? "correct" : status === "partial" ? "partial" : status === "incorrect" ? "wrong" : status === "pending" ? "pending" : "skipped"}`}>
+                        {status === "correct" ? "Correct" : status === "partial" ? "Partial" : status === "incorrect" ? "Wrong" : status === "pending" ? "Pending" : "Skipped"}
                       </span>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12"
                         style={{ color: BE.textMute, transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "none", flexShrink: 0 }}>

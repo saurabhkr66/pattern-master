@@ -25,9 +25,16 @@ export default async function NewTestPage() {
 
   const coachingId = actor!.coachingId!;
 
-  // mcq/nat for everyone; subjective (photo answers, AI-graded) is super-admin
-  // only while the grading pipeline is being proven — drop the gate to roll out.
-  const allowedTypes = actor?.isSuperAdmin ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
+  // mcq/nat for everyone; subjective (photo answers, AI-graded) is opt-in — only
+  // surfaced when a super admin has enabled it for this coaching (or the actor is
+  // a super admin). This keeps paid Gemini grading off for coachings that haven't
+  // asked for it. The POST /api/coaching/tests route enforces the same rule.
+  const coaching = await prisma.coaching.findUnique({
+    where: { id: coachingId },
+    select: { subjective_enabled: true },
+  });
+  const allowSubjective = !!actor?.isSuperAdmin || !!coaching?.subjective_enabled;
+  const allowedTypes = allowSubjective ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
   const [questions, batches] = await Promise.all([
     prisma.coachingQuestion.findMany({
       where: { coaching_id: coachingId, question_type: { in: allowedTypes } },

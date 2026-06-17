@@ -316,6 +316,11 @@ model Coaching {
   billing_mode    String             @default("per_test") // per_test | monthly
   price_per_test  Int                @default(15) // used when billing_mode = per_test
   monthly_fee     Int                @default(0) // flat ₹/month when billing_mode = monthly
+  // Subjective (photo-answer, AI-graded) tests are opt-in per coaching: OFF by
+  // default so a coaching's admins can't create subjective tests (and trigger
+  // paid Gemini grading) until a super admin enables it on request. Super admins
+  // can always use subjective regardless of this flag.
+  subjective_enabled Boolean         @default(false)
   active          Boolean            @default(true)
   created_at      DateTime           @default(now())
   updated_at      DateTime           @updatedAt

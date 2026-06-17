@@ -9,6 +9,7 @@ import {
 import type { RuntimeTest } from "@/lib/coachingTestRuntime";
 import { subjectiveEntryMarks, type StoredAnswers } from "@/lib/coachingScore";
 import { isSubjectiveEntry } from "@/lib/subjectiveTypes";
+import { gradingCostUsd } from "@/lib/subjectiveGrading";
 import { isR2Configured, presignAnswerGets } from "@/lib/r2";
 import SubjectiveReviewPanel, {
   type ReviewQuestion,
@@ -79,6 +80,22 @@ export default async function SubjectiveReviewPage({
   const answers = (attempt.answers ?? {}) as StoredAnswers;
 
   const subjective = resolved.filter((q) => q.question_type === "subjective");
+
+  // Super-admin only: roughly what the AI grading of this attempt cost. Summed
+  // from the per-answer token counts stored at grading time.
+  let gradeTokIn = 0;
+  let gradeTokOut = 0;
+  let gradeTokThink = 0;
+  for (const q of subjective) {
+    const v = answers[q.id];
+    if (!isSubjectiveEntry(v)) continue;
+    gradeTokIn += v.gemini_input_tokens ?? 0;
+    gradeTokOut += v.gemini_output_tokens ?? 0;
+    gradeTokThink += v.gemini_thinking_tokens ?? 0;
+  }
+  const gradeTokTotal = gradeTokIn + gradeTokOut + gradeTokThink;
+  const gradeCostUsd = gradingCostUsd(gradeTokIn, gradeTokOut, gradeTokThink);
+
   const allKeys = subjective.flatMap((q) => {
     const v = answers[q.id];
     return isSubjectiveEntry(v) ? v.image_keys : [];
@@ -121,6 +138,24 @@ export default async function SubjectiveReviewPage({
       >
         ← Back to attempt analysis
       </Link>
+
+      {/* Super-admin only: AI grading token/cost for this attempt. */}
+      {actor!.isSuperAdmin && gradeTokTotal > 0 && (
+        <div className="mt-3 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-400">
+          <span className="text-slate-300">AI grading cost</span> ·{" "}
+          {gradeCostUsd != null ? (
+            <span className="text-amber-300">≈ ${gradeCostUsd.toFixed(4)}</span>
+          ) : (
+            <span className="text-slate-500">unpriced</span>
+          )}{" "}
+          <span className="text-slate-600">
+            ({gradeTokIn.toLocaleString()} in · {gradeTokOut.toLocaleString()} out ·{" "}
+            {gradeTokThink.toLocaleString()} thinking · {subjective.length} answer
+            {subjective.length === 1 ? "" : "s"})
+          </span>
+        </div>
+      )}
+
       <SubjectiveReviewPanel
         attemptId={attempt.id}
         studentName={attempt.student.name}

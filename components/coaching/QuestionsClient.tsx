@@ -302,6 +302,7 @@ export default function QuestionsClient({
           editId={editId}
           prefill={prefill}
           taxonomy={taxonomy}
+          isSuperAdmin={isSuperAdmin}
           onClose={() => setShowForm(false)}
           onSaved={() => {
             setShowForm(false);
@@ -597,12 +598,14 @@ function QuestionFormModal({
   editId,
   prefill,
   taxonomy,
+  isSuperAdmin,
   onClose,
   onSaved,
 }: {
   editId: string | null;
   prefill: Leaf | null;
   taxonomy: GradeNode[];
+  isSuperAdmin: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -792,7 +795,13 @@ function QuestionFormModal({
                 >
                   <option value="mcq">MCQ</option>
                   <option value="nat">Numerical (NAT)</option>
-                  <option value="subjective">Subjective</option>
+                  {/* Authoring subjective is super-admin-only (AI import). Coaching
+                      admins can't pick it when creating, but the option still shows
+                      when they're editing an already-subjective question so the type
+                      renders correctly and they can fix its content. */}
+                  {(isSuperAdmin || type === "subjective") && (
+                    <option value="subjective">Subjective</option>
+                  )}
                 </select>
               </label>
               <label>

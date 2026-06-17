@@ -48,6 +48,9 @@ export async function PATCH(
     }
     data.monthly_fee = f;
   }
+  if (typeof body.subjectiveEnabled === "boolean") {
+    data.subjective_enabled = body.subjectiveEnabled;
+  }
   if (body.city !== undefined) data.city = body.city?.trim() || null;
   if (body.ownerEmail !== undefined) {
     data.owner_email = body.ownerEmail?.trim().toLowerCase() || null;

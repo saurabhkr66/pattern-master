@@ -1,13 +1,7 @@
-import { v2 as cloudinary } from 'cloudinary';
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-export default cloudinary;
+// Pure, browser-safe URL helpers. Uploads land in ImageKit (see
+// lib/coachingImageUpload.ts) and legacy assets live in Cloudinary; this module
+// only builds delivery URLs, so it intentionally has no SDK import — pulling the
+// Cloudinary Node SDK in here would break client bundles (it requires `fs`).
 
 const IMAGEKIT_TRANSFORMS = "f-auto,q-auto";
 

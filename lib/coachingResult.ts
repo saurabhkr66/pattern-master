@@ -100,6 +100,7 @@ export async function getAttemptResultData(
       subject: q.subject || "General",
       topic: q.topic || undefined,
       explanation: q.solution || undefined,
+      images: q.images ?? undefined,
       timeSpentSecs: times[q.id] ?? 0,
     };
 
@@ -168,7 +169,10 @@ export async function getAttemptResultData(
       skippedCount,
       timeTakenSecs: attempt.time_taken_secs ?? 0,
     },
-    { examType: "GATE", mockTestId: null }
+    // Coaching tests aren't tied to a national exam type, so leave examType
+    // unset — otherwise ScoreOverview shows a misleading "GATE" pill on every
+    // result. The badge is hidden when examType is undefined.
+    { examType: undefined, mockTestId: null }
   );
 
   if (isRedisConfigured()) {
