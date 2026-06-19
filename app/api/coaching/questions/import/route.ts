@@ -43,6 +43,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   // it on only for hard papers where a wrong answer key is expensive.
   const wantVerify = String(form.get("verify") ?? "") === "1";
 
+  // Hindi translation is opt-in (default OFF). Most coaching papers are English-
+  // only, and translating every field roughly doubles output tokens/cost — so the
+  // admin flips this on per import only for bilingual papers.
+  const bilingual = String(form.get("hindi") ?? "") === "1";
+
   const imageFiles = form.getAll("images").filter((f): f is File => f instanceof File).slice(0, MAX_IMAGES);
   const pdfEntry = form.get("pdf");
   const pdfFile = pdfEntry instanceof File ? pdfEntry : null;
@@ -128,6 +133,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           pdf,
           sections,
           qtype,
+          bilingual,
           // Catalog wins when present (school classes); else the typed list.
           topicsBySection: hasCatalog ? topicsBySection : undefined,
           topics: hasCatalog ? undefined : topics,
@@ -165,17 +171,21 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
         // model isn't identifying the figures (prompt/model side).
         let flagged = 0;
         let cropped = 0;
+        let noPage = 0; // flagged figure questions a PDF can't locate (no page index)
         for (const q of questions) {
-          if (q.is_figure || q.has_diagram || q.options_are_figures) flagged++;
+          if (q.is_figure || q.has_diagram || q.options_are_figures) {
+            flagged++;
+            if (pdf && typeof q.page !== "number") noPage++;
+          }
           q.images = await cropQuestionImage(cropCtx, q, coachingId, apiKey, req.signal);
           if (q.images?.length) cropped++;
-          // Capture a figure drawn inside the worked SOLUTION (tagged type:"explanation"
-          // so it renders with the solution, not the question). Appended to the same
+          // Capture figure(s) drawn inside the worked SOLUTION (tagged type:"explanation"
+          // so they render with the solution, not the question). Appended to the same
           // images array — the renderer filters by type. Best-effort like the question crop.
-          const solImg = await cropSolutionImage(cropCtx, q, coachingId, apiKey, req.signal);
-          if (solImg) {
+          const solImgs = await cropSolutionImage(cropCtx, q, coachingId, apiKey, req.signal);
+          if (solImgs?.length) {
             const imgs = q.images ?? [];
-            q.images = [...imgs, { ...solImg, index: imgs.length }];
+            q.images = [...imgs, ...solImgs.map((im, k) => ({ ...im, index: imgs.length + k }))];
           } else if (q.solution_has_diagram) {
             // A solution figure was expected but none came out — flag for review so the
             // admin pastes it (or confirms the solution is text-only) before saving.
@@ -195,8 +205,9 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           }
         }
         console.log(
-          `[import] figures: ${flagged} flagged by model, ${cropped} cropped ` +
-            `(source: ${pdf ? (renderer ? "PDF+renderer" : "PDF, renderer FAILED") : `${images.length} image(s)`})`
+          `[import] figures: ${flagged} flagged, ${cropped} cropped, ${Math.max(0, flagged - cropped)} missed` +
+            (noPage ? ` (${noPage} miss(es) had NO page index — unlocatable in the PDF)` : "") +
+            ` (source: ${pdf ? (renderer ? "PDF+renderer" : "PDF, renderer FAILED") : `${images.length} image(s)`})`
         );
 
         // Independent answer verification: re-solve each objective question blind

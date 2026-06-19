@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X, Upload, Loader2, FileText, ImageIcon } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 
@@ -60,11 +60,44 @@ export default function QuestionImportModal({
   // extraction is reliable on easy papers; flip on for hard papers where a wrong
   // answer key is costly.
   const [verify, setVerify] = useState(false);
+  // Hindi translation is opt-in (default OFF) — most papers are English-only and
+  // translating every field roughly doubles the token cost. Turn on for bilingual papers.
+  const [hindi, setHindi] = useState(false);
   const [topics, setTopics] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [pdf, setPdf] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Drag-highlight for the image drop zone on the upload step.
+  const [imgDragOver, setImgDragOver] = useState(false);
+
+  // Append (never replace) image files — so pasting/dropping screenshots one at a
+  // time accumulates instead of clobbering the previous ones. Non-images ignored.
+  function addImageFiles(files: File[]) {
+    const imgs = files.filter((f) => f.type.startsWith("image/"));
+    if (imgs.length) setImages((prev) => [...prev, ...imgs]);
+  }
+
+  // Paste-anywhere: while on the upload step, Ctrl/Cmd+V drops clipboard
+  // screenshots straight into the image list — no need to focus a specific box.
+  // Text pastes carry no files, so typing in the exam/set inputs is unaffected.
+  useEffect(() => {
+    if (phase !== "upload" || busy) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const files = Array.from(e.clipboardData?.files ?? []).filter((f) => f.type.startsWith("image/"));
+      if (files.length) {
+        e.preventDefault();
+        setImages((prev) => [...prev, ...files]);
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [phase, busy]);
+
+  // Object-URL thumbnails for the picked images; revoked when the list changes or
+  // the modal unmounts so we don't leak blobs across re-renders.
+  const imagePreviews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
+  useEffect(() => () => imagePreviews.forEach((u) => URL.revokeObjectURL(u)), [imagePreviews]);
 
   // Live extraction progress (NDJSON stream from the import route).
   const [progress, setProgress] = useState<{ label: string; done: number; total: number }>({
@@ -104,6 +137,7 @@ export default function QuestionImportModal({
       fd.set("set", set.trim());
       fd.set("qtype", qtype);
       fd.set("verify", verify ? "1" : "0");
+      fd.set("hindi", hindi ? "1" : "0");
       if (topics.trim()) fd.set("topics", topics.trim());
       images.forEach((f) => fd.append("images", f));
       if (pdf) fd.set("pdf", pdf);
@@ -268,8 +302,9 @@ export default function QuestionImportModal({
         {phase === "upload" && !busy && (
           <div className="space-y-4">
             <p className="text-sm text-slate-400">
-              Upload photos of a question paper or a PDF. We extract the questions, translate
-              EN↔HI, and tag each with a section from this exam — you review before saving.
+              Upload photos of a question paper or a PDF. We extract the questions and tag each
+              with a section from this exam — you review before saving. Hindi translation is
+              optional (off by default).
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <label className="block">
@@ -340,18 +375,103 @@ export default function QuestionImportModal({
               </span>
             </div>
 
+            {/* Hindi translation toggle — off by default. Translating every field
+                roughly doubles output tokens, so it's opt-in for bilingual papers. */}
+            <div
+              onClick={() => setHindi((v) => !v)}
+              className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950 p-3 hover:border-amber-500/60"
+            >
+              <span
+                role="switch"
+                aria-checked={hindi}
+                className={`relative mt-0.5 inline-block h-5 w-9 shrink-0 rounded-full transition-colors ${hindi ? "bg-amber-500" : "bg-slate-700"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${hindi ? "translate-x-4" : "translate-x-0.5"}`}
+                />
+              </span>
+              <span>
+                <span className="block text-sm font-medium text-slate-200">
+                  Generate Hindi translation
+                </span>
+                <span className="block text-[11px] text-slate-500">
+                  Off: English only — faster &amp; cheaper. On: also translate every question,
+                  option and solution to Hindi. Turn on only for bilingual papers.
+                </span>
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-6 text-center hover:border-amber-500">
+              {/* Image zone — paste a screenshot (Ctrl/Cmd+V works anywhere on this
+                  step), drop files, or browse. Images accumulate so you can add many. */}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setImgDragOver(true);
+                }}
+                onDragLeave={() => setImgDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setImgDragOver(false);
+                  addImageFiles(Array.from(e.dataTransfer.files));
+                }}
+                className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-6 text-center transition ${
+                  imgDragOver ? "border-amber-500 bg-amber-500/5" : "border-slate-700 bg-slate-950 hover:border-amber-500"
+                }`}
+              >
                 <ImageIcon className="h-6 w-6 text-slate-500" />
-                <span className="text-sm text-slate-300">{images.length ? `${images.length} image(s) selected` : "Choose images"}</span>
-                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => setImages(Array.from(e.target.files ?? []))} />
-              </label>
-              <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-6 text-center hover:border-amber-500">
+                <span className="text-sm text-slate-300">{images.length ? `${images.length} image(s) added` : "Add images"}</span>
+                <span className="text-[11px] text-slate-500">
+                  Paste a screenshot (Ctrl/Cmd+V), drop images, or{" "}
+                  <label className="cursor-pointer text-amber-400 hover:underline">
+                    browse
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        addImageFiles(Array.from(e.target.files ?? []));
+                        e.target.value = ""; // allow re-picking the same file
+                      }}
+                    />
+                  </label>
+                </span>
+              </div>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-6 text-center hover:border-amber-500">
                 <FileText className="h-6 w-6 text-slate-500" />
                 <span className="text-sm text-slate-300">{pdf ? pdf.name : "Choose a PDF"}</span>
                 <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setPdf(e.target.files?.[0] ?? null)} />
               </label>
             </div>
+
+            {/* Thumbnails of the picked/pasted images, in order, each removable. */}
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {images.map((f, i) => (
+                  <div key={i} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-slate-700 bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={imagePreviews[i]} alt={f.name || `image ${i + 1}`} className="h-full w-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                      title="Remove this image"
+                      className="absolute right-1 top-1 rounded-full bg-black/70 p-0.5 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="absolute bottom-0 left-0 rounded-tr bg-black/60 px-1 text-[10px] text-white">{i + 1}</span>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setImages([])}
+                  className="self-center text-xs text-slate-400 hover:text-red-400 hover:underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
 
             <button
               onClick={runExtract}

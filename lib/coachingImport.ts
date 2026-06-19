@@ -62,9 +62,18 @@ const FIGURE_MODEL =
 //  - Gemini 2.5 Pro REQUIRES a numeric budget (rejects 0); flash/lite take 0 to
 //    skip thinking so the whole output budget goes to the JSON answer.
 const G3_THINKING_LEVEL = process.env.COACHING_IMPORT_THINKING_LEVEL || "LOW";
-const thinkingConfigFor = (modelId: string) =>
+// Figure detection gets its OWN thinking level (G3 figure models only), decoupled
+// from the big extraction calls: its input is a single page, so thinking harder
+// there is cheap, whereas raising the global level would also tax every extraction
+// call. Defaults to the global level, so behaviour is unchanged until you set it.
+// NOTE: bounding-box localization is a spatial task — Google recommends LOW/zero
+// thinking for it, so model CAPABILITY (COACHING_IMPORT_FIGURE_MODEL) is the bigger
+// recall lever than this. Only applies to a Gemini-3 figure model (2.5 flash stays
+// budget 0; a 2.5 Pro figure model still gets a positive budget below).
+const FIGURE_THINKING_LEVEL = process.env.COACHING_IMPORT_FIGURE_THINKING_LEVEL || G3_THINKING_LEVEL;
+const thinkingConfigFor = (modelId: string, g3Level: string = G3_THINKING_LEVEL) =>
   /gemini-3/i.test(modelId)
-    ? { thinkingLevel: G3_THINKING_LEVEL }
+    ? { thinkingLevel: g3Level }
     : {
         thinkingBudget: /pro/i.test(modelId)
           ? Math.max(128, Number(process.env.COACHING_IMPORT_THINKING || 2048))
@@ -271,7 +280,11 @@ function buildPrompt(
   qtype: ImportQType,
   topics?: string[],
   topicsBySection?: Record<string, string[]>,
-  onlyNumbers?: number[]
+  onlyNumbers?: number[],
+  // Hindi translation is opt-in (default OFF): when false we never ask for the
+  // *_hindi fields, so the model spends no tokens translating and the output is
+  // English-only. The admin flips it on per import only for bilingual papers.
+  bilingual = false
 ): string {
   // When batching, restrict this call to a specific set of printed numbers so the
   // output stays under the token limit. The full document is still attached so
@@ -301,31 +314,39 @@ function buildPrompt(
     numberFilter ??
       "Extract EVERY question present, in order — do NOT sample, summarize, or stop early. If the document has 50 or 100 questions, return all 50 or 100. The array length must equal the number of questions in the source.",
     "Return a JSON array; each element is one question with these fields:",
-    `{
-  "number": integer | null,           // the PRINTED question number (1, 2, 3…) — needed to match answers
-  "question_text": string,            // English. LaTeX inline as \\( ... \\), display as \\[ ... \\]
-  "question_text_hindi": string,      // Hindi translation (translate if the source is English; keep LaTeX/numbers identical)
-  "question_type": "mcq" | "nat" | "subjective",
-  "options": [{"label":"A","text":string}, ...],        // English (mcq only)
-  "options_hindi": [{"label":"A","text":string}, ...],  // Hindi, same labels/order (mcq only)
-  "solution": string | null,          // English worked solution — WRITE THIS FIRST, before deciding the answer
-  "solution_hindi": string | null,    // Hindi
-  "solution_answer": string | null,   // the option label (mcq) / number (nat) your "solution" above arrives at
-  "correct_answer": string,           // the PRINTED answer if the paper prints one; else copy "solution_answer"
-  "max_marks": number,
-  "nat_tolerance": number | null,
-  "section": string | null,
-  "topic": string | null,
-  "has_diagram": boolean,             // true if the question contains a drawn figure/diagram/graph/chart
-  "options_are_figures": boolean,     // true if the ANSWER CHOICES are pictures (mirror-image / non-verbal reasoning) that can't be written as text
-  "solution_has_diagram": boolean,    // true if the WORKED SOLUTION/explanation itself contains a drawn figure/diagram/graph the explanation relies on
-  "solution_page": integer | null,    // 0-based PDF page the SOLUTION figure is on (null for image uploads)
-  "source_image": number,             // index of the image the question came from (0-based; 0 for PDF)
-  "is_figure": boolean,               // true if the question NEEDS its figures to be answered (non-verbal reasoning, diagrams, figure options)
-  "page": integer | null,             // 0-based PDF page this question is on (null for image uploads)
-  "confidence": number                // 0..1 extraction confidence
-}`,
-    "Preserve the source language verbatim and faithfully translate the other side; keep math/numbers identical across languages.",
+    [
+      "{",
+      '  "number": integer | null,           // the PRINTED question number (1, 2, 3…) — needed to match answers',
+      '  "question_text": string,            // English. LaTeX inline as \\( ... \\), display as \\[ ... \\]',
+      ...(bilingual
+        ? ['  "question_text_hindi": string,      // Hindi translation (translate if the source is English; keep LaTeX/numbers identical)']
+        : []),
+      '  "question_type": "mcq" | "nat" | "subjective",',
+      '  "options": [{"label":"A","text":string}, ...],        // English (mcq only)',
+      ...(bilingual
+        ? ['  "options_hindi": [{"label":"A","text":string}, ...],  // Hindi, same labels/order (mcq only)']
+        : []),
+      '  "solution": string | null,          // English worked solution — WRITE THIS FIRST, before deciding the answer',
+      ...(bilingual ? ['  "solution_hindi": string | null,    // Hindi'] : []),
+      '  "solution_answer": string | null,   // the option label (mcq) / number (nat) your "solution" above arrives at',
+      '  "correct_answer": string,           // the PRINTED answer if the paper prints one; else copy "solution_answer"',
+      '  "max_marks": number,',
+      '  "nat_tolerance": number | null,',
+      '  "section": string | null,',
+      '  "topic": string | null,',
+      '  "has_diagram": boolean,             // true if the question contains a drawn figure/diagram/graph/chart',
+      '  "options_are_figures": boolean,     // true if the ANSWER CHOICES are pictures (mirror-image / non-verbal reasoning) that can\'t be written as text',
+      '  "solution_has_diagram": boolean,    // true if the WORKED SOLUTION/explanation itself contains a drawn figure/diagram/graph the explanation relies on',
+      '  "solution_page": integer | null,    // 0-based PDF page the SOLUTION figure is on (null for image uploads)',
+      '  "source_image": number,             // index of the image the question came from (0-based; 0 for PDF)',
+      '  "is_figure": boolean,               // true if the question NEEDS its figures to be answered (non-verbal reasoning, diagrams, figure options)',
+      '  "page": integer | null,             // 0-based PDF page this question is on (null for image uploads)',
+      '  "confidence": number                // 0..1 extraction confidence',
+      "}",
+    ].join("\n"),
+    ...(bilingual
+      ? ["Preserve the source language verbatim and faithfully translate the other side; keep math/numbers identical across languages."]
+      : ['Extract every field in ENGLISH only — do NOT translate or emit any Hindi (no "*_hindi" fields).']),
     LATEX_RULES,
     // Pass 1 captures questions + options + number AND any answers visible in the
     // document (inline or from a printed answer key). The more answers we grab now,
@@ -365,42 +386,49 @@ const OPTION_SCHEMA: Schema = {
   required: ["label", "text"],
 };
 
-const RESPONSE_SCHEMA: ResponseSchema = {
-  type: SchemaType.ARRAY,
-  items: {
-    type: SchemaType.OBJECT,
-    properties: {
-      number: { type: SchemaType.INTEGER, nullable: true },
-      question_text: { type: SchemaType.STRING },
-      question_text_hindi: { type: SchemaType.STRING, nullable: true },
-      question_type: { type: SchemaType.STRING, format: "enum", enum: ["mcq", "nat", "subjective"] },
-      options: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true },
-      options_hindi: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true },
-      // Reasoning-first: solution + the answer the solution concludes are emitted
-      // BEFORE correct_answer, so the model works the problem out before committing
-      // to an answer (structured output generates fields top-to-bottom and can't
-      // revise an earlier field). correct_answer then either reads the printed key
-      // or follows solution_answer — and a disagreement between them is the flag.
-      solution: { type: SchemaType.STRING, nullable: true },
-      solution_hindi: { type: SchemaType.STRING, nullable: true },
-      solution_answer: { type: SchemaType.STRING, nullable: true },
-      correct_answer: { type: SchemaType.STRING, nullable: true },
-      max_marks: { type: SchemaType.NUMBER },
-      nat_tolerance: { type: SchemaType.NUMBER, nullable: true },
-      section: { type: SchemaType.STRING, nullable: true },
-      topic: { type: SchemaType.STRING, nullable: true },
-      has_diagram: { type: SchemaType.BOOLEAN, nullable: true },
-      options_are_figures: { type: SchemaType.BOOLEAN, nullable: true },
-      solution_has_diagram: { type: SchemaType.BOOLEAN, nullable: true },
-      solution_page: { type: SchemaType.INTEGER, nullable: true },
-      source_image: { type: SchemaType.INTEGER, nullable: true },
-      is_figure: { type: SchemaType.BOOLEAN, nullable: true },
-      page: { type: SchemaType.INTEGER, nullable: true },
-      confidence: { type: SchemaType.NUMBER, nullable: true },
+// Built per import: the *_hindi fields are included ONLY when the admin opts into
+// a bilingual import. Leaving them out of the schema (rather than just out of the
+// prompt) stops the decoder from reserving/emitting them at all on the default
+// English-only path.
+function buildResponseSchema(bilingual: boolean): ResponseSchema {
+  const properties: Record<string, Schema> = {
+    number: { type: SchemaType.INTEGER, nullable: true },
+    question_text: { type: SchemaType.STRING },
+    ...(bilingual ? { question_text_hindi: { type: SchemaType.STRING, nullable: true } } : {}),
+    question_type: { type: SchemaType.STRING, format: "enum", enum: ["mcq", "nat", "subjective"] },
+    options: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true },
+    ...(bilingual ? { options_hindi: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true } } : {}),
+    // Reasoning-first: solution + the answer the solution concludes are emitted
+    // BEFORE correct_answer, so the model works the problem out before committing
+    // to an answer (structured output generates fields top-to-bottom and can't
+    // revise an earlier field). correct_answer then either reads the printed key
+    // or follows solution_answer — and a disagreement between them is the flag.
+    solution: { type: SchemaType.STRING, nullable: true },
+    ...(bilingual ? { solution_hindi: { type: SchemaType.STRING, nullable: true } } : {}),
+    solution_answer: { type: SchemaType.STRING, nullable: true },
+    correct_answer: { type: SchemaType.STRING, nullable: true },
+    max_marks: { type: SchemaType.NUMBER },
+    nat_tolerance: { type: SchemaType.NUMBER, nullable: true },
+    section: { type: SchemaType.STRING, nullable: true },
+    topic: { type: SchemaType.STRING, nullable: true },
+    has_diagram: { type: SchemaType.BOOLEAN, nullable: true },
+    options_are_figures: { type: SchemaType.BOOLEAN, nullable: true },
+    solution_has_diagram: { type: SchemaType.BOOLEAN, nullable: true },
+    solution_page: { type: SchemaType.INTEGER, nullable: true },
+    source_image: { type: SchemaType.INTEGER, nullable: true },
+    is_figure: { type: SchemaType.BOOLEAN, nullable: true },
+    page: { type: SchemaType.INTEGER, nullable: true },
+    confidence: { type: SchemaType.NUMBER, nullable: true },
+  };
+  return {
+    type: SchemaType.ARRAY,
+    items: {
+      type: SchemaType.OBJECT,
+      properties,
+      required: ["question_text", "question_type", "max_marks"],
     },
-    required: ["question_text", "question_type", "max_marks"],
-  },
-};
+  };
+}
 
 // Pass 0: enumerate the printed question numbers. Tiny output (just integers) so
 // it never truncates even for a 100-question paper — gives us the ranges to batch
@@ -421,24 +449,27 @@ function buildEnumeratePrompt(): string {
 // Pass 2: the answer key. A focused, compact extraction (number → label [+ worked
 // solution]) from the solutions section — far more reliable than asking the
 // question pass to also hunt down 100 answers.
-const ANSWER_KEY_SCHEMA: ResponseSchema = {
-  type: SchemaType.ARRAY,
-  items: {
-    type: SchemaType.OBJECT,
-    properties: {
-      number: { type: SchemaType.INTEGER },
-      // Reasoning-first: solution + the answer it concludes precede the printed answer.
-      solution: { type: SchemaType.STRING, nullable: true },
-      solution_hindi: { type: SchemaType.STRING, nullable: true },
-      solution_answer: { type: SchemaType.STRING, nullable: true }, // the answer the solution concludes (own reasoning)
-      answer: { type: SchemaType.STRING }, // the PRINTED answer (option label/number); else = solution_answer
-      derived: { type: SchemaType.BOOLEAN, nullable: true }, // true = AI-solved, not from the paper
-      solution_has_diagram: { type: SchemaType.BOOLEAN, nullable: true }, // the printed solution contains a drawn figure
-      solution_page: { type: SchemaType.INTEGER, nullable: true }, // 0-based page the solution figure is on
+// solution_hindi is included only on the bilingual path (see buildResponseSchema).
+function buildAnswerKeySchema(bilingual: boolean): ResponseSchema {
+  return {
+    type: SchemaType.ARRAY,
+    items: {
+      type: SchemaType.OBJECT,
+      properties: {
+        number: { type: SchemaType.INTEGER },
+        // Reasoning-first: solution + the answer it concludes precede the printed answer.
+        solution: { type: SchemaType.STRING, nullable: true },
+        ...(bilingual ? { solution_hindi: { type: SchemaType.STRING, nullable: true } } : {}),
+        solution_answer: { type: SchemaType.STRING, nullable: true }, // the answer the solution concludes (own reasoning)
+        answer: { type: SchemaType.STRING }, // the PRINTED answer (option label/number); else = solution_answer
+        derived: { type: SchemaType.BOOLEAN, nullable: true }, // true = AI-solved, not from the paper
+        solution_has_diagram: { type: SchemaType.BOOLEAN, nullable: true }, // the printed solution contains a drawn figure
+        solution_page: { type: SchemaType.INTEGER, nullable: true }, // 0-based page the solution figure is on
+      },
+      required: ["number", "answer"],
     },
-    required: ["number", "answer"],
-  },
-};
+  };
+}
 
 type AnswerKeyEntry = {
   number: number;
@@ -451,7 +482,7 @@ type AnswerKeyEntry = {
   solution_page?: number | null; // 0-based page the solution figure is on
 };
 
-function buildAnswerKeyPrompt(onlyNumbers?: number[]): string {
+function buildAnswerKeyPrompt(onlyNumbers?: number[], bilingual = false): string {
   const scope = onlyNumbers?.length
     ? `Provide the correct answer + worked solution ONLY for these question numbers: ${JSON.stringify(
         onlyNumbers
@@ -461,21 +492,27 @@ function buildAnswerKeyPrompt(onlyNumbers?: number[]): string {
     `You are given an exam paper. ${scope}`,
     "These papers almost always PRINT the answers — your PRIMARY job is to FIND and READ them, not to solve the questions. The printed answers/solutions may be ANYWHERE and in ANY format: inline next to each question, in an answer key, in a separate solutions section, at the very end, after each section, or in a table (often a compact grid like '1-B 2-C 3-A'). Before deciding an answer is missing, scan the ENTIRE document end to end — including the last pages — for an answer key or solutions section.",
     "Return STRICT JSON: an array where each element is one question's answer:",
-    `{
-  "number": integer,            // the question number this answer belongs to
-  "solution": string | null,    // worked explanation in English — WRITE FIRST, all math in $...$ / $$...$$ LaTeX
-  "solution_hindi": string | null, // Hindi translation of the solution (math identical)
-  "solution_answer": string | null, // the option label / number your "solution" above concludes (your own reasoning)
-  "answer": string,             // the PRINTED answer (option label A/B/C… for mcq, numeric value for nat); if none is printed, copy "solution_answer"
-  "derived": boolean,           // true if YOU solved it (not found in the paper), false if read from the paper
-  "solution_has_diagram": boolean, // true if the PRINTED worked solution contains a drawn figure/diagram/graph the explanation refers to
-  "solution_page": integer | null  // 0-based page the solution figure is on (null for image uploads)
-}`,
+    [
+      "{",
+      '  "number": integer,            // the question number this answer belongs to',
+      '  "solution": string | null,    // worked explanation in English — WRITE FIRST, all math in $...$ / $$...$$ LaTeX',
+      ...(bilingual ? ['  "solution_hindi": string | null, // Hindi translation of the solution (math identical)'] : []),
+      '  "solution_answer": string | null, // the option label / number your "solution" above concludes (your own reasoning)',
+      '  "answer": string,             // the PRINTED answer (option label A/B/C… for mcq, numeric value for nat); if none is printed, copy "solution_answer"',
+      '  "derived": boolean,           // true if YOU solved it (not found in the paper), false if read from the paper',
+      '  "solution_has_diagram": boolean, // true if the PRINTED worked solution contains a drawn figure/diagram/graph the explanation refers to',
+      '  "solution_page": integer | null  // 0-based page the solution figure is on (null for image uploads)',
+      "}",
+    ].join("\n"),
     'REASON BEFORE ANSWERING (order matters): FIRST write the worked "solution", THEN set "solution_answer" to what it concludes, THEN set "answer". Fill "solution_answer" ALWAYS from your own reasoning (even when a printed answer exists) — it cross-checks the printed key.',
     'CRITICAL — for "answer": do NOT solve a question whose answer is printed in the paper. Read the printed answer verbatim and set derived=false. If the printed key differs from your "solution_answer", KEEP the printed value in "answer" (the disagreement is flagged for review). Set derived=true ONLY as a genuine last resort: after scanning the entire document you are certain the answer is printed NOWHERE — then set "answer" = "solution_answer". derived=true should be RARE; if you are setting it for most questions, you have not located the answer key yet — look again.',
-    "LENGTH LIMIT: keep each worked solution concise — at most ~80 words / 6 lines. Stop once the key reasoning is clear; do NOT repeat steps, restate the question, or pad. The Hindi solution is just a translation of the same length.",
+    bilingual
+      ? "LENGTH LIMIT: keep each worked solution concise — at most ~80 words / 6 lines. Stop once the key reasoning is clear; do NOT repeat steps, restate the question, or pad. The Hindi solution is just a translation of the same length."
+      : "LENGTH LIMIT: keep each worked solution concise — at most ~80 words / 6 lines. Stop once the key reasoning is clear; do NOT repeat steps, restate the question, or pad.",
     LATEX_RULES,
-    'The LaTeX rule above applies ONLY to "solution"/"solution_hindi". The "answer" field is NOT math: emit a plain option label (A, B, C…) or a plain number with NO $ signs, backticks, or LaTeX — e.g. "B" or "42", never "$42$".',
+    bilingual
+      ? 'The LaTeX rule above applies ONLY to "solution"/"solution_hindi". The "answer" field is NOT math: emit a plain option label (A, B, C…) or a plain number with NO $ signs, backticks, or LaTeX — e.g. "B" or "42", never "$42$".'
+      : 'The LaTeX rule above applies ONLY to "solution". The "answer" field is NOT math: emit a plain option label (A, B, C…) or a plain number with NO $ signs, backticks, or LaTeX — e.g. "B" or "42", never "$42$". Write everything in ENGLISH only — do NOT emit any Hindi.',
     'For a written/subjective question (no answer choices, answer is not a single number) put the FULL model answer into "solution" and set "answer" to "" — the model answer is what matters for these.',
     "Return an entry for EVERY question number — never leave a question without an answer. Do not stop early.",
     "Output ONLY the JSON array, no prose.",
@@ -550,6 +587,9 @@ export async function extractQuestions(opts: {
   qtype?: ImportQType;
   topics?: string[];
   topicsBySection?: Record<string, string[]>;
+  /** Opt into Hindi translation of every question/option/solution (default OFF).
+   *  When false the model is asked for — and the schema only allows — English. */
+  bilingual?: boolean;
   /** Aborts the whole pipeline when the client disconnects (page refresh/close),
    *  so we stop firing Gemini calls instead of burning quota on a dead request. */
   signal?: AbortSignal;
@@ -561,6 +601,9 @@ export async function extractQuestions(opts: {
   const key = process.env.GEMINI_API_KEY ?? "";
   if (!USE_VERTEX && !key) throw new Error("Missing GEMINI_API_KEY");
   const qtype = opts.qtype ?? "mixed";
+  const bilingual = opts.bilingual ?? false;
+  // Built once per run: drops the *_hindi fields entirely on the English-only path.
+  const responseSchema = buildResponseSchema(bilingual);
   // Always log the backend so "it's still using the API key" is obvious at a glance.
   console.log(
     USE_VERTEX
@@ -620,9 +663,9 @@ export async function extractQuestions(opts: {
       if (signal?.aborted) return [] as ParsedQuestion[]; // client gone — don't fire
       const label = `pass-1 batch ${group[0]}–${group[group.length - 1]}`;
       try {
-        const got = (await callResilient(key, label, RESPONSE_SCHEMA, [
+        const got = (await callResilient(key, label, responseSchema, [
           ...media,
-          { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group) },
+          { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group, bilingual) },
         ], signal)) as ParsedQuestion[];
         // Stream this batch the moment it lands so the UI fills in live.
         extracted += got.length;
@@ -639,9 +682,9 @@ export async function extractQuestions(opts: {
     questions = batched.flat().sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
   } else {
     emit({ t: "phase", phase: "extract", total: numbers.length });
-    questions = (await callResilient(key, "pass-1", RESPONSE_SCHEMA, [
+    questions = (await callResilient(key, "pass-1", responseSchema, [
       ...media,
-      { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection) },
+      { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, undefined, bilingual) },
     ], signal)) as ParsedQuestion[];
     emit({ t: "questions", items: questions, done: questions.length, total: questions.length });
   }
@@ -673,9 +716,9 @@ export async function extractQuestions(opts: {
       if (signal?.aborted) return [] as AnswerKeyEntry[]; // client gone — don't fire
       const label = `answer-key batch ${group[0]}–${group[group.length - 1]}`;
       try {
-        return (await callResilient(key, label, ANSWER_KEY_SCHEMA, [
+        return (await callResilient(key, label, buildAnswerKeySchema(bilingual), [
           ...media,
-          { text: buildAnswerKeyPrompt(group) },
+          { text: buildAnswerKeyPrompt(group, bilingual) },
         ], signal, ANSWER_MODEL)) as AnswerKeyEntry[];
       } catch (e) {
         console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
@@ -1244,12 +1287,18 @@ async function uploadCrop(png: Buffer, coachingId: string): Promise<string | nul
  * Returns [ymin, xmin, ymax, xmax] normalized 0..1000, or null if no figure
  * is found or the call fails. Best-effort: never throws.
  */
+// Returns a LIST of boxes (one per distinct figure) — a question can carry several
+// diagrams, and the old single-box shape silently dropped all but one.
 const FIGURE_DETECT_SCHEMA: ResponseSchema = {
   type: SchemaType.OBJECT,
   properties: {
-    box: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER }, nullable: true },
+    boxes: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } },
+      nullable: true,
+    },
   },
-  required: ["box"],
+  required: ["boxes"],
 };
 
 async function locateFigure(
@@ -1263,7 +1312,7 @@ async function locateFigure(
   //  - "whole":    the whole question + every answer-option PICTURE (options_are_figures)
   //  - "solution": the figure drawn inside this question's WORKED SOLUTION/explanation
   mode: "tight" | "whole" | "solution" = "tight"
-): Promise<number[] | null> {
+): Promise<number[][] | null> {
   if (signal?.aborted) return null;
   const qRef = typeof questionNumber === "number"
     ? `question ${questionNumber}`
@@ -1271,25 +1320,25 @@ async function locateFigure(
   const prompt = (mode === "whole"
     ? [
         `Look at this exam paper page. Draw ONE box around the ENTIRE ${qRef} — its stem/figure AND all of its answer-option pictures (A, B, C, D) — because the options are figures the student must see, so they MUST stay inside the box.`,
-        "Return a JSON object with a single field \"box\": [ymin, xmin, ymax, xmax], each an integer 0..1000 normalized to the image dimensions.",
+        "Return a JSON object {\"boxes\": [[ymin, xmin, ymax, xmax]]} with that SINGLE box, each value an integer 0..1000 normalized to the image dimensions.",
         "Include everything needed to answer: the question figure(s) AND every option picture. EXCLUDE only other questions and any printed answer key / solution.",
-        "If the page does NOT contain this question, return {\"box\": null}.",
+        "If the page does NOT contain this question, return {\"boxes\": []}.",
       ]
     : mode === "solution"
     ? [
-        `Look at this exam paper page. Find the drawn FIGURE (diagram, graph, chart, circuit, geometric construction, labelled sketch) that appears inside the WORKED SOLUTION / explanation for ${qRef} — NOT the figure in the question itself.`,
-        "Return a JSON object with a single field \"box\": [ymin, xmin, ymax, xmax], each an integer 0..1000 normalized to the image dimensions.",
-        "The box must be TIGHT around the solution's figure itself — EXCLUDE the surrounding solution text/equations, the question stem, and any other question.",
-        "If the solution for this question has NO drawn figure on this page, return {\"box\": null}.",
+        `Look at this exam paper page. Find EVERY drawn FIGURE (diagram, graph, chart, circuit, geometric construction, labelled sketch) that appears inside the WORKED SOLUTION / explanation for ${qRef} — NOT the figure in the question itself.`,
+        "Return a JSON object {\"boxes\": [[ymin, xmin, ymax, xmax], ...]} with one inner array PER figure, each value an integer 0..1000 normalized to the image dimensions.",
+        "Each box must be TIGHT around the solution's figure itself — EXCLUDE the surrounding solution text/equations, the question stem, and any other question.",
+        "If the solution for this question has NO drawn figure on this page, return {\"boxes\": []}.",
       ]
     : [
-        `Look at this exam paper page. Find the drawn FIGURE (diagram, graph, chart, circuit, geometric shape, table-as-image) that belongs to ${qRef}.`,
-        "Return a JSON object with a single field \"box\": [ymin, xmin, ymax, xmax] where each value is an integer 0..1000 normalized to the image dimensions.",
-        "The box must be TIGHT around the figure itself — include the complete drawing but EXCLUDE:",
+        `Look at this exam paper page. Find EVERY drawn FIGURE (diagram, graph, chart, circuit, geometric shape, table-as-image) that belongs to ${qRef}. Most questions have ONE figure, but some have SEVERAL (e.g. two shapes to compare, a strip of diagrams) — return a separate box for EACH distinct figure.`,
+        "Return a JSON object {\"boxes\": [[ymin, xmin, ymax, xmax], ...]} with one inner array PER figure, each value an integer 0..1000 normalized to the image dimensions.",
+        "Each box must be TIGHT around its figure — include the complete drawing but EXCLUDE:",
         "  • The question stem text (already captured separately)",
         "  • Any printed solution / working / answer below or beside the figure",
         "  • Text answer options (A, B, C, D) unless the options ARE figures themselves",
-        "If the page does NOT contain a figure for this question, return {\"box\": null}.",
+        "If the page contains NO figure for this question, return {\"boxes\": []}.",
       ]
   ).join("\n");
 
@@ -1308,7 +1357,8 @@ async function locateFigure(
       responseSchema: FIGURE_DETECT_SCHEMA,
       maxOutputTokens: 256,
       temperature: 0.1,
-      thinkingConfig: thinkingConfigFor(FIGURE_MODEL),
+      // Decoupled figure-only thinking level (G3 figure models). See FIGURE_THINKING_LEVEL.
+      thinkingConfig: thinkingConfigFor(FIGURE_MODEL, FIGURE_THINKING_LEVEL),
     };
     const model = USE_VERTEX
       ? vertexAI!.getGenerativeModel({
@@ -1342,11 +1392,17 @@ async function locateFigure(
     if (!text) return null;
 
     const parsed = JSON.parse(text);
-    const box = parsed?.box;
-    if (!Array.isArray(box) || box.length !== 4) return null;
-    const nums = box.map(Number);
-    if (nums.some((n) => !Number.isFinite(n) || n < 0 || n > 1000)) return null;
-    return nums;
+    // Accept the new {boxes:[[...]]} shape and, defensively, an old {box:[...]} one.
+    const raw: unknown[] = Array.isArray(parsed?.boxes)
+      ? parsed.boxes
+      : Array.isArray(parsed?.box)
+        ? [parsed.box]
+        : [];
+    const boxes = raw
+      .filter((b): b is number[] => Array.isArray(b) && b.length === 4)
+      .map((b) => b.map(Number))
+      .filter((b) => b.every((n) => Number.isFinite(n) && n >= 0 && n <= 1000));
+    return boxes.length ? boxes : null;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     // Rate limited — wait and return null (don't block the import for a figure)
@@ -1375,24 +1431,66 @@ export async function cropQuestionImage(
   apiKey?: string,
   signal?: AbortSignal
 ): Promise<StoredImage[] | null> {
-  // Snapshot questions that contain a drawn figure OR whose answer choices are
-  // pictures (mirror-image / non-verbal reasoning). has_diagram = "a figure is
-  // present"; options_are_figures = "the choices are pictures" — either needs an
-  // image. Plain text questions (where the model sometimes mis-sets is_figure)
-  // have neither, so we skip them and never snapshot a useless image of text.
-  if (!q.has_diagram && !q.options_are_figures) return null;
-
-  const src = await resolveSourcePage(ctx, q.page, q.source_image);
-  if (!src) return null;
+  // Attempt a snapshot whenever the extractor signalled a figure in ANY way:
+  // has_diagram ("a figure is present"), options_are_figures ("the choices are
+  // pictures"), OR is_figure ("needs its figure to be answered"). flash-lite often
+  // sets is_figure WITHOUT has_diagram, so gating on has_diagram alone silently
+  // dropped those figures. Detection self-guards — locateFigure returns nothing on
+  // a page with no real figure, and the >10px crop check rejects junk — and a
+  // flagged question that yields no crop is surfaced for human review. So erring
+  // toward attempting (recall) is the safe direction here.
+  if (!q.has_diagram && !q.options_are_figures && !q.is_figure) return null;
   const key = apiKey ?? process.env.GEMINI_API_KEY ?? "";
   if (!USE_VERTEX && !key) return null;
 
   // Figure-option questions (mirror-image etc.) need the WHOLE question captured,
-  // options included — pass that mode through so the box doesn't exclude the choices.
-  const box = await locateFigure(src.png, q.number, q.question_text, key, signal, q.options_are_figures ? "whole" : "tight");
-  if (!box) return null;
-  const url = await cropBoxAndUpload(src, box, coachingId);
-  return url ? [{ index: 0, filename: url }] : null;
+  // options included — pass "whole" so the box doesn't exclude the choices.
+  const imgs = await detectAndCrop(ctx, q, coachingId, key, signal, q.options_are_figures ? "whole" : "tight", q.page);
+  return imgs.length ? imgs : null;
+}
+
+/**
+ * Locate + crop a question's figure(s) from a page, then upload each. Two pieces of
+ * resilience over the old single-shot path:
+ *  - Page tolerance: flash's `page` index for a PDF drifts by a page, and a wrong
+ *    page is the difference between a clean crop and a silent miss — so when the
+ *    primary page yields nothing we probe its neighbours (±1). Image uploads have a
+ *    single source, so they only try the one candidate.
+ *  - Multiple figures: crops EVERY box the detector returns (a question can carry
+ *    several diagrams), instead of keeping just the first.
+ * Returns the uploaded figures (possibly several), or [] if none located anywhere.
+ */
+async function detectAndCrop(
+  ctx: CropContext,
+  q: ParsedQuestion,
+  coachingId: string,
+  key: string,
+  signal: AbortSignal | undefined,
+  mode: "tight" | "whole" | "solution",
+  preferredPage: number | null | undefined
+): Promise<StoredImage[]> {
+  const explanation = mode === "solution";
+  const pages: (number | null | undefined)[] =
+    ctx.renderer && typeof preferredPage === "number"
+      ? [preferredPage, preferredPage - 1, preferredPage + 1]
+      : [preferredPage];
+  for (const page of pages) {
+    if (typeof page === "number" && page < 0) continue;
+    const src = await resolveSourcePage(ctx, page, q.source_image);
+    if (!src) continue;
+    const boxes = await locateFigure(src.png, q.number, q.question_text, key, signal, mode);
+    if (!boxes) continue;
+    // "whole" (figure-option) questions are captured as ONE image so the stem +
+    // all four option pictures stay together; never fragment those into pieces.
+    const use = mode === "whole" ? boxes.slice(0, 1) : boxes;
+    const out: StoredImage[] = [];
+    for (const box of use) {
+      const url = await cropBoxAndUpload(src, box, coachingId);
+      if (url) out.push({ index: out.length, filename: url, ...(explanation ? { type: "explanation" as const } : {}) });
+    }
+    if (out.length) return out; // found figures on this candidate page — done
+  }
+  return [];
 }
 
 /**
@@ -1407,21 +1505,16 @@ export async function cropSolutionImage(
   coachingId: string,
   apiKey?: string,
   signal?: AbortSignal
-): Promise<StoredImage | null> {
+): Promise<StoredImage[] | null> {
   if (!q.solution_has_diagram) return null;
-
-  // Prefer the solution's own page; fall back to the question's page (the
-  // solution is often printed right under the question on the same page).
-  const page = typeof q.solution_page === "number" ? q.solution_page : q.page;
-  const src = await resolveSourcePage(ctx, page, q.source_image);
-  if (!src) return null;
   const key = apiKey ?? process.env.GEMINI_API_KEY ?? "";
   if (!USE_VERTEX && !key) return null;
 
-  const box = await locateFigure(src.png, q.number, q.question_text, key, signal, "solution");
-  if (!box) return null;
-  const url = await cropBoxAndUpload(src, box, coachingId);
-  return url ? { index: 0, filename: url, type: "explanation" } : null;
+  // Prefer the solution's own page; fall back to the question's page (the solution
+  // is often printed right under the question). detectAndCrop also probes ±1.
+  const page = typeof q.solution_page === "number" ? q.solution_page : q.page;
+  const imgs = await detectAndCrop(ctx, q, coachingId, key, signal, "solution", page);
+  return imgs.length ? imgs : null;
 }
 
 type PageSource = { png: Buffer; W: number; H: number };
