@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Plus, Search, Trash2, Pencil, X, ChevronRight, Folder, FolderOpen, Clock, Upload } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 import QuestionImportModal from "@/components/coaching/QuestionImportModal";
+import { display, Btn, Card, Pill, PageHead } from "@/components/coaching/ui";
 
 const inputCls =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
+  "w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white outline-none focus:border-amber-500";
 
 type QType = "mcq" | "nat" | "subjective";
 type Option = { label: string; text: string };
@@ -182,39 +183,34 @@ export default function QuestionsClient({
   const showTable = flatMode || leaf !== null;
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Question Bank</h1>
-        <div className="flex items-center gap-2">
-          {/* AI bulk import is super-admin-only for now. */}
-          {isSuperAdmin && (
-            <button
-              onClick={() => setShowImport(true)}
-              className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
-            >
-              <Upload className="h-4 w-4" /> Bulk import
-            </button>
-          )}
-          <button
-            onClick={() => openAdd(flatMode ? null : leaf)}
-            className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-500"
-          >
-            <Plus className="h-4 w-4" /> Add Question
-          </button>
-        </div>
-      </div>
+    <div className="p-5 sm:p-8 lg:p-10">
+      <PageHead title="Question Bank" sub="Organize, manage and reuse questions efficiently.">
+        {/* AI bulk import is super-admin-only for now. */}
+        {isSuperAdmin && (
+          <Btn kind="ghost" onClick={() => setShowImport(true)}>
+            <Upload className="h-[18px] w-[18px]" /> Bulk import
+          </Btn>
+        )}
+        <Btn onClick={() => openAdd(flatMode ? null : leaf)}>
+          <Plus className="h-[18px] w-[18px]" /> Add Question
+        </Btn>
+      </PageHead>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+      <div className="flex flex-wrap gap-3">
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-500" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search all questions"
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 py-2 pl-9 pr-3 text-sm text-white outline-none focus:border-amber-500"
+            placeholder="Search all questions…"
+            className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-3 text-sm text-white outline-none focus:border-amber-500"
           />
         </div>
-        <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white">
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 text-sm text-white outline-none focus:border-amber-500"
+        >
           <option value="">All types</option>
           <option value="mcq">MCQ</option>
           <option value="nat">Numerical</option>
@@ -223,13 +219,13 @@ export default function QuestionsClient({
         {/* "Recently added" view so questions you just added never get lost. */}
         <button
           onClick={() => setRecent((r) => !r)}
-          className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
+          className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-3 text-sm font-semibold transition ${
             recent
-              ? "border-amber-500 bg-amber-500/10 text-amber-300"
-              : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+              ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
+              : "border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
           }`}
         >
-          <Clock className="h-4 w-4" /> Recently added
+          <Clock className="h-[18px] w-[18px]" /> Recently added
         </button>
       </div>
 
@@ -258,7 +254,8 @@ export default function QuestionsClient({
           {leaf.grade && leaf.set && (
             <a
               href={`/coaching-admin/tests/new?exam=${encodeURIComponent(leaf.grade)}&set=${encodeURIComponent(leaf.set)}`}
-              className="ml-auto rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-500"
+              className="ml-auto rounded-xl px-4 py-2 text-xs font-bold transition hover:brightness-110"
+              style={{ background: "linear-gradient(135deg,#fb923c 0%,#f59e0b 100%)", color: "#1a1205" }}
             >
               Create test from this set →
             </a>
@@ -338,13 +335,13 @@ function FolderBrowser({
 }) {
   if (taxonomy.length === 0) {
     return (
-      <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950 px-4 py-10 text-center text-slate-500">
+      <div className="mt-5 rounded-[18px] border border-white/[0.07] bg-white/[0.02] px-4 py-10 text-center text-slate-500">
         No questions yet. Click “Add Question” to create your first one.
       </div>
     );
   }
   return (
-    <div className="mt-4 space-y-2">
+    <div className="mt-5 space-y-2">
       {taxonomy.map((g) => (
         <GradeFolder
           key={GRADE_LABEL(g.grade)}
@@ -372,18 +369,18 @@ function GradeFolder({
   // Auto-open the grade that contains the active leaf.
   const [open, setOpen] = useState(activeLeaf?.grade === node.grade);
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+    <div className="overflow-hidden rounded-[18px] border border-white/[0.07] bg-white/[0.02]">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-slate-900"
+        className="flex w-full items-center gap-2.5 px-4 py-3.5 text-left transition hover:bg-white/[0.03]"
       >
         <ChevronRight className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? "rotate-90" : ""}`} />
-        {open ? <FolderOpen className="h-4 w-4 text-amber-400" /> : <Folder className="h-4 w-4 text-amber-400" />}
-        <span className="font-semibold text-white">{GRADE_LABEL(node.grade)}</span>
-        <span className="ml-auto rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">{node.count}</span>
+        {open ? <FolderOpen className="h-[19px] w-[19px] text-amber-400" /> : <Folder className="h-[19px] w-[19px] text-amber-400" />}
+        <span className="font-bold text-white">{GRADE_LABEL(node.grade)}</span>
+        <span className="ml-auto rounded-full bg-white/[0.06] px-2.5 py-0.5 text-xs font-bold text-slate-400">{node.count}</span>
       </button>
       {open && (
-        <div className="space-y-1.5 border-t border-slate-800 px-3 py-2">
+        <div className="space-y-1.5 border-t border-white/[0.06] px-3 py-2">
           {node.subjects.map((s) => (
             <SubjectFolder
               key={SUBJECT_LABEL(s.subject)}
@@ -415,14 +412,14 @@ function SubjectFolder({
 }) {
   const [open, setOpen] = useState(activeLeaf?.grade === grade && activeLeaf?.subject === node.subject);
   return (
-    <div className="rounded-lg border border-slate-800/70">
+    <div className="rounded-xl border border-white/[0.05]">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-900"
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition hover:bg-white/[0.03]"
       >
         <ChevronRight className={`h-3.5 w-3.5 shrink-0 text-slate-600 transition-transform ${open ? "rotate-90" : ""}`} />
-        <span className="text-sm font-medium text-slate-200">{SUBJECT_LABEL(node.subject)}</span>
-        <span className="ml-auto text-xs text-slate-500">{node.count}</span>
+        <span className="text-sm font-semibold text-slate-200">{SUBJECT_LABEL(node.subject)}</span>
+        <span className="ml-auto text-xs font-bold text-slate-500">{node.count}</span>
       </button>
       {open && (
         <div className="space-y-0.5 px-2 pb-2">
@@ -433,21 +430,29 @@ function SubjectFolder({
             return (
               <div
                 key={SET_LABEL(t.set)}
-                className={`group flex items-center gap-2 rounded-md px-2 py-1.5 ${active ? "bg-amber-500/10" : "hover:bg-slate-900"}`}
+                className="group flex items-center gap-2 rounded-lg px-2 py-2 transition"
+                style={
+                  active
+                    ? {
+                        background: "linear-gradient(90deg, rgba(245,158,11,0.14), transparent)",
+                        borderLeft: "3px solid #f59e0b",
+                      }
+                    : { borderLeft: "3px solid transparent" }
+                }
               >
                 <button
                   onClick={() => onSelectLeaf(thisLeaf)}
                   className="flex min-w-0 flex-1 items-center gap-2 text-left"
                 >
-                  <span className={`truncate text-sm ${active ? "text-amber-300" : "text-slate-300"}`}>
+                  <span className={`truncate text-sm font-medium ${active ? "text-amber-300" : "text-slate-300"}`}>
                     {SET_LABEL(t.set)}
                   </span>
-                  <span className="ml-auto text-xs text-slate-500">{t.count}</span>
+                  <span className="ml-auto text-xs font-bold text-slate-500">{t.count}</span>
                 </button>
                 <button
                   onClick={() => onAddInLeaf(thisLeaf)}
                   title="Add question here"
-                  className="shrink-0 rounded p-1 text-slate-500 opacity-0 transition hover:bg-slate-800 hover:text-amber-400 group-hover:opacity-100"
+                  className="shrink-0 rounded p-1 text-slate-500 opacity-0 transition hover:bg-white/[0.06] hover:text-amber-400 group-hover:opacity-100"
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -475,53 +480,64 @@ function QuestionsTable({
   return (
     <>
       {/* Desktop: table. Mobile: stacked cards (below). */}
-      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
-        <table className="w-full min-w-[680px] text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <th className="px-4 py-3 font-medium">Question</th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Section</th>
-              <th className="px-4 py-3 font-medium">Set</th>
-              <th className="px-4 py-3 font-medium">Marks</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800 bg-slate-950">
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  Loading…
-                </td>
-              </tr>
-            ) : questions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  No questions here.
-                </td>
-              </tr>
-            ) : (
-              questions.map((qq) => (
-                <tr key={qq.id} className="text-slate-200">
-                  <td className="max-w-md px-4 py-3">
-                    <span className="line-clamp-2 text-slate-300">{qq.question_text}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
-                      {TYPE_LABELS[qq.question_type] ?? qq.question_type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-400">{qq.subject ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-400">{qq.set_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-400">{qq.max_marks}</td>
-                  <td className="px-4 py-3">
-                    <QuestionActions id={qq.id} onEdit={() => onEdit(qq.id)} onReload={onReload} />
-                  </td>
+      <div className="mt-5 hidden md:block">
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-sm">
+              <thead
+                className="text-[13px] font-semibold text-slate-400"
+                style={{ background: "rgba(255,255,255,0.02)" }}
+              >
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <th className="px-6 py-3.5 font-semibold">Question</th>
+                  <th className="px-6 py-3.5 font-semibold">Type</th>
+                  <th className="px-6 py-3.5 font-semibold">Section</th>
+                  <th className="px-6 py-3.5 font-semibold">Set</th>
+                  <th className="px-6 py-3.5 font-semibold">Marks</th>
+                  <th className="px-6 py-3.5 text-right font-semibold">Actions</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
+                      Loading…
+                    </td>
+                  </tr>
+                ) : questions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
+                      No questions here.
+                    </td>
+                  </tr>
+                ) : (
+                  questions.map((qq, i) => (
+                    <tr
+                      key={qq.id}
+                      className="text-slate-200 transition hover:bg-white/[0.02]"
+                      style={{ borderBottom: i < questions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                    >
+                      <td className="max-w-md px-6 py-4">
+                        <span className="line-clamp-2 text-slate-300">{qq.question_text}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Pill tone={qq.question_type === "mcq" ? "amber" : qq.question_type === "subjective" ? "accent" : "slate"}>
+                          {TYPE_LABELS[qq.question_type] ?? qq.question_type}
+                        </Pill>
+                      </td>
+                      <td className="px-6 py-4 text-slate-400">{qq.subject ?? "—"}</td>
+                      <td className="px-6 py-4 text-slate-400">{qq.set_name ?? "—"}</td>
+                      <td className="px-6 py-4 text-slate-400">{qq.max_marks}</td>
+                      <td className="px-6 py-4">
+                        <QuestionActions id={qq.id} onEdit={() => onEdit(qq.id)} onReload={onReload} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </div>
 
       {/* Mobile cards */}
@@ -563,14 +579,15 @@ function QuestionActions({
   onEdit: () => void;
   onReload: () => void;
 }) {
+  const iconBtn = "grid h-9 w-9 shrink-0 place-items-center rounded-[9px] border transition";
   return (
-    <div className="flex shrink-0 justify-end gap-2">
+    <div className="flex shrink-0 justify-end gap-2.5">
       <button
         onClick={onEdit}
-        className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+        className={`${iconBtn} border-white/10 bg-white/[0.03] text-slate-300 hover:text-white`}
         title="Edit"
       >
-        <Pencil className="h-4 w-4" />
+        <Pencil className="h-[17px] w-[17px]" />
       </button>
       <button
         onClick={async () => {
@@ -578,10 +595,11 @@ function QuestionActions({
           const res = await fetch(`/api/coaching/questions/${id}`, { method: "DELETE" });
           if (res.ok) onReload();
         }}
-        className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-red-400"
+        className={`${iconBtn} text-red-400`}
+        style={{ background: "rgba(239,68,68,0.12)", borderColor: "rgba(239,68,68,0.3)" }}
         title="Delete"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-[17px] w-[17px]" />
       </button>
     </div>
   );
@@ -761,13 +779,16 @@ function QuestionFormModal({
   const natAnswer = type === "nat" ? correct : "";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4">
-      <div className="my-8 w-full max-w-3xl rounded-2xl bg-slate-900 p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+      <div
+        className="my-8 w-full max-w-3xl rounded-[18px] border p-6"
+        style={{ background: "#0f1218", borderColor: "rgba(255,255,255,0.07)", boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-bold text-white" style={{ fontFamily: display }}>
             {editId ? "Edit Question" : "Add Question"}
           </h2>
-          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800">
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-white/[0.06]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -950,7 +971,8 @@ function QuestionFormModal({
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-amber-600 py-2 font-medium text-white hover:bg-amber-500 disabled:opacity-50"
+              className="w-full rounded-xl py-2.5 font-bold transition hover:brightness-110 disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg,#fb923c 0%,#f59e0b 100%)", color: "#1a1205" }}
             >
               {saving ? "Saving…" : editId ? "Save changes" : "Add question"}
             </button>

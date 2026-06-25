@@ -2,19 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, TrendingUp, Users, FileQuestion, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, ClipboardList, UserCog, IndianRupee, CalendarCheck, type LucideIcon } from "lucide-react";
+
+type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean };
 
 // Mobile bottom tab nav (replaces the sidebar on small screens). Desktop hides it.
-const NAV = [
+// Kept to the most-used destinations; the rest (Insights, Question Bank) live in
+// the top menu (AdminMobileHeader) so this row stays uncramped.
+const NAV: NavItem[] = [
   { href: "/coaching-admin", label: "Home", icon: LayoutDashboard, exact: true },
-  { href: "/coaching-admin/insights", label: "Insights", icon: TrendingUp },
   { href: "/coaching-admin/students", label: "Students", icon: Users },
-  { href: "/coaching-admin/questions", label: "Bank", icon: FileQuestion },
   { href: "/coaching-admin/tests", label: "Tests", icon: ClipboardList },
+  { href: "/coaching-admin/attendance", label: "Attend", icon: CalendarCheck },
+  { href: "/coaching-admin/fees", label: "Fees", icon: IndianRupee },
 ];
 
-export default function AdminBottomNav() {
+// Owner-only entry, appended when canManageTeam.
+const TEAM_NAV: NavItem = { href: "/coaching-admin/team", label: "Team", icon: UserCog };
+
+export default function AdminBottomNav({ canManageTeam = false }: { canManageTeam?: boolean }) {
   const pathname = usePathname();
+  const nav = canManageTeam ? [...NAV, TEAM_NAV] : NAV;
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-30 flex md:hidden"
@@ -26,7 +34,7 @@ export default function AdminBottomNav() {
         paddingTop: 8,
       }}
     >
-      {NAV.map(({ href, label, icon: Icon, exact }) => {
+      {nav.map(({ href, label, icon: Icon, exact }) => {
         const on = exact ? pathname === href : pathname.startsWith(href);
         const color = on ? "#ff8f00" : "#5e6480";
         return (

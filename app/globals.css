@@ -180,6 +180,38 @@ body {
     border: 1px solid var(--border);
     border-radius: 12px;
   }
+
+  /* ===== Coaching module: pointer cursor on interactive elements =====
+     Tailwind v4 Preflight sets `button, [role=button] { cursor: default }`, so
+     buttons/links in the coaching admin + student (/c/[slug]) areas showed the
+     arrow cursor on hover. Scoped to `.coaching-scope` (set on both coaching
+     layout wrappers) so the rest of the app is untouched. In `@layer components`
+     so a per-element `cursor-*` Tailwind utility can still override it. */
+  .coaching-scope :is(a, button, summary, label[for], select, [role="button"], [role="tab"], [role="link"]):not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  .coaching-scope :is(button, [role="button"]):disabled,
+  .coaching-scope [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* ===== Coaching module: dark-themed native <select> dropdowns =====
+     The <option> popup ignores the trigger's styling and falls back to the OS
+     light list (white background, blue highlight). Chromium/Firefox DO honour
+     background-color/color set on the options themselves, so theme them here to
+     match the coaching surfaces. Only the options are styled (not the <select>
+     trigger) so each select keeps its own trigger background. Scoped to
+     `.coaching-scope`, so the rest of the app is untouched. */
+  .coaching-scope select option,
+  .coaching-scope select optgroup {
+    background-color: #0f1218;
+    color: #e7eaf0;
+  }
+  .coaching-scope select option:checked,
+  .coaching-scope select option:hover {
+    background-color: #ff8f00;
+    color: #1a1205;
+  }
 }
 
 

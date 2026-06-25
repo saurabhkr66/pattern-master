@@ -1,11 +1,63 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { X, Upload, Loader2, FileText, ImageIcon } from "lucide-react";
+import {
+  X,
+  Upload,
+  Loader2,
+  FileText,
+  ImageIcon,
+  UploadCloud,
+  GraduationCap,
+  ClipboardList,
+  Tag,
+  Info,
+  Check,
+  CheckSquare,
+  NotebookPen,
+  Cpu,
+  ShieldCheck,
+  Languages,
+  Undo2,
+} from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 
 const inputCls =
   "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
+
+// Icon-prefixed field used on the redesigned upload step (left padding leaves
+// room for the absolutely-positioned icon).
+const fieldCls =
+  "w-full rounded-xl border border-white/10 bg-white/[0.02] py-2.5 pl-11 pr-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-amber-500/60";
+
+// "What does this paper contain?" choices. Each carries its own icon + accent
+// colour for the icon tile; the selected card always reads amber.
+const CONTENT_OPTS = [
+  { v: "objective", label: "MCQ / Numerical", hint: "Options or numeric answers", Icon: CheckSquare, accent: "amber" },
+  { v: "subjective", label: "Subjective", hint: "Written answers + model solutions", Icon: NotebookPen, accent: "sky" },
+  { v: "mixed", label: "Mixed — auto-detect", hint: "AI classifies each question automatically", Icon: Cpu, accent: "violet" },
+] as const;
+
+const ACCENT: Record<string, string> = {
+  amber: "bg-amber-500/15 text-amber-400",
+  sky: "bg-sky-500/15 text-sky-400",
+  violet: "bg-violet-500/15 text-violet-400",
+};
+
+// Pill toggle switch shared by the two AI-pass rows on the upload step.
+function Switch({ checked }: { checked: boolean }) {
+  return (
+    <span
+      role="switch"
+      aria-checked={checked}
+      className={`relative mt-0.5 inline-block h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? "bg-amber-500" : "bg-slate-700"}`}
+    >
+      <span
+        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}
+      />
+    </span>
+  );
+}
 
 type ParsedQ = {
   question_type: "mcq" | "nat" | "subjective";
@@ -248,13 +300,29 @@ export default function QuestionImportModal({
   const includedCount = questions.filter((q) => q._include).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4">
-      <div className="my-8 w-full max-w-4xl rounded-2xl bg-slate-900 p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">
-            Bulk import {phase === "review" ? `· review (${includedCount})` : ""}
-          </h2>
-          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4">
+      <div className="my-6 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-y-auto rounded-3xl border border-white/[0.08] bg-[#08090d] p-6 shadow-2xl">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-400">
+              <UploadCloud className="h-6 w-6" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold tracking-tight text-white">
+                Bulk import {phase === "review" ? `· review (${includedCount})` : ""}
+              </h2>
+              {phase === "upload" && (
+                <p className="mt-0.5 max-w-2xl text-[13px] leading-snug text-slate-400">
+                  Upload a question paper or PDF. We extract the questions and tag each with a
+                  section. You review before saving. Hindi translation is optional (off by default).
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/[0.03] p-2 text-slate-400 hover:bg-white/[0.07] hover:text-white"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -300,110 +368,112 @@ export default function QuestionImportModal({
         )}
 
         {phase === "upload" && !busy && (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-400">
-              Upload photos of a question paper or a PDF. We extract the questions and tag each
-              with a section from this exam — you review before saving. Hindi translation is
-              optional (off by default).
-            </p>
+          <div className="space-y-3">
+            {/* Meta inputs — each with an icon prefix and an info hint. */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <label className="block">
-                <span className="text-sm text-slate-300">Exam / Class</span>
-                <input value={exam} onChange={(e) => setExam(e.target.value)} className={`mt-1 ${inputCls}`} placeholder="e.g. SSC CGL" />
-              </label>
-              <label className="block">
-                <span className="text-sm text-slate-300">Set / Mock</span>
-                <input value={set} onChange={(e) => setSet(e.target.value)} className={`mt-1 ${inputCls}`} placeholder="e.g. Mock 5" />
-              </label>
-              <label className="block">
-                <span className="text-sm text-slate-300">Topic list (optional, comma-sep)</span>
-                <input value={topics} onChange={(e) => setTopics(e.target.value)} className={`mt-1 ${inputCls}`} placeholder="Kinematics, Optics…" />
-              </label>
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-slate-300">
+                  Exam / Class <Info className="h-3.5 w-3.5 text-slate-500" />
+                </label>
+                <div className="relative mt-1.5">
+                  <GraduationCap className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400/80" />
+                  <input value={exam} onChange={(e) => setExam(e.target.value)} className={fieldCls} placeholder="e.g. SSC CGL" />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-slate-300">
+                  Set / Mock <Info className="h-3.5 w-3.5 text-slate-500" />
+                </label>
+                <div className="relative mt-1.5">
+                  <ClipboardList className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400/80" />
+                  <input value={set} onChange={(e) => setSet(e.target.value)} className={fieldCls} placeholder="e.g. Mock 5" />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-slate-300">
+                  Topic list (optional, comma-separated) <Info className="h-3.5 w-3.5 text-slate-500" />
+                </label>
+                <div className="relative mt-1.5">
+                  <Tag className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400/80" />
+                  <input value={topics} onChange={(e) => setTopics(e.target.value)} className={fieldCls} placeholder="Kinematics, Optics…" />
+                </div>
+              </div>
             </div>
 
             {/* Pre-declared question type → focused (more accurate) extraction. */}
             <div>
-              <span className="text-sm text-slate-300">What does this paper contain?</span>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {(
-                  [
-                    { v: "objective", label: "MCQ / Numerical", hint: "options or numeric answers" },
-                    { v: "subjective", label: "Subjective", hint: "written answers + model solutions" },
-                    { v: "mixed", label: "Mixed — auto-detect", hint: "AI classifies each question" },
-                  ] as const
-                ).map((o) => (
-                  <button
-                    key={o.v}
-                    type="button"
-                    onClick={() => setQtype(o.v)}
-                    className={`rounded-lg border px-3 py-2 text-left text-sm ${
-                      qtype === o.v
-                        ? "border-amber-500 bg-amber-500/10 text-amber-300"
-                        : "border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800"
-                    }`}
-                  >
-                    <span className="block font-medium">{o.label}</span>
-                    <span className="block text-[11px] text-slate-500">{o.hint}</span>
-                  </button>
-                ))}
+              <p className="text-sm font-semibold text-white">What does this paper contain?</p>
+              <div className="mt-2.5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {CONTENT_OPTS.map((o) => {
+                  const selected = qtype === o.v;
+                  return (
+                    <button
+                      key={o.v}
+                      type="button"
+                      onClick={() => setQtype(o.v)}
+                      className={`relative overflow-hidden rounded-2xl border p-3 text-left transition ${
+                        selected
+                          ? "border-amber-500 bg-amber-500/[0.08] shadow-[0_0_30px_rgba(245,158,11,0.12)]"
+                          : "border-white/10 bg-white/[0.02] hover:border-white/25"
+                      }`}
+                    >
+                      {selected && (
+                        <span className="absolute right-0 top-0 h-0 w-0 border-r-[34px] border-t-[34px] border-r-amber-500 border-t-transparent">
+                          <Check className="absolute -right-8 top-0.5 h-3 w-3 text-black" strokeWidth={3} />
+                        </span>
+                      )}
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${ACCENT[o.accent]}`}>
+                        <o.Icon className="h-5 w-5" />
+                      </span>
+                      <div className="mt-2.5 text-[15px] font-semibold text-white">{o.label}</div>
+                      <div className="mt-0.5 text-[13px] text-slate-400">{o.hint}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Answer verification toggle — the expensive Gemini pass. Off by
-                default; the admin turns it on only for hard papers. */}
-            <div
-              onClick={() => setVerify((v) => !v)}
-              className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950 p-3 hover:border-amber-500/60"
-            >
-              <span
-                role="switch"
-                aria-checked={verify}
-                className={`relative mt-0.5 inline-block h-5 w-9 shrink-0 rounded-full transition-colors ${verify ? "bg-amber-500" : "bg-slate-700"}`}
+            {/* Expensive AI passes — both off by default, grouped in one card. */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02]">
+              {/* Answer verification toggle — the expensive Gemini pass. */}
+              <div
+                onClick={() => setVerify((v) => !v)}
+                className="flex cursor-pointer items-center gap-3 p-3"
               >
-                <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${verify ? "translate-x-4" : "translate-x-0.5"}`}
-                />
-              </span>
-              <span>
-                <span className="block text-sm font-medium text-slate-200">
-                  Verify answers (independent AI re-solve)
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                  <ShieldCheck className="h-[18px] w-[18px]" />
                 </span>
-                <span className="block text-[11px] text-slate-500">
-                  Off: faster &amp; cheaper — trusts the extracted answer key. On: a second
-                  model re-solves each question blind and flags disagreements. Use for hard papers.
+                <div className="min-w-0 flex-1">
+                  <div className="text-[15px] font-semibold text-white">Verify answers (independent AI re-solve)</div>
+                  <p className="mt-0.5 text-[13px] leading-snug text-slate-400">
+                    Off trusts the extracted key. On re-solves each question blind &amp; flags disagreements.
+                  </p>
+                </div>
+                <Switch checked={verify} />
+              </div>
+
+              <div className="mx-3.5 h-px bg-white/10" />
+
+              {/* Hindi translation toggle — off by default. */}
+              <div
+                onClick={() => setHindi((v) => !v)}
+                className="flex cursor-pointer items-center gap-3 p-3"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                  <Languages className="h-[18px] w-[18px]" />
                 </span>
-              </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[15px] font-semibold text-white">Generate Hindi translation</div>
+                  <p className="mt-0.5 text-[13px] leading-snug text-slate-400">
+                    Off is English only. On also translates questions, options &amp; solutions to Hindi.
+                  </p>
+                </div>
+                <Switch checked={hindi} />
+              </div>
             </div>
 
-            {/* Hindi translation toggle — off by default. Translating every field
-                roughly doubles output tokens, so it's opt-in for bilingual papers. */}
-            <div
-              onClick={() => setHindi((v) => !v)}
-              className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 bg-slate-950 p-3 hover:border-amber-500/60"
-            >
-              <span
-                role="switch"
-                aria-checked={hindi}
-                className={`relative mt-0.5 inline-block h-5 w-9 shrink-0 rounded-full transition-colors ${hindi ? "bg-amber-500" : "bg-slate-700"}`}
-              >
-                <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${hindi ? "translate-x-4" : "translate-x-0.5"}`}
-                />
-              </span>
-              <span>
-                <span className="block text-sm font-medium text-slate-200">
-                  Generate Hindi translation
-                </span>
-                <span className="block text-[11px] text-slate-500">
-                  Off: English only — faster &amp; cheaper. On: also translate every question,
-                  option and solution to Hindi. Turn on only for bilingual papers.
-                </span>
-              </span>
-            </div>
-
+            {/* Upload zones — paste/drop/browse images, or pick a PDF. */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {/* Image zone — paste a screenshot (Ctrl/Cmd+V works anywhere on this
-                  step), drop files, or browse. Images accumulate so you can add many. */}
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -415,15 +485,19 @@ export default function QuestionImportModal({
                   setImgDragOver(false);
                   addImageFiles(Array.from(e.dataTransfer.files));
                 }}
-                className={`flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-6 text-center transition ${
-                  imgDragOver ? "border-amber-500 bg-amber-500/5" : "border-slate-700 bg-slate-950 hover:border-amber-500"
+                className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed px-5 py-3.5 text-center transition ${
+                  imgDragOver ? "border-amber-500 bg-amber-500/10" : "border-amber-500/40 bg-amber-500/[0.03] hover:border-amber-500"
                 }`}
               >
-                <ImageIcon className="h-6 w-6 text-slate-500" />
-                <span className="text-sm text-slate-300">{images.length ? `${images.length} image(s) added` : "Add images"}</span>
-                <span className="text-[11px] text-slate-500">
-                  Paste a screenshot (Ctrl/Cmd+V), drop images, or{" "}
-                  <label className="cursor-pointer text-amber-400 hover:underline">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-500/40 text-amber-400">
+                  <ImageIcon className="h-5 w-5" />
+                </span>
+                <span className="text-[15px] font-bold text-white">
+                  {images.length ? `${images.length} image(s) added` : "Add images"}
+                </span>
+                <span className="text-[13px] text-slate-400">
+                  Paste (Ctrl/Cmd+V), drop, or{" "}
+                  <label className="cursor-pointer font-semibold text-amber-400 hover:underline">
                     browse
                     <input
                       type="file"
@@ -438,9 +512,12 @@ export default function QuestionImportModal({
                   </label>
                 </span>
               </div>
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-6 text-center hover:border-amber-500">
-                <FileText className="h-6 w-6 text-slate-500" />
-                <span className="text-sm text-slate-300">{pdf ? pdf.name : "Choose a PDF"}</span>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-sky-500/40 bg-sky-500/[0.03] px-5 py-3.5 text-center hover:border-sky-500">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-sky-500/40 text-sky-400">
+                  <FileText className="h-5 w-5" />
+                </span>
+                <span className="text-[15px] font-bold text-white">{pdf ? pdf.name : "Choose a PDF"}</span>
+                <span className="text-[13px] text-slate-400">PDF of the question paper (max 50MB)</span>
                 <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setPdf(e.target.files?.[0] ?? null)} />
               </label>
             </div>
@@ -473,13 +550,22 @@ export default function QuestionImportModal({
               </div>
             )}
 
-            <button
-              onClick={runExtract}
-              disabled={busy}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 py-2.5 font-medium text-white hover:bg-amber-500 disabled:opacity-50"
-            >
-              {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Extracting…</> : <><Upload className="h-4 w-4" /> Extract questions</>}
-            </button>
+            {/* Footer actions. */}
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-2.5 text-sm font-semibold text-slate-200 hover:bg-white/[0.07]"
+              >
+                <Undo2 className="h-4 w-4" /> Cancel
+              </button>
+              <button
+                onClick={runExtract}
+                disabled={busy}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-amber-400 to-amber-500 px-6 py-3 text-base font-bold text-black shadow-lg shadow-amber-500/25 hover:from-amber-300 hover:to-amber-400 disabled:opacity-50 sm:max-w-2xl"
+              >
+                {busy ? <><Loader2 className="h-5 w-5 animate-spin" /> Extracting…</> : <><Upload className="h-5 w-5" /> Extract questions</>}
+              </button>
+            </div>
           </div>
         )}
 

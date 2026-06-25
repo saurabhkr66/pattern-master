@@ -19,7 +19,7 @@ export const GET = withCoachingContext(async (_req, { coachingId }, { params }) 
 export const PATCH = withCoachingContext(async (req, { coachingId, actor }, { params }) => {
   const { id } = await params;
   const body = await req.json();
-  const { error, data } = validateCoachingQuestion(body);
+  const { error, data } = validateCoachingQuestion(body, { requireSubjectiveSolution: true });
   if (error || !data) {
     return NextResponse.json({ error: error ?? "invalid question" }, { status: 400 });
   }
@@ -45,7 +45,17 @@ export const PATCH = withCoachingContext(async (req, { coachingId, actor }, { pa
       { status: 403 }
     );
   }
-  await prisma.coachingQuestion.update({ where: { id }, data });
+  await prisma.coachingQuestion.update({
+    where: { id },
+    data: {
+      ...data,
+      // Editing a subjective question can change the question text or model
+      // answer, which makes its precomputed rubric stale. Reset rubric_version so
+      // the backfill regenerates it; grading falls back to deriving the scheme
+      // until then.
+      ...(data.question_type === "subjective" ? { rubric_version: 0 } : {}),
+    },
+  });
   // The answer/text may have changed — bust the cached question set of every
   // live test using it so students aren't graded on the stale cached answer.
   await invalidateTestsWithQuestion(coachingId, id);

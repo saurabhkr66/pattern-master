@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
 import {
@@ -117,17 +116,14 @@ export async function POST(
       return NextResponse.json({ ok: true, attemptId, alreadySubmitted: true });
     }
 
-    // Photo answers (if any) are graded by Gemini AFTER this response flushes —
-    // the student sees "Submitted" instantly, never waits on the AI. A failure
-    // here leaves grading_status = "pending"; the admin's "Grade ungraded"
-    // button on the results page is the retry net.
-    if (needsGrading) {
-      after(() =>
-        import("@/lib/subjectiveGrading")
-          .then((m) => m.gradeAttemptSubjectives({ attemptId, coachingId: cid, trigger: "auto" }))
-          .catch((err) => console.error(`[submit] grading ${attemptId} failed:`, err))
-      );
-    }
+    // Photo answers (if any) are left at grading_status = "pending"; the Gemini
+    // BATCH sweeper (/api/cron/grade-batch, run by cron + result-page nudges)
+    // grades them ~50% cheaper than per-answer calls. We do NOT grade inline here
+    // — batching deliberately accumulates answers across students rather than
+    // firing one job per submit. The admin "Grade ungraded" button stays the
+    // instant on-demand path. `needsGrading` is already reflected in the stored
+    // grading_status by gradeAndWrite.
+    void needsGrading;
 
     return NextResponse.json({ ok: true, attemptId, score, maxScore });
   } catch (err) {

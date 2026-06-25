@@ -4,9 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar } from "lucide-react";
+import { Plus, X, MoreVertical, Hash, Clock, Check, Calendar, ClipboardList } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { buildTestInviteMessage, openWhatsApp } from "@/lib/whatsappShare";
+import { display, Btn, Card, Pill, PageHead } from "@/components/coaching/ui";
 
 type TestRow = {
   id: string;
@@ -22,11 +23,12 @@ type TestRow = {
 
 type CoachingInfo = { name: string; slug: string; joinCode: string };
 
-const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-slate-800 text-slate-300",
-  active: "bg-green-900/50 text-green-400",
-  closed: "bg-amber-900/40 text-amber-400",
-  scheduled: "bg-sky-900/40 text-sky-400",
+// Effective status → Pill tone (+ whether it shows a live dot).
+const STATUS_TONE: Record<string, { tone: string; dot?: boolean }> = {
+  draft: { tone: "slate" },
+  active: { tone: "success", dot: true },
+  closed: { tone: "amber" },
+  scheduled: { tone: "accent" },
 };
 
 // A test marked "active" is only really open inside its time window. Once end_at
@@ -43,7 +45,7 @@ function effectiveStatus(t: TestRow): "draft" | "active" | "closed" | "scheduled
 }
 
 const inputCls =
-  "mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
+  "mt-1 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white outline-none focus:border-amber-500";
 
 // ISO → value for <input type="datetime-local"> (local time, minute precision).
 function toLocalInput(iso: string | null): string {
@@ -68,6 +70,13 @@ export default function TestsClient({
 
   const shown = tests.filter((t) => filter === "all" || effectiveStatus(t) === filter);
 
+  // Counts for the filter pills.
+  const counts = {
+    all: tests.length,
+    active: tests.filter((t) => effectiveStatus(t) === "active").length,
+    closed: tests.filter((t) => effectiveStatus(t) === "closed").length,
+  };
+
   // clearEnd: also wipe a past end_at so reopening a window-ended test actually
   // makes it open again (flipping status alone wouldn't — the window stays shut).
   async function setStatus(id: string, status: string, clearEnd = false) {
@@ -86,91 +95,119 @@ export default function TestsClient({
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Tests</h1>
-        <button
-          onClick={() => router.push("/coaching-admin/tests/new")}
-          className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-500"
-        >
-          <Plus className="h-4 w-4" /> New Test
-        </button>
-      </div>
+    <div className="p-5 sm:p-8 lg:p-10">
+      <PageHead title="Tests" sub="Create, manage and analyze tests seamlessly.">
+        <Btn onClick={() => router.push("/coaching-admin/tests/new")}>
+          <Plus className="h-[18px] w-[18px]" /> New Test
+        </Btn>
+      </PageHead>
 
-      {/* Status filter chips */}
-      <div className="mt-5 flex gap-2">
-        {(["all", "active", "closed"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1.5 text-sm capitalize transition ${
-              filter === f
-                ? "bg-amber-500 font-semibold text-slate-950"
-                : "border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
+      {/* Status filter pills with counts */}
+      <div className="flex flex-wrap gap-3">
+        {(["all", "active", "closed"] as const).map((f) => {
+          const on = filter === f;
+          const tone = f === "active" ? "#22c55e" : f === "closed" ? "#f59e0b" : "#f59e0b";
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className="inline-flex items-center gap-2.5 rounded-full border px-4 py-2.5 text-sm font-semibold capitalize transition"
+              style={
+                on
+                  ? { background: "rgba(245,158,11,0.08)", color: "#f59e0b", borderColor: "rgba(245,158,11,0.5)" }
+                  : { background: "rgba(255,255,255,0.03)", color: "#c9ced8", borderColor: "rgba(255,255,255,0.07)" }
+              }
+            >
+              {f}
+              <span
+                className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white"
+                style={{ background: counts[f] ? tone : "rgba(255,255,255,0.06)" }}
+              >
+                {counts[f]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Desktop: table. Mobile: stacked cards (below) — the wide table can't
           fit a phone without horizontal scroll. */}
-      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <th className="px-4 py-3 font-medium">Title</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Questions</th>
-              <th className="px-4 py-3 font-medium">Duration</th>
-              <th className="px-4 py-3 font-medium">Window</th>
-              <th className="px-4 py-3 font-medium">Submissions</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800 bg-slate-950">
-            {shown.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                  No tests yet.
-                </td>
-              </tr>
-            ) : (
-              shown.map((t) => (
-                <tr key={t.id} className="text-slate-200">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/coaching-admin/tests/${t.id}/results`}
-                      className="font-medium text-white hover:text-amber-400 hover:underline"
-                    >
-                      {t.title}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[effectiveStatus(t)]}`}>
-                      {effectiveStatus(t)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-400">{t.questionCount}</td>
-                  <td className="px-4 py-3 text-slate-400">{Math.round(t.duration_secs / 60)} min</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
-                    {t.end_at
-                      ? `closes ${new Date(t.end_at).toLocaleDateString([], { day: "numeric", month: "short" })}, ${new Date(t.end_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400">{t.submissions}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <ShareTestButton test={t} coaching={coaching} />
-                      <RowMenu test={t} busy={busy === t.id} onStatus={setStatus} onEdit={setEditing} />
-                    </div>
-                  </td>
+      <div className="mt-5 hidden md:block">
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead
+                className="text-[13px] font-semibold text-slate-400"
+                style={{ background: "rgba(255,255,255,0.02)" }}
+              >
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <th className="px-6 py-2.5 font-semibold">Title</th>
+                  <th className="px-6 py-2.5 font-semibold">Status</th>
+                  <th className="px-6 py-2.5 font-semibold">Questions</th>
+                  <th className="px-6 py-2.5 font-semibold">Duration</th>
+                  <th className="px-6 py-2.5 font-semibold">Window</th>
+                  <th className="px-6 py-2.5 font-semibold">Submissions</th>
+                  <th className="px-6 py-2.5 text-right font-semibold">Actions</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {shown.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-10 text-center text-slate-500">
+                      No tests yet.
+                    </td>
+                  </tr>
+                ) : (
+                  shown.map((t, i) => {
+                    const es = effectiveStatus(t);
+                    const st = STATUS_TONE[es];
+                    return (
+                      <tr
+                        key={t.id}
+                        className="text-slate-200 transition hover:bg-white/[0.02]"
+                        style={{ borderBottom: i < shown.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                      >
+                        <td className="px-6 py-2.5">
+                          <Link
+                            href={`/coaching-admin/tests/${t.id}/results`}
+                            className="flex items-center gap-3"
+                          >
+                            <span
+                              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-amber-400"
+                              style={{ background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.3)" }}
+                            >
+                              <ClipboardList className="h-[18px] w-[18px]" />
+                            </span>
+                            <span className="font-bold text-white hover:text-amber-400">{t.title}</span>
+                          </Link>
+                        </td>
+                        <td className="px-6 py-2.5">
+                          <Pill tone={st.tone} dot={st.dot}>
+                            <span className="capitalize">{es}</span>
+                          </Pill>
+                        </td>
+                        <td className="px-6 py-2.5 text-slate-400">{t.questionCount}</td>
+                        <td className="px-6 py-2.5 text-slate-400">{Math.round(t.duration_secs / 60)} min</td>
+                        <td className="whitespace-nowrap px-6 py-2.5 text-xs text-slate-500">
+                          {t.end_at
+                            ? `closes ${new Date(t.end_at).toLocaleDateString([], { day: "numeric", month: "short" })}, ${new Date(t.end_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                            : "—"}
+                        </td>
+                        <td className="px-6 py-2.5 text-slate-400">{t.submissions}</td>
+                        <td className="px-6 py-2.5">
+                          <div className="flex items-center justify-end gap-2">
+                            <ShareTestButton test={t} coaching={coaching} />
+                            <RowMenu test={t} busy={busy === t.id} onStatus={setStatus} onEdit={setEditing} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </div>
 
       {/* Mobile cards */}
@@ -190,8 +227,10 @@ export default function TestsClient({
                   >
                     {t.title}
                   </Link>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${STATUS_STYLES[effectiveStatus(t)]}`}>
-                    {effectiveStatus(t)}
+                  <span className="shrink-0 capitalize">
+                    <Pill tone={STATUS_TONE[effectiveStatus(t)].tone} dot={STATUS_TONE[effectiveStatus(t)].dot}>
+                      {effectiveStatus(t)}
+                    </Pill>
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
@@ -256,9 +295,10 @@ function ShareTestButton({ test, coaching }: { test: TestRow; coaching: Coaching
         );
       }}
       title="Share on WhatsApp"
-      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-green-400"
+      className="grid h-9 w-9 place-items-center rounded-[10px] text-emerald-400 transition hover:brightness-110"
+      style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}
     >
-      <WhatsAppIcon className="h-4 w-4" />
+      <WhatsAppIcon className="h-[18px] w-[18px]" />
     </button>
   );
 }
@@ -318,24 +358,32 @@ function RowMenu({
   }, [open, place]);
 
   const itemCls =
-    "block w-full px-4 py-2.5 text-left text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50";
+    "block w-full rounded-lg px-4 py-2.5 text-left text-sm font-semibold text-slate-200 hover:bg-white/[0.06] disabled:opacity-50";
 
   return (
     <>
       <button
         ref={btnRef}
         onClick={() => setOpen((o) => !o)}
-        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+        className="grid h-9 w-9 place-items-center rounded-[10px] border border-white/10 bg-white/[0.03] text-amber-400 transition hover:brightness-110"
         title="Actions"
       >
-        <MoreVertical className="h-4 w-4" />
+        <MoreVertical className="h-[18px] w-[18px]" />
       </button>
       {open && coords &&
         createPortal(
           <div
             ref={menuRef}
-            style={{ position: "fixed", top: coords.top, left: coords.left, width: MENU_W }}
-            className="z-[60] overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-xl"
+            style={{
+              position: "fixed",
+              top: coords.top,
+              left: coords.left,
+              width: MENU_W,
+              background: "#13161d",
+              borderColor: "rgba(255,255,255,0.07)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+            }}
+            className="z-[60] overflow-hidden rounded-2xl border p-2"
           >
             {es === "draft" && (
               <button disabled={busy} className={`${itemCls} text-green-400`} onClick={() => { setOpen(false); onStatus(test.id, "active"); }}>
@@ -422,11 +470,14 @@ function EditTestModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div
+        className="w-full max-w-md rounded-[18px] border p-6"
+        style={{ background: "#0f1218", borderColor: "rgba(255,255,255,0.07)", boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Edit test</h2>
-          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800">
+          <h2 className="text-lg font-bold text-white" style={{ fontFamily: display }}>Edit test</h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-white/[0.06]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -454,7 +505,12 @@ function EditTestModal({
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <button type="submit" disabled={saving} className="w-full rounded-lg bg-amber-600 py-2 font-medium text-white hover:bg-amber-500 disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full rounded-xl py-2.5 font-bold transition hover:brightness-110 disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg,#fb923c 0%,#f59e0b 100%)", color: "#1a1205" }}
+          >
             {saving ? "Saving…" : "Save changes"}
           </button>
         </form>

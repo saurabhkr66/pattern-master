@@ -308,27 +308,30 @@ export async function finalizeOverdueAttempts(
           times,
           timeTakenSecs: timeTaken,
         });
-        // Photo answers recovered from the draft still need AI grading — fire it
-        // after the response flushes (works in the server-component render paths
-        // that call this on-view). Failures leave grading_status = pending; the
-        // admin's "Grade ungraded" button is the retry net.
-        if (res.needsGrading) {
-          const attemptId = a.id;
-          after(() =>
-            import("@/lib/subjectiveGrading")
-              .then((m) => m.gradeAttemptSubjectives({ attemptId, coachingId, trigger: "auto" }))
-              .catch((err) => console.error(`[finalize] grading ${attemptId} failed:`, err))
-          );
-        }
-        return res.updated ? 1 : 0;
+        // Photo answers recovered from the draft are left at grading_status =
+        // pending for the Gemini BATCH sweeper (cheaper than per-answer calls);
+        // we nudge it ONCE after the loop rather than grading inline per attempt.
+        return { updated: res.updated ? 1 : 0, needsGrading: res.needsGrading };
       } catch (err) {
         console.error(`[finalize] attempt ${a.id} failed:`, err);
-        return 0;
+        return { updated: 0, needsGrading: false };
       }
     })
   );
 
-  const finalized = results.reduce<number>((s, n) => s + n, 0);
+  const finalized = results.reduce<number>((s, r) => s + r.updated, 0);
+
+  // If any finalized attempt has pending photo answers, nudge the batch sweeper
+  // after the response flushes so grading advances on this view without waiting
+  // for cron. Idempotent + lock-guarded; the cron and admin "Grade ungraded"
+  // button remain the backstops.
+  if (results.some((r) => r.needsGrading)) {
+    after(() =>
+      import("@/lib/subjectiveBatch")
+        .then((m) => m.nudgeGradingSweep())
+        .catch((err) => console.error("[finalize] grading nudge failed:", err))
+    );
+  }
 
   // Invalidate the leaderboard ONCE for the whole batch, not per-attempt.
   // The debounced invalidateTestLeaderboard handles dedup, but calling once

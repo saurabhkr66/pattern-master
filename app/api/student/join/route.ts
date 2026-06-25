@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createStudentSession, hashPin, isValidPin } from "@/lib/studentAuth";
 import { rateLimit } from "@/lib/rateLimit";
+import { invalidateCoachingRoster } from "@/lib/coachingCache";
 
 // Public. First-time student onboarding (also the "set/reset my PIN" path) via a
 // coaching's join code. Body: { slug, joinCode, name, phone, pin }
@@ -94,6 +95,10 @@ export async function POST(req: NextRequest) {
         where: whereKey,
         data: { name: String(name).trim(), active: true, pin_hash: pinHash, status: nextStatus },
       });
+      // A re-join that stays approved keeps the student in the roster but may have
+      // renamed/reactivated them — drop the cached roster. (A "pending" outcome
+      // isn't in the roster yet; the owner's approve goes through the PATCH route.)
+      if (nextStatus === "approved") await invalidateCoachingRoster(coaching.id);
     } else {
       try {
         student = await prisma.student.create({

@@ -1,0 +1,104 @@
+// ─── Fee Management (coaching → student tuition tracking) ─────────────────────
+//
+// This is the OPPOSITE direction of BillingPeriod/BillingEvent (which are the
+// platform charging the coaching). Here a coaching tracks what its own students
+// owe it. v1 is tracking-only — no payment gateway. Amounts are Int rupees, to
+// match the Coaching.price_per_test / monthly_fee convention.
+//
+// Paid/partial/pending status is DERIVED from payments (see lib/coachingFees),
+// never stored, so FeePayment rows stay the single source of truth.
+//
+// The back-relations + fee_receipt_seq counter live on Coaching/Student/Batch in
+// schema.prisma (Prisma can't split one model across files).
+
+// A reusable batch-level fee structure. Defined once, then bulk-applied to every
+// student in a batch — each application materialises a per-student FeePlan.
+model FeeTemplate {
+  id           String   @id @default(uuid())
+  coaching_id  String
+  batch_id     String? // target batch (null = whole coaching)
+  title        String // "Class 8 — 2026-27"
+  total_amount Int
+  installments Json // [{ label, amount, due_date(ISO) }]
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  coaching     Coaching  @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  batch        Batch?    @relation(fields: [batch_id], references: [id])
+  plans        FeePlan[]
+
+  @@index([coaching_id])
+}
+
+// One student's fee schedule. Created either by applying a FeeTemplate (bulk) or
+// ad-hoc for a single student (template_id null).
+model FeePlan {
+  id           String   @id @default(uuid())
+  coaching_id  String
+  student_id   String
+  template_id  String? // provenance: which template created it (null = ad-hoc)
+  title        String
+  total_amount Int
+  status       String   @default("active") // active | archived
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  coaching     Coaching         @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  student      Student          @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  template     FeeTemplate?     @relation(fields: [template_id], references: [id], onDelete: SetNull)
+  installments FeeInstallment[]
+  payments     FeePayment[]
+
+  // Idempotent bulk-apply: a student can hold at most one plan per template, so
+  // re-applying (e.g. to cover newly-joined students) skips existing ones.
+  @@unique([student_id, template_id])
+  @@index([coaching_id])
+  @@index([student_id])
+}
+
+// A single scheduled chunk of a plan (amount + due date). Payments allocate to one.
+model FeeInstallment {
+  id          String   @id @default(uuid())
+  coaching_id String // denormalized for tenant-scoped due-date queries
+  plan_id     String
+  label       String // "Installment 1"
+  amount      Int
+  due_date    DateTime
+  created_at  DateTime @default(now())
+  plan        FeePlan      @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  payments    FeePayment[]
+
+  @@index([plan_id])
+  @@index([coaching_id, due_date])
+}
+
+// A recorded payment. receipt_no is a per-coaching sequential number issued via
+// the atomic Coaching.fee_receipt_seq bump. installment_id null = a general /
+// advance payment not tied to a specific installment.
+model FeePayment {
+  id             String   @id @default(uuid())
+  coaching_id    String
+  student_id     String
+  plan_id        String
+  installment_id String? // allocation target (null = general / advance)
+  amount         Int
+  method         String   @default("cash") // cash | upi | bank | other
+  note           String?
+  receipt_no     Int // sequential per coaching
+  recorded_by    String? // CoachingAdmin id
+  // Void (reversal) instead of delete: a mis-recorded payment is marked voided so
+  // the receipt number stays in the audit trail and is never reissued. Voided rows
+  // are excluded from every paid/balance derivation (lib/coachingFees*) and hidden
+  // from students, but the admin still sees them (stamped VOIDED) on the receipt.
+  voided_at      DateTime? // null = live payment; set = reversed
+  voided_by      String? // CoachingAdmin id who voided it
+  paid_at        DateTime @default(now())
+  created_at     DateTime @default(now())
+  coaching       Coaching        @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  student        Student         @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  plan           FeePlan         @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  installment    FeeInstallment? @relation(fields: [installment_id], references: [id], onDelete: SetNull)
+
+  @@unique([coaching_id, receipt_no])
+  @@index([coaching_id, paid_at(sort: Desc)])
+  @@index([plan_id])
+  @@index([student_id])
+}

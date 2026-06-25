@@ -16,8 +16,9 @@ import { bestEffortInvalidate } from "@/lib/cacheInvalidation";
 
 // v2: config now also carries duration_secs + end_at (for the server-side
 // submit deadline). v3: full test row now carries batch_ids (per-batch test
-// targeting). Bumping drops older-shaped entries so the new fields are present.
-const VERSION = "v3";
+// targeting). v4: resolved questions now carry `rubric` (precomputed subjective
+// mark scheme). Bumping drops older-shaped entries so the new fields are present.
+const VERSION = "v4";
 const TTL_SECONDS = 60 * 60; // 1h; also busted explicitly on test edit
 const key = (testId: string) => `coaching:test:${testId}:resolved:${VERSION}`;
 const configKey = (testId: string) => `coaching:test:${testId}:config:${VERSION}`;

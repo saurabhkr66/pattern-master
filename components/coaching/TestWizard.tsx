@@ -3,9 +3,10 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
+import { display, Card, Btn, ORANGE_GRAD } from "@/components/coaching/ui";
 
 const inputCls =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
+  "w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white outline-none focus:border-amber-500";
 
 type BankQuestion = {
   id: string;
@@ -149,27 +150,47 @@ export default function TestWizard({
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <h1 className="text-2xl font-semibold text-white">New Test</h1>
+    <div className="mx-auto max-w-3xl p-5 sm:p-8">
+      <Card glow>
+        <div className="p-6 sm:p-8">
+      <h2 className="text-2xl font-extrabold text-white sm:text-[28px]" style={{ fontFamily: display }}>
+        New Test
+      </h2>
 
       {/* Stepper */}
-      <div className="mt-6 flex items-center gap-2">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex items-center gap-2">
-            <div
-              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
-                i < step ? "bg-amber-600 text-white" : i === step ? "bg-amber-500 text-white" : "bg-slate-800 text-slate-400"
-              }`}
-            >
-              {i < step ? <Check className="h-4 w-4" /> : i + 1}
+      <div className="mt-6 flex items-center">
+        {STEPS.map((label, i) => {
+          const done = i < step;
+          const on = i === step;
+          return (
+            <div key={label} className="flex flex-1 items-center last:flex-none">
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                  style={
+                    done || on
+                      ? { background: ORANGE_GRAD, color: "#1a1205" }
+                      : { background: "rgba(255,255,255,0.06)", color: "#8b93a2", border: "1px solid rgba(255,255,255,0.07)" }
+                  }
+                >
+                  {done ? <Check className="h-4 w-4" /> : i + 1}
+                </div>
+                <span
+                  className="text-sm font-semibold sm:text-base"
+                  style={{ color: on ? "#f59e0b" : done ? "#c9ced8" : "#8b93a2" }}
+                >
+                  {label}
+                </span>
+              </div>
+              {i < STEPS.length - 1 && (
+                <div className="mx-4 h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
+              )}
             </div>
-            <span className={i === step ? "text-white" : "text-slate-400"}>{label}</span>
-            {i < STEPS.length - 1 && <div className="mx-2 h-px w-8 bg-slate-700" />}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-6">
+      <div className="mt-7 rounded-2xl border border-white/[0.07] bg-white/[0.015] p-5 sm:p-6">
         {step === 0 && (
           <div className="space-y-4">
             <label className="block">
@@ -229,28 +250,25 @@ export default function TestWizard({
         {step === 1 && (
           <div>
             {/* Source tabs */}
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex gap-1 rounded-lg bg-slate-800 p-1">
-                <button
-                  onClick={() => setTab("coaching")}
-                  className={`rounded-md px-3 py-1.5 text-sm ${tab === "coaching" ? "bg-amber-600 text-white" : "text-slate-300"}`}
-                >
-                  My question bank
-                </button>
-                <button
-                  onClick={() => setTab("pyq")}
-                  className={`rounded-md px-3 py-1.5 text-sm ${tab === "pyq" ? "bg-amber-600 text-white" : "text-slate-300"}`}
-                >
-                  PYQ bank
-                </button>
-                {isSuperAdmin && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div
+                className="flex gap-1.5 rounded-xl border p-1.5"
+                style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)" }}
+              >
+                {([
+                  { key: "coaching", label: "My question bank" },
+                  { key: "pyq", label: "PYQ bank" },
+                  ...(isSuperAdmin ? [{ key: "all", label: "All coachings" }] : []),
+                ] as { key: "coaching" | "pyq" | "all"; label: string }[]).map((t) => (
                   <button
-                    onClick={() => setTab("all")}
-                    className={`rounded-md px-3 py-1.5 text-sm ${tab === "all" ? "bg-amber-600 text-white" : "text-slate-300"}`}
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                    style={tab === t.key ? { background: ORANGE_GRAD, color: "#1a1205" } : { color: "#c9ced8" }}
                   >
-                    All coachings
+                    {t.label}
                   </button>
-                )}
+                ))}
               </div>
               <span className="text-sm text-slate-400">{selected.size} selected</span>
             </div>
@@ -297,7 +315,7 @@ export default function TestWizard({
               <span className="text-sm text-slate-300">Negative marking per wrong MCQ</span>
               <input type="number" step="any" min={0} value={negMarks} onChange={(e) => setNegMarks(e.target.value)} className={`mt-1 ${inputCls} max-w-[160px]`} />
             </label>
-            <div className="rounded-lg border border-slate-800 p-3">
+            <div className="rounded-xl border border-white/[0.07] p-4">
               <label className="flex items-center justify-between">
                 <span className="text-sm text-slate-300">Question pool — each student gets a random subset</span>
                 <input type="checkbox" checked={usePool} onChange={(e) => setUsePool(e.target.checked)} className="h-4 w-4 accent-amber-500" />
@@ -319,24 +337,20 @@ export default function TestWizard({
         {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
         <div className="mt-6 flex justify-between">
-          <button
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={step === 0}
-            className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
-          >
+          <Btn kind="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
             Back
-          </button>
+          </Btn>
           {step < STEPS.length - 1 ? (
-            <button onClick={next} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500">
-              Next
-            </button>
+            <Btn onClick={next}>Next</Btn>
           ) : (
-            <button onClick={submit} disabled={saving} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50">
+            <Btn onClick={submit} disabled={saving}>
               {saving ? "Creating…" : publishNow ? "Create & Publish" : "Create Draft"}
-            </button>
+            </Btn>
           )}
         </div>
       </div>
+        </div>
+      </Card>
     </div>
   );
 }
@@ -499,7 +513,7 @@ function CoachingPicker({
 
       {/* Folder quick-add — add a whole section or the whole paper in one click. */}
       {grade && folderTotal > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 p-2.5">
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-2.5">
           <span className="text-xs font-medium text-slate-400">Quick add:</span>
           <button
             type="button"
@@ -860,7 +874,7 @@ function QuestionRow({
   meta: string[];
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 hover:border-slate-700">
+    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 transition hover:border-amber-500/40">
       <input type="checkbox" checked={checked} onChange={onToggle} className="mt-1 h-4 w-4 accent-amber-500" />
       <span className="flex-1">
         <span className="line-clamp-2 text-sm text-slate-200">{text}</span>

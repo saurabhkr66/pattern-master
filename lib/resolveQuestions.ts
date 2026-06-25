@@ -37,6 +37,9 @@ export interface NormalizedQuestion {
   correct_answer: string;
   solution: string | null;
   solution_html: string | null;
+  // Precomputed mark scheme the subjective grader applies (coaching subjective
+  // questions only; null otherwise). Server-side only — stripped before client.
+  rubric: string | null;
   marks: number;
   neg_marks: number;
   nat_tolerance: number | null;
@@ -61,6 +64,7 @@ export type ClientQuestion = Omit<
   | "solution_html"
   | "solution_hindi"
   | "solution_html_hindi"
+  | "rubric"
   | "nat_tolerance"
 >;
 
@@ -143,6 +147,7 @@ export async function resolveQuestions(
             correct_answer: true,
             solution: true,
             solution_html: true,
+            rubric: true,
             max_marks: true,
             nat_tolerance: true,
             subject: true,
@@ -202,6 +207,7 @@ export async function resolveQuestions(
         correct_answer: r.correct_answer ?? "",
         solution: r.solution ?? null,
         solution_html: r.solution_html ?? null,
+        rubric: r.rubric ?? null,
         marks: ref.marks ?? r.max_marks ?? 1,
         neg_marks: ref.neg_marks ?? 0,
         nat_tolerance: r.nat_tolerance ?? null,
@@ -229,6 +235,7 @@ export async function resolveQuestions(
         correct_answer: r.correct_answer ?? "",
         solution: r.explanation ?? null,
         solution_html: r.explanation_html ?? null,
+        rubric: null, // PYQ/Generated are objective; no subjective rubric.
         marks: ref.marks ?? r.marks ?? 1,
         neg_marks: ref.neg_marks ?? 0,
         nat_tolerance: null,
@@ -256,6 +263,7 @@ export function stripAnswers(q: NormalizedQuestion): ClientQuestion {
     solution_html,
     solution_hindi,
     solution_html_hindi,
+    rubric,
     nat_tolerance,
     ...safe
   } = q;
@@ -264,6 +272,7 @@ export function stripAnswers(q: NormalizedQuestion): ClientQuestion {
   void solution_html;
   void solution_hindi;
   void solution_html_hindi;
+  void rubric;
   void nat_tolerance;
   return safe;
 }

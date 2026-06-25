@@ -20,10 +20,11 @@ type GroupKey = "needs" | "improving" | "absent";
 type Tab = "all" | GroupKey;
 
 // Semantic colors already used across the coaching admin (red/emerald/amber).
-const SEM: Record<GroupKey, { text: string; bg: string; icon: typeof TrendingDown }> = {
-  needs: { text: "text-red-400", bg: "bg-red-500/15", icon: TrendingDown },
-  improving: { text: "text-emerald-400", bg: "bg-emerald-500/15", icon: TrendingUp },
-  absent: { text: "text-amber-400", bg: "bg-amber-500/15", icon: UserX },
+// `glow` drives the mockup's tinted card background + border per group.
+const SEM: Record<GroupKey, { text: string; bg: string; icon: typeof TrendingDown; glow: string }> = {
+  needs: { text: "text-red-400", bg: "bg-red-500/15", icon: TrendingDown, glow: "#ef4444" },
+  improving: { text: "text-emerald-400", bg: "bg-emerald-500/15", icon: TrendingUp, glow: "#22c55e" },
+  absent: { text: "text-amber-400", bg: "bg-amber-500/15", icon: UserX, glow: "#f59e0b" },
 };
 
 // Score → semantic tone (same thresholds as the rest of the app).
@@ -151,12 +152,15 @@ export default function InsightsBoard({ data }: { data: InsightsBoardData }) {
           return (
             <section
               key={g.key}
-              className="overflow-hidden rounded-2xl border bg-white/[0.025]"
-              style={{ borderColor: "rgba(255,255,255,0.07)" }}
+              className="overflow-hidden rounded-2xl border"
+              style={{
+                borderColor: `${sem.glow}33`,
+                background: `linear-gradient(180deg, ${sem.glow}14, #0f1218 55%)`,
+              }}
             >
-              <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${sem.bg} ${sem.text}`}>
-                  <Icon className="h-4 w-4" />
+              <div className="flex items-center gap-3 px-4 py-4 sm:px-5">
+                <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${sem.bg} ${sem.text}`}>
+                  <Icon className="h-[22px] w-[22px]" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

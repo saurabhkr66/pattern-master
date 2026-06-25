@@ -13,7 +13,7 @@ export const isStandardDriver = (process.env.DB_DRIVER ?? "neon-http") === "stan
 // A unique-constraint violation surfaces as Prisma's normalized "P2002" on most
 // paths, but the Neon HTTP adapter sometimes throws the RAW Postgres SQLSTATE
 // "23505" instead — accept either so skipDuplicates is reliable.
-function isUniqueViolation(e: unknown): boolean {
+export function isUniqueViolation(e: unknown): boolean {
   const code = (e as { code?: string } | null)?.code;
   return code === "P2002" || code === "23505";
 }

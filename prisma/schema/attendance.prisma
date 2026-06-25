@@ -1,0 +1,50 @@
+// ─── Attendance (coaching → daily batch roll-call) ────────────────────────────
+//
+// A teacher picks a batch + a date and marks each student present/absent. v1 is
+// two states only (present boolean); a later "late/excused" need can widen this
+// to a status string without reshaping the tables.
+//
+// Two tables mirror the FeeTemplate/FeePlan split: AttendanceSession is the
+// per-batch-per-day header (one roll-call), AttendanceRecord is the per-student
+// row under it. Storing absences EXPLICITLY (present=false) — rather than as the
+// absence of a row — lets us tell "this day was never taken" apart from "marked
+// absent" when re-opening a past date.
+//
+// The back-relations + attendance_visible_to_students flag live on
+// Coaching/Batch/Student in schema.prisma (Prisma can't split one model across
+// files). coaching_id is denormalized onto both tables for tenant-scoped queries,
+// matching the FeePayment convention.
+
+model AttendanceSession {
+  id          String   @id @default(uuid())
+  coaching_id String
+  batch_id    String
+  date        DateTime @db.Date // date only — one roll-call per batch per day
+  marked_by   String? // CoachingAdmin id of whoever last saved it
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  coaching    Coaching           @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  batch       Batch              @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  records     AttendanceRecord[]
+
+  // One session per batch per day; re-saving updates this same row.
+  @@unique([batch_id, date])
+  // Admin history list: WHERE coaching_id ORDER BY date DESC.
+  @@index([coaching_id, date(sort: Desc)])
+}
+
+model AttendanceRecord {
+  id          String  @id @default(uuid())
+  coaching_id String // denormalized for tenant-scoped per-student queries
+  session_id  String
+  student_id  String
+  present     Boolean @default(false)
+  coaching    Coaching          @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  session     AttendanceSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  student     Student           @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([session_id, student_id])
+  // Serves a student's own attendance history: WHERE student_id.
+  @@index([student_id])
+  @@index([coaching_id])
+}

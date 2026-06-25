@@ -41,12 +41,23 @@ type CoachingHandler = (
  *     const students = await prisma.student.findMany({ where: { coaching_id: coachingId } });
  *     ...
  *   });
+ *
+ * Pass `{ ownerOnly: true }` to restrict the route to the coaching owner (and
+ * super admins). Used for team management — inviting/removing teachers is the
+ * owner's privilege; teachers run everything else.
  */
-export function withCoachingContext(handler: CoachingHandler) {
+export function withCoachingContext(
+  handler: CoachingHandler,
+  opts: { ownerOnly?: boolean } = {}
+) {
   return async (req: NextRequest, route: RouteContext): Promise<Response> => {
     const actor = await resolveCoachingAdmin();
     if (!actor) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    if (opts.ownerOnly && !actor.isSuperAdmin && actor.role !== "owner") {
+      return NextResponse.json({ error: "owner only" }, { status: 403 });
     }
 
     let coachingId: string | null;

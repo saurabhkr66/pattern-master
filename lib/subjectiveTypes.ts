@@ -13,6 +13,14 @@
 
 export type SubjectiveConfidence = "high" | "medium" | "low";
 
+/** One entry in the grading audit trail — logged whenever marks change. */
+export interface GradeHistoryEntry {
+  from: number | null; // previous marks (null = first grade / ungraded)
+  to: number;          // new marks awarded
+  by: string;          // who: admin id / "ai" / "revert"
+  at: string;          // ISO timestamp
+}
+
 export interface SubjectiveAnswerEntry {
   type: "subjective";
   /** R2 object keys (max 3 photos), in page order. */
@@ -40,6 +48,8 @@ export interface SubjectiveAnswerEntry {
   gemini_input_tokens?: number | null;
   gemini_output_tokens?: number | null;
   gemini_thinking_tokens?: number | null;
+  /** Audit trail: logged whenever marks change (teacher override, revert, AI grade). */
+  grade_history?: GradeHistoryEntry[];
 }
 
 export const MAX_SUBJECTIVE_PHOTOS = 3;

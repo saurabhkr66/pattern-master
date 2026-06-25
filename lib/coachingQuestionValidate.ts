@@ -72,12 +72,22 @@ function normalizeMcqAnswer(raw: string, options: Option[]): string {
 }
 
 export function validateCoachingQuestion(
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  // Direct create/edit pass requireSubjectiveSolution=true so a subjective
+  // question can't be saved without a model answer (it's needed both to grade and
+  // to precompute the rubric — see lib/coachingRubric). The bulk import leaves it
+  // off and stays lenient: missing solutions are flagged for review instead.
+  opts?: { requireSubjectiveSolution?: boolean }
 ): { error?: string; data?: ValidatedQuestion } {
   const type = String(body?.question_type ?? "mcq").toLowerCase();
   if (!TYPES.has(type)) return { error: "invalid question_type" };
   const questionText = typeof body?.question_text === "string" ? body.question_text.trim() : "";
   if (!questionText) return { error: "question_text is required" };
+
+  const solution = str(body.solution);
+  if (type === "subjective" && opts?.requireSubjectiveSolution && !solution) {
+    return { error: "subjective questions require a model answer (solution)" };
+  }
 
   const maxMarks = Number(body.max_marks ?? 1);
   if (!Number.isFinite(maxMarks) || maxMarks <= 0) return { error: "invalid max_marks" };
@@ -116,7 +126,7 @@ export function validateCoachingQuestion(
       question_text: questionText,
       options: options as unknown as Prisma.InputJsonValue,
       correct_answer,
-      solution: str(body.solution),
+      solution,
       max_marks: maxMarks,
       nat_tolerance,
       grade: str(body.grade),

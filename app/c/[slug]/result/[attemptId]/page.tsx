@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { Hourglass } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -100,13 +101,28 @@ export default async function ResultPage({
   const gradingInProgress =
     attempt.grading_status === "pending" || attempt.grading_status === "review";
 
+  // Self-heal backstop for the batch grader: if this attempt's written answers are
+  // still PENDING (queued but not yet AI-graded), nudge the sweeper after the
+  // response flushes so grading advances on traffic even when cron lapses. The
+  // sweep is global, lock-guarded, and idempotent, so firing it from a view that
+  // sees pending work is safe; we skip "review" (already AI-graded, awaiting a
+  // teacher) so routine result views don't sweep needlessly. The VPS cron remains
+  // the primary driver — this just keeps grading moving in dev and on cron gaps.
+  if (attempt.grading_status === "pending") {
+    after(() =>
+      import("@/lib/subjectiveBatch")
+        .then((m) => m.nudgeGradingSweep())
+        .catch((err) => console.error("[result] grading nudge failed:", err))
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--bg-base)" }}>
       {gradingInProgress && (
         <div className="flex items-center gap-2.5 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-300">
           <Hourglass className="h-4 w-4 shrink-0" />
-          Your written answers are being graded — your score may increase once grading
-          completes.
+          Your written answers are being graded — this can take a little while. Check
+          back later; your score may increase once grading completes.
         </div>
       )}
       {peer && <StudentPerformanceContext stats={peer} />}

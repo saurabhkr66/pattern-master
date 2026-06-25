@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
@@ -107,6 +108,19 @@ export default async function AdminAttemptAnalysisPage({
     }
   }
 
+  // Self-heal backstop for the batch grader: a teacher opening a still-PENDING
+  // attempt nudges the global sweeper after the response flushes, so grading
+  // advances on traffic when cron lapses (and in dev, where there's no cron). The
+  // sweep is global, lock-guarded, and idempotent. Skip "review" (already
+  // AI-graded, awaiting the teacher) — the VPS cron stays the primary driver.
+  if (attempt.grading_status === "pending") {
+    after(() =>
+      import("@/lib/subjectiveBatch")
+        .then((m) => m.nudgeGradingSweep())
+        .catch((err) => console.error("[admin-attempt] grading nudge failed:", err))
+    );
+  }
+
   // Cached, shared builder — seeded by THIS attempt's student_id so the
   // shuffle/pool matches what that student saw. Identical grading to the
   // student-facing result page.
@@ -120,7 +134,10 @@ export default async function AdminAttemptAnalysisPage({
   const hasSubjective = attempt.grading_status !== "none";
 
   return (
-    <div className="flex h-screen flex-col">
+    // The dashboard shell renders at 80% zoom; this full-screen analysis is tuned
+    // for 100%, so cancel the inherited zoom here (0.80 × 1.25 = 1.0). md-only,
+    // since the zoom is only applied on desktop.
+    <div className="flex h-screen flex-col md:[zoom:1.25]">
       {hasSubjective && (
         <div className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900 px-4 py-2.5">
           <span className="text-sm text-slate-300">

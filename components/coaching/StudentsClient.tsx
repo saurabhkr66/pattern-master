@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Plus, Search, Trash2, Pencil, X, KeyRound, LayoutGrid, Check } from "lucide-react";
-import { display } from "@/components/coaching/ui";
+import { Plus, Search, Trash2, Pencil, X, KeyRound, LayoutGrid, Check, Phone } from "lucide-react";
+import { display, Btn, Card, Avatar, Pill } from "@/components/coaching/ui";
 
 const inputCls =
-  "w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500";
+  "w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white outline-none focus:border-amber-500";
 
 type Batch = { id: string; name: string; _count?: { students: number } };
 type Student = {
@@ -102,31 +102,28 @@ export default function StudentsClient({
 
   return (
     <div className="p-5 sm:p-8">
-      {/* Header: title + compact Add */}
+      {/* Header: title + Add */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white sm:text-3xl" style={{ fontFamily: display }}>
+        <h1
+          className="text-2xl font-extrabold tracking-tight text-white sm:text-[34px] lg:text-[38px]"
+          style={{ fontFamily: display, letterSpacing: "-0.02em" }}
+        >
           Students
         </h1>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400"
-        >
-          <Plus className="h-4 w-4" /> Add
-        </button>
+        <Btn onClick={() => setShowAdd(true)}>
+          <Plus className="h-[18px] w-[18px]" /> Add Student
+        </Btn>
       </div>
 
       {/* Sub-actions: manage batches + total count */}
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <button
-          onClick={() => setShowBatches(true)}
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
-        >
-          <LayoutGrid className="h-4 w-4" /> Manage Batches
-        </button>
-        <span className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <Btn kind="soft" onClick={() => setShowBatches(true)}>
+          <LayoutGrid className="h-[18px] w-[18px]" /> Manage Batches
+        </Btn>
+        <Pill tone="amber">
           {students.length}
           {hasMore ? "+" : ""} total
-        </span>
+        </Pill>
       </div>
 
       {/* Pending approvals — code-joined students the owner hasn't admitted yet. */}
@@ -135,13 +132,13 @@ export default function StudentsClient({
       )}
 
       {/* Search (full width) */}
-      <div className="relative mt-4">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+      <div className="relative mt-5">
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name or phone"
-          className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-amber-500"
+          placeholder="Search name or phone number…"
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3.5 pl-11 pr-3 text-[15px] text-white outline-none focus:border-amber-500"
         />
       </div>
 
@@ -162,54 +159,71 @@ export default function StudentsClient({
       </div>
 
       {/* Desktop: table. Mobile: stacked cards (below). */}
-      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-slate-800 md:block">
-        <table className="w-full min-w-[680px] text-left text-sm">
-          <thead className="bg-slate-900 text-slate-400">
-            <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Phone</th>
-              <th className="px-4 py-3 font-medium">Batch</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800 bg-slate-950">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                  Loading…
-                </td>
-              </tr>
-            ) : students.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                  No students yet.
-                </td>
-              </tr>
-            ) : (
-              students.map((s) => (
-                <tr key={s.id} className="text-slate-200">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/coaching-admin/students/${s.id}`}
-                      className="font-medium text-white hover:text-amber-400 hover:underline"
-                    >
-                      {s.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-slate-400">{s.phone}</td>
-                  <td className="px-4 py-3 text-slate-400">{s.batch?.name ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge s={s} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <StudentActions s={s} onEdit={setEditing} onReload={refetch} />
-                  </td>
+      <div className="mt-5 hidden md:block">
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-sm">
+              <thead
+                className="text-[13px] font-semibold text-slate-400"
+                style={{ background: "rgba(255,255,255,0.02)" }}
+              >
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <th className="px-6 py-3.5 font-semibold">Name</th>
+                  <th className="px-6 py-3.5 font-semibold">Phone</th>
+                  <th className="px-6 py-3.5 font-semibold">Batch</th>
+                  <th className="px-6 py-3.5 font-semibold">Status</th>
+                  <th className="px-6 py-3.5 text-right font-semibold">Actions</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
+                      Loading…
+                    </td>
+                  </tr>
+                ) : students.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
+                      No students yet.
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((s, i) => (
+                    <tr
+                      key={s.id}
+                      className="text-slate-200 transition hover:bg-white/[0.02]"
+                      style={{ borderBottom: i < students.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                    >
+                      <td className="px-6 py-4">
+                        <Link
+                          href={`/coaching-admin/students/${s.id}`}
+                          className="flex items-center gap-3.5"
+                        >
+                          <Avatar text={s.name} size={42} />
+                          <span className="font-semibold text-white hover:text-amber-400">{s.name}</span>
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-2 text-slate-300">
+                          <Phone className="h-4 w-4 text-slate-500" />
+                          {s.phone}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-400">{s.batch?.name ?? "—"}</td>
+                      <td className="px-6 py-4">
+                        <StatusBadge s={s} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <StudentActions s={s} onEdit={setEditing} onReload={refetch} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </div>
 
       {/* Mobile cards */}
@@ -221,9 +235,7 @@ export default function StudentsClient({
         ) : (
           students.map((s) => (
             <article key={s.id} className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-500/15 text-sm font-bold text-amber-400">
-                {s.name.charAt(0).toUpperCase()}
-              </span>
+              <Avatar text={s.name} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <Link
@@ -303,8 +315,10 @@ function StudentActions({
   onEdit: (s: Student) => void;
   onReload: () => void;
 }) {
+  const iconBtn =
+    "grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border transition";
   return (
-    <div className="flex shrink-0 justify-end gap-2">
+    <div className="flex shrink-0 justify-end gap-2.5">
       <button
         onClick={async () => {
           if (!confirm(`Reset ${s.name}'s PIN? They'll re-join with the code to set a new one.`)) return;
@@ -315,17 +329,18 @@ function StudentActions({
           });
           if (res.ok) alert("PIN reset. The student re-joins with the code to set a new PIN.");
         }}
-        className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-amber-400"
+        className={`${iconBtn} border-white/10 bg-white/[0.03] text-slate-400 hover:text-amber-400`}
         title="Reset PIN"
       >
-        <KeyRound className="h-4 w-4" />
+        <KeyRound className="h-[18px] w-[18px]" />
       </button>
       <button
         onClick={() => onEdit(s)}
-        className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+        className={`${iconBtn} text-amber-400`}
+        style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(245,158,11,0.27)" }}
         title="Edit"
       >
-        <Pencil className="h-4 w-4" />
+        <Pencil className="h-[18px] w-[18px]" />
       </button>
       <button
         onClick={async () => {
@@ -333,10 +348,11 @@ function StudentActions({
           const res = await fetch(`/api/coaching/students/${s.id}`, { method: "DELETE" });
           if (res.ok) onReload();
         }}
-        className="rounded p-1.5 text-slate-400 hover:bg-slate-800 hover:text-red-400"
+        className={`${iconBtn} text-red-400`}
+        style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(239,68,68,0.27)" }}
         title="Deactivate"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-[18px] w-[18px]" />
       </button>
     </div>
   );
@@ -345,18 +361,15 @@ function StudentActions({
 // Enrollment badge. status is orthogonal to `active`: pending/rejected take
 // precedence; an approved student falls back to the Active/Inactive distinction
 // (a deactivated-but-approved student reads "Inactive").
-function StatusBadge({ s, compact }: { s: Student; compact?: boolean }) {
-  const base = compact
-    ? "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
-    : "rounded-full px-2 py-0.5 text-xs";
-  if (s.status === "pending")
-    return <span className={`${base} bg-amber-500/15 text-amber-400`}>Pending</span>;
-  if (s.status === "rejected")
-    return <span className={`${base} bg-red-500/15 text-red-400`}>Rejected</span>;
+function StatusBadge({ s }: { s: Student; compact?: boolean }) {
+  if (s.status === "pending") return <Pill tone="amber">Pending</Pill>;
+  if (s.status === "rejected") return <Pill tone="danger">Rejected</Pill>;
   return s.active ? (
-    <span className={`${base} bg-emerald-500/15 text-emerald-400`}>Active</span>
+    <Pill tone="success" dot>
+      Active
+    </Pill>
   ) : (
-    <span className={`${base} bg-slate-800 text-slate-400`}>Inactive</span>
+    <Pill tone="slate">Inactive</Pill>
   );
 }
 
@@ -513,7 +526,8 @@ function StudentFormModal({
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-lg bg-amber-600 py-2 font-medium text-white hover:bg-amber-500 disabled:opacity-50"
+          className="w-full rounded-xl py-2.5 font-bold transition hover:brightness-110 disabled:opacity-50"
+          style={{ background: "linear-gradient(135deg,#fb923c 0%,#f59e0b 100%)", color: "#1a1205" }}
         >
           {saving ? "Saving…" : editing ? "Save changes" : "Add student"}
         </button>
@@ -564,7 +578,7 @@ function BatchModal({
         {batches.map((b) => (
           <li
             key={b.id}
-            className="flex items-center justify-between rounded-lg border border-slate-800 px-3 py-2 text-sm text-slate-200"
+            className="flex items-center justify-between rounded-xl border border-white/10 px-3.5 py-2.5 text-sm text-slate-200"
           >
             <span>{b.name}</span>
             <span className="text-slate-500">{b._count?.students ?? 0} students</span>
@@ -577,12 +591,13 @@ function BatchModal({
           onChange={(e) => setName(e.target.value)}
           placeholder="New batch name"
           required
-          className="input flex-1"
+          className={`${inputCls} flex-1`}
         />
         <button
           type="submit"
           disabled={saving}
-          className="rounded-lg bg-amber-600 px-4 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50"
+          className="rounded-xl px-5 text-sm font-bold transition hover:brightness-110 disabled:opacity-50"
+          style={{ background: "linear-gradient(135deg,#fb923c 0%,#f59e0b 100%)", color: "#1a1205" }}
         >
           Add
         </button>
@@ -602,11 +617,16 @@ function Modal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div
+        className="w-full max-w-md rounded-[18px] border p-6"
+        style={{ background: "#0f1218", borderColor: "rgba(255,255,255,0.07)", boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800">
+          <h2 className="text-lg font-bold text-white" style={{ fontFamily: display }}>
+            {title}
+          </h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-white/[0.06]">
             <X className="h-5 w-5" />
           </button>
         </div>

@@ -4,16 +4,21 @@ import type { ReactNode, CSSProperties } from "react";
 // mockup (admin.jsx). Dark near-black surfaces, translucent bordered cards,
 // amber accent (brand #ff8f00, not the mockup's purple), big display numerals.
 
-// Reference the next/font CSS variables (set on the coaching layout wrappers via
+// Reference the next/font CSS variable (set on the coaching layout wrappers via
 // coachingFontVars), with web-safe fallbacks for any render outside that scope.
-export const sans = "var(--font-manrope), ui-sans-serif, system-ui, sans-serif";
-export const display = "var(--font-space-grotesk), var(--font-manrope), ui-sans-serif, sans-serif";
+// The "Consistent design format" mockup uses one family — Plus Jakarta Sans —
+// for both body and display, so `sans` and `display` now point at the same var.
+export const sans = "var(--font-jakarta), ui-sans-serif, system-ui, sans-serif";
+export const display = "var(--font-jakarta), ui-sans-serif, system-ui, sans-serif";
 export const mono = "var(--font-jetbrains-mono), ui-monospace, monospace";
 
-// Amber brand gradient (replaces the mockup's purple). Used for the logo badge
-// and student-facing primary buttons.
+// Amber brand gradient. The mockup uses a 135° orange ramp for primary actions
+// and the logo badge; AMBER_GRAD keeps the warmer logo gradient.
 export const AMBER_GRAD = "linear-gradient(180deg,#ffb24d,#ff8f00)";
 export const AMBER_GLOW = "0 10px 28px -8px rgba(255,143,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25)";
+// Primary-button gradient + glow from the mockup (theme.jsx orangeGrad).
+export const ORANGE_GRAD = "linear-gradient(135deg,#fb923c 0%,#f59e0b 100%)";
+export const ORANGE_BTN_GLOW = "0 8px 22px rgba(245,158,11,0.32)";
 
 // Gradient brand badge with the coaching's initial.
 export function LogoBadge({ letter, size = 56 }: { letter: string; size?: number }) {
@@ -50,8 +55,14 @@ export function Card({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border bg-white/[0.025] ${className}`}
-      style={{ borderColor: "rgba(255,255,255,0.07)" }}
+      className={`relative overflow-hidden rounded-[18px] border ${className}`}
+      style={{
+        borderColor: "rgba(255,255,255,0.07)",
+        background: "#0f1218",
+        boxShadow: glow
+          ? "0 0 0 1px rgba(245,158,11,0.12), 0 20px 50px rgba(0,0,0,0.4)"
+          : "0 14px 40px rgba(0,0,0,0.35)",
+      }}
     >
       {glow && (
         <div
@@ -68,18 +79,31 @@ export function Card({
 }
 
 // ── Pill (status / tag badge) ──────────────────────────────────────────────────
-const PILL: Record<string, string> = {
-  success: "bg-emerald-500/15 text-emerald-400",
-  amber: "bg-amber-500/15 text-amber-400",
-  accent: "bg-amber-500/15 text-amber-400",
-  slate: "bg-white/[0.06] text-slate-300",
-  danger: "bg-red-500/15 text-red-400",
+// Bordered, tinted badges matching the mockup Badge (theme.jsx). `dot` adds a
+// leading status dot in the tone colour.
+const PILL: Record<string, { bg: string; fg: string; bd: string }> = {
+  success: { bg: "rgba(34,197,94,0.14)", fg: "#4ade80", bd: "rgba(34,197,94,0.3)" },
+  amber: { bg: "rgba(245,158,11,0.12)", fg: "#f59e0b", bd: "rgba(245,158,11,0.3)" },
+  accent: { bg: "rgba(245,158,11,0.12)", fg: "#f59e0b", bd: "rgba(245,158,11,0.3)" },
+  slate: { bg: "rgba(255,255,255,0.05)", fg: "#8b93a2", bd: "rgba(255,255,255,0.07)" },
+  danger: { bg: "rgba(239,68,68,0.12)", fg: "#f87171", bd: "rgba(239,68,68,0.3)" },
 };
-export function Pill({ tone = "slate", children }: { tone?: string; children: ReactNode }) {
+export function Pill({
+  tone = "slate",
+  dot = false,
+  children,
+}: {
+  tone?: string;
+  dot?: boolean;
+  children: ReactNode;
+}) {
+  const c = PILL[tone] ?? PILL.slate;
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${PILL[tone] ?? PILL.slate}`}
+      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold"
+      style={{ background: c.bg, color: c.fg, borderColor: c.bd }}
     >
+      {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.fg }} />}
       {children}
     </span>
   );
@@ -96,19 +120,29 @@ export function Btn({
 }: {
   children: ReactNode;
   onClick?: () => void;
-  kind?: "primary" | "ghost";
+  kind?: "primary" | "ghost" | "soft";
   type?: "button" | "submit";
   disabled?: boolean;
   className?: string;
 }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50";
-  const styles =
+    "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition hover:brightness-110 disabled:opacity-50";
+  const style: CSSProperties =
     kind === "primary"
-      ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
-      : "border border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]";
+      ? { background: ORANGE_GRAD, color: "#1a1205", boxShadow: ORANGE_BTN_GLOW }
+      : kind === "soft"
+        ? {
+            background: "rgba(245,158,11,0.1)",
+            color: "#f59e0b",
+            border: "1px solid rgba(245,158,11,0.3)",
+          }
+        : {
+            background: "rgba(255,255,255,0.04)",
+            color: "#c9ced8",
+            border: "1px solid rgba(255,255,255,0.07)",
+          };
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${styles} ${className}`}>
+    <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${className}`} style={style}>
       {children}
     </button>
   );
@@ -118,10 +152,12 @@ export function Btn({
 export function PageHead({
   title,
   sub,
+  icon,
   children,
 }: {
   title: string;
-  sub?: string;
+  sub?: ReactNode;
+  icon?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -134,11 +170,28 @@ export function PageHead({
         }}
       />
       <div className="relative flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white" style={{ fontFamily: display }}>
-            {title}
-          </h1>
-          {sub && <p className="mt-1.5 text-sm text-slate-400">{sub}</p>}
+        <div className="flex items-center gap-4">
+          {icon && (
+            <span
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-amber-400"
+              style={{
+                background: "rgba(245,158,11,0.12)",
+                border: "1px solid rgba(245,158,11,0.35)",
+                boxShadow: "0 0 30px rgba(245,158,11,0.15)",
+              }}
+            >
+              {icon}
+            </span>
+          )}
+          <div>
+            <h1
+              className="text-3xl font-extrabold tracking-tight text-white sm:text-[34px] lg:text-[38px]"
+              style={{ fontFamily: display, letterSpacing: "-0.02em" }}
+            >
+              {title}
+            </h1>
+            {sub && <p className="mt-1.5 text-sm text-slate-400 sm:text-base">{sub}</p>}
+          </div>
         </div>
         {children && <div className="flex items-center gap-3">{children}</div>}
       </div>
@@ -159,52 +212,97 @@ function sparkPaths(values: number[], w = 84, h = 34) {
   return { line, area };
 }
 
+// Stat tile with a tinted icon chip (mockup StatCard / ProfileStat / ResStat).
+// `icon` is a lucide node; `iconColor` tints the chip. Optional `spark` draws a
+// full-width sparkline pinned to the card bottom.
 export function StatCard({
   label,
   value,
+  sub,
+  icon,
+  iconColor = "#f59e0b",
   accent = false,
   spark,
 }: {
-  label: string;
+  label: ReactNode;
   value: string | number;
+  sub?: string;
+  icon?: ReactNode;
+  iconColor?: string;
   accent?: boolean;
   spark?: number[];
 }) {
-  const p = spark ? sparkPaths(spark) : null;
-  const gid = `sp-${label.replace(/\W/g, "")}`;
+  const p = spark ? sparkPaths(spark, 120, 34) : null;
+  const gid = `sp-${String(label).replace(/\W/g, "")}`;
   return (
     <Card glow={accent} className="flex-1">
       <div className="px-6 py-5">
-        <div className="text-sm font-semibold text-slate-400">{label}</div>
-        <div className="mt-4 flex items-end justify-between">
-          <div
-            className="text-4xl font-bold leading-none tracking-tight text-white"
-            style={{ fontFamily: display }}
+        {icon && (
+          <span
+            className="mb-4 grid h-11 w-11 place-items-center rounded-xl"
+            style={{
+              color: iconColor,
+              background: `${iconColor}1f`,
+              border: `1px solid ${iconColor}33`,
+            }}
           >
-            {value}
-          </div>
-          {p && (
-            <svg width="84" height="34" viewBox="0 0 84 34" fill="none" className="mb-0.5">
-              <defs>
-                <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#ff8f00" stopOpacity="0.35" />
-                  <stop offset="1" stopColor="#ff8f00" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d={p.area} fill={`url(#${gid})`} />
-              <path
-                d={p.line}
-                stroke="#ffab33"
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
+            {icon}
+          </span>
+        )}
+        <div
+          className="text-3xl font-extrabold leading-none tracking-tight text-white sm:text-4xl"
+          style={{ fontFamily: display }}
+        >
+          {value}
         </div>
+        <div className="mt-2 text-sm font-semibold text-slate-300">{label}</div>
+        {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
+        {p && (
+          <svg
+            viewBox="0 0 120 34"
+            preserveAspectRatio="none"
+            fill="none"
+            className="mt-3 h-8 w-full"
+          >
+            <defs>
+              <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor={iconColor} stopOpacity="0.35" />
+                <stop offset="1" stopColor={iconColor} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d={p.area} fill={`url(#${gid})`} />
+            <path
+              d={p.line}
+              stroke={iconColor}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
       </div>
     </Card>
+  );
+}
+
+// ── Avatar (initials circle) ───────────────────────────────────────────────────
+export function Avatar({ text, size = 44, ring = false }: { text: string; size?: number; ring?: boolean }) {
+  return (
+    <div
+      className="grid shrink-0 place-items-center rounded-full font-extrabold text-amber-400"
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.36,
+        background: "rgba(245,158,11,0.14)",
+        border: "1.5px solid rgba(245,158,11,0.5)",
+        boxShadow: ring ? "0 0 0 5px rgba(245,158,11,0.08)" : "none",
+        fontFamily: display,
+      }}
+    >
+      {(text || "?").charAt(0).toUpperCase()}
+    </div>
   );
 }
 

@@ -1,9 +1,10 @@
 import type { TestClassAnalytics } from "@/lib/coachingTestAnalytics";
-import { mono } from "@/components/coaching/ui";
+import { Users, Clock, UserX, TrendingUp, CheckCircle2, Info } from "lucide-react";
+import { mono, Card, StatCard } from "@/components/coaching/ui";
 
 // Whole-class report for one test. Pure presentation — fed by
-// getTestClassAnalytics. Matches the slate aesthetic of the results page it
-// lives on (not the redesign Card primitives).
+// getTestClassAnalytics. Uses the neutral coaching-module surfaces (Card /
+// StatCard primitives), matching the rest of the redesigned dashboard.
 
 // Red (dire) → amber (shaky) → emerald (solid) by % correct.
 function pctTone(pct: number): { text: string; bar: string } {
@@ -12,15 +13,22 @@ function pctTone(pct: number): { text: string; bar: string } {
   return { text: "text-emerald-400", bar: "bg-emerald-500/70" };
 }
 
+// Same tone as a hex, for the StatCard icon tile.
+function pctHex(pct: number): string {
+  if (pct < 40) return "#ef4444";
+  if (pct < 70) return "#f59e0b";
+  return "#22c55e";
+}
+
 function Panel({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/60">
-      <div className="border-b border-slate-800 px-5 py-4">
+    <Card>
+      <div className="border-b border-white/[0.07] px-5 py-4">
         <h2 className="text-base font-semibold text-white">{title}</h2>
         {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
       </div>
       <div className="p-5">{children}</div>
-    </section>
+    </Card>
   );
 }
 
@@ -61,7 +69,7 @@ export default function TestAnalytics({ data }: { data: TestClassAnalytics }) {
 
   if (p.submitted === 0) {
     return (
-      <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 px-4 py-10 text-center text-slate-500">
+      <div className="mt-6 rounded-[18px] border border-white/[0.07] bg-white/[0.02] px-4 py-10 text-center text-slate-500">
         No submissions yet — class analytics will appear once students submit.
       </div>
     );
@@ -70,12 +78,13 @@ export default function TestAnalytics({ data }: { data: TestClassAnalytics }) {
   const maxBand = Math.max(...distribution.map((d) => d.count), 1);
   const hasUntagged = topics.some((t) => t.topic === "Untagged");
 
+  const SI = "h-[22px] w-[22px]";
   const stats = [
-    { label: "Submitted", value: p.submitted, cls: "text-white" },
-    { label: "In progress", value: p.inProgress, cls: "text-white" },
-    { label: "Absent", value: p.absent, cls: p.absent > 0 ? "text-amber-400" : "text-white" },
-    { label: "Class avg", value: `${avgScorePct}%`, cls: pctTone(avgScorePct).text },
-    { label: "Completion", value: `${p.completionPct}%`, cls: "text-white" },
+    { label: "Submitted", value: p.submitted, sub: "of class", icon: <Users className={SI} />, color: "#8b5cf6" },
+    { label: "In progress", value: p.inProgress, sub: "students", icon: <Clock className={SI} />, color: "#3b82f6" },
+    { label: "Absent", value: p.absent, sub: "students", icon: <UserX className={SI} />, color: "#f59e0b" },
+    { label: "Class average", value: `${avgScorePct}%`, sub: "out of 100", icon: <TrendingUp className={SI} />, color: pctHex(avgScorePct) },
+    { label: "Completion", value: `${p.completionPct}%`, sub: "tests completed", icon: <CheckCircle2 className={SI} />, color: "#22c55e" },
   ];
 
   return (
@@ -83,12 +92,7 @@ export default function TestAnalytics({ data }: { data: TestClassAnalytics }) {
       {/* Participation + class average */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-            <p className="text-xs text-slate-400">{s.label}</p>
-            <p className={`mt-1.5 text-2xl font-semibold ${s.cls}`} style={{ fontFamily: mono }}>
-              {s.value}
-            </p>
-          </div>
+          <StatCard key={s.label} icon={s.icon} iconColor={s.color} value={s.value} label={s.label} sub={s.sub} />
         ))}
       </div>
 
@@ -152,9 +156,14 @@ export default function TestAnalytics({ data }: { data: TestClassAnalytics }) {
             })}
           </div>
           {hasUntagged && (
-            <p className="mt-4 text-xs text-slate-500">
-              “Untagged” = questions with no topic set. Tag questions in the Bank to sharpen this breakdown.
-            </p>
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" />
+              <p className="text-xs leading-relaxed text-slate-400">
+                <span className="font-semibold text-slate-200">“Untagged”</span> = questions with no topic set.
+                <br />
+                Tag questions in the Bank to sharpen this breakdown.
+              </p>
+            </div>
           )}
         </Panel>
       </div>
@@ -164,17 +173,18 @@ export default function TestAnalytics({ data }: { data: TestClassAnalytics }) {
         <div className="-mx-5 -mb-5 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="text-slate-400">
-              <tr className="border-y border-slate-800">
+              <tr className="border-y border-white/[0.07]">
                 <th className="px-5 py-2.5 font-medium">#</th>
                 <th className="px-3 py-2.5 font-medium">Question</th>
                 <th className="px-3 py-2.5 font-medium">Topic</th>
                 <th className="px-3 py-2.5 text-right font-medium">Correct</th>
                 <th className="px-3 py-2.5 text-right font-medium">Wrong</th>
                 <th className="px-3 py-2.5 text-right font-medium">Skipped</th>
+                <th className="px-3 py-2.5 text-right font-medium">Avg Marks</th>
                 <th className="px-5 py-2.5 text-right font-medium">Seen</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/70">
+            <tbody className="divide-y divide-white/[0.06]">
               {items.map((it) => {
                 const tone = pctTone(it.correctPct);
                 return (
@@ -194,6 +204,20 @@ export default function TestAnalytics({ data }: { data: TestClassAnalytics }) {
                     </td>
                     <td className="px-3 py-3 text-right text-slate-400" style={{ fontFamily: mono }}>
                       {it.skipped}
+                    </td>
+                    <td className="px-3 py-3 text-right text-slate-400" style={{ fontFamily: mono }}>
+                      {it.avgMarks != null ? (
+                        <span>
+                          <span className="text-slate-200">{it.avgMarks}</span>
+                          <span className="text-slate-500"> / {it.maxMarks}</span>
+                        </span>
+                      ) : it.pending > 0 ? (
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] text-amber-400">
+                          {it.pending} pending
+                        </span>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-5 py-3 text-right text-slate-500" style={{ fontFamily: mono }}>
                       {it.seen}

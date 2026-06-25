@@ -76,7 +76,7 @@ export const GET = withCoachingContext(async (req, { coachingId }) => {
 // POST /api/coaching/questions
 export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const body = await req.json();
-  const { error, data } = validateCoachingQuestion(body);
+  const { error, data } = validateCoachingQuestion(body, { requireSubjectiveSolution: true });
   if (error || !data) return NextResponse.json({ error: error ?? "invalid" }, { status: 400 });
 
   // Subjective questions are created ONLY by super admins via the AI import

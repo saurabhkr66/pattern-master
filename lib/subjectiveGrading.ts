@@ -33,14 +33,14 @@ import { invalidateAttemptResult } from "@/lib/coachingResult";
 // lands ONE TestAttempt.update — no per-question writes, so concurrent runs
 // can't clobber each other's JSON (Neon HTTP has no transactions).
 
-const MODEL = process.env.SUBJECTIVE_GRADER_MODEL || "gemini-3.1-flash-lite";
+export const MODEL = process.env.SUBJECTIVE_GRADER_MODEL || "gemini-3.1-flash-lite";
 const CONCURRENCY = 3; // parallel Gemini calls per attempt
 
 // Thinking level for the grader. Gemini 3.x flash-lite controls thinking by
 // LEVEL (MINIMAL | LOW | MEDIUM | HIGH), not a numeric budget. Component-wise
 // marking benefits from a reasoning pass, so default it on at LOW. Env-overridable
 // to dial up accuracy (MEDIUM/HIGH) or down for cost (MINIMAL) at scale.
-const THINKING_LEVEL = process.env.SUBJECTIVE_GRADER_THINKING_LEVEL || "LOW";
+export const THINKING_LEVEL = process.env.SUBJECTIVE_GRADER_THINKING_LEVEL || "LOW";
 
 // PROCESS-WIDE rate limiter for grading calls. Each submitted attempt fires its
 // OWN after() grader (no shared queue), so the per-attempt CONCURRENCY cap can't
@@ -146,8 +146,12 @@ function graderModel() {
   });
 }
 
-function buildGradingPrompt(q: NormalizedQuestion): string {
+export function buildGradingPrompt(q: NormalizedQuestion): string {
   const hasModelAnswer = !!q.solution?.trim();
+  // Precomputed mark scheme (lib/coachingRubric). When present, the grader APPLIES
+  // it instead of re-deriving the mark split every call — fewer thinking tokens at
+  // grade time and a consistent breakdown across all students of this question.
+  const hasRubric = !!q.rubric?.trim();
   return [
     "You are an experienced school teacher grading ONE student's handwritten answer, photographed and attached as image(s) (multiple images = pages of the same answer, in order).",
     "",
@@ -157,6 +161,9 @@ function buildGradingPrompt(q: NormalizedQuestion): string {
       ? `\nMODEL ANSWER:\n${q.solution!.trim()}`
       : "\nMODEL ANSWER:\n(none provided — no model answer exists for this question)",
     `\nMAXIMUM MARKS: ${q.marks}`,
+    hasRubric
+      ? `\nMARK SCHEME (apply this EXACT breakdown — the marks are split across these fixed parts):\n${q.rubric!.trim()}`
+      : null,
     "",
     hasModelAnswer
       ? null
@@ -175,13 +182,18 @@ function buildGradingPrompt(q: NormalizedQuestion): string {
       : null,
     "- Do NOT penalise extra correct information, grammar, spelling, or handwriting style unless it changes the meaning.",
     "- The student may answer in English, Hindi, or a mix — grade the content, not the language.",
-    "- MARK BY COMPONENT, not holistically: infer the parts the marks are split across from the MODEL ANSWER and the MAXIMUM MARKS (board questions allocate marks per part — e.g. a 3-mark question = definition 1 + reason 1 + balanced equation 1).",
+    hasRubric
+      ? "- MARK BY COMPONENT using the MARK SCHEME above: award each listed part independently against the student's answer. The parts and their marks are FIXED by the scheme — do NOT invent new parts or re-split the marks."
+      : "- MARK BY COMPONENT, not holistically: infer the parts the marks are split across from the MODEL ANSWER and the MAXIMUM MARKS (board questions allocate marks per part — e.g. a 3-mark question = definition 1 + reason 1 + balanced equation 1).",
     "- Mark each part INDEPENDENTLY: give a part its full marks only if that part is correct and complete; give that part 0 if it is missing, wrong, or built on a fundamentally incorrect concept/law/formula — EVEN IF the student names a related or 'nearby' idea. Do NOT give a consolation half-mark for being in the right topic area (e.g. citing the WRONG conservation law earns 0 for the reason, not 0.5).",
     "- marks_awarded is the SUM of the per-part marks. Partial credit comes ONLY from parts that are fully correct — never from half-crediting an incorrect part.",
     "- METHOD / STEP MARKING: the working/concept and the final answer are SEPARATE parts. Award the marks for correct method, setup, and concepts EVEN IF the final answer is wrong — a careless slip or arithmetic error at the end loses only the final-answer mark, not the marks already earned for correct reasoning. A right concept with a wrong final value keeps the concept/method marks; zero a part only when THAT part is itself wrong or rests on a wrong concept.",
     "- Do NOT penalise the same mistake twice: if the student makes one error and then carries it correctly through the later steps, give credit for those later steps (error carried forward).",
+    "- FOR NUMERICAL QUESTIONS, split the marks across formula/setup, substitution, calculation, and final answer. Award the formula/setup mark when the correct relation is written even if later arithmetic is wrong; award later steps when they correctly follow from an earlier wrong value (carry-forward); lose only the specific step that is wrong.",
     `- marks_awarded must be between 0 and ${q.marks}, in steps of 0.5.`,
+    "- WHEN UNCERTAIN between two mark values, choose the LOWER one unless there is clear evidence in the answer supporting the higher mark. Do not round generously.",
     "- If the image is blank, unreadable, or not an answer to this question, award 0 and say why in the feedback.",
+    "- Do NOT guess illegible handwriting: if any portion cannot be read with reasonable confidence, do NOT invent its content. Grade only what is clearly visible, note the unreadable section in the feedback, and lower confidence accordingly.",
     "",
     "feedback: FIRST a brief per-part breakdown showing each part's marks (e.g. 'Definition ✓ 1/1; Reason ✗ 0/1 — wrong law, cites X but should be Y; Equation ✓ 1/1'), THEN one short sentence of guidance for the student. Write this breakdown BEFORE deciding marks_awarded, and make marks_awarded equal the total of your breakdown.",
     'confidence: "high" = clearly readable and unambiguous against the model answer; "medium" = readable but the marks involve judgement; "low" = hard to read, ambiguous, or you are unsure.',
@@ -208,20 +220,82 @@ export function gradingCostUsd(input: number, output: number, thinking: number):
   return p ? (input * p.in + (output + thinking) * p.out) / 1_000_000 : null;
 }
 
-/** Grade one answer's image(s) against its question. Throws on Gemini failure. */
-export async function gradeSubjectiveAnswer(
-  q: NormalizedQuestion,
-  images: { data: string; mimeType: string }[]
-): Promise<{
+export type ParsedGrade = {
   marks: number;
   feedback: string;
   confidence: SubjectiveConfidence;
   /** Set only when the question had no model answer and Gemini wrote one. */
   generatedModelAnswer: string | null;
-  /** Tokens this call used — for the super-admin cost view. */
-  usage: { input: number; output: number; thinking: number };
-}> {
+};
+
+/**
+ * Parse the grader's JSON output into clamped marks + feedback + confidence.
+ * Shared by the synchronous path and the batch write-back so both interpret the
+ * model output identically. Throws on non-numeric marks (caller flags the answer).
+ */
+export function parseGradeResult(text: string, q: NormalizedQuestion): ParsedGrade {
   const hasModelAnswer = !!q.solution?.trim();
+  const parsed = JSON.parse(text) as {
+    marks_awarded?: unknown;
+    feedback?: unknown;
+    confidence?: unknown;
+    model_answer?: unknown;
+  };
+  const raw = Number(parsed.marks_awarded);
+  if (!Number.isFinite(raw)) throw new Error("grader returned non-numeric marks");
+  // Clamp to [0, max] and snap to 0.5 steps.
+  const marks = Math.min(Math.max(Math.round(raw * 2) / 2, 0), q.marks);
+  const confidence: SubjectiveConfidence =
+    parsed.confidence === "high" || parsed.confidence === "medium" || parsed.confidence === "low"
+      ? parsed.confidence
+      : "low"; // unknown confidence → treat as low (teacher reviews)
+  const feedback = typeof parsed.feedback === "string" ? parsed.feedback.slice(0, 1000) : "";
+  // Keep the written answer only when the question genuinely lacked one.
+  const written = typeof parsed.model_answer === "string" ? parsed.model_answer.trim() : "";
+  const generatedModelAnswer = !hasModelAnswer && written ? written.slice(0, 4000) : null;
+  return { marks, feedback, confidence, generatedModelAnswer };
+}
+
+/** The answer-entry patch for a successfully graded answer (shared sync + batch). */
+export function gradedAnswerPatch(
+  r: ParsedGrade,
+  usage: { input: number; output: number; thinking: number }
+): Partial<SubjectiveAnswerEntry> {
+  return {
+    gemini_marks: r.marks,
+    gemini_feedback: r.feedback,
+    gemini_confidence: r.confidence,
+    generated_model_answer: r.generatedModelAnswer,
+    gemini_input_tokens: usage.input,
+    gemini_output_tokens: usage.output,
+    gemini_thinking_tokens: usage.thinking,
+    flagged: false,
+  };
+}
+
+/** The subjective answers of an attempt that still need AI grading (shared sync + batch). */
+export function selectUngradedSubjectives(
+  resolved: NormalizedQuestion[],
+  answers: StoredAnswers,
+  force = false
+): { q: NormalizedQuestion; entry: SubjectiveAnswerEntry }[] {
+  const todo: { q: NormalizedQuestion; entry: SubjectiveAnswerEntry }[] = [];
+  for (const q of resolved) {
+    if (q.question_type !== "subjective") continue;
+    const v = answers[q.id];
+    if (!isSubjectiveEntry(v) || v.image_keys.length === 0) continue;
+    if (v.manual_override != null) continue; // teacher already decided
+    if (!force && v.gemini_marks != null && !v.flagged) continue; // already AI-graded
+    todo.push({ q, entry: v });
+  }
+  return todo;
+}
+
+/** Grade one answer's image(s) against its question. Throws on Gemini failure. */
+export async function gradeSubjectiveAnswer(
+  q: NormalizedQuestion,
+  images: { data: string; mimeType: string }[]
+): Promise<ParsedGrade & { usage: { input: number; output: number; thinking: number } }> {
   const model = graderModel();
   const res = await callGeminiWithRetry(() =>
     model.generateContent({
@@ -244,29 +318,7 @@ export async function gradeSubjectiveAnswer(
     output: Number(um.candidatesTokenCount ?? 0),
     thinking: Number(um.thoughtsTokenCount ?? 0),
   };
-  const text = res.response.text();
-  const parsed = JSON.parse(text) as {
-    marks_awarded?: unknown;
-    feedback?: unknown;
-    confidence?: unknown;
-    model_answer?: unknown;
-  };
-
-  const raw = Number(parsed.marks_awarded);
-  if (!Number.isFinite(raw)) throw new Error("grader returned non-numeric marks");
-  // Clamp to [0, max] and snap to 0.5 steps.
-  const marks = Math.min(Math.max(Math.round(raw * 2) / 2, 0), q.marks);
-  const confidence: SubjectiveConfidence =
-    parsed.confidence === "high" || parsed.confidence === "medium" || parsed.confidence === "low"
-      ? parsed.confidence
-      : "low"; // unknown confidence → treat as low (teacher reviews)
-  const feedback = typeof parsed.feedback === "string" ? parsed.feedback.slice(0, 1000) : "";
-  // Keep the written answer only when the question genuinely lacked one.
-  const written =
-    typeof parsed.model_answer === "string" ? parsed.model_answer.trim() : "";
-  const generatedModelAnswer =
-    !hasModelAnswer && written ? written.slice(0, 4000) : null;
-  return { marks, feedback, confidence, generatedModelAnswer, usage };
+  return { ...parseGradeResult(res.response.text(), q), usage };
 }
 
 /** Bounded-concurrency map (no p-limit dep). */
@@ -339,16 +391,7 @@ export async function gradeAttemptSubjectives(opts: {
   const resolved = studentQuestionsFromBase(base, runtimeTest, attempt.student_id);
   const answers = (attempt.answers ?? {}) as StoredAnswers;
 
-  // Select what actually needs grading.
-  const todo: { q: NormalizedQuestion; entry: SubjectiveAnswerEntry }[] = [];
-  for (const q of resolved) {
-    if (q.question_type !== "subjective") continue;
-    const v = answers[q.id];
-    if (!isSubjectiveEntry(v) || v.image_keys.length === 0) continue;
-    if (v.manual_override != null) continue; // teacher already decided
-    if (!force && v.gemini_marks != null && !v.flagged) continue; // already AI-graded
-    todo.push({ q, entry: v });
-  }
+  const todo = selectUngradedSubjectives(resolved, answers, force);
   if (todo.length === 0) {
     return { graded: 0, flagged: 0, skipped: 1, pending: 0, status: attempt.grading_status };
   }
@@ -362,19 +405,7 @@ export async function gradeAttemptSubjectives(opts: {
       const images = await Promise.all(entry.image_keys.map((k) => getObjectBase64(k)));
       const g = await gradeSubjectiveAnswer(q, images);
       graded++;
-      return {
-        qId: q.id,
-        patch: {
-          gemini_marks: g.marks,
-          gemini_feedback: g.feedback,
-          gemini_confidence: g.confidence,
-          generated_model_answer: g.generatedModelAnswer,
-          gemini_input_tokens: g.usage.input,
-          gemini_output_tokens: g.usage.output,
-          gemini_thinking_tokens: g.usage.thinking,
-          flagged: false,
-        } as Partial<SubjectiveAnswerEntry>,
-      };
+      return { qId: q.id, patch: gradedAnswerPatch(g, g.usage) };
     } catch (err) {
       console.error(`[grade:${trigger}] attempt ${attemptId} q ${q.id} failed:`, err);
       flagged++;
@@ -382,25 +413,61 @@ export async function gradeAttemptSubjectives(opts: {
     }
   });
 
-  // Merge onto a FRESH read — a teacher may have overridden an answer while we
-  // were grading; their decision always survives. The student can't write
-  // post-submit, so the only other writer is another grading run (which, at
-  // temperature 0, produced the same marks anyway).
+  const merged = await mergeGradeResultsIntoAttempt({
+    attemptId,
+    coachingId,
+    testId: attempt.test.id,
+    resolved,
+    results,
+  });
+  if (!merged) {
+    return { graded, flagged, skipped: 0, pending: 0, status: attempt.grading_status };
+  }
+  return { graded, flagged, skipped: 0, pending: merged.pending, status: merged.status };
+}
+
+/**
+ * Merge graded-answer patches into an attempt and re-finalize it in ONE update.
+ * Re-reads answers FIRST so a teacher's manual override (or a concurrent run)
+ * always survives, recomputes score + grading_status through the shared scorer,
+ * and busts the leaderboard/result caches. Shared by the synchronous grader and
+ * the batch write-back. Returns null if the attempt is no longer gradable.
+ */
+export async function mergeGradeResultsIntoAttempt(opts: {
+  attemptId: string;
+  coachingId: string;
+  testId: string;
+  resolved: NormalizedQuestion[];
+  results: { qId: string; patch: Partial<SubjectiveAnswerEntry> }[];
+}): Promise<{ pending: number; status: string } | null> {
+  const { attemptId, coachingId, testId, resolved, results } = opts;
+
   const fresh = await withDbRetry(() =>
     prisma.testAttempt.findFirst({
       where: { id: attemptId, coaching_id: coachingId },
       select: { answers: true, status: true },
     })
   );
-  if (!fresh || fresh.status !== "submitted") {
-    return { graded, flagged, skipped: 0, pending: 0, status: attempt.grading_status };
-  }
+  if (!fresh || fresh.status !== "submitted") return null;
+
   const merged = { ...((fresh.answers ?? {}) as StoredAnswers) };
   for (const r of results) {
     const cur = merged[r.qId];
     if (!isSubjectiveEntry(cur)) continue; // answer shape changed under us — skip
     if (cur.manual_override != null) continue; // teacher won the race
-    merged[r.qId] = { ...cur, ...r.patch };
+    // Log AI grade events into the audit trail so every marks change is tracked.
+    const patched = { ...cur, ...r.patch };
+    if (r.patch.gemini_marks != null && !r.patch.flagged) {
+      const history = (cur.grade_history ?? []).slice();
+      history.push({
+        from: cur.gemini_marks,
+        to: r.patch.gemini_marks,
+        by: "ai",
+        at: new Date().toISOString(),
+      });
+      patched.grade_history = history;
+    }
+    merged[r.qId] = patched;
   }
 
   const { score, sectionScores, pendingSubjective } = computeAttemptScore(resolved, merged);
@@ -418,12 +485,10 @@ export async function gradeAttemptSubjectives(opts: {
     })
   );
 
-  // Marks changed → the cached leaderboard and this attempt's cached result are
-  // both stale now.
   await Promise.all([
-    invalidateTestLeaderboard(attempt.test.id),
+    invalidateTestLeaderboard(testId),
     invalidateAttemptResult(attemptId),
   ]);
 
-  return { graded, flagged, skipped: 0, pending: pendingSubjective, status: gradingStatus };
+  return { pending: pendingSubjective, status: gradingStatus };
 }

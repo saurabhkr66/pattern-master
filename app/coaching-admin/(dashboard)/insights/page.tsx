@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrendingUp } from "lucide-react";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { getCoachingInsights } from "@/lib/coachingInsights";
 import { PageHead } from "@/components/coaching/ui";
@@ -29,7 +30,11 @@ export default async function InsightsPage() {
 
   return (
     <div className="p-5 sm:p-8 lg:p-10">
-      <PageHead title="Insights" sub="Who needs attention, who's improving, who's missing tests" />
+      <PageHead
+        title="Insights"
+        sub="Who needs attention, who's improving, who's missing tests"
+        icon={<TrendingUp className="h-[30px] w-[30px]" />}
+      />
       <InsightsBoard data={{ weak, improving, absent }} />
     </div>
   );

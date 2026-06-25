@@ -56,21 +56,32 @@ export default async function CoachingAdminLayout({
 
   if (actor.coachingId) {
     coachingName = (await getCachedCoachingName(actor.coachingId)) ?? "Coaching";
-    subtitle = impersonating ? "Super admin · managing" : actor.role === "owner" ? "Owner" : "Admin";
+    subtitle = impersonating ? "Super admin · managing" : actor.role === "owner" ? "Owner" : "Teacher";
   } else if (actor.isSuperAdmin) {
     subtitle = "Platform Super Admin";
   }
 
+  // Team management (invite/remove teachers) is owner-only; super admins managing
+  // a coaching get it too. Drives the Team nav entry in the sidebar + bottom nav.
+  const canManageTeam = actor.role === "owner" || actor.isSuperAdmin;
+
   return (
-      <div className={`${coachingFontVars} flex min-h-screen`} style={{ background: "#06060c" }}>
+      <div
+        className={`coaching-scope ${coachingFontVars} flex min-h-screen md:min-h-[125vh] md:[zoom:0.80]`}
+        style={{
+          background:
+            "radial-gradient(1200px 600px at 80% -10%, rgba(245,158,11,0.06), transparent 60%), #08090d",
+          color: "#c9ced8",
+        }}
+      >
         {/* Desktop sidebar (hidden on mobile) */}
-        <AdminSidebar coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} isSuperAdmin={actor.isSuperAdmin} />
+        <AdminSidebar coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} isSuperAdmin={actor.isSuperAdmin} canManageTeam={canManageTeam} />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           {/* Mobile-only top bar; bottom nav handles navigation on mobile */}
-          <AdminMobileHeader coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} isSuperAdmin={actor.isSuperAdmin} />
+          <AdminMobileHeader coachingName={coachingName} subtitle={subtitle} impersonating={impersonating} isSuperAdmin={actor.isSuperAdmin} canManageTeam={canManageTeam} />
           <main className="min-w-0 flex-1 overflow-y-auto pb-24 md:pb-0">{children}</main>
         </div>
-        <AdminBottomNav />
+        <AdminBottomNav canManageTeam={canManageTeam} />
       </div>
   );
 }

@@ -27,7 +27,7 @@ export type CoachingActor = {
   clerkId: string;
   isSuperAdmin: boolean;
   coachingId: string | null;
-  role: "owner" | "admin" | null;
+  role: "owner" | "teacher" | null;
   adminId: string | null;
 };
 
@@ -82,7 +82,7 @@ export async function getCoachingActor(): Promise<CoachingActor | null> {
       clerkId: userId,
       isSuperAdmin: false,
       coachingId: admin.coaching_id,
-      role: admin.role === "owner" ? "owner" : "admin",
+      role: admin.role === "owner" ? "owner" : "teacher",
       adminId: admin.id,
     };
   }
@@ -91,9 +91,12 @@ export async function getCoachingActor(): Promise<CoachingActor | null> {
 }
 
 /**
- * Claim-on-first-login: if the signed-in user's email matches an unclaimed
- * `Coaching.owner_email`, create the owner `CoachingAdmin` row linking their
- * clerk_id. Idempotent — safe to call on every /coaching-admin entry.
+ * Claim-on-first-login. Two paths, in priority order:
+ *   1. Teacher invite — an owner pre-created a `CoachingAdmin` row with this
+ *      email and no clerk_id yet. Link it by stamping the clerk_id.
+ *   2. Owner claim — the signed-in email matches an unclaimed approved
+ *      `Coaching.owner_email`; create the owner `CoachingAdmin` row.
+ * Idempotent — safe to call on every /coaching-admin entry.
  *
  * Returns the linked coachingId, or null if there was nothing to claim.
  * This is the only path that hits the Clerk API (to read the email of a user
@@ -114,7 +117,29 @@ export async function claimCoachingIfPending(): Promise<string | null> {
   const email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
   if (!email) return null;
 
-  // Find a coaching that named this email as owner, is approved, and has no owner
+  // 1. Pending teacher invite: a seat the owner created with this email but no
+  // clerk_id yet. Stamp it. Race-safe via the clerk_id @unique (catch + re-read).
+  const invite = await prisma.coachingAdmin.findFirst({
+    where: { email, clerk_id: null },
+    select: { id: true, coaching_id: true },
+  });
+  if (invite) {
+    try {
+      await prisma.coachingAdmin.update({
+        where: { id: invite.id },
+        data: { clerk_id: userId },
+      });
+      return invite.coaching_id;
+    } catch {
+      const row = await prisma.coachingAdmin.findUnique({
+        where: { clerk_id: userId },
+        select: { coaching_id: true },
+      });
+      return row?.coaching_id ?? null;
+    }
+  }
+
+  // 2. Find a coaching that named this email as owner, is approved, and has no owner
   // linked yet. Pending/rejected applications are deliberately unclaimable — the
   // owner can sign in but won't gain dashboard access until a super admin approves.
   const coaching = await prisma.coaching.findFirst({
@@ -131,7 +156,7 @@ export async function claimCoachingIfPending(): Promise<string | null> {
   // created the row, swallow the conflict and re-read.
   try {
     await prisma.coachingAdmin.create({
-      data: { coaching_id: coaching.id, clerk_id: userId, role: "owner" },
+      data: { coaching_id: coaching.id, clerk_id: userId, email, role: "owner" },
     });
   } catch {
     const row = await prisma.coachingAdmin.findUnique({

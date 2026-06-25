@@ -321,6 +321,20 @@ model Coaching {
   // paid Gemini grading) until a super admin enables it on request. Super admins
   // can always use subjective regardless of this flag.
   subjective_enabled Boolean         @default(false)
+  // Whether students can see their own fee plan + payment receipts in their
+  // dashboard (/c/[slug]/fees). OFF by default: fee tracking is the tutor's
+  // private bookkeeping until they opt in to sharing it. Toggled from the admin
+  // Fees page; gates both the student fees page and per-receipt access.
+  fees_visible_to_students Boolean    @default(false)
+  // Whether students can see their own attendance record (/c/[slug]/attendance).
+  // OFF by default, same as fees: roll-call is the tutor's bookkeeping until they
+  // opt in to sharing it. Toggled from the admin Attendance page; gates the
+  // student attendance page. Rides the slug cache (see lib/coachingCache).
+  attendance_visible_to_students Boolean @default(false)
+  // Monotonic per-coaching counter for fee-payment receipt numbers, bumped
+  // atomically (raw UPDATE ... RETURNING) so receipts are unique + consecutive
+  // even across concurrent admins. See lib/coachingFees / fees.prisma.
+  fee_receipt_seq Int                @default(0)
   active          Boolean            @default(true)
   created_at      DateTime           @default(now())
   updated_at      DateTime           @updatedAt
@@ -331,6 +345,11 @@ model Coaching {
   tests           CoachingTest[]
   billing         BillingEvent[]
   billing_periods BillingPeriod[]
+  fee_templates   FeeTemplate[]
+  fee_plans       FeePlan[]
+  fee_payments    FeePayment[]
+  attendance_sessions AttendanceSession[]
+  attendance_records  AttendanceRecord[]
 
   @@index([slug])
   @@index([city])
@@ -340,11 +359,20 @@ model Coaching {
 model CoachingAdmin {
   id          String   @id @default(uuid())
   coaching_id String
-  clerk_id    String   @unique
-  role        String   @default("admin") // admin | owner
+  // Null until an invited member signs in and claims the seat (see
+  // claimCoachingIfPending). Postgres treats NULLs as distinct, so many pending
+  // invites coexist under this @unique; one Clerk user still maps to one seat.
+  clerk_id    String?  @unique
+  // Invite target / linked account email, lowercased. The owner invites a
+  // teacher by email; the matching email on first Clerk login claims the seat.
+  email       String?
+  name        String? // optional display name shown in the team roster
+  role        String   @default("teacher") // owner | teacher
   created_at  DateTime @default(now())
   coaching    Coaching @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
 
+  // One invite per email per coaching (NULL emails — legacy/owner rows — are distinct).
+  @@unique([coaching_id, email])
   @@index([coaching_id])
 }
 
@@ -355,6 +383,8 @@ model Batch {
   created_at  DateTime  @default(now())
   coaching    Coaching  @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
   students    Student[]
+  fee_templates FeeTemplate[]
+  attendance_sessions AttendanceSession[]
 
   @@unique([coaching_id, name])
   @@index([coaching_id])
@@ -383,6 +413,9 @@ model Student {
   coaching      Coaching      @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
   batch         Batch?        @relation(fields: [batch_id], references: [id])
   attempts      TestAttempt[]
+  fee_plans     FeePlan[]
+  fee_payments  FeePayment[]
+  attendance_records AttendanceRecord[]
 
   @@unique([coaching_id, phone])
   // Students list is WHERE coaching_id ORDER BY joined_at DESC (+ pagination);
@@ -402,6 +435,12 @@ model CoachingQuestion {
   correct_answer String
   solution       String?
   solution_html  String?
+  // Precomputed per-question mark scheme (part-wise breakdown) the subjective
+  // grader APPLIES instead of re-deriving on every call — see lib/coachingRubric.
+  // rubric_version < RUBRIC_VERSION (0 = ungenerated/stale) → backfill recomputes;
+  // reset to 0 whenever the model answer (solution) is edited.
+  rubric         String?
+  rubric_version Int       @default(0)
   question_type  String    @default("mcq") // mcq | nat | subjective
   max_marks      Int       @default(1)
   nat_tolerance  Float?
@@ -522,6 +561,11 @@ model TestAttempt {
   // (submitted, awaiting Gemini) | review (AI pass done, ≥1 answer needs the
   // teacher: low confidence or grading failure) | done (every answer final).
   grading_status  String        @default("none")
+  // When set, this attempt's ungraded subjective answers are already part of an
+  // open Gemini batch job (GradingBatch.job_name) — so the batch sweeper won't
+  // re-submit them. Cleared when the batch's results are written back. null =
+  // not in any batch (eligible for the next sweep). See lib/subjectiveBatch.
+  grading_batch   String?
   billed          Boolean       @default(false)
   started_at      DateTime      @default(now())
   submitted_at    DateTime?
@@ -538,6 +582,26 @@ model TestAttempt {
   @@index([coaching_id, billed])
   // Admin results page: "which attempts of this test still need grading/review".
   @@index([test_id, grading_status])
+  // Batch sweeper: find ungraded attempts not yet in a batch (grading_status =
+  // 'pending' AND grading_batch IS NULL), across all tests.
+  @@index([grading_status, grading_batch])
+}
+
+// One Gemini Batch Mode job for subjective grading. The sweeper submits all
+// pending answers as ONE inlined batch (~50% of standard token cost), records
+// the job here, then on a later pass polls it and writes results back to each
+// attempt. attempt_ids lets the write-back re-finalize the right attempts and
+// clear their grading_batch markers; answers are mapped via per-request metadata
+// (attemptId__questionId), so no separate key map is stored. See lib/subjectiveBatch.
+model GradingBatch {
+  id          String   @id @default(uuid())
+  job_name    String   @unique // Gemini batch resource name (batches/...)
+  status      String   @default("running") // running | done | failed
+  attempt_ids String[] // attempts with answers in this batch
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([status])
 }
 
 // Per-month bill status a super admin toggles (due | paid). Amounts are derived

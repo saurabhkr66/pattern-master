@@ -1,22 +1,13 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { unstable_cache } from "next/cache";
-import { Users, ClipboardList, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Users, ClipboardList, CheckCircle2, Clock } from "lucide-react";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
-import { Card, PageHead, Pill, display, mono } from "@/components/coaching/ui";
+import { Card, PageHead, Pill, StatCard, display, mono } from "@/components/coaching/ui";
 
 export const dynamic = "force-dynamic";
 
 const MONTH_LABEL = (d: Date) => d.toLocaleString("en-US", { month: "short" });
-
-// Tone → tinted icon-badge / spark colours for the KPI tiles (mobile redesign).
-const TILE_TONE: Record<string, { badge: string; spark: string }> = {
-  orange: { badge: "bg-orange-500/15 text-orange-400", spark: "#ff8f00" },
-  blue: { badge: "bg-sky-500/15 text-sky-400", spark: "#38bdf8" },
-  green: { badge: "bg-emerald-500/15 text-emerald-400", spark: "#34d399" },
-  amber: { badge: "bg-amber-500/15 text-amber-400", spark: "#fbbf24" },
-};
 
 function timeAgo(ms: number): string {
   if (!ms) return "";
@@ -178,10 +169,10 @@ export default async function CoachingAdminHome() {
 
       {/* KPI tiles — 2×2 on mobile, a row on desktop */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatTile icon={<Users className="h-4 w-4" />} tone="orange" value={students} label="Active Students" spark={series} />
-        <StatTile icon={<ClipboardList className="h-4 w-4" />} tone="blue" value={tests} label="Tests" spark={series} />
-        <StatTile icon={<CheckCircle2 className="h-4 w-4" />} tone="green" value={submissionsThisMonth} label="Submissions" sub="this month" spark={series} />
-        <StatTile icon={<Clock className="h-4 w-4" />} tone="amber" value={pendingApprovals} label="Pending Approvals" sub="awaiting you" />
+        <StatCard icon={<Users className="h-[22px] w-[22px]" />} iconColor="#f59e0b" value={students} label="Active Students" spark={series} />
+        <StatCard icon={<ClipboardList className="h-[22px] w-[22px]" />} iconColor="#3b82f6" value={tests} label="Tests" spark={series} />
+        <StatCard icon={<CheckCircle2 className="h-[22px] w-[22px]" />} iconColor="#22c55e" value={submissionsThisMonth} label="Submissions" sub="this month" spark={series} />
+        <StatCard icon={<Clock className="h-[22px] w-[22px]" />} iconColor="#fbbf24" value={pendingApprovals} label="Pending Approvals" sub="awaiting you" />
       </div>
 
       <div className="mt-4 flex flex-col gap-4 lg:mt-5 lg:flex-row lg:gap-5">
@@ -238,57 +229,6 @@ export default async function CoachingAdminHome() {
         </Card>
       </div>
     </div>
-  );
-}
-
-// KPI tile (mobile redesign) — icon badge, big number, label, mini sparkline.
-function StatTile({
-  icon,
-  tone,
-  value,
-  label,
-  sub,
-  spark,
-}: {
-  icon: ReactNode;
-  tone: keyof typeof TILE_TONE;
-  value: string | number;
-  label: string;
-  sub?: string;
-  spark?: number[];
-}) {
-  const t = TILE_TONE[tone];
-  return (
-    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
-      <span className={`grid h-8 w-8 place-items-center rounded-lg ${t.badge}`}>{icon}</span>
-      <div className="mt-3 text-2xl font-bold leading-none text-white sm:text-3xl" style={{ fontFamily: display }}>
-        {value}
-      </div>
-      <div className="mt-1.5 text-xs font-medium text-slate-400">
-        {label}
-        {sub && <span className="text-slate-500"> · {sub}</span>}
-      </div>
-      {spark && (
-        <div className="mt-2">
-          <MiniSpark values={spark} color={t.spark} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MiniSpark({ values, color }: { values: number[]; color: string }) {
-  if (values.length < 2) return <div className="h-6" />;
-  const W = 80,
-    H = 24;
-  const max = Math.max(...values, 1);
-  const step = W / (values.length - 1);
-  const pts = values.map((v, i) => [i * step, H - 2 - (v / max) * (H - 6)]);
-  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
-  return (
-    <svg width="100%" height="24" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" fill="none">
-      <path d={line} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 

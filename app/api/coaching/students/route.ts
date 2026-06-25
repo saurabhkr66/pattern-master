@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
+import { invalidateCoachingRoster } from "@/lib/coachingCache";
 
 // One page of students — keeps the initial render and each "load more" small.
 export const STUDENTS_PAGE_SIZE = 50;
@@ -93,6 +94,10 @@ export const POST = withCoachingContext(async (req, { coachingId }) => {
     },
     select: { id: true },
   });
+
+  // Owner-added students default to approved+active, so they enter the roster
+  // immediately — drop the cached attendance roster.
+  await invalidateCoachingRoster(coachingId);
 
   return NextResponse.json({ ok: true, id: student.id });
 });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
 import { invalidateStudent, blockStudent, unblockStudent } from "@/lib/studentCache";
+import { invalidateCoachingRoster } from "@/lib/coachingCache";
 
 // PATCH /api/coaching/students/[id]  { name?, phone?, batchId?, active? }
 // Edit a student. The where-clause includes coaching_id so an admin can only
@@ -73,6 +74,9 @@ export const PATCH = withCoachingContext(async (req, { coachingId }, { params })
   // Edits can flip active, reset the PIN, or kill the session token — drop the
   // cached record so the change (incl. an immediate session kill) takes effect.
   await invalidateStudent(id);
+  // Any edit can change roster membership (status/active), name, or batch, so drop
+  // the cached attendance roster for this coaching.
+  await invalidateCoachingRoster(coachingId);
   // Deactivation also writes a revocation tombstone so a stale cache hit can't
   // keep the student in; reactivation lifts it.
   if (data.active === false) await blockStudent(id);
@@ -95,5 +99,7 @@ export const DELETE = withCoachingContext(async (_req, { coachingId }, { params 
   // keep the now-inactive student authenticating until the TTL.
   await invalidateStudent(id);
   await blockStudent(id);
+  // Removed from the roster — drop the coaching's cached attendance roster.
+  await invalidateCoachingRoster(coachingId);
   return NextResponse.json({ ok: true });
 });

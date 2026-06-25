@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Check, ChevronDown, Loader2, Sparkles, User } from "lucide-react";
+import { AlertTriangle, BookOpen, Check, ChevronDown, Loader2, RotateCcw, Sparkles, User } from "lucide-react";
 import MathRenderer from "@/components/ui/MathRenderer";
 
 // Teacher grading panel for one attempt's subjective answers. Each card shows
@@ -108,6 +108,47 @@ export default function SubjectiveReviewPanel({
               setScore(newScore);
               setStatus(newStatus);
             }}
+            onReverted={(newScore, newStatus) => {
+              setItems((prev) =>
+                prev.map((x, j) =>
+                  j === i
+                    ? {
+                        ...x,
+                        manualOverride: null,
+                        finalMarks:
+                          x.geminiMarks != null &&
+                          !x.flagged &&
+                          (x.geminiConfidence === "high" || x.geminiConfidence === "medium")
+                            ? x.geminiMarks
+                            : null,
+                        pending:
+                          !(
+                            x.geminiMarks != null &&
+                            !x.flagged &&
+                            (x.geminiConfidence === "high" || x.geminiConfidence === "medium")
+                          ),
+                        gradedBy: null,
+                      }
+                    : x
+                )
+              );
+              setScore(newScore);
+              setStatus(newStatus);
+            }}
+            onModelAnswerSaved={() => {
+              setItems((prev) =>
+                prev.map((x, j) =>
+                  j === i
+                    ? {
+                        ...x,
+                        // Move generated → real model answer
+                        modelAnswer: x.generatedModelAnswer,
+                        generatedModelAnswer: null,
+                      }
+                    : x
+                )
+              );
+            }}
           />
         ))}
         {items.length === 0 && (
@@ -124,10 +165,14 @@ function ReviewCard({
   attemptId,
   q,
   onSaved,
+  onReverted,
+  onModelAnswerSaved,
 }: {
   attemptId: string;
   q: ReviewQuestion;
   onSaved: (marks: number, score: number, status: string) => void;
+  onReverted: (score: number, status: string) => void;
+  onModelAnswerSaved: () => void;
 }) {
   const [marksInput, setMarksInput] = useState<string>(
     q.manualOverride != null
@@ -137,6 +182,9 @@ function ReviewCard({
         : ""
   );
   const [saving, setSaving] = useState(false);
+  const [reverting, setReverting] = useState(false);
+  const [savingModelAnswer, setSavingModelAnswer] = useState(false);
+  const [modelAnswerSaved, setModelAnswerSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModel, setShowModel] = useState(false);
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
@@ -163,6 +211,49 @@ function ReviewCard({
       onSaved(marks, data.score, data.gradingStatus);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function revertToAi() {
+    setReverting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/coaching/attempts/${attemptId}/subjective`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionId: q.questionId, revert: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Failed to revert");
+        return;
+      }
+      // Reset the input to reflect AI marks
+      setMarksInput(q.geminiMarks != null ? String(q.geminiMarks) : "");
+      onReverted(data.score, data.gradingStatus);
+    } finally {
+      setReverting(false);
+    }
+  }
+
+  async function saveModelAnswer() {
+    setSavingModelAnswer(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/coaching/attempts/${attemptId}/save-model-answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionId: q.questionId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Failed to save model answer");
+        return;
+      }
+      setModelAnswerSaved(true);
+      onModelAnswerSaved();
+    } finally {
+      setSavingModelAnswer(false);
     }
   }
 
@@ -229,6 +320,27 @@ function ReviewCard({
           {showModel && (
             <div className="border-t border-slate-800 px-3 py-2 text-sm text-slate-300">
               <MathRenderer content={q.modelAnswer || q.generatedModelAnswer!} />
+              {/* Save AI-generated model answer to question bank */}
+              {!q.modelAnswer && q.generatedModelAnswer && !modelAnswerSaved && (
+                <button
+                  type="button"
+                  onClick={saveModelAnswer}
+                  disabled={savingModelAnswer}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
+                >
+                  {savingModelAnswer ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <BookOpen className="h-3 w-3" />
+                  )}
+                  Save as model answer
+                </button>
+              )}
+              {modelAnswerSaved && (
+                <p className="mt-2 text-xs text-emerald-400">
+                  ✓ Saved to question bank — future grading will use this answer.
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -268,7 +380,7 @@ function ReviewCard({
             </div>
           )}
 
-          {/* Override input */}
+          {/* Override input + revert button */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <label className="text-xs text-slate-400">
               {q.pending || q.flagged ? "Award marks" : "Override marks"}
@@ -292,6 +404,18 @@ function ReviewCard({
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
               Save
             </button>
+            {/* Revert to AI grade — only shown when there's a manual override AND an AI grade to fall back to */}
+            {q.manualOverride != null && q.geminiMarks != null && (
+              <button
+                type="button"
+                onClick={revertToAi}
+                disabled={reverting}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+              >
+                {reverting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                Revert to AI
+              </button>
+            )}
             {error && <span className="text-xs text-red-400">{error}</span>}
           </div>
         </>

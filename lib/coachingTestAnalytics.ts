@@ -54,6 +54,9 @@ export type ItemStat = {
   skipped: number;
   pending: number; // subjective answers awaiting grading (excluded from %)
   correctPct: number;
+  // Subjective-only: average marks awarded (null for objective questions).
+  avgMarks: number | null;
+  maxMarks: number | null;
 };
 export type TestClassAnalytics = {
   participation: ClassParticipation;
@@ -64,8 +67,8 @@ export type TestClassAnalytics = {
   items: ItemStat[]; // hardest first
 };
 
-type Tally = { correct: number; wrong: number; skipped: number; pending: number; seen: number };
-const newTally = (): Tally => ({ correct: 0, wrong: 0, skipped: 0, pending: 0, seen: 0 });
+type Tally = { correct: number; wrong: number; skipped: number; pending: number; seen: number; marksSum: number; maxMarksSum: number };
+const newTally = (): Tally => ({ correct: 0, wrong: 0, skipped: 0, pending: 0, seen: 0, marksSum: 0, maxMarksSum: 0 });
 
 const DIST_BANDS = ["0–20%", "20–40%", "40–60%", "60–80%", "80–100%"];
 
@@ -166,6 +169,13 @@ export function getTestClassAnalytics(
             } else {
               const { marks, pending } = subjectiveEntryMarks(v, q.marks);
               outcome = pending ? "pending" : marks > 0 ? "correct" : "wrong";
+              // Track actual marks for subjective depth (avg marks per question).
+              if (!pending) {
+                item.marksSum += marks;
+                item.maxMarksSum += q.marks;
+                topic.marksSum += marks;
+                topic.maxMarksSum += q.marks;
+              }
             }
           } else {
             const ua = typeof v === "string" ? v : "";
@@ -218,6 +228,8 @@ export function getTestClassAnalytics(
       const items: ItemStat[] = resolved
         .map((q, i) => {
           const t = itemTally.get(q.id)!;
+          const isSubj = q.question_type === "subjective";
+          const gradedCount = t.maxMarksSum > 0 ? Math.round(t.maxMarksSum / q.marks) : 0;
           return {
             id: q.id,
             index: i + 1,
@@ -230,6 +242,8 @@ export function getTestClassAnalytics(
             skipped: t.skipped,
             pending: t.pending,
             correctPct: correctPct(t),
+            avgMarks: isSubj && gradedCount > 0 ? Math.round((t.marksSum / gradedCount) * 10) / 10 : null,
+            maxMarks: isSubj ? q.marks : null,
           };
         })
         .sort((a, b) => a.correctPct - b.correctPct); // hardest first

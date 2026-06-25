@@ -16,10 +16,13 @@ export type CachedCoaching = {
   active: boolean;
   price_per_test: number;
   join_code: string;
+  fees_visible_to_students: boolean;
+  attendance_visible_to_students: boolean;
 };
 
 const TTL = 600;
-const key = (slug: string) => `coaching:slug:${slug}:v1`;
+// v3: payload now carries attendance_visible_to_students. Bump drops older entries.
+const key = (slug: string) => `coaching:slug:${slug}:v3`;
 
 export async function getCachedCoachingBySlug(slug: string): Promise<CachedCoaching | null> {
   if (isRedisConfigured()) {
@@ -42,6 +45,8 @@ export async function getCachedCoachingBySlug(slug: string): Promise<CachedCoach
         active: true,
         price_per_test: true,
         join_code: true,
+        fees_visible_to_students: true,
+        attendance_visible_to_students: true,
       },
     })
   );
@@ -141,6 +146,62 @@ export async function invalidateActiveTests(coachingId: string): Promise<void> {
   if (!isRedisConfigured()) return;
   await bestEffortInvalidate(`active-tests:${coachingId}`, () =>
     redis.del(activeTestsKey(coachingId))
+  );
+}
+
+// ── Attendance roster (approved + active students per coaching) ──────────────
+// getBatchRoster runs every time an admin opens attendance for a batch on a date,
+// but the student list itself only changes when a student is added, removed,
+// deactivated, approved/rejected, renamed, or moved between batches. Cache the
+// whole coaching's approved+active roster once (id, name, batch_id; name-sorted)
+// and filter per batch in memory; the per-date attendance marks stay a live read.
+// Busted on any roster-affecting student mutation via invalidateCoachingRoster;
+// 10-min TTL as a backstop.
+
+export type CachedRosterStudent = { id: string; name: string; batch_id: string | null };
+
+const ROSTER_TTL = 600;
+const rosterKey = (coachingId: string) => `coaching:${coachingId}:roster:v1`;
+
+export async function getCachedCoachingRoster(
+  coachingId: string
+): Promise<CachedRosterStudent[]> {
+  if (isRedisConfigured()) {
+    try {
+      const c = await redis.get<CachedRosterStudent[]>(rosterKey(coachingId));
+      if (c) return c;
+    } catch {
+      /* fall through to DB */
+    }
+  }
+
+  const students = await withDbRetry(() =>
+    prisma.student.findMany({
+      where: { coaching_id: coachingId, status: "approved", active: true },
+      select: { id: true, name: true, batch_id: true },
+      orderBy: { name: "asc" },
+    })
+  );
+
+  if (isRedisConfigured()) {
+    try {
+      await redis.set(rosterKey(coachingId), students, { ex: ROSTER_TTL });
+    } catch {
+      /* best-effort */
+    }
+  }
+  return students;
+}
+
+/**
+ * Drop the cached roster. Call on any student mutation that changes who is in the
+ * approved+active roster, their name, or their batch (add / remove / deactivate /
+ * approve / reject / rename / move batch).
+ */
+export async function invalidateCoachingRoster(coachingId: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+  await bestEffortInvalidate(`coaching-roster:${coachingId}`, () =>
+    redis.del(rosterKey(coachingId))
   );
 }
 
