@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { CalendarCheck, Check, X, Users, UserCheck, History } from "lucide-react";
-import { Btn, Card, Pill, PageHead, StatCard, display } from "@/components/coaching/ui";
+import { CalendarCheck, Check, X, Users, UserCheck, History, BarChart3 } from "lucide-react";
+import { Btn, Card, Pill, PageHead, display } from "@/components/coaching/ui";
 import VisibilityToggle from "@/components/coaching/VisibilityToggle";
-import type { RosterStudent, AttendanceHistoryRow } from "@/lib/coachingAttendanceData";
+import AttendanceAnalyticsPanel from "@/components/coaching/AttendanceAnalyticsPanel";
+import type {
+  RosterStudent,
+  AttendanceHistoryRow,
+  AttendanceAnalytics,
+} from "@/lib/coachingAttendanceData";
 
 const inputCls =
   "rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white outline-none focus:border-amber-500";
@@ -41,6 +46,7 @@ export default function AttendanceClient({
   initialDate,
   initialRoster,
   initialTaken,
+  analytics,
 }: {
   attendanceVisibleToStudents: boolean;
   batches: Batch[];
@@ -49,7 +55,11 @@ export default function AttendanceClient({
   initialDate: string;
   initialRoster: RosterStudent[] | null;
   initialTaken: boolean;
+  analytics: AttendanceAnalytics;
 }) {
+  // Tutor switches between the day-to-day marking workflow and the analytics view;
+  // marking is the primary action so it's the default tab.
+  const [tab, setTab] = useState<"mark" | "analytics">("mark");
   // Whether the server pre-rendered a roster we can paint immediately (no spinner).
   const seeded = Boolean(initialBatchId && initialDate && initialRoster);
 
@@ -198,6 +208,35 @@ export default function AttendanceClient({
         icon={<CalendarCheck className="h-7 w-7" />}
       />
 
+      {/* Tabs: day-to-day marking vs. analytics */}
+      <div className="-mx-1 mb-6 flex gap-2 px-1">
+        {([
+          { key: "mark", label: "Mark attendance", icon: CalendarCheck },
+          { key: "analytics", label: "Analytics", icon: BarChart3 },
+        ] as const).map((t) => {
+          const active = tab === t.key;
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                active
+                  ? "border-transparent bg-amber-500/15 text-amber-400"
+                  : "border-white/10 text-slate-400 hover:bg-white/[0.04]"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {tab === "analytics" ? (
+        <AttendanceAnalyticsPanel analytics={analytics} />
+      ) : (
+        <>
       <VisibilityToggle
         initial={attendanceVisibleToStudents}
         endpoint="/api/coaching/attendance/settings"
@@ -307,6 +346,8 @@ export default function AttendanceClient({
             loadingMore={loadingHistory}
             onLoadMore={loadMoreHistory}
           />
+        </>
+      )}
         </>
       )}
     </div>

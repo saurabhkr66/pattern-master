@@ -53,9 +53,18 @@ export default function TestWizard({
   const [step, setStep] = useState(0);
 
   // Step 1 — basics
+  // mode: "test" = timed one-shot exam; "assignment" = untimed homework with a
+  // pass threshold and unlimited retries (no timer, no opens-at, due date only).
+  // Deep-link ?mode=assignment (from the Homework tab's "New homework" button)
+  // opens the wizard already on the assignment toggle.
+  const [mode, setMode] = useState<"test" | "assignment">(
+    sp.get("mode") === "assignment" ? "assignment" : "test"
+  );
+  const isAssignment = mode === "assignment";
   const [title, setTitle] = useState(initSet ? `${initExam} ${initSet}`.trim() : "");
   const [description, setDescription] = useState("");
   const [durationMins, setDurationMins] = useState("60");
+  const [passPct, setPassPct] = useState("70");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   // Batch targeting — empty set means "visible to every student".
@@ -102,7 +111,12 @@ export default function TestWizard({
     setError(null);
     if (step === 0) {
       if (!title.trim()) return setError("Title is required");
-      if (!(Number(durationMins) > 0)) return setError("Duration must be greater than 0");
+      if (isAssignment) {
+        const pp = Number(passPct);
+        if (!(pp >= 1 && pp <= 100)) return setError("Pass threshold must be between 1 and 100%");
+      } else if (!(Number(durationMins) > 0)) {
+        return setError("Duration must be greater than 0");
+      }
     }
     if (step === 1 && selected.size === 0) {
       return setError("Select at least one question");
@@ -126,8 +140,10 @@ export default function TestWizard({
         body: JSON.stringify({
           title,
           description,
+          mode,
+          passPct: isAssignment ? Number(passPct) : undefined,
           durationMins: Number(durationMins),
-          startAt: startAt || null,
+          startAt: isAssignment ? null : startAt || null,
           endAt: endAt || null,
           shuffle,
           poolSize: usePool ? Number(poolSize) : null,
@@ -154,7 +170,7 @@ export default function TestWizard({
       <Card glow>
         <div className="p-6 sm:p-8">
       <h2 className="text-2xl font-extrabold text-white sm:text-[28px]" style={{ fontFamily: display }}>
-        New Test
+        {isAssignment ? "New Assignment" : "New Test"}
       </h2>
 
       {/* Stepper */}
@@ -193,6 +209,25 @@ export default function TestWizard({
       <div className="mt-7 rounded-2xl border border-white/[0.07] bg-white/[0.015] p-5 sm:p-6">
         {step === 0 && (
           <div className="space-y-4">
+            {/* Mode toggle: a Test is timed & one-shot; an Assignment is untimed
+                homework students retry until they hit the pass threshold. */}
+            <div className="flex gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] p-1.5">
+              {([
+                { key: "test", label: "Test", hint: "Timed · one attempt" },
+                { key: "assignment", label: "Assignment", hint: "Untimed · retry to pass" },
+              ] as const).map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setMode(m.key)}
+                  className="flex-1 rounded-lg px-4 py-2.5 text-center transition"
+                  style={mode === m.key ? { background: ORANGE_GRAD, color: "#1a1205" } : { color: "#c9ced8" }}
+                >
+                  <span className="block text-sm font-bold">{m.label}</span>
+                  <span className="block text-[11px] opacity-80">{m.hint}</span>
+                </button>
+              ))}
+            </div>
             <label className="block">
               <span className="text-sm text-slate-300">Title</span>
               <input value={title} onChange={(e) => setTitle(e.target.value)} className={`mt-1 ${inputCls}`} />
@@ -201,20 +236,39 @@ export default function TestWizard({
               <span className="text-sm text-slate-300">Description (optional)</span>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className={`mt-1 ${inputCls}`} />
             </label>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <label className="block">
-                <span className="text-sm text-slate-300">Duration (min)</span>
-                <input type="number" min={1} value={durationMins} onChange={(e) => setDurationMins(e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-              <label className="block">
-                <span className="text-sm text-slate-300">Opens (optional)</span>
-                <input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-              <label className="block">
-                <span className="text-sm text-slate-300">Closes (optional)</span>
-                <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-            </div>
+            {isAssignment ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm text-slate-300">Pass threshold (%)</span>
+                  <input type="number" min={1} max={100} value={passPct} onChange={(e) => setPassPct(e.target.value)} className={`mt-1 ${inputCls}`} />
+                  <span className="mt-1 block text-xs text-slate-500">
+                    Students retry until they score at least this much.
+                  </span>
+                </label>
+                <label className="block">
+                  <span className="text-sm text-slate-300">Due date (optional)</span>
+                  <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className={`mt-1 ${inputCls}`} />
+                  <span className="mt-1 block text-xs text-slate-500">
+                    After this, the assignment is read-only.
+                  </span>
+                </label>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <label className="block">
+                  <span className="text-sm text-slate-300">Duration (min)</span>
+                  <input type="number" min={1} value={durationMins} onChange={(e) => setDurationMins(e.target.value)} className={`mt-1 ${inputCls}`} />
+                </label>
+                <label className="block">
+                  <span className="text-sm text-slate-300">Opens (optional)</span>
+                  <input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} className={`mt-1 ${inputCls}`} />
+                </label>
+                <label className="block">
+                  <span className="text-sm text-slate-300">Closes (optional)</span>
+                  <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className={`mt-1 ${inputCls}`} />
+                </label>
+              </div>
+            )}
 
             {batches.length > 0 && (
               <div className="block">
@@ -307,10 +361,12 @@ export default function TestWizard({
 
         {step === 2 && (
           <div className="space-y-5">
-            <label className="flex items-center justify-between">
-              <span className="text-sm text-slate-300">Shuffle questions &amp; options per student</span>
-              <input type="checkbox" checked={shuffle} onChange={(e) => setShuffle(e.target.checked)} className="h-4 w-4 accent-amber-500" />
-            </label>
+            {!isAssignment && (
+              <label className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Shuffle questions &amp; options per student</span>
+                <input type="checkbox" checked={shuffle} onChange={(e) => setShuffle(e.target.checked)} className="h-4 w-4 accent-amber-500" />
+              </label>
+            )}
             <label className="block">
               <span className="text-sm text-slate-300">Negative marking per wrong MCQ</span>
               <input type="number" step="any" min={0} value={negMarks} onChange={(e) => setNegMarks(e.target.value)} className={`mt-1 ${inputCls} max-w-[160px]`} />

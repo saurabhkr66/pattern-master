@@ -18,11 +18,12 @@ export type CachedCoaching = {
   join_code: string;
   fees_visible_to_students: boolean;
   attendance_visible_to_students: boolean;
+  announcements_enabled: boolean;
 };
 
 const TTL = 600;
-// v3: payload now carries attendance_visible_to_students. Bump drops older entries.
-const key = (slug: string) => `coaching:slug:${slug}:v3`;
+// v4: payload now carries announcements_enabled. Bump drops older entries.
+const key = (slug: string) => `coaching:slug:${slug}:v4`;
 
 export async function getCachedCoachingBySlug(slug: string): Promise<CachedCoaching | null> {
   if (isRedisConfigured()) {
@@ -47,6 +48,7 @@ export async function getCachedCoachingBySlug(slug: string): Promise<CachedCoach
         join_code: true,
         fees_visible_to_students: true,
         attendance_visible_to_students: true,
+        announcements_enabled: true,
       },
     })
   );
@@ -79,6 +81,10 @@ export async function invalidateCoachingSlug(slug: string): Promise<void> {
 export type CachedActiveTest = {
   id: string;
   title: string;
+  // "test" = timed exam; "assignment" = untimed homework. The dashboard splits
+  // its list on this; assignments carry a pass_pct instead of a real duration.
+  mode: string;
+  pass_pct: number | null;
   duration_secs: number;
   start_at: string | null;
   end_at: string | null;
@@ -90,8 +96,8 @@ export type CachedActiveTest = {
 };
 
 const ACTIVE_TESTS_TTL = 300;
-// v2: payload now carries batch_ids. Bump drops any v1-shaped entry.
-const activeTestsKey = (coachingId: string) => `coaching:${coachingId}:activeTests:v2`;
+// v3: payload now carries mode + pass_pct. Bump drops any v2-shaped entry.
+const activeTestsKey = (coachingId: string) => `coaching:${coachingId}:activeTests:v3`;
 
 export async function getCachedActiveTests(coachingId: string): Promise<CachedActiveTest[]> {
   if (isRedisConfigured()) {
@@ -109,6 +115,8 @@ export async function getCachedActiveTests(coachingId: string): Promise<CachedAc
       select: {
         id: true,
         title: true,
+        mode: true,
+        pass_pct: true,
         duration_secs: true,
         start_at: true,
         end_at: true,
@@ -123,6 +131,8 @@ export async function getCachedActiveTests(coachingId: string): Promise<CachedAc
   const shaped: CachedActiveTest[] = tests.map((t) => ({
     id: t.id,
     title: t.title,
+    mode: t.mode,
+    pass_pct: t.pass_pct,
     duration_secs: t.duration_secs,
     start_at: t.start_at ? t.start_at.toISOString() : null,
     end_at: t.end_at ? t.end_at.toISOString() : null,
@@ -146,6 +156,84 @@ export async function invalidateActiveTests(coachingId: string): Promise<void> {
   if (!isRedisConfigured()) return;
   await bestEffortInvalidate(`active-tests:${coachingId}`, () =>
     redis.del(activeTestsKey(coachingId))
+  );
+}
+
+// ── Announcements list (student dashboard + announcements page) ──────────────
+// Like the active-tests list, the published announcement list is IDENTICAL for
+// every student of a coaching and changes only when an admin posts/edits/deletes
+// one. The student dashboard reads it on every load to compute the unread badge,
+// so we cache the small shaped list per coaching. Per-student read state is NOT
+// cached (it's a live AnnouncementRead read). Busted on any announcement
+// mutation; 5-min TTL as a backstop.
+//
+// created_at is stored as an ISO string (round-trips through JSON); the consumer
+// reconstructs a Date for display.
+
+export type CachedAnnouncement = {
+  id: string;
+  title: string;
+  body: string;
+  pinned: boolean;
+  // Per-batch targeting: empty = all approved students; else only students whose
+  // batch_id is in this list (filtered per-student via studentInTestBatches).
+  batch_ids: string[];
+  created_at: string; // ISO
+};
+
+const ANNOUNCEMENTS_TTL = 300;
+const announcementsKey = (coachingId: string) => `coaching:${coachingId}:announcements:v1`;
+
+export async function getCachedAnnouncements(coachingId: string): Promise<CachedAnnouncement[]> {
+  if (isRedisConfigured()) {
+    try {
+      const c = await redis.get<CachedAnnouncement[]>(announcementsKey(coachingId));
+      if (c) return c;
+    } catch {
+      /* fall through to DB */
+    }
+  }
+
+  const rows = await withDbRetry(() =>
+    prisma.announcement.findMany({
+      where: { coaching_id: coachingId, active: true },
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        pinned: true,
+        batch_ids: true,
+        created_at: true,
+      },
+      // Pinned first, then newest — the same order the UI renders in.
+      orderBy: [{ pinned: "desc" }, { created_at: "desc" }],
+    })
+  );
+
+  const shaped: CachedAnnouncement[] = rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    body: a.body,
+    pinned: a.pinned,
+    batch_ids: a.batch_ids,
+    created_at: a.created_at.toISOString(),
+  }));
+
+  if (isRedisConfigured()) {
+    try {
+      await redis.set(announcementsKey(coachingId), shaped, { ex: ANNOUNCEMENTS_TTL });
+    } catch {
+      /* best-effort */
+    }
+  }
+  return shaped;
+}
+
+/** Drop the cached announcements list (call on announcement create / edit / delete). */
+export async function invalidateAnnouncements(coachingId: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+  await bestEffortInvalidate(`announcements:${coachingId}`, () =>
+    redis.del(announcementsKey(coachingId))
   );
 }
 

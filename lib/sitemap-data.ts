@@ -10,7 +10,7 @@
 // hub and mock buckets are emitted.
 
 import { prisma } from "@/lib/prisma";
-import { toSlug, buildExamSlug, paperSlug, paperYear } from "@/lib/seo";
+import { toSlug, buildExamSlug, paperSlug, paperYear, TOPIC_PAGE_SIZE } from "@/lib/seo";
 
 export const BASE = "https://battleexam.com";
 export const CHUNK_SIZE = 10_000; // generous headroom under Google's 50K cap
@@ -147,14 +147,68 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     priority: 0.9,
   }));
 
+  // Per-topic freshness + depth. The Pattern table has no timestamp column and
+  // its questions paginate at TOPIC_PAGE_SIZE per page, so for every topic we
+  // derive two things from its child questions (both tables carry created_at and
+  // are indexed by pattern_id):
+  //   • lastmod → newest question added (max of PYQ/generated). Freshly seeded
+  //               topics advertise a recent date and get recrawled promptly.
+  //   • count   → total questions, to emit every pagination page (/page/2…N).
+  //               Without this only page 1 of each topic was in the sitemap and
+  //               ~90% of question pages stayed invisible to Google.
+  const [gqAgg, pyqAgg] = await Promise.all([
+    prisma.generatedQuestion
+      .groupBy({ by: ["pattern_id"], _max: { created_at: true }, _count: true })
+      .catch(logFail("gq agg")),
+    prisma.pYQ
+      .groupBy({ by: ["pattern_id"], _max: { created_at: true }, _count: true })
+      .catch(logFail("pyq agg")),
+  ]);
+  const lastmodByPattern = new Map<string, Date>();
+  const countByPattern = new Map<string, number>();
+  for (const r of [...gqAgg, ...pyqAgg]) {
+    countByPattern.set(r.pattern_id, (countByPattern.get(r.pattern_id) ?? 0) + r._count);
+    const d = r._max.created_at;
+    if (!d) continue;
+    const prev = lastmodByPattern.get(r.pattern_id);
+    if (!prev || d > prev) lastmodByPattern.set(r.pattern_id, d);
+  }
+
   const topicRows = await prisma.pattern
-    .findMany({ select: { exam_type: true, branch: true, subject: true, topic_name: true } })
+    .findMany({ select: { id: true, exam_type: true, branch: true, subject: true, topic_name: true } })
     .catch(logFail("topic hub"));
-  const topicPages: UrlEntry[] = topicRows.map((r) => ({
-    url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`,
-    changefreq: "weekly",
-    priority: 0.85,
-  }));
+  const topicPages: UrlEntry[] = topicRows.flatMap((r) => {
+    const base = `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`;
+    const lastmod = lastmodByPattern.get(r.id)?.toISOString();
+    const totalQ = countByPattern.get(r.id) ?? 0;
+    // Skip topics with zero questions: the page renders as a question-less
+    // "Practice Questions & PYQs" shell, which is thin/misleading content. Once
+    // the topic is seeded it re-enters the sitemap automatically (count-driven).
+    if (totalQ === 0) return [];
+    // Mirror the topic page's own pagination math — Math.max(1, ceil(totalQ /
+    // PAGE_SIZE)) — so we never emit a /page/N the route would 404.
+    const totalPages = Math.max(1, Math.ceil(totalQ / TOPIC_PAGE_SIZE));
+
+    const entries: UrlEntry[] = [
+      {
+        url: base,
+        ...(lastmod ? { lastmod } : {}),
+        changefreq: "weekly",
+        priority: 0.85,
+      },
+    ];
+    // Page 1 is the canonical primary surface; deeper pages get a slightly lower
+    // priority so crawlers still treat the topic root as the lead URL.
+    for (let p = 2; p <= totalPages; p++) {
+      entries.push({
+        url: `${base}/page/${p}`,
+        ...(lastmod ? { lastmod } : {}),
+        changefreq: "weekly",
+        priority: 0.7,
+      });
+    }
+    return entries;
+  });
 
   // /[examType]/pyq — one per exam that has seeded papers
   const pyqExamRows = await prisma.mockTestTemplate

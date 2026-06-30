@@ -331,6 +331,10 @@ model Coaching {
   // opt in to sharing it. Toggled from the admin Attendance page; gates the
   // student attendance page. Rides the slug cache (see lib/coachingCache).
   attendance_visible_to_students Boolean @default(false)
+  // Whether the in-app announcement board is on for this coaching. OFF by default
+  // (the tutor opts in from the admin Announcements page); gates the student
+  // announcements page + dashboard chip. Rides the slug cache (see lib/coachingCache).
+  announcements_enabled Boolean         @default(false)
   // Monotonic per-coaching counter for fee-payment receipt numbers, bumped
   // atomically (raw UPDATE ... RETURNING) so receipts are unique + consecutive
   // even across concurrent admins. See lib/coachingFees / fees.prisma.
@@ -350,6 +354,7 @@ model Coaching {
   fee_payments    FeePayment[]
   attendance_sessions AttendanceSession[]
   attendance_records  AttendanceRecord[]
+  announcements   Announcement[]
 
   @@index([slug])
   @@index([city])
@@ -416,6 +421,7 @@ model Student {
   fee_plans     FeePlan[]
   fee_payments  FeePayment[]
   attendance_records AttendanceRecord[]
+  announcement_reads AnnouncementRead[]
 
   @@unique([coaching_id, phone])
   // Students list is WHERE coaching_id ORDER BY joined_at DESC (+ pagination);
@@ -517,9 +523,16 @@ model CoachingTest {
   title         String
   description   String?
   questions     Json // [{ id, source: "coaching"|"pyq"|"generated", marks, neg_marks, section? }]
+  // "test" = timed, one-shot exam (default). "assignment" = untimed homework:
+  // no timer/waiting-room, retry the objective portion freely until pass_pct, a
+  // single submit-for-review for subjective. See lib/coachingFinalize / dashboard.
+  mode          String        @default("test") // test | assignment
+  // Pass threshold (percent) for an assignment — student keeps retrying until
+  // score% >= pass_pct, then it's "complete". null for tests.
+  pass_pct      Int?
   duration_secs Int           @default(3600)
   start_at      DateTime?
-  end_at        DateTime?
+  end_at        DateTime? // for assignments: the due date (read-only after)
   shuffle       Boolean       @default(true)
   pool_size     Int? // if set, each student gets pool_size random questions
   // Batch targeting: empty = visible to every approved student (default);
@@ -547,6 +560,9 @@ model TestAttempt {
   student_id      String
   status          String        @default("in_progress") // in_progress | submitted
   answers         Json          @default("{}")
+  // For assignment attempts: how many times the student has submitted (each
+  // "Check"/retry resets the row and bumps this). 1 for a plain test attempt.
+  attempt_count   Int           @default(1)
   score           Float?
   max_score       Float?
   time_taken_secs Int? // total time spent (analysis)

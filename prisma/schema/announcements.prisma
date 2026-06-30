@@ -1,0 +1,52 @@
+// ─── Announcements (coaching → broadcast message board) ───────────────────────
+//
+// Replaces the external WhatsApp-group dependency: a tutor posts a titled message
+// to the coaching's students, optionally pinned (sticky to the top) and optionally
+// scoped to specific batches. Students see them on their dashboard with an unread
+// badge.
+//
+// Targeting mirrors CoachingTest.batch_ids: an empty batch_ids = visible to every
+// approved student; a non-empty list = only students whose batch_id is in it
+// (an unbatched student is excluded). The dashboard filters per-student via
+// studentInTestBatches (lib/coachingBatch), the same helper tests use.
+//
+// AnnouncementRead is the per-student read marker (mirrors the AttendanceRecord
+// per-student-row pattern). Its absence = unread; its presence = read. Read state
+// is per-student and stays a live read, while the announcement LIST itself is
+// identical for every student and is Redis-cached per coaching (lib/coachingCache).
+//
+// The announcements_enabled flag + back-relations live on Coaching/Student in
+// schema.prisma (Prisma can't split one model across files).
+
+model Announcement {
+  id          String   @id @default(uuid())
+  coaching_id String
+  title       String
+  body        String
+  pinned      Boolean  @default(false)
+  // Empty = all approved students; non-empty = only these batches (mirrors CoachingTest.batch_ids).
+  batch_ids   String[] @default([])
+  active      Boolean  @default(true) // soft-delete
+  created_by  String? // CoachingAdmin id of the author (null: super-admin has no admin row)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  coaching    Coaching           @relation(fields: [coaching_id], references: [id], onDelete: Cascade)
+  reads       AnnouncementRead[]
+
+  // Admin + cache-fill list: WHERE coaching_id ORDER BY pinned DESC, created_at DESC.
+  @@index([coaching_id, pinned, created_at(sort: Desc)])
+}
+
+model AnnouncementRead {
+  id              String       @id @default(uuid())
+  announcement_id String
+  student_id      String
+  read_at         DateTime     @default(now())
+  announcement    Announcement @relation(fields: [announcement_id], references: [id], onDelete: Cascade)
+  student         Student      @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  // One read marker per student per announcement; re-marking is a no-op upsert.
+  @@unique([announcement_id, student_id])
+  // Serves the student's "which have I read" lookup: WHERE student_id.
+  @@index([student_id])
+}

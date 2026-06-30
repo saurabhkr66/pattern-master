@@ -26,7 +26,19 @@ export async function uploadCoachingImage(
       useUniqueFileName: true,
     });
     return result.url ?? null;
-  } catch {
+  } catch (e) {
+    // Surface WHY the upload failed (was a silent `catch {}`). Dump the full error —
+    // the ImageKit SDK attaches a response body/status that explains a 4xx/5xx.
+    const err = e as { status?: number; error?: unknown; message?: string; body?: unknown; response?: unknown };
+    console.error("[imagekit] upload failed:", {
+      message: err?.message,
+      status: err?.status,
+      error: err?.error,
+      body: err?.body,
+      response: err?.response,
+      privateKeyPresent: !!process.env.IMAGEKIT_PRIVATE_KEY,
+      endpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
+    });
     return null;
   }
 }

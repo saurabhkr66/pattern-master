@@ -27,7 +27,8 @@ export default async function TestsPage() {
   const coachingId = actor!.coachingId!;
   const [tests, coaching] = await Promise.all([
     prisma.coachingTest.findMany({
-      where: { coaching_id: coachingId },
+      // Timed tests only — untimed assignments live under the Homework tab.
+      where: { coaching_id: coachingId, mode: "test" },
       select: {
         id: true,
         title: true,

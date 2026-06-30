@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import TestEngine, { type SubmitAnswer } from "@/components/test/TestEngine";
 import type { TestQuestion, DraftState } from "@/components/test/testEngineTypes";
 import { isTabSwitchSuppressed } from "@/components/test/tabSwitchSuppress";
+import { clearLocalDraft } from "@/lib/localDraft";
 import type { ExamConfig } from "@/lib/examConfigs";
 
 // Wraps the existing consumer TestEngine for coaching tests. We reuse the
@@ -85,6 +86,7 @@ export default function StudentTestRunner({
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
+          clearLocalDraft(attemptId); // submit landed — drop the offline backup
           router.replace(`/c/${slug}/result/${attemptId}`);
           return;
         }
@@ -92,6 +94,7 @@ export default function StudentTestRunner({
         // were autosaved to Redis; the result page finalizes from them on view.
         // Send them there rather than dead-ending on an error.
         if (res.status === 403) {
+          clearLocalDraft(attemptId);
           router.replace(`/c/${slug}/result/${attemptId}`);
           return;
         }

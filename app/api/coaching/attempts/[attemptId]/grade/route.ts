@@ -9,7 +9,16 @@ export const maxDuration = 300;
 // for one attempt's subjective answers. The admin-triggered retry net for
 // Gemini outages / killed background runs. Body: { force?: boolean } — force
 // re-grades answers that already have AI marks (manual overrides still win).
-export const POST = withCoachingContext(async (req, { coachingId }, { params }) => {
+//
+// SUPER-ADMIN ONLY: firing Gemini is gated to super admins (subjective AI stays
+// under super-admin review — see project_subjective_stays_manual). Regular
+// coaching teachers grade subjective answers MANUALLY via the subjective
+// override route; they never get an "AI grade" button (and this server check
+// backstops the hidden button).
+export const POST = withCoachingContext(async (req, { coachingId, actor }, { params }) => {
+  if (!actor.isSuperAdmin) {
+    return NextResponse.json({ error: "AI grading is restricted to super admins" }, { status: 403 });
+  }
   const { attemptId } = await params;
   const body = await req.json().catch(() => ({}));
   const force = !!(body as { force?: unknown }).force;

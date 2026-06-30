@@ -107,18 +107,23 @@ export function answersFromDraft(
  * view path can clobber an existing submission (which may carry fresher answers).
  * Callers should branch on `updated` to detect "already submitted".
  */
-export async function gradeAndWrite(opts: {
+/**
+ * Build the STORED answers (original option space) from a student's display-space
+ * answer map. Objective answers stay strings (MCQ letters de-shuffled back to the
+ * original option order); a subjective answer becomes a SubjectiveAnswerEntry
+ * holding its photos' R2 keys (validated against this attempt's prefix = ownership,
+ * capped at MAX_SUBJECTIVE_PHOTOS). Shared by the test submit (gradeAndWrite) and
+ * the assignment submit so the two store answers identically.
+ */
+export function buildStoredAnswers(opts: {
   attemptId: string;
   studentId: string;
   coachingId: string;
   test: Pick<RuntimeTest, "id" | "shuffle">;
   resolved: NormalizedQuestion[];
   answers: Map<string, string>;
-  times: Record<string, number>;
-  timeTakenSecs: number | null;
-}): Promise<{ score: number; maxScore: number; updated: boolean; needsGrading: boolean }> {
-  const { attemptId, studentId, coachingId, test, resolved, answers, times, timeTakenSecs } = opts;
-
+}): StoredAnswers {
+  const { attemptId, studentId, coachingId, test, resolved, answers } = opts;
   // When options were shuffled for display, the student's answer is a DISPLAY
   // letter — map it back to the original option letter so grading (which compares
   // original labels) and the stored answer are correct.
@@ -129,16 +134,11 @@ export async function gradeAndWrite(opts: {
     return String.fromCharCode(65 + perm[d]);
   };
 
-  // Build the STORED answers (original option space). Objective answers stay
-  // strings; a subjective answer becomes a SubjectiveAnswerEntry holding its
-  // photos' R2 keys (graded asynchronously after this write).
   const keyPrefix = answerKeyPrefix(coachingId, test.id, attemptId);
   const storedAnswers: StoredAnswers = {};
   for (const q of resolved) {
     let ua = answers.get(q.id) ?? "";
     if (q.question_type === "subjective") {
-      // The submit payload carries the photo keys joined with ";". Keep only
-      // keys minted for THIS attempt (prefix check = ownership), max 3.
       const keys = ua
         .split(";")
         .map((k) => k.trim())
@@ -152,6 +152,22 @@ export async function gradeAndWrite(opts: {
     }
     storedAnswers[q.id] = ua;
   }
+  return storedAnswers;
+}
+
+export async function gradeAndWrite(opts: {
+  attemptId: string;
+  studentId: string;
+  coachingId: string;
+  test: Pick<RuntimeTest, "id" | "shuffle">;
+  resolved: NormalizedQuestion[];
+  answers: Map<string, string>;
+  times: Record<string, number>;
+  timeTakenSecs: number | null;
+}): Promise<{ score: number; maxScore: number; updated: boolean; needsGrading: boolean }> {
+  const { attemptId, studentId, coachingId, test, resolved, answers, times, timeTakenSecs } = opts;
+
+  const storedAnswers = buildStoredAnswers({ attemptId, studentId, coachingId, test, resolved, answers });
 
   // One shared formula for submit-time, post-AI, and post-override scoring.
   const { score, maxScore, sectionScores } = computeAttemptScore(resolved, storedAnswers);
@@ -233,6 +249,7 @@ export async function finalizeOverdueAttempts(
     where: { id: testId, coaching_id: coachingId },
     select: {
       id: true,
+      mode: true,
       questions: true,
       shuffle: true,
       pool_size: true,
@@ -241,6 +258,10 @@ export async function finalizeOverdueAttempts(
     },
   });
   if (!test) return 0;
+  // Assignments are untimed (duration_secs = 0, which would read as instantly
+  // overdue here) and finalize through their own retryable flow — never force
+  // them into the timed-test "submitted" terminal state.
+  if (test.mode === "assignment") return 0;
 
   const open = await prisma.testAttempt.findMany({
     where: { test_id: testId, coaching_id: coachingId, status: "in_progress" },

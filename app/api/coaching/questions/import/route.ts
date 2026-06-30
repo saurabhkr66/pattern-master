@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
-import { extractQuestions, cropQuestionImage, cropSolutionImage, verifyAnswers, reviewSubjectiveAnswers, resetTokenUsage, getTokenUsage, logTokenUsage, type UploadImage, type ImportQType } from "@/lib/coachingImport";
+import { extractQuestions, cropQuestionImage, cropSolutionImage, verifyAnswers, reviewSubjectiveAnswers, generateComparisonSolutions, resetTokenUsage, getTokenUsage, logTokenUsage, type UploadImage, type ImportQType } from "@/lib/coachingImport";
 import { pdfPageRenderer } from "@/lib/pdfRaster";
 
 // sharp + Gemini SDK need the Node runtime (not edge).
@@ -43,6 +43,16 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   // it on only for hard papers where a wrong answer key is expensive.
   const wantVerify = String(form.get("verify") ?? "") === "1";
 
+  // Which model runs the (opt-in) verify/review pass — the super admin picks it in
+  // the modal. Validated against the allowlist server-side (resolveVerifyModel), so
+  // an unknown/missing value just falls back to the default.
+  const verifyModel = String(form.get("verifyModel") ?? "").trim() || undefined;
+
+  // Which model derives answers + writes worked solutions (Pass 2). Super admin picks
+  // it; re-validated server-side (resolveGenerationModel) against the allowlist.
+  const answerModel = String(form.get("answerModel") ?? "").trim() || undefined;
+
+
   // Hindi translation is opt-in (default OFF). Most coaching papers are English-
   // only, and translating every field roughly doubles output tokens/cost — so the
   // admin flips this on per import only for bilingual papers.
@@ -56,8 +66,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   }
 
   // The exam's section catalog (global + this coaching's) constrains Gemini.
+  // Match the exam name case-insensitively: the field is free-typed in the modal,
+  // and a stray case/spacing difference from the seeded key would otherwise return
+  // zero sections (the paper imports unsectioned).
   const sectionRows = await prisma.examSection.findMany({
-    where: { exam, OR: [{ coaching_id: null }, { coaching_id: coachingId }] },
+    where: { exam: { equals: exam, mode: "insensitive" }, OR: [{ coaching_id: null }, { coaching_id: coachingId }] },
     select: { name: true },
     orderBy: { sort_order: "asc" },
   });
@@ -67,7 +80,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   // Present for CBSE classes (fixed syllabus); empty for exams not yet seeded —
   // in which case we fall back to the admin-typed topic list below.
   const topicRows = await prisma.syllabusTopic.findMany({
-    where: { exam, OR: [{ coaching_id: null }, { coaching_id: coachingId }] },
+    where: { exam: { equals: exam, mode: "insensitive" }, OR: [{ coaching_id: null }, { coaching_id: coachingId }] },
     select: { section: true, name: true },
     orderBy: { sort_order: "asc" },
   });
@@ -134,6 +147,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           sections,
           qtype,
           bilingual,
+          answerModel,
           // Catalog wins when present (school classes); else the typed list.
           topicsBySection: hasCatalog ? topicsBySection : undefined,
           topics: hasCatalog ? undefined : topics,
@@ -210,6 +224,20 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
             ` (source: ${pdf ? (renderer ? "PDF+renderer" : "PDF, renderer FAILED") : `${images.length} image(s)`})`
         );
 
+        // Blind cross-check (always): V4 Pro solves every question from scratch (never
+        // shown the answer); the review UI compares its answer to the recorded one (and
+        // the verify model's, when on). After cropping so figures feed the solve.
+        if (!req.signal.aborted) {
+          await generateComparisonSolutions({
+            questions,
+            // Defaults to V4 Pro (text-based blind solve); the answer-key pass above
+            // stays on Gemini because it must read the page images.
+            bilingual,
+            signal: req.signal,
+            onEvent: write,
+          });
+        }
+
         // Independent answer verification: re-solve each objective question blind
         // (no answer key shown) and flag any whose answer disagrees with what we
         // captured, so the human reviewer focuses on the questionable ones. Runs
@@ -217,10 +245,10 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
         // Best-effort — never blocks the import. Skip if the client already left.
         if (wantVerify && !req.signal.aborted) {
           // Objective answers: blind re-solve + disagreement check.
-          await verifyAnswers({ questions, signal: req.signal, onEvent: write });
+          await verifyAnswers({ questions, model: verifyModel, signal: req.signal, onEvent: write });
           // Subjective model answers: independent quality review (correct/complete?).
           if (!req.signal.aborted) {
-            await reviewSubjectiveAnswers({ questions, signal: req.signal, onEvent: write });
+            await reviewSubjectiveAnswers({ questions, model: verifyModel, signal: req.signal, onEvent: write });
           }
         }
 

@@ -40,12 +40,10 @@ const vertexAI = USE_VERTEX
 // isn't reliably served there). COACHING_IMPORT_MODEL overrides either.
 const MODEL =
   process.env.COACHING_IMPORT_MODEL || (USE_VERTEX ? "gemini-2.5-flash" : "gemini-3.1-flash-lite");
-// The answer-key pass is accuracy-critical: it must LOCATE and READ the printed
-// answers rather than solve questions itself. Defaults to gemini-3.1-flash-lite
-// — cheap/fast and reliable for reading printed answers (Pro's thinking tokens
-// would be wasted on a reading task). The blind VERIFY pass below catches the
-// rare misread. Override with COACHING_IMPORT_ANSWER_MODEL.
-const ANSWER_MODEL = process.env.COACHING_IMPORT_ANSWER_MODEL || "gemini-3.1-flash-lite";
+// The answer-key (Pass 2) pass both READS the printed answers and DERIVES/writes the
+// worked solution — the latter is a reasoning task, so its model is now selectable per
+// import (GENERATION_MODEL_OPTIONS, default DeepSeek V4 Pro; resolveGenerationModel).
+// COACHING_IMPORT_ANSWER_MODEL still overrides the default.
 // Figure detection is a pure spatial-localization task — a flash model with
 // thinking OFF is ideal (and Google recommends thinkingBudget=0 for it). It must
 // NOT inherit COACHING_IMPORT_MODEL: pointing it at Pro both wastes Pro on a
@@ -106,6 +104,15 @@ const CONCURRENCY = Math.max(
   1,
   Number(process.env.COACHING_IMPORT_CONCURRENCY || 16)
 );
+
+// Blind cross-check (generateComparisonSolutions) batch size. That pass ALWAYS runs
+// and solves every TEXT question with V4 — historically one V4 call per question,
+// which dominates the import's request count. Batching K text questions into one
+// call cuts that count ~K×. Default 5: enough to slash calls without overlong
+// prompts/outputs (each solution is ~60–150 words). Set to 1 to restore the old
+// one-call-per-question behaviour. Only text questions are batched; figure-bearing
+// ones stay per-call (their image must be attached individually).
+const COMPARE_BATCH = Math.max(1, Number(process.env.COACHING_IMPORT_COMPARE_BATCH || 5));
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -216,6 +223,13 @@ export type ParsedQuestion = {
   section?: string | null;
   topic?: string | null;
   images?: StoredImage[] | null;
+  // Comparison mode (opt-in): a SECOND worked solution from a different model, shown
+  // beside `solution` in review so the admin keeps the better one. Transit/review-only
+  // — dropped before save (the chosen text lives in `solution`).
+  solution_alt?: string | null; // the OTHER solution (flash-lite answer-key) — alternate to keep
+  solution_alt_hindi?: string | null;
+  solution_alt_model?: string; // label for the alternate's source
+  blind_answer?: string; // V4 Pro's OWN (blind) concluded answer — for the agreement badge
   // Transit-only hints from Gemini (never stored):
   number?: number | null; // printed question number — join key for the answer-key pass
   answer_derived?: boolean; // answer was AI-solved (not found in the paper) → flag for review
@@ -576,7 +590,7 @@ async function uploadPdf(pdf: UploadImage, apiKey: string): Promise<{ mimeType: 
  * its final `done` event.
  */
 export type ImportEvent =
-  | { t: "phase"; phase: "enumerate" | "extract" | "answers" | "verify" | "review"; total?: number }
+  | { t: "phase"; phase: "enumerate" | "extract" | "answers" | "verify" | "review" | "compare"; total?: number }
   | { t: "questions"; items: ParsedQuestion[]; done: number; total: number }
   | { t: "usage"; rows: TokenUsageRow[] };
 
@@ -590,6 +604,9 @@ export async function extractQuestions(opts: {
   /** Opt into Hindi translation of every question/option/solution (default OFF).
    *  When false the model is asked for — and the schema only allows — English. */
   bilingual?: boolean;
+  /** Model for the Pass-2 answer-key pass (derive answers + write worked solutions).
+   *  Validated against GENERATION_MODEL_OPTIONS; defaults to V4 Pro (resolveGenerationModel). */
+  answerModel?: string | null;
   /** Aborts the whole pipeline when the client disconnects (page refresh/close),
    *  so we stop firing Gemini calls instead of burning quota on a dead request. */
   signal?: AbortSignal;
@@ -602,13 +619,16 @@ export async function extractQuestions(opts: {
   if (!USE_VERTEX && !key) throw new Error("Missing GEMINI_API_KEY");
   const qtype = opts.qtype ?? "mixed";
   const bilingual = opts.bilingual ?? false;
+  // Pass-2 answer/solution model — V4 Pro by default (reasoning), Gemini if chosen or
+  // if DeepSeek isn't configured. Pass 1 (extraction) always stays on Gemini (MODEL).
+  const answerModel = resolveGenerationModel(opts.answerModel);
   // Built once per run: drops the *_hindi fields entirely on the English-only path.
   const responseSchema = buildResponseSchema(bilingual);
   // Always log the backend so "it's still using the API key" is obvious at a glance.
   console.log(
     USE_VERTEX
-      ? `[import] backend: Vertex AI (${process.env.VERTEX_LOCATION || "us-central1"}) — extract ${MODEL}, answers ${ANSWER_MODEL}`
-      : `[import] backend: Developer API (GEMINI_API_KEY) — extract ${MODEL}, answers ${ANSWER_MODEL}  [set GEMINI_USE_VERTEX=1 + restart for Vertex]`
+      ? `[import] backend: Vertex AI (${process.env.VERTEX_LOCATION || "us-central1"}) — extract ${MODEL}, answers ${answerModel}`
+      : `[import] backend: Developer API (GEMINI_API_KEY) — extract ${MODEL}, answers ${answerModel}  [set GEMINI_USE_VERTEX=1 + restart for Vertex]`
   );
   const signal = opts.signal;
   const emit = opts.onEvent ?? (() => {});
@@ -716,10 +736,13 @@ export async function extractQuestions(opts: {
       if (signal?.aborted) return [] as AnswerKeyEntry[]; // client gone — don't fire
       const label = `answer-key batch ${group[0]}–${group[group.length - 1]}`;
       try {
-        return (await callResilient(key, label, buildAnswerKeySchema(bilingual), [
+        // Routed by model id: DeepSeek (V4 Pro) via the OpenAI-compatible client,
+        // Gemini via callResilient. MAX_OUTPUT_TOKENS bounds the DeepSeek batch so a
+        // group of worked solutions isn't truncated (the 1024 verify default would be).
+        return (await callModel(key, label, buildAnswerKeySchema(bilingual), [
           ...media,
           { text: buildAnswerKeyPrompt(group, bilingual) },
-        ], signal, ANSWER_MODEL)) as AnswerKeyEntry[];
+        ], answerModel, signal, MAX_OUTPUT_TOKENS)) as AnswerKeyEntry[];
       } catch (e) {
         console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
         return [] as AnswerKeyEntry[];
@@ -731,6 +754,18 @@ export async function extractQuestions(opts: {
   }
   // Cross-check each objective answer against what its own solution concludes.
   flagSolutionMismatches(questions);
+  // Canonicalize each MCQ's correct_answer to its real option label. The model
+  // sometimes returns the answer positionally ("1") or wrapped ("(A)", "A.") while
+  // the options are labelled A/B/C/D — the review UI's radio compares label STRICTLY,
+  // so a non-canonical value leaves NO option selected (the "bullet" never shows),
+  // and the saved answer wouldn't match a label either. Resolve in place; leave it
+  // untouched if it can't be pinned to an option (don't destroy a raw value).
+  for (const q of questions) {
+    if (q.question_type === "mcq" && q.correct_answer) {
+      const label = resolveMcqLabel(q.correct_answer, q.options);
+      if (label) q.correct_answer = label;
+    }
+  }
   return questions;
 }
 
@@ -769,6 +804,14 @@ const TOKEN_PRICES: Record<string, { in: number; out: number }> = {
   "gemini-3.1-flash-lite": { in: 0.25, out: 1.5 }, // was wrongly 0.1/0.4 — corrected
   "gemini-2.5-flash": { in: 0.3, out: 2.5 },
   "gemini-2.5-pro": { in: 1.25, out: 10.0 },
+  // DeepSeek V4 (post-promo steady-state, Jun 2026). Cheap output is why V4 Pro is
+  // a good fit for the reasoning-heavy verify + answer/solution generation passes.
+  // Keyed by the explicit V4 model id. NOTE: the legacy `deepseek-chat` alias maps to
+  // V4 FLASH (cheaper/lighter) and is being retired 2026-07-24 — so we pass
+  // `deepseek-v4-pro` explicitly to actually get the Pro model. Cache-hit discount
+  // isn't modelled (cached=0), so the cost shown is a slight over-estimate.
+  "deepseek-v4-pro": { in: 0.435, out: 0.87 },
+  "deepseek-v4-flash": { in: 0.14, out: 0.28 },
 };
 
 type UsageAcc = { calls: number; input: number; cached: number; output: number; thinking: number };
@@ -1006,19 +1049,39 @@ function flagSolutionMismatches(questions: ParsedQuestion[]): void {
 }
 
 /**
- * Map an answer-key value ("C", "(C)", or the option's full text) to one of the
- * question's option labels, so the review radio pre-selects the right choice.
+ * Map an answer-key value ("C", "(C)", "3", or the option's full text) to one of
+ * the question's option labels, so the review radio pre-selects the right choice
+ * AND two models that name the same option differently ("A" vs "1") don't read as
+ * a disagreement. Resolution order: exact label → option text → positional index
+ * (a bare number, or a letter mapped A→1, B→2…) so a numeric answer lands on a
+ * letter-labelled paper and vice-versa.
  */
 function resolveMcqLabel(raw: string, options?: { label: string; text: string }[] | null): string | null {
   const s = raw.trim();
   if (!options?.length) return /^[A-Za-z]$/.test(s) ? s.toUpperCase() : null;
+  // Exact label match first — this also covers numerically-labelled papers (where
+  // "1" IS the real label), so positional fallback never overrides a true match.
   const ci = options.find((o) => o.label.toLowerCase() === s.toLowerCase());
   if (ci) return ci.label;
   const byText = options.find((o) => o.text.trim().toLowerCase() === s.toLowerCase());
   if (byText) return byText.label;
+  // A bare number ("1", "(2)", "3.") → 1-based option index. Handles a model that
+  // answers "1" for the first option when the paper labels them A/B/C/D.
+  const num = s.match(/^\(?\s*(\d+)\s*\)?[.)]?$/);
+  if (num) {
+    const i = Number(num[1]) - 1;
+    if (i >= 0 && i < options.length) return options[i].label;
+  }
+  // A leading letter: prefer a matching letter label, else treat it positionally
+  // (A→1st option…) so a letter answer maps onto a numerically-labelled paper.
   const lead = s.match(/[A-Za-z]/)?.[0];
-  const byLead = lead && options.find((o) => o.label.toLowerCase() === lead.toLowerCase());
-  return byLead ? byLead.label : null;
+  if (lead) {
+    const byLead = options.find((o) => o.label.toLowerCase() === lead.toLowerCase());
+    if (byLead) return byLead.label;
+    const i = lead.toUpperCase().charCodeAt(0) - 65; // A→0, B→1…
+    if (i >= 0 && i < options.length) return options[i].label;
+  }
+  return null;
 }
 
 // ─── Pass 3: independent answer verification ─────────────────────────────────
@@ -1030,17 +1093,209 @@ function resolveMcqLabel(raw: string, options?: { label: string; text: string }[
 // wrong. Disagreements are flagged (answer_disputed) for the mandatory human
 // review — they are NEVER auto-corrected. Mirrors the admin/ai-review blind solve.
 //
-// Use a DIFFERENT model than extraction (COACHING_IMPORT_VERIFY_MODEL) for a
-// genuinely independent second opinion — Gemini 3 Flash. Stronger solver than the
-// flash-lite extraction/answer passes (so its blind solve is a meaningful check)
-// without Pro's thinking-token bill. Model choice is constrained: there is no
-// plain "gemini-3.1-flash", and "gemini-3.5-flash" is priced like 2.5-pro — so the
-// only cheap general Gemini-3 Flash is "gemini-3-flash-preview", which is served on
-// BOTH the Developer API key and Vertex global. One id covers both transports; the
-// trade-off is it's a preview (watch for deprecation). As a Gemini 3 model it runs
-// via thinkingConfigFor with thinkingLevel (default LOW) — a numeric budget would
-// throw. Bump COACHING_IMPORT_THINKING_LEVEL if the blind solve is too weak.
-const VERIFY_MODEL = process.env.COACHING_IMPORT_VERIFY_MODEL || "gemini-3-flash-preview";
+// Use a DIFFERENT model than extraction for a genuinely independent second opinion.
+// The super admin picks the verifier per import from VERIFY_MODEL_OPTIONS below; the
+// default is Gemini 3 Flash. DeepSeek V4 Pro is offered because it's a flagship-class
+// solver from a DIFFERENT vendor, so its mistakes DECORRELATE from the Gemini
+// extractor (a same-family verifier tends to echo the extractor's errors), at a
+// fraction of a Gemini-Pro price. The blind solve is a pure reasoning task on (mostly
+// printed) text — DeepSeek's strength; OCR (where Gemini leads) barely matters as
+// figures arrive pre-cropped. Gemini ids run via the Gemini path (Gemini-3 ids use
+// thinking level COACHING_IMPORT_THINKING_LEVEL, default LOW); DeepSeek ids route
+// through the OpenAI-compatible client below and need DEEPSEEK_API_KEY.
+
+// Selectable VERIFY models, in menu order. The first is the Gemini fallback when a
+// DeepSeek pick has no key. Server-side allowlist (the modal mirrors these labels) so
+// a requested id is validated, never trusted raw. `deepseek-v4-pro` is the EXPLICIT V4
+// Pro id — the legacy `deepseek-chat` alias resolves to V4 Flash (and retires 2026-07-24).
+export const VERIFY_MODEL_OPTIONS = [
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash (default)" },
+  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (cheapest)" },
+] as const;
+const DEFAULT_VERIFY_MODEL = process.env.COACHING_IMPORT_VERIFY_MODEL || VERIFY_MODEL_OPTIONS[0].id;
+
+// Selectable ANSWER-KEY (Pass 2) models. This pass READS the answer key off the page
+// images and returns JSON, so it must be MULTIMODAL — DeepSeek V4 is TEXT-ONLY on the
+// API (rejects image input), so only Gemini is offered here. (V4 Pro's reasoning
+// is used for SOLUTION writing via the comparison pass instead, which works from text.)
+export const GENERATION_MODEL_OPTIONS = [
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (default)" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash (stronger reader)" },
+] as const;
+// Env override of the default keeps the existing COACHING_IMPORT_ANSWER_MODEL knob.
+const DEFAULT_GENERATION_MODEL = process.env.COACHING_IMPORT_ANSWER_MODEL || GENERATION_MODEL_OPTIONS[0].id;
+const GENERATION_FALLBACK_MODEL = "gemini-3.1-flash-lite";
+
+// Model for the always-on BLIND cross-check. It solves from the EXTRACTED QUESTION
+// TEXT (no page image needed), so the text-only DeepSeek V4 Pro works here. Default =
+// V4 Pro for reasoning (falls back to Gemini if no DeepSeek key).
+export const COMPARE_MODEL_OPTIONS = [
+  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
+] as const;
+const DEFAULT_COMPARE_MODEL = process.env.DEEPSEEK_API_KEY ? "deepseek-v4-pro" : "gemini-3.1-flash-lite";
+
+// True for any DeepSeek model id — routes to the OpenAI-compatible client, not Gemini.
+const isDeepSeekModel = (id: string) => /deepseek/i.test(id);
+
+// Resolve a per-import requested model against an allowlist: unknown → default, and a
+// DeepSeek pick degrades to `fallback` when DEEPSEEK_API_KEY is absent so a pass never
+// silently no-ops (or 401s) just because DeepSeek isn't configured.
+function resolveModel(
+  requested: string | null | undefined,
+  options: ReadonlyArray<{ id: string }>,
+  defaultId: string,
+  fallbackId: string
+): string {
+  let model = options.some((o) => o.id === requested) ? requested! : defaultId;
+  if (isDeepSeekModel(model) && !process.env.DEEPSEEK_API_KEY) {
+    console.warn(`[import] model "${model}" needs DEEPSEEK_API_KEY — falling back to ${fallbackId}`);
+    model = fallbackId;
+  }
+  return model;
+}
+const resolveVerifyModel = (requested?: string | null) =>
+  resolveModel(requested, VERIFY_MODEL_OPTIONS, DEFAULT_VERIFY_MODEL, VERIFY_MODEL_OPTIONS[0].id);
+const resolveGenerationModel = (requested?: string | null) =>
+  resolveModel(requested, GENERATION_MODEL_OPTIONS, DEFAULT_GENERATION_MODEL, GENERATION_FALLBACK_MODEL);
+const resolveCompareModel = (requested?: string | null) =>
+  resolveModel(requested, COMPARE_MODEL_OPTIONS, DEFAULT_COMPARE_MODEL, GENERATION_FALLBACK_MODEL);
+
+const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1").replace(/\/$/, "");
+
+// Convert the Gemini-style Part[] the prompts build into OpenAI chat "content".
+// IMPORTANT: DeepSeek's V4 API is TEXT-ONLY — it rejects `image_url`
+// content ("unknown variant `image_url`, expected `text`"). So we DROP inline images
+// here and send text only. DeepSeek is therefore only used for text-based reasoning
+// (solution writing / blind verify from the question text); anything that must READ the
+// page (the answer-key pass) stays on Gemini. Returns the text content + the number of
+// images dropped (so the caller can log it).
+function partsToOpenAIContent(parts: Part[]): { content: unknown[]; droppedImages: number } {
+  const content: unknown[] = [];
+  let droppedImages = 0;
+  for (const p of parts as unknown as Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>) {
+    if (p.text) content.push({ type: "text", text: p.text });
+    else if (p.inlineData) droppedImages++;
+  }
+  return { content, droppedImages };
+}
+
+// Parse a model's text reply into the one-element array the verify/review callers
+// expect. json_object mode returns an OBJECT, so accept either: a bare array, an
+// object holding an array, or a single object (wrapped). Strips ``` fences and
+// salvages the first JSON blob if there's stray prose.
+function coerceJsonArray(text: string): unknown[] {
+  const t = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  let parsed: unknown = null;
+  try {
+    parsed = JSON.parse(t);
+  } catch {
+    const m = t.match(/[[{][\s\S]*[\]}]/);
+    if (m) {
+      try {
+        parsed = JSON.parse(m[0]);
+      } catch {
+        /* unsalvageable */
+      }
+    }
+  }
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === "object") {
+    for (const v of Object.values(parsed as Record<string, unknown>)) if (Array.isArray(v)) return v;
+    return [parsed];
+  }
+  return [];
+}
+
+// Fold a DeepSeek (OpenAI-shaped) usage block into the per-model totals. Cached
+// reads aren't modelled (see TOKEN_PRICES note) — all input bills at full rate.
+function recordDeepSeekUsage(modelId: string, u: unknown): void {
+  const usage = u as { prompt_tokens?: number; completion_tokens?: number } | undefined;
+  if (!usage) return;
+  const acc = _tokenUsage.get(modelId) ?? { calls: 0, input: 0, cached: 0, output: 0, thinking: 0 };
+  acc.calls += 1;
+  acc.input += Number(usage.prompt_tokens ?? 0);
+  acc.output += Number(usage.completion_tokens ?? 0);
+  _tokenUsage.set(modelId, acc);
+}
+
+// One DeepSeek chat-completions call constrained to JSON, returned as the same
+// array shape callResilient yields, so the verify/review callers don't care which
+// vendor answered. Retries transient/429 like the Gemini path; respects the signal.
+async function callDeepSeekJsonArray(
+  label: string,
+  parts: Part[],
+  signal: AbortSignal | undefined,
+  modelId: string,
+  maxTokens = 1024,
+  temperature = 0.3
+): Promise<unknown[]> {
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) throw new Error("DEEPSEEK_API_KEY not set");
+  const { content, droppedImages } = partsToOpenAIContent(parts);
+  if (droppedImages) {
+    console.warn(`[import] ${label}: ${droppedImages} image(s) dropped — ${modelId} is text-only (solves from text)`);
+  }
+  const body = JSON.stringify({
+    model: modelId,
+    messages: [{ role: "user", content }],
+    temperature,
+    max_tokens: maxTokens,
+    response_format: { type: "json_object" },
+  });
+
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (signal?.aborted) throw new Error("aborted: client disconnected");
+    try {
+      const res = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body,
+        signal,
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        if (res.status === 429) {
+          const wait = Math.min(35, (parseRetryDelaySec(txt) ?? 20) + 1);
+          console.warn(`[import] ${label} DeepSeek rate-limited — waiting ${wait}s [attempt ${attempt}/${MAX_ATTEMPTS}]`);
+          await sleep(wait * 1000);
+          continue;
+        }
+        throw new Error(`DeepSeek ${res.status}: ${txt.slice(0, 200)}`);
+      }
+      const json = (await res.json()) as { choices?: { message?: { content?: string } }[]; usage?: unknown };
+      recordDeepSeekUsage(modelId, json.usage);
+      return coerceJsonArray(json.choices?.[0]?.message?.content ?? "");
+    } catch (e) {
+      lastErr = e;
+      if (signal?.aborted || (e instanceof Error && /aborted/i.test(e.message))) throw e;
+      console.warn(`[import] ${label} attempt ${attempt}/${MAX_ATTEMPTS} failed: ${e instanceof Error ? e.message : e}`);
+      if (attempt < MAX_ATTEMPTS) await sleep(2000 * attempt);
+    }
+  }
+  throw lastErr;
+}
+
+// Dispatch a JSON call to whichever vendor `model` names: DeepSeek via the
+// OpenAI-compatible client, anything else via the Gemini path. Keeps the verify,
+// review, and answer-generation callers vendor-agnostic. `maxTokens` bounds the
+// DeepSeek output budget (small for verify, large for batched solution generation).
+function callModel(
+  geminiKey: string,
+  label: string,
+  schema: ResponseSchema,
+  parts: Part[],
+  model: string,
+  signal?: AbortSignal,
+  maxTokens?: number
+): Promise<unknown[]> {
+  return isDeepSeekModel(model)
+    ? callDeepSeekJsonArray(label, parts, signal, model, maxTokens)
+    : callResilient(geminiKey, label, schema, parts, signal, model);
+}
 
 const VERIFY_SCHEMA: ResponseSchema = {
   type: SchemaType.ARRAY,
@@ -1133,11 +1388,15 @@ function verifyDisplay(q: ParsedQuestion, aiRaw: string): string {
  */
 export async function verifyAnswers(opts: {
   questions: ParsedQuestion[];
+  model?: string | null;
   signal?: AbortSignal;
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<void> {
+  const model = resolveVerifyModel(opts.model);
   const key = process.env.GEMINI_API_KEY ?? "";
-  if (!USE_VERTEX && !key) return;
+  // The verifier may be Gemini (needs the key / Vertex) or DeepSeek (needs its own
+  // key, checked inside its client) — only gate on the Gemini key when Gemini is it.
+  if (!isDeepSeekModel(model) && !USE_VERTEX && !key) return;
   const { questions, signal } = opts;
   const emit = opts.onEvent ?? (() => {});
 
@@ -1146,7 +1405,7 @@ export async function verifyAnswers(opts: {
     (q) => (q.question_type === "mcq" || q.question_type === "nat") && !!q.correct_answer
   );
   if (!targets.length) return;
-  console.log(`[import] verifying ${targets.length} objective answer(s) with ${VERIFY_MODEL}`);
+  console.log(`[import] verifying ${targets.length} objective answer(s) with ${model}`);
   emit({ t: "phase", phase: "verify", total: targets.length });
 
   let disputes = 0;
@@ -1155,15 +1414,19 @@ export async function verifyAnswers(opts: {
     const label = `verify q${q.number ?? "?"}`;
     try {
       const parts: Part[] = [...(await figureParts(q)), { text: buildVerifyPrompt(q) }];
-      const got = (await callResilient(key, label, VERIFY_SCHEMA, parts, signal, VERIFY_MODEL)) as {
+      const got = (await callModel(key, label, VERIFY_SCHEMA, parts, model, signal)) as {
         answer?: string;
         confidence?: number;
       }[];
       const aiRaw = got[0]?.answer ? String(got[0].answer) : "";
-      if (aiRaw && answersDisagree(q, aiRaw)) {
-        q.answer_disputed = true;
+      if (aiRaw) {
+        // Always record the verifier's answer so the 3-way agreement badge can show it
+        // even when it agrees; only flag a dispute when it actually disagrees.
         q.verify_answer = verifyDisplay(q, aiRaw);
-        disputes++;
+        if (answersDisagree(q, aiRaw)) {
+          q.answer_disputed = true;
+          disputes++;
+        }
       }
     } catch (e) {
       // Verification is best-effort — a failed check leaves the question unflagged.
@@ -1217,11 +1480,13 @@ function buildSubjectiveReviewPrompt(q: ParsedQuestion): string {
  */
 export async function reviewSubjectiveAnswers(opts: {
   questions: ParsedQuestion[];
+  model?: string | null;
   signal?: AbortSignal;
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<void> {
+  const model = resolveVerifyModel(opts.model);
   const key = process.env.GEMINI_API_KEY ?? "";
-  if (!USE_VERTEX && !key) return;
+  if (!isDeepSeekModel(model) && !USE_VERTEX && !key) return;
   const { questions, signal } = opts;
   const emit = opts.onEvent ?? (() => {});
 
@@ -1230,7 +1495,7 @@ export async function reviewSubjectiveAnswers(opts: {
     (q) => q.question_type === "subjective" && !!String(q.solution ?? "").trim()
   );
   if (!targets.length) return;
-  console.log(`[import] reviewing ${targets.length} subjective model answer(s) with ${VERIFY_MODEL}`);
+  console.log(`[import] reviewing ${targets.length} subjective model answer(s) with ${model}`);
   emit({ t: "phase", phase: "review", total: targets.length });
 
   let flagged = 0;
@@ -1239,13 +1504,13 @@ export async function reviewSubjectiveAnswers(opts: {
     const label = `review q${q.number ?? "?"}`;
     try {
       const parts: Part[] = [...(await figureParts(q)), { text: buildSubjectiveReviewPrompt(q) }];
-      const got = (await callResilient(
+      const got = (await callModel(
         key,
         label,
         SUBJECTIVE_REVIEW_SCHEMA,
         parts,
-        signal,
-        VERIFY_MODEL
+        model,
+        signal
       )) as { ok?: boolean; issue?: string | null }[];
       const r = got[0];
       if (r && r.ok === false) {
@@ -1260,6 +1525,235 @@ export async function reviewSubjectiveAnswers(opts: {
     }
   });
   console.log(`[import] subjective review flagged ${flagged}/${targets.length} model answer(s)`);
+}
+
+// ─── Blind cross-check (always on) ───────────────────────────────────────────
+// V4 Pro solves EVERY question FROM SCRATCH (never shown the answer) and writes its
+// worked solution into `solution_alt` + its own concluded answer into
+// `blind_answer`. The recorded answer (flash-lite Pass 2) is left untouched —
+// the review UI compares the two answers (and the verify model's, when Verify is on)
+// and flags disagreements. One model call per question.
+const SOLUTION_ONLY_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      answer: { type: SchemaType.STRING, nullable: true },
+      solution: { type: SchemaType.STRING },
+      solution_hindi: { type: SchemaType.STRING, nullable: true },
+    },
+    required: ["solution"],
+  },
+};
+
+function buildSolutionPrompt(q: ParsedQuestion, bilingual: boolean): string {
+  const opts =
+    q.question_type === "mcq" && q.options?.length
+      ? `Options:\n${q.options.map((o) => `${o.label}. ${o.text || "(see figure)"}`).join("\n")}`
+      : "";
+  const isObjective = q.question_type === "mcq" || q.question_type === "nat";
+  return [
+    "You are INDEPENDENTLY solving ONE exam question from scratch to produce a worked solution. Decide the answer using ONLY your own reasoning.",
+    "Do NOT assume any answer has been provided, and do NOT rely on any answer key — solve it yourself from first principles.",
+    `Question type: ${q.question_type.toUpperCase()}`,
+    `Question: ${q.question_text}`,
+    opts,
+    q.images?.length ? "The figure this question refers to is attached as an image." : "",
+    // V4 Pro reasons in a hidden reasoning_content field and we only keep `content`,
+    // so we MUST tell it to write the full working INTO the solution itself.
+    "Put the FULL reasoning into the \"solution\" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don't restate the question verbatim. Aim for roughly 60–150 words.",
+    isObjective
+      ? 'Also set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words.'
+      : 'This is a subjective question — set "answer" to null.',
+    LATEX_RULES,
+    bilingual ? 'Also fill "solution_hindi": a Hindi translation of the same solution (identical math).' : "",
+    `Return STRICT JSON: a one-element array [{"answer": string|null, "solution": string${bilingual ? ', "solution_hindi": string' : ""}}].`,
+    "Output ONLY the JSON array, no prose.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+// Batched variant of SOLUTION_ONLY_SCHEMA: K text questions solved in one V4 call.
+// Each result carries the "id" it answers so the array maps back to the right
+// question even if the model reorders or drops one.
+const SOLUTION_BATCH_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      id: { type: SchemaType.INTEGER },
+      answer: { type: SchemaType.STRING, nullable: true },
+      solution: { type: SchemaType.STRING },
+      solution_hindi: { type: SchemaType.STRING, nullable: true },
+    },
+    required: ["id", "solution"],
+  },
+};
+
+// Solve several TEXT questions in one blind pass. Each question is tagged with a
+// 1-based id (its position in `qs`) so the returned array can be matched back even
+// if the model reorders. Mirrors buildSolutionPrompt's rules, applied per question.
+function buildSolutionBatchPrompt(qs: ParsedQuestion[], bilingual: boolean): string {
+  const blocks = qs
+    .map((q, i) => {
+      const opts =
+        q.question_type === "mcq" && q.options?.length
+          ? `Options:\n${q.options.map((o) => `${o.label}. ${o.text || "(see figure)"}`).join("\n")}`
+          : "";
+      return [`--- Question id=${i + 1} (type: ${q.question_type.toUpperCase()}) ---`, q.question_text, opts]
+        .filter(Boolean)
+        .join("\n");
+    })
+    .join("\n\n");
+  return [
+    "You are INDEPENDENTLY solving the exam questions below from scratch to produce a worked solution for EACH. Decide each answer using ONLY your own reasoning.",
+    "Do NOT assume any answer has been provided, and do NOT rely on any answer key — solve every question yourself from first principles. Solve each question INDEPENDENTLY of the others.",
+    "",
+    blocks,
+    "",
+    // V4 Pro reasons in a hidden reasoning_content field and we only keep `content`,
+    // so we MUST tell it to write the full working INTO each solution itself.
+    'For EACH question put the FULL reasoning into its "solution" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don\'t restate the question verbatim. Aim for roughly 60–150 words per solution.',
+    'For an MCQ/NAT question set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words. For a SUBJECTIVE question set "answer" to null.',
+    LATEX_RULES,
+    bilingual ? 'Also fill "solution_hindi" for each: a Hindi translation of the same solution (identical math).' : "",
+    `Return STRICT JSON: an array with ONE element per question, each {"id": integer (the id shown above), "answer": string|null, "solution": string${bilingual ? ', "solution_hindi": string' : ""}}. Return every id exactly once.`,
+    "Output ONLY the JSON array, no prose.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * Blind cross-check (always runs): V4 Pro solves every question from scratch — never
+ * shown the recorded answer — and stores its worked solution in `solution_alt` and its
+ * own concluded answer in `blind_answer`. The recorded `correct_answer`
+ * (flash-lite Pass 2) is NOT touched; the review UI compares the two (plus the verify
+ * model when Verify is on) and flags disagreements. One model call per question.
+ * Best-effort and concurrent. Call AFTER cropping so figure questions carry their figure.
+ */
+export async function generateComparisonSolutions(opts: {
+  questions: ParsedQuestion[];
+  primaryModel?: string | null;
+  bilingual?: boolean;
+  signal?: AbortSignal;
+  onEvent?: (ev: ImportEvent) => void;
+}): Promise<void> {
+  const model = resolveCompareModel(opts.primaryModel);
+  const key = process.env.GEMINI_API_KEY ?? "";
+  const bilingual = opts.bilingual ?? false;
+  const { questions, signal } = opts;
+  const emit = opts.onEvent ?? (() => {});
+
+  // V4 is text-only — skip any question that depends on a FIGURE it can't see. Those
+  // keep flash-lite's solution as the default (Gemini read the image). A figure that
+  // lives only in the SOLUTION (type "explanation") doesn't block a text solve.
+  const needsFigure = (q: ParsedQuestion) =>
+    (q.images ?? []).some((im) => im.type !== "explanation") ||
+    !!q.is_figure ||
+    !!q.has_diagram ||
+    !!q.options_are_figures ||
+    !!q.figure_missing;
+  const targets = questions.filter((q) => String(q.question_text ?? "").trim() && !needsFigure(q));
+  const skipped = questions.filter((q) => String(q.question_text ?? "").trim() && needsFigure(q)).length;
+  if (!targets.length) {
+    console.log(`[import] blind cross-check: nothing to solve (${skipped} figure question(s) kept on flash-lite)`);
+    return;
+  }
+  console.log(`[import] blind cross-check: solving ${targets.length} text question(s) with ${model} (${skipped} figure question(s) kept on flash-lite)`);
+  emit({ t: "phase", phase: "compare", total: targets.length });
+
+  let done = 0;
+  let disagree = 0;
+
+  // Fold one blind result onto its question. Returns true if the blind answer
+  // disagrees with the recorded one (for the diagnostics tally). Shared by the
+  // batched (text) path and the per-question (figure) path below.
+  type BlindResult = { answer?: string; solution?: string; solution_hindi?: string };
+  const apply = (q: ParsedQuestion, r: BlindResult | undefined): boolean => {
+    if (!r) return false;
+    if (r.solution?.trim()) {
+      // Keep flash-lite's answer-key solution as the ALTERNATE so it can still be
+      // chosen in review.
+      if (q.solution?.trim()) {
+        q.solution_alt = q.solution;
+        q.solution_alt_hindi = q.solution_hindi ?? null;
+        q.solution_alt_model = "Gemini (answer key)";
+      }
+      // V4 Pro is the most advanced model, so its blind solution is the SAVED default.
+      q.solution = r.solution;
+      if (bilingual && r.solution_hindi) q.solution_hindi = r.solution_hindi;
+    }
+    // Record V4's own (blind) answer and compare it to the recorded one.
+    const aiRaw = r.answer ? String(r.answer) : "";
+    if (aiRaw && (q.question_type === "mcq" || q.question_type === "nat")) {
+      q.blind_answer = verifyDisplay(q, aiRaw);
+      return answersDisagree(q, aiRaw);
+    }
+    return false;
+  };
+
+  // Figure-bearing questions stay one-per-call so their image is attached to the
+  // solve; pure-text questions are BATCHED (COMPARE_BATCH per call) to cut V4's
+  // request count — this pass is the always-on one. Most questions are text-only.
+  const withImages = targets.filter((q) => q.images?.length);
+  const textOnly = targets.filter((q) => !q.images?.length);
+
+  // Batched text solves.
+  const groups = chunk(textOnly, COMPARE_BATCH);
+  await mapLimit(groups, CONCURRENCY, async (group) => {
+    if (signal?.aborted) return;
+    // A 1-question group is just the focused single-question prompt/schema.
+    if (group.length === 1) {
+      const q = group[0];
+      try {
+        const got = (await callModel(key, `blind q${q.number ?? "?"}`, SOLUTION_ONLY_SCHEMA,
+          [{ text: buildSolutionPrompt(q, bilingual) }], model, signal, MAX_OUTPUT_TOKENS
+        )) as BlindResult[];
+        if (apply(q, got[0])) disagree++;
+      } catch (e) {
+        console.warn(`[import] blind q${q.number ?? "?"} failed:`, e instanceof Error ? e.message : e);
+      }
+      done++;
+      return;
+    }
+    const label = `blind batch q${group[0].number ?? "?"}–${group[group.length - 1].number ?? "?"}`;
+    // Size the output budget to the batch (K solutions, ~bilingual doubling).
+    const budget = Math.min(65536, 4000 + group.length * 3500);
+    try {
+      const got = (await callModel(key, label, SOLUTION_BATCH_SCHEMA,
+        [{ text: buildSolutionBatchPrompt(group, bilingual) }], model, signal, budget
+      )) as (BlindResult & { id?: number })[];
+      // Map results back by the 1-based id we assigned; fall back to array order.
+      const byId = new Map<number, BlindResult>();
+      got.forEach((r, i) => byId.set(typeof r?.id === "number" ? r.id : i + 1, r));
+      group.forEach((q, i) => {
+        if (apply(q, byId.get(i + 1))) disagree++;
+        done++;
+      });
+    } catch (e) {
+      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
+      done += group.length;
+    }
+  });
+
+  // Per-question path for figure-bearing questions (image must be attached).
+  await mapLimit(withImages, CONCURRENCY, async (q) => {
+    if (signal?.aborted) return;
+    const parts: Part[] = [...(await figureParts(q)), { text: buildSolutionPrompt(q, bilingual) }];
+    try {
+      const got = (await callModel(key, `blind q${q.number ?? "?"}`, SOLUTION_ONLY_SCHEMA,
+        parts, model, signal, MAX_OUTPUT_TOKENS
+      )) as BlindResult[];
+      if (apply(q, got[0])) disagree++;
+    } catch (e) {
+      console.warn(`[import] blind q${q.number ?? "?"} failed:`, e instanceof Error ? e.message : e);
+    }
+    done++;
+  });
+
+  console.log(`[import] blind cross-check done ${done}/${targets.length} — ${disagree} disagree with the recorded answer`);
 }
 
 // A rasterized PDF page source, shaped to avoid leaking mupdf types here (the

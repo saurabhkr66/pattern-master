@@ -2,14 +2,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudent } from "@/lib/studentAuth";
-import { getCachedCoachingBySlug, getCachedActiveTests } from "@/lib/coachingCache";
+import { getCachedCoachingBySlug, getCachedActiveTests, getCachedAnnouncements } from "@/lib/coachingCache";
 import { studentInTestBatches } from "@/lib/coachingBatch";
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import StudentHeader from "@/components/coaching/StudentHeader";
 import RememberCoaching from "@/components/coaching/RememberCoaching";
 import TrendChart from "@/components/coaching/TrendChart";
 import { Card, Pill, AMBER_GRAD, AMBER_GLOW, display, mono } from "@/components/coaching/ui";
-import { Calendar, ChevronRight, ClipboardList, Clock, FileText, Inbox, Receipt, TrendingUp, Trophy, XCircle } from "lucide-react";
+import { Calendar, ChevronRight, ClipboardList, Clock, FileText, Inbox, Megaphone, Receipt, TrendingUp, Trophy, XCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +68,7 @@ export default async function StudentDashboard({
   // This student's own attempts stay a live read (must reflect a just-submitted
   // result immediately, and it's per-student so there's little to share).
   // The two are independent → fetch in parallel.
-  const [tests, attempts] = await Promise.all([
+  const [tests, attempts, announcements, reads] = await Promise.all([
     getCachedActiveTests(coaching.id),
     prisma.testAttempt.findMany({
       where: { student_id: student.id, coaching_id: coaching.id },
@@ -78,21 +78,89 @@ export default async function StudentDashboard({
         status: true,
         score: true,
         max_score: true,
+        grading_status: true,
+        attempt_count: true,
         submitted_at: true,
         test: { select: { title: true } },
       },
       orderBy: { submitted_at: "desc" },
       take: 50, // cap to prevent unbounded fetch as test history grows
     }),
+    // Announcement board (cached list + this student's read markers) — only when
+    // the coaching has the feature on. The list is shared/cached; read state is a
+    // small live per-student read.
+    coaching.announcements_enabled ? getCachedAnnouncements(coaching.id) : Promise.resolve([]),
+    coaching.announcements_enabled
+      ? prisma.announcementRead.findMany({
+          where: { student_id: student.id },
+          select: { announcement_id: true },
+        })
+      : Promise.resolve([]),
   ]);
 
+  // Unread = announcements visible to this student (batch-filtered) that have no
+  // read marker yet. Drives the dashboard chip badge.
+  const readIds = new Set(reads.map((r) => r.announcement_id));
+  const unreadAnnouncements = announcements.filter(
+    (a) => studentInTestBatches(a.batch_ids, student.batch_id) && !readIds.has(a.id)
+  ).length;
+
   const attemptByTest = new Map(attempts.map((a) => [a.test_id, a]));
+
+  // Split the active list: timed tests vs untimed assignments (homework). Each
+  // renders in its own section with its own state model.
+  const activeTests = tests.filter((t) => t.mode !== "assignment");
+  const activeAssignments = tests.filter((t) => t.mode === "assignment");
+
+  // Assignment view models. State is derived from this student's single attempt
+  // row (created when they open the assignment) + the pass threshold:
+  //   not_started     — no check submitted yet (score null)
+  //   retry           — checked, objective % below pass_pct
+  //   complete         — checked, % at/above pass_pct (and not awaiting review)
+  //   awaiting_teacher — submitted for review, a subjective answer needs grading
+  const assignments = activeAssignments
+    .filter((t) => studentInTestBatches(t.batch_ids, student.batch_id))
+    .map((t) => {
+      const endAt = t.end_at ? new Date(t.end_at) : null;
+      const ws = testWindowState(null, endAt);
+      const att = attemptByTest.get(t.id);
+      const max = att?.max_score ?? 0;
+      const pct = max > 0 ? Math.round(((att?.score ?? 0) / max) * 100) : 0;
+      const passPct = t.pass_pct ?? 0;
+      let state: "not_started" | "retry" | "complete" | "awaiting_teacher";
+      const passedNow = att?.max_score != null && pct >= passPct;
+      if (att?.status === "review_locked") {
+        // Locked for review: complete once it clears the bar AND nothing's left to
+        // grade; otherwise it's in the teacher's hands (not retryable).
+        state = passedNow && att.grading_status !== "awaiting_teacher" && att.grading_status !== "review"
+          ? "complete"
+          : "awaiting_teacher";
+      } else if (att == null || att.score == null) {
+        state = "not_started";
+      } else if (passedNow) {
+        state = "complete";
+      } else {
+        state = "retry";
+      }
+      return {
+        id: t.id,
+        title: t.title,
+        questionCount: t.pool_size ?? t.question_count,
+        passPct,
+        pct,
+        attemptCount: att?.attempt_count ?? 0,
+        endAt,
+        windowState: ws,
+        state,
+      };
+    })
+    .filter((a) => a.windowState !== "after" || a.state === "complete");
 
   // Available = active test, window open or upcoming, not yet submitted, AND
   // (if the test targets specific batches) this student is in one of them. The
   // server start/paper routes enforce the same rule — this just hides what the
   // student can't open.
-  const available = tests
+  const available = activeTests
     .filter((t) => studentInTestBatches(t.batch_ids, student.batch_id))
     .map((t) => {
       const startAt = t.start_at ? new Date(t.start_at) : null;
@@ -155,6 +223,19 @@ export default async function StudentDashboard({
             </h1>
             <p className="mt-1.5 text-sm text-slate-400 sm:text-[15px]">{subtitle}</p>
             <div className="mt-3 flex flex-wrap gap-2.5">
+              {coaching.announcements_enabled && (
+                <Link
+                  href={`/c/${slug}/announcements`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
+                >
+                  <Megaphone className="h-4 w-4 text-amber-400" /> Announcements
+                  {unreadAnnouncements > 0 && (
+                    <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-[#1a1205]">
+                      {unreadAnnouncements}
+                    </span>
+                  )}
+                </Link>
+              )}
               {coaching.fees_visible_to_students && (
                 <Link
                   href={`/c/${slug}/fees`}
@@ -190,6 +271,8 @@ export default async function StudentDashboard({
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.25fr_1fr] lg:gap-8">
+          {/* Left column: available tests + assignments (homework) */}
+          <div className="space-y-8">
           {/* Available tests */}
           <section>
             <h2 className="mb-4 flex items-center gap-2.5 text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: display }}>
@@ -285,6 +368,75 @@ export default async function StudentDashboard({
               )}
             </div>
           </section>
+
+          {/* Assignments (untimed homework — retry until you pass) */}
+          {assignments.length > 0 && (
+            <section>
+              <h2 className="mb-4 flex items-center gap-2.5 text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: display }}>
+                <ClipboardList className="h-5 w-5 text-amber-400" /> Assignments
+              </h2>
+              <div className="space-y-4">
+                {assignments.map((a) => (
+                  <Card key={a.id} glow className="transition-transform duration-200 hover:-translate-y-0.5">
+                    <div className="flex items-center gap-4 px-5 py-5 sm:px-6">
+                      <div
+                        className="grid shrink-0 place-items-center rounded-xl"
+                        style={{ height: 52, width: 52, background: "rgba(255,143,0,0.14)", border: "1px solid rgba(255,143,0,0.3)" }}
+                      >
+                        <ClipboardList className="h-6 w-6 text-amber-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-[17px] font-bold text-white">{a.title}</span>
+                          {a.state === "complete" ? (
+                            <Pill tone="success" dot>Complete</Pill>
+                          ) : a.state === "awaiting_teacher" ? (
+                            <Pill tone="slate" dot>Awaiting teacher</Pill>
+                          ) : a.state === "retry" ? (
+                            <Pill tone="amber" dot>{a.pct}% · pass {a.passPct}%</Pill>
+                          ) : (
+                            <Pill tone="slate" dot>New</Pill>
+                          )}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-slate-400" style={{ fontFamily: mono }}>
+                          <span>{a.questionCount} questions</span>
+                          <span className="text-slate-600">·</span>
+                          <span>pass {a.passPct}%</span>
+                          {a.endAt && (
+                            <>
+                              <span className="text-slate-600">·</span>
+                              <span>
+                                due{" "}
+                                {a.endAt.toLocaleString("en-IN", {
+                                  timeZone: "Asia/Kolkata",
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <Link
+                        href={`/c/${slug}/assignment/${a.id}`}
+                        className="grid h-11 shrink-0 place-items-center rounded-xl px-6 text-[15px] font-bold text-[#1a1205] transition hover:brightness-110"
+                        style={{ background: AMBER_GRAD, boxShadow: AMBER_GLOW }}
+                      >
+                        {a.state === "complete" || a.state === "awaiting_teacher"
+                          ? "Review"
+                          : a.state === "retry"
+                          ? "Continue"
+                          : "Start"}
+                      </Link>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
+          </div>
 
           {/* Trend + past results */}
           <section>

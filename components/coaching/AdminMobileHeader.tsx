@@ -14,8 +14,10 @@ import {
   Users,
   FileQuestion,
   ClipboardList,
+  NotebookPen,
   CalendarCheck,
   IndianRupee,
+  Megaphone,
   UserCog,
   type LucideIcon,
 } from "lucide-react";
@@ -31,6 +33,8 @@ const MENU: NavItem[] = [
   { href: "/coaching-admin/students", label: "Students", icon: Users },
   { href: "/coaching-admin/questions", label: "Question Bank", icon: FileQuestion },
   { href: "/coaching-admin/tests", label: "Tests", icon: ClipboardList },
+  { href: "/coaching-admin/homework", label: "Homework", icon: NotebookPen },
+  { href: "/coaching-admin/announcements", label: "Announcements", icon: Megaphone },
   { href: "/coaching-admin/attendance", label: "Attendance", icon: CalendarCheck },
   { href: "/coaching-admin/fees", label: "Fees", icon: IndianRupee },
 ];

@@ -17,12 +17,14 @@ import * as path from "path";
 dotenv.config({ path: ".env" });
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  vertexai: true,
+  project: 'project-27ed127f-554a-419a-b39',
+  location: 'global'
 });
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const BATCH_SIZE = 1;        // Process one at a time for fine-grained throttling
-const BATCH_DELAY_MS = 4500;  // 4.5 seconds pause between requests to stay under 15 RPM
+const BATCH_SIZE = 10;       // Vertex has high quotas — run 10 in parallel per batch
+const BATCH_DELAY_MS = 1000;  // 1s pause between batches (Vertex, not the 15 RPM free tier)
 const MAX_RETRIES = 4;        // attempts per question on transient failure
 const RETRY_BASE_MS = 2000;   // first retry waits this long; doubles each retry
 const PROCESSED_LOG = path.resolve("scripts/processed-rewrite.log");

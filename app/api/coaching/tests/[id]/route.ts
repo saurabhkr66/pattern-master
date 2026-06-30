@@ -72,6 +72,13 @@ export const PATCH = withCoachingContext(async (req, { coachingId }, { params })
     }
     data.duration_secs = Math.round(dur * 60);
   }
+  if (body.passPct !== undefined) {
+    const pp = Math.round(Number(body.passPct));
+    if (!Number.isFinite(pp) || pp < 1 || pp > 100) {
+      return NextResponse.json({ error: "pass threshold must be 1–100%" }, { status: 400 });
+    }
+    data.pass_pct = pp;
+  }
   if (body.startAt !== undefined) data.start_at = body.startAt ? new Date(body.startAt) : null;
   if (body.endAt !== undefined) data.end_at = body.endAt ? new Date(body.endAt) : null;
   if (typeof body.shuffle === "boolean") data.shuffle = body.shuffle;

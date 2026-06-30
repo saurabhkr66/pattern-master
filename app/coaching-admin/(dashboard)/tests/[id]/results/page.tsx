@@ -18,6 +18,15 @@ function GradingChip({ status, attemptId }: { status: string; attemptId: string 
   if (status === "pending") {
     return <Pill tone="amber">AI grading…</Pill>;
   }
+  // Assignment submitted for review, not yet graded by anyone. Links the teacher
+  // straight to the manual-grade UI (AI grading is super-admin-only).
+  if (status === "awaiting_teacher") {
+    return (
+      <Link href={`/coaching-admin/attempts/${attemptId}/review`} className="hover:underline">
+        <Pill tone="danger">Needs grading</Pill>
+      </Link>
+    );
+  }
   if (status === "review") {
     return (
       <Link href={`/coaching-admin/attempts/${attemptId}/review`} className="hover:underline">

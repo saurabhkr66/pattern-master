@@ -26,11 +26,13 @@ export const GET = withCoachingContext(async (_req, { coachingId }) => {
   return NextResponse.json({ tests });
 });
 
-// POST /api/coaching/tests — create a test.
+// POST /api/coaching/tests — create a test or an assignment.
 // Body: { title, description?, durationMins, startAt?, endAt?, shuffle?, poolSize?,
-//         negMarks?, status?, questions: [{id, source, marks}] }
-// Coaching-source mcq/nat for everyone; subjective (photo answers, AI-graded) is
-// super-admin only while the grading pipeline is being proven.
+//         negMarks?, status?, mode?, passPct?, questions: [{id, source, marks}] }
+// mode "assignment" = untimed homework (no duration; passPct is the retry-until
+// threshold; endAt is the due date). Coaching-source mcq/nat for everyone;
+// subjective (photo answers, AI-graded) is super-admin only while the grading
+// pipeline is being proven.
 export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const body = await req.json();
   const {
@@ -43,14 +45,32 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
     poolSize,
     negMarks = 0,
     status = "draft",
+    mode = "test",
+    passPct,
     questions,
     batchIds,
   } = body;
 
   if (!title?.trim()) return NextResponse.json({ error: "title is required" }, { status: 400 });
-  const dur = Number(durationMins);
-  if (!Number.isFinite(dur) || dur <= 0) {
-    return NextResponse.json({ error: "invalid duration" }, { status: 400 });
+  const isAssignment = mode === "assignment";
+
+  // Tests are timed (duration required). Assignments are untimed — duration is
+  // stored as 0 (the assignment runtime never reads it) and a pass threshold is
+  // required instead.
+  let durationSecs = 0;
+  let pass_pct: number | null = null;
+  if (isAssignment) {
+    const pp = Math.round(Number(passPct));
+    if (!Number.isFinite(pp) || pp < 1 || pp > 100) {
+      return NextResponse.json({ error: "pass threshold must be 1–100%" }, { status: 400 });
+    }
+    pass_pct = pp;
+  } else {
+    const dur = Number(durationMins);
+    if (!Number.isFinite(dur) || dur <= 0) {
+      return NextResponse.json({ error: "invalid duration" }, { status: 400 });
+    }
+    durationSecs = Math.round(dur * 60);
   }
   if (!Array.isArray(questions) || questions.length === 0) {
     return NextResponse.json({ error: "add at least one question" }, { status: 400 });
@@ -133,10 +153,17 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
       title: title.trim(),
       description: description?.trim() || null,
       questions: refs,
-      duration_secs: Math.round(dur * 60),
-      start_at: startAt ? new Date(startAt) : null,
+      mode: isAssignment ? "assignment" : "test",
+      pass_pct,
+      duration_secs: durationSecs,
+      // Assignments don't pre-open (no waiting room) — start_at is meaningless;
+      // end_at is the due date.
+      start_at: isAssignment ? null : startAt ? new Date(startAt) : null,
       end_at: endAt ? new Date(endAt) : null,
-      shuffle: !!shuffle,
+      // Assignments never shuffle: homework is self-paced practice (no anti-cheat
+      // need), and keeping the original option order means the untimed runner
+      // renders + grades in one space (no per-student option de-shuffle).
+      shuffle: isAssignment ? false : !!shuffle,
       pool_size: pool,
       batch_ids,
       status: status === "active" ? "active" : "draft",

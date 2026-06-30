@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { resolveCoachingAdmin } from "@/lib/coachingAuth";
 import { prisma } from "@/lib/prisma";
-import { getAttendanceHistory, getBatchRoster } from "@/lib/coachingAttendanceData";
+import { getAttendanceAnalytics, getAttendanceHistory, getBatchRoster } from "@/lib/coachingAttendanceData";
 import AttendanceClient from "@/components/coaching/AttendanceClient";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +38,7 @@ export default async function AttendancePage() {
   const coachingId = actor!.coachingId!;
   const initialDate = istToday();
 
-  const [coaching, batches, history] = await Promise.all([
+  const [coaching, batches, history, analytics] = await Promise.all([
     prisma.coaching.findUnique({
       where: { id: coachingId },
       select: { attendance_visible_to_students: true },
@@ -49,6 +49,7 @@ export default async function AttendancePage() {
       orderBy: { name: "asc" },
     }),
     getAttendanceHistory(coachingId),
+    getAttendanceAnalytics(coachingId),
   ]);
 
   // Pre-render the roster for the default batch + today so the first paint has
@@ -67,6 +68,7 @@ export default async function AttendancePage() {
       initialDate={initialDate}
       initialRoster={initialRoster?.students ?? null}
       initialTaken={initialRoster?.taken ?? false}
+      analytics={analytics}
     />
   );
 }

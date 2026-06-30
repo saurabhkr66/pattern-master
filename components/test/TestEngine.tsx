@@ -13,6 +13,7 @@ import {
   type SubmitAnswer,
   type DraftState,
 } from "./testEngineTypes";
+import { saveLocalDraft, loadLocalDraft } from "@/lib/localDraft";
 
 export type { TestQuestion, SubmitAnswer, DraftState } from "./testEngineTypes";
 
@@ -131,6 +132,33 @@ export default function TestEngine({
     activeSectionIdx: sectionIdxRef.current,
   }), []);
 
+  // ── Offline backup ──
+  // Mirror every draft snapshot into IndexedDB (local, survives reload) and try
+  // to push it to the server. `synced` records whether the server has actually
+  // acknowledged this snapshot — an unsynced local entry is answers the server
+  // hasn't seen, which the reconnect handler below replays.
+  const flushToServer = useCallback(async (): Promise<boolean> => {
+    if (!draftId) return false;
+    const state = buildDraftState();
+    // Write locally first so a failed/blocked network call still leaves a
+    // recoverable copy on disk.
+    await saveLocalDraft(draftId, state, false, Date.now());
+    try {
+      const res = await fetch(saveEndpoint, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId, state }),
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (data.ok) {
+        // Mark the local copy as synced so reconnect doesn't replay it again.
+        await saveLocalDraft(draftId, state, true, Date.now());
+        return true;
+      }
+    } catch { /* offline / server unreachable — local copy stands in */ }
+    return false;
+  }, [draftId, buildDraftState, saveEndpoint]);
+
   const currentQ = questions.find((q) => q.id === currentQId) ?? questions[0];
   const globalIdx = questions.findIndex((q) => q.id === currentQId);
 
@@ -197,18 +225,71 @@ export default function TestEngine({
     if (!draftId) return;
     const id = setInterval(async () => {
       setSaveStatus("saving");
-      try {
-        const res = await fetch(saveEndpoint, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ draftId, state: buildDraftState() }),
-        });
-        const data = await res.json();
-        setSaveStatus(data.ok ? "saved" : "error");
-      } catch { setSaveStatus("error"); }
+      const ok = await flushToServer();
+      // "error" here is non-fatal: the snapshot is safe in IndexedDB and will be
+      // replayed automatically when the connection returns (online handler).
+      setSaveStatus(ok ? "saved" : "error");
     }, autosaveIntervalMs);
     return () => clearInterval(id);
-  }, [draftId, buildDraftState, saveEndpoint, autosaveIntervalMs]);
+  }, [draftId, flushToServer, autosaveIntervalMs]);
+
+  // ── Local write-through on every answer / navigation change ──
+  // IndexedDB writes are cheap and local, so unlike the throttled server save we
+  // persist on every meaningful state change. timeSpent (ticks every second) is
+  // deliberately excluded — its latest value rides along on the next snapshot.
+  useEffect(() => {
+    if (!draftId) return;
+    saveLocalDraft(draftId, buildDraftState(), false, Date.now());
+  }, [
+    draftId, buildDraftState,
+    mcqSelected, msqSelected, natValues, subjPhotos,
+    statuses, markedReview, currentQId, activeSectionIdx,
+  ]);
+
+  // ── Recover answers buffered offline before this load ──
+  // If a network drop + reload happened, the server draft (initialState) is
+  // stale but IndexedDB holds the newer answers. Apply the local copy on mount.
+  // Every server save is preceded by a local write, so a local entry is always
+  // newer-or-equal to the server's — and the key is attempt-scoped, so there is
+  // no risk of loading a different attempt's data.
+  const recoveredRef = useRef(false);
+  useEffect(() => {
+    if (!draftId || recoveredRef.current) return;
+    recoveredRef.current = true;
+    (async () => {
+      const local = await loadLocalDraft(draftId);
+      if (!local || local.synced) return; // nothing newer than the server
+      const ls = local.state as DraftState;
+      if (ls.mcqAnswers) setMcqSelected(ls.mcqAnswers);
+      if (ls.msqAnswers) setMsqSelected(ls.msqAnswers);
+      if (ls.natValues) setNatValues(ls.natValues);
+      if (ls.subjPhotos) setSubjPhotos(ls.subjPhotos);
+      if (ls.statuses) setStatuses(ls.statuses as Record<string, QStatus>);
+      if (ls.markedReview) setMarkedReview(new Set(ls.markedReview));
+      if (ls.timeSpentMap) setTimeSpent(ls.timeSpentMap);
+      if (ls.currentQId) setCurrentQId(ls.currentQId);
+      if (typeof ls.activeSectionIdx === "number") setActiveSectionIdx(ls.activeSectionIdx);
+      // Push the recovered answers back to the server now that we're loaded.
+      flushToServer();
+    })();
+  }, [draftId, flushToServer]);
+
+  // ── Replay buffered answers when the connection returns ──
+  useEffect(() => {
+    if (!draftId) return;
+    const onOnline = async () => {
+      setSaveStatus("saving");
+      const ok = await flushToServer();
+      setSaveStatus(ok ? "saved" : "error");
+    };
+    const onOffline = () => setSaveStatus("error");
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, [draftId, flushToServer]);
 
   // ── Safety net: flush state on tab close / app background ──
   // Catches the common failure modes (user closes tab, switches apps on
@@ -217,11 +298,14 @@ export default function TestEngine({
   useEffect(() => {
     if (!draftId) return;
     const flush = () => {
+      const state = buildDraftState();
+      // Local backup first — synchronous-ish and reliable even as the page dies.
+      saveLocalDraft(draftId, state, false, Date.now());
       try {
         fetch(saveEndpoint, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ draftId, state: buildDraftState() }),
+          body: JSON.stringify({ draftId, state }),
           keepalive: true,
         }).catch(() => {});
       } catch { /* ignore */ }

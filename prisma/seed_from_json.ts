@@ -100,46 +100,34 @@ const FILE_TOPIC_MAP: Array<{
   // images whose files were truly missing from ImageKit (re-scraped fresh).
   imagesOnly?: boolean;
 }> = [
-    // ── GATE EE → Power Systems (11) + Electrical Machines (5) ───────────────
-    // Re-scraped from practicepaper.in to restore missing images. images-only.
-    { file: 'prisma/seed-data/gate-ee/ee_compensation-techniques-and-voltage-profile-control.json',
-      topic_name: 'Compensation Techniques and Voltage Profile Control', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_distribution-systems-cables-and-insulators.json',
-      topic_name: 'Distribution Systems, Cables and Insulators', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_economic-power-generation-and-load-dispatch.json',
-      topic_name: 'Economic Power Generation and Load Dispatch', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_fault-analysis.json',
-      topic_name: 'Fault Analysis', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_high-voltage-dc-transmission.json',
-      topic_name: 'High Voltage DC Transmission', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_load-flow-studies.json',
-      topic_name: 'Load Flow Studies', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_per-unit-system.json',
-      topic_name: 'Per Unit System', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_performance-of-transmission-lines-line-parameters-and-corona.json',
-      topic_name: 'Performance of Transmission Lines, Line Parameters and Corona', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_power-system-stability.json',
-      topic_name: 'Power System Stability', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_power-system-transients.json',
-      topic_name: 'Power System Transients', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_switch-gear-and-protection.json',
-      topic_name: 'Switch Gear and Protection', exam_type: 'GATE', branch: 'EE', subject: 'Power Systems', imagesOnly: true },
+    // ── JEE Main → Physics ───────────────────────────────────────────────────
+    // Full seed (create + update), NOT imagesOnly. JEE Main is branchless, so
+    // branch is "Common" (see lib/seo.ts branchWhereClause). Files come from the
+    // sibling exam-scraper project's extractor output; the per-question
+    // `topic_name`/`exam_type`/`year`/`marks` in the JSON match these entries.
+   
 
-    { file: 'prisma/seed-data/gate-ee/ee_dc-machines.json',
-      topic_name: 'DC Machines', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_transformers.json',
-      topic_name: 'Transformers', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_synchronous-machines.json',
-      topic_name: 'Synchronous Machines', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_three-phase-induction-machines.json',
-      topic_name: 'Three Phase Induction Machines', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
-    { file: 'prisma/seed-data/gate-ee/ee_single-phase-induction-motors-emec.json',
-      topic_name: 'Single Phase Induction Motors & EMEC', exam_type: 'GATE', branch: 'EE', subject: 'Electrical Machines', imagesOnly: true },
+    { file: '../exam-scraper/extractor/jee_area_under_the_curves_1.json',
+      topic_name: 'Area Under the Curves', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_area_under_the_curves_2.json',
+      topic_name: 'Area Under the Curves', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_differential_equations_1.json',
+      topic_name: 'Differential Equations', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_differential_equations_2.json',
+      topic_name: 'Differential Equations', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_differential_equations_3.json',
+      topic_name: 'Differential Equations', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_vector_algebra_1.json',
+      topic_name: 'Vector Algebra', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_vector_algebra_2.json',
+      topic_name: 'Vector Algebra', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
+    { file: '../exam-scraper/extractor/jee_vector_algebra_3.json',
+      topic_name: 'Vector Algebra', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
   ];
 
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
-  console.log(`${colors.bright}📂 Seeding PYQ images from JSON files (DB_DRIVER=${driver})${colors.reset}`);
+  console.log(`${colors.bright}📂 Seeding PYQs from JSON files (DB_DRIVER=${driver})${colors.reset}`);
   const dbHost = (() => { try { return new URL(databaseUrl!).host; } catch { return '(unparseable)'; } })();
   console.log(`${colors.yellow}🎯 Target DB: ${dbHost}${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}\n`);

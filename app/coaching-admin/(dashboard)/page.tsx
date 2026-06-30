@@ -29,6 +29,9 @@ type DashboardData = {
   submissionsThisMonth: number;
   // Billing is super-admin-only — the owner dashboard shows operational KPIs, not money.
   pendingApprovals: number;
+  // Homework submitted for review whose written (subjective) answers nobody has
+  // graded yet — the teacher's "to do" queue.
+  assignmentsToReview: number;
   series: number[];
   buckets: { label: string; count: number }[];
   acts: Activity[];
@@ -50,7 +53,7 @@ const getDashboardData = (coachingId: string) =>
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const [students, tests, submissionsThisMonth, pendingApprovals, monthly, recentAttempts, recentStudents, recentTests] =
+      const [students, tests, submissionsThisMonth, pendingApprovals, assignmentsToReview, monthly, recentAttempts, recentStudents, recentTests] =
         await Promise.all([
           prisma.student.count({ where: { coaching_id: coachingId, active: true } }),
           prisma.coachingTest.count({ where: { coaching_id: coachingId } }),
@@ -61,6 +64,17 @@ const getDashboardData = (coachingId: string) =>
           // how many code-joined students are waiting for the owner to approve.
           prisma.student.count({
             where: { coaching_id: coachingId, active: true, status: "pending" },
+          }),
+          // Assignment submissions locked for review whose subjective answers
+          // still need grading (awaiting_teacher = nobody has graded; review = AI
+          // graded but flagged answers remain). Scoped to assignment tests.
+          prisma.testAttempt.count({
+            where: {
+              coaching_id: coachingId,
+              status: "review_locked",
+              grading_status: { in: ["awaiting_teacher", "review"] },
+              test: { mode: "assignment" },
+            },
           }),
           prisma.$queryRaw<{ month: Date; submissions: number }[]>`
             SELECT date_trunc('month', submitted_at) AS month, count(*)::int AS submissions
@@ -128,6 +142,7 @@ const getDashboardData = (coachingId: string) =>
         tests,
         submissionsThisMonth,
         pendingApprovals,
+        assignmentsToReview,
         series,
         buckets,
         acts,
@@ -160,12 +175,28 @@ export default async function CoachingAdminHome() {
   const coachingId = actor!.coachingId!;
   const now = new Date();
 
-  const { students, tests, submissionsThisMonth, pendingApprovals, series, buckets, acts } =
+  const { students, tests, submissionsThisMonth, pendingApprovals, assignmentsToReview, series, buckets, acts } =
     await getDashboardData(coachingId);
 
   return (
     <div className="p-5 sm:p-8 lg:p-10">
       <PageHead title="Dashboard" sub={`Snapshot · ${now.toLocaleString("en-US", { month: "long", year: "numeric" })}`} />
+
+      {/* Homework awaiting grading — the teacher's review queue. Only shows when
+          there's something to do; links to the tests/assignments list. */}
+      {assignmentsToReview > 0 && (
+        <Link
+          href="/coaching-admin/homework"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] px-5 py-3.5 transition hover:bg-amber-500/[0.12]"
+        >
+          <Clock className="h-5 w-5 shrink-0 text-amber-400" />
+          <span className="text-sm text-slate-200">
+            <span className="font-bold text-white">{assignmentsToReview}</span> assignment
+            {assignmentsToReview === 1 ? "" : "s"} submitted for review need grading.
+          </span>
+          <span className="ml-auto text-sm font-semibold text-amber-400">Review →</span>
+        </Link>
+      )}
 
       {/* KPI tiles — 2×2 on mobile, a row on desktop */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

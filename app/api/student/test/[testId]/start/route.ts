@@ -6,6 +6,7 @@ import { getCachedFullTest } from "@/lib/coachingQuestionCache";
 import { studentInTestBatches } from "@/lib/coachingBatch";
 import { testWindowState } from "@/lib/coachingTestRuntime";
 import { getCoachingDraft } from "@/lib/coachingDraft";
+import { isPastDeadline } from "@/lib/coachingFinalize";
 import { paperKeyB64 } from "@/lib/paperCrypto";
 
 /**
@@ -75,6 +76,16 @@ export async function POST(
   // started_at may arrive as a string depending on the driver — normalize.
   const attempt = { id: row.id, status: row.status, started_at: new Date(row.started_at) };
   if (attempt.status === "submitted") {
+    return NextResponse.json({ submitted: true, attemptId: attempt.id });
+  }
+
+  // Deadline already passed (timer ran out while the tab was closed / the phone
+  // was locked, so the client never auto-submitted). Don't hand back a takeable
+  // test the student would have to submit by hand — route them to results, where
+  // finalizeOverdueAttempts grades this attempt from its last autosaved answers.
+  // The grace window inside isPastDeadline still lets a genuine buzzer-fired
+  // client submit land if they reopen within a few seconds of expiry.
+  if (isPastDeadline(attempt.started_at, test.duration_secs, test.end_at, now)) {
     return NextResponse.json({ submitted: true, attemptId: attempt.id });
   }
 

@@ -38,6 +38,23 @@ const CONTENT_OPTS = [
   { v: "mixed", label: "Mixed — auto-detect", hint: "AI classifies each question automatically", Icon: Cpu, accent: "violet" },
 ] as const;
 
+// Selectable verifier models — mirrors VERIFY_MODEL_OPTIONS in lib/coachingImport.ts
+// (the server re-validates against that allowlist). First entry is the default.
+const VERIFY_MODELS = [
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Default · strong reader, multimodal" },
+  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Different vendor · decorrelated errors, cheap" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Same as extractor · cheapest" },
+] as const;
+
+// Selectable answer-key models — mirrors GENERATION_MODEL_OPTIONS in
+// lib/coachingImport.ts. Drives the Pass-2 pass that READS the printed answer key off
+// the page. Gemini-only: it needs to see the images, and DeepSeek is text-only.
+// (V4 Pro's reasoning powers the worked SOLUTIONS via "Compare two solutions" below.)
+const GENERATION_MODELS = [
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Default · reads the printed key" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Stronger reader" },
+] as const;
+
 const ACCENT: Record<string, string> = {
   amber: "bg-amber-500/15 text-amber-400",
   sky: "bg-sky-500/15 text-sky-400",
@@ -70,6 +87,12 @@ type ParsedQ = {
   nat_tolerance?: number | null;
   solution?: string | null;
   solution_hindi?: string | null;
+  // Comparison mode: a second model's worked solution, shown beside `solution` so the
+  // admin keeps the better one. Stripped before commit.
+  solution_alt?: string | null;
+  solution_alt_hindi?: string | null;
+  solution_alt_model?: string;
+  blind_answer?: string; // V4's own (blind) answer — for the agreement badge
   section?: string | null;
   topic?: string | null;
   images?: { index: number; filename: string; type?: "question" | "explanation" }[] | null;
@@ -105,6 +128,11 @@ export default function QuestionImportModal({
 }) {
   const [phase, setPhase] = useState<"upload" | "review" | "done">("upload");
   const [exam, setExam] = useState("");
+  // The seeded exam/class catalog — offered as a datalist on the exam input so the
+  // typed value matches a catalog key exactly. Section lookup on the server is an
+  // exact (now case-insensitive) match on this string; a free-typed mismatch is
+  // why sections come back empty.
+  const [examOptions, setExamOptions] = useState<string[]>([]);
   const [set, setSet] = useState("");
   const [qtype, setQtype] = useState<"objective" | "subjective" | "mixed">("objective");
   // Independent answer verification is the expensive pass (a stronger model
@@ -112,6 +140,10 @@ export default function QuestionImportModal({
   // extraction is reliable on easy papers; flip on for hard papers where a wrong
   // answer key is costly.
   const [verify, setVerify] = useState(false);
+  // Which model runs the verify/review pass when it's on. Default = Gemini 3 Flash.
+  const [verifyModel, setVerifyModel] = useState<string>(VERIFY_MODELS[0].id);
+  // Answer-key model (Pass 2, reads the printed key). Default = Gemini flash-lite.
+  const [answerModel, setAnswerModel] = useState<string>(GENERATION_MODELS[0].id);
   // Hindi translation is opt-in (default OFF) — most papers are English-only and
   // translating every field roughly doubles the token cost. Turn on for bilingual papers.
   const [hindi, setHindi] = useState(false);
@@ -146,6 +178,27 @@ export default function QuestionImportModal({
     return () => window.removeEventListener("paste", onPaste);
   }, [phase, busy]);
 
+  // Load the distinct exam/class catalog (global + this coaching's) once, to
+  // suggest exact catalog keys on the exam input. Without an exact match the
+  // server finds no sections for the paper.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/coaching/exam-sections");
+        if (!cancelled && res.ok) {
+          const data = await res.json();
+          setExamOptions((data.exams ?? []) as string[]);
+        }
+      } catch {
+        /* non-fatal — the input still works as free text */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Object-URL thumbnails for the picked images; revoked when the list changes or
   // the modal unmounts so we don't leak blobs across re-renders.
   const imagePreviews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
@@ -171,6 +224,7 @@ export default function QuestionImportModal({
     extract: "Extracting questions…",
     answers: "Finding answers & solutions…",
     cropping: "Cropping figures…",
+    compare: "Generating comparison solutions…",
     verify: "Double-checking answers…",
     review: "Reviewing model answers…",
   };
@@ -189,6 +243,8 @@ export default function QuestionImportModal({
       fd.set("set", set.trim());
       fd.set("qtype", qtype);
       fd.set("verify", verify ? "1" : "0");
+      if (verify) fd.set("verifyModel", verifyModel);
+      fd.set("answerModel", answerModel);
       fd.set("hindi", hindi ? "1" : "0");
       if (topics.trim()) fd.set("topics", topics.trim());
       images.forEach((f) => fd.append("images", f));
@@ -278,6 +334,11 @@ export default function QuestionImportModal({
         .map((q) => {
           const copy = { ...q };
           delete copy._include;
+          // Cross-check-only fields never get saved — the chosen text is already in `solution`.
+          delete copy.solution_alt;
+          delete copy.solution_alt_hindi;
+          delete copy.solution_alt_model;
+          delete copy.blind_answer;
           return copy;
         });
       const res = await fetch("/api/coaching/questions/import/commit", {
@@ -377,8 +438,24 @@ export default function QuestionImportModal({
                 </label>
                 <div className="relative mt-1.5">
                   <GraduationCap className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-amber-400/80" />
-                  <input value={exam} onChange={(e) => setExam(e.target.value)} className={fieldCls} placeholder="e.g. SSC CGL" />
+                  <input
+                    value={exam}
+                    onChange={(e) => setExam(e.target.value)}
+                    list="import-exam-options"
+                    className={fieldCls}
+                    placeholder="e.g. SSC CGL"
+                  />
+                  <datalist id="import-exam-options">
+                    {examOptions.map((x) => (
+                      <option key={x} value={x} />
+                    ))}
+                  </datalist>
                 </div>
+                {examOptions.length > 0 && exam.trim() && !examOptions.some((x) => x.toLowerCase() === exam.trim().toLowerCase()) && (
+                  <p className="mt-1 text-[11px] text-amber-400/90">
+                    No section catalog for &ldquo;{exam.trim()}&rdquo; — pick a listed exam/class to auto-tag sections.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="flex items-center gap-1.5 text-sm font-medium text-slate-300">
@@ -433,6 +510,40 @@ export default function QuestionImportModal({
               </div>
             </div>
 
+            {/* Answer-key model — reads the printed answers off the page (a vision task,
+                so Gemini only). V4 Pro is text-only and can't read the page, so it powers
+                the worked SOLUTIONS via "Compare two solutions" below instead. */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+              <label className="flex items-center gap-1.5 text-[15px] font-semibold text-white">
+                <Cpu className="h-[18px] w-[18px] text-amber-400/80" /> Answer-key model
+              </label>
+              <p className="mt-0.5 text-[13px] leading-snug text-slate-400">
+                Reads the printed answers/solutions off the paper. Gemini only — V4 Pro can&apos;t see the page.
+              </p>
+              <select
+                value={answerModel}
+                onChange={(e) => setAnswerModel(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500/60 sm:max-w-md"
+              >
+                {GENERATION_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label} — {m.hint}
+                  </option>
+                ))}
+              </select>
+
+              {/* Blind cross-check is always on (no toggle): V4 Pro re-solves every
+                  question from scratch and review flags where its answer differs. */}
+              <p className="mt-3 flex items-start gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] p-2.5 text-[12px] leading-snug text-slate-400">
+                <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/80" />
+                <span>
+                  DeepSeek V4 Pro independently re-solves every <em>text</em> question (blind — never shown the answer) and
+                  becomes the default solution; review flags where its answer differs. Figure questions stay on Gemini
+                  (V4 can&apos;t see images). Turn on Verify below for a 3-way check.
+                </span>
+              </p>
+            </div>
+
             {/* Expensive AI passes — both off by default, grouped in one card. */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.02]">
               {/* Answer verification toggle — the expensive Gemini pass. */}
@@ -451,6 +562,28 @@ export default function QuestionImportModal({
                 </div>
                 <Switch checked={verify} />
               </div>
+
+              {/* Verifier model picker — only relevant when verify is on. The server
+                  re-validates against its allowlist. Use a different vendor than the
+                  Gemini extractor (e.g. DeepSeek) for decorrelated second opinions. */}
+              {verify && (
+                <div className="border-t border-white/10 px-3 pb-3 pt-2.5 pl-[60px]">
+                  <label className="flex items-center gap-1.5 text-[13px] font-medium text-slate-300">
+                    <Cpu className="h-3.5 w-3.5 text-amber-400/80" /> Verifier model
+                  </label>
+                  <select
+                    value={verifyModel}
+                    onChange={(e) => setVerifyModel(e.target.value)}
+                    className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500/60 sm:max-w-md"
+                  >
+                    {VERIFY_MODELS.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label} — {m.hint}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="mx-3.5 h-px bg-white/10" />
 
@@ -712,14 +845,25 @@ export default function QuestionImportModal({
                         AI-solved · verify
                       </span>
                     )}
-                    {q.answer_disputed && (
-                      <span
-                        className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400"
-                        title={`An independent AI solve got "${q.verify_answer ?? "?"}" but the captured answer is "${q.correct_answer ?? "—"}". Check which is right.`}
-                      >
-                        ⚠ AI got {q.verify_answer ?? "?"} ≠ {q.correct_answer ?? "—"}
-                      </span>
-                    )}
+                    {/* Blind cross-check: recorded answer (Flash) vs V4 Pro's independent
+                        solve, plus the Verify model when it ran. Green = agree, red = differ. */}
+                    {(q.question_type === "mcq" || q.question_type === "nat") && q.blind_answer && (() => {
+                      const flash = (q.correct_answer ?? "").trim();
+                      const v4 = (q.blind_answer ?? "").trim();
+                      const ver = (q.verify_answer ?? "").trim();
+                      const norm = (s: string) => s.toUpperCase().replace(/[$`\s]/g, "");
+                      const vals = [flash, v4, ver].filter(Boolean);
+                      const agree = vals.length > 1 && vals.every((x) => norm(x) === norm(vals[0]));
+                      const parts = [`Flash: ${flash || "—"}`, `V4: ${v4 || "—"}`, ...(ver ? [`Verify: ${ver}`] : [])];
+                      return (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${agree ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}
+                          title={agree ? "Independent solve(s) agree with the recorded answer." : "An independent solve disagrees with the recorded answer — check which is right."}
+                        >
+                          {agree ? "✓ " : "⚠ "}{parts.join(" · ")}
+                        </span>
+                      );
+                    })()}
                     {q.solution_mismatch && (
                       <span
                         className="rounded-full bg-orange-500/15 px-2 py-0.5 text-xs font-medium text-orange-400"
@@ -869,6 +1013,23 @@ export default function QuestionImportModal({
                       {String(q.solution_hindi ?? "").trim() && (
                         <MathRenderer content={q.solution_hindi!} className="text-xs text-slate-400" />
                       )}
+                      {q.solution_alt && (
+                        <AltSolutionCard
+                          altText={q.solution_alt}
+                          altHindi={q.solution_alt_hindi}
+                          model={q.solution_alt_model}
+                          inUse={(q.solution ?? "").trim() === (q.solution_alt ?? "").trim()}
+                          onUse={() =>
+                            setQuestions((qs) =>
+                              qs.map((x, j) =>
+                                j === i
+                                  ? { ...x, solution: x.solution_alt ?? x.solution, solution_hindi: x.solution_alt_hindi ?? x.solution_hindi }
+                                  : x
+                              )
+                            )
+                          }
+                        />
+                      )}
                       {/* A figure can live in the model answer too (a labelled diagram the
                           grader/student needs) — paste or fix it here. */}
                       <p className="pt-1 text-[10px] uppercase text-slate-500">Solution figure (optional)</p>
@@ -898,6 +1059,23 @@ export default function QuestionImportModal({
                       )}
                       {String(q.solution_hindi ?? "").trim() && (
                         <MathRenderer content={q.solution_hindi!} className="text-xs text-slate-400" />
+                      )}
+                      {q.solution_alt && (
+                        <AltSolutionCard
+                          altText={q.solution_alt}
+                          altHindi={q.solution_alt_hindi}
+                          model={q.solution_alt_model}
+                          inUse={(q.solution ?? "").trim() === (q.solution_alt ?? "").trim()}
+                          onUse={() =>
+                            setQuestions((qs) =>
+                              qs.map((x, j) =>
+                                j === i
+                                  ? { ...x, solution: x.solution_alt ?? x.solution, solution_hindi: x.solution_alt_hindi ?? x.solution_hindi }
+                                  : x
+                              )
+                            )
+                          }
+                        />
                       )}
                       {/* A worked solution sometimes has its own diagram (construction,
                           graph) — capture it here; it renders with the solution. */}
@@ -954,6 +1132,45 @@ export default function QuestionImportModal({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Comparison mode: the alternate model's worked solution, shown beside the primary
+// one with a "Use this" button that copies it into `solution` (the saved field).
+function AltSolutionCard({
+  altText,
+  altHindi,
+  model,
+  inUse,
+  onUse,
+}: {
+  altText: string;
+  altHindi?: string | null;
+  model?: string;
+  inUse: boolean;
+  onUse: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-sky-500/30 bg-sky-500/[0.05] p-2">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <p className="text-[10px] uppercase text-sky-300">
+          Alternate solution{model ? ` · ${model}` : ""}
+        </p>
+        <button
+          type="button"
+          onClick={onUse}
+          disabled={inUse}
+          className="shrink-0 rounded border border-sky-500/40 px-2 py-0.5 text-[11px] font-medium text-sky-300 transition hover:bg-sky-500/15 disabled:opacity-40"
+          title={inUse ? "This is the solution currently kept" : "Replace the kept solution with this one"}
+        >
+          {inUse ? "✓ In use" : "Use this solution"}
+        </button>
+      </div>
+      <MathRenderer content={altText} className="text-xs text-slate-300" />
+      {String(altHindi ?? "").trim() && (
+        <MathRenderer content={altHindi!} className="mt-1 text-xs text-slate-400" />
+      )}
     </div>
   );
 }

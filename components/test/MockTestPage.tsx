@@ -10,6 +10,7 @@ import {
 import TestEngine, { type TestQuestion, type SubmitAnswer } from "@/components/test/TestEngine";
 import TestAnalysis, { type ResultData } from "@/components/test/TestAnalysis";
 import { trackPageView } from "@/lib/analytics";
+import { clearLocalDraft } from "@/lib/localDraft";
 import { BE } from "@/lib/theme";
 import { isAdmin as checkIsAdmin } from "@/lib/admin";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -396,13 +397,14 @@ export default function MockTestPage() {
         correctCount: sessionScore.correctCount, wrongCount: sessionScore.wrongCount,
         skippedCount: sessionScore.skippedCount, timeTakenSecs: sessionScore.timeTakenSecs,
       }, { examType: selectedExam ?? undefined, mockTestId }));
+      if (draftId) clearLocalDraft(draftId); // submit landed — drop the offline backup
       goTo("results", false, mockTestId ?? undefined, data.sessionId);
     } catch (err: any) {
       setSubmitError(err.message);
     } finally {
       setSubmitting(false);
     }
-  }, [mockTestId, selectedExam, selectedBranch, goTo]);
+  }, [mockTestId, selectedExam, selectedBranch, goTo, draftId]);
 
   const handleRetake = () => {
     goTo("setup");
