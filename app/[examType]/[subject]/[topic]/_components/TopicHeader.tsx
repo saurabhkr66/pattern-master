@@ -3,6 +3,7 @@ import Link from "next/link";
 interface Props {
   examType: string;
   subject: string;
+  topic: string;
   subjectLabel: string;
   topicLabel: string;
   examFullLabel: string;
@@ -15,9 +16,13 @@ interface Props {
 }
 
 export default function TopicHeader({
-  examType, subject, subjectLabel, topicLabel, examFullLabel,
+  examType, subject, topic, subjectLabel, topicLabel, examFullLabel,
   atomicLogic, totalQ, pyqCount, gqCount, year, shortNotes,
 }: Props) {
+  // The full notes live on their own SEO page (.../[topic]/notes); here we only
+  // surface a link to them so the questions page stays question-focused.
+  const hasNotes = !!shortNotes && shortNotes.trim().length > 0;
+
   return (
     <>
       <nav
@@ -58,24 +63,30 @@ export default function TopicHeader({
         </p>
       </header>
 
-      {shortNotes && (
-        <section
-          className="mb-10 p-5 rounded-2xl border"
+      {hasNotes && (
+        <Link
+          href={`/${examType}/${subject}/${topic}/notes`}
+          className="mb-10 flex items-center justify-between gap-3 p-4 rounded-2xl border transition-all hover:brightness-110"
           style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
         >
-          <h2
-            className="text-sm font-black uppercase tracking-widest mb-3"
-            style={{ color: "var(--accent)" }}
-          >
-            📘 {topicLabel} – Concept Summary
-          </h2>
-          <div
-            className="text-sm leading-relaxed whitespace-pre-wrap"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {shortNotes}
-          </div>
-        </section>
+          <span className="flex items-center gap-3">
+            <span className="text-xl">📘</span>
+            <span>
+              <span
+                className="block text-sm font-bold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {topicLabel} Notes &amp; Formulas
+              </span>
+              <span className="block text-xs" style={{ color: "var(--text-muted)" }}>
+                Quick concept summary before you practise
+              </span>
+            </span>
+          </span>
+          <span className="text-sm font-bold shrink-0" style={{ color: "var(--accent)" }}>
+            Read notes →
+          </span>
+        </Link>
       )}
     </>
   );

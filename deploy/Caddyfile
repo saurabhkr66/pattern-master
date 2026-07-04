@@ -16,11 +16,29 @@ battleexam.example.com {
     }
 }
 
-# To also serve the bare apex + www, use this form instead:
+# Live config on the VPS (2026-07-04). www MUST redirect, not serve: when it
+# was in the same site block, Google crawled a full duplicate copy of the site
+# on www.battleexam.com — 60% of the "Crawled - currently not indexed" bucket
+# in Search Console was www URLs.
 #
-# battleexam.com, www.battleexam.com {
+# battleexam.com {
 #     encode gzip zstd
+#
+#     # Legacy ?page=N topic pagination -> path-based /page/N. next.config has
+#     # the same redirect but Next appends the original query to the destination
+#     # (/page/4?page=4); handling it here strips the query entirely. Public SEO
+#     # routes deliberately bypass Next middleware, so Caddy is the layer for this.
+#     @legacyPageQuery {
+#         path_regexp topic ^/[^/]+/[^/]+/[^/]+$
+#         query page=*
+#     }
+#     redir @legacyPageQuery {http.request.uri.path}/page/{http.request.uri.query.page} 301
+#
 #     reverse_proxy localhost:3000 {
 #         flush_interval -1
 #     }
+# }
+#
+# www.battleexam.com {
+#     redir https://battleexam.com{uri} 301
 # }

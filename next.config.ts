@@ -52,7 +52,10 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      // Legacy ?page=N topic pagination → path-based /page/N (ISR-compatible)
+      // Legacy ?page=N topic pagination → path-based /page/N (ISR-compatible).
+      // Next appends the matched query to the destination (/page/4?page=4), so
+      // prod Caddy handles this same redirect first and strips the query; this
+      // rule is the fallback for non-Caddy environments.
       {
         source: "/:p1/:p2/:p3",
         has: [{ type: "query", key: "page", value: "(?<page>\\d+)" }],

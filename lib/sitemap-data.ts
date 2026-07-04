@@ -175,7 +175,7 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
   }
 
   const topicRows = await prisma.pattern
-    .findMany({ select: { id: true, exam_type: true, branch: true, subject: true, topic_name: true } })
+    .findMany({ select: { id: true, exam_type: true, branch: true, subject: true, topic_name: true, short_notes: true } })
     .catch(logFail("topic hub"));
   const topicPages: UrlEntry[] = topicRows.flatMap((r) => {
     const base = `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`;
@@ -205,6 +205,16 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
         ...(lastmod ? { lastmod } : {}),
         changefreq: "weekly",
         priority: 0.7,
+      });
+    }
+    // Dedicated concept-notes page — only when the topic actually has notes
+    // (the /notes route notFound()s otherwise, so an empty entry would 404).
+    if (r.short_notes && r.short_notes.trim().length > 0) {
+      entries.push({
+        url: `${base}/notes`,
+        ...(lastmod ? { lastmod } : {}),
+        changefreq: "monthly",
+        priority: 0.8,
       });
     }
     return entries;

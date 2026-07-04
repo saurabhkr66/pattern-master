@@ -184,6 +184,53 @@ export async function fetchPattern(
   return getPatternPage(match.id, pageNum, pageSize);
 }
 
+// Lightweight lookup for the dedicated notes page: just the concept notes and
+// counts, no questions loaded. Separate cache key from the paginated question
+// fetch so the notes route stays cheap.
+const getTopicNotes = (patternId: string) =>
+  unstable_cache(
+    async () => {
+      const meta = await prisma.pattern.findUnique({
+        where: { id: patternId },
+        select: {
+          id: true,
+          subject: true,
+          atomic_logic: true,
+          short_notes: true,
+          _count: { select: { pyqs: true, questions: true } },
+        },
+      });
+      if (!meta) return null;
+
+      return {
+        id: meta.id,
+        subject: meta.subject,
+        atomic_logic: meta.atomic_logic,
+        short_notes: meta.short_notes,
+        pyqCount: meta._count.pyqs,
+        gqCount: meta._count.questions,
+        totalQ: meta._count.pyqs + meta._count.questions,
+      };
+    },
+    ["topic-notes", patternId],
+    { revalidate: 604800, tags: ["patterns"] },
+  )();
+
+export async function fetchTopicNotes(
+  exam: ExamSeoInfo,
+  subjectLabel: string,
+  topicSlug: string,
+) {
+  const examSlug    = toSlug(exam.examType);
+  const branchSlug  = exam.branch ? toSlug(exam.branch) : "common";
+  const subjectSlug = toSlug(subjectLabel);
+
+  const match = await getPatternBySlug(examSlug, branchSlug, subjectSlug, topicSlug);
+  if (!match) return null;
+
+  return getTopicNotes(match.id);
+}
+
 export function combineQuestions(
   pyqs: Awaited<ReturnType<typeof fetchPattern>> extends infer T
     ? T extends { pyqs: infer P } ? P : never

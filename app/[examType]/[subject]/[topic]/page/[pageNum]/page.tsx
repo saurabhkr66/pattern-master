@@ -130,6 +130,7 @@ export default async function TopicPageN({
         <TopicHeader
           examType={examType}
           subject={subject}
+          topic={topic}
           subjectLabel={subjectLabel}
           topicLabel={topicLabel}
           examFullLabel={exam.fullLabel}
