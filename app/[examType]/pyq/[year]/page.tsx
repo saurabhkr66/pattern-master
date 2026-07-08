@@ -104,7 +104,9 @@ export default async function YearPYQPage({
   const { examType, year } = await params;
   const exam = parseExamSlug(examType);
   const yearNum = parseInt(year, 10);
-  if (!exam || isNaN(yearNum) || yearNum < 1990 || yearNum > new Date().getFullYear()) notFound();
+  // Same clamp as the pyq hub + sitemap (1980 → next year): GATE papers go
+  // back to 1987, and next year's paper can appear before the calendar flips.
+  if (!exam || isNaN(yearNum) || yearNum < 1980 || yearNum > new Date().getFullYear() + 1) notFound();
 
   const [pyqs, mockPapers] = await Promise.all([
     prisma.pYQ.findMany({
@@ -214,7 +216,7 @@ export default async function YearPYQPage({
             Previous Year Questions
           </p>
           <h1 className="text-3xl md:text-4xl font-black mb-3" style={{ color: "var(--text-primary)" }}>
-            {exam.fullLabel} {yearNum} PYQ
+            {exam.fullLabel} {yearNum} Previous Year Question Paper with Solutions
           </h1>
           <p className="text-sm max-w-2xl" style={{ color: "var(--text-secondary)" }}>
             {yearPapers.length > 0 && <>{yearPapers.length} paper{yearPapers.length > 1 ? "s" : ""} · </>}

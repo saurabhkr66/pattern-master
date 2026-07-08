@@ -80,6 +80,20 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  // Bing Webmaster verification. Bing powers ChatGPT Search & (partly)
+  // Perplexity, so getting verified + indexed there is a GEO priority. Paste the
+  // token from Bing Webmaster Tools into NEXT_PUBLIC_BING_SITE_VERIFICATION.
+  // (Alternatively, Bing can import verification directly from Google Search
+  // Console with no code — then this env var can stay unset.)
+  ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+    ? {
+        verification: {
+          other: {
+            "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION,
+          },
+        },
+      }
+    : {}),
   icons: {
     icon: [
       { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },

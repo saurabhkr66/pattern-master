@@ -231,6 +231,67 @@ export async function fetchTopicNotes(
   return getTopicNotes(match.id);
 }
 
+// Sibling topics in the same exam/branch/subject — powers the "Related topics"
+// internal-link block at the bottom of a topic page. Real <a> links to every
+// sibling spread internal-link equity across the subject's topic pages (helps
+// thin/short_notes-less pages get discovered and indexed). Ordered by question
+// count so the richest siblings surface first.
+const getRelatedTopics = (
+  examSlug: string,
+  branchSlug: string,
+  subjectSlug: string,
+  currentTopicSlug: string,
+  limit: number,
+) =>
+  unstable_cache(
+    async () => {
+      const siblings = await prisma.pattern.findMany({
+        where: {
+          exam_slug: examSlug,
+          branch_slug: branchSlug,
+          subject_slug: subjectSlug,
+          topic_slug: { not: currentTopicSlug },
+        },
+        select: {
+          topic_name: true,
+          topic_slug: true,
+          _count: { select: { pyqs: true, questions: true } },
+        },
+      });
+
+      return siblings
+        .map((s) => ({
+          topicName: s.topic_name,
+          topicSlug: s.topic_slug ?? toSlug(s.topic_name),
+          totalQ: s._count.pyqs + s._count.questions,
+        }))
+        .filter((s) => s.totalQ > 0)
+        .sort((a, b) => b.totalQ - a.totalQ)
+        .slice(0, limit);
+    },
+    ["related-topics", examSlug, branchSlug, subjectSlug, currentTopicSlug, String(limit)],
+    { revalidate: 604800, tags: ["patterns"] },
+  )();
+
+export type RelatedTopic = {
+  topicName: string;
+  topicSlug: string;
+  totalQ: number;
+};
+
+export async function fetchRelatedTopics(
+  exam: ExamSeoInfo,
+  subjectLabel: string,
+  currentTopicSlug: string,
+  limit = 8,
+): Promise<RelatedTopic[]> {
+  const examSlug    = toSlug(exam.examType);
+  const branchSlug  = exam.branch ? toSlug(exam.branch) : "common";
+  const subjectSlug = toSlug(subjectLabel);
+
+  return getRelatedTopics(examSlug, branchSlug, subjectSlug, currentTopicSlug, limit);
+}
+
 export function combineQuestions(
   pyqs: Awaited<ReturnType<typeof fetchPattern>> extends infer T
     ? T extends { pyqs: infer P } ? P : never

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cleanTextForMeta, type ExamSeoInfo } from "@/lib/seo";
+import { cleanTextForMeta, type ExamSeoInfo, buildQuestionSchema, getQuestionUrl } from "@/lib/seo";
 import type { CombinedQuestion } from "./dataFetch";
 
 const BASE = "https://battleexam.com";
@@ -153,5 +153,28 @@ export function buildSchemas({
     ],
   };
 
-  return { itemListSchema, courseSchema, breadcrumbSchema };
+  const quizSchemas = pageQuestions.map((q) => {
+    const qUrlPath = getQuestionUrl({
+      id: q.id,
+      prefix: q.source,
+      subject: subjectLabel,
+      topicName: topicLabel,
+      examType: exam.examType,
+      branch: exam.branch,
+    });
+    return buildQuestionSchema({
+      questionText: q.questionText,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation,
+      subject: subjectLabel,
+      topicName: topicLabel,
+      year: q.source === "pyq" ? q.year : new Date().getFullYear(),
+      questionType: q.questionType,
+      url: `${BASE}${qUrlPath}`,
+      exam,
+    });
+  });
+
+  return { itemListSchema, courseSchema, breadcrumbSchema, quizSchemas };
 }

@@ -13,13 +13,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
-import { fetchPattern, combineQuestions, unslug } from "./_lib/dataFetch";
+import { fetchPattern, fetchRelatedTopics, combineQuestions, unslug } from "./_lib/dataFetch";
 import { buildTopicMetadata, buildSchemas } from "./_lib/metadata";
 import TopicHeader from "./_components/TopicHeader";
 import PracticeModePromo from "./_components/PracticeModePromo";
 import QuestionList from "./_components/QuestionList";
 import TopicPagination from "./_components/TopicPagination";
 import SignupCTA from "./_components/SignupCTA";
+import RelatedTopics from "./_components/RelatedTopics";
 
 const BASE = "https://battleexam.com";
 const PAGE_SIZE = TOPIC_PAGE_SIZE;
@@ -77,7 +78,10 @@ export default async function TopicPage({
   const subjectLabel = unslug(subject);
   const topicLabel = unslug(topic);
 
-  const pattern = await fetchPattern(exam, subjectLabel, topic, pageNum, PAGE_SIZE);
+  const [pattern, relatedTopics] = await Promise.all([
+    fetchPattern(exam, subjectLabel, topic, pageNum, PAGE_SIZE),
+    fetchRelatedTopics(exam, subjectLabel, topic),
+  ]);
   if (!pattern) notFound();
 
   const basePath = `/${examType}/${subject}/${topic}`;
@@ -90,7 +94,7 @@ export default async function TopicPage({
   const totalPages = Math.max(1, Math.ceil(totalQ / PAGE_SIZE));
   const start = 0;
 
-  const { itemListSchema, courseSchema, breadcrumbSchema } = buildSchemas({
+  const { itemListSchema, courseSchema, breadcrumbSchema, quizSchemas } = buildSchemas({
     exam,
     examType,
     subject,
@@ -125,6 +129,13 @@ export default async function TopicPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+      {quizSchemas.map((schema, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
 
       <div className="max-w-4xl mx-auto py-10 px-4">
         <TopicHeader
@@ -152,6 +163,13 @@ export default async function TopicPage({
         />
 
         <TopicPagination pageNum={pageNum} totalPages={totalPages} basePath={basePath} />
+
+        <RelatedTopics
+          topics={relatedTopics}
+          examType={examType}
+          subject={subject}
+          subjectLabel={subjectLabel}
+        />
 
         <SignupCTA topicLabel={topicLabel} />
       </div>

@@ -2,16 +2,16 @@ import Link from "next/link";
 import { HOME_EXAM_COPY } from "@/components/landing/homeMetadata";
 
 const GATE_CSE_SUBJECTS = [
-  { label: "Algorithms", href: "/gate-cse/algorithms" },
-  { label: "Data Structures", href: "/gate-cse/data-structures" },
-  { label: "Operating Systems", href: "/gate-cse/operating-systems" },
-  { label: "DBMS", href: "/gate-cse/dbms" },
-  { label: "Computer Networks", href: "/gate-cse/computer-networks" },
-  { label: "Theory of Computation", href: "/gate-cse/theory-of-computation" },
-  { label: "Compiler Design", href: "/gate-cse/compiler-design" },
-  { label: "Digital Logic", href: "/gate-cse/digital-logic" },
-  { label: "Computer Organisation", href: "/gate-cse/computer-organisation" },
-  { label: "Discrete Mathematics", href: "/gate-cse/discrete-mathematics" },
+  { label: "Algorithms PYQs", href: "/gate-cse/algorithms" },
+  { label: "Data Structures PYQs", href: "/gate-cse/data-structures" },
+  { label: "Operating Systems PYQs", href: "/gate-cse/operating-systems" },
+  { label: "DBMS PYQs", href: "/gate-cse/dbms" },
+  { label: "Computer Networks PYQs", href: "/gate-cse/computer-networks" },
+  { label: "Theory of Computation PYQs", href: "/gate-cse/theory-of-computation" },
+  { label: "Compiler Design PYQs", href: "/gate-cse/compiler-design" },
+  { label: "Digital Logic PYQs", href: "/gate-cse/digital-logic" },
+  { label: "Computer Organisation PYQs", href: "/gate-cse/computer-organisation" },
+  { label: "Discrete Mathematics PYQs", href: "/gate-cse/discrete-mathematics" },
 ];
 
 export default function LandingFooter() {

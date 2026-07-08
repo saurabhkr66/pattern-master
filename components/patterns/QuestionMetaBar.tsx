@@ -26,7 +26,7 @@ export default function QuestionMetaBar({
         {question.difficulty_level || "Medium"}
       </span>
       <span>·</span>
-      <span>{question.question_type || "MCQ"} · {question.marks || 1} mark{(question.marks || 1) > 1 ? "s" : ""}</span>
+      <span>{question.question_type || "MCQ"}{/* · {question.marks || 1} mark{(question.marks || 1) > 1 ? "s" : ""} */}</span>
       <span style={{ flex: 1 }} />
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <button

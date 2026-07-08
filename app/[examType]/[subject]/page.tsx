@@ -133,6 +133,13 @@ export default async function SubjectPage({
 
   if (!patterns.length) notFound();
 
+  // Hide topics with zero questions from the grid + ItemList schema — they
+  // render as question-less shells (thin content for crawlers, dead ends for
+  // users). Seeding is ongoing; a topic re-enters automatically once its first
+  // questions land (same rule the sitemap applies).
+  const seeded = patterns.filter((p) => p._count.pyqs + p._count.questions > 0);
+  if (!seeded.length) notFound();
+
   const canonical = `${BASE}/${examType}/${subject}`;
   const year = new Date().getFullYear() + 1;
 
@@ -142,8 +149,8 @@ export default async function SubjectPage({
     name: `${exam.fullLabel} ${subjectLabel} Topics`,
     description: `All ${exam.fullLabel} ${subjectLabel} topics with practice questions`,
     url: canonical,
-    numberOfItems: patterns.length,
-    itemListElement: patterns.map((p, i) => ({
+    numberOfItems: seeded.length,
+    itemListElement: seeded.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: p.topic_name,
@@ -166,7 +173,7 @@ export default async function SubjectPage({
     ],
   };
 
-  const totalQuestions = patterns.reduce(
+  const totalQuestions = seeded.reduce(
     (sum, p) => sum + p._count.pyqs + p._count.questions,
     0
   );
@@ -204,10 +211,10 @@ export default async function SubjectPage({
             className="text-3xl md:text-4xl font-black mb-3"
             style={{ color: "var(--text-primary)" }}
           >
-            {subjectLabel} Practice Questions
+            {exam.fullLabel} {subjectLabel} Practice Questions &amp; PYQs
           </h1>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            {patterns.length} topics · {totalQuestions} questions · AI‑generated
+            {seeded.length} topics · {totalQuestions} questions · AI‑generated
             &amp; Previous Year Questions for {exam.fullLabel} {year}
           </p>
         </div>
@@ -219,7 +226,7 @@ export default async function SubjectPage({
 
         {/* Topic grid */}
         <div className="grid sm:grid-cols-2 gap-3">
-          {patterns.map((p) => (
+          {seeded.map((p) => (
             <Link
               key={p.id}
               href={`/${examType}/${subject}/${toSlug(p.topic_name)}`}

@@ -194,7 +194,7 @@ export default async function ExamLandingPage({ params }: { params: Promise<Page
             Exam preparation
           </p>
           <h1 className="text-3xl md:text-4xl font-black mb-3" style={{ color: "var(--text-primary)" }}>
-            {exam.fullLabel} Preparation
+            {exam.fullLabel} Preparation – Practice Questions, PYQs &amp; Mock Tests
           </h1>
           <p className="text-sm max-w-2xl" style={{ color: "var(--text-secondary)" }}>
             Pattern-based {exam.fullLabel} preparation with AI-generated questions, previous year questions

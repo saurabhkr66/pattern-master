@@ -90,7 +90,7 @@ export default async function TopicPageN({
 
   const start = (pageNum - 1) * PAGE_SIZE;
 
-  const { itemListSchema, courseSchema, breadcrumbSchema } = buildSchemas({
+  const { itemListSchema, courseSchema, breadcrumbSchema, quizSchemas } = buildSchemas({
     exam,
     examType,
     subject,
@@ -125,6 +125,13 @@ export default async function TopicPageN({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+      {quizSchemas.map((schema, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
 
       <div className="max-w-4xl mx-auto py-10 px-4">
         <TopicHeader

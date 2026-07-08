@@ -27,16 +27,47 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow,
       },
-      // Explicitly welcome AI crawlers for Generative Engine Optimisation (GEO)
+      // Explicitly welcome AI crawlers for Generative Engine Optimisation (GEO).
+      // Two kinds of bots, both needed:
+      //   • Training crawlers   — GPTBot, ClaudeBot, PerplexityBot, Google-Extended
+      //   • Retrieval crawlers  — fetched live at answer time and cited in the
+      //     response: OAI-SearchBot (ChatGPT Search), ChatGPT-User (browse),
+      //     Perplexity-User, Claude-User, anthropic-ai. These decide whether we
+      //     get CITED by ChatGPT / Perplexity / Claude, so keep them open.
+      // (Gemini's live grounding uses plain Googlebot, allowed by the "*" rule.)
       {
-        userAgent: ["GPTBot", "PerplexityBot", "ClaudeBot", "Google-Extended"],
+        userAgent: [
+          "GPTBot",
+          "OAI-SearchBot",
+          "ChatGPT-User",
+          "PerplexityBot",
+          "Perplexity-User",
+          "ClaudeBot",
+          "Claude-User",
+          "anthropic-ai",
+          "Google-Extended",
+          "Applebot-Extended",
+        ],
         allow: "/",
         disallow: ["/dashboard", "/onboarding", "/api/"],
       },
-      // Block image-specific crawlers from fetching images. Page-rendering
+      // Block image-specific crawlers from fetching content images. Page-rendering
       // crawlers (Googlebot, Bingbot) still see the images for context.
+      //
+      // IMPORTANT: the favicon/icon files MUST stay crawlable here. Google
+      // fetches the search-results favicon with Googlebot-Image, so a blanket
+      // disallow hides the icon from search results. Allow the icon assets
+      // (longest-match wins, so these override the "/" disallow below).
       {
         userAgent: ["Googlebot-Image", "Bingbot-Image", "msnbot-media"],
+        allow: [
+          "/favicon.ico",
+          "/favicon-48.png",
+          "/favicon-192.png",
+          "/favicon-512.png",
+          "/icon.png",
+          "/apple-icon.png",
+        ],
         disallow: "/",
       },
       // Block SEO-tool / scraper bots. They drive zero user traffic and

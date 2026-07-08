@@ -48,7 +48,7 @@ export default function TopicHeader({
           className="text-3xl md:text-4xl font-black mb-3"
           style={{ color: "var(--text-primary)" }}
         >
-          {topicLabel} Practice Questions
+          {topicLabel} – {examFullLabel} {subjectLabel} Practice Questions &amp; PYQs
         </h1>
         {atomicLogic && (
           <p

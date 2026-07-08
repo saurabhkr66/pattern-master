@@ -4,10 +4,10 @@
 //   app/sitemap.xml/route.ts  → sitemap index
 //   app/sitemap/[id]/route.ts → individual child sitemaps
 //
-// IMPORTANT: per-question pages (pyq-*, gq-*, spyq-*) are `noindex` —
-// they're thin and the same content lives on the rich topic pages. Per
-// Google's guidance, noindex URLs do NOT belong in sitemaps. Only the
-// hub and mock buckets are emitted.
+// IMPORTANT: per-question URLs (pyq-*, gq-*, spyq-*) 308-redirect to their
+// parent topic page (see app/[examType]/[subject]/[topic]/[questionId]/route.ts)
+// — they're thin and the same content lives on the rich topic pages. Redirecting
+// URLs do NOT belong in sitemaps. Only the hub and mock buckets are emitted.
 
 import { prisma } from "@/lib/prisma";
 import { toSlug, buildExamSlug, paperSlug, paperYear, TOPIC_PAGE_SIZE } from "@/lib/seo";
@@ -220,19 +220,38 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     return entries;
   });
 
-  // /[examType]/pyq — one per exam that has seeded papers
-  const pyqExamRows = await prisma.mockTestTemplate
-    .findMany({
-      where: { mode: "seeded" },
-      select: { exam_type: true, branch: true },
-      distinct: ["exam_type", "branch"],
-    })
-    .catch(logFail("pyq hub"));
-  const pyqPages: UrlEntry[] = pyqExamRows.map((r) => ({
-    url: `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/pyq`,
-    changefreq: "weekly",
-    priority: 0.9,
-  }));
+  // /[examType]/pyq — one per exam that has seeded papers or PYQs
+  const [pyqExamRows, seededExamRows] = await Promise.all([
+    prisma.$queryRaw<Array<{ exam_type: string; branch: string }>>`
+      SELECT DISTINCT q.exam_type, p.branch
+      FROM "PYQ" q
+      JOIN "Pattern" p ON q.pattern_id = p.id
+    `.catch(logFail("pyq exams")),
+    prisma.mockTestTemplate
+      .findMany({
+        where: { mode: "seeded" },
+        select: { exam_type: true, branch: true },
+        distinct: ["exam_type", "branch"],
+      })
+      .catch(logFail("seeded exams")),
+  ]);
+
+  const seenPyqHubs = new Set<string>();
+  const pyqPages: UrlEntry[] = [];
+  const addPyqHub = (examType: string, branch: string | null) => {
+    const slug = buildExamSlug(examType, branch);
+    if (!seenPyqHubs.has(slug)) {
+      seenPyqHubs.add(slug);
+      pyqPages.push({
+        url: `${BASE}/${slug}/pyq`,
+        changefreq: "weekly",
+        priority: 0.9,
+      });
+    }
+  };
+
+  for (const r of pyqExamRows || []) addPyqHub(r.exam_type, r.branch);
+  for (const r of seededExamRows || []) addPyqHub(r.exam_type, r.branch);
 
   return [...staticPages, ...mockLandingPages, ...examPages, ...subjectPages, ...topicPages, ...pyqPages];
 }
@@ -265,24 +284,21 @@ export async function buildPaperPagesSitemap(): Promise<UrlEntry[]> {
 export async function buildPyqYearsSitemap(): Promise<UrlEntry[]> {
   // Fetch distinct (exam_type, branch, year) combos from PYQ table.
   // Pattern holds exam_type + branch; join through pattern.
-  const rows = await prisma.pYQ
-    .findMany({
-      select: {
-        year: true,
-        exam_type: true,
-        pattern: { select: { branch: true } },
-      },
-      distinct: ["exam_type", "year"],
-      orderBy: [{ exam_type: "asc" }, { year: "desc" }],
-    })
-    .catch(logFail("pyq years"));
+  // Year clamp guards against extraction bugs where a number inside the
+  // question text (e.g. "2080 kJ/mol") was parsed as the exam year and would
+  // otherwise emit a bogus /pyq/2080 page.
+  const rows = await prisma.$queryRaw<Array<{ exam_type: string; branch: string; year: number }>>`
+    SELECT DISTINCT q.exam_type, p.branch, q.year
+    FROM "PYQ" q
+    JOIN "Pattern" p ON q.pattern_id = p.id
+    WHERE q.year BETWEEN 1980 AND EXTRACT(YEAR FROM now()) + 1
+    ORDER BY q.exam_type ASC, q.year DESC
+  `.catch(logFail("pyq years"));
 
-  // Deduplicate on (exam_type, branch, year) since distinct only covers exam_type+year
   const seen = new Set<string>();
   const entries: UrlEntry[] = [];
-  for (const r of rows) {
-    const branch = r.pattern?.branch ?? null;
-    const examSlug = buildExamSlug(r.exam_type, branch);
+  for (const r of rows || []) {
+    const examSlug = buildExamSlug(r.exam_type, r.branch);
     const key = `${examSlug}::${r.year}`;
     if (seen.has(key)) continue;
     seen.add(key);

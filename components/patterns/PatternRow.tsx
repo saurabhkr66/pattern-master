@@ -60,7 +60,7 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride, language }:
         <span style={{ fontFamily: BE.mono, textTransform: 'none', letterSpacing: 0, color: BE.textDim }}>#{String(i + 1).padStart(2,'0')}</span>
         {isPyq && <span style={{ color: BE.warn }}>PYQ {q.year}</span>}
         <span>· {q.exam_type}</span>
-        <span>· {q.marks}M</span>
+        {/* <span>· {q.marks}M</span> */}
         <span style={{ flex: 1 }} />
         {q.isBookmarked && (
           <Bookmark size={11} fill={BE.accent} stroke="none" />

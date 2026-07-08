@@ -42,7 +42,7 @@ export async function generateMetadata({
 
   // Root layout appends " | BattleExam" via its title template — keep the
   // page part ≤60 chars with the primary keyword at the front.
-  const title = `${exam.fullLabel} Previous Year Questions – ${unitCap}-wise PYQs`;
+  const title = `${exam.fullLabel} PYQs (Previous Year Questions) – ${unitCap}-wise`;
   const longDesc = `Practice ${exam.fullLabel} previous year questions ${unit}-wise with step-by-step solutions. Free PYQ papers, pattern analysis & mock tests. Start solving in 30 seconds.`;
   const description =
     longDesc.length <= 160
@@ -119,6 +119,9 @@ export default async function PYQPage({
       where: {
         exam_type: exam.examType,
         pattern: branchWhereClause(exam.branch),
+        // Clamp out extraction-bug years (e.g. "2080 kJ/mol" parsed as the
+        // exam year) so bogus /pyq/2080 links never surface.
+        year: { gte: 1980, lte: new Date().getFullYear() + 1 },
       },
       _count: { year: true },
       orderBy: { year: "desc" },
@@ -261,7 +264,7 @@ export default async function PYQPage({
                   style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
                 >
                   <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>
-                    {s.subject}
+                    {s.subject} PYQs
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
                     {s.pyqs} PYQ{s.pyqs > 1 ? "s" : ""}
