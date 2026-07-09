@@ -48,5 +48,9 @@ next-env.d.ts
 
 .claude/scheduled_tasks.lock
 
+# telegram poster runtime artifacts
+/scripts/telegram/.posted.json
+/scripts/telegram/preview-*.png
+
 # clerk configuration (can include secrets)
 /.clerk/
