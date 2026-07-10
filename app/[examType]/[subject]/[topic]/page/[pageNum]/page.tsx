@@ -42,10 +42,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { examType, subject, topic, pageNum: pageNumStr } = await params;
   const pageNum = parseInt(pageNumStr, 10);
-  if (isNaN(pageNum) || pageNum < 2) return { title: "Not Found | BattleExam" };
+  if (isNaN(pageNum) || pageNum < 2) return { title: "Not Found" };
 
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found | BattleExam" };
+  if (!exam) return { title: "Not Found" };
 
   return buildTopicMetadata({
     exam,

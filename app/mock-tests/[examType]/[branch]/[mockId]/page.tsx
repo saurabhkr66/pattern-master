@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ examType:
     select: { title: true, exam_type: true, branch: true, total_questions: true, max_score: true, duration_secs: true }
   });
 
-  if (!test) return { title: "Mock Test Not Found | BattleExam" };
+  if (!test) return { title: "Mock Test Not Found" };
 
   const info = getExamSeoInfo(test.exam_type, test.branch);
   const branchLabel = displayBranch(test.branch);

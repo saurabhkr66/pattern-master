@@ -28,7 +28,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const coaching = await getCoaching(slug);
-  if (!coaching) return { title: "Coaching not found | BattleExam" };
+  if (!coaching) return { title: "Coaching not found" };
   return {
     title: `${coaching.name}${coaching.city ? ` · ${coaching.city}` : ""}`,
     description: `Join ${coaching.name} on BattleExam to take their tests and track your progress.`,

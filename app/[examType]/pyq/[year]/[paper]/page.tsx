@@ -96,10 +96,10 @@ export async function generateMetadata({
   const { examType, year, paper } = await params;
   const exam = parseExamSlug(examType);
   const yearNum = parseInt(year, 10);
-  if (!exam || isNaN(yearNum)) return { title: "Not Found | BattleExam" };
+  if (!exam || isNaN(yearNum)) return { title: "Not Found" };
 
   const mock = await getCachedMock(examType, yearNum, paper);
-  if (!mock) return { title: "Not Found | BattleExam" };
+  if (!mock) return { title: "Not Found" };
 
   const canonical = `${BASE}/${examType}/pyq/${year}/${paper}`;
   const title = `${mock.title} – Questions with Solutions`;

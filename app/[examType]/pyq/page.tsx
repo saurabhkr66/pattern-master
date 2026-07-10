@@ -31,7 +31,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { examType } = await params;
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found | BattleExam" };
+  if (!exam) return { title: "Not Found" };
 
   const canonical = `${BASE}/${examType}/pyq`;
   const year = new Date().getFullYear();

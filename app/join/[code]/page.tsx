@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Join a coaching | BattleExam",
+  title: "Join a coaching",
   robots: { index: false, follow: false },
 };
 

@@ -3,7 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import ApplyForm from "@/components/coaching/ApplyForm";
 
 export const metadata = {
-  title: "For Coachings — Run online tests for your students | BattleExam",
+  title: "For Coachings — Run online tests for your students",
   description:
     "Bring your coaching online with BattleExam: build tests from a huge question bank, assign them to your batches, and track every student's performance. Apply for access.",
 };

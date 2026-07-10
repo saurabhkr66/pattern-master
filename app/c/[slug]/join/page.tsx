@@ -4,7 +4,7 @@ import { getCurrentStudent } from "@/lib/studentAuth";
 import StudentAuthForm from "@/components/coaching/StudentAuthForm";
 
 export const metadata = {
-  title: "Join | BattleExam",
+  title: "Join",
   robots: { index: false, follow: false },
 };
 

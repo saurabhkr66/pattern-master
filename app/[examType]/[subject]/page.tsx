@@ -62,7 +62,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { examType, subject } = await params;
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found | BattleExam" };
+  if (!exam) return { title: "Not Found" };
 
   const subjectLabel = unslug(subject);
   const canonical = `${BASE}/${examType}/${subject}`;

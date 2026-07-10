@@ -51,7 +51,7 @@ export async function generateMetadata({
   const { examType, subject, topic } = await params;
 
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found | BattleExam" };
+  if (!exam) return { title: "Not Found" };
 
   return buildTopicMetadata({
     exam,

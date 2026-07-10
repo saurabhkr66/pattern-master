@@ -5,7 +5,7 @@ import { SignIn } from "@clerk/nextjs";
 // sign in with the email the platform set as the coaching's owner_email; the
 // /coaching-admin layout claims the coaching for them on first entry.
 export const metadata = {
-  title: "Coaching Admin Sign In | BattleExam",
+  title: "Coaching Admin Sign In",
   robots: { index: false, follow: false },
 };
 

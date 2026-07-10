@@ -38,7 +38,7 @@ export async function generateMetadata({
   const { examType, year } = await params;
   const exam = parseExamSlug(examType);
   const yearNum = parseInt(year, 10);
-  if (!exam || isNaN(yearNum)) return { title: "Not Found | BattleExam" };
+  if (!exam || isNaN(yearNum)) return { title: "Not Found" };
 
   const canonical = `${BASE}/${examType}/pyq/${year}`;
   const title = `${exam.fullLabel} ${yearNum} Previous Year Questions (PYQ) with Solutions`;

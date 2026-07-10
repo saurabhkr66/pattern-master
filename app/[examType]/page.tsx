@@ -29,7 +29,7 @@ export async function generateStaticParams(): Promise<PageParams[]> {
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
   const { examType } = await params;
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found | BattleExam" };
+  if (!exam) return { title: "Not Found" };
 
   const canonical = `${BASE}/${examType}`;
   const year = new Date().getFullYear() + 1;

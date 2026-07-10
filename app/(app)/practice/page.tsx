@@ -66,7 +66,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   }
 
   return {
-    title: "Practice Dashboard | BattleExam",
+    title: "Practice Dashboard",
     description: `Browse ${joinExamLabels()} topics and practice with AI-generated questions and previous year papers.`,
     alternates: { canonical: `${BASE}/practice` }
   };
