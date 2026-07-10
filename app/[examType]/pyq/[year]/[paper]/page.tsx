@@ -102,7 +102,7 @@ export async function generateMetadata({
   if (!mock) return { title: "Not Found | BattleExam" };
 
   const canonical = `${BASE}/${examType}/pyq/${year}/${paper}`;
-  const title = `${mock.title} – Questions with Solutions | BattleExam`;
+  const title = `${mock.title} – Questions with Solutions`;
   const description = `Solve all ${mock.total_questions} questions from ${mock.title} with detailed solutions and explanations. Interactive answer-checking, free on BattleExam.`;
 
   return {

@@ -22,7 +22,7 @@ export function buildTopicMetadata({
   const canonical = pageNum === 1 ? basePath : `${basePath}/page/${pageNum}`;
   const pageSuffix = pageNum > 1 ? ` – Page ${pageNum}` : "";
 
-  const title = `${topicLabel} – ${exam.fullLabel} ${subjectLabel} Practice Questions & PYQs${pageSuffix} | BattleExam`;
+  const title = `${topicLabel} – ${exam.fullLabel} ${subjectLabel} Practice Questions & PYQs${pageSuffix}`;
   const description = `Practise ${topicLabel} for ${exam.fullLabel} ${year} with all previous year questions and AI-generated practice questions. Solutions and explanations included. Free on BattleExam.`;
 
   const keywords = [

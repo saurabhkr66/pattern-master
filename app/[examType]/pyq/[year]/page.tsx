@@ -41,7 +41,7 @@ export async function generateMetadata({
   if (!exam || isNaN(yearNum)) return { title: "Not Found | BattleExam" };
 
   const canonical = `${BASE}/${examType}/pyq/${year}`;
-  const title = `${exam.fullLabel} ${yearNum} Previous Year Questions (PYQ) with Solutions | BattleExam`;
+  const title = `${exam.fullLabel} ${yearNum} Previous Year Questions (PYQ) with Solutions`;
   const description = `Solve all ${exam.fullLabel} ${yearNum} previous year questions with detailed solutions and explanations. Topic-wise organised, free on BattleExam.`;
 
   return {

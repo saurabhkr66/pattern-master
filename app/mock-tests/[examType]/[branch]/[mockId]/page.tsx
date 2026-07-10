@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ examType:
   const fullLabel = branchLabel ? `${info.examLabel} (${branchLabel})` : info.examLabel;
   const durationMins = Math.round(test.duration_secs / 60);
 
-  const title = `${test.title} | ${fullLabel} Mock Test | BattleExam`;
+  const title = `${test.title} | ${fullLabel} Mock Test`;
   const description = `Take the ${test.title} for ${fullLabel}. ${test.total_questions} hand-picked questions, ${test.max_score} marks, ${durationMins} minutes. Real exam interface and detailed performance analysis. Free to practice on BattleExam.`;
   const canonical = `${BASE}/mock-tests/${examType}/${branch}/${mockId}`;
 

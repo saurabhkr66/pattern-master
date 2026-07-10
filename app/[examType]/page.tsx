@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
   const canonical = `${BASE}/${examType}`;
   const year = new Date().getFullYear() + 1;
 
-  const title = `${exam.fullLabel} Preparation – Subjects, PYQs & Mock Tests | BattleExam`;
+  const title = `${exam.fullLabel} Preparation – Subjects, PYQs & Mock Tests`;
   const description = `Prepare for ${exam.fullLabel} ${year} with AI-generated pattern-based practice questions, previous year questions (PYQs) organised by subject and topic, and full-length mock tests. Free to start on BattleExam.`;
 
   const keywords = [

@@ -58,7 +58,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       const exam = examType ? getExamSeoInfo(examType, branch) : null;
       const examLabel = exam?.fullLabel ?? "your exam";
       return {
-        title: `${name} Practice Questions & PYQs | BattleExam`,
+        title: `${name} Practice Questions & PYQs`,
         description: `Practice ${name} questions for ${examLabel}. Track your progress, solve previous year questions, and master patterns.`,
         alternates: { canonical: `${BASE}/practice?patternId=${patternId}` }
       };

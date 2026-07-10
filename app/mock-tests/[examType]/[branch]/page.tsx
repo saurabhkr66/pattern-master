@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ examType:
 
   const branchLabel = branch === "all-subjects" ? "All Subjects" : unslug(branch);
 
-  const title = `${branchLabel} Mock Tests for ${info.examLabel} | BattleExam`;
+  const title = `${branchLabel} Mock Tests for ${info.examLabel}`;
   const description = `Take free ${branchLabel} mock tests for ${info.examLabel}. Practice with full-length papers, previous year questions, and AI-generated mocks. Detailed analysis and solutions included.`;
   const canonical = `${BASE}/mock-tests/${examType}/${branch}`;
 

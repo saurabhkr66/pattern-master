@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ examType:
   const actualExamType = allExams.find((e) => toSlug(e.exam_type) === examType)?.exam_type ?? examType;
   const info = getExamSeoInfo(actualExamType, null);
 
-  const title = `${info.examLabel} Mock Tests & Practice Papers | BattleExam`;
+  const title = `${info.examLabel} Mock Tests & Practice Papers`;
   const description = `Free online mock tests for ${info.examLabel}. Real exam interface, detailed analysis and subject-wise practice papers. Start your ${info.examLabel} preparation today.`;
   const canonical = `${BASE}/mock-tests/${examType}`;
 

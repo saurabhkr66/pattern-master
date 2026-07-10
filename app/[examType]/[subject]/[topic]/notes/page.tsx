@@ -44,7 +44,7 @@ export async function generateMetadata({
   const year = new Date().getFullYear() + 1;
   const canonical = `${BASE}/${examType}/${subject}/${topic}/notes`;
 
-  const title = `${topicLabel} Notes, Formulas & Concepts – ${exam.fullLabel} ${subjectLabel} | BattleExam`;
+  const title = `${topicLabel} Notes, Formulas & Concepts – ${exam.fullLabel} ${subjectLabel}`;
   const description = `Concise ${topicLabel} notes for ${exam.fullLabel} ${year}: key concepts, formulas and must-know points for ${subjectLabel}. Free revision notes on BattleExam.`;
 
   const keywords = [

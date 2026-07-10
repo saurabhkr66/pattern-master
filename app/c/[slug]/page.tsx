@@ -30,7 +30,7 @@ export async function generateMetadata({
   const coaching = await getCoaching(slug);
   if (!coaching) return { title: "Coaching not found | BattleExam" };
   return {
-    title: `${coaching.name}${coaching.city ? ` · ${coaching.city}` : ""} | BattleExam`,
+    title: `${coaching.name}${coaching.city ? ` · ${coaching.city}` : ""}`,
     description: `Join ${coaching.name} on BattleExam to take their tests and track your progress.`,
   };
 }

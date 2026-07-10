@@ -90,6 +90,12 @@ export async function listSitemapIds(): Promise<string[]> {
 // Googlebot doesn't treat a rotating `lastmod` as noise and ignore it.
 const STATIC_LASTMOD = "2026-06-08";
 
+// The sitemap index lastmod should reflect when child sitemaps were last
+// updated (roughly: "today" since they're revalidated daily via ISR).
+export function currentLastmod(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
 export async function buildHubSitemap(): Promise<UrlEntry[]> {
   const staticPages: UrlEntry[] = [
     { url: BASE,                  lastmod: STATIC_LASTMOD, changefreq: "weekly",  priority: 1.0 },
@@ -375,7 +381,7 @@ ${urls}
 }
 
 export function renderSitemapIndex(ids: string[]): string {
-  const lastmod = STATIC_LASTMOD;
+  const lastmod = currentLastmod();
   const entries = ids
     .map(
       (id) =>

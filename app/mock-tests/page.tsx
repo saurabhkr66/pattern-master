@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const revalidate = 3600;
 
 const MOCK_EXAM_COPY = joinExamLabels();
-const MOCK_TITLE = `Online Mock Tests – ${MOCK_EXAM_COPY} | BattleExam`;
+const MOCK_TITLE = `Online Mock Tests – ${MOCK_EXAM_COPY}`;
 const MOCK_DESC = `Free online mock tests with real exam interfaces for ${MOCK_EXAM_COPY}. Full-length papers, instant scoring, detailed performance analysis and step-by-step explanations.`;
 const MOCK_URL = "https://battleexam.com/mock-tests";
 

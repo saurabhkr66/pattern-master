@@ -68,7 +68,7 @@ export async function generateMetadata({
   const canonical = `${BASE}/${examType}/${subject}`;
   const year = new Date().getFullYear() + 1;
 
-  const title = `${exam.fullLabel} ${subjectLabel} Practice Questions – Topics & PYQs | BattleExam`;
+  const title = `${exam.fullLabel} ${subjectLabel} Practice Questions – Topics & PYQs`;
   const description = `Practise all ${exam.fullLabel} ${subjectLabel} topics with AI-generated questions and previous year questions (PYQs). Master every ${subjectLabel} pattern tested in ${exam.fullLabel} ${year}. Free to start.`;
 
   const keywords = [
@@ -167,7 +167,13 @@ export default async function SubjectPage({
       {
         "@type": "ListItem",
         position: 2,
-        name: `${exam.fullLabel} ${subjectLabel}`,
+        name: exam.fullLabel,
+        item: `${BASE}/${examType}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: subjectLabel,
         item: canonical,
       },
     ],
@@ -197,6 +203,10 @@ export default async function SubjectPage({
         >
           <Link href="/" className="hover:underline">
             Home
+          </Link>
+          <span>›</span>
+          <Link href={`/${examType}`} className="hover:underline">
+            {exam.fullLabel}
           </Link>
           <span>›</span>
           <span style={{ color: "var(--text-primary)" }}>{subjectLabel}</span>
