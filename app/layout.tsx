@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     title: ROOT_TITLE,
     description: `Master ${EXAM_COPY} with AI-generated pattern-based practice, PYQs and full-length mocks. Free to start.`,
     creator: "@battleexam",
-    images: ["https://battleexam.com/opengraph-image"],
+    images: ["https://battleexam.com/og-image.png"],
   },
   robots: {
     index: true,
