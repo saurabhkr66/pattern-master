@@ -210,35 +210,41 @@ export default function QuestionPane({
       </div>
 
       {/* Bottom action bar */}
-      <div style={{
-        borderTop: `1px solid ${BE.line}`, padding: "12px 28px",
-        background: "var(--bg-base)", display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
-      }}>
+      <div
+        className="px-3 sm:px-7 gap-2 sm:gap-2.5"
+        style={{
+          borderTop: `1px solid ${BE.line}`, paddingTop: 12, paddingBottom: 12,
+          background: "var(--bg-base)", display: "flex", alignItems: "center", flexShrink: 0,
+        }}
+      >
         <button
           onClick={onPrev}
           disabled={globalIdx === 0}
           className="be-btn"
-          style={{ opacity: globalIdx === 0 ? 0.35 : 1 }}
+          style={{ opacity: globalIdx === 0 ? 0.35 : 1, flexShrink: 0 }}
         >
-          ← Previous
+          ←<span className="hidden sm:inline"> Previous</span>
         </button>
-        <button onClick={() => onClearResponse(currentQ)} className="be-btn">
-          Clear response
+        <button onClick={() => onClearResponse(currentQ)} className="be-btn" style={{ flexShrink: 0 }}>
+          Clear<span className="hidden sm:inline"> response</span>
         </button>
         <span style={{ flex: 1 }} />
         <button
           onClick={() => onMarkReviewAndNext(currentQ)}
           className="be-btn"
+          style={{ flexShrink: 0 }}
         >
-          Save &amp; mark for review
+          <span className="hidden sm:inline">Save &amp; mark for review</span>
+          <span className="sm:hidden">Review</span>
         </button>
         <button
           onClick={onNext}
           disabled={globalIdx === totalQuestions - 1}
           className="be-btn be-btn-primary"
-          style={{ padding: "8px 16px", opacity: globalIdx === totalQuestions - 1 ? 0.35 : 1 }}
+          style={{ padding: "8px 16px", opacity: globalIdx === totalQuestions - 1 ? 0.35 : 1, flexShrink: 0 }}
         >
-          Save &amp; next →
+          <span className="hidden sm:inline">Save &amp; next</span>
+          <span className="sm:hidden">Next</span> →
         </button>
       </div>
     </main>

@@ -28,7 +28,7 @@ export default function MobilePaletteOverlay({
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex justify-end" onClick={onClose}>
       <div
-        className="w-72 h-full p-5 flex flex-col gap-4 overflow-y-auto"
+        className="w-72 h-full p-5 flex flex-col gap-4"
         style={{ background: BE.surface }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -42,13 +42,15 @@ export default function MobilePaletteOverlay({
           <PalCount n={counts.answeredReview} l="Ans + marked" c={BE.warn} dot />
           <PalCount n={counts.notVisited} l="Not visited" c={BE.textMute} />
         </div>
-        <PaletteGrid
-          questions={questions}
-          allQuestions={questions}
-          statuses={statuses}
-          currentQId={currentQId}
-          onGoTo={onGoTo}
-        />
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <PaletteGrid
+            questions={questions}
+            allQuestions={questions}
+            statuses={statuses}
+            currentQId={currentQId}
+            onGoTo={onGoTo}
+          />
+        </div>
         <button
           onClick={() => { onClose(); onSubmitClick(); }}
           className="be-btn be-btn-primary w-full"

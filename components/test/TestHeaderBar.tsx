@@ -17,12 +17,13 @@ interface Props {
   timeLeft: number;
   onTogglePalette: () => void;
   onOpenInstructions: () => void;
+  onSubmitClick: () => void;
 }
 
 export default function TestHeaderBar({
   mockTestTitle, config, branch, questions,
   activeSectionIdx, onSectionChange,
-  draftId, saveStatus, timeLeft, onTogglePalette, onOpenInstructions,
+  draftId, saveStatus, timeLeft, onTogglePalette, onOpenInstructions, onSubmitClick,
 }: Props) {
   const sections = config.sections;
   const multiSection = sections.length > 1;
@@ -36,7 +37,7 @@ export default function TestHeaderBar({
       </div>
 
       {multiSection && (
-        <div style={{ display: "flex", gap: 2, padding: 3, background: "var(--bg-base)", borderRadius: 7, border: `1px solid ${BE.line}`, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 2, padding: 3, background: "var(--bg-base)", borderRadius: 7, border: `1px solid ${BE.line}`, flexShrink: 1, minWidth: 0, overflowX: "auto", scrollbarWidth: "none" }}>
           {sections.map((sec, i) => {
             const active = i === activeSectionIdx;
             return (
@@ -46,7 +47,7 @@ export default function TestHeaderBar({
                   const firstQ = sectionQuestions(questions, i)[0];
                   onSectionChange(i, firstQ?.id ?? null);
                 }}
-                style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 5, color: active ? BE.text : BE.textDim, background: active ? "rgba(255,255,255,0.08)" : "transparent", cursor: "pointer", fontWeight: 500, border: "none" }}
+                style={{ padding: "4px 10px", fontSize: 11.5, borderRadius: 5, color: active ? BE.text : BE.textDim, background: active ? "rgba(255,255,255,0.08)" : "transparent", cursor: "pointer", fontWeight: 500, border: "none", flexShrink: 0, whiteSpace: "nowrap" }}
               >
                 {sec.name}
               </button>
@@ -90,6 +91,15 @@ export default function TestHeaderBar({
         style={{ padding: "7px 8px", borderRadius: 8, border: `1px solid ${BE.line}`, background: "transparent", color: BE.textDim, flexShrink: 0, display: "flex", alignItems: "center" }}
       >
         <BarChart3 size={18} />
+      </button>
+
+      {/* Submit — mobile only, always visible so students don't need the palette drawer */}
+      <button
+        onClick={onSubmitClick}
+        className="lg:hidden be-btn be-btn-primary"
+        style={{ padding: "7px 12px", fontSize: 12.5, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}
+      >
+        Submit
       </button>
     </header>
   );

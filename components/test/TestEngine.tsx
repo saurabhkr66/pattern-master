@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { type ExamConfig } from "@/lib/examConfigs";
 import TestHeaderBar from "./TestHeaderBar";
 import QuestionPane from "./QuestionPane";
@@ -40,7 +40,7 @@ interface Props {
 }
 
 export default function TestEngine({
-  questions,
+  questions: rawQuestions,
   config,
   branch,
   mockTestId: _mockTestId,
@@ -56,6 +56,16 @@ export default function TestEngine({
   autosaveIntervalMs = 1_200_000,
   subjectiveUpload,
 }: Props) {
+  // Group questions by section (stable sort keeps in-section order) so global
+  // navigation — "Save & next" at a section's end — always rolls into the NEXT
+  // section. Coaching papers with per-student shuffle (and any teacher-built
+  // paper with mixed subject order) arrive with sections interleaved, which
+  // otherwise makes Next hop between sections in raw array order.
+  const questions = useMemo(
+    () => [...rawQuestions].sort((a, b) => a.sectionIndex - b.sectionIndex),
+    [rawQuestions]
+  );
+
   const s = initialState ?? {};
 
   const [activeSectionIdx, setActiveSectionIdx] = useState<number>(s.activeSectionIdx ?? 0);
@@ -472,6 +482,7 @@ export default function TestEngine({
         timeLeft={timeLeft}
         onTogglePalette={() => setShowPalette(!showPalette)}
         onOpenInstructions={() => setShowInstructions(true)}
+        onSubmitClick={() => setConfirmSubmit(true)}
       />
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>

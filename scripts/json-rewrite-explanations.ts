@@ -16,21 +16,24 @@ import * as path from "path";
 
 dotenv.config({ path: ".env" });
 
-// --- Vertex AI (billed against GCP credit) — commented out, using free-tier API key instead ---
-// const ai = new GoogleGenAI({
-//   vertexai: true,
-//   project: 'project-27ed127f-554a-419a-b39',
-//   location: 'global'
-// });
-
-// Gemini Developer API via API key (free tier for gemini-3.1-flash-lite).
+// --- Vertex AI (billed against GCP credit) ---
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  vertexai: true,
+  project: 'project-27ed127f-554a-419a-b39',
+  location: 'global'
 });
 
+// Gemini Developer API via API key (free tier for gemini-3.1-flash-lite) — commented out, using Vertex AI instead.
+// const ai = new GoogleGenAI({
+//   apiKey: process.env.GEMINI_API_KEY,
+// });
+
 const IMAGEKIT_ENDPOINT = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
-const TEXT_BATCH_SIZE = 5;    // text-only questions: 5 packed into ONE request (1 API call)
-const BATCH_DELAY_MS = 4500;  // ~13 req/min — under the 15 RPM free-tier cap for flash-lite
+const BATCH_SIZE = 10;        // Vertex has high quotas — run 10 in parallel per batch
+const BATCH_DELAY_MS = 1000;  // 1s pause between batches (Vertex, not the 15 RPM free tier)
+// --- API-key (free-tier) batch settings — commented out, using Vertex ---
+// const TEXT_BATCH_SIZE = 5;    // text-only questions: 5 packed into ONE request (1 API call)
+// const BATCH_DELAY_MS = 4500;  // ~13 req/min — under the 15 RPM free-tier cap for flash-lite
 const MAX_RETRIES = 4;        // attempts per question on transient failure
 const RETRY_BASE_MS = 2000;   // first retry waits this long; doubles each retry
 const PROCESSED_LOG = path.resolve("scripts/processed-rewrite.log");
@@ -235,11 +238,14 @@ async function produceExplanation(
 }
 
 // ---------------------------------------------------------------------------
-// Batched path: pack TEXT_BATCH_SIZE text-only questions into ONE request and
-// get back a JSON array of explanations. Cuts request count ~5x (key for the
-// 15 RPM free tier) without the image-association problem.
+// API-key (free-tier) batched path — COMMENTED OUT, using Vertex instead.
+// Packs TEXT_BATCH_SIZE text-only questions into ONE request and gets back a
+// JSON array of explanations. Cuts request count ~5x (key for the 15 RPM free
+// tier) without the image-association problem. On Vertex we don't need this —
+// we run BATCH_SIZE questions in parallel via produceExplanation instead.
 // ---------------------------------------------------------------------------
 
+/*
 const BATCH_SCHEMA = {
   type: Type.ARRAY,
   items: {
@@ -371,6 +377,7 @@ async function produceExplanationsBatch(questions: any[]): Promise<{
 
   return { explanations: out, tokens };
 }
+*/
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -449,35 +456,33 @@ async function processFile(filePath: string, isDry: boolean, processed: Set<stri
       appendProcessed(successIds.splice(0));
     };
 
-    const textTargets = targets.filter((q) => !hasUsableImage(q));
-    const imageTargets = targets.filter((q) => hasUsableImage(q));
-    const textBatches = Math.ceil(textTargets.length / TEXT_BATCH_SIZE);
-    console.log(
-      `  Routing: ${textTargets.length} text-only → ${textBatches} request(s) of ${TEXT_BATCH_SIZE} | ${imageTargets.length} with images → 1 per request`
-    );
+    // --- Vertex path: run BATCH_SIZE questions in parallel per batch ---
+    // Each question is an independent produceExplanation call (which also handles
+    // any images), so unlike the free-tier responseSchema batch there's no
+    // image-association problem — Vertex's high quota lets us fan out.
+    const totalBatches = Math.ceil(targets.length / BATCH_SIZE);
+    for (let bi = 0; bi < totalBatches; bi++) {
+      const batch = targets.slice(bi * BATCH_SIZE, (bi + 1) * BATCH_SIZE);
+      console.log(`  [Batch ${bi + 1}/${totalBatches}] Processing ${batch.length} questions in parallel...`);
 
-    // --- Phase 1: text-only questions, TEXT_BATCH_SIZE packed into one request ---
-    for (let bi = 0; bi < textBatches; bi++) {
-      const batch = textTargets.slice(bi * TEXT_BATCH_SIZE, (bi + 1) * TEXT_BATCH_SIZE);
-      console.log(`  [Text batch ${bi + 1}/${textBatches}] ${batch.length} questions in ONE request...`);
-      const befores = batch.map((q) => q.explanation);
-      const { explanations, tokens } = await produceExplanationsBatch(batch);
-      batch.forEach((q, i) => recordResult(q, befores[i], explanations[i]));
-      logTokens(`Text batch ${bi + 1}/${textBatches}`, tokens);
-      saveProgress();
-      if (bi < textBatches - 1 || imageTargets.length > 0) await sleep(BATCH_DELAY_MS);
-    }
+      const results = await Promise.all(
+        batch.map(async (q) => {
+          const before = q.explanation;
+          const { explanation, tokens } = await produceExplanation(q);
+          return { q, before, explanation, tokens };
+        })
+      );
 
-    // --- Phase 2: image questions, 1 per request ---
-    for (let ii = 0; ii < imageTargets.length; ii++) {
-      const q = imageTargets[ii];
-      console.log(`  [Image ${ii + 1}/${imageTargets.length}] 1 question (with image)...`);
-      const before = q.explanation;
-      const { explanation, tokens } = await produceExplanation(q);
-      recordResult(q, before, explanation);
-      logTokens(`Image ${ii + 1}/${imageTargets.length}`, tokens);
+      const batchTokens = { prompt: 0, candidates: 0, thoughts: 0 };
+      for (const { q, before, explanation, tokens } of results) {
+        batchTokens.prompt += tokens.prompt;
+        batchTokens.candidates += tokens.candidates;
+        batchTokens.thoughts += tokens.thoughts;
+        recordResult(q, before, explanation);
+      }
+      logTokens(`Batch ${bi + 1}/${totalBatches}`, batchTokens);
       saveProgress();
-      if (ii < imageTargets.length - 1) await sleep(BATCH_DELAY_MS);
+      if (bi < totalBatches - 1) await sleep(BATCH_DELAY_MS);
     }
 
     if (!isDry && rewritten > 0) {

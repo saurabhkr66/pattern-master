@@ -45,9 +45,15 @@ const transformMath = (s: string): string =>
     .replace(/Ω/g, '\\Omega ')
     .replace(/Δ/g, '\\Delta ')
     .replace(/∆/g, '\\Delta ')
-    .replace(/(?<!\\)\bsum\b/g, '\\sum')
-    .replace(/(?<!\\)\bint\b/g, '\\int')
-    .replace(/(?<!\\)\bprod\b/g, '\\prod')
+    .replace(/(?<!\\)\bsum(?![a-zA-Z])/g, '\\sum')
+    .replace(/(?<!\\)\bint(?![a-zA-Z])/g, '\\int')
+    .replace(/(?<!\\)\bprod(?![a-zA-Z])/g, '\\prod')
+    // Upright trig/log function names that lost their backslash during scraping
+    // (e.g. "sin", "cos" left as plain letters renders as italic s·i·n).
+    .replace(/(?<!\\)\b(arcsin|arccos|arctan|sinh|cosh|tanh|sin|cos|tan|cot|sec|csc|log|ln)(?![a-zA-Z])/g, '\\$1')
+    // A thin-space (\;) stranded right before a super/subscript detaches the
+    // exponent from its base ("sin \;^2 x" → sin ² x). Drop it so it binds.
+    .replace(/\\[;,]\s*(?=[\^_])/g, '')
     .replace(/(?<!\\)\bcap\b/g, '\\cap')
     .replace(/(?<!\\)\bcup\b/g, '\\cup')
     .replace(/(?<!\\)\bin\b/g, '\\in')
@@ -91,7 +97,8 @@ function splitTopLevelCommas(s: string): string[] {
     } else if (ch === '}') {
       depth--;
       cur += ch;
-    } else if (ch === ',' && depth === 0) {
+    } else if (ch === ',' && depth === 0 && s[i - 1] !== '\\') {
+      // Skip escaped commas (\, is a LaTeX thin-space, not a cell separator).
       out.push(cur);
       cur = '';
     } else {
@@ -193,18 +200,18 @@ const expandTextTable = (s: string): string =>
   s
     .replace(/\[\s*\\text\{table\}\s*([\s\S]*?)\s*\]/g, (_, body: string) => {
       const rows = body
-        .split(';')
+        .split(/(?<!\\);/)
         .map((r) => cleanCells(splitTopLevelCommas(r)).join(' & '));
       return '\\begin{bmatrix}' + rows.join(' \\\\ ') + '\\end{bmatrix}';
     })
     .replace(/(?:\\left\s*)?\|\s*\\text\{table\}\s*([\s\S]*?)\s*\|(?:\s*\\right)?/g, (_, body: string) => {
       const rows = body
-        .split(';')
+        .split(/(?<!\\);/)
         .map((r) => cleanCells(splitTopLevelCommas(r)).join(' & '));
       return '\\begin{vmatrix}' + rows.join(' \\\\ ') + '\\end{vmatrix}';
     })
     .replace(/\\\{\s*\\text\{table\}\s*([\s\S]+?)\s*\.(?!\d)/g, (_, body: string) => {
-      const rows = body.split(';').map((r) => {
+      const rows = body.split(/(?<!\\);/).map((r) => {
         const cells = cleanCells(splitTopLevelCommas(r));
         if (cells.length > 2) {
           return cells[0] + ' & ' + cells.slice(1).join(' ');
@@ -381,7 +388,16 @@ export function transformMathContent(content: string): string {
     .replace(/\{\{\{([a-zA-Z])\}\}\}\^\{\\\^\}/g, '\\hat{$1}')
     .replace(/\{\{([a-zA-Z])\^\{\\\^\}\}\}/g, '\\hat{$1}')
     .replace(/\{\{\\text\{([a-zA-Z])\}\}\}\^\{\\\^\}/g, '\\hat{$1}')
+    // Space-tolerant variants of the hat-accent patterns above (scraper emits
+    // "{ {\text{i}}}^{\^}" with stray spaces, which the strict rules miss and
+    // leave a bare \^ that KaTeX errors on).
+    .replace(/\{\s*\{\s*\\text\{([a-zA-Z])\}\s*\}\s*\}\s*\^\{\s*\\\^\s*\}/g, '\\hat{$1}')
+    .replace(/\{\s*\{\s*([a-zA-Z])\s*\}\s*\}\s*\^\{\s*\\\^\s*\}/g, '\\hat{$1}')
     .replace(/([a-zA-Z])\^\{\\\^\}/g, '\\hat{$1}')
+    // Primes stored inside a superscript group ("^{'}", "^{''}", "^{' '}") are a
+    // double-superscript error in KaTeX; convert to real \prime tokens (g'' etc).
+    .replace(/\^\{\s*('(?:\s*')*)\s*\}/g, (_m: string, primes: string) =>
+      '^{' + '\\prime'.repeat((primes.match(/'/g) || []).length) + '}')
     .replace(/\\alphax/g, '\\alpha x')
     .replace(/\\betay/g, '\\beta y')
     .replace(/\\gammaz/g, '\\gamma z')
@@ -409,7 +425,10 @@ export function transformMathContent(content: string): string {
     .replace(/\^\{∘\}/g, '^{\\circ}')
     .replace(/\\text\{_{2,}\}/g, '\\underline{\\hspace{3em}}')
     .replace(/_(\d+)_(\d+)/g, '_{$1}{}_{$2}')
-    .replace(/\^(\d+)([+-])/g, '^{$1$2}')
+    // Superscripted ion charge (Mg^2+ -> Mg^{2+}) only when the sign is terminal
+    // (end / space / close-bracket / comma). Otherwise "x^2+g" is algebra, not a
+    // charge, and must stay as x squared PLUS g.
+    .replace(/\^(\d+)([+-])(?=[\s)\]},.]|$)/g, '^{$1$2}')
     .replace(/(?<!\$)\[([^\[\]]+\^[^\[\]]+)\](?!\()(?!\$)/g, '\\$$[$1]\\$$')
     .replace(/\\left\s*\[/g, '\\left[')
     .replace(/\\right\s*\]/g, '\\right]')
@@ -424,8 +443,26 @@ export function transformMathContent(content: string): string {
   const tableExpanded = expandTextTable(envWrapped);
 
   const processedContent = tableExpanded
-    .replace(/\$\$([\s\S]*?)\$\$/g, (_m, body: string) => `$$${transformMath(body)}$$`)
-    .replace(/\$([^$\n]+?)\$/g, (_m, body: string) => `$${transformMath(body)}$`);
+    .replace(/\$\$([\s\S]*?)\$\$/g, (_m, body: string) => `$$${balanceBraces(transformMath(body))}$$`)
+    .replace(/\$([^$\n]+?)\$/g, (_m, body: string) => `$${balanceBraces(transformMath(body))}$`);
 
   return processedContent;
+}
+
+// Safety net for scraped LaTeX with a stray/dropped brace (e.g. "{ \vec{\text{u}}"
+// where the closing "}" was lost). An unbalanced group makes KaTeX error out and
+// render the whole span as a red source dump. We count only unescaped braces and
+// pad the shorter side so at least *something* renders. A well-formed span is
+// already balanced, so this is a no-op for correct content.
+function balanceBraces(body: string): string {
+  let open = 0;
+  let close = 0;
+  for (let i = 0; i < body.length; i++) {
+    if (body[i - 1] === '\\') continue;
+    if (body[i] === '{') open++;
+    else if (body[i] === '}') close++;
+  }
+  if (open > close) return body + '}'.repeat(open - close);
+  if (close > open) return '{'.repeat(close - open) + body;
+  return body;
 }
