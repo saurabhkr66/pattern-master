@@ -21,8 +21,12 @@ const fixRowBreaks = (s: string): string =>
     begin + body.replace(/(?<!\\)\\(?=\s)/g, '\\\\') + end
   );
 
-const transformMath = (s: string): string =>
-  fixRowBreaks(s)
+// Turns plain words / unicode into \commands. MUST NOT run inside \text{…}: an
+// upright "sec" (seconds), "in", "sin" there would become \sec/\in/\sin, which
+// are math-mode functions and error in text mode. transformMath masks text spans
+// around this pass.
+const normalizeCommands = (s: string): string =>
+  s
     .replace(
       /(?<!\\)\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|phi|chi|psi|omega)(?=[_]|\b)/g,
       '\\$1'
@@ -78,12 +82,75 @@ const transformMath = (s: string): string =>
     .replace(/≥/g, '\\ge ')
     .replace(/≠/g, '\\ne ')
     .replace(/×/g, '\\times ')
+    // Additional unicode symbols the scraper emits (also reached after a stray
+    // backslash before the symbol is stripped in baseContent).
+    .replace(/±/g, '\\pm ')
+    .replace(/∓/g, '\\mp ')
+    .replace(/Σ/g, '\\Sigma ')
+    .replace(/Π/g, '\\Pi ')
+    .replace(/Γ/g, '\\Gamma ')
+    .replace(/Θ/g, '\\Theta ')
+    .replace(/Λ/g, '\\Lambda ')
+    .replace(/Ξ/g, '\\Xi ')
+    .replace(/Φ/g, '\\Phi ')
+    .replace(/Ψ/g, '\\Psi ')
+    .replace(/⇌/g, '\\rightleftharpoons ')
+    .replace(/⋂/g, '\\bigcap ')
+    .replace(/⋃/g, '\\bigcup ')
+    .replace(/∊/g, '\\in ')
+    .replace(/∉/g, '\\notin ')
+    .replace(/∽/g, '\\backsim ')
+    .replace(/≅/g, '\\cong ')
+    .replace(/≃/g, '\\simeq ')
+    .replace(/⊕/g, '\\oplus ')
+    .replace(/⊗/g, '\\otimes ')
+    .replace(/∠/g, '\\angle ')
+    .replace(/∅/g, '\\emptyset ')
+    .replace(/∂/g, '\\partial ')
+    .replace(/∇/g, '\\nabla ')
+    .replace(/⊥/g, '\\perp ')
+    .replace(/∥/g, '\\parallel ')
+    .replace(/√/g, '\\surd ')
+    .replace(/°/g, '{}^{\\circ}');
+
+// Full per-span normalisation. Masks \text{…}/\mathrm{…} first so the command
+// normaliser never rewrites plain words inside prose (units like "sec", "in").
+const TEXT_MASK_RE = /\\(?:text|textrm|mathrm|operatorname|mbox)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g;
+const transformMath = (s: string): string => {
+  const stash: string[] = [];
+  const masked = fixRowBreaks(s).replace(TEXT_MASK_RE, (m) => {
+    stash.push(m);
+    return `\x00${stash.length - 1}\x00`;
+  });
+  const restored = normalizeCommands(masked)
+    // A greek/arrow/operator command jammed against a following letter
+    // ("\Delta"+"l" → "\Deltal", "\Rightarrow"+"x") is an undefined sequence;
+    // reinsert the swallowed space. The word list is closed so this can't split
+    // a longer valid command.
+    .replace(GLUED_CMD_RE, '$1 $2')
+    .replace(/\x00(\d+)\x00/g, (_m, i) => stash[Number(i)]);
+  let out = restored
+    // Wrap \text{…} bodies that carry sub/superscripts so they still render.
     .replace(/\\text\{((?:[^{}]|\{[^{}]*\})*)\}/g, (match, body: string) => {
       if (!/[_^]/.test(body)) return match;
       const cleaned = body.replace(/\$/g, '');
       return '\\text{$' + cleaned + '$}';
     })
-    .replace(/(?:\\\\)+\\?hline/g, '\\\\ \\hline');
+    .replace(/(?:\\\\)+\\?hline/g, '\\\\ \\hline')
+    // Drop a lone trailing backslash (dangling \ at span end → KaTeX "Unexpected
+    // character '\'"). Leaves a real row-break "\\" intact.
+    .replace(/(?<!\\)\\[ \t]*$/, '');
+  // A bare "&" outside an alignment environment is read as a column separator and
+  // errors. In spans that aren't a table/aligned block it's a literal ampersand
+  // ("\text{ & }" = "and", or a stray leading "&") → escape it.
+  if (!/\\begin\{(?:array|aligned|align\*?|matrix|[bvVpB]matrix|cases|split|gather)\}/.test(out)) {
+    out = out.replace(/(?<!\\)&/g, '\\&');
+  }
+  return out;
+};
+
+// Closed list of commands the scraper tends to glue to a trailing letter.
+const GLUED_CMD_RE = /(\\(?:Rightarrow|Leftarrow|Leftrightarrow|leftrightarrow|Longrightarrow|longrightarrow|rightleftharpoons|therefore|because|infty|partial|nabla|Delta|Gamma|Lambda|Sigma|Omega|Theta|Phi|Psi|Pi|Xi|alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|rho|sigma|tau|upsilon|phi|varphi|chi|psi|omega|pi|sum|prod|int|cap|cup|times|cdot|angle|circ|pm|mp))([A-Za-z])/g;
 
 function splitTopLevelCommas(s: string): string[] {
   const out: string[] = [];
@@ -301,13 +368,44 @@ const wrapInlineCode = (s: string): string => {
   return result;
 };
 
+// HTML entities left in scraped content (e.g. "&times;", "&mu;", "&amp;") break
+// KaTeX: a stray "&" is read as an alignment tab ("Expected 'EOF', got '&'").
+// Decode the common ones to the unicode/command the rest of the pipeline expects.
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '\\&', nbsp: ' ', lt: '<', gt: '>',
+  times: '×', divide: '÷', plusmn: '±', minus: '-', sdot: '⋅', middot: '•',
+  deg: '°', prime: "'", Prime: "''", infin: '∞', empty: '∅', part: '∂', nabla: '∇',
+  le: '≤', ge: '≥', ne: '≠', equiv: '≡', asymp: '≈', sim: '∼', prop: '∝',
+  rarr: '→', larr: '←', harr: '↔', rArr: '⇒', hArr: '⇔', there4: '∴',
+  cap: '∩', cup: '∪', sub: '⊂', sup: '⊃', sube: '⊆', supe: '⊇', isin: '∈', notin: '∉',
+  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ', eta: 'η',
+  theta: 'θ', iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'µ', nu: 'ν', xi: 'ξ', pi: 'π',
+  rho: 'ρ', sigma: 'σ', tau: 'τ', phi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+  Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Pi: 'Π', Sigma: 'Σ',
+  Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω', radic: '√', sum: '∑', int: '∫', frasl: '/',
+  hellip: '...', ordm: '°', deg2: '°',
+};
+function decodeMathEntities(s: string): string {
+  return s
+    .replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (m, name: string) =>
+      Object.prototype.hasOwnProperty.call(NAMED_ENTITIES, name) ? NAMED_ENTITIES[name] : m)
+    .replace(/&#(\d+);/g, (_m, n: string) => {
+      const code = Number(n);
+      return code >= 32 && code <= 0x2fff ? String.fromCodePoint(code) : _m;
+    })
+    .replace(/&#x([0-9a-fA-F]+);/g, (_m, h: string) => {
+      const code = parseInt(h, 16);
+      return code >= 32 && code <= 0x2fff ? String.fromCodePoint(code) : _m;
+    });
+}
+
 /**
  * The full transform pipeline. Mirrors the body of MathRenderer up to (but not
  * including) the <ReactMarkdown> render. Output is the markdown string that
  * react-markdown / remark-math / rehype-katex consume.
  */
 export function transformMathContent(content: string): string {
-  const baseContent = wrapInlineCode(content || '')
+  const baseContent = wrapInlineCode(decodeMathEntities(content || ''))
     .replace(/[‘’ʼ´]/g, "'")
     .replace(/[“”]/g, '"')
     .replace(/[–—]/g, '-')
@@ -383,6 +481,10 @@ export function transformMathContent(content: string): string {
     .replace(/\\ge\b/g, '≥')
     .replace(/\\ne\b/g, '≠')
     .replace(/\\times\b/g, '×')
+    // A backslash directly before a unicode symbol ("\Σ", "\±", "\⇌") is a
+    // scraper artifact — no LaTeX command is non-ASCII. Strip it so the symbol
+    // falls through to the unicode→command maps in normalizeCommands.
+    .replace(/\\(?=[^\x00-\x7F])/g, '')
     .replace(/\\pix/g, '\\pi x')
     .replace(/\{([a-zA-Z])\}\^\{\\\^\}/g, '\\hat{$1}')
     .replace(/\{\{\{([a-zA-Z])\}\}\}\^\{\\\^\}/g, '\\hat{$1}')
