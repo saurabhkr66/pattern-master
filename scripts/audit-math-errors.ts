@@ -46,7 +46,7 @@ function extractSpans(transformed: string): string[] {
 function normalizeMsg(m: string): string {
   return m
     .replace(/KaTeX parse error:\s*/i, "")
-    .replace(/ at position \d+.*$/s, "")
+    .replace(/ at position \d+[\s\S]*$/, "")
     .replace(/'[^']*'/g, (q) => (q.length > 3 ? "'…'" : q))
     .trim();
 }
