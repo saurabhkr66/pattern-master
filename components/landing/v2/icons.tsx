@@ -80,4 +80,28 @@ export const I: Record<string, (p?: P) => ReactElement> = {
   star: (p) => <Icon {...p} fill="currentColor" stroke="none" d="m12 2 2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.8l1.2-6.6L2.5 9.6l6.6-.9L12 2Z" />,
   bars: (p) => <Icon {...p} paths={[{ d: "M5 21V10" }, { d: "M12 21V4" }, { d: "M19 21v-7" }]} />,
   sword: (p) => <Icon {...p} fill="currentColor" stroke="none" d="M14.5 3 21 3l-9.5 9.5-2-2L14.5 3ZM7 14l3 3-4 4H3v-3l4-4Zm2.5-1.5 2 2-1.5 1.5-2-2 1.5-1.5Z" />,
+  bulb: (p) => <Icon {...p} paths={[{ d: "M9 18h6" }, { d: "M10 22h4" }, { d: "M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z" }]} />,
+  grid: (p) => <Icon {...p} paths={[{ d: "M3 3h7v7H3z" }, { d: "M14 3h7v7h-7z" }, { d: "M14 14h7v7h-7z" }, { d: "M3 14h7v7H3z" }]} />,
+  chart: (p) => <Icon {...p} paths={[{ d: "M3 3v18h18" }, { d: "m7 16 4-4 4 2 5-6" }]} />,
+  layers: (p) => <Icon {...p} paths={[{ d: "m12 2 10 6.5-10 6.5L2 8.5 12 2Z" }, { d: "m2 15.5 10 6.5 10-6.5" }, { d: "m2 12 10 6.5L22 12" }]} />,
+  bookmark: (p) => <Icon {...p} d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />,
+  alert: (p) => <Icon {...p} paths={[{ d: "M12 9v4" }, { d: "M12 17h.01" }, { d: "M10.3 3.5 1.7 18a2 2 0 0 0 1.7 3h17.2a2 2 0 0 0 1.7-3L13.7 3.5a2 2 0 0 0-3.4 0Z" }]} />,
+  heatmap: (p) => (
+    <Icon {...p}>
+      <rect x="3" y="3" width="4" height="4" rx="1" fill="currentColor" opacity=".25" />
+      <rect x="10" y="3" width="4" height="4" rx="1" fill="currentColor" opacity=".65" />
+      <rect x="17" y="3" width="4" height="4" rx="1" fill="currentColor" opacity=".4" />
+      <rect x="3" y="10" width="4" height="4" rx="1" fill="currentColor" opacity=".9" />
+      <rect x="10" y="10" width="4" height="4" rx="1" fill="currentColor" opacity=".15" />
+      <rect x="17" y="10" width="4" height="4" rx="1" fill="currentColor" opacity=".75" />
+      <rect x="3" y="17" width="4" height="4" rx="1" fill="currentColor" opacity=".5" />
+      <rect x="10" y="17" width="4" height="4" rx="1" fill="currentColor" opacity=".85" />
+      <rect x="17" y="17" width="4" height="4" rx="1" fill="currentColor" opacity=".3" />
+    </Icon>
+  ),
+  share: (p) => <Icon {...p} paths={[{ d: "M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" }, { d: "M6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" }, { d: "M18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" }, { d: "m8.6 13.5 6.9 3.4" }, { d: "m15.4 7.1-6.9 3.4" }]} />,
+  moon: (p) => <Icon {...p} d="M21 12.8A9 9 0 0 1 11.2 3 9 9 0 1 0 21 12.8Z" />,
+  mobile: (p) => <Icon {...p} paths={[{ d: "M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" }, { d: "M11 18h2" }]} />,
+  flag: (p) => <Icon {...p} paths={[{ d: "M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" }, { d: "M4 22v-7" }]} />,
+  trophy: (p) => <Icon {...p} paths={[{ d: "M6 9H4.5a2.5 2.5 0 0 1 0-5H6" }, { d: "M18 9h1.5a2.5 2.5 0 0 0 0-5H18" }, { d: "M6 4h12v8a6 6 0 0 1-12 0V4Z" }, { d: "M8 22h8" }, { d: "M10 22v-4" }, { d: "M14 22v-4" }]} />,
 };

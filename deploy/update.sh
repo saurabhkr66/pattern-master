@@ -30,4 +30,13 @@ npm run build
 echo ">> Reloading app (zero-downtime cluster reload)..."
 pm2 reload battleexam
 
+# `npm run build` above wiped .next/cache, so every sitemap is cold. Pre-warm
+# them with a patient request now — otherwise Googlebot hits the cold, slow
+# /sitemap/0.xml build, times out, and it stays stuck on "Couldn't fetch" in
+# Search Console (see deploy/warm-sitemap.sh). Non-fatal: a failed warm must
+# not fail the deploy.
+echo ">> Warming sitemap ISR cache..."
+sleep 5  # let the reloaded cluster workers start accepting connections
+bash deploy/warm-sitemap.sh || echo "   (sitemap warm failed — non-fatal; cron will retry)"
+
 echo ">> Done. Live."

@@ -49,3 +49,28 @@ export async function requireAdmin(): Promise<string> {
   if (!isAdmin(email)) redirect("/");
   return email!;
 }
+
+/**
+ * Route-handler counterpart to requireAdmin: resolves the caller's email the
+ * same way (session claim, then Clerk API) and reports whether they're an admin,
+ * without redirecting — API routes answer 401/403 instead.
+ *
+ * Gating on the EMAIL rather than a userId matters: dev and prod Clerk instances
+ * issue different userIds for the same person, so a userId-keyed check passes in
+ * prod and silently fails in dev.
+ */
+export async function isAdminRequest(): Promise<boolean> {
+  const { userId, sessionClaims } = await auth();
+  if (!userId) return false;
+
+  let email = (sessionClaims as { email?: string } | null)?.email?.toLowerCase();
+  if (!email) {
+    try {
+      const user = await currentUserWithRetry();
+      email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
+    } catch {
+      return false;
+    }
+  }
+  return isAdmin(email);
+}

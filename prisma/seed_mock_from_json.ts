@@ -25,19 +25,21 @@ function sha256(s: string): string {
 }
 
 /**
- * Hash of the questions array that is INVARIANT to:
- *  - the random `id` field on each question (regenerated each run)
- *  - the `topic` field (preserved across runs via merge — should not trigger update)
+ * Hash of the questions array, INVARIANT only to the random `id` field (which is
+ * regenerated each run). `topic` IS part of the hash so a re-tagged topic re-seeds
+ * the mock — topics are authored in the source JSON now (see json-topics-neet.ts),
+ * so the JSON is the source of truth and its changes must propagate.
  * Used to short-circuit re-seeds when nothing meaningful changed.
  */
 // Bump SEED_VERSION whenever the seeder's question shape changes in a way that
 // requires re-writing existing rows even though the source JSON is unchanged.
-// v2: align sectionIndex with examConfig (GA at 0, Subject at 1) — fixes prior
-// bug where subject-only papers had every question land under the GA tab.
-const SEED_VERSION = "v2";
+// v2: align sectionIndex with examConfig (GA at 0, Subject at 1).
+// v3: `topic` now counts in the hash (was excluded) + JSON topic is authoritative,
+//     so re-tagging + re-seeding updates instead of skipping.
+const SEED_VERSION = "v3";
 function mockContentHash(allQuestions: any[]): string {
   const stripped = allQuestions.map(q => {
-    const { id: _id, topic: _topic, ...rest } = q;
+    const { id: _id, ...rest } = q;
     return rest;
   });
   return sha256(SEED_VERSION + ":" + JSON.stringify(stripped));
@@ -175,16 +177,17 @@ async function main() {
         select: { id: true, mock_number: true, content_hash: true },
       });
 
-      // Build the questions array from JSON. Topic is set from JSON for now; we'll
-      // merge in any DB-side topic edits only if we determine an update is actually needed.
-      const buildAllQuestions = (topicOverrides?: Map<string, string>): any[] => {
+      // Build the questions array from JSON. `topic` comes straight from the source
+      // JSON (authored by json-topics-neet.ts) — it is the source of truth, so a
+      // re-tag re-seeds the mock rather than being preserved from the old DB row.
+      const buildAllQuestions = (): any[] => {
         const out: any[] = [];
         for (let si = 0; si < paperData.sections.length; si++) {
           const sec = paperData.sections[si];
           for (let qi = 0; qi < sec.questions.length; qi++) {
             const q = sec.questions[qi];
             const optional = isOptionalQuestion();
-            const topic = topicOverrides?.get(q.question_text) ?? (q.topic_name || "");
+            const topic = q.topic_name || "";
             out.push({
               id: randomUUID(),
               source: 'template',
@@ -222,29 +225,17 @@ async function main() {
       }, 0);
 
       if (existing) {
-        // Update path: content actually changed. Now (and only now) pull the existing
-        // questions blob so we can preserve any manually-edited `topic` values.
-        const existingFull = await prisma.mockTestTemplate.findUnique({
-          where: { id: existing.id },
-          select: { questions: true },
-        });
-        const topicOverrides = new Map<string, string>();
-        if (existingFull && Array.isArray(existingFull.questions)) {
-          for (const eq of existingFull.questions as any[]) {
-            if (eq?.question_text && eq?.topic) topicOverrides.set(eq.question_text, eq.topic);
-          }
-        }
-        const mergedQuestions = buildAllQuestions(topicOverrides);
-
+        // Update path: content (incl. topic) changed. The JSON is authoritative, so
+        // we overwrite with the freshly-built questions — no merge from the old row.
         await prisma.mockTestTemplate.update({
           where: { id: existing.id },
           data: {
             subjects: paperData.sections.map(s => s.name),
-            total_questions: mergedQuestions.length,
+            total_questions: provisionalQuestions.length,
             max_score: maxScore,
             duration_secs: examConfig.durationSecs,
             sections: examConfig.sections as any,
-            questions: mergedQuestions,
+            questions: provisionalQuestions,
             content_hash: newHash,
           },
           select: { id: true },

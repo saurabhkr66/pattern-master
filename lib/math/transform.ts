@@ -28,7 +28,10 @@ const fixRowBreaks = (s: string): string =>
 const normalizeCommands = (s: string): string =>
   s
     .replace(
-      /(?<!\\)\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|phi|chi|psi|omega)(?=[_]|\b)/g,
+      // Lookbehind is (?<![a-zA-Z\\]) rather than \b so a greek name glued to a
+      // preceding digit still converts ("\cos2theta" → "\cos2\theta"); a letter
+      // before it still blocks (protects "varphi", "beta" inside words).
+      /(?<![a-zA-Z\\])(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|phi|chi|psi|omega)(?=[_]|\b)/g,
       '\\$1'
     )
     .replace(/α/g, '\\alpha ')
@@ -485,6 +488,9 @@ export function transformMathContent(content: string): string {
     // scraper artifact — no LaTeX command is non-ASCII. Strip it so the symbol
     // falls through to the unicode→command maps in normalizeCommands.
     .replace(/\\(?=[^\x00-\x7F])/g, '')
+    // Same for a backslash before a digit ("\2theta"): no LaTeX command starts
+    // with a digit. The (?<!\\) guard keeps a real row-break "\\2" intact.
+    .replace(/(?<!\\)\\(?=\d)/g, '')
     .replace(/\\pix/g, '\\pi x')
     .replace(/\{([a-zA-Z])\}\^\{\\\^\}/g, '\\hat{$1}')
     .replace(/\{\{\{([a-zA-Z])\}\}\}\^\{\\\^\}/g, '\\hat{$1}')

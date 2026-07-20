@@ -10,32 +10,94 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
+import { getImageUrl } from "../lib/imageUtils";
 
 dotenv.config({ path: ".env" });
 
 const prisma = new PrismaClient();
-const ai = new GoogleGenAI({
-  vertexai: true,
-  project: "project-27ed127f-554a-419a-b39",
-  location: "us-central1",
-});
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+// Backend toggle (mirrors lib/coachingImport.ts): GEMINI_USE_VERTEX=1 → Vertex AI
+// (GCP ADC, high quota); otherwise the Developer API with GEMINI_API_KEY (free
+// tier is ~15 req/min — see BATCH_SIZE/delay note below). Both use the same
+// @google/genai generateContent shape, so nothing else changes.
+const ai = process.env.GEMINI_USE_VERTEX === "0"
+  ? new GoogleGenAI({
+      vertexai: true,
+      project: process.env.VERTEX_PROJECT || "project-27ed127f-554a-419a-b39",
+      location: process.env.VERTEX_LOCATION || "us-central1",
+    })
+  : new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-function getCloudinaryUrl(filename: string): string {
-  if (!filename) return "";
-  if (filename.startsWith("http")) return filename;
-  const clean = filename.replace(/^\/+/, "").replace("images/questions/", "");
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/pattern-master/${clean}`;
+// Topic classification model. gemini-3.1-flash-lite is fast/cheap and served on
+// the Developer API; on Vertex it isn't reliable, so 2.5-flash is the fallback.
+// Override with TOPIC_MODEL.
+const TOPIC_MODEL = process.env.TOPIC_MODEL
+  || (process.env.GEMINI_USE_VERTEX === "0" ? "gemini-2.5-flash" : "gemini-3.1-flash-lite");
+
+// Gemini 3.x controls thinking by LEVEL (a numeric budget is rejected); 2.5 uses a
+// numeric budget (0 = skip). Classification is light, so keep thinking minimal.
+function topicThinking(model: string): Record<string, unknown> {
+  return /gemini-3/i.test(model) ? { thinkingLevel: "LOW" } : { thinkingBudget: 0 };
+}
+
+const BATCH_SIZE = 15;        // text questions packed into ONE request
+// Proactive pacing: the Developer API free tier for flash-lite is ~15 req/min, so
+// ~4.5s between requests keeps us under it (~13/min). Override with TOPIC_DELAY_MS
+// (e.g. set to 500 on a paid key for speed). generateWithRetry is the backstop.
+const BATCH_DELAY_MS = Number(process.env.TOPIC_DELAY_MS || 4500);
+const MAX_RETRIES = 6;
+const RATE_LIMIT_WAIT_MS = 60000; // fallback wait when the 429 carries no retryDelay
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isRateLimit(err: any): boolean {
+  const m = String(err?.message || err).toLowerCase();
+  return m.includes("429") || m.includes("quota") || m.includes("rate limit")
+    || m.includes("resource_exhausted") || m.includes("resource exhausted");
+}
+
+// Gemini 429s usually carry a suggested wait, e.g. `"retryDelay":"37s"`. Honour it
+// (plus a 1s cushion) when present; otherwise fall back to a fixed wait.
+function retryDelayMs(err: any): number {
+  const m = String(err?.message || "").match(/retryDelay"?\s*:\s*"?(\d+)s/i);
+  return m ? (Number(m[1]) + 1) * 1000 : RATE_LIMIT_WAIT_MS;
+}
+
+// One Gemini call with rate-limit handling: on a 429 it WAITS (not counting it as
+// an attempt) and retries indefinitely; other errors get a few exponential retries
+// before giving up. So a per-minute quota just pauses the run instead of dropping
+// questions.
+async function generateWithRetry(req: any, label: string): Promise<any> {
+  let attempt = 0;
+  for (;;) {
+    try {
+      return await ai.models.generateContent(req);
+    } catch (err: any) {
+      if (isRateLimit(err)) {
+        const wait = retryDelayMs(err);
+        console.warn(`  [rate-limit] ${label}: quota hit — waiting ${Math.round(wait / 1000)}s then retrying…`);
+        await sleep(wait);
+        continue; // don't consume a retry attempt for throttling
+      }
+      if (++attempt >= MAX_RETRIES) throw err;
+      const backoff = 2000 * 2 ** (attempt - 1);
+      console.warn(`  [retry] ${label}: ${err?.message} — retrying in ${backoff}ms (${attempt}/${MAX_RETRIES})`);
+      await sleep(backoff);
+    }
+  }
 }
 
 async function fetchImageAsBase64(filename: string): Promise<{ data: string; mimeType: string } | null> {
   try {
-    const url = getCloudinaryUrl(filename);
+    // Resolve via the app's ImageKit resolver (lib/imageUtils.getImageUrl), which
+    // prefixes pattern-master/ and appends the ImageKit transform. Needs
+    // NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT in .env; without it getImageUrl returns a
+    // relative path (no http) and we skip the image gracefully.
+    const url = getImageUrl(filename);
     if (!url.startsWith("http")) return null;
     const res = await fetch(url);
     if (!res.ok) return null;
@@ -103,13 +165,13 @@ async function generateTopic(
       if (imageData) parts.push({ inlineData: imageData });
     }
 
-    const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      config: { thinkingConfig: { thinkingBudget: 0 } },
+    const result = await generateWithRetry({
+      model: TOPIC_MODEL,
+      config: { thinkingConfig: topicThinking(TOPIC_MODEL) },
       contents: parts.map((p) =>
         typeof p === "string" ? p : p.inlineData ? { inlineData: p.inlineData } : p
       ),
-    });
+    }, "image-q");
 
     return cleanTopic(result.text || "", allowedTopics);
   } catch (err: any) {
@@ -118,8 +180,82 @@ async function generateTopic(
   }
 }
 
+// Does the question carry a usable (non-explanation) image? Those go through the
+// single-question path so Gemini can actually see the figure; everything else is
+// batched as text.
+function hasUsableImage(q: { images?: any[] }): boolean {
+  const imgs = (q.images as any[]) || [];
+  return imgs.some((i) => i && i.type !== "explanation" && (i.filename || i.url));
+}
+
+const TOPIC_SCHEMA = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      index: { type: Type.INTEGER },
+      topic: { type: Type.STRING },
+    },
+    required: ["index", "topic"],
+  },
+};
+
+function buildBatchPrompt(questions: any[], allowedTopics: string[]): string {
+  const blocks = questions
+    .map((q, i) => `=== Question ${i + 1} ===\n${q.question_text}\nOptions: ${JSON.stringify(q.options ?? [])}`)
+    .join("\n\n");
+  return `You are an academic expert. Categorize EACH exam question below into EXACTLY ONE topic from the allowed list.
+
+--- ALLOWED TOPICS START ---
+${allowedTopics.join("\n")}
+--- ALLOWED TOPICS END ---
+
+Rules:
+1. Use ONLY a topic name that appears verbatim in the list above.
+2. If a question doesn't fit perfectly, pick the closest match.
+3. Return one object per question using its 1-based index; include every index exactly once.
+
+${blocks}`;
+}
+
+// Classify up to BATCH_SIZE text questions in a SINGLE request. Returns topics
+// aligned to the input order (null where the model didn't answer / errored).
+async function generateTopicsBatch(questions: any[], allowedTopics: string[]): Promise<(string | null)[]> {
+  const out = new Array<string | null>(questions.length).fill(null);
+  if (allowedTopics.length === 0 || questions.length === 0) return out;
+  try {
+    const result = await generateWithRetry({
+      model: TOPIC_MODEL,
+      config: {
+        thinkingConfig: topicThinking(TOPIC_MODEL),
+        responseMimeType: "application/json",
+        responseSchema: TOPIC_SCHEMA as any,
+      },
+      contents: buildBatchPrompt(questions, allowedTopics),
+    }, "batch");
+    const parsed = JSON.parse(result.text || "[]");
+    if (Array.isArray(parsed)) {
+      for (const item of parsed) {
+        const idx = Number(item?.index) - 1;
+        if (idx >= 0 && idx < out.length && item?.topic) {
+          out[idx] = cleanTopic(String(item.topic), allowedTopics);
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error("  Gemini batch error:", err.message);
+  }
+  return out;
+}
+
 function saveJson(filePath: string, data: any[]) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+}
+
+// Print prev → current topic for one question, with a snippet of the stem.
+function logChange(q: any, before: string, after: string) {
+  const stem = String(q.question_text || "").replace(/\s+/g, " ").slice(0, 55);
+  console.log(`    ${String(before || "(none)").padEnd(26)} → ${after.padEnd(26)}  ${stem}`);
 }
 
 async function processFile(filePath: string, topicMap: Record<string, string[]>, isDry: boolean, isForce: boolean) {
@@ -190,40 +326,58 @@ async function processFile(filePath: string, topicMap: Record<string, string[]>,
     }
     console.log(`  Using ${allowedTopics.length} topics for subject: ${subject}`);
 
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    const BATCH_SIZE = 10;
-    console.log(`  Processing in batches of ${BATCH_SIZE} with a 1.5s delay...`);
+    // Text questions → BATCH_SIZE packed into ONE request each (the speed win).
+    // Image questions → single-question path so Gemini can see the figure.
+    const textQs = toProcess.filter((q) => !hasUsableImage(q));
+    const imageQs = toProcess.filter((q) => hasUsableImage(q));
+    console.log(`  Model: ${TOPIC_MODEL} | text: ${textQs.length} (batched ${BATCH_SIZE}/call), with-image: ${imageQs.length} (individual)`);
 
-    for (let i = 0; i < toProcess.length; i += BATCH_SIZE) {
-      const batch = toProcess.slice(i, i + BATCH_SIZE);
-      const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(toProcess.length / BATCH_SIZE);
+    const totalBatches = Math.ceil(textQs.length / BATCH_SIZE);
+    for (let i = 0; i < textQs.length; i += BATCH_SIZE) {
+      const batch = textQs.slice(i, i + BATCH_SIZE);
+      console.log(`  Text batch [${Math.floor(i / BATCH_SIZE) + 1}/${totalBatches}]`);
 
-      process.stdout.write(`  Batch [${batchIndex}/${totalBatches}] processing... `);
-
-      const promises = batch.map(async (q) => {
-        const topic = await generateTopic(q, allowedTopics);
-        if (topic && topic !== "Unknown") {
-          q.topic_name = topic;
-          return true;
+      const topics = await generateTopicsBatch(batch, allowedTopics);
+      let n = 0;
+      batch.forEach((q, j) => {
+        const before = q.topic_name ?? "";
+        if (topics[j] && topics[j] !== "Unknown") {
+          logChange(q, before, topics[j]!);
+          q.topic_name = topics[j];
+          n++;
         }
-        return false;
       });
+      fixed += n; totalFixed += n;
+      failed += batch.length - n; totalFailed += batch.length - n;
+      console.log(`  ✓ (${n}/${batch.length} assigned)`);
 
-      const results = await Promise.all(promises);
-      const fixedInBatch = results.filter(Boolean).length;
-      fixed += fixedInBatch;
-      totalFixed += fixedInBatch;
+      if (!isDry) saveJson(absPath, isFlatArray ? mock.questions : data);
+      if (i + BATCH_SIZE < textQs.length) await sleep(BATCH_DELAY_MS);
+    }
 
-      console.log(`✓ (${fixedInBatch}/${batch.length} assigned)`);
+    // Image questions: small parallel fan-out, each with its figure attached.
+    const IMG_CONCURRENCY = 2; // small fan-out — keep the per-minute request rate low
+    const imgBatches = Math.ceil(imageQs.length / IMG_CONCURRENCY);
+    for (let i = 0; i < imageQs.length; i += IMG_CONCURRENCY) {
+      const batch = imageQs.slice(i, i + IMG_CONCURRENCY);
+      console.log(`  Image batch [${Math.floor(i / IMG_CONCURRENCY) + 1}/${imgBatches}]`);
 
-      if (!isDry) {
-        saveJson(absPath, isFlatArray ? mock.questions : data);
-      }
+      const topics = await Promise.all(batch.map((q) => generateTopic(q, allowedTopics)));
+      let n = 0;
+      topics.forEach((topic, j) => {
+        const before = batch[j].topic_name ?? "";
+        if (topic && topic !== "Unknown") {
+          logChange(batch[j], before, topic);
+          batch[j].topic_name = topic;
+          n++;
+        }
+      });
+      fixed += n; totalFixed += n;
+      failed += batch.length - n; totalFailed += batch.length - n;
+      console.log(`  ✓ (${n}/${batch.length} assigned)`);
 
-      if (i + BATCH_SIZE < toProcess.length) {
-        await sleep(1500); // Sleep 1.5 seconds between batches
-      }
+      if (!isDry) saveJson(absPath, isFlatArray ? mock.questions : data);
+      if (i + IMG_CONCURRENCY < imageQs.length) await sleep(BATCH_DELAY_MS);
     }
 
     if (!isDry && fixed > 0) {
@@ -267,7 +421,9 @@ async function main() {
   console.log(`Found ${Object.values(topicMap).flat().length} topics across ${Object.keys(topicMap).length} subjects.\n`);
 
   if (args.includes("--auto")) {
-    const dirPath = path.resolve(AUTO_DIR);
+    const dirIdx = args.indexOf("--dir");
+    const autoDir = dirIdx !== -1 ? args[dirIdx + 1] : AUTO_DIR;
+    const dirPath = path.resolve(autoDir);
     if (!fs.existsSync(dirPath)) {
       console.error(`Auto dir not found: ${dirPath}`);
       process.exit(1);
@@ -277,7 +433,7 @@ async function main() {
       console.log(`No JSON files found in ${dirPath}`);
       process.exit(0);
     }
-    console.log(`Found ${files.length} file(s) in ${AUTO_DIR}\n`);
+    console.log(`Found ${files.length} file(s) in ${autoDir}\n`);
     for (const file of files) {
       console.log(`\n${"=".repeat(60)}`);
       console.log(`File: ${file}`);

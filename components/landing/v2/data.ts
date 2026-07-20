@@ -288,11 +288,19 @@ export const COVERAGE: CoverageTab[] = [
 export const FAQS: { q: string; a: string }[] = [
   {
     q: "How is BattleExam different from other platforms?",
-    a: "Most platforms recycle the same fixed question bank. BattleExam generates fresh questions every time, each one targeting the specific atomic logic of the topic — the exact thinking pattern examiners test. You learn the pattern once, then drill it until it's automatic.",
+    a: "You get three things in one place: 15+ years of real previous-year questions (PYQs), full-length mock tests with the actual exam interface and marking, and a pattern engine that generates fresh questions around each topic's atomic logic. So you practise real papers and unlimited variations of them — instead of grinding a single recycled question bank.",
+  },
+  {
+    q: "Does BattleExam have PYQs and mock tests?",
+    a: "Yes — both are core features, not add-ons. There are 15+ years of previous-year questions, browsable by subject, topic and year with step-by-step solutions, plus full-length mock tests that replicate each exam's real interface, timer and marking scheme. Every PYQ is tagged to the pattern it tests, so you study papers in context.",
+  },
+  {
+    q: "How do I know the questions and answers are correct?",
+    a: "PYQs are real questions from official past papers with their official answer keys — committee-vetted by definition, just re-organised by topic and year. AI-generated practice questions additionally pass an automated answer-review that re-solves each one and flags any disagreement with the stored answer for human correction. And every question has a one-tap 'Report an issue' button — reported questions go to a review queue and get fixed, so errors are corrected rather than silently drilled.",
   },
   {
     q: "Which exams and branches are covered?",
-    a: "GATE across all 8 branches, JEE Main, JEE Advanced, NEET UG, and UGC NET Paper 1 & Paper 2. Every topic is tagged to its pattern and backed by a real Previous-Year-Question bank.",
+    a: "GATE across all 8 branches, JEE Main, JEE Advanced, NEET UG, and UGC NET Paper 1 & Paper 2. Every topic is tagged to its pattern and backed by 15+ years of real previous-year questions and full-length mocks.",
   },
   {
     q: "Is it really free?",
@@ -313,6 +321,85 @@ export const FAQS: { q: string; a: string }[] = [
 ];
 
 export const EXAM_CHIPS = ["GATE", "JEE Main", "JEE Advanced", "NEET", "UGC NET"];
+
+export type FeatureItem = {
+  icon: string;
+  title: string;
+  desc: string;
+};
+
+export type FeatureCategory = {
+  id: string;
+  icon: string;
+  accent: string;
+  label: string;
+  features: FeatureItem[];
+};
+
+export const FEATURES_FULL: FeatureCategory[] = [
+  {
+    id: "practice",
+    icon: "target",
+    accent: "var(--amber-bright)",
+    label: "Practice & Learning",
+    features: [
+      { icon: "brain", title: "Pattern-first learning", desc: "Each topic is distilled to one core pattern — the atomic logic — so you learn to solve, not memorise." },
+      { icon: "bolt", title: "AI-generated fresh questions", desc: "Every session is unique. Questions are generated on the spot with exam-grade distractors — nothing repeats." },
+      { icon: "sliders", title: "Adaptive Easy → Hard", desc: "Three difficulty tiers calibrated to real exam scoring. Hard mode is genuinely top-rank level." },
+      { icon: "bulb", title: "Instant explanations", desc: "Step-by-step AI explanations on every question — understand why the answer is right, not just what it is." },
+      { icon: "grid", title: "Subject & topic browser", desc: "Browse every subject, drill into topics, see question counts and PYQs at a glance." },
+    ],
+  },
+  {
+    id: "papers",
+    icon: "archive",
+    accent: "var(--amber)",
+    label: "Exam Papers & Mocks",
+    features: [
+      { icon: "archive", title: "15+ years of PYQs", desc: "Real previous-year questions tagged by topic, year and difficulty — with official solutions." },
+      { icon: "timer", title: "Full-length mock tests", desc: "Sit the real exam interface — same layout, timer, marking scheme. GATE, JEE, NEET, UGC NET." },
+      { icon: "chart", title: "Deep performance analysis", desc: "Score donut, marks gained vs lost, accuracy %, per-question pacing chart, section-wise topic drilldown and auto-generated insights — all instant." },
+      { icon: "trophy", title: "Live leaderboard", desc: "Real-time rankings powered by WebSockets. See who's taking the test now, score distribution histogram, and your rank among all test-takers." },
+      { icon: "sliders", title: "Section & topic breakdown", desc: "Drill into each section: accuracy bars, marks, time per topic, and targeted recommendations for weak areas below 50%." },
+      { icon: "layers", title: "Multi-exam coverage", desc: "GATE (all 8 branches), JEE Main, JEE Advanced, NEET UG and UGC NET Paper 1 & 2." },
+    ],
+  },
+  {
+    id: "review",
+    icon: "cards",
+    accent: "var(--rose)",
+    label: "Smart Review System",
+    features: [
+      { icon: "xCircle", title: "Mistake log & pattern analysis", desc: "Wrong answers grouped by root pattern — fix the cause, not the symptom." },
+      { icon: "rotate", title: "Flashcard review (SRS)", desc: "Each missed pattern becomes a spaced-repetition card. Review until it's automatic." },
+      { icon: "bookmark", title: "Bookmarks", desc: "Save any question for later — one tap to bookmark, one tap to revisit." },
+      { icon: "alert", title: "Critical review queue", desc: "Your recent wrong answers surfaced on the dashboard, ready to re-solve immediately." },
+    ],
+  },
+  {
+    id: "dashboard",
+    icon: "bars",
+    accent: "var(--emerald)",
+    label: "Your Dashboard",
+    features: [
+      { icon: "bars", title: "Personalised stats", desc: "Track total attempted, accuracy %, current streak and uncorrected mistakes — all in one view." },
+      { icon: "heatmap", title: "26-week mastery wall", desc: "A GitHub-style heatmap showing your daily progress over the last 6 months." },
+      { icon: "target", title: "Weak topic detection", desc: "AI identifies your weakest pattern and suggests a focused drill to close the gap." },
+      { icon: "share", title: "Shareable progress card", desc: "Generate a public OG-image scorecard and share your prep stats on socials." },
+    ],
+  },
+  {
+    id: "platform",
+    icon: "spark",
+    accent: "var(--amber-bright)",
+    label: "Platform",
+    features: [
+      { icon: "moon", title: "Dark & light theme", desc: "Full theme support. Study at night without blinding yourself — or switch to light for daytime." },
+      { icon: "mobile", title: "Mobile-ready", desc: "Fully responsive web app that works on any device. Also available as a native Android app." },
+      { icon: "flag", title: "Question reporting", desc: "Found an error? One tap to report — questions go to a review queue and get fixed." },
+    ],
+  },
+];
 
 export const FOOTER_TOPICS = [
   "Algorithms", "Data Structures", "Operating Systems", "DBMS",

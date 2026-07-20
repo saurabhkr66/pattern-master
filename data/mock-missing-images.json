@@ -1,0 +1,688 @@
+{
+  "summary": {
+    "mockTemplates": 252,
+    "totalRefs": 9375,
+    "distinctChecked": 9247,
+    "distinctMissing": 338,
+    "missingRefs": 342,
+    "mocksAffected": 37,
+    "errored": 0
+  },
+  "mocks": [
+    {
+      "mockId": "7bda5dd1-471b-4fd8-a204-e96e587f39e7",
+      "title": "NEET 2024",
+      "exam_type": "NEET",
+      "branch": null,
+      "count": 105,
+      "refs": [
+        "q3_ages_content_2025_07_16_2Fhome2Fub_73d0eb3b1752669750729_png.png",
+        "q3_exp_ages_content_2025_07_16_2Fhome2Fub_bd98c47b1752669751035_png.png",
+        "q4_ages_content_2025_07_16_2Fhome2Fub_705d55a31752669751300_png.png",
+        "q5_exp_ages_content_2025_07_16_2Fhome2Fub_59e84f321752669752564_png.png",
+        "q6_ages_content_2025_07_16_2Fhome2Fub_f7eccf6a1752669752911_png.png",
+        "q9_opt0_ages_content_2025_07_16_2Fhome2Fub_ba0d60941752669754979_png.png",
+        "q9_opt1_ages_content_2025_07_16_2Fhome2Fub_3d9deae31752669755052_png.png",
+        "q9_opt2_ages_content_2025_07_16_2Fhome2Fub_d81abf501752669755156_png.png",
+        "q9_opt3_ages_content_2025_07_16_2Fhome2Fub_a60b74fb1752669755316_png.png",
+        "q11_exp_ages_content_2025_07_16_2Fhome2Fub_a8d488b41752669755593_png.png",
+        "q12_ages_content_2025_07_16_2Fhome2Fub_5911f4901752669755985_png.png",
+        "q12_exp_ages_content_2025_07_16_2Fhome2Fub_88ba68e11752669756126_png.png",
+        "q13_ages_content_2025_07_16_2Fhome2Fub_975c822d1752669756309_png.png",
+        "q14_ages_content_2025_07_16_2Fhome2Fub_4776aacd1752669756843_png.png",
+        "q19_ages_content_2025_07_16_2Fhome2Fub_f837518a1752669758797_png.png",
+        "q20_ages_content_2025_07_16_2Fhome2Fub_e423aca61752669759944_png.png",
+        "q20_exp_ages_content_2025_07_16_2Fhome2Fub_0200e8a81752669760216_png.png",
+        "q20_exp_ages_content_2025_07_16_2Fhome2Fub_0200e8a81752669760216_png.png",
+        "q23_ages_content_2025_07_16_2Fhome2Fub_4b8bb94f1752669761315_png.png",
+        "q23_exp_ages_content_2025_07_16_2Fhome2Fub_ccf108c71752669761401_png.png",
+        "q26_exp_ages_content_2025_07_16_2Fhome2Fub_c6e2b0cc1752669762971_png.png",
+        "q27_exp_ages_content_2025_07_16_2Fhome2Fub_7823b0611752669763300_png.png",
+        "q28_exp_ages_content_2025_07_16_2Fhome2Fub_4d3827611752669763928_png.png",
+        "q29_ages_content_2025_07_16_2Fhome2Fub_0308a3831752669764081_png.png",
+        "q32_ages_content_2025_07_16_2Fhome2Fub_e71bfc621752669765795_png.png",
+        "q32_exp_ages_content_2025_07_16_2Fhome2Fub_e71bfc621752669765795_png.png",
+        "q34_ages_content_2025_07_16_2Fhome2Fub_45d462a91752669766799_png.png",
+        "q34_exp_ages_content_2025_07_16_2Fhome2Fub_ead0ab5c1752669766939_png.png",
+        "q35_exp_ages_content_2025_07_16_2Fhome2Fub_f06d6f401752669768911_png.png",
+        "q39_ages_content_2025_07_16_2Fhome2Fub_4cdca7e21752669770534_png.png",
+        "q40_ages_content_2025_07_16_2Fhome2Fub_701f655b1752669771428_png.png",
+        "q40_opt0_ages_content_2025_07_16_2Fhome2Fub_b8e1a2831752669771735_png.png",
+        "q40_opt1_ages_content_2025_07_16_2Fhome2Fub_2d74d3611752669771853_png.png",
+        "q40_opt2_ages_content_2025_07_16_2Fhome2Fub_9066d5f91752669771944_png.png",
+        "q40_opt3_ages_content_2025_07_16_2Fhome2Fub_c1f69a5b1752669772048_png.png",
+        "q40_exp_ages_content_2025_07_16_2Fhome2Fub_35bf0b561752669771608_png.png",
+        "q41_opt0_ages_content_2025_07_16_2Fhome2Fub_3a29d9a21752669772634_png.png",
+        "q41_opt1_ages_content_2025_07_16_2Fhome2Fub_82586b111752669772733_png.png",
+        "q41_opt2_ages_content_2025_07_16_2Fhome2Fub_569a85a01752669772830_png.png",
+        "q41_opt3_ages_content_2025_07_16_2Fhome2Fub_ac5e70891752669772922_png.png",
+        "q41_exp_ages_content_2025_07_16_2Fhome2Fub_3a29d9a21752669772634_png.png",
+        "q45_ages_content_2025_07_16_2Fhome2Fub_5a6734481752669775123_png.png",
+        "q47_exp_ages_content_2025_07_16_2Fhome2Fub_26420efc1752669777152_png.png",
+        "q53_opt0_ages_content_2025_07_16_2Fhome2Fub_7f6a965b1752669782797_png.png",
+        "q53_opt1_ages_content_2025_07_16_2Fhome2Fub_3fcb0e7c1752669782896_png.png",
+        "q53_opt2_ages_content_2025_07_16_2Fhome2Fub_ba0c1b0c1752669782978_png.png",
+        "q53_opt3_ages_content_2025_07_16_2Fhome2Fub_693fe5091752669783049_png.png",
+        "q53_exp_ages_content_2025_07_16_2Fhome2Fub_a9197e7c1752669782721_png.png",
+        "q55_opt0_ages_content_2025_07_16_2Fhome2Fub_f6c157ba1752669783689_png.png",
+        "q55_opt1_ages_content_2025_07_16_2Fhome2Fub_3561c1321752669783840_png.png",
+        "q55_opt2_ages_content_2025_07_16_2Fhome2Fub_2a7d98781752669783920_png.png",
+        "q55_opt3_ages_content_2025_07_16_2Fhome2Fub_d97c4ad51752669784042_png.png",
+        "q55_exp_ages_content_2025_07_16_2Fhome2Fub_215a2ef81752669783570_png.png",
+        "q56_opt1_ages_content_2025_07_16_2Fhome2Fub_336413a31752669784515_png.png",
+        "q56_opt2_ages_content_2025_07_16_2Fhome2Fub_d1f2b1f01752669784698_png.png",
+        "q56_opt3_ages_content_2025_07_16_2Fhome2Fub_0db1d1501752669784766_png.png",
+        "q59_opt0_ages_content_2025_07_16_2Fhome2Fub_ea1736fb1752669786297_png.png",
+        "q59_opt1_ages_content_2025_07_16_2Fhome2Fub_614e417a1752669786371_png.png",
+        "q59_opt2_ages_content_2025_07_16_2Fhome2Fub_d67464551752669786532_png.png",
+        "q59_opt3_ages_content_2025_07_16_2Fhome2Fub_48f5ee191752669786602_png.png",
+        "q59_exp_ages_content_2025_07_16_2Fhome2Fub_176e8e781752669786213_png.png",
+        "q66_opt0_ages_content_2025_07_16_2Fhome2Fub_66fdcac51752669794127_png.png",
+        "q66_opt1_ages_content_2025_07_16_2Fhome2Fub_6c6d4ae71752669794221_png.png",
+        "q66_opt2_ages_content_2025_07_16_2Fhome2Fub_e776fefd1752669794336_png.png",
+        "q66_opt3_ages_content_2025_07_16_2Fhome2Fub_15f69f8c1752669794523_png.png",
+        "q66_exp_ages_content_2025_07_16_2Fhome2Fub_934c54371752669794044_png.png",
+        "q76_ages_content_2025_07_16_2Fhome2Fub_9d558c2a1752669801588_png.png",
+        "q76_opt0_ages_content_2025_07_16_2Fhome2Fub_cef0139e1752669801821_png.png",
+        "q76_opt1_ages_content_2025_07_16_2Fhome2Fub_03d30f8e1752669801943_png.png",
+        "q76_opt2_ages_content_2025_07_16_2Fhome2Fub_16fd06d01752669802036_png.png",
+        "q76_opt3_ages_content_2025_07_16_2Fhome2Fub_2b7318a11752669802130_png.png",
+        "q76_exp_ages_content_2025_07_16_2Fhome2Fub_933662d81752669801731_png.png",
+        "q78_exp_ages_content_2025_07_16_2Fhome2Fub_31978ab01752669803818_png.png",
+        "q81_exp_ages_content_2025_07_16_2Fhome2Fub_36f071931752669805980_png.png",
+        "q83_ages_content_2025_07_16_2Fhome2Fub_81a96e621752669806319_png.png",
+        "q83_exp_ages_content_2025_07_16_2Fhome2Fub_6c51b68b1752669806795_png.png",
+        "q83_exp_ages_content_2025_07_16_2Fhome2Fub_6c51b68b1752669806795_png.png",
+        "q83_exp_ages_content_2025_07_16_2Fhome2Fub_6c51b68b1752669806795_png.png",
+        "q83_exp_ages_content_2025_07_16_2Fhome2Fub_6c51b68b1752669806795_png.png",
+        "q85_exp_ages_content_2025_07_16_2Fhome2Fub_39eaaa0d1752669810089_png.png",
+        "q88_ages_content_2025_07_16_2Fhome2Fub_0ddadeb71752669813180_png.png",
+        "q88_opt0_ages_content_2025_07_16_2Fhome2Fub_344a3a311752669813385_png.png",
+        "q88_opt1_ages_content_2025_07_16_2Fhome2Fub_e1930a3f1752669813450_png.png",
+        "q88_opt2_ages_content_2025_07_16_2Fhome2Fub_57748de61752669813539_png.png",
+        "q88_opt3_ages_content_2025_07_16_2Fhome2Fub_e0ffa80c1752669813753_png.png",
+        "q88_exp_ages_content_2025_07_16_2Fhome2Fub_2f606cab1752669813300_png.png",
+        "q89_exp_ages_content_2025_07_16_2Fhome2Fub_66332c611752669814331_png.png",
+        "q92_ages_content_2025_07_16_2Fhome2Fub_aa637c9b1752669815924_png.png",
+        "q92_opt0_ages_content_2025_07_16_2Fhome2Fub_1eddb0a51752669816095_png.png",
+        "q92_opt1_ages_content_2025_07_16_2Fhome2Fub_ebdaaeaf1752669816311_png.png",
+        "q92_opt2_ages_content_2025_07_16_2Fhome2Fub_bc38b5ff1752669816426_png.png",
+        "q92_opt3_ages_content_2025_07_16_2Fhome2Fub_3eb555f71752669816522_png.png",
+        "q92_exp_ages_content_2025_07_16_2Fhome2Fub_a3d85c6d1752669815999_png.png",
+        "q94_exp_ages_content_2025_07_16_2Fhome2Fub_ce7db5441752669817266_png.png",
+        "q95_exp_ages_content_2025_07_16_2Fhome2Fub_682b510f1752669819259_png.png",
+        "q103_ages_content_2025_07_16_2Fhome2Fub_977a24ff1752669824711_png.png",
+        "q115_ages_content_2025_07_16_2Fhome2Fub_aee06c381752669826714_png.png",
+        "q119_ages_content_2025_07_16_2Fhome2Fub_6bdc61791752669827411_png.png",
+        "q130_exp_ages_content_2025_07_16_2Fhome2Fub_931ef87a1752669829481_png.png",
+        "q133_exp_ages_content_2025_07_16_2Fhome2Fub_8f25049c1752669830434_png.png",
+        "q139_ages_content_2025_07_16_2Fhome2Fub_2f2fd49c1752669833640_png.png",
+        "q172_ages_content_2025_07_16_2Fhome2Fub_b43d4e181752669841202_jpg.jpg",
+        "q180_ages_content_2025_07_16_2Fhome2Fub_4eadb9e91752669842219_jpg.jpg",
+        "q192_ages_content_2025_07_16_2Fhome2Fub_5183a8741752669845548_jpg.jpg",
+        "q192_exp_ages_content_2025_07_16_2Fhome2Fub_c09464d81752669845739_jpg.jpg"
+      ]
+    },
+    {
+      "mockId": "1864bece-03a6-4fec-a610-9c3ff66d68e0",
+      "title": "13 Apr 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 38,
+      "refs": [
+        "13_apr_s1_optfix_for-the-following-circuit-and-_img1_20260512_060245.webp",
+        "13_apr_s1_optfix_for-the-following-circuit-and-_img2_optA_20260512_060246.webp",
+        "13_apr_s1_optfix_for-the-following-circuit-and-_img3_optB_20260512_060249.webp",
+        "13_apr_s1_optfix_for-the-following-circuit-and-_img4_optC_20260512_060250.webp",
+        "13_apr_s1_optfix_for-the-following-circuit-and-_img5_optD_20260512_060253.webp",
+        "13_apr_s1_optfix_for-the-following-circuit-and-_img6_explanation_20260512_060255.webp",
+        "13_apr_s1_optfix_which-graph-represents-the-dif_img1_optA_20260512_060248.webp",
+        "13_apr_s1_optfix_which-graph-represents-the-dif_img2_optB_20260512_060250.webp",
+        "13_apr_s1_optfix_which-graph-represents-the-dif_img3_optC_20260512_060252.webp",
+        "13_apr_s1_optfix_which-graph-represents-the-dif_img4_optD_20260512_060254.webp",
+        "13_apr_s1_optfix_which-graph-represents-the-dif_img5_explanation_20260512_060256.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img1_20260512_060257.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img2_optA_20260512_060300.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img3_optB_20260512_060301.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img4_optC_20260512_060303.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img5_optD_20260512_060303.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img6_explanation_20260512_060304.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img1_20260512_060300.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img2_optA_20260512_060301.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img3_optB_20260512_060303.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img4_optC_20260512_060304.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img5_optD_20260512_060305.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img6_explanation_20260512_060305.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img1_20260512_060305.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img2_optA_20260512_060305.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img3_optB_20260512_060306.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img4_optC_20260512_060306.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img5_optD_20260512_060306.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img6_explanation_20260512_060306.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img1_20260512_060306.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img2_optA_20260512_060306.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img5_optD_20260512_060307.webp",
+        "13_apr_s1_optfix_in-the-reaction-given-below-13_img6_explanation_20260512_060307.webp",
+        "13_apr_s1_optfix_among-the-following-compounds-_img1_optA_20260512_060303.webp",
+        "13_apr_s1_optfix_among-the-following-compounds-_img2_optB_20260512_060303.webp",
+        "13_apr_s1_optfix_among-the-following-compounds-_img3_optC_20260512_060304.webp",
+        "13_apr_s1_optfix_among-the-following-compounds-_img4_optD_20260512_060305.webp",
+        "13_apr_s1_optfix_among-the-following-compounds-_img5_explanation_20260512_060305.webp"
+      ]
+    },
+    {
+      "mockId": "1effc938-bda9-4ad5-b292-9250498bb7b2",
+      "title": "JEE Main 2026 Jan 21 shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 30,
+      "refs": [
+        "cracku/a-1-m-long-metal-rod-ab-completes-t_img1.png",
+        "cracku/a-uniform-rod-of-mass-m-and-length_img1.png",
+        "cracku/the-given-circuit-works-as_img1.png",
+        "cracku/potential-energy-v-versus-distance_img1.png",
+        "cracku/water-flows-through-a-horizontal-tu_img1.png",
+        "cracku/two-identical-thin-rods-of-mass-m-k_img1.png",
+        "cracku/the-heat-generated-in-1-minute-betw_img1.png",
+        "cracku/from-the-following-the-least-stable_opta_img1.png",
+        "cracku/from-the-following-the-least-stable_optb_img2.png",
+        "cracku/from-the-following-the-least-stable_optc_img3.png",
+        "cracku/from-the-following-the-least-stable_optd_img4.png",
+        "cracku/an-organic-compound-p-of-molecular_opta_img1.png",
+        "cracku/an-organic-compound-p-of-molecular_optb_img2.png",
+        "cracku/an-organic-compound-p-of-molecular_optc_img3.png",
+        "cracku/an-organic-compound-p-of-molecular_optd_img4.png",
+        "cracku/which-of-the-following-graphs-betwe_opta_img1.png",
+        "cracku/which-of-the-following-graphs-betwe_optb_img2.png",
+        "cracku/which-of-the-following-graphs-betwe_optc_img3.png",
+        "cracku/which-of-the-following-graphs-betwe_optd_img4.png",
+        "cracku/identify-a-in-the-following-reactio_img1.png",
+        "cracku/identify-a-in-the-following-reactio_opta_img2.png",
+        "cracku/identify-a-in-the-following-reactio_optb_img3.png",
+        "cracku/identify-a-in-the-following-reactio_optc_img4.png",
+        "cracku/identify-a-in-the-following-reactio_optd_img5.png",
+        "cracku/a-hydrocarbon-p-c_4h_8-on-reaction_opta_img1.png",
+        "cracku/a-hydrocarbon-p-c_4h_8-on-reaction_optb_img2.png",
+        "cracku/a-hydrocarbon-p-c_4h_8-on-reaction_optc_img3.png",
+        "cracku/a-hydrocarbon-p-c_4h_8-on-reaction_optd_img4.png",
+        "cracku/for-the-reaction-n_2o_4rightlefthar_img1.png",
+        "cracku/use-the-following-data-one-mole-eac_img1.png"
+      ]
+    },
+    {
+      "mockId": "9d2031ed-8cab-48fc-bf61-5d445e2967b8",
+      "title": "25 Jun 2022 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 30,
+      "refs": [
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052806.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_20260512_052810.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052814.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_20260512_052820.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_20260512_052826.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052826.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_20260512_052829.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img2_explanation_20260512_052830.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052834.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_20260512_052835.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img2_explanation_20260512_052838.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052838.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img2_optA_20260512_052837.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img3_optB_20260512_052838.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img4_optC_20260512_052838.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img5_optD_20260512_052839.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img6_explanation_20260512_052840.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_optA_20260512_052837.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img2_optB_20260512_052838.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img3_optC_20260512_052839.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img4_optD_20260512_052839.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img5_explanation_20260512_052840.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_20260512_052837.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img2_optA_20260512_052838.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img4_optC_20260512_052839.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img5_optD_20260512_052840.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img6_explanation_20260512_052841.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img3_optB_20260512_052839.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052844.webp",
+        "25_jun_s1_optfix_25-jun-2022-shift-1_img1_explanation_20260512_052845.webp"
+      ]
+    },
+    {
+      "mockId": "8f86814e-4602-4f12-a362-e83fb13f22fb",
+      "title": "18 Mar 2021 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 27,
+      "refs": [
+        "18_mar_s2_optfix_the-velocity-displacement-grap_img1_20260512_082626.webp",
+        "18_mar_s2_optfix_the-velocity-displacement-grap_img2_optA_20260512_082630.webp",
+        "18_mar_s2_optfix_the-velocity-displacement-grap_img3_optB_20260512_082631.webp",
+        "18_mar_s2_optfix_the-velocity-displacement-grap_img4_optC_20260512_082631.webp",
+        "18_mar_s2_optfix_the-velocity-displacement-grap_img5_optD_20260512_082632.webp",
+        "18_mar_s2_optfix_three-rays-of-light-namely-red_img1_20260512_082626.webp",
+        "18_mar_s2_optfix_a-solid-cylinder-of-mass-m-is-_img1_20260512_082620.webp",
+        "18_mar_s2_optfix_a-particle-of-mass-m-moves-in-_img1_optA_20260512_082626.webp",
+        "18_mar_s2_optfix_a-particle-of-mass-m-moves-in-_img2_optB_20260512_082630.webp",
+        "18_mar_s2_optfix_a-particle-of-mass-m-moves-in-_img3_optC_20260512_082631.webp",
+        "18_mar_s2_optfix_a-particle-of-mass-m-moves-in-_img4_optD_20260512_082631.webp",
+        "18_mar_s2_optfix_the-projectile-motion-of-a-par_img1_20260512_082626.webp",
+        "18_mar_s2_optfix_the-typical-output-characteris_img1_20260512_082630.webp",
+        "18_mar_s2_optfix_consider-a-water-tank-as-shown_img1_20260512_082630.webp",
+        "18_mar_s2_optfix_consider-a-72-cm-long-wire-a-b_img1_20260512_082631.webp",
+        "18_mar_s2_optfix_main-products-formed-during-a-_img1_optA_20260512_082637.webp",
+        "18_mar_s2_optfix_main-products-formed-during-a-_img2_optB_20260512_082637.webp",
+        "18_mar_s2_optfix_main-products-formed-during-a-_img3_optC_20260512_082637.webp",
+        "18_mar_s2_optfix_main-products-formed-during-a-_img4_optD_20260512_082637.webp",
+        "18_mar_s2_optfix_consider-the-given-reaction-pe_img1_20260512_082704.webp",
+        "18_mar_s2_optfix_consider-the-above-reaction-th_img1_20260512_082705.webp",
+        "18_mar_s2_optfix_consider-the-above-reaction-th_img2_optA_20260512_082705.webp",
+        "18_mar_s2_optfix_consider-the-above-reaction-th_img3_optB_20260512_082706.webp",
+        "18_mar_s2_optfix_consider-the-above-reaction-th_img4_optC_20260512_082706.webp",
+        "18_mar_s2_optfix_consider-the-above-reaction-th_img5_optD_20260512_082707.webp",
+        "18_mar_s2_optfix_in-the-following-molecules-hyb_img1_20260512_082705.webp",
+        "18_mar_s2_optfix_consider-the-above-reaction-wh_img1_20260512_082709.webp"
+      ]
+    },
+    {
+      "mockId": "c5a77699-aed2-4d89-8614-a72237041149",
+      "title": "24 Jan 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 18,
+      "refs": [
+        "24_jan_s1_optfix_textr-formed-in-the-following-_img1_20260512_054406.webp",
+        "24_jan_s1_optfix_textr-formed-in-the-following-_img2_optA_20260512_054407.webp",
+        "24_jan_s1_optfix_textr-formed-in-the-following-_img3_optB_20260512_054408.webp",
+        "24_jan_s1_optfix_textr-formed-in-the-following-_img4_optC_20260512_054409.webp",
+        "24_jan_s1_optfix_textr-formed-in-the-following-_img5_optD_20260512_054410.webp",
+        "24_jan_s1_optfix_textr-formed-in-the-following-_img6_explanation_20260512_054411.webp",
+        "24_jan_s1_optfix_a-and-b-formed-in-the-followin_img1_20260512_054408.webp",
+        "24_jan_s1_optfix_a-and-b-formed-in-the-followin_img2_optA_20260512_054409.webp",
+        "24_jan_s1_optfix_a-and-b-formed-in-the-followin_img3_optB_20260512_054410.webp",
+        "24_jan_s1_optfix_a-and-b-formed-in-the-followin_img4_optC_20260512_054411.webp",
+        "24_jan_s1_optfix_a-and-b-formed-in-the-followin_img5_optD_20260512_054411.webp",
+        "24_jan_s1_optfix_a-and-b-formed-in-the-followin_img6_explanation_20260512_054412.webp",
+        "24_jan_s1_optfix_in-the-following-given-reactio_img1_20260512_054407.webp",
+        "24_jan_s1_optfix_in-the-following-given-reactio_img2_optA_20260512_054409.webp",
+        "24_jan_s1_optfix_in-the-following-given-reactio_img3_optB_20260512_054410.webp",
+        "24_jan_s1_optfix_in-the-following-given-reactio_img4_optC_20260512_054411.webp",
+        "24_jan_s1_optfix_in-the-following-given-reactio_img5_optD_20260512_054411.webp",
+        "24_jan_s1_optfix_in-the-following-given-reactio_img6_explanation_20260512_054412.webp"
+      ]
+    },
+    {
+      "mockId": "f7a26d20-e0c2-4478-99ef-b99e080b3808",
+      "title": "DBMS, Network Theory Test #1",
+      "exam_type": "GATE",
+      "branch": null,
+      "count": 13,
+      "refs": [
+        "gate-ece_network-theory/for-the-r-l-circuit-_img1.jpg",
+        "gate-ece_network-theory/pin-the-circuit-show_img1_3.png",
+        "gate-ece_network-theory/in-the-interconnecti_img1.png",
+        "gate-ece_network-theory/consider-a-delta-con_img1.png",
+        "gate-ece_network-theory/the-abcd-matrix-for-_img1.png",
+        "gate-ece_network-theory/in-the-given-circuit_img1_3.jpg",
+        "gate-ece_network-theory/pfor-the-two-port-ne_img1.png",
+        "gate-ece_network-theory/an-ac-voltage-source_img1.png",
+        "gate-ece_network-theory/the-voltage-e0-in-fi_img1.png",
+        "gate-ece_network-theory/p-text--the-current-_img1.png",
+        "gate-ece_network-theory/identify-which-of-th_img1.jpg",
+        "gate-ece_network-theory/if-r1-r2-r4-r-and-r3_img1.png",
+        "gate-ece_network-theory/in-the-following-fig_img1.jpg"
+      ]
+    },
+    {
+      "mockId": "b44085c8-575c-42f6-9920-b776a4d4c872",
+      "title": "JEE Main 2026 Jan 21 shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 13,
+      "refs": [
+        "cracku/the-charge-stored-by-the-capacitor_img1.png",
+        "cracku/an-infinitely-long-straight-wire-ca_img1.png",
+        "cracku/as-shown-in-the-diagram-when-the-in_img1.png",
+        "cracku/a-large-drum-having-radius-r-is-spi_img1.png",
+        "cracku/the-pulley-shown-in-the-figure-is-m_img1.png",
+        "cracku/two-known-resistances-of-r-omega-an_img1.png",
+        "cracku/the-total-length-of-potentiometer-w_img1.png",
+        "cracku/the-correct-order-of-reactivity-of_img1.png",
+        "cracku/for-a-closed-circuit-daniell-cell-w_opta_img1.png",
+        "cracku/for-a-closed-circuit-daniell-cell-w_optb_img2.png",
+        "cracku/for-a-closed-circuit-daniell-cell-w_optc_img3.png",
+        "cracku/for-a-closed-circuit-daniell-cell-w_optd_img4.png",
+        "cracku/let-alpha-and-beta-be-the-roots-of_exp_img1.png"
+      ]
+    },
+    {
+      "mockId": "b7e46fc2-5806-4b6c-a583-391fc7777ca1",
+      "title": "24 Jun 2022 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 10,
+      "refs": [
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_explanation_20260512_052239.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img2_explanation_20260512_052240.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_explanation_20260512_052241.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_explanation_20260512_052244.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_explanation_20260512_052249.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_explanation_20260512_052252.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_explanation_20260512_052253.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_20260512_052257.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_20260512_052259.webp",
+        "24_jun_s1_optfix_24-jun-2022-shift-1_img1_20260512_052301.webp"
+      ]
+    },
+    {
+      "mockId": "231c678a-d388-4c9f-9184-f521151d7ee7",
+      "title": "20 Jul 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 8,
+      "refs": [
+        "20_jul_s1_physics_the-value-of-current-in-the-6omega_img1_20260512_011948.webp",
+        "20_jul_s1_physics_the-value-of-current-in-the-6omega_img2_20260512_011949.webp",
+        "20_jul_s1_physics_ac-voltage-vt20-sinomegat-of-frequ_img1_20260512_011951.webp",
+        "20_jul_s1_optfix_the-correct-structure-of-rhuma_img1_optA_20260512_045453.webp",
+        "20_jul_s1_optfix_the-correct-structure-of-rhuma_img2_optB_20260512_045454.webp",
+        "20_jul_s1_optfix_the-correct-structure-of-rhuma_img3_optC_20260512_045455.webp",
+        "20_jul_s1_optfix_the-correct-structure-of-rhuma_img4_optD_20260512_045456.webp",
+        "20_jul_s1_optfix_the-correct-structure-of-rhuma_img5_explanation_20260512_045457.webp"
+      ]
+    },
+    {
+      "mockId": "1b8465aa-89fb-476d-9e1f-f4c0886f79bc",
+      "title": "11 Apr 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 6,
+      "refs": [
+        "11_apr_s1_optfix_texta-and-textb-in-the-above-r_img1_20260512_060059.webp",
+        "11_apr_s1_optfix_texta-and-textb-in-the-above-r_img2_optA_20260512_060101.webp",
+        "11_apr_s1_optfix_texta-and-textb-in-the-above-r_img3_optB_20260512_060102.webp",
+        "11_apr_s1_optfix_texta-and-textb-in-the-above-r_img4_optC_20260512_060103.webp",
+        "11_apr_s1_optfix_texta-and-textb-in-the-above-r_img5_optD_20260512_060103.webp",
+        "11_apr_s1_optfix_texta-and-textb-in-the-above-r_img6_explanation_20260512_060103.webp"
+      ]
+    },
+    {
+      "mockId": "83a2f2b4-f8da-44ea-a172-84ae0099fa9f",
+      "title": "28 Jul 2022 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 6,
+      "refs": [
+        "28_jul_s2_optfix_the-major-product-in-the-given_img1_20260512_053738.webp",
+        "28_jul_s2_optfix_the-major-product-in-the-given_img2_optA_20260512_053740.webp",
+        "28_jul_s2_optfix_the-major-product-in-the-given_img3_optB_20260512_053741.webp",
+        "28_jul_s2_optfix_the-major-product-in-the-given_img4_optC_20260512_053742.webp",
+        "28_jul_s2_optfix_the-major-product-in-the-given_img5_optD_20260512_053742.webp",
+        "28_jul_s2_optfix_the-major-product-in-the-given_img6_explanation_20260512_053743.webp"
+      ]
+    },
+    {
+      "mockId": "91c29413-b7a1-484d-9188-4afd512eb249",
+      "title": "22 Jul 2021 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 5,
+      "refs": [
+        "22_jul_s2_optfix_in-a-circuit-consisting-of-a-c_img1_20260512_061432.webp",
+        "22_jul_s2_optfix_in-a-circuit-consisting-of-a-c_img2_optA_20260512_061433.webp",
+        "22_jul_s2_optfix_in-a-circuit-consisting-of-a-c_img3_optB_20260512_061436.webp",
+        "22_jul_s2_optfix_in-a-circuit-consisting-of-a-c_img4_optC_20260512_061436.webp",
+        "22_jul_s2_optfix_in-a-circuit-consisting-of-a-c_img5_optD_20260512_061439.webp"
+      ]
+    },
+    {
+      "mockId": "73251f46-5764-4f4b-a71d-7302f9961b35",
+      "title": "30 Jan 2023 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 5,
+      "refs": [
+        "30_jan_s2_optfix_the-output-texty-for-the-input_img1_20260512_054809.webp",
+        "30_jan_s2_optfix_the-output-texty-for-the-input_img2_optA_20260512_054810.webp",
+        "30_jan_s2_optfix_the-output-texty-for-the-input_img3_optB_20260512_054811.webp",
+        "30_jan_s2_optfix_the-output-texty-for-the-input_img4_optC_20260512_054811.webp",
+        "30_jan_s2_optfix_the-output-texty-for-the-input_img5_optD_20260512_054812.webp"
+      ]
+    },
+    {
+      "mockId": "2196580f-fa7c-47bb-a445-bd658c75dd14",
+      "title": "17 Mar 2021 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 2,
+      "refs": [
+        "17_mar_s2_mathematics_if-the-integral-010-sin-2-pi-xe_img1_20260512_011722.webp",
+        "17_mar_s2_mathematics_let-tan-alpha-tan-beta-and-tan-gamma-alpha-beta-_img1_20260512_011739.webp"
+      ]
+    },
+    {
+      "mockId": "a4c8b376-a905-4c35-a20f-1814e44f06e6",
+      "title": "16 Mar 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 2,
+      "refs": [
+        "16_mar_s1_mathematics_let-a-vector-alpha-ibeta-j-be-obtaine_img1_20260512_011428.webp",
+        "16_mar_s1_mathematics_let-a-vector-alpha-ibeta-j-be-obtaine_img2_20260512_011428.webp"
+      ]
+    },
+    {
+      "mockId": "e6585a43-9c0b-457d-be5c-ed08153fd85d",
+      "title": "GATE PI 2014",
+      "exam_type": "GATE",
+      "branch": "PI",
+      "count": 2,
+      "refs": [
+        "q7_n_images_content_2024_05_02_image1_a585f6861714635597010_gif.gif",
+        "q7_n_images_content_2024_05_02_image2_2ca934371714635597016_gif.gif"
+      ]
+    },
+    {
+      "mockId": "73db8040-8b31-4b73-a1b0-18b4840c5c31",
+      "title": "25 Jul 2022 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 2,
+      "refs": [
+        "25_jul_s1_mathematics_let-the-locus-of-the-centre-alpha-_img1_20260511_235755.webp",
+        "25_jul_s1_mathematics_let-the-locus-of-the-centre-alpha-_img2_20260511_235758.webp"
+      ]
+    },
+    {
+      "mockId": "59f4863a-08f4-4d75-867c-fda1ca4b249d",
+      "title": "10 Apr 2023 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 2,
+      "refs": [
+        "10_apr_s2_mathematics_in-the-figure-theta_1theta_2fracpi2-and_img1_20260511_202853.webp",
+        "10_apr_s2_mathematics_in-the-figure-theta_1theta_2fracpi2-and_img2_20260511_202853.webp"
+      ]
+    },
+    {
+      "mockId": "921640f8-dea4-4b60-bc8a-1104fd63c29a",
+      "title": "26 Feb 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "26_feb_s1_mathematics_let-lambda-21-be-a-point-on-the-pla_img1_20260512_011003.webp"
+      ]
+    },
+    {
+      "mockId": "2562e747-70df-4a54-a677-1261388afe3d",
+      "title": "13 Apr 2023 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "13_apr_s2_mathematics_let-alpha-beta-be-the-centroid-of-the_img1_20260511_203844.webp"
+      ]
+    },
+    {
+      "mockId": "0e973b47-c642-4eeb-99b0-ae237434855f",
+      "title": "12 Apr 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "12_apr_s1_mathematics_if-the-point-alpha-7-sqrt33-lies-o_img1_20260511_203225.webp"
+      ]
+    },
+    {
+      "mockId": "1cbf548e-8088-4a65-9159-088303d2515a",
+      "title": "27 Jul 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "27_jul_s1_mathematics_let-f-fracpi4-fracpi4-r-be-defin_img1_20260512_012505.webp"
+      ]
+    },
+    {
+      "mockId": "546dd60e-279e-438f-ac93-ce8ee3bc3364",
+      "title": "26 Aug 2021 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "26_aug_s2_mathematics_the-value-of-2-sin-fracpi8-sin-_img1_20260512_012749.webp"
+      ]
+    },
+    {
+      "mockId": "64264c90-36ac-43b6-b15a-a8e47dc4d235",
+      "title": "25 Feb 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "25_feb_s1_mathematics_the-value-of-the-integral-sintheta_img1_20260512_010758.webp"
+      ]
+    },
+    {
+      "mockId": "4b2c26ad-23fe-4107-b9e2-aa249e934395",
+      "title": "28 Jul 2022 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "28_jul_s1_mathematics_for-textt-02-pi-if-textabc-is-a_img1_20260512_000924.webp"
+      ]
+    },
+    {
+      "mockId": "985cbfab-05d0-424b-820d-e092666a3e78",
+      "title": "17 Mar 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "17_mar_s1_mathematics_if-cot-1alphacot-1-2cot-1-8cot-1-1_img1_20260512_011633.webp"
+      ]
+    },
+    {
+      "mockId": "af15e1f7-d0e9-421c-bfc0-bf3e4c69d516",
+      "title": "25 Jul 2022 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "25_jul_s2_mathematics_let-the-point-palpha-beta-be-at-a-uni_img1_20260512_000013.webp"
+      ]
+    },
+    {
+      "mockId": "6edfea1c-9248-4aea-a6c2-3950859cfc41",
+      "title": "8 Apr 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "8_apr_s1_mathematics_let-calpha-beta-be-the-circumcenter-o_img1_20260511_202522.webp"
+      ]
+    },
+    {
+      "mockId": "328e5304-99dd-4f63-8206-d4be9ca9cc97",
+      "title": "29 Jul 2022 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "29_jul_s2_mathematics_let-textaalpha-2-textbalpha-6-and-text_img1_20260512_001250.webp"
+      ]
+    },
+    {
+      "mockId": "79c8f79d-6516-4c04-a127-abcb69de778c",
+      "title": "31 Jan 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "31_jan_s1_mathematics_let-theta-be-the-angle-between-the_img1_20260511_201942.webp"
+      ]
+    },
+    {
+      "mockId": "a4d55a1a-443b-4c07-9e91-e53831cf7975",
+      "title": "31 Aug 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "31_aug_s1_mathematics_if-the-variable-line-3-x4-yalpha-l_img1_20260512_013042.webp"
+      ]
+    },
+    {
+      "mockId": "1df6b5ca-e1da-4113-a5ad-a2040e585262",
+      "title": "31 Aug 2021 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "31_aug_s2_mathematics_if-sin-xsin-3-xcos-3-x-d-x-alpha-l_img1_20260512_013135.webp"
+      ]
+    },
+    {
+      "mockId": "4c4aba91-1431-47c2-903c-c157e5d9aae6",
+      "title": "15 Apr 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "15_apr_s1_mathematics_if-alpha-beta-is-the-orthocenter-of-t_img1_20260511_203958.webp"
+      ]
+    },
+    {
+      "mockId": "2f2401e7-30eb-4ce9-b3b6-4803a590152f",
+      "title": "24 Feb 2021 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "24_feb_s1_mathematics_the-minimum-value-of-alpha-for-whi_img1_20260512_010613.webp"
+      ]
+    },
+    {
+      "mockId": "1b337863-568f-479b-873e-ee1e8f17614e",
+      "title": "30 Jan 2023 Shift 1",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "30_jan_s1_mathematics_let-alpha-be-the-area-of-the-large_img1_20260511_201729.webp"
+      ]
+    },
+    {
+      "mockId": "e6c2b96d-c648-4921-8588-075f043f3986",
+      "title": "16 Mar 2021 Shift 2",
+      "exam_type": "JEE_MAIN",
+      "branch": null,
+      "count": 1,
+      "refs": [
+        "16_mar_s2_mathematics_let-alpha-r-be-such-that-the-funct_img1_20260512_011520.webp"
+      ]
+    }
+  ]
+}

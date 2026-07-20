@@ -69,6 +69,20 @@ Add TWO prefix-scoped rules so backups and answer photos expire on their own sch
 
 Both prefixes share the 10 GB free tier; dumps are a few MB each so they're negligible.
 
+## 6. Warm the sitemap cache (cron, as the `battle` user)
+`deploy/update.sh` already warms the sitemap after every deploy (a fresh build
+wipes `.next/cache`). This cron is a top-up: if the server restarts and evicts
+the cache between deploys, it re-warms `/sitemap/0.xml` before Googlebot hits it
+cold and times out (which strands it on "Couldn't fetch" in Search Console).
+```
+crontab -e
+```
+Add this line (runs 02:30 server time daily, just after the backup):
+```
+30 2 * * * /bin/bash -lc '/home/battle/pattern-master/deploy/warm-sitemap.sh'
+```
+Verify: `tail ~/warm-sitemap.log` should show `HTTP 200` for every child sitemap.
+
 ## Notes
 - 500 MB of data dumps to a few MB gzipped; 30 days of nightly dumps is well under R2's
   10 GB free tier — effectively $0.

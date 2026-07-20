@@ -5,7 +5,7 @@ export const HOME_EXAM_COPY = joinExamLabels();
 export const HOME_EXAM_LIST = listExamLabels();
 
 const HOME_TITLE = `BattleExam – Pattern-Based ${HOME_EXAM_COPY} Practice & Mock Tests`;
-const HOME_DESC = `Master ${HOME_EXAM_COPY} with AI-generated pattern-based questions, previous year questions (PYQs) and full-length mock tests. Adaptive difficulty, instant explanations. Free to start.`;
+const HOME_DESC = `Master ${HOME_EXAM_COPY} with 15+ years of previous year questions (PYQs), full-length mock tests, and AI-generated pattern-based questions. Adaptive difficulty, instant explanations. Free to start.`;
 const HOME_OG_DESC = `Practice ${HOME_EXAM_COPY} with AI questions tailored to each topic's core logic. Adaptive difficulty, instant explanations, PYQs included. Free.`;
 
 export const homeMetadata: Metadata = {
@@ -139,7 +139,7 @@ export const softwareAppSchema = {
   applicationCategory: "EducationApplication",
   applicationSubCategory: "Exam Preparation",
   url: "https://battleexam.com",
-  description: `AI-powered pattern-based exam preparation platform for ${HOME_EXAM_COPY}. Practice with adaptive-difficulty questions, access previous year papers, and track your progress.`,
+  description: `Pattern-based exam preparation platform for ${HOME_EXAM_COPY}. Practice 15+ years of previous year questions (PYQs), take full-length mock tests with the real exam interface, drill AI-generated pattern-based questions at adaptive difficulty, and track your progress.`,
   offers: {
     "@type": "Offer",
     price: "0",
@@ -148,9 +148,9 @@ export const softwareAppSchema = {
     description: "Free core practice. No credit card required.",
   },
   featureList: [
+    `15+ years of Previous Year Questions (PYQs) for ${HOME_EXAM_COPY}`,
+    "Full-length mock tests with real exam interface, timer and marking scheme",
     "AI-generated pattern-based questions",
-    `Previous Year Questions (PYQs) for ${HOME_EXAM_COPY}`,
-    "Full-length mock tests with real exam interface",
     "Adaptive difficulty: Easy, Medium, Hard",
     "Instant explanations and step-by-step solutions",
     "Progress tracking and accuracy analytics",
@@ -199,7 +199,15 @@ export const faqStructuredData = {
       name: "Does BattleExam have previous year questions (PYQs)?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: `Yes. BattleExam includes PYQ banks for ${HOME_EXAM_COPY}, organised by subject, topic and year. Every previous year question is tagged to the exact pattern it tests, so you can study PYQs in context rather than in isolation.`,
+        text: `Yes. BattleExam includes 15+ years of PYQ banks for ${HOME_EXAM_COPY}, organised by subject, topic and year with step-by-step solutions. Every previous year question is tagged to the exact pattern it tests, so you can study PYQs in context rather than in isolation.`,
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How does BattleExam ensure its questions and answers are accurate?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "PYQs on BattleExam are real questions from official past papers with their official answer keys, so they are validated by the exam bodies themselves rather than AI-generated. AI-generated practice questions additionally pass an automated answer-review that re-solves each question and flags any disagreement with the stored answer for human correction. Every question also has a user 'Report an issue' control; reported questions enter a review queue and are corrected, so errors are fixed rather than silently repeated.",
       },
     },
     {

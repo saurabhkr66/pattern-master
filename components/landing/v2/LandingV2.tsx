@@ -7,6 +7,7 @@ import { I } from "./icons";
 import {
   QUESTIONS,
   FEATURES,
+  FEATURES_FULL,
   COVERAGE,
   FAQS,
   EXAM_CHIPS,
@@ -172,8 +173,10 @@ function Hero() {
               <span className="grad-text">Start understanding.</span>
             </h1>
             <p className="lead">
-              BattleExam teaches the <b>one core pattern</b> behind each exam topic —
-              then drills it with infinite, freshly generated questions until you genuinely own it.
+              BattleExam teaches the <b>one core pattern</b> behind each exam topic, then
+              drills it with infinite fresh questions — backed by <b>15+ years of previous-year
+              questions (PYQs)</b> and <b>full-length mock tests</b> with the real exam
+              interface, for GATE, JEE, NEET &amp; UGC NET.
             </p>
             <div className="exam-chips">
               {EXAM_CHIPS.map((c) => <span key={c} className="chip">{c}</span>)}
@@ -185,7 +188,7 @@ function Hero() {
               <a href="#coverage" className="btn btn-ghost btn-lg">See topics <I.arrow /></a>
             </div>
             <div className="trust-row">
-              {["100% free to start", "Latest syllabus", "Instant explanations", "PYQs included"].map((t) => (
+              {["100% free to start", "15+ years of PYQs", "Full-length mock tests", "Instant explanations"].map((t) => (
                 <span className="trust" key={t}><I.check /> {t}</span>
               ))}
             </div>
@@ -303,6 +306,70 @@ function Features() {
               </div>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- All Features ---------- */
+function AllFeatures() {
+  const [active, setActive] = useState(FEATURES_FULL[0].id);
+  const totalFeatures = FEATURES_FULL.reduce((n, c) => n + c.features.length, 0);
+  const cur = FEATURES_FULL.find((c) => c.id === active)!;
+
+  return (
+    <section className="section" id="all-features">
+      <div className="wrap">
+        <div className="sec-head center">
+          <span className="eyebrow">The full package</span>
+          <h2 className="h-sec">Everything you get —<br /><span className="grad-text">100% free.</span></h2>
+          <p className="lead muted">
+            Not a stripped-down trial. Every feature listed here is available from day one, no credit card, no catch.
+          </p>
+          <div className="af-pill">
+            <I.spark /> {totalFeatures} features · All free
+          </div>
+        </div>
+
+        <div className="af-tabs">
+          {FEATURES_FULL.map((cat) => {
+            const CatIcon = I[cat.icon];
+            return (
+              <button
+                key={cat.id}
+                className={"af-tab" + (cat.id === active ? " active" : "")}
+                onClick={() => setActive(cat.id)}
+                style={{ "--cat-accent": cat.accent } as React.CSSProperties}
+              >
+                <CatIcon />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="af-panel" key={active}>
+          <div className="af-panel-head">
+            <h3>{cur.label}</h3>
+            <span className="af-count">{cur.features.length} features</span>
+          </div>
+          <div className="af-list">
+            {cur.features.map((f, i) => {
+              const FIcon = I[f.icon];
+              return (
+                <div className="af-item" key={i} style={{ animationDelay: `${i * 60}ms` }}>
+                  <div className="af-ico" style={{ color: cur.accent }}>
+                    <FIcon />
+                  </div>
+                  <div className="af-text">
+                    <h4>{f.title}</h4>
+                    <p>{f.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
@@ -437,7 +504,7 @@ function FAQ() {
                   {f.q}
                   <span className="ic"><I.plus /></span>
                 </button>
-                <div className="faq-a" style={{ maxHeight: isOpen ? 320 : 0 }}>
+                <div className="faq-a" style={{ maxHeight: isOpen ? 440 : 0 }}>
                   <div className="inner">{f.a}</div>
                 </div>
               </div>
@@ -546,6 +613,7 @@ export default function LandingV2({ fontClassName = "" }: { fontClassName?: stri
       <Stats />
       <HowItWorks />
       <Features />
+      <AllFeatures />
       <MistakesRoom />
       <Coverage />
       <FAQ />

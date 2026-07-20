@@ -7,7 +7,8 @@
       "Bash(npx tsc *)",
       "Read(//c/Users/saura/.claude/skills/graphify/**)",
       "Read(//c/Users/saura/Desktop/images/topicwise/**)",
-      "Read(//c/Users/saura/Desktop/**)"
+      "Read(//c/Users/saura/Desktop/**)",
+      "Bash(npx tsx *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\saura\\Desktop\\projects\\practicepaper-scraper"
