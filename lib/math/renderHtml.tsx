@@ -21,7 +21,7 @@ import { mathRemarkPlugins, mathRehypePlugins, mathComponents } from "./markdown
 // Bump whenever transform.ts / markdownConfig change so the backfill knows which
 // stored rows are stale. MathHtml falls back to live rendering for rows whose
 // render_version is below this, so correctness is never broken in the meantime.
-export const RENDER_VERSION = 1;
+export const RENDER_VERSION = 2;
 
 // Scraped content occasionally contains an unpaired UTF-16 surrogate (a broken
 // character). The browser tolerates it when rendering live, but it is invalid

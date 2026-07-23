@@ -2,7 +2,11 @@
 //
 // Serves individual child sitemaps. URL shape: /sitemap/<id>.xml where
 // <id> is one of:
-//   0          → hub: static, exam/subject/topic, mock landing
+//   0          → light hub: static, exam/subject, mock landing, pyq hubs
+//   topics     → per-topic pages (roots + /page/N + /notes); isolated here so
+//                its heavy aggregations never block the sitemap index
+//   pyq-years  → year-wise PYQ index
+//   papers     → seeded paper pages
 //   mock-N     → Nth chunk of mock test instances
 //
 // Replaces the previous `app/sitemap.ts` metadata file. The metadata

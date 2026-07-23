@@ -554,7 +554,68 @@ export function transformMathContent(content: string): string {
     .replace(/\$\$([\s\S]*?)\$\$/g, (_m, body: string) => `$$${balanceBraces(transformMath(body))}$$`)
     .replace(/\$([^$\n]+?)\$/g, (_m, body: string) => `$${balanceBraces(transformMath(body))}$`);
 
-  return processedContent;
+  return escapeStrayEmphasis(processedContent);
+}
+
+// Scraped content is plain text, not authored markdown: a "*" is a Kleene star
+// or a multiplication sign, never emphasis. remark still reads "(0+1)*0(0+1)*0"
+// as an <em> span, silently italicising the middle and dropping the stars. Escape
+// every literal "*" that sits OUTSIDE math ($…$, $$…$$) and code (`…`, ```…```)
+// so it renders verbatim. Delimited regions are skipped so real math/pointers
+// ("int *p") are untouched. A "*" already escaped as "\*" is left alone.
+function escapeStrayEmphasis(s: string): string {
+  let out = '';
+  let i = 0;
+  const n = s.length;
+  while (i < n) {
+    // Fenced code block: ```lang … ``` — copy through verbatim.
+    if (s.startsWith('```', i)) {
+      const close = s.indexOf('```', i + 3);
+      const end = close === -1 ? n : close + 3;
+      out += s.slice(i, end);
+      i = end;
+      continue;
+    }
+    // Inline code span: `…` — copy through verbatim.
+    if (s[i] === '`') {
+      const close = s.indexOf('`', i + 1);
+      const end = close === -1 ? n : close + 1;
+      out += s.slice(i, end);
+      i = end;
+      continue;
+    }
+    // Display math: $$…$$
+    if (s.startsWith('$$', i)) {
+      const close = s.indexOf('$$', i + 2);
+      const end = close === -1 ? n : close + 2;
+      out += s.slice(i, end);
+      i = end;
+      continue;
+    }
+    // Inline math: $…$
+    if (s[i] === '$') {
+      const close = s.indexOf('$', i + 1);
+      const end = close === -1 ? n : close + 1;
+      out += s.slice(i, end);
+      i = end;
+      continue;
+    }
+    // A backslash escapes the next char — copy the pair so an existing "\*"
+    // (or any escaped char) is never touched or double-escaped.
+    if (s[i] === '\\' && i + 1 < n) {
+      out += s.slice(i, i + 2);
+      i += 2;
+      continue;
+    }
+    if (s[i] === '*') {
+      out += '\\*';
+      i++;
+      continue;
+    }
+    out += s[i];
+    i++;
+  }
+  return out;
 }
 
 // Safety net for scraped LaTeX with a stray/dropped brace (e.g. "{ \vec{\text{u}}"

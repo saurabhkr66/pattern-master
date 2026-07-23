@@ -412,11 +412,19 @@ export function buildQuestionSchema(q: {
   url: string;
   exam: ExamSeoInfo;
 }) {
+  // Google's Quiz spec only recognises these eduQuestionType values:
+  // "Flashcard", "Multiple choice", "Checkbox". Anything else is flagged as an
+  // invalid enum value in Search Console and blocks the rich result.
+  //   MCQ (one correct)      → "Multiple choice"
+  //   MSQ (many correct)     → "Checkbox"
+  //   NAT (numeric entry)    → "Flashcard" (no valid multiple-choice shape;
+  //                            free-response answer carried by acceptedAnswer)
   const typeMap: Record<string, string> = {
     MCQ: "Multiple choice",
-    MSQ: "Multiple select",
-    NAT: "Numerical answer",
+    MSQ: "Checkbox",
+    NAT: "Flashcard",
   };
+  const isFlashcard = (typeMap[q.questionType] ?? "") === "Flashcard";
 
   const publisher = {
     "@type": "Organization",
@@ -428,15 +436,25 @@ export function buildQuestionSchema(q: {
     }
   };
 
-  const suggestedAnswer = q.options.map((opt) => {
-    const letter = opt.trim().match(/^([A-Z])[.)]/)?.[1] ?? "";
-    const isCorrect = q.correctAnswer.split(";").includes(letter);
-    return {
-      "@type": "Answer",
-      "text": opt,
-      "isCorrect": isCorrect,
-    };
-  });
+  // Normalise the correct answer into a set of uppercase letters. Options may
+  // separate multiple correct answers with ";" or ",", so accept both. An
+  // option's letter comes from its "A."/"A)" prefix when present, otherwise
+  // from its position (index 0 → A) — the old prefix-only match silently marked
+  // NOTHING correct when options lacked letter prefixes.
+  const correctLetters = new Set(
+    q.correctAnswer
+      .split(/[;,]/)
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean),
+  );
+  const letterFor = (opt: string, i: number): string =>
+    opt.trim().match(/^([A-Za-z])[.)]/)?.[1]?.toUpperCase() ?? String.fromCharCode(65 + i);
+
+  const suggestedAnswer = q.options.map((opt, i) => ({
+    "@type": "Answer",
+    "text": opt,
+    "isCorrect": correctLetters.has(letterFor(opt, i)),
+  }));
 
   const yearLabel = q.year > 2000 ? ` ${q.year}` : "";
   const examFull = q.exam.fullLabel;
@@ -452,10 +470,7 @@ export function buildQuestionSchema(q: {
   const explanationClean = q.explanation ? cleanTextForMeta(q.explanation, 1000) : "";
   const acceptedAnswerText = explanationClean
     || (q.questionType === "NAT" ? q.correctAnswer : "")
-    || q.options.find((opt) => {
-      const letter = opt.trim().match(/^([A-Z])[.)]/)?.[1] ?? "";
-      return q.correctAnswer.split(";").includes(letter);
-    })
+    || q.options.find((opt, i) => correctLetters.has(letterFor(opt, i)))
     || "";
 
   return {
@@ -483,9 +498,13 @@ export function buildQuestionSchema(q: {
         "eduQuestionType": typeMap[q.questionType] ?? q.questionType,
         "learningResourceType": "Practice problem",
         "text": questionTextClean || q.questionText.slice(0, 1000),
-        "suggestedAnswer": q.questionType === "NAT"
-          ? [{ "@type": "Answer", "text": q.correctAnswer, "isCorrect": true }]
-          : suggestedAnswer,
+        // Flashcard (NAT) questions carry the answer only via acceptedAnswer —
+        // Google's Flashcard type takes no suggestedAnswer, and a numeric-entry
+        // question has no multiple-choice options to list. MCQ/MSQ emit the
+        // options as suggestedAnswer.
+        ...(isFlashcard || suggestedAnswer.length === 0
+          ? {}
+          : { "suggestedAnswer": suggestedAnswer }),
         ...(acceptedAnswerText
           ? {
               "acceptedAnswer": {

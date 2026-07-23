@@ -9,31 +9,32 @@
  * JSON format: array of mock objects, each with a `questions` array.
  */
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
 
 dotenv.config({ path: ".env" });
 
-// --- Vertex AI (billed against GCP credit) ---
-const ai = new GoogleGenAI({
-  vertexai: true,
-  project: 'project-27ed127f-554a-419a-b39',
-  location: 'global'
-});
-
-// Gemini Developer API via API key (free tier for gemini-3.1-flash-lite) — commented out, using Vertex AI instead.
+// --- Vertex AI (billed against GCP credit) — commented out, using API key instead. ---
 // const ai = new GoogleGenAI({
-//   apiKey: process.env.GEMINI_API_KEY,
+//   vertexai: true,
+//   project: 'project-27ed127f-554a-419a-b39',
+//   location: 'global'
 // });
 
+// Gemini Developer API via API key (free tier for gemini-3.5-flash-lite).
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
 const IMAGEKIT_ENDPOINT = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
-const BATCH_SIZE = 10;        // Vertex has high quotas — run 10 in parallel per batch
-const BATCH_DELAY_MS = 1000;  // 1s pause between batches (Vertex, not the 15 RPM free tier)
-// --- API-key (free-tier) batch settings — commented out, using Vertex ---
-// const TEXT_BATCH_SIZE = 5;    // text-only questions: 5 packed into ONE request (1 API call)
-// const BATCH_DELAY_MS = 4500;  // ~13 req/min — under the 15 RPM free-tier cap for flash-lite
+// --- Vertex batch settings — commented out, using API-key free-tier batching ---
+// const BATCH_SIZE = 10;        // Vertex has high quotas — run 10 in parallel per batch
+// const BATCH_DELAY_MS = 1000;  // 1s pause between batches (Vertex, not the 15 RPM free tier)
+// --- API-key (free-tier) batch settings ---
+const TEXT_BATCH_SIZE = 5;    // text-only questions: 5 packed into ONE request (1 API call)
+const BATCH_DELAY_MS = 4500;  // ~13 req/min — under the 15 RPM free-tier cap for flash-lite
 const MAX_RETRIES = 4;        // attempts per question on transient failure
 const RETRY_BASE_MS = 2000;   // first retry waits this long; doubles each retry
 const PROCESSED_LOG = path.resolve("scripts/processed-rewrite.log");
@@ -116,10 +117,10 @@ Reference (facts only — do NOT copy):
 ${q.explanation}
 
 Write a completely fresh explanation from scratch in your own voice:
-1. Start with the core concept, law, or principle that makes the correct answer obvious.
+1. Start with the core concept, law, principle, or formula that makes the correct answer obvious. For Biology and purely conceptual/factual questions there is no formula — lead with the underlying fact, definition, or mechanism instead.
 2. Walk through the reasoning naturally — like a teacher explaining it for the first time.
 3. All numerical values and facts must match the reference exactly.
-4. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units.
+4. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units. For Biology and non-mathematical questions, write plain prose with NO LaTeX at all.
 5. 2-4 sentences for conceptual questions; concise step-by-step for numerical problems.
 6. Do NOT use bullet points or numbered lists — flowing paragraphs only.
 7. Do NOT write meta phrases like "The given solution...", "Let us analyze...", "To solve this...".
@@ -141,9 +142,9 @@ Question: ${q.question_text}${optionsText}
 Correct Answer: ${q.correct_answer}
 
 Rules:
-1. Start directly with the key concept, law, or formula — do NOT restate the question.
+1. Start directly with the key concept, law, principle, or formula — do NOT restate the question. For Biology and purely conceptual/factual questions there is no formula — lead with the underlying fact, definition, or mechanism.
 2. For numerical problems show key steps only — no repeated lines, no restating intermediate values. For conceptual questions explain the principle in 2-3 sentences.
-3. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units.
+3. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units. For Biology and non-mathematical questions, write plain prose with NO LaTeX at all.
 4. Length: 2-3 sentences for conceptual MCQs, full step-by-step working for numerical problems.
 5. Do NOT use bullet points or numbered lists — write in flowing paragraphs.
 6. Do NOT write meta phrases like "Let's analyze...", "To solve this...", "We need to find...".
@@ -195,7 +196,7 @@ async function produceExplanation(
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const result = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite",
+        model: "gemini-3.5-flash-lite",
         contents,
         config: {
           thinkingConfig: { thinkingBudget: -1 },
@@ -238,25 +239,18 @@ async function produceExplanation(
 }
 
 // ---------------------------------------------------------------------------
-// API-key (free-tier) batched path — COMMENTED OUT, using Vertex instead.
+// API-key (free-tier) batched path.
 // Packs TEXT_BATCH_SIZE text-only questions into ONE request and gets back a
 // JSON array of explanations. Cuts request count ~5x (key for the 15 RPM free
-// tier) without the image-association problem. On Vertex we don't need this —
-// we run BATCH_SIZE questions in parallel via produceExplanation instead.
+// tier) without the image-association problem. Image-bearing questions still go
+// one-per-request via produceExplanation.
 // ---------------------------------------------------------------------------
 
-/*
-const BATCH_SCHEMA = {
-  type: Type.ARRAY,
-  items: {
-    type: Type.OBJECT,
-    properties: {
-      index: { type: Type.INTEGER },
-      explanation: { type: Type.STRING },
-    },
-    required: ["index", "explanation"],
-  },
-};
+// Plain-text delimiter the model wraps each explanation in. We deliberately avoid
+// JSON output here: LaTeX is backslash-heavy ($\frac$, $\text$, ...) and JSON string
+// escaping mangles it (\f → form-feed, \t → tab, etc.). A delimiter keeps the
+// backslashes literal — no escaping layer to corrupt them.
+const BATCH_DELIM = /^===\s*EXPLANATION\s+(\d+)\s*===\s*$/gim;
 
 function buildBatchPrompt(questions: any[]): string {
   const header = `You are an expert competitive exam educator writing fresh explanations for students.
@@ -266,16 +260,22 @@ Below are ${questions.length} exam questions. Write a brand-new explanation for 
 For questions that include a "Reference", use it ONLY to verify facts, values, and which answer is correct — do NOT copy its phrasing, sentence structure, or wording. For questions without a Reference, write from your own expert knowledge.
 
 Rules for every explanation:
-1. Start with the core concept, law, or formula that makes the correct answer obvious — do NOT restate the question.
+1. Start with the core concept, law, principle, or formula that makes the correct answer obvious — do NOT restate the question. For Biology and purely conceptual/factual questions there is no formula — lead with the underlying fact, definition, or mechanism.
 2. Walk through the reasoning naturally, like a teacher explaining it for the first time. For numerical problems show key steps only; for conceptual ones explain the principle in 2-3 sentences.
 3. All numerical values and facts must match the question/Reference exactly.
-4. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units.
+4. Use LaTeX ($...$) for inline math and ($$...$$) for standalone equations — only for actual formulas and equations, NOT for plain numbers or units. For Biology and non-mathematical questions, write plain prose with NO LaTeX at all.
 5. 2-4 sentences for conceptual questions; concise step-by-step for numerical problems.
 6. Do NOT use bullet points or numbered lists — flowing paragraphs only.
 7. Do NOT write meta phrases like "The given solution...", "Let us analyze...", "To solve this...".
 8. Do NOT end with "The correct option is X" or "Hence option X is correct".
 
-Return ONLY a JSON array. Each element must be {"index": <the question's index>, "explanation": "<the explanation text>"}. Include every index exactly once.`;
+OUTPUT FORMAT — this is critical. Do NOT use JSON. For each question, output a delimiter line exactly like this:
+=== EXPLANATION <number> ===
+followed by that question's explanation text on the next lines. Write LaTeX naturally with normal backslashes (e.g. $\\frac{a}{b}$) — do NOT escape backslashes. Include every question number exactly once, in order. Example for two questions:
+=== EXPLANATION 1 ===
+First explanation text here.
+=== EXPLANATION 2 ===
+Second explanation text here.`;
 
   const blocks = questions.map((q, i) => {
     const idx = i + 1;
@@ -306,12 +306,10 @@ async function produceExplanationsBatch(questions: any[]): Promise<{
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const result = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite",
+        model: "gemini-3.5-flash-lite",
         contents: prompt,
         config: {
           thinkingConfig: { thinkingBudget: -1 },
-          responseMimeType: "application/json",
-          responseSchema: BATCH_SCHEMA as any,
         },
       });
 
@@ -322,32 +320,24 @@ async function produceExplanationsBatch(questions: any[]): Promise<{
         tokens.thoughts = (usage as any).thoughtsTokenCount ?? 0;
       }
 
-      // result.text is already a decoded string from the SDK — calling JSON.parse
-      // on it directly corrupts LaTeX: \frac → \f (form-feed) + "rac", \text → \t
-      // (tab) + "ext", etc.  The SDK exposes the pre-parsed object on
-      // result.candidates[0].content.parts[0].text when using structured output,
-      // but the safest fix is to re-escape lone backslashes before parsing so
-      // JSON.parse treats them as literal characters, not escape sequences.
-      const rawText = result.text || "[]";
-      const safeText = rawText.replace(/\\(?!["\\/bfnrtu])/g, "\\\\");
-      const parsed = JSON.parse(safeText);
-      if (!Array.isArray(parsed)) {
-        lastErr = "response was not a JSON array";
-      } else {
-        let filled = 0;
-        for (const item of parsed) {
-          const idx = Number(item?.index) - 1;
-          if (idx >= 0 && idx < out.length && item?.explanation) {
-            const cleaned = cleanExplanation(String(item.explanation));
-            if (cleaned) {
-              out[idx] = cleaned;
-              filled++;
-            }
-          }
+      // Split the plain-text response on the "=== EXPLANATION n ===" delimiters.
+      // No JSON parsing means LaTeX backslashes stay literal (no \f/\t mangling).
+      const rawText = result.text || "";
+      let filled = 0;
+      const matches = [...rawText.matchAll(BATCH_DELIM)];
+      for (let m = 0; m < matches.length; m++) {
+        const idx = Number(matches[m][1]) - 1;
+        const start = matches[m].index! + matches[m][0].length;
+        const end = m + 1 < matches.length ? matches[m + 1].index! : rawText.length;
+        if (idx < 0 || idx >= out.length) continue;
+        const cleaned = cleanExplanation(rawText.slice(start, end).trim());
+        if (cleaned) {
+          out[idx] = cleaned;
+          filled++;
         }
-        if (filled > 0) return { explanations: out, tokens };
-        lastErr = "no usable items in response";
       }
+      if (filled > 0) return { explanations: out, tokens };
+      lastErr = matches.length === 0 ? "no delimiters found in response" : "no usable items in response";
     } catch (err: any) {
       lastErr = err?.message || String(err);
       const isRateLimit =
@@ -377,7 +367,6 @@ async function produceExplanationsBatch(questions: any[]): Promise<{
 
   return { explanations: out, tokens };
 }
-*/
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -456,33 +445,41 @@ async function processFile(filePath: string, isDry: boolean, processed: Set<stri
       appendProcessed(successIds.splice(0));
     };
 
-    // --- Vertex path: run BATCH_SIZE questions in parallel per batch ---
-    // Each question is an independent produceExplanation call (which also handles
-    // any images), so unlike the free-tier responseSchema batch there's no
-    // image-association problem — Vertex's high quota lets us fan out.
-    const totalBatches = Math.ceil(targets.length / BATCH_SIZE);
-    for (let bi = 0; bi < totalBatches; bi++) {
-      const batch = targets.slice(bi * BATCH_SIZE, (bi + 1) * BATCH_SIZE);
-      console.log(`  [Batch ${bi + 1}/${totalBatches}] Processing ${batch.length} questions in parallel...`);
+    // --- API-key (free-tier) path ---
+    // Text-only questions get packed TEXT_BATCH_SIZE at a time into ONE request
+    // (produceExplanationsBatch). Image-bearing questions can't be packed (the
+    // model loses track of which image is which), so they go one-per-request.
+    // Both paths sleep BATCH_DELAY_MS between requests to stay under 15 RPM, and
+    // each handles 429s internally with a 65s backoff.
+    const textTargets = targets.filter((q) => !hasUsableImage(q));
+    const imageTargets = targets.filter((q) => hasUsableImage(q));
+    let requestsMade = 0;
 
-      const results = await Promise.all(
-        batch.map(async (q) => {
-          const before = q.explanation;
-          const { explanation, tokens } = await produceExplanation(q);
-          return { q, before, explanation, tokens };
-        })
-      );
+    const totalTextBatches = Math.ceil(textTargets.length / TEXT_BATCH_SIZE);
+    for (let bi = 0; bi < totalTextBatches; bi++) {
+      const batch = textTargets.slice(bi * TEXT_BATCH_SIZE, (bi + 1) * TEXT_BATCH_SIZE);
+      if (requestsMade > 0) await sleep(BATCH_DELAY_MS);
+      console.log(`  [Text batch ${bi + 1}/${totalTextBatches}] ${batch.length} question(s) in 1 request...`);
 
-      const batchTokens = { prompt: 0, candidates: 0, thoughts: 0 };
-      for (const { q, before, explanation, tokens } of results) {
-        batchTokens.prompt += tokens.prompt;
-        batchTokens.candidates += tokens.candidates;
-        batchTokens.thoughts += tokens.thoughts;
-        recordResult(q, before, explanation);
-      }
-      logTokens(`Batch ${bi + 1}/${totalBatches}`, batchTokens);
+      const befores = batch.map((q) => q.explanation);
+      const { explanations, tokens } = await produceExplanationsBatch(batch);
+      requestsMade++;
+      for (let i = 0; i < batch.length; i++) recordResult(batch[i], befores[i], explanations[i]);
+      logTokens(`Text batch ${bi + 1}/${totalTextBatches}`, tokens);
       saveProgress();
-      if (bi < totalBatches - 1) await sleep(BATCH_DELAY_MS);
+    }
+
+    for (let i = 0; i < imageTargets.length; i++) {
+      const q = imageTargets[i];
+      if (requestsMade > 0) await sleep(BATCH_DELAY_MS);
+      console.log(`  [Image ${i + 1}/${imageTargets.length}] 1 question in 1 request...`);
+
+      const before = q.explanation;
+      const { explanation, tokens } = await produceExplanation(q);
+      requestsMade++;
+      recordResult(q, before, explanation);
+      logTokens(`Image ${i + 1}/${imageTargets.length}`, tokens);
+      saveProgress();
     }
 
     if (!isDry && rewritten > 0) {

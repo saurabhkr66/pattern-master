@@ -7,7 +7,11 @@
 // IMPORTANT: per-question URLs (pyq-*, gq-*, spyq-*) 308-redirect to their
 // parent topic page (see app/[examType]/[subject]/[topic]/[questionId]/route.ts)
 // — they're thin and the same content lives on the rich topic pages. Redirecting
-// URLs do NOT belong in sitemaps. Only the hub and mock buckets are emitted.
+// URLs do NOT belong in sitemaps.
+//
+// Child sitemap ids: "0" (light hub: static + exam/subject/mock-landing/pyq
+// hubs), "topics" (heavy per-topic pages, isolated so its aggregations can't
+// time out the index), "pyq-years", "papers", and "mock-N" (chunked instances).
 
 import { prisma } from "@/lib/prisma";
 import { toSlug, buildExamSlug, paperSlug, paperYear, TOPIC_PAGE_SIZE } from "@/lib/seo";
@@ -83,6 +87,22 @@ export async function listSitemapIds(): Promise<string[]> {
     ids.push("papers");
   }
 
+  // Topic pages live in their own child sitemap ("topics"), NOT in the hub.
+  // Their URL set is derived from two full-table groupBy aggregations
+  // (PYQ + GeneratedQuestion) plus a findMany over every Pattern — by far the
+  // heaviest work in the sitemap path. Keeping it out of the hub (id "0") and
+  // out of the index means a cold Googlebot fetch of /sitemap.xml never runs
+  // those queries, so the index can't time out ("Temporary processing error").
+  // A cheap count() is all the index needs to decide whether to list the child.
+  const patternCount = await prisma.pattern.count().catch((e) => {
+    console.error("[sitemap] pattern count failed:", e);
+    return 0;
+  });
+
+  if (patternCount > 0) {
+    ids.push("topics");
+  }
+
   return ids;
 }
 
@@ -153,6 +173,52 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     priority: 0.9,
   }));
 
+  // /[examType]/pyq — one per exam that has seeded papers or PYQs
+  const [pyqExamRows, seededExamRows] = await Promise.all([
+    prisma.$queryRaw<Array<{ exam_type: string; branch: string }>>`
+      SELECT DISTINCT q.exam_type, p.branch
+      FROM "PYQ" q
+      JOIN "Pattern" p ON q.pattern_id = p.id
+    `.catch(logFail("pyq exams")),
+    prisma.mockTestTemplate
+      .findMany({
+        where: { mode: "seeded" },
+        select: { exam_type: true, branch: true },
+        distinct: ["exam_type", "branch"],
+      })
+      .catch(logFail("seeded exams")),
+  ]);
+
+  const seenPyqHubs = new Set<string>();
+  const pyqPages: UrlEntry[] = [];
+  const addPyqHub = (examType: string, branch: string | null) => {
+    const slug = buildExamSlug(examType, branch);
+    if (!seenPyqHubs.has(slug)) {
+      seenPyqHubs.add(slug);
+      pyqPages.push({
+        url: `${BASE}/${slug}/pyq`,
+        changefreq: "weekly",
+        priority: 0.9,
+      });
+    }
+  };
+
+  for (const r of pyqExamRows || []) addPyqHub(r.exam_type, r.branch);
+  for (const r of seededExamRows || []) addPyqHub(r.exam_type, r.branch);
+
+  return [...staticPages, ...mockLandingPages, ...examPages, ...subjectPages, ...pyqPages];
+}
+
+// Topic pages — the heaviest bucket, deliberately isolated in its own child
+// sitemap ("topics") so its full-table aggregations never block the sitemap
+// index or the lighter hub. Cached 24h at the edge like every other child.
+//
+// NOTE ON SCALE: this emits every topic root + each /page/N + /notes into a
+// single urlset. At the current scale (hundreds of patterns → low thousands of
+// URLs) that stays comfortably under Google's 50K-per-sitemap cap. If topic
+// URLs ever approach that, chunk this the way buildMockChunk does (topics-N)
+// and have listSitemapIds() push one id per chunk.
+export async function buildTopicsSitemap(): Promise<UrlEntry[]> {
   // Per-topic freshness + depth. The Pattern table has no timestamp column and
   // its questions paginate at TOPIC_PAGE_SIZE per page, so for every topic we
   // derive two things from its child questions (both tables carry created_at and
@@ -183,7 +249,7 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
   const topicRows = await prisma.pattern
     .findMany({ select: { id: true, exam_type: true, branch: true, subject: true, topic_name: true, short_notes: true } })
     .catch(logFail("topic hub"));
-  const topicPages: UrlEntry[] = topicRows.flatMap((r) => {
+  return topicRows.flatMap((r) => {
     const base = `${BASE}/${buildExamSlug(r.exam_type, r.branch)}/${toSlug(r.subject)}/${toSlug(r.topic_name)}`;
     const lastmod = lastmodByPattern.get(r.id)?.toISOString();
     const totalQ = countByPattern.get(r.id) ?? 0;
@@ -225,41 +291,6 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
     }
     return entries;
   });
-
-  // /[examType]/pyq — one per exam that has seeded papers or PYQs
-  const [pyqExamRows, seededExamRows] = await Promise.all([
-    prisma.$queryRaw<Array<{ exam_type: string; branch: string }>>`
-      SELECT DISTINCT q.exam_type, p.branch
-      FROM "PYQ" q
-      JOIN "Pattern" p ON q.pattern_id = p.id
-    `.catch(logFail("pyq exams")),
-    prisma.mockTestTemplate
-      .findMany({
-        where: { mode: "seeded" },
-        select: { exam_type: true, branch: true },
-        distinct: ["exam_type", "branch"],
-      })
-      .catch(logFail("seeded exams")),
-  ]);
-
-  const seenPyqHubs = new Set<string>();
-  const pyqPages: UrlEntry[] = [];
-  const addPyqHub = (examType: string, branch: string | null) => {
-    const slug = buildExamSlug(examType, branch);
-    if (!seenPyqHubs.has(slug)) {
-      seenPyqHubs.add(slug);
-      pyqPages.push({
-        url: `${BASE}/${slug}/pyq`,
-        changefreq: "weekly",
-        priority: 0.9,
-      });
-    }
-  };
-
-  for (const r of pyqExamRows || []) addPyqHub(r.exam_type, r.branch);
-  for (const r of seededExamRows || []) addPyqHub(r.exam_type, r.branch);
-
-  return [...staticPages, ...mockLandingPages, ...examPages, ...subjectPages, ...topicPages, ...pyqPages];
 }
 
 export async function buildPaperPagesSitemap(): Promise<UrlEntry[]> {
@@ -340,6 +371,7 @@ export async function buildMockChunk(chunkIdx: number): Promise<UrlEntry[]> {
 // Returns null when the id is unrecognised.
 export async function buildSitemapById(id: string): Promise<UrlEntry[] | null> {
   if (id === "0") return buildHubSitemap();
+  if (id === "topics") return buildTopicsSitemap();
   if (id === "pyq-years") return buildPyqYearsSitemap();
   if (id === "papers") return buildPaperPagesSitemap();
 

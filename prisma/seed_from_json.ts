@@ -100,31 +100,36 @@ const FILE_TOPIC_MAP: Array<{
   // images whose files were truly missing from ImageKit (re-scraped fresh).
   imagesOnly?: boolean;
 }> = [
-    // ── JEE Main → Physics ───────────────────────────────────────────────────
-    // Full seed (create + update), NOT imagesOnly. JEE Main is branchless, so
-    // branch is "Common" (see lib/seo.ts branchWhereClause). Files come from the
-    // sibling exam-scraper project's extractor output; the per-question
-    // `topic_name`/`exam_type`/`year`/`marks` in the JSON match these entries.
-   
-
-    { file: '../exam-scraper/extractor/jee_circles_1.json',
-      topic_name: 'Circles', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_circles_2.json',
-      topic_name: 'Circles', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_ellipse_1.json',
-      topic_name: 'Ellipse', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_hyperbola_1.json',
-      topic_name: 'Hyperbola', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_logarithms_1.json',
-      topic_name: 'Logarithms', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_parabola_1.json',
-      topic_name: 'Parabola', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_parabola_2.json',
-      topic_name: 'Parabola', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-    { file: '../exam-scraper/extractor/jee_trigonometric_ratios_and_identities_1.json',
-      topic_name: 'Trigonometric Ratios and Identities', exam_type: 'JEE_MAIN', branch: 'Common', subject: 'Mathematics' },
-  ];
-
+    // ── NEET → Biology (batch 2) ─────────────────────────────────────────────
+    // Full seed (create + update). NEET is branchless → branch "Common". The
+    // JSON's per-question `topic_name` is a lowercase slug, so the DB `topic_name`
+    // below is the exact Title-Case pattern name (verified against the DB — subject
+    // "Biology", branch "Common", all exist at 0 PYQs). "part-N" files are chunks
+    // of the SAME topic → same pattern, merged by content hash.
+    // NOTE: neet_biomolecules-questions-part-1/2.json are INTENTIONALLY excluded —
+    // "Biomolecules" exists only as a Chemistry pattern (already seeded, 79 PYQs);
+    // there is no Biology "Biomolecules" pattern. Decide taxonomy before seeding it.
+    { file: '../exam-scraper/extractor/neet_cell-the-unit-of-life-questions-part-1.json',
+      topic_name: 'Cell - The Unit of Life', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_cell-the-unit-of-life-questions-part-2.json',
+      topic_name: 'Cell - The Unit of Life', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_cell-cycle-and-cell-division.json',
+      topic_name: 'Cell Cycle and Cell Division', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_photosynthesis-in-higher-plants.json',
+      topic_name: 'Photosynthesis in Higher Plants', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_respiration-in-plants-questions.json',
+      topic_name: 'Respiration in Plants', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_plant-growth-and-development.json',
+      topic_name: 'Plant Growth and Development', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_plant-growth-and-development-questions-part-2.json',
+      topic_name: 'Plant Growth and Development', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_breathing-and-exchange-of-gases.json',
+      topic_name: 'Breathing and Exchange of Gases', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_body-fluids-and-circulation.json',
+      topic_name: 'Body Fluids and Circulation', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_structural-organisation-in-animals.json',
+      topic_name: 'Structural Organisation in Animals', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+];
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);
   console.log(`${colors.bright}📂 Seeding PYQs from JSON files (DB_DRIVER=${driver})${colors.reset}`);
