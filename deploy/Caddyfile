@@ -1,12 +1,23 @@
 # BattleExam reverse proxy + automatic HTTPS.
 # Copy this to /etc/caddy/Caddyfile on the server, then:  systemctl reload caddy
 #
-# Replace battleexam.example.com with your REAL domain (its DNS A record
-# must already point at this VPS's IP). Caddy fetches + renews the TLS
-# cert for you automatically — no certbot, no cron.
+# Caddy fetches + renews the TLS cert automatically — no certbot, no cron.
+# (When Cloudflare is in front, Caddy uses Full (Strict) SSL mode and its
+# cert validates against Cloudflare's origin-pull requests.)
 
-battleexam.example.com {
+battleexam.com {
     encode gzip zstd
+
+    # Legacy ?page=N topic pagination -> path-based /page/N. next.config has
+    # the same redirect but Next appends the original query to the destination
+    # (/page/4?page=4); handling it here strips the query entirely. Public SEO
+    # routes deliberately bypass Next middleware, so Caddy is the layer for this.
+    @legacyPageQuery {
+        path_regexp topic ^/[^/]+/[^/]+/[^/]+$
+        query page=*
+    }
+    redir @legacyPageQuery {http.request.uri.path}/page/{http.request.uri.query.page} 301
+
     reverse_proxy localhost:3000 {
         # Flush every write straight through instead of buffering. The question
         # import endpoint streams whitespace heartbeats during long (>100s) Gemini
@@ -16,29 +27,10 @@ battleexam.example.com {
     }
 }
 
-# Live config on the VPS (2026-07-04). www MUST redirect, not serve: when it
-# was in the same site block, Google crawled a full duplicate copy of the site
-# on www.battleexam.com — 60% of the "Crawled - currently not indexed" bucket
-# in Search Console was www URLs.
-#
-# battleexam.com {
-#     encode gzip zstd
-#
-#     # Legacy ?page=N topic pagination -> path-based /page/N. next.config has
-#     # the same redirect but Next appends the original query to the destination
-#     # (/page/4?page=4); handling it here strips the query entirely. Public SEO
-#     # routes deliberately bypass Next middleware, so Caddy is the layer for this.
-#     @legacyPageQuery {
-#         path_regexp topic ^/[^/]+/[^/]+/[^/]+$
-#         query page=*
-#     }
-#     redir @legacyPageQuery {http.request.uri.path}/page/{http.request.uri.query.page} 301
-#
-#     reverse_proxy localhost:3000 {
-#         flush_interval -1
-#     }
-# }
-#
-# www.battleexam.com {
-#     redir https://battleexam.com{uri} 301
-# }
+# www MUST redirect, not serve: when it was in the same site block, Google
+# crawled a full duplicate copy of the site on www.battleexam.com — 60% of
+# the "Crawled - currently not indexed" bucket in Search Console was www URLs.
+# Canonical host is the apex (non-www).
+www.battleexam.com {
+    redir https://battleexam.com{uri} 301
+}
