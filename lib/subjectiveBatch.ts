@@ -3,6 +3,7 @@ import {
   GoogleGenAI,
   JobState,
   ThinkingLevel,
+  type GenerateContentResponse,
   type InlinedRequest,
 } from "@google/genai";
 import { prisma } from "@/lib/prisma";
@@ -250,6 +251,30 @@ const usageOf = (
 });
 
 /**
+ * Text of a BATCH inlined response.
+ *
+ * `.text` is a GETTER on the SDK's GenerateContentResponse *class*, but batch
+ * results are deserialized into PLAIN objects (batches.get → inlinedResponseFromMldev
+ * builds `{}` literals; only models.generateContent wraps them in the class). So
+ * `resp.text` is always `undefined` here even though it type-checks — reading it
+ * silently flagged every batch-graded answer. Extract the parts ourselves, skipping
+ * thought parts, exactly as the class getter does.
+ */
+function responseText(resp: GenerateContentResponse | undefined): string | undefined {
+  const parts = resp?.candidates?.[0]?.content?.parts ?? [];
+  let text = "";
+  let any = false;
+  for (const part of parts) {
+    if (part.thought) continue; // reasoning, not the JSON answer
+    if (typeof part.text === "string") {
+      any = true;
+      text += part.text;
+    }
+  }
+  return any ? text : undefined;
+}
+
+/**
  * POLL pass: for every running batch, check completion. On success, map each
  * response back to its answer via metadata, write results through the shared
  * attempt merge (teacher overrides survive), and clear the batch marker. On
@@ -305,10 +330,21 @@ export async function pollGradingBatches(): Promise<{
         if (!key) continue;
         const { attemptId, qId } = parseKey(key);
         const list = byAttempt.get(attemptId) ?? [];
+        const text = r.error ? undefined : responseText(r.response);
+        if (!text) {
+          // Empty text with no per-request error usually means the answer was
+          // truncated (MAX_TOKENS, thinking ate the budget) or blocked — log it
+          // rather than letting it vanish into a silent `flagged`.
+          console.error(
+            `[grade-batch] no text for ${key}:`,
+            r.error ??
+              `finishReason=${r.response?.candidates?.[0]?.finishReason ?? "unknown"}`
+          );
+        }
         list.push({
           qId,
           key,
-          text: r.error ? undefined : r.response?.text,
+          text,
           usage: usageOf(r.response),
           errored: !!r.error || !r.response,
         });

@@ -96,6 +96,15 @@ const BATCH_SIZE = Math.max(1, Number(process.env.COACHING_IMPORT_BATCH || 1));
 // output still fits: ~3.5k tokens per question (bilingual + LaTeX + solution) + headroom.
 const MAX_OUTPUT_TOKENS = Math.min(65536, 4000 + BATCH_SIZE * 3500);
 
+// Same curve, sized to the number of questions a SPECIFIC call must emit. The
+// MAX_OUTPUT_TOKENS constant is sized for one BATCH_SIZE batch, so any call whose
+// scope is wider (notably the un-batched fallback that extracts a WHOLE paper when
+// the enumerate pass fails) must derive its own budget — otherwise it silently
+// truncates at MAX_TOKENS and only the salvaged first few questions import.
+const outputBudgetFor = (count: number) => Math.min(65536, 4000 + Math.max(1, count) * 3500);
+// Ceiling used when the scope is unknown (enumerate failed → "extract everything").
+const MAX_MODEL_OUTPUT_TOKENS = 65536;
+
 // How many batches run at once. Defaults to 16 — with BATCH=1 this is what keeps
 // a whole paper fast (16 single-question calls in flight) instead of crawling
 // serially. Assumes a paid Developer tier or Vertex; the free 15-req/min cap will
@@ -104,6 +113,19 @@ const CONCURRENCY = Math.max(
   1,
   Number(process.env.COACHING_IMPORT_CONCURRENCY || 16)
 );
+
+// How many QUESTIONS are cropped at once (route's figure stage). Deliberately much
+// lower than CONCURRENCY: one unit of work there is not one API call but up to SIX
+// (locateFigure probes the flagged page ±1, for the question figure and again for a
+// solution figure), so 16 in flight would burst ~96 vision requests. 4 keeps the
+// peak request rate comparable to the other passes. Assumes a paid tier; drop it to
+// 1–2 on the free tier, where the backoffs would make concurrency counterproductive.
+export const FIGURE_CROP_CONCURRENCY = Math.max(
+  1,
+  Number(process.env.COACHING_IMPORT_CROP_CONCURRENCY || 4)
+);
+// Attempts per figure-detection call, including the first (see locateFigure).
+const FIGURE_MAX_ATTEMPTS = Math.max(1, Number(process.env.COACHING_IMPORT_FIGURE_RETRIES || 3));
 
 // Blind cross-check (generateComparisonSolutions) batch size. That pass ALWAYS runs
 // and solves every TEXT question with V4 — historically one V4 call per question,
@@ -121,7 +143,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 /** Bounded-concurrency map (no p-limit dep) — keeps results in input order. */
-async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
   let next = 0;
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
@@ -161,7 +183,8 @@ async function callResilient(
   schema: ResponseSchema,
   parts: Part[],
   signal?: AbortSignal,
-  modelId: string = MODEL
+  modelId: string = MODEL,
+  maxTokens: number = MAX_OUTPUT_TOKENS
 ): Promise<unknown[]> {
   let lastErr: unknown;
   let tempIdx = 0;
@@ -169,7 +192,7 @@ async function callResilient(
     if (signal?.aborted) throw new Error("aborted: client disconnected");
     const temp = ESCALATING_TEMPS[Math.min(tempIdx, ESCALATING_TEMPS.length - 1)];
     try {
-      return await callGeminiJsonArray(apiKey, schema, parts, temp, signal, modelId);
+      return await callGeminiJsonArray(apiKey, schema, parts, temp, signal, modelId, maxTokens);
     } catch (e) {
       lastErr = e;
       const msg = e instanceof Error ? e.message : String(e);
@@ -701,11 +724,21 @@ export async function extractQuestions(opts: {
     // Parallel batches return out of order — sort the flattened list by number.
     questions = batched.flat().sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
   } else {
+    // Un-batched single call. Its scope is the WHOLE paper whenever the enumerate
+    // pass failed (numbers === []), so it must NOT inherit MAX_OUTPUT_TOKENS (sized
+    // for one BATCH_SIZE batch) — that capped a 50-question paper at ~7.5k output
+    // tokens and silently imported only the handful salvaged before MAX_TOKENS.
+    const budget = numbers.length ? outputBudgetFor(numbers.length) : MAX_MODEL_OUTPUT_TOKENS;
+    if (!numbers.length) {
+      console.warn(
+        `[import] ⚠ no question numbers enumerated — extracting the whole paper in ONE call at the ${budget}-token ceiling. A very long paper may still truncate; re-run so the enumerate pass can batch it.`
+      );
+    }
     emit({ t: "phase", phase: "extract", total: numbers.length });
     questions = (await callResilient(key, "pass-1", responseSchema, [
       ...media,
       { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, undefined, bilingual) },
-    ], signal)) as ParsedQuestion[];
+    ], signal, MODEL, budget)) as ParsedQuestion[];
     emit({ t: "questions", items: questions, done: questions.length, total: questions.length });
   }
   // Client disconnected during pass 1 — stop now, skip the answer-key pass.
@@ -719,30 +752,41 @@ export async function extractQuestions(opts: {
   // Pass 1 didn't capture. Now that Pass 1 actively hunts the answer key, this
   // fallback pass fires only for the stragglers — typically few or zero questions,
   // drastically reducing API calls vs the old approach where EVERY answer came here.
-  const missing = questions.filter((q) =>
-    q.question_type === "subjective" ? !q.solution : !q.correct_answer
-  );
-  const answered = questions.length - missing.length;
-  console.log(`[import] pass 1 answered ${answered}/${questions.length} — ${missing.length} need answer-key pass`);
-  if (missing.length) {
-    emit({ t: "phase", phase: "answers", total: missing.length });
-    const missingNumbers = [
-      ...new Set(
-        missing.map((q, i) => (typeof q.number === "number" ? q.number : i + 1))
-      ),
-    ];
+  // Join keys must be derived ONCE, from the FULL questions array, and reused by
+  // both the request and the merge — see buildJoinKeys.
+  const joinKeys = buildJoinKeys(questions);
+  const missingIdx = questions
+    .map((_, i) => i)
+    .filter((i) => {
+      const q = questions[i];
+      return q.question_type === "subjective" ? !q.solution : !q.correct_answer;
+    });
+  const answered = questions.length - missingIdx.length;
+  console.log(`[import] pass 1 answered ${answered}/${questions.length} — ${missingIdx.length} need answer-key pass`);
+  // A question with no printed number whose position collides with another
+  // question's printed number has no safe join key — asking for it would risk
+  // merging the wrong answer onto it, so it's left to the blind cross-check.
+  const askable = missingIdx.filter((i) => joinKeys[i] != null);
+  if (askable.length < missingIdx.length) {
+    console.warn(
+      `[import] ⚠ ${missingIdx.length - askable.length} unnumbered question(s) skipped in the answer-key pass — no collision-free join key`
+    );
+  }
+  if (askable.length) {
+    emit({ t: "phase", phase: "answers", total: askable.length });
+    const missingNumbers = [...new Set(askable.map((i) => joinKeys[i]!))];
     const groups = chunk(missingNumbers, BATCH_SIZE);
     const batched = await mapLimit(groups, CONCURRENCY, async (group) => {
       if (signal?.aborted) return [] as AnswerKeyEntry[]; // client gone — don't fire
       const label = `answer-key batch ${group[0]}–${group[group.length - 1]}`;
       try {
         // Routed by model id: DeepSeek (V4 Pro) via the OpenAI-compatible client,
-        // Gemini via callResilient. MAX_OUTPUT_TOKENS bounds the DeepSeek batch so a
-        // group of worked solutions isn't truncated (the 1024 verify default would be).
+        // Gemini via callResilient. The budget is sized to THIS group so a batch of
+        // worked solutions isn't truncated (the 1024 verify default would be).
         return (await callModel(key, label, buildAnswerKeySchema(bilingual), [
           ...media,
           { text: buildAnswerKeyPrompt(group, bilingual) },
-        ], answerModel, signal, MAX_OUTPUT_TOKENS)) as AnswerKeyEntry[];
+        ], answerModel, signal, outputBudgetFor(group.length))) as AnswerKeyEntry[];
       } catch (e) {
         console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
         return [] as AnswerKeyEntry[];
@@ -750,7 +794,7 @@ export async function extractQuestions(opts: {
     });
     const answers = batched.flat();
     console.log(`[import] answer-key pass returned ${answers.length} answer(s) across ${groups.length} batch(es)`);
-    mergeAnswers(questions, answers);
+    mergeAnswers(questions, answers, joinKeys);
   }
   // Cross-check each objective answer against what its own solution concludes.
   flagSolutionMismatches(questions);
@@ -881,13 +925,14 @@ async function callGeminiJsonArray(
   parts: Part[],
   temperature = 0.3,
   signal?: AbortSignal,
-  modelId: string = MODEL
+  modelId: string = MODEL,
+  maxTokens: number = MAX_OUTPUT_TOKENS
 ): Promise<unknown[]> {
   if (signal?.aborted) throw new Error("aborted: client disconnected");
   const generationConfig = {
     responseMimeType: "application/json",
     responseSchema: schema,
-    maxOutputTokens: MAX_OUTPUT_TOKENS,
+    maxOutputTokens: maxTokens,
     // NOT 0: greedy decoding (temp 0) makes the model fall into repetition loops
     // that fill the whole token budget and trip a bogus "output limit" error.
     // callResilient raises this further if a loop still slips through.
@@ -982,17 +1027,46 @@ async function callGeminiJsonArray(
 }
 
 /**
- * Fold answer-key entries into the questions, matching by printed number (falling
- * back to position). Only fills answers/solutions that pass 1 left empty.
+ * The key each question is requested/merged under in the answer-key pass: its
+ * PRINTED number, else its 1-based position in the FULL questions array. Returns
+ * null when that positional fallback would collide with some other question's
+ * printed number — such a question is unjoinable, and merging on the collision
+ * would silently write a DIFFERENT question's answer (and solution) onto it.
+ *
+ * Deriving this in one place is the point: the request previously keyed off the
+ * index within the `missing` SUBSET while the merge keyed off the index in the full
+ * array, so the two disagreed for every unnumbered question whenever some questions
+ * already had answers.
  */
-function mergeAnswers(questions: ParsedQuestion[], key: AnswerKeyEntry[]): void {
+function buildJoinKeys(questions: ParsedQuestion[]): (number | null)[] {
+  const printed = new Set(
+    questions.map((q) => q.number).filter((n): n is number => typeof n === "number")
+  );
+  return questions.map((q, i) => {
+    if (typeof q.number === "number") return q.number;
+    const positional = i + 1;
+    return printed.has(positional) ? null : positional;
+  });
+}
+
+/**
+ * Fold answer-key entries into the questions, matching on the shared join key
+ * (see buildJoinKeys). Only fills answers/solutions that pass 1 left empty.
+ */
+function mergeAnswers(
+  questions: ParsedQuestion[],
+  key: AnswerKeyEntry[],
+  joinKeys: (number | null)[]
+): void {
   const byNumber = new Map<number, AnswerKeyEntry>();
   for (const e of key) {
     const n = Number(e?.number);
     if (Number.isFinite(n)) byNumber.set(n, e);
   }
   questions.forEach((q, i) => {
-    const entry = byNumber.get(typeof q.number === "number" ? q.number : i + 1);
+    const jk = joinKeys[i];
+    if (jk == null) return; // unjoinable — never guess
+    const entry = byNumber.get(jk);
     if (!entry) return;
     // Subjective: there is no "correct answer" — the prize is the model solution
     // (what the AI grader marks against). Never write an answer letter onto it.
@@ -1165,6 +1239,28 @@ const resolveCompareModel = (requested?: string | null) =>
 
 const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1").replace(/\/$/, "");
 
+// Completion budget for a DeepSeek call that doesn't ask for a specific one. Must
+// leave room for a reasoning model's chain of thought, not just the JSON reply.
+const DEEPSEEK_DEFAULT_MAX_TOKENS = Number(process.env.COACHING_IMPORT_DEEPSEEK_MAX_TOKENS) || 4096;
+
+/**
+ * Render an array ResponseSchema as a compact "these keys are required" line for
+ * vendors that can't accept a JSON Schema (DeepSeek supports only json_object mode).
+ * Returns "" for a schema this can't describe, so the prompt is left untouched.
+ */
+function schemaHint(schema: ResponseSchema): string {
+  const items = (schema as { items?: { properties?: Record<string, unknown>; required?: string[] } }).items;
+  const props = items?.properties;
+  if (!props) return "";
+  const required = new Set(items?.required ?? []);
+  const keys = Object.keys(props).map((k) => (required.has(k) ? `"${k}" (REQUIRED)` : `"${k}"`));
+  return (
+    `\n\nRESPONSE SHAPE (strict): reply with a JSON object {"results": [ ... ]}. ` +
+    `The array holds ONE element per question, and every element has these keys: ${keys.join(", ")}. ` +
+    `Never omit a REQUIRED key and never merge two questions into one element.`
+  );
+}
+
 // Convert the Gemini-style Part[] the prompts build into OpenAI chat "content".
 // IMPORTANT: DeepSeek's V4 API is TEXT-ONLY — it rejects `image_url`
 // content ("unknown variant `image_url`, expected `text`"). So we DROP inline images
@@ -1226,10 +1322,15 @@ function recordDeepSeekUsage(modelId: string, u: unknown): void {
 // vendor answered. Retries transient/429 like the Gemini path; respects the signal.
 async function callDeepSeekJsonArray(
   label: string,
+  schema: ResponseSchema,
   parts: Part[],
   signal: AbortSignal | undefined,
   modelId: string,
-  maxTokens = 1024,
+  // NOT 1024: V4 Pro is a REASONING model, so its chain of thought draws on the same
+  // completion budget as the reply. At 1024 a long solve consumed the budget before
+  // the JSON closed — coerceJsonArray then returned [], and the caller (verify /
+  // review, both best-effort) silently recorded "no disagreement" instead of an error.
+  maxTokens = DEEPSEEK_DEFAULT_MAX_TOKENS,
   temperature = 0.3
 ): Promise<unknown[]> {
   const key = process.env.DEEPSEEK_API_KEY;
@@ -1238,6 +1339,12 @@ async function callDeepSeekJsonArray(
   if (droppedImages) {
     console.warn(`[import] ${label}: ${droppedImages} image(s) dropped — ${modelId} is text-only (solves from text)`);
   }
+  // DeepSeek's response_format only supports `json_object` — it cannot enforce a
+  // JSON Schema the way Gemini's responseSchema does, so the shape is prompt-only
+  // here. Spelling the required keys out restores most of that guarantee; it matters
+  // most for the batched blind solve, whose results are mapped back BY the "id" key.
+  const hint = schemaHint(schema);
+  if (hint) content.push({ type: "text", text: hint });
   const body = JSON.stringify({
     model: modelId,
     messages: [{ role: "user", content }],
@@ -1266,9 +1373,20 @@ async function callDeepSeekJsonArray(
         }
         throw new Error(`DeepSeek ${res.status}: ${txt.slice(0, 200)}`);
       }
-      const json = (await res.json()) as { choices?: { message?: { content?: string } }[]; usage?: unknown };
+      const json = (await res.json()) as {
+        choices?: { message?: { content?: string }; finish_reason?: string }[];
+        usage?: unknown;
+      };
       recordDeepSeekUsage(modelId, json.usage);
-      return coerceJsonArray(json.choices?.[0]?.message?.content ?? "");
+      const choice = json.choices?.[0];
+      // Truncation is otherwise invisible: the reply just fails to parse and the
+      // best-effort callers treat the empty result as "nothing to flag".
+      if (choice?.finish_reason === "length") {
+        console.warn(
+          `[import] ⚠ ${label}: ${modelId} hit max_tokens (${maxTokens}) — reply truncated, result may be partial or empty`
+        );
+      }
+      return coerceJsonArray(choice?.message?.content ?? "");
     } catch (e) {
       lastErr = e;
       if (signal?.aborted || (e instanceof Error && /aborted/i.test(e.message))) throw e;
@@ -1293,9 +1411,13 @@ function callModel(
   maxTokens?: number
 ): Promise<unknown[]> {
   return isDeepSeekModel(model)
-    ? callDeepSeekJsonArray(label, parts, signal, model, maxTokens)
-    : callResilient(geminiKey, label, schema, parts, signal, model);
+    ? callDeepSeekJsonArray(label, schema, parts, signal, model, maxTokens)
+    : callResilient(geminiKey, label, schema, parts, signal, model, maxTokens);
 }
+
+// Verify / subjective-review replies are tiny, but a reasoning verifier still needs
+// headroom for its chain of thought before the JSON — see DEEPSEEK_DEFAULT_MAX_TOKENS.
+const VERIFY_MAX_TOKENS = Number(process.env.COACHING_IMPORT_VERIFY_MAX_TOKENS) || 4096;
 
 const VERIFY_SCHEMA: ResponseSchema = {
   type: SchemaType.ARRAY,
@@ -1414,7 +1536,7 @@ export async function verifyAnswers(opts: {
     const label = `verify q${q.number ?? "?"}`;
     try {
       const parts: Part[] = [...(await figureParts(q)), { text: buildVerifyPrompt(q) }];
-      const got = (await callModel(key, label, VERIFY_SCHEMA, parts, model, signal)) as {
+      const got = (await callModel(key, label, VERIFY_SCHEMA, parts, model, signal, VERIFY_MAX_TOKENS)) as {
         answer?: string;
         confidence?: number;
       }[];
@@ -1510,7 +1632,8 @@ export async function reviewSubjectiveAnswers(opts: {
         SUBJECTIVE_REVIEW_SCHEMA,
         parts,
         model,
-        signal
+        signal,
+        VERIFY_MAX_TOKENS
       )) as { ok?: boolean; issue?: string | null }[];
       const r = got[0];
       if (r && r.ok === false) {
@@ -1700,57 +1823,90 @@ export async function generateComparisonSolutions(opts: {
   const withImages = targets.filter((q) => q.images?.length);
   const textOnly = targets.filter((q) => !q.images?.length);
 
+  // Solve ONE question on its own and fold the result in. Used for single-question
+  // groups, figure-bearing questions (their image must be attached), and as the
+  // recovery path when a batch's results can't be mapped back safely.
+  const solveOne = async (q: ParsedQuestion, withFigure = false): Promise<void> => {
+    const label = `blind q${q.number ?? "?"}`;
+    try {
+      const parts: Part[] = withFigure
+        ? [...(await figureParts(q)), { text: buildSolutionPrompt(q, bilingual) }]
+        : [{ text: buildSolutionPrompt(q, bilingual) }];
+      const got = (await callModel(
+        key, label, SOLUTION_ONLY_SCHEMA, parts, model, signal, MAX_OUTPUT_TOKENS
+      )) as BlindResult[];
+      if (apply(q, got[0])) disagree++;
+    } catch (e) {
+      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
+    }
+    done++;
+  };
+
   // Batched text solves.
   const groups = chunk(textOnly, COMPARE_BATCH);
   await mapLimit(groups, CONCURRENCY, async (group) => {
     if (signal?.aborted) return;
     // A 1-question group is just the focused single-question prompt/schema.
     if (group.length === 1) {
-      const q = group[0];
-      try {
-        const got = (await callModel(key, `blind q${q.number ?? "?"}`, SOLUTION_ONLY_SCHEMA,
-          [{ text: buildSolutionPrompt(q, bilingual) }], model, signal, MAX_OUTPUT_TOKENS
-        )) as BlindResult[];
-        if (apply(q, got[0])) disagree++;
-      } catch (e) {
-        console.warn(`[import] blind q${q.number ?? "?"} failed:`, e instanceof Error ? e.message : e);
-      }
-      done++;
+      await solveOne(group[0]);
       return;
     }
     const label = `blind batch q${group[0].number ?? "?"}–${group[group.length - 1].number ?? "?"}`;
     // Size the output budget to the batch (K solutions, ~bilingual doubling).
-    const budget = Math.min(65536, 4000 + group.length * 3500);
+    const budget = outputBudgetFor(group.length);
+    let got: (BlindResult & { id?: number })[];
     try {
-      const got = (await callModel(key, label, SOLUTION_BATCH_SCHEMA,
+      got = (await callModel(key, label, SOLUTION_BATCH_SCHEMA,
         [{ text: buildSolutionBatchPrompt(group, bilingual) }], model, signal, budget
       )) as (BlindResult & { id?: number })[];
-      // Map results back by the 1-based id we assigned; fall back to array order.
-      const byId = new Map<number, BlindResult>();
-      got.forEach((r, i) => byId.set(typeof r?.id === "number" ? r.id : i + 1, r));
+    } catch (e) {
+      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
+      done += group.length;
+      return;
+    }
+
+    // Map results back STRICTLY by the 1-based id we assigned in the prompt.
+    //
+    // The default compare model is DeepSeek, whose API can't enforce a JSON Schema
+    // (json_object mode only), so the id is prompt-guaranteed at best. The old code
+    // fell back to array order per-element, which is silently WRONG when the model
+    // drops a question: every later result shifts onto the preceding question. That
+    // matters doubly here because `apply` overwrites `q.solution` — for a subjective
+    // question that field is the model answer the AI grader marks students against.
+    // So: ids present → map by id; no ids but exactly one result per question →
+    // order is unambiguous; anything else → re-solve individually rather than guess.
+    if (got.length > 0 && got.every((r) => typeof r?.id === "number")) {
+      const byId = new Map<number, BlindResult>(got.map((r) => [r.id as number, r as BlindResult]));
       group.forEach((q, i) => {
         if (apply(q, byId.get(i + 1))) disagree++;
         done++;
       });
-    } catch (e) {
-      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
-      done += group.length;
+      return;
+    }
+    if (got.length === group.length) {
+      console.warn(`[import] ${label}: results carried no "id" — mapping by order (counts match)`);
+      group.forEach((q, i) => {
+        if (apply(q, got[i])) disagree++;
+        done++;
+      });
+      return;
+    }
+    console.warn(
+      `[import] ⚠ ${label}: ${got.length} result(s) for ${group.length} question(s) and no usable ids — re-solving individually so solutions can't land on the wrong question`
+    );
+    for (const q of group) {
+      if (signal?.aborted) {
+        done++;
+        continue;
+      }
+      await solveOne(q);
     }
   });
 
   // Per-question path for figure-bearing questions (image must be attached).
   await mapLimit(withImages, CONCURRENCY, async (q) => {
     if (signal?.aborted) return;
-    const parts: Part[] = [...(await figureParts(q)), { text: buildSolutionPrompt(q, bilingual) }];
-    try {
-      const got = (await callModel(key, `blind q${q.number ?? "?"}`, SOLUTION_ONLY_SCHEMA,
-        parts, model, signal, MAX_OUTPUT_TOKENS
-      )) as BlindResult[];
-      if (apply(q, got[0])) disagree++;
-    } catch (e) {
-      console.warn(`[import] blind q${q.number ?? "?"} failed:`, e instanceof Error ? e.message : e);
-    }
-    done++;
+    await solveOne(q, true);
   });
 
   console.log(`[import] blind cross-check done ${done}/${targets.length} — ${disagree} disagree with the recorded answer`);
@@ -1836,7 +1992,9 @@ async function locateFigure(
       ]
   ).join("\n");
 
-  try {
+  // ONE detection attempt. Retried by the loop below on a transient failure —
+  // extracted so a 429 costs a backoff instead of the figure itself.
+  const attempt = async (): Promise<number[][] | null> => {
     const parts: Part[] = [
       { inlineData: { mimeType: "image/png", data: pageImage.toString("base64") } },
       { text: prompt },
@@ -1897,16 +2055,39 @@ async function locateFigure(
       .map((b) => b.map(Number))
       .filter((b) => b.every((n) => Number.isFinite(n) && n >= 0 && n <= 1000));
     return boxes.length ? boxes : null;
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    // Rate limited — wait and return null (don't block the import for a figure)
-    if (/429|quota|rate limit|RESOURCE_EXHAUSTED/i.test(msg)) {
-      console.warn(`[import] figure detection rate-limited — skipping figure for ${qRef}`);
-    } else {
-      console.warn(`[import] figure detection failed for ${qRef}: ${msg.slice(0, 100)}`);
+  };
+
+  // Every other Gemini call in this file backs off and retries through
+  // callResilient; figure detection used to just log "rate-limited — skipping" and
+  // return null, so a 429 LOST the figure permanently (the question imports with
+  // figure_missing and the admin re-attaches it by hand). That was tolerable while
+  // this ran serially, but the crop stage now runs several questions concurrently,
+  // which makes 429s likely rather than rare. So transient failures wait and retry;
+  // only a genuinely broken call gives up. Still never throws — a figure that can't
+  // be located is best-effort by design.
+  for (let i = 1; i <= FIGURE_MAX_ATTEMPTS; i++) {
+    if (signal?.aborted) return null;
+    try {
+      return await attempt();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (signal?.aborted || /aborted/i.test(msg)) return null;
+      const retryable = /429|quota|rate limit|RESOURCE_EXHAUSTED|\b503\b|overloaded|unavailable/i.test(msg);
+      if (!retryable || i === FIGURE_MAX_ATTEMPTS) {
+        console.warn(
+          `[import] figure detection ${retryable ? "gave up after" : "failed on"} attempt ${i} for ${qRef}: ${msg.slice(0, 100)}`
+        );
+        return null;
+      }
+      // Honour the server's suggested delay when it sends one, else exponential.
+      const wait = Math.min(35, parseRetryDelaySec(msg) ?? Math.min(30, 2 ** i)) + Math.random();
+      console.warn(
+        `[import] figure detection transient error for ${qRef} — waiting ${wait.toFixed(1)}s [attempt ${i}/${FIGURE_MAX_ATTEMPTS}]`
+      );
+      await sleep(wait * 1000);
     }
-    return null;
   }
+  return null;
 }
 
 /**

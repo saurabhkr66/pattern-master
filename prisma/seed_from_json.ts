@@ -100,35 +100,34 @@ const FILE_TOPIC_MAP: Array<{
   // images whose files were truly missing from ImageKit (re-scraped fresh).
   imagesOnly?: boolean;
 }> = [
-    // ── NEET → Biology (batch 2) ─────────────────────────────────────────────
+    // ── NEET → Biology (batch 4, final Biology chapters) ─────────────────────
     // Full seed (create + update). NEET is branchless → branch "Common". The
     // JSON's per-question `topic_name` is a lowercase slug, so the DB `topic_name`
-    // below is the exact Title-Case pattern name (verified against the DB — subject
-    // "Biology", branch "Common", all exist at 0 PYQs). "part-N" files are chunks
-    // of the SAME topic → same pattern, merged by content hash.
-    // NOTE: neet_biomolecules-questions-part-1/2.json are INTENTIONALLY excluded —
-    // "Biomolecules" exists only as a Chemistry pattern (already seeded, 79 PYQs);
-    // there is no Biology "Biomolecules" pattern. Decide taxonomy before seeding it.
-    { file: '../exam-scraper/extractor/neet_cell-the-unit-of-life-questions-part-1.json',
-      topic_name: 'Cell - The Unit of Life', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_cell-the-unit-of-life-questions-part-2.json',
-      topic_name: 'Cell - The Unit of Life', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_cell-cycle-and-cell-division.json',
-      topic_name: 'Cell Cycle and Cell Division', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_photosynthesis-in-higher-plants.json',
-      topic_name: 'Photosynthesis in Higher Plants', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_respiration-in-plants-questions.json',
-      topic_name: 'Respiration in Plants', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_plant-growth-and-development.json',
-      topic_name: 'Plant Growth and Development', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_plant-growth-and-development-questions-part-2.json',
-      topic_name: 'Plant Growth and Development', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_breathing-and-exchange-of-gases.json',
-      topic_name: 'Breathing and Exchange of Gases', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_body-fluids-and-circulation.json',
-      topic_name: 'Body Fluids and Circulation', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
-    { file: '../exam-scraper/extractor/neet_structural-organisation-in-animals.json',
-      topic_name: 'Structural Organisation in Animals', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    // below is the exact Title-Case pattern name (from prisma/NEET_TOPICS.md —
+    // subject "Biology", branch "Common"). "part-N" files are chunks of the SAME
+    // topic → same pattern, merged by content hash.
+    { file: '../exam-scraper/extractor/neet_evolution-questions-part-1.json',
+      topic_name: 'Evolution', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_evolution-questions-part-2.json',
+      topic_name: 'Evolution', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_human-health-and-diseases-questions-part-1.json',
+      topic_name: 'Human Health and Diseases', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_human-health-and-diseases-questions-part-2.json',
+      topic_name: 'Human Health and Diseases', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_microbes-in-human-welfare.json',
+      topic_name: 'Microbes in Human Welfare', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_biotechnology-principles-and-processes-part-1.json',
+      topic_name: 'Biotechnology Principles and Processes', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_biotechnology-principles-and-processes-part-2.json',
+      topic_name: 'Biotechnology Principles and Processes', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_biotechnology-and-its-applications.json',
+      topic_name: 'Biotechnology and Its Applications', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_organisms-and-populations.json',
+      topic_name: 'Organisms and Populations', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_ecosystem-questions.json',
+      topic_name: 'Ecosystem', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
+    { file: '../exam-scraper/extractor/neet_biodiversity-and-conservation.json',
+      topic_name: 'Biodiversity and Conservation', exam_type: 'NEET', branch: 'Common', subject: 'Biology' },
 ];
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}════════════════════════════════════════════════════════════${colors.reset}`);

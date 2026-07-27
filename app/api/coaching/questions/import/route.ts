@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withCoachingContext } from "@/lib/withCoachingContext";
-import { extractQuestions, cropQuestionImage, cropSolutionImage, verifyAnswers, reviewSubjectiveAnswers, generateComparisonSolutions, resetTokenUsage, getTokenUsage, logTokenUsage, type UploadImage, type ImportQType } from "@/lib/coachingImport";
+import { extractQuestions, cropQuestionImage, cropSolutionImage, verifyAnswers, reviewSubjectiveAnswers, generateComparisonSolutions, resetTokenUsage, getTokenUsage, logTokenUsage, mapLimit, FIGURE_CROP_CONCURRENCY, type UploadImage, type ImportQType } from "@/lib/coachingImport";
 import { pdfPageRenderer } from "@/lib/pdfRaster";
+import sharp from "sharp";
 
 // sharp + Gemini SDK need the Node runtime (not edge).
 export const runtime = "nodejs";
@@ -11,8 +12,46 @@ export const maxDuration = 300;
 
 const MAX_IMAGES = 25;
 
+// Longest-edge cap for an uploaded page photo. Exam pages are text and line art, so
+// 2200px keeps small print legible for OCR while cutting the payload by roughly an
+// order of magnitude against a modern phone's 12MP original.
+const MAX_IMAGE_EDGE = Number(process.env.COACHING_IMPORT_MAX_IMAGE_EDGE) || 2200;
+// Warn past this much inlined base64 — the request body limit is around 20MB.
+const INLINE_WARN_BYTES = 15_000_000;
+
 async function fileToUpload(file: File): Promise<UploadImage> {
   const buf = Buffer.from(await file.arrayBuffer());
+  return { mimeType: file.type || "application/octet-stream", base64: buf.toString("base64") };
+}
+
+/**
+ * Downscale + re-encode an uploaded page photo before it is inlined.
+ *
+ * Every extraction call re-sends the FULL media prefix — that's deliberate, it's what
+ * keeps Gemini's implicit context cache warm — and at BATCH_SIZE=1 that means one
+ * re-upload per question. So 25 raw 12MP photos base64'd is tens of MB on every
+ * request and trips the ~20MB body limit as an opaque "fetch failed". PDFs dodge this
+ * via the File API; inlined images have no equivalent, so they get shrunk here.
+ * Falls back to the original bytes when sharp can't read the file (it may still be a
+ * format Gemini accepts) or when the re-encode doesn't actually save anything.
+ */
+async function imageToUpload(file: File): Promise<UploadImage> {
+  const buf = Buffer.from(await file.arrayBuffer());
+  try {
+    const out = await sharp(buf)
+      .rotate() // honour EXIF orientation before resizing
+      .resize({
+        width: MAX_IMAGE_EDGE,
+        height: MAX_IMAGE_EDGE,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 82 })
+      .toBuffer();
+    if (out.length < buf.length) return { mimeType: "image/jpeg", base64: out.toString("base64") };
+  } catch {
+    /* unreadable by sharp — send the original through */
+  }
   return { mimeType: file.type || "application/octet-stream", base64: buf.toString("base64") };
 }
 
@@ -94,8 +133,17 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const topicsRaw = String(form.get("topics") ?? "").trim();
   const topics = topicsRaw ? topicsRaw.split(",").map((t) => t.trim()).filter(Boolean) : undefined;
 
-  const images = await Promise.all(imageFiles.map(fileToUpload));
+  const images = await Promise.all(imageFiles.map(imageToUpload));
   const pdf = pdfFile ? await fileToUpload(pdfFile) : undefined;
+  if (images.length) {
+    const inlineBytes = images.reduce((n, i) => n + i.base64.length, 0);
+    console.log(`[import] ${images.length} image(s) inlined ≈ ${(inlineBytes / 1e6).toFixed(1)}MB per request`);
+    if (inlineBytes > INLINE_WARN_BYTES) {
+      console.warn(
+        `[import] ⚠ inlined images are ≈${(inlineBytes / 1e6).toFixed(1)}MB — close to the request body limit; expect "fetch failed". Lower COACHING_IMPORT_MAX_IMAGE_EDGE or upload fewer pages.`
+      );
+    }
+  }
 
   // The extraction below (Gemini passes + cropping) routinely runs past 100s,
   // which is Cloudflare's hard origin-response cap — it would 524 before we ever
@@ -186,7 +234,18 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
         let flagged = 0;
         let cropped = 0;
         let noPage = 0; // flagged figure questions a PDF can't locate (no page index)
-        for (const q of questions) {
+        // Cropping runs FIGURE_CROP_CONCURRENCY questions at a time. It used to be a
+        // serial for-loop — the only serial stage in the pipeline — and on a
+        // figure-heavy paper its up-to-6 vision calls per question dominated the whole
+        // import's wall clock. Each question's work is independent (it only mutates its
+        // own `q`), and the counters below are safe because single-threaded JS makes
+        // `cropped++` indivisible. The renderer is safe to share: its render() is
+        // synchronous and memoised per page, so concurrent callers can't interleave
+        // inside it and a shared page still rasterizes only once.
+        await mapLimit(questions, FIGURE_CROP_CONCURRENCY, async (q) => {
+          // Stop starting new work once the client is gone (the old loop walked every
+          // remaining question, relying on the inner calls to no-op).
+          if (req.signal.aborted) return;
           if (q.is_figure || q.has_diagram || q.options_are_figures) {
             flagged++;
             if (pdf && typeof q.page !== "number") noPage++;
@@ -217,7 +276,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           if ((q.is_figure || q.has_diagram || q.options_are_figures) && !q.images?.length) {
             q.figure_missing = true;
           }
-        }
+        });
         console.log(
           `[import] figures: ${flagged} flagged, ${cropped} cropped, ${Math.max(0, flagged - cropped)} missed` +
             (noPage ? ` (${noPage} miss(es) had NO page index — unlocatable in the PDF)` : "") +
