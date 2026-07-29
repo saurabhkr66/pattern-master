@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LayoutGrid, List, Plus, Check } from "lucide-react";
+import MathInline from "@/components/ui/MathInline";
 import Segmented from "./masteryNotes/Segmented";
 import CollapsibleSection from "./masteryNotes/CollapsibleSection";
 import Block from "./masteryNotes/Block";
@@ -27,9 +28,15 @@ export default function MasteryNotes({ data = SAMPLE }: { data?: MasteryNoteData
   const [activeId, setActiveId] = useState(sections[0]?.id);
   const [filter, setFilter] = useState('All');
 
-  const countItems = (section: MasteryNoteSection) => {
-    return (section.blocks || []).reduce((acc, b) => acc + (b.items ? b.items.length : 0), 0);
-  };
+  // Card count for the TOC badge. Markdown blocks hold one item per *line*, so
+  // counting them would show a meaningless "47" next to a prose section.
+  const countItems = (section: MasteryNoteSection) =>
+    (section.blocks || []).reduce(
+      (acc, b) => acc + (b.kind === 'markdown' || !b.items ? 0 : b.items.length),
+      0
+    );
+
+  const totalCards = sections.reduce((acc, s) => acc + countItems(s), 0);
 
   if (sections.length === 0) {
     return <div className="p-8 text-center text-[var(--text-muted)]">No notes available for this topic.</div>;
@@ -48,11 +55,13 @@ export default function MasteryNotes({ data = SAMPLE }: { data?: MasteryNoteData
                  onClick={() => setActiveId(s.id)}
                  className={`group flex justify-between items-baseline gap-2 px-3 py-1.5 no-underline transition-all border-l-2 -ml-[1px]
                    ${active ? 'border-[#ff8a3d] text-[#ff8a3d]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-                <span>
-                  <span className="font-mono text-[10px] opacity-60 mr-2">0{i + 1}</span>
-                  {s.title}
+                <span className="min-w-0">
+                  <span className="font-mono text-[10px] opacity-60 mr-2">{String(i + 1).padStart(2, '0')}</span>
+                  <MathInline content={s.title} />
                 </span>
-                <span className="font-mono text-[10px] opacity-40">{countItems(s)}</span>
+                {countItems(s) > 0 && (
+                  <span className="font-mono text-[10px] opacity-40">{countItems(s)}</span>
+                )}
               </a>
             );
           })}
@@ -62,7 +71,12 @@ export default function MasteryNotes({ data = SAMPLE }: { data?: MasteryNoteData
           <div className="mt-6 p-3 border border-[var(--border)] rounded-lg text-[11px] text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-surface-2)]">
             <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold tracking-wider mb-1.5">Reading time</div>
             <div className="text-[var(--text-primary)] font-mono text-[14px] mb-0.5">{parsedData.meta.readTime}</div>
-            <div className="opacity-70">{parsedData.meta.cards} cards · updated {parsedData.meta.updated}</div>
+            <div className="opacity-70">
+              {totalCards > 0
+                ? `${totalCards} cards`
+                : `${sections.length} section${sections.length === 1 ? '' : 's'}`}
+              {parsedData.meta.updated ? ` · updated ${parsedData.meta.updated}` : ''}
+            </div>
           </div>
         )}
       </aside>

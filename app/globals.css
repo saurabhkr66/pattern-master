@@ -69,9 +69,36 @@ body {
 .katex { font-size: 1em; }
 .katex-display { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
 
+/* <MathInline> — phrasing-level math for card labels, table cells and <pre>.
+   It must inherit the slot's typography (size, weight, colour, font-family) and
+   never introduce block spacing, otherwise a formula inside a bold 12px label
+   renders at a different scale than the text beside it. */
+.math-inline {
+  display: inline;
+  font: inherit;
+  color: inherit;
+}
+.math-inline .katex {
+  font-size: 1.05em;   /* KaTeX runs optically small; nudge to match body text */
+  line-height: inherit;
+}
+.math-inline code {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+/* Safety net: if content still produces display math, keep it in the line box
+   instead of letting it break the surrounding flex/grid row. */
+.math-inline .katex-display {
+  display: inline-block;
+  margin: 0;
+  text-align: left;
+}
+
 @media (max-width: 768px) {
   .katex { font-size: 0.7em; }
   .katex-display { font-size: 0.7em; text-align: left; }
+  .math-inline .katex { font-size: 0.95em; }
   .qp-qtext { font-size: 14px !important; line-height: 1.45 !important; }
   .qp-scroll { padding: 12px 10px !important; }
 }

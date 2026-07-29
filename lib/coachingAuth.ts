@@ -42,23 +42,18 @@ export async function getCoachingActor(): Promise<CoachingActor | null> {
   const { userId, sessionClaims } = await auth();
   if (!userId) return null;
 
-  // Super-admin status keys off the Clerk session EMAIL — the stable credential
-  // across Clerk instances — NOT a DB User row keyed by userId. The dev and prod
-  // Clerk instances issue different userIds for the same person, so the old
-  // `User.findUnique({ id: userId })` lookup matched in prod (where User.id was
-  // synced to the prod userId) but returned null in dev, bouncing super admins
-  // off /admin/coachings. Mirrors lib/requireAdmin: fast path is the `email`
-  // session claim (Clerk Dashboard → Sessions); fall back to the Clerk API only
-  // when the claim is absent AND the user isn't a linked coaching admin.
-  const claimEmail = (sessionClaims as { email?: string } | null)?.email?.toLowerCase();
-
-  const admin = await prisma.coachingAdmin.findUnique({
-    where: { clerk_id: userId },
-    select: { id: true, coaching_id: true, role: true },
-  });
-
-  let email = claimEmail;
-  if (!email && !admin) {
+  // EMAIL is the identity everywhere in this file — never the Clerk userId. The
+  // dev and prod Clerk instances issue different userIds for the same person, so
+  // any userId-keyed check passes in prod and silently fails in dev (the old
+  // `User.findUnique({ id: userId })` bounced super admins off /admin/coachings).
+  // Mirrors lib/requireAdmin: fast path is the `email` session claim (Clerk
+  // Dashboard → Sessions), falling back to the Clerk API.
+  //
+  // Resolve it BEFORE touching Prisma so a super admin never depends on the DB
+  // being reachable — locally the DB is a tunnel that is often down, and the
+  // findUnique used to throw before the email check ever ran.
+  let email = (sessionClaims as { email?: string } | null)?.email?.toLowerCase();
+  if (!email) {
     const user = await currentUser();
     email = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
   }
@@ -76,6 +71,21 @@ export async function getCoachingActor(): Promise<CoachingActor | null> {
       adminId: null,
     };
   }
+
+  // Not a super admin — now resolve the coaching seat. Match on clerk_id OR the
+  // signed-in email: the email match is what makes a seat linked in prod usable
+  // from a local dev session, where the same person carries a different userId.
+  const matches = await prisma.coachingAdmin.findMany({
+    where: {
+      OR: [{ clerk_id: userId }, ...(email ? [{ email }] : [])],
+    },
+    select: { id: true, coaching_id: true, role: true, clerk_id: true },
+    take: 5,
+  });
+  // Prefer the seat already stamped with this userId; otherwise take the
+  // email-matched one (the cross-Clerk-instance / pre-claim case).
+  const admin =
+    matches.find((m) => m.clerk_id === userId) ?? matches[0] ?? null;
 
   if (admin) {
     return {

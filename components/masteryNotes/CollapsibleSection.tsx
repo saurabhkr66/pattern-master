@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
+import MathInline from "@/components/ui/MathInline";
 import { T } from "./types";
+import { htmlToMarkdown } from "./mathText";
 
 interface Props {
   id: string;
@@ -27,9 +29,15 @@ export default function CollapsibleSection({ id, n, title, sub, open = false, ch
           className={`transition-transform duration-200 mt-1 flex-shrink-0 text-[var(--text-muted)]
             ${isOpen ? 'rotate-90' : ''}`}
         />
-        <div className="font-mono text-[11px] text-[#ff8a3d] font-bold tracking-tight">0{n}</div>
-        <div className="text-[16px] font-bold tracking-tight" style={{ fontFamily: T.serif }}>{title}</div>
-        <div className="text-[11px] text-[var(--text-muted)] italic hidden sm:block" style={{ fontFamily: T.serif }}>· {sub}</div>
+        <div className="font-mono text-[11px] text-[#ff8a3d] font-bold tracking-tight">{String(n).padStart(2, '0')}</div>
+        <div className="text-[16px] font-bold tracking-tight" style={{ fontFamily: T.serif }}>
+          <MathInline content={htmlToMarkdown(title)} />
+        </div>
+        {!!sub?.trim() && (
+          <div className="text-[11px] text-[var(--text-muted)] italic hidden sm:block" style={{ fontFamily: T.serif }}>
+            · <MathInline content={htmlToMarkdown(sub)} />
+          </div>
+        )}
         <div className="flex-1" />
         {!isOpen && <span className="text-[10px] text-[var(--text-muted)] font-mono opacity-60">Expand</span>}
       </div>

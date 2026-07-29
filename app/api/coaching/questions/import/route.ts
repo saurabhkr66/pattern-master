@@ -91,6 +91,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   // it; re-validated server-side (resolveGenerationModel) against the allowlist.
   const answerModel = String(form.get("answerModel") ?? "").trim() || undefined;
 
+  // DeepSeek kill switch for this import (modal toggle, default ON). Off → every pass
+  // that would have used V4 Pro runs on DEEPSEEK_OFF_MODEL (gemini-3.5-flash-lite)
+  // instead. Absent field means ON so an older client keeps the previous behaviour.
+  const allowDeepSeek = String(form.get("deepseek") ?? "1") !== "0";
+
 
   // Hindi translation is opt-in (default OFF). Most coaching papers are English-
   // only, and translating every field roughly doubles output tokens/cost — so the
@@ -291,6 +296,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
             questions,
             // Defaults to V4 Pro (text-based blind solve); the answer-key pass above
             // stays on Gemini because it must read the page images.
+            allowDeepSeek,
             bilingual,
             signal: req.signal,
             onEvent: write,
@@ -304,10 +310,10 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
         // Best-effort — never blocks the import. Skip if the client already left.
         if (wantVerify && !req.signal.aborted) {
           // Objective answers: blind re-solve + disagreement check.
-          await verifyAnswers({ questions, model: verifyModel, signal: req.signal, onEvent: write });
+          await verifyAnswers({ questions, model: verifyModel, allowDeepSeek, signal: req.signal, onEvent: write });
           // Subjective model answers: independent quality review (correct/complete?).
           if (!req.signal.aborted) {
-            await reviewSubjectiveAnswers({ questions, model: verifyModel, signal: req.signal, onEvent: write });
+            await reviewSubjectiveAnswers({ questions, model: verifyModel, allowDeepSeek, signal: req.signal, onEvent: write });
           }
         }
 

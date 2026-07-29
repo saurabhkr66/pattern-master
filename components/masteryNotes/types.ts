@@ -66,4 +66,7 @@ export const btnClass = (primary: boolean) => `
     : 'bg-white/5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-white/10'}
 `;
 
+// Kept for callers that need bare text (aria labels, plain-text export). For
+// anything that is rendered, prefer htmlToMarkdown() from ./mathText so legacy
+// <b>/<i> markup survives as markdown instead of being thrown away.
 export function stripHtml(s: string) { return s.replace(/<[^>]+>/g, ''); }

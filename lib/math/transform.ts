@@ -519,9 +519,16 @@ export function transformMathContent(content: string): string {
     .replace(/\\∆/g, '\\Delta')
     .replace(/\$([^$]*?)∵([^$]*?)\$/g, (_, a, b) => `$${a}\\because ${b}$`)
     .replace(/\$([^$]*?)⇒([^$]*?)\$/g, (_, a, b) => `$${a}\\Rightarrow ${b}$`)
-    .replace(/\$(?!\$)((?:[^$]|\\\$)*\\begin\{cases\}[\s\S]*?\\end\{cases\}(?:[^$]|\\\$)*)\$/g,
+    // Promote a cases/aligned block from INLINE "$…$" to display "$$…$$".
+    // The (?<!\$) / (?!\$) guards are load-bearing: without them the rule also
+    // fires on content that is ALREADY "$$…$$", matching from the second "$" of
+    // the opening pair to the first "$" of the closing pair. That leaves a
+    // stray lone "$" on either side of the block, which renders as a literal
+    // dollar sign next to correctly-typeset math. The bmatrix rule below always
+    // had these guards; cases/aligned did not.
+    .replace(/(?<!\$)\$(?!\$)((?:[^$]|\\\$)*\\begin\{cases\}[\s\S]*?\\end\{cases\}(?:[^$]|\\\$)*)\$(?!\$)/g,
       (_m, body) => `\n\n$$\n${body}\n$$\n\n`)
-    .replace(/\$(?!\$)((?:[^$]|\\\$)*\\begin\{aligned\}[\s\S]*?\\end\{aligned\}(?:[^$]|\\\$)*)\$/g,
+    .replace(/(?<!\$)\$(?!\$)((?:[^$]|\\\$)*\\begin\{aligned\}[\s\S]*?\\end\{aligned\}(?:[^$]|\\\$)*)\$(?!\$)/g,
       (_m, body) => `\n\n$$\n${body}\n$$\n\n`)
     .replace(/(?<!\$)\$(?!\$)((?:[^$]|\\\$)*\\begin\{(bmatrix|vmatrix|pmatrix|matrix|array)\}[\s\S]*?\\end\{\2\}(?:[^$]|\\\$)*)\$(?!\$)/g,
       (_m, body) => `\n\n$$\n${body}\n$$\n\n`)

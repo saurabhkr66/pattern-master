@@ -38,12 +38,18 @@ const CONTENT_OPTS = [
   { v: "mixed", label: "Mixed — auto-detect", hint: "AI classifies each question automatically", Icon: Cpu, accent: "violet" },
 ] as const;
 
+// Where DeepSeek passes land when the DeepSeek toggle is off — mirrors
+// DEEPSEEK_OFF_MODEL in lib/coachingImport.ts.
+const DEEPSEEK_OFF_MODEL = "gemini-3.5-flash-lite";
+
 // Selectable verifier models — mirrors VERIFY_MODEL_OPTIONS in lib/coachingImport.ts
 // (the server re-validates against that allowlist). First entry is the default.
 const VERIFY_MODELS = [
-  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Default · strong reader, multimodal" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", hint: "Default · strong reader, multimodal" },
   { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Different vendor · decorrelated errors, cheap" },
-  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Same as extractor · cheapest" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", hint: "Same as extractor · cheapest" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Previous default" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Older generation" },
 ] as const;
 
 // Selectable answer-key models — mirrors GENERATION_MODEL_OPTIONS in
@@ -51,8 +57,10 @@ const VERIFY_MODELS = [
 // the page. Gemini-only: it needs to see the images, and DeepSeek is text-only.
 // (V4 Pro's reasoning powers the worked SOLUTIONS via "Compare two solutions" below.)
 const GENERATION_MODELS = [
-  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Default · reads the printed key" },
-  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Stronger reader" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", hint: "Default · reads the printed key" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", hint: "Stronger reader" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Older generation" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Previous stronger reader" },
 ] as const;
 
 const ACCENT: Record<string, string> = {
@@ -144,6 +152,18 @@ export default function QuestionImportModal({
   const [verifyModel, setVerifyModel] = useState<string>(VERIFY_MODELS[0].id);
   // Answer-key model (Pass 2, reads the printed key). Default = Gemini flash-lite.
   const [answerModel, setAnswerModel] = useState<string>(GENERATION_MODELS[0].id);
+  // DeepSeek V4 Pro powers the always-on blind cross-check (and is offered as a
+  // verifier). ON by default — a different vendor makes its mistakes decorrelated
+  // from Gemini's. Off keeps the cross-check running on gemini-3.5-flash-lite.
+  const [deepseek, setDeepseek] = useState(true);
+  // Turning DeepSeek off also has to move a DeepSeek verifier pick off it, or the
+  // select would render blank against a filtered option list (the server would fall
+  // back anyway, but the UI would be lying about what's going to run).
+  const toggleDeepseek = () => {
+    const next = !deepseek;
+    setDeepseek(next);
+    if (!next && verifyModel.startsWith("deepseek")) setVerifyModel(DEEPSEEK_OFF_MODEL);
+  };
   // Hindi translation is opt-in (default OFF) — most papers are English-only and
   // translating every field roughly doubles the token cost. Turn on for bilingual papers.
   const [hindi, setHindi] = useState(false);
@@ -245,6 +265,7 @@ export default function QuestionImportModal({
       fd.set("verify", verify ? "1" : "0");
       if (verify) fd.set("verifyModel", verifyModel);
       fd.set("answerModel", answerModel);
+      fd.set("deepseek", deepseek ? "1" : "0");
       fd.set("hindi", hindi ? "1" : "0");
       if (topics.trim()) fd.set("topics", topics.trim());
       images.forEach((f) => fd.append("images", f));
@@ -532,16 +553,36 @@ export default function QuestionImportModal({
                 ))}
               </select>
 
-              {/* Blind cross-check is always on (no toggle): V4 Pro re-solves every
-                  question from scratch and review flags where its answer differs. */}
-              <p className="mt-3 flex items-start gap-1.5 rounded-xl border border-white/10 bg-white/[0.02] p-2.5 text-[12px] leading-snug text-slate-400">
+              {/* The blind cross-check itself always runs; this toggle only picks WHO
+                  runs it. On = DeepSeek V4 Pro (different vendor → decorrelated
+                  mistakes). Off = gemini-3.5-flash-lite, same family as the extractor. */}
+              <div
+                onClick={toggleDeepseek}
+                className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] p-2.5"
+              >
                 <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/80" />
-                <span>
-                  DeepSeek V4 Pro independently re-solves every <em>text</em> question (blind — never shown the answer) and
-                  becomes the default solution; review flags where its answer differs. Figure questions stay on Gemini
-                  (V4 can&apos;t see images). Turn on Verify below for a 3-way check.
-                </span>
-              </p>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold text-white">
+                    Blind cross-check with DeepSeek V4 Pro
+                  </div>
+                  <p className="mt-0.5 text-[12px] leading-snug text-slate-400">
+                    {deepseek ? (
+                      <>
+                        V4 Pro independently re-solves every <em>text</em> question (blind — never shown the answer) and
+                        becomes the default solution; review flags where its answer differs. Figure questions stay on
+                        Gemini (V4 can&apos;t see images). Turn on Verify below for a 3-way check.
+                      </>
+                    ) : (
+                      <>
+                        Off — the cross-check still runs, but on <strong>gemini-3.5-flash-lite</strong> instead. Same
+                        family as the extractor, so its mistakes are more correlated and it&apos;ll catch fewer bad
+                        answers. Any DeepSeek verifier pick below falls back to it too.
+                      </>
+                    )}
+                  </p>
+                </div>
+                <Switch checked={deepseek} />
+              </div>
             </div>
 
             {/* Expensive AI passes — both off by default, grouped in one card. */}
@@ -576,7 +617,7 @@ export default function QuestionImportModal({
                     onChange={(e) => setVerifyModel(e.target.value)}
                     className="mt-1.5 w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500/60 sm:max-w-md"
                   >
-                    {VERIFY_MODELS.map((m) => (
+                    {VERIFY_MODELS.filter((m) => deepseek || !m.id.startsWith("deepseek")).map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.label} — {m.hint}
                       </option>

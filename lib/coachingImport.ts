@@ -321,21 +321,36 @@ function buildPrompt(
   // Hindi translation is opt-in (default OFF): when false we never ask for the
   // *_hindi fields, so the model spends no tokens translating and the output is
   // English-only. The admin flips it on per import only for bilingual papers.
-  bilingual = false
+  bilingual = false,
+  // Set only for a paper whose numbering RESTARTS per section: scopes this batch to
+  // one section so `onlyNumbers` identifies exactly one question each. Also pins the
+  // "section" field of every returned question, which keeps the label identical
+  // across the enumerate/extract/answer passes (they have to join on it).
+  onlySection?: string | null
 ): string {
   // When batching, restrict this call to a specific set of printed numbers so the
   // output stays under the token limit. The full document is still attached so
   // the model has the context it needs to read each question accurately.
   const numberFilter = onlyNumbers?.length
-    ? `EXTRACT ONLY the questions whose PRINTED number is one of: ${JSON.stringify(
-        onlyNumbers
-      )}. Skip every other question entirely — do NOT include them. Return exactly these questions, in ascending number order.`
+    ? onlySection
+      ? `This paper RESTARTS its question numbering in each section, so the same printed number appears in more than one section. EXTRACT ONLY the questions printed under the section heading ${JSON.stringify(
+          onlySection
+        )} whose PRINTED number is one of: ${JSON.stringify(
+          onlyNumbers
+        )}. A question with a matching number in ANY OTHER section is NOT wanted — skip it entirely. Return exactly these questions, in ascending number order.`
+      : `EXTRACT ONLY the questions whose PRINTED number is one of: ${JSON.stringify(
+          onlyNumbers
+        )}. Skip every other question entirely — do NOT include them. Return exactly these questions, in ascending number order.`
     : null;
-  const sectionList = sections.length
-    ? `Assign each question a "section" — it MUST be EXACTLY one of: ${JSON.stringify(
-        sections
-      )}. If none fits, use null. Do NOT invent new section names.`
-    : `Leave "section" as null.`;
+  const sectionList = onlySection
+    ? `Every question you return comes from section ${JSON.stringify(
+        onlySection
+      )} — set "section" to EXACTLY that string on all of them.`
+    : sections.length
+      ? `Assign each question a "section" — it MUST be EXACTLY one of: ${JSON.stringify(
+          sections
+        )}. If none fits, use null. Do NOT invent new section names.`
+      : `Leave "section" as null.`;
   // Catalog mode (fixed CBSE syllabus): topic must come from the chosen section's
   // own list. Flat mode: a single shared list. Else: no topic.
   const topicList =
@@ -467,19 +482,37 @@ function buildResponseSchema(bilingual: boolean): ResponseSchema {
   };
 }
 
-// Pass 0: enumerate the printed question numbers. Tiny output (just integers) so
-// it never truncates even for a 100-question paper — gives us the ranges to batch
-// the heavy extraction passes over.
+// Pass 0: enumerate the printed question numbers. Tiny output so it never truncates
+// even for a 100-question paper — gives us the ranges to batch the heavy extraction
+// passes over.
+//
+// Each entry carries its SECTION heading because a printed number is NOT a unique id:
+// papers that restart numbering per section (Section A 1–10, then Section B 1–55) reuse
+// every number in 1–10. Enumerating bare integers made those collide — the dedupe below
+// collapsed 65 questions to 55 unique numbers, and the number-filtered extraction batch
+// then returned whichever of the two questions numbered 7 the model felt like, which is
+// what "randomly leaving questions out" actually was. (section, number) is unique.
 const ENUM_SCHEMA: ResponseSchema = {
   type: SchemaType.ARRAY,
-  items: { type: SchemaType.INTEGER },
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      number: { type: SchemaType.INTEGER },
+      section: { type: SchemaType.STRING, nullable: true },
+    },
+    required: ["number"],
+  },
 };
 
 function buildEnumeratePrompt(): string {
   return [
-    "Look at the attached exam paper and list the PRINTED number of EVERY question in it, in ascending order.",
+    "Look at the attached exam paper and list EVERY question in it, in the order they appear in the document.",
     "Count questions only — ignore the answer key / solutions section so each question is counted once.",
-    "Return STRICT JSON: an array of integers, e.g. [1,2,3,4,5]. If a question has no printed number, use its 1-based position. Output ONLY the array, no prose.",
+    'For each question return {"number": <printed number>, "section": <the section heading it appears under>}.',
+    '"section" must be the heading VERBATIM as printed (e.g. "Section A", "Part II", "Physics"). Use null ONLY if the paper has no section headings at all.',
+    "IMPORTANT: many papers RESTART numbering at 1 in each section. Do NOT renumber, merge, or skip a question because its number already appeared — list every question, including repeated numbers, in document order.",
+    "If a question has no printed number, use its 1-based position within its section.",
+    "Output ONLY the JSON array, no prose.",
   ].join("\n");
 }
 
@@ -519,11 +552,25 @@ type AnswerKeyEntry = {
   solution_page?: number | null; // 0-based page the solution figure is on
 };
 
-function buildAnswerKeyPrompt(onlyNumbers?: number[], bilingual = false): string {
+function buildAnswerKeyPrompt(
+  onlyNumbers?: number[],
+  bilingual = false,
+  // Set for a paper that restarts numbering per section — without it, "the answer to
+  // Q7" is ambiguous and the wrong section's answer gets merged onto the question.
+  onlySection?: string | null
+): string {
   const scope = onlyNumbers?.length
-    ? `Provide the correct answer + worked solution ONLY for these question numbers: ${JSON.stringify(
-        onlyNumbers
-      )}. Return exactly one entry per number, in ascending order — skip all other questions.`
+    ? onlySection
+      ? `This paper RESTARTS its question numbering in each section. Provide the correct answer + worked solution ONLY for questions in section ${JSON.stringify(
+          onlySection
+        )} with these printed numbers: ${JSON.stringify(
+          onlyNumbers
+        )}. Answers belonging to a same-numbered question in a DIFFERENT section are wrong here — make sure the answer you read is the one for section ${JSON.stringify(
+          onlySection
+        )}. Return exactly one entry per number, in ascending order — skip all other questions.`
+      : `Provide the correct answer + worked solution ONLY for these question numbers: ${JSON.stringify(
+          onlyNumbers
+        )}. Return exactly one entry per number, in ascending order — skip all other questions.`
     : "Provide the correct answer + worked solution for EVERY question in it.";
   return [
     `You are given an exam paper. ${scope}`,
@@ -682,14 +729,73 @@ export async function extractQuestions(opts: {
   // answer key) so a big solutions section can't inflate the count. Best-effort:
   // on failure we fall back to a single, un-batched extraction call below.
   let numbers: number[] = [];
+  // Section-scoped batches, set ONLY when the paper restarts numbering per section.
+  // Empty otherwise, so every other paper takes exactly the code path it always has.
+  let sectionBatches: { section: string; numbers: number[] }[] = [];
+  const sectionOrder = new Map<string, number>();
   emit({ t: "phase", phase: "enumerate" });
   try {
     const enumParts: Part[] = [...media, { text: buildEnumeratePrompt() }];
     const raw = await callResilient(key, "enumerate", ENUM_SCHEMA, enumParts, signal);
-    numbers = [...new Set(raw.map((n) => Number(n)).filter((n) => Number.isFinite(n)))].sort(
-      (a, b) => a - b
-    );
-    console.log(`[import] enumerate pass: ${numbers.length} question number(s)`);
+    // Tolerate the older bare-integer shape as well as {number, section}.
+    const entries = raw
+      .map((r) => {
+        const o = (typeof r === "object" && r !== null ? r : { number: r }) as {
+          number?: unknown;
+          section?: unknown;
+        };
+        const n = Number(o.number);
+        if (!Number.isFinite(n)) return null;
+        const s = typeof o.section === "string" ? o.section.trim() : "";
+        return { number: n, section: s || null };
+      })
+      .filter((e): e is { number: number; section: string | null } => e !== null);
+
+    // Numbering restarts when the SAME printed number appears under two different
+    // section headings. (A number repeated within one section is just a model
+    // stutter — deduped below, not treated as a restart.)
+    const sectionsFor = new Map<number, Set<string>>();
+    for (const e of entries) {
+      if (!sectionsFor.has(e.number)) sectionsFor.set(e.number, new Set());
+      sectionsFor.get(e.number)!.add(e.section ?? "");
+    }
+    const restarts = [...sectionsFor.values()].some((s) => s.size > 1);
+    const labelled = entries.filter((e) => e.section).length;
+
+    if (restarts && labelled === entries.length) {
+      // Group in first-appearance order, deduping numbers WITHIN a section.
+      const bySection = new Map<string, number[]>();
+      for (const e of entries) {
+        const s = e.section!;
+        if (!bySection.has(s)) {
+          bySection.set(s, []);
+          sectionOrder.set(s, sectionOrder.size);
+        }
+        if (!bySection.get(s)!.includes(e.number)) bySection.get(s)!.push(e.number);
+      }
+      sectionBatches = [...bySection].map(([section, nums]) => ({
+        section,
+        numbers: nums.sort((a, b) => a - b),
+      }));
+      numbers = sectionBatches.flatMap((b) => b.numbers);
+      console.log(
+        `[import] enumerate pass: ${numbers.length} question(s) across ${sectionBatches.length} section(s) with RESTARTING numbering — ` +
+          sectionBatches.map((b) => `"${b.section}"×${b.numbers.length}`).join(", ")
+      );
+    } else {
+      if (restarts) {
+        // Duplicated numbers but the model couldn't name the sections — there is no
+        // key that separates them, so number-filtered batching would drop questions.
+        // Fall back to one un-batched call, which extracts in document order instead.
+        console.warn(
+          `[import] ⚠ repeated question numbers but ${entries.length - labelled} entr(ies) have no section heading — batching would drop questions, extracting in ONE call instead.`
+        );
+        numbers = [];
+      } else {
+        numbers = [...new Set(entries.map((e) => e.number))].sort((a, b) => a - b);
+        console.log(`[import] enumerate pass: ${numbers.length} question number(s)`);
+      }
+    }
   } catch (e) {
     console.error("[import] enumerate pass failed, falling back to single call:", e instanceof Error ? e.message : e);
   }
@@ -698,18 +804,28 @@ export async function extractQuestions(opts: {
   // paper is long enough that one call would truncate; otherwise a single call.
   let questions: ParsedQuestion[];
   if (numbers.length > BATCH_SIZE) {
-    const groups = chunk(numbers, BATCH_SIZE);
+    // One flat list of batches. Restart papers chunk WITHIN each section so a batch
+    // never spans two sections — that's what makes its number filter unambiguous.
+    const groups: { section: string | null; numbers: number[] }[] = sectionBatches.length
+      ? sectionBatches.flatMap((b) =>
+          chunk(b.numbers, BATCH_SIZE).map((numbers) => ({ section: b.section, numbers }))
+        )
+      : chunk(numbers, BATCH_SIZE).map((numbers) => ({ section: null, numbers }));
     console.log(`[import] extracting ${numbers.length} questions in ${groups.length} batch(es) of ${BATCH_SIZE}, ${CONCURRENCY} at a time`);
     emit({ t: "phase", phase: "extract", total: numbers.length });
     let extracted = 0;
-    const batched = await mapLimit(groups, CONCURRENCY, async (group) => {
+    const batched = await mapLimit(groups, CONCURRENCY, async (g) => {
       if (signal?.aborted) return [] as ParsedQuestion[]; // client gone — don't fire
-      const label = `pass-1 batch ${group[0]}–${group[group.length - 1]}`;
+      const group = g.numbers;
+      const label = `pass-1 batch ${g.section ? `${g.section} ` : ""}${group[0]}–${group[group.length - 1]}`;
       try {
         const got = (await callResilient(key, label, responseSchema, [
           ...media,
-          { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group, bilingual) },
+          { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group, bilingual, g.section) },
         ], signal)) as ParsedQuestion[];
+        // The batch prompt pins the section, but a model can still omit it — stamp it
+        // so the answer-key join below always has the label it needs.
+        if (g.section) for (const q of got) if (!q.section) q.section = g.section;
         // Stream this batch the moment it lands so the UI fills in live.
         extracted += got.length;
         emit({ t: "questions", items: got, done: extracted, total: numbers.length });
@@ -721,8 +837,17 @@ export async function extractQuestions(opts: {
         return [] as ParsedQuestion[];
       }
     });
-    // Parallel batches return out of order — sort the flattened list by number.
-    questions = batched.flat().sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+    // Parallel batches return out of order — sort the flattened list by number, and
+    // by section first when numbering restarts (else Section B's Q1 would sort above
+    // Section A's Q2 and the paper would come back interleaved).
+    questions = batched.flat().sort((a, b) => {
+      if (sectionBatches.length) {
+        const sa = sectionOrder.get(a.section ?? "") ?? Number.MAX_SAFE_INTEGER;
+        const sb = sectionOrder.get(b.section ?? "") ?? Number.MAX_SAFE_INTEGER;
+        if (sa !== sb) return sa - sb;
+      }
+      return (a.number ?? 0) - (b.number ?? 0);
+    });
   } else {
     // Un-batched single call. Its scope is the WHOLE paper whenever the enumerate
     // pass failed (numbers === []), so it must NOT inherit MAX_OUTPUT_TOKENS (sized
@@ -774,27 +899,46 @@ export async function extractQuestions(opts: {
   }
   if (askable.length) {
     emit({ t: "phase", phase: "answers", total: askable.length });
-    const missingNumbers = [...new Set(askable.map((i) => joinKeys[i]!))];
-    const groups = chunk(missingNumbers, BATCH_SIZE);
-    const batched = await mapLimit(groups, CONCURRENCY, async (group) => {
-      if (signal?.aborted) return [] as AnswerKeyEntry[]; // client gone — don't fire
-      const label = `answer-key batch ${group[0]}–${group[group.length - 1]}`;
+    // Restart papers ask (and merge) one section at a time: a batch of bare numbers
+    // spanning two sections would pull whichever Q7 answer the model saw first and
+    // merge it onto both. Every other paper keeps the single global group it had.
+    const buckets: { section: string | null; idx: number[] }[] = sectionBatches.length
+      ? [...new Set(askable.map((i) => questions[i].section ?? ""))].map((section) => ({
+          section: section || null,
+          idx: askable.filter((i) => (questions[i].section ?? "") === section),
+        }))
+      : [{ section: null, idx: askable }];
+    const groups = buckets.flatMap((b) =>
+      chunk([...new Set(b.idx.map((i) => joinKeys[i]!))], BATCH_SIZE).map((numbers) => ({
+        section: b.section,
+        numbers,
+        // Merge scope: only this section's questions can receive these answers.
+        idx: new Set(b.idx),
+      }))
+    );
+    const batched = await mapLimit(groups, CONCURRENCY, async (g) => {
+      if (signal?.aborted) return { g, answers: [] as AnswerKeyEntry[] }; // client gone
+      const group = g.numbers;
+      const label = `answer-key batch ${g.section ? `${g.section} ` : ""}${group[0]}–${group[group.length - 1]}`;
       try {
         // Routed by model id: DeepSeek (V4 Pro) via the OpenAI-compatible client,
         // Gemini via callResilient. The budget is sized to THIS group so a batch of
         // worked solutions isn't truncated (the 1024 verify default would be).
-        return (await callModel(key, label, buildAnswerKeySchema(bilingual), [
+        const answers = (await callModel(key, label, buildAnswerKeySchema(bilingual), [
           ...media,
-          { text: buildAnswerKeyPrompt(group, bilingual) },
+          { text: buildAnswerKeyPrompt(group, bilingual, g.section) },
         ], answerModel, signal, outputBudgetFor(group.length))) as AnswerKeyEntry[];
+        return { g, answers };
       } catch (e) {
         console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
-        return [] as AnswerKeyEntry[];
+        return { g, answers: [] as AnswerKeyEntry[] };
       }
     });
-    const answers = batched.flat();
-    console.log(`[import] answer-key pass returned ${answers.length} answer(s) across ${groups.length} batch(es)`);
-    mergeAnswers(questions, answers, joinKeys);
+    const total = batched.reduce((n, b) => n + b.answers.length, 0);
+    console.log(`[import] answer-key pass returned ${total} answer(s) across ${groups.length} batch(es)`);
+    for (const b of batched) {
+      mergeAnswers(questions, b.answers, joinKeys, sectionBatches.length ? b.g.idx : undefined);
+    }
   }
   // Cross-check each objective answer against what its own solution concludes.
   flagSolutionMismatches(questions);
@@ -845,6 +989,10 @@ const CACHED_INPUT_FACTOR = 0.1;
 const TOKEN_PRICES: Record<string, { in: number; out: number }> = {
   "gemini-3-flash-preview": { in: 0.5, out: 3.0 },
   "gemini-3.5-flash": { in: 1.5, out: 9.0 },
+  // Flash-Lite bills ALL input modalities (text/image/video/audio) at the one rate,
+  // so a page-image-heavy import costs the same per token as plain text. Its cached
+  // input rate is $0.03/1M — exactly the 10% CACHED_INPUT_FACTOR above.
+  "gemini-3.5-flash-lite": { in: 0.3, out: 2.5 },
   "gemini-3.1-flash-lite": { in: 0.25, out: 1.5 }, // was wrongly 0.1/0.4 — corrected
   "gemini-2.5-flash": { in: 0.3, out: 2.5 },
   "gemini-2.5-pro": { in: 1.25, out: 10.0 },
@@ -1056,7 +1204,10 @@ function buildJoinKeys(questions: ParsedQuestion[]): (number | null)[] {
 function mergeAnswers(
   questions: ParsedQuestion[],
   key: AnswerKeyEntry[],
-  joinKeys: (number | null)[]
+  joinKeys: (number | null)[],
+  // Restart papers pass the indices of the ONE section these answers were asked for.
+  // Without it a printed number matches a question in every section that reuses it.
+  onlyIdx?: Set<number>
 ): void {
   const byNumber = new Map<number, AnswerKeyEntry>();
   for (const e of key) {
@@ -1064,6 +1215,7 @@ function mergeAnswers(
     if (Number.isFinite(n)) byNumber.set(n, e);
   }
   questions.forEach((q, i) => {
+    if (onlyIdx && !onlyIdx.has(i)) return; // answers scoped to another section
     const jk = joinKeys[i];
     if (jk == null) return; // unjoinable — never guess
     const entry = byNumber.get(jk);
@@ -1183,9 +1335,11 @@ function resolveMcqLabel(raw: string, options?: { label: string; text: string }[
 // a requested id is validated, never trusted raw. `deepseek-v4-pro` is the EXPLICIT V4
 // Pro id — the legacy `deepseek-chat` alias resolves to V4 Flash (and retires 2026-07-24).
 export const VERIFY_MODEL_OPTIONS = [
-  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash (default)" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash (default)" },
   { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
-  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (cheapest)" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (cheapest)" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash (previous default)" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
 ] as const;
 const DEFAULT_VERIFY_MODEL = process.env.COACHING_IMPORT_VERIFY_MODEL || VERIFY_MODEL_OPTIONS[0].id;
 
@@ -1194,48 +1348,64 @@ const DEFAULT_VERIFY_MODEL = process.env.COACHING_IMPORT_VERIFY_MODEL || VERIFY_
 // API (rejects image input), so only Gemini is offered here. (V4 Pro's reasoning
 // is used for SOLUTION writing via the comparison pass instead, which works from text.)
 export const GENERATION_MODEL_OPTIONS = [
-  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (default)" },
-  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash (stronger reader)" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (default)" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash (stronger reader)" },
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
 ] as const;
 // Env override of the default keeps the existing COACHING_IMPORT_ANSWER_MODEL knob.
 const DEFAULT_GENERATION_MODEL = process.env.COACHING_IMPORT_ANSWER_MODEL || GENERATION_MODEL_OPTIONS[0].id;
-const GENERATION_FALLBACK_MODEL = "gemini-3.1-flash-lite";
+const GENERATION_FALLBACK_MODEL = "gemini-3.5-flash-lite";
 
 // Model for the always-on BLIND cross-check. It solves from the EXTRACTED QUESTION
 // TEXT (no page image needed), so the text-only DeepSeek V4 Pro works here. Default =
 // V4 Pro for reasoning (falls back to Gemini if no DeepSeek key).
 export const COMPARE_MODEL_OPTIONS = [
   { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
 ] as const;
-const DEFAULT_COMPARE_MODEL = process.env.DEEPSEEK_API_KEY ? "deepseek-v4-pro" : "gemini-3.1-flash-lite";
+const DEFAULT_COMPARE_MODEL = process.env.DEEPSEEK_API_KEY ? "deepseek-v4-pro" : "gemini-3.5-flash-lite";
 
 // True for any DeepSeek model id — routes to the OpenAI-compatible client, not Gemini.
 const isDeepSeekModel = (id: string) => /deepseek/i.test(id);
 
+// Where every DeepSeek pass lands when the admin switches DeepSeek OFF for an import
+// (the modal's "DeepSeek V4 Pro" toggle). Deliberately the cheap Gemini lite model —
+// the blind cross-check still runs, just with a same-vendor solver.
+export const DEEPSEEK_OFF_MODEL = "gemini-3.5-flash-lite";
+
 // Resolve a per-import requested model against an allowlist: unknown → default, and a
-// DeepSeek pick degrades to `fallback` when DEEPSEEK_API_KEY is absent so a pass never
-// silently no-ops (or 401s) just because DeepSeek isn't configured.
+// DeepSeek pick degrades to a Gemini model when DeepSeek can't be used — either because
+// DEEPSEEK_API_KEY is absent or because the admin toggled DeepSeek off for this import —
+// so a pass never silently no-ops (or 401s) instead of running.
 function resolveModel(
   requested: string | null | undefined,
   options: ReadonlyArray<{ id: string }>,
   defaultId: string,
-  fallbackId: string
+  fallbackId: string,
+  allowDeepSeek: boolean = true
 ): string {
   let model = options.some((o) => o.id === requested) ? requested! : defaultId;
-  if (isDeepSeekModel(model) && !process.env.DEEPSEEK_API_KEY) {
-    console.warn(`[import] model "${model}" needs DEEPSEEK_API_KEY — falling back to ${fallbackId}`);
-    model = fallbackId;
+  if (isDeepSeekModel(model)) {
+    if (!allowDeepSeek) {
+      console.log(`[import] DeepSeek off for this import — "${model}" → ${DEEPSEEK_OFF_MODEL}`);
+      model = DEEPSEEK_OFF_MODEL;
+    } else if (!process.env.DEEPSEEK_API_KEY) {
+      console.warn(`[import] model "${model}" needs DEEPSEEK_API_KEY — falling back to ${fallbackId}`);
+      model = fallbackId;
+    }
   }
   return model;
 }
-const resolveVerifyModel = (requested?: string | null) =>
-  resolveModel(requested, VERIFY_MODEL_OPTIONS, DEFAULT_VERIFY_MODEL, VERIFY_MODEL_OPTIONS[0].id);
+const resolveVerifyModel = (requested?: string | null, allowDeepSeek = true) =>
+  resolveModel(requested, VERIFY_MODEL_OPTIONS, DEFAULT_VERIFY_MODEL, VERIFY_MODEL_OPTIONS[0].id, allowDeepSeek);
 const resolveGenerationModel = (requested?: string | null) =>
   resolveModel(requested, GENERATION_MODEL_OPTIONS, DEFAULT_GENERATION_MODEL, GENERATION_FALLBACK_MODEL);
-const resolveCompareModel = (requested?: string | null) =>
-  resolveModel(requested, COMPARE_MODEL_OPTIONS, DEFAULT_COMPARE_MODEL, GENERATION_FALLBACK_MODEL);
+const resolveCompareModel = (requested?: string | null, allowDeepSeek = true) =>
+  resolveModel(requested, COMPARE_MODEL_OPTIONS, DEFAULT_COMPARE_MODEL, GENERATION_FALLBACK_MODEL, allowDeepSeek);
 
 const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1").replace(/\/$/, "");
 
@@ -1511,10 +1681,12 @@ function verifyDisplay(q: ParsedQuestion, aiRaw: string): string {
 export async function verifyAnswers(opts: {
   questions: ParsedQuestion[];
   model?: string | null;
+  /** false → a DeepSeek pick degrades to DEEPSEEK_OFF_MODEL (modal toggle). */
+  allowDeepSeek?: boolean;
   signal?: AbortSignal;
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<void> {
-  const model = resolveVerifyModel(opts.model);
+  const model = resolveVerifyModel(opts.model, opts.allowDeepSeek ?? true);
   const key = process.env.GEMINI_API_KEY ?? "";
   // The verifier may be Gemini (needs the key / Vertex) or DeepSeek (needs its own
   // key, checked inside its client) — only gate on the Gemini key when Gemini is it.
@@ -1603,10 +1775,12 @@ function buildSubjectiveReviewPrompt(q: ParsedQuestion): string {
 export async function reviewSubjectiveAnswers(opts: {
   questions: ParsedQuestion[];
   model?: string | null;
+  /** false → a DeepSeek pick degrades to DEEPSEEK_OFF_MODEL (modal toggle). */
+  allowDeepSeek?: boolean;
   signal?: AbortSignal;
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<void> {
-  const model = resolveVerifyModel(opts.model);
+  const model = resolveVerifyModel(opts.model, opts.allowDeepSeek ?? true);
   const key = process.env.GEMINI_API_KEY ?? "";
   if (!isDeepSeekModel(model) && !USE_VERTEX && !key) return;
   const { questions, signal } = opts;
@@ -1759,11 +1933,15 @@ function buildSolutionBatchPrompt(qs: ParsedQuestion[], bilingual: boolean): str
 export async function generateComparisonSolutions(opts: {
   questions: ParsedQuestion[];
   primaryModel?: string | null;
+  /** false → the DeepSeek default degrades to DEEPSEEK_OFF_MODEL (modal toggle).
+   *  The cross-check still runs — same Gemini family as Pass 2, so its errors are
+   *  more correlated than V4's, but it stays a genuine blind re-solve. */
+  allowDeepSeek?: boolean;
   bilingual?: boolean;
   signal?: AbortSignal;
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<void> {
-  const model = resolveCompareModel(opts.primaryModel);
+  const model = resolveCompareModel(opts.primaryModel, opts.allowDeepSeek ?? true);
   const key = process.env.GEMINI_API_KEY ?? "";
   const bilingual = opts.bilingual ?? false;
   const { questions, signal } = opts;
