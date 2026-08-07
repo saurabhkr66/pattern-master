@@ -164,7 +164,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
   };
   const [batchLog, setBatchLog] = useState<BatchEntry[]>([]);
   const [batchDone, setBatchDone] = useState(false);
-  const [aiModel, setAiModel] = useState<"gemini" | "gpt-4o-mini" | "vertex-2.5-pro">("gemini");
+  const [aiModel, setAiModel] = useState<"gemini" | "gpt-4o-mini" | "deepseek-v4-flash">("gemini");
   const [previewId, setPreviewId] = useState<string | null>(null);
 
   // Remove a question from local state once it gets an explanation
@@ -566,7 +566,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
           >
             <option value="gemini">Gemini Flash (Free)</option>
             <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="vertex-2.5-pro">Vertex Gemini 2.5 Pro</option>
+            <option value="deepseek-v4-flash">DeepSeek V4 Flash (Modal)</option>
           </select>
           <button
             onClick={handleBatchRun}
@@ -623,7 +623,7 @@ function QuestionCard({
   onPreview,
 }: {
   question: QuestionRow;
-  aiModel: "gemini" | "gpt-4o-mini" | "vertex-2.5-pro";
+  aiModel: "gemini" | "gpt-4o-mini" | "deepseek-v4-flash";
   onDone: () => void;
   onPreview: () => void;
 }) {
@@ -689,12 +689,12 @@ function QuestionCard({
             </button>
             <button
               onClick={() => handleGenerate(true)}
-              disabled={loading || aiModel === "gpt-4o-mini"}
-              title={aiModel === "gpt-4o-mini" ? "Search grounding is only available on Gemini/Vertex" : "Generate with Google Search grounding"}
+              disabled={loading || aiModel === "gpt-4o-mini" || aiModel === "deepseek-v4-flash"}
+              title={aiModel === "gpt-4o-mini" || aiModel === "deepseek-v4-flash" ? "Search grounding is only available on Gemini" : "Generate with Google Search grounding"}
               className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                 loading
                   ? "bg-sky-100 text-sky-600 dark:bg-sky-500/10 animate-pulse"
-                  : aiModel === "gpt-4o-mini"
+                  : aiModel === "gpt-4o-mini" || aiModel === "deepseek-v4-flash"
                   ? "bg-gray-100 text-gray-300 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed"
                   : "bg-sky-500 text-white hover:bg-sky-600 shadow shadow-sky-500/20"
               }`}

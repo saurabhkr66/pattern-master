@@ -285,6 +285,89 @@ export const EXAM_CONFIGS: ExamConfig[] = [
   },
 ];
 
+/* ─────────────── Random test sizing ─────────────── */
+
+/**
+ * Random tests are user-sized. The cap scales with how many subjects the user
+ * filtered to — one subject is a focused drill, more subjects need more room to
+ * cover each — with a hard ceiling so a GATE branch (10+ subjects) can't ask for
+ * a paper longer than the real exam. No filter means "all subjects" → ceiling.
+ */
+export const RANDOM_MIN_QUESTIONS = 1;
+export const RANDOM_MAX_QUESTIONS = 60;
+export const SECS_PER_QUESTION = 120;
+
+export function randomQuestionCap(subjectCount: number): number {
+  if (subjectCount <= 0) return RANDOM_MAX_QUESTIONS;
+  return Math.min(30 + (subjectCount - 1) * 10, RANDOM_MAX_QUESTIONS);
+}
+
+export function clampRandomCount(count: number, subjectCount: number): number {
+  const cap = randomQuestionCap(subjectCount);
+  if (!Number.isFinite(count)) return cap;
+  return Math.max(RANDOM_MIN_QUESTIONS, Math.min(Math.floor(count), cap));
+}
+
+/** 2 minutes per question, always — a 40-question paper really is 80 minutes. */
+export function randomDurationSecs(count: number): number {
+  return count * SECS_PER_QUESTION;
+}
+
+/**
+ * Split `total` across `weights` proportionally. Uses largest-remainder so the
+ * parts sum to exactly `total` — plain rounding would miss the target on small
+ * papers (7 questions over 3 equal sections rounds to 6 or 9).
+ */
+function largestRemainder(weights: number[], total: number): number[] {
+  const sum = weights.reduce((s, w) => s + w, 0);
+  if (sum <= 0 || total <= 0) return weights.map(() => 0);
+  const exact = weights.map((w) => (w * total) / sum);
+  const parts = exact.map((e) => Math.floor(e));
+  let left = total - parts.reduce((s, p) => s + p, 0);
+  const byFraction = exact
+    .map((e, i) => ({ i, frac: e - Math.floor(e) }))
+    .sort((a, b) => b.frac - a.frac);
+  for (let k = 0; left > 0 && byFraction.length > 0; k++, left--) {
+    parts[byFraction[k % byFraction.length].i]++;
+  }
+  return parts;
+}
+
+/**
+ * Shrink a full-length exam config down to `count` questions, keeping the real
+ * exam's subject proportions and mark bands. Sections that round down to zero
+ * are dropped entirely, so a 2-question paper doesn't render empty section tabs.
+ *
+ * Server and client both derive from this, so the generated paper, the timer,
+ * and the section palette can't disagree.
+ */
+export function scaleExamConfig(config: ExamConfig, count: number): ExamConfig {
+  const target = Math.max(RANDOM_MIN_QUESTIONS, Math.min(Math.floor(count), RANDOM_MAX_QUESTIONS));
+  const perSection = largestRemainder(config.sections.map((s) => s.totalQuestions), target);
+
+  const sections: SectionConfig[] = [];
+  config.sections.forEach((sec, i) => {
+    const n = perSection[i];
+    if (n <= 0) return;
+    const perBand = largestRemainder(sec.markDistribution.map((b) => b.count), n);
+    const markDistribution = sec.markDistribution
+      .map((b, bi) => ({ ...b, count: perBand[bi] }))
+      .filter((b) => b.count > 0);
+    const maxScore = markDistribution.length > 0
+      ? markDistribution.reduce((s, b) => s + b.marks * b.count, 0)
+      : Math.round((sec.maxScore * n) / Math.max(1, sec.totalQuestions));
+    sections.push({ ...sec, totalQuestions: n, maxScore, markDistribution });
+  });
+
+  return {
+    ...config,
+    sections,
+    totalQuestions: target,
+    maxScore: sections.reduce((s, sec) => s + sec.maxScore, 0),
+    durationSecs: randomDurationSecs(target),
+  };
+}
+
 export function getExamConfig(examType: ExamType, branch?: string): ExamConfig {
   const base = EXAM_CONFIGS.find((e) => e.examType === examType)!;
   if (examType === "GATE" && branch) {
@@ -299,6 +382,7 @@ export function getExamConfig(examType: ExamType, branch?: string): ExamConfig {
 export function fmtDuration(secs: number): string {
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
+  if (h === 0) return `${m}m`;
   if (m === 0) return `${h}h`;
   return `${h}h ${m}m`;
 }

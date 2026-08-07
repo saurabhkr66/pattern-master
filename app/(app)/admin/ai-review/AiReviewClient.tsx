@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getQuestionsForReview,
   getReviewExamTypes,
@@ -15,6 +15,7 @@ import {
 import MathRenderer from "@/components/ui/MathRenderer";
 import { displayBranch } from "@/lib/seo";
 import { getImageUrl } from "@/lib/imageUtils";
+import { AI_MODEL_OPTIONS, type AIModel } from "@/lib/aiModels";
 
 type QuestionImage = { index: number; filename: string; type?: string };
 type ReviewSource = "PYQ" | "GeneratedQuestion" | "Mock";
@@ -114,7 +115,7 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedTitle, setSelectedTitle] = useState<string>("");
   const [loadingTopics, setLoadingTopics] = useState(false);
-  const [aiModel, setAiModel] = useState<"gemini" | "gpt-4o-mini" | "vertex-2.5-pro">("gemini");
+  const [aiModel, setAiModel] = useState<AIModel>("gemini");
 
   const parseExam = (val: string) => {
     const [examType, branch] = val.split("::");
@@ -222,7 +223,7 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
     explanationReviewText?: string;
     explanationFlagged?: boolean;
     resolution?: { decision: "use_ai" | "keep_stored"; answer: string };
-    explResolution?: { decision: "use_ai" | "keep_stored" };
+    explResolution?: { decision: "use_ai" | "keep_stored" | "edit" };
     question?: ReviewRow;
     tokens?: { input: number; output: number; thoughts: number };
   };
@@ -238,6 +239,14 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
   // Redis verdicts WITHOUT re-running the (paid) AI prompts.
   const [lastBatchId, setLastBatchId] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  // Which batch entry has its inline explanation editor open, plus its draft text.
+  const [editingExplId, setEditingExplId] = useState<string | null>(null);
+  const [explDraft, setExplDraft] = useState("");
+  // Ids resolved from the batch panel DURING a run. Refs, not state: the run loop
+  // closes over its initial render, so a state value read at commit time would be
+  // stale and the commit would re-flag questions the admin had just fixed.
+  const resolvedAnswersRef = useRef<Set<string>>(new Set());
+  const resolvedExplRef = useRef<Set<string>>(new Set());
 
   // Resolve an answer mismatch straight from the batch detail popup.
   const handleResolveEntry = async (entry: BatchEntry, decision: "use_ai" | "keep_stored") => {
@@ -245,6 +254,7 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
     setResolvingId(entry.id);
     try {
       await resolveReviewMismatch(entry.id, entry.question.questionType, entry.question.mockTestId, decision, entry.aiDetectedAnswer ?? null);
+      resolvedAnswersRef.current.add(entry.id);
       const resolution = { decision, answer: decision === "use_ai" ? (entry.aiDetectedAnswer ?? "") : entry.question.correct_answer };
       setBatchLog(prev => prev.map(x => (x.id === entry.id ? { ...x, resolution } : x)));
       setDetailEntry(prev => (prev && prev.id === entry.id ? { ...prev, resolution } : prev));
@@ -255,12 +265,24 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
     }
   };
 
-  // Resolve a flagged explanation from the batch detail popup.
-  const handleResolveExplEntry = async (entry: BatchEntry, decision: "use_ai" | "keep_stored") => {
+  // Resolve a flagged explanation from the batch detail popup. "edit" saves the
+  // admin's own corrected text; like the other two it clears the pending flag, so a
+  // question fixed here never reaches /admin/reports.
+  const handleResolveExplEntry = async (
+    entry: BatchEntry,
+    decision: "use_ai" | "keep_stored" | "edit",
+    edited?: string,
+  ) => {
     if (!entry.question) return;
     setResolvingId(entry.id);
     try {
-      await resolveExplanation(entry.id, entry.question.questionType, entry.question.mockTestId, decision, decision === "use_ai" ? (entry.verifyText ?? null) : null);
+      const text =
+        decision === "use_ai" ? (entry.verifyText ?? null) : decision === "edit" ? (edited ?? "") : null;
+      await resolveExplanation(entry.id, entry.question.questionType, entry.question.mockTestId, decision, text);
+      // Keep the in-memory row in step with the DB so the panel shows the saved text.
+      if (decision !== "keep_stored" && text) entry.question.explanation = text;
+      resolvedExplRef.current.add(entry.id);
+      setEditingExplId(null);
       const explResolution = { decision };
       setBatchLog(prev => prev.map(x => (x.id === entry.id ? { ...x, explResolution } : x)));
       setDetailEntry(prev => (prev && prev.id === entry.id ? { ...prev, explResolution } : prev));
@@ -282,6 +304,8 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
     setBatchRunning(true);
     setBatchDone(false);
     setBatchLog([]);
+    resolvedAnswersRef.current = new Set();
+    resolvedExplRef.current = new Set();
     setBatchCommitted(false);
     setBatchCommitError(false);
     setBatchProgress({ done: 0, total: batch.length, failed: 0, mismatches: 0, explFlags: 0 });
@@ -336,7 +360,10 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
     setCommitting(true);
     setBatchCommitError(false);
     try {
-      await commitReviewBatch(batchId);
+      await commitReviewBatch(batchId, {
+        answers: [...resolvedAnswersRef.current],
+        explanations: [...resolvedExplRef.current],
+      });
       setBatchCommitted(true);
     } catch {
       setBatchCommitError(true);
@@ -378,6 +405,18 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
                 <button onClick={() => setDetailEntry(null)} className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs">✕</button>
               </div>
               <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+                {e.tokens && (
+                  <div className="flex items-center justify-between text-[11px] font-mono bg-purple-50/70 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 px-3 py-1.5 rounded-xl border border-purple-200/60 dark:border-purple-800/40">
+                    <span className="font-bold">📊 Token Usage ({aiModel})</span>
+                    <div className="flex gap-3">
+                      <span>Input: <strong>{e.tokens.input.toLocaleString()}</strong></span>
+                      <span>Output: <strong>{e.tokens.output.toLocaleString()}</strong></span>
+                      {e.tokens.thoughts > 0 && (
+                        <span>Thinking: <strong>{e.tokens.thoughts.toLocaleString()}</strong></span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border dark:border-zinc-800 text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
                   <MathRenderer content={q.question_text} />
                   <QuestionImages images={q.images} />
@@ -455,16 +494,48 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
                 </div>
 
                 {/* Explanation choice — available for every question */}
-                {!e.explResolution ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">Explanation:</span>
-                    {q.explanation && (
-                      <button onClick={() => handleResolveExplEntry(e, "keep_stored")} disabled={resolvingId === e.id} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 disabled:opacity-50">Keep stored</button>
+                {/* Inline editor — correcting it here clears the pending flag, so the
+                    question never lands on /admin/reports. */}
+                {editingExplId === e.id && (
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-bold text-amber-500 uppercase">✏️ Editing explanation — LaTeX in $…$</div>
+                    <textarea
+                      value={explDraft}
+                      onChange={ev => setExplDraft(ev.target.value)}
+                      rows={10}
+                      className="w-full p-3 rounded-xl bg-white dark:bg-zinc-950 border border-amber-300 dark:border-amber-500/40 text-xs text-gray-800 dark:text-gray-200 font-mono leading-relaxed outline-none focus:border-amber-500"
+                    />
+                    {explDraft.trim() && (
+                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-950/60 border border-gray-200 dark:border-zinc-800">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Preview</div>
+                        <MathRenderer content={explDraft} />
+                      </div>
                     )}
-                    <button onClick={() => handleResolveExplEntry(e, "use_ai")} disabled={resolvingId === e.id || !e.verifyText} title={!e.verifyText ? "No AI solution text available" : "Store the AI's independent solution as the explanation"} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50">{q.explanation ? "→ Use AI's solution" : "+ Add AI's solution"}</button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleResolveExplEntry(e, "edit", explDraft)} disabled={resolvingId === e.id || !explDraft.trim()} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50">{resolvingId === e.id ? "Saving…" : "💾 Save explanation"}</button>
+                      <button onClick={() => setEditingExplId(null)} disabled={resolvingId === e.id} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+                      {e.verifyText && (
+                        <button onClick={() => setExplDraft(e.verifyText!)} disabled={resolvingId === e.id} className="px-3 py-1.5 rounded-lg text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline disabled:opacity-50">Load AI&apos;s solution</button>
+                      )}
+                    </div>
                   </div>
+                )}
+                {!e.explResolution ? (
+                  editingExplId !== e.id && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Explanation:</span>
+                      {q.explanation && (
+                        <button onClick={() => handleResolveExplEntry(e, "keep_stored")} disabled={resolvingId === e.id} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 disabled:opacity-50">Keep stored</button>
+                      )}
+                      <button onClick={() => handleResolveExplEntry(e, "use_ai")} disabled={resolvingId === e.id || !e.verifyText} title={!e.verifyText ? "No AI solution text available" : "Store the AI's independent solution as the explanation"} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50">{q.explanation ? "→ Use AI's solution" : "+ Add AI's solution"}</button>
+                      <button onClick={() => { setExplDraft(q.explanation || e.verifyText || ""); setEditingExplId(e.id); }} disabled={resolvingId === e.id} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-800 border border-amber-300 dark:border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 disabled:opacity-50">✏️ Edit &amp; fix</button>
+                    </div>
+                  )
                 ) : (
-                  <div className="text-xs font-bold text-green-700 dark:text-green-400">✓ {e.explResolution.decision === "use_ai" ? (q.explanation ? "Explanation replaced with AI's solution." : "AI's solution stored as explanation.") : "Kept stored explanation."}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="text-xs font-bold text-green-700 dark:text-green-400">✓ {e.explResolution.decision === "edit" ? "Explanation saved — flag cleared, won't appear in Reports." : e.explResolution.decision === "use_ai" ? (q.explanation ? "Explanation replaced with AI's solution." : "AI's solution stored as explanation.") : "Kept stored explanation."}</div>
+                    <button onClick={() => { setExplDraft(q.explanation || ""); setEditingExplId(e.id); }} className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline">edit again</button>
+                  </div>
                 )}
               </div>
             </div>
@@ -493,6 +564,31 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
               <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-purple-400 to-fuchsia-500 rounded-full transition-all duration-500" style={{ width: `${(batchProgress.done / Math.max(1, batchProgress.total)) * 100}%` }} />
               </div>
+              {(() => {
+                const batchTokens = batchLog.reduce(
+                  (acc, e) => {
+                    if (e.tokens) {
+                      acc.input += e.tokens.input || 0;
+                      acc.output += e.tokens.output || 0;
+                      acc.thoughts += e.tokens.thoughts || 0;
+                    }
+                    return acc;
+                  },
+                  { input: 0, output: 0, thoughts: 0 }
+                );
+                return (
+                  <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-zinc-400 bg-purple-50/60 dark:bg-purple-950/30 px-3 py-1.5 rounded-lg border border-purple-100 dark:border-purple-800/20 mt-2 font-mono">
+                    <span className="font-bold text-purple-700 dark:text-purple-300">📊 Tokens ({aiModel})</span>
+                    <span className="flex gap-2">
+                      <span>In: <strong className="text-gray-800 dark:text-gray-200">{batchTokens.input.toLocaleString()}</strong></span>
+                      <span>Out: <strong className="text-gray-800 dark:text-gray-200">{batchTokens.output.toLocaleString()}</strong></span>
+                      {batchTokens.thoughts > 0 && (
+                        <span>Think: <strong className="text-purple-600 dark:text-purple-400">{batchTokens.thoughts.toLocaleString()}</strong></span>
+                      )}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-1">
               {[...batchLog].reverse().map((entry, i) => (
@@ -501,6 +597,11 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
                   {entry.isMismatch && <span className="flex-shrink-0 text-[9px] font-black bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 px-1.5 py-0.5 rounded">⚠️ ANS</span>}
                   {entry.explanationFlagged && <span className="flex-shrink-0 text-[9px] font-black bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 px-1.5 py-0.5 rounded">📖 EXPL</span>}
                   <span className="truncate flex-1">{entry.label}</span>
+                  {entry.tokens && (
+                    <span className="flex-shrink-0 text-[9px] font-mono text-purple-600 dark:text-purple-400 font-semibold">
+                      {entry.tokens.input}in / {entry.tokens.output}out{entry.tokens.thoughts > 0 ? ` / ${entry.tokens.thoughts}t` : ""}
+                    </span>
+                  )}
                   {entry.status === "ok" && <span className="flex-shrink-0 text-gray-300 dark:text-zinc-600 text-[8px]">↗</span>}
                 </button>
               ))}
@@ -612,9 +713,15 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
         </div>
         <div className="flex items-center gap-2">
           <select value={aiModel} onChange={e => setAiModel(e.target.value as any)} disabled={batchRunning} className="px-2 py-2 rounded-lg text-[10px] font-bold bg-white dark:bg-zinc-900 border dark:border-zinc-700 outline-none">
-            <option value="gemini">Gemini Flash (Free)</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="vertex-2.5-pro">Vertex Gemini 2.5 Pro</option>
+            {/* Labels come from lib/aiModels so they name the model that ACTUALLY
+                runs — the old hand-written "Gemini Flash (API key)" didn't say which
+                model, and went stale whenever the constant moved a generation.
+                The hint names who pays: API key, OpenAI key, or Modal. */}
+            {AI_MODEL_OPTIONS.map(m => (
+              <option key={m.id} value={m.id}>
+                {m.label} · {m.hint}
+              </option>
+            ))}
           </select>
           <button onClick={handleBatchRun} disabled={batchRunning || questions.length === 0} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${batchRunning ? "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 animate-pulse" : questions.length === 0 ? "bg-gray-100 text-gray-400 cursor-default" : "bg-purple-500 text-white hover:bg-purple-600 shadow-lg shadow-purple-500/20"}`}>
             {batchRunning ? "⏳ Reviewing..." : `Review All (${questions.length})`}
@@ -648,7 +755,7 @@ function ReviewCard({
   onReviewed,
 }: {
   question: ReviewRow;
-  aiModel: "gemini" | "gpt-4o-mini" | "vertex-2.5-pro";
+  aiModel: AIModel;
   onReviewed: () => void;
 }) {
   const [loading, setLoading] = useState(false);
@@ -657,7 +764,12 @@ function ReviewCard({
   const [resolving, setResolving] = useState(false);
   const [resolved, setResolved] = useState<{ decision: "use_ai" | "keep_stored"; answer: string } | null>(null);
   const [explResolving, setExplResolving] = useState(false);
-  const [explResolved, setExplResolved] = useState<"use_ai" | "keep_stored" | null>(null);
+  const [explResolved, setExplResolved] = useState<"use_ai" | "keep_stored" | "edit" | null>(null);
+  // Inline explanation editor. `draft` seeds from the stored explanation, or from
+  // the AI's solution when there is nothing stored — the common case for a question
+  // flagged "no explanation" is wanting the AI text as a starting point to correct.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
 
   const options = (question.options as Record<string, string>) ?? {};
   const optionLabels: Record<string, string> = { "0": "A", "1": "B", "2": "C", "3": "D" };
@@ -688,12 +800,18 @@ function ReviewCard({
     }
   };
 
-  const handleResolveExpl = async (decision: "use_ai" | "keep_stored") => {
+  const handleResolveExpl = async (decision: "use_ai" | "keep_stored" | "edit", edited?: string) => {
     setExplResolving(true);
     setError(null);
     try {
-      await resolveExplanation(question.id, question.questionType, question.mockTestId, decision, decision === "use_ai" ? (result?.verifyText ?? null) : null);
+      const text =
+        decision === "use_ai" ? (result?.verifyText ?? null) : decision === "edit" ? (edited ?? "") : null;
+      await resolveExplanation(question.id, question.questionType, question.mockTestId, decision, text);
+      // Reflect the saved text locally so the card shows what's now in the DB
+      // without a refetch — the list row is a snapshot from the server render.
+      if (decision !== "keep_stored" && text) question.explanation = text;
       setExplResolved(decision);
+      setEditing(false);
     } catch (err: any) {
       setError(err?.message || "Failed to resolve explanation");
     } finally {
@@ -726,6 +844,11 @@ function ReviewCard({
             {result && result.explanationVerdict === "skipped" && (
               <span className="text-[10px] font-black uppercase bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-gray-400 px-2 py-0.5 rounded">📖 No explanation</span>
             )}
+            {result && result.usage && (
+              <span className="text-[10px] font-mono font-bold bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 px-2 py-0.5 rounded">
+                📊 {result.usage.input.toLocaleString()} in · {result.usage.output.toLocaleString()} out{result.usage.thoughts > 0 ? ` · ${result.usage.thoughts.toLocaleString()} think` : ""}
+              </span>
+            )}
           </div>
           <div className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2"><MathRenderer content={question.question_text} /></div>
           <QuestionImages images={question.images} compact />
@@ -740,6 +863,16 @@ function ReviewCard({
 
       {result && (
         <div className="border-t dark:border-zinc-800 p-4 flex flex-col gap-3 bg-gray-50 dark:bg-black/20">
+          <div className="flex items-center justify-between text-[11px] font-mono text-gray-600 dark:text-gray-300 bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-purple-100 dark:border-zinc-800 shadow-sm">
+            <span className="font-bold text-purple-600 dark:text-purple-400">📊 Token Usage ({aiModel})</span>
+            <div className="flex items-center gap-3">
+              <span>Input: <strong className="text-gray-900 dark:text-gray-100">{result.usage.input.toLocaleString()}</strong></span>
+              <span>Output: <strong className="text-gray-900 dark:text-gray-100">{result.usage.output.toLocaleString()}</strong></span>
+              {result.usage.thoughts > 0 && (
+                <span>Thinking: <strong className="text-purple-600 dark:text-purple-400">{result.usage.thoughts.toLocaleString()}</strong></span>
+              )}
+            </div>
+          </div>
           {Object.keys(options).length > 0 ? (
             <div className="grid grid-cols-1 gap-1">
               {Object.entries(options).map(([k, v]) => {
@@ -807,17 +940,51 @@ function ReviewCard({
             )}
           </div>
 
+          {/* Inline editor — fix the explanation here instead of leaving it for the
+              reports page. Saving clears the pending AI Explanation Issue flag, so a
+              question corrected here never shows up in /admin/reports. */}
+          {editing && (
+            <div className="space-y-2">
+              <div className="text-[10px] font-bold text-amber-500 uppercase">✏️ Editing explanation — LaTeX in $…$</div>
+              <textarea
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                rows={10}
+                className="w-full p-3 rounded-xl bg-white dark:bg-zinc-950 border border-amber-300 dark:border-amber-500/40 text-xs text-gray-800 dark:text-gray-200 font-mono leading-relaxed outline-none focus:border-amber-500"
+              />
+              {draft.trim() && (
+                <div className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-950/60 border border-gray-200 dark:border-zinc-800">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Preview</div>
+                  <MathRenderer content={draft} />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleResolveExpl("edit", draft)} disabled={explResolving || !draft.trim()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50">{explResolving ? "Saving…" : "💾 Save explanation"}</button>
+                <button onClick={() => setEditing(false)} disabled={explResolving} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+                {result.verifyText && (
+                  <button onClick={() => setDraft(result.verifyText)} disabled={explResolving} className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline disabled:opacity-50">Load AI&apos;s solution</button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Explanation choice — available on every reviewed question, not just flagged ones */}
           {!explResolved ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold text-gray-400 uppercase">Explanation:</span>
-              {question.explanation && (
-                <button onClick={() => handleResolveExpl("keep_stored")} disabled={explResolving} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 disabled:opacity-50">Keep stored</button>
-              )}
-              <button onClick={() => handleResolveExpl("use_ai")} disabled={explResolving || !result.verifyText} title={!result.verifyText ? "No AI solution text available" : "Store the AI's independent solution as the explanation"} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50">{question.explanation ? "→ Use AI's solution" : "+ Add AI's solution"}</button>
-            </div>
+            !editing && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold text-gray-400 uppercase">Explanation:</span>
+                {question.explanation && (
+                  <button onClick={() => handleResolveExpl("keep_stored")} disabled={explResolving} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 disabled:opacity-50">Keep stored</button>
+                )}
+                <button onClick={() => handleResolveExpl("use_ai")} disabled={explResolving || !result.verifyText} title={!result.verifyText ? "No AI solution text available" : "Store the AI's independent solution as the explanation"} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50">{question.explanation ? "→ Use AI's solution" : "+ Add AI's solution"}</button>
+                <button onClick={() => { setDraft(question.explanation || result.verifyText || ""); setEditing(true); }} disabled={explResolving} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white dark:bg-zinc-800 border border-amber-300 dark:border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 disabled:opacity-50">✏️ Edit &amp; fix</button>
+              </div>
+            )
           ) : (
-            <div className="text-[11px] font-bold text-green-700 dark:text-green-400">✓ {explResolved === "use_ai" ? (question.explanation ? "Explanation replaced with AI's solution." : "AI's solution stored as explanation.") : "Kept stored explanation."}</div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="text-[11px] font-bold text-green-700 dark:text-green-400">✓ {explResolved === "edit" ? "Explanation saved — flag cleared, won't appear in Reports." : explResolved === "use_ai" ? "Explanation replaced with AI's solution." : "Kept stored explanation."}</div>
+              <button onClick={() => { setDraft(question.explanation || ""); setEditing(true); }} className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline">edit again</button>
+            </div>
           )}
           <div className="flex gap-2 justify-end">
             <button onClick={onReviewed} className="px-4 py-1.5 rounded-xl text-xs font-bold bg-green-500 text-white hover:bg-green-600 shadow shadow-green-500/20">✓ Done & Remove</button>

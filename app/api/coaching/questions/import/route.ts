@@ -92,7 +92,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   const answerModel = String(form.get("answerModel") ?? "").trim() || undefined;
 
   // DeepSeek kill switch for this import (modal toggle, default ON). Off → every pass
-  // that would have used V4 Pro runs on DEEPSEEK_OFF_MODEL (gemini-3.5-flash-lite)
+  // that would have used DeepSeek V4 runs on DEEPSEEK_OFF_MODEL (gemini-3.5-flash-lite)
   // instead. Absent field means ON so an older client keeps the previous behaviour.
   const allowDeepSeek = String(form.get("deepseek") ?? "1") !== "0";
 
@@ -219,6 +219,9 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           finish();
           return;
         }
+        // One label for the whole parallel block below (cropping + the text-only
+        // blind cross-check). generateComparisonSolutions deliberately does NOT emit
+        // its own phase during "text-only" so this label survives the window.
         write({ t: "phase", phase: "cropping", total: questions.length });
 
         // Snapshot figure questions to an image (rasterized PDF page or source image)
@@ -239,67 +242,80 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
         let flagged = 0;
         let cropped = 0;
         let noPage = 0; // flagged figure questions a PDF can't locate (no page index)
-        // Cropping runs FIGURE_CROP_CONCURRENCY questions at a time. It used to be a
-        // serial for-loop — the only serial stage in the pipeline — and on a
-        // figure-heavy paper its up-to-6 vision calls per question dominated the whole
-        // import's wall clock. Each question's work is independent (it only mutates its
-        // own `q`), and the counters below are safe because single-threaded JS makes
-        // `cropped++` indivisible. The renderer is safe to share: its render() is
-        // synchronous and memoised per page, so concurrent callers can't interleave
-        // inside it and a shared page still rasterizes only once.
-        await mapLimit(questions, FIGURE_CROP_CONCURRENCY, async (q) => {
-          // Stop starting new work once the client is gone (the old loop walked every
-          // remaining question, relying on the inner calls to no-op).
-          if (req.signal.aborted) return;
-          if (q.is_figure || q.has_diagram || q.options_are_figures) {
-            flagged++;
-            if (pdf && typeof q.page !== "number") noPage++;
-          }
-          q.images = await cropQuestionImage(cropCtx, q, coachingId, apiKey, req.signal);
-          if (q.images?.length) cropped++;
-          // Capture figure(s) drawn inside the worked SOLUTION (tagged type:"explanation"
-          // so they render with the solution, not the question). Appended to the same
-          // images array — the renderer filters by type. Best-effort like the question crop.
-          const solImgs = await cropSolutionImage(cropCtx, q, coachingId, apiKey, req.signal);
-          if (solImgs?.length) {
-            const imgs = q.images ?? [];
-            q.images = [...imgs, ...solImgs.map((im, k) => ({ ...im, index: imgs.length + k }))];
-          } else if (q.solution_has_diagram) {
-            // A solution figure was expected but none came out — flag for review so the
-            // admin pastes it (or confirms the solution is text-only) before saving.
-            q.solution_figure_missing = true;
-          }
-          // Figure MCQs have their choices inside the image, so option text is empty —
-          // which the validator would drop. Use each option's label as its text so the
-          // A/B/C/D choices survive and render as selectable buttons next to the figure.
-          if (q.images?.length && q.question_type === "mcq" && Array.isArray(q.options)) {
-            q.options = q.options.map((o) => ({ label: o.label, text: (o.text ?? "").trim() || o.label }));
-          }
-          // A figure was expected (drawn diagram or picture-options) but no image
-          // came out — flag it so the reviewer adds the figure or confirms it's
-          // actually text-only, instead of a broken question slipping through silently.
-          if ((q.is_figure || q.has_diagram || q.options_are_figures) && !q.images?.length) {
-            q.figure_missing = true;
-          }
-        });
-        console.log(
-          `[import] figures: ${flagged} flagged, ${cropped} cropped, ${Math.max(0, flagged - cropped)} missed` +
-            (noPage ? ` (${noPage} miss(es) had NO page index — unlocatable in the PDF)` : "") +
-            ` (source: ${pdf ? (renderer ? "PDF+renderer" : "PDF, renderer FAILED") : `${images.length} image(s)`})`
-        );
+        // Cropping and text-only blind cross-check run IN PARALLEL. Text-only
+        // questions need no figure — their blind solve (DeepSeek V4 reasoning) is
+        // safe to start immediately. This overlaps the (typically slower) figure
+        // cropping with the (typically longer) reasoning model, cutting 30–60s
+        // off the import for a paper with both figure and text questions.
+        // Each path mutates DISJOINT fields on each question object (cropping
+        // writes q.images; cross-check writes q.solution / q.blind_answer), and
+        // the cross-check's needsFigure filter excludes figure-flagged questions
+        // entirely, so there is no concurrent mutation on the same question.
+        await Promise.all([
+          // ── Figure cropping ───────────────────────────────────────────────
+          (async () => {
+            await mapLimit(questions, FIGURE_CROP_CONCURRENCY, async (q) => {
+              if (req.signal.aborted) return;
+              if (q.is_figure || q.has_diagram || q.options_are_figures) {
+                flagged++;
+                if (pdf && typeof q.page !== "number") noPage++;
+              }
+              q.images = await cropQuestionImage(cropCtx, q, coachingId, apiKey, req.signal);
+              if (q.images?.length) cropped++;
+              // Capture figure(s) drawn inside the worked SOLUTION (tagged type:"explanation"
+              // so they render with the solution, not the question). Appended to the same
+              // images array — the renderer filters by type. Best-effort like the question crop.
+              const solImgs = await cropSolutionImage(cropCtx, q, coachingId, apiKey, req.signal);
+              if (solImgs?.length) {
+                const imgs = q.images ?? [];
+                q.images = [...imgs, ...solImgs.map((im, k) => ({ ...im, index: imgs.length + k }))];
+              } else if (q.solution_has_diagram) {
+                q.solution_figure_missing = true;
+              }
+              // Figure MCQs have their choices inside the image, so option text is empty —
+              // which the validator would drop. Use each option's label as its text so the
+              // A/B/C/D choices survive and render as selectable buttons next to the figure.
+              if (q.images?.length && q.question_type === "mcq" && Array.isArray(q.options)) {
+                q.options = q.options.map((o) => ({ label: o.label, text: (o.text ?? "").trim() || o.label }));
+              }
+              // A figure was expected (drawn diagram or picture-options) but no image
+              // came out — flag it so the reviewer adds the figure or confirms it's
+              // actually text-only, instead of a broken question slipping through silently.
+              if ((q.is_figure || q.has_diagram || q.options_are_figures) && !q.images?.length) {
+                q.figure_missing = true;
+              }
+            });
+            console.log(
+              `[import] figures: ${flagged} flagged, ${cropped} cropped, ${Math.max(0, flagged - cropped)} missed` +
+                (noPage ? ` (${noPage} miss(es) had NO page index — unlocatable in the PDF)` : "") +
+                ` (source: ${pdf ? (renderer ? "PDF+renderer" : "PDF, renderer FAILED") : `${images.length} image(s)`})`
+            );
+          })(),
+          // ── Text-only blind cross-check (no image dependency) ─────────────
+          (async () => {
+            if (!req.signal.aborted) {
+              await generateComparisonSolutions({
+                questions,
+                allowDeepSeek,
+                bilingual,
+                signal: req.signal,
+                onEvent: write,
+                phase: "text-only",
+              });
+            }
+          })(),
+        ]);
 
-        // Blind cross-check (always): V4 Pro solves every question from scratch (never
-        // shown the answer); the review UI compares its answer to the recorded one (and
-        // the verify model's, when on). After cropping so figures feed the solve.
+        // After cropping: cross-check questions that gained images (text questions
+        // with solution explanation figures) and retry any the text-only phase missed.
         if (!req.signal.aborted) {
           await generateComparisonSolutions({
             questions,
-            // Defaults to V4 Pro (text-based blind solve); the answer-key pass above
-            // stays on Gemini because it must read the page images.
             allowDeepSeek,
             bilingual,
             signal: req.signal,
             onEvent: write,
+            phase: "post-crop",
           });
         }
 
@@ -327,6 +343,7 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           delete q.source_image;
           delete q.solution_has_diagram;
           delete q.solution_page;
+          delete q.blind_solved; // two-phase cross-check bookkeeping only
         }
 
         // Per-model token/cost summary for this import — logged server-side and

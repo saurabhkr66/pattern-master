@@ -117,8 +117,17 @@ export async function POST(req: NextRequest) {
 
     // Also try to get answers from the stored template (avoids N+1 lookups and handles all question types)
     let templateAnswers: Map<string, { correct_answer: string; explanation: string; question_text: string; options: unknown; topic?: string }> | null = null;
+    // Section list for scoring. The template's own sections are authoritative:
+    // a user-sized random paper has fewer sections and much smaller per-section
+    // maxScores than the full exam config, and sectionIndex on each answer is a
+    // position in *this* list. Fall back to the exam config for old templates.
+    let paperSections: { name: string; maxScore: number; negativePerMark: number }[] = config.sections;
     if (mockTestId) {
       const template = await getCachedTemplateById(mockTestId);
+      const storedSections = template?.sections;
+      if (Array.isArray(storedSections) && storedSections.length > 0) {
+        paperSections = storedSections as typeof paperSections;
+      }
       if (template?.questions) {
         const qs = template.questions as any[];
         templateAnswers = new Map(
@@ -160,18 +169,18 @@ export async function POST(req: NextRequest) {
 
     // Per-section tracking
     const sectionTrackers: Map<number, { score: number; maxScore: number; correct: number; wrong: number; skipped: number }> = new Map();
-    config.sections.forEach((sec, si) => {
+    paperSections.forEach((sec, si) => {
       sectionTrackers.set(si, { score: 0, maxScore: sec.maxScore, correct: 0, wrong: 0, skipped: 0 });
     });
 
     const breakdown: BreakdownItem[] = [];
-    const negativePerMarkBySec = config.sections.map((sec) => sec.negativePerMark);
+    const negativePerMarkBySec = paperSections.map((sec) => sec.negativePerMark);
 
     for (const ans of answers) {
       const qData = getQData(ans);
       if (!qData) continue;
 
-      const sec = config.sections[ans.sectionIndex];
+      const sec = paperSections[ans.sectionIndex];
       const negPerMark = negativePerMarkBySec[ans.sectionIndex] ?? 1 / 3;
       const isSkipped = !ans.userAnswer || ans.userAnswer.trim() === "";
       const isCounted = true;
@@ -244,7 +253,7 @@ export async function POST(req: NextRequest) {
     const finalScore = Math.max(0, Math.round(score * 100) / 100);
 
     // Build per-section score data
-    const sectionScores: SectionScore[] = config.sections.map((sec, si) => {
+    const sectionScores: SectionScore[] = paperSections.map((sec, si) => {
       const t = sectionTrackers.get(si)!;
       return {
         name: sec.name,
@@ -305,9 +314,19 @@ export async function POST(req: NextRequest) {
       })
       .map(ans => {
         const qData = getQData(ans)!;
+        const isPyq = ans.source === "pyq";
         return {
           user_id: userId,
-          pyq_id: ans.source === "pyq" ? ans.questionId : null,
+          pyq_id: isPyq ? ans.questionId : null,
+          // Mock questions live inside MockTestTemplate.questions as self-contained
+          // JSON — deliberately NOT rows in PYQ/GeneratedQuestion, so there is
+          // nothing to FK to. `mock_question_id` is a loose string for exactly
+          // that case; without it the row carries no identity at all and the
+          // `mock_question_id IS NULL` filter in dashboard/_lib/queries.ts (which
+          // exists to keep mock answers out of "current mistakes") silently
+          // matches every row. Same FK + same value as TestSession.mock_test_id.
+          mock_question_id: isPyq ? null : ans.questionId,
+          mock_test_id: mockTestId ?? null,
           is_correct: isAnswerCorrect(ans.questionType, ans.userAnswer!, qData.correct_answer),
           user_answer: ans.userAnswer,
           time_spent: ans.timeSpentSecs || null,

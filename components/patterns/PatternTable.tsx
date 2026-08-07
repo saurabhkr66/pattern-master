@@ -118,7 +118,11 @@ export default function PatternTable({
       const raw = localStorage.getItem(progressStorageKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed?.data && typeof parsed.fetchedAt === "number") {
+        // Never seed from an EMPTY map: it would pin every topic at 0/N for the
+        // full 6 h staleTime. Treating it as absent forces one server read,
+        // which also self-heals entries poisoned before this guard existed.
+        const hasProgress = Object.keys(parsed?.data?.progress ?? {}).length > 0;
+        if (hasProgress && typeof parsed.fetchedAt === "number") {
           queryClient.setQueryData(["practiceProgress", exam, branch], parsed.data, {
             updatedAt: parsed.fetchedAt,
           });
@@ -133,7 +137,11 @@ export default function PatternTable({
     queryFn: async () => {
       const params = new URLSearchParams({ exam, branch });
       const res = await fetch(`/api/practice/progress?${params.toString()}`);
+      if (!res.ok) throw new Error(`progress ${res.status}`);
       const json = await res.json();
+      // Throw rather than cache a non-answer — React Query keeps the previous
+      // data and retries, instead of persisting 0s for the next 6 h.
+      if (json?.unauthenticated || json?.error) throw new Error("progress unavailable");
       try {
         localStorage.setItem(progressStorageKey, JSON.stringify({ data: json, fetchedAt: Date.now() }));
       } catch { /* ignore */ }

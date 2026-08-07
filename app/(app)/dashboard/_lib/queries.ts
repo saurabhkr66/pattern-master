@@ -28,7 +28,13 @@ export function getCachedStatsActivity(userId: string) {
                      ORDER BY created_at DESC
                    ) as rn
             FROM "Attempt"
-            WHERE user_id = ${userId} AND mock_question_id IS NULL
+            WHERE user_id = ${userId}
+              AND mock_question_id IS NULL
+              -- Legacy mock rows (pre-dating mock_question_id being written on
+              -- submit) have all refs NULL, so the filter above misses them and
+              -- COALESCE collapses them into one NULL partition — leaking one
+              -- arbitrary mock answer into the mistakes count.
+              AND COALESCE(question_id, pyq_id) IS NOT NULL
           ) t
           WHERE rn = 1 AND is_correct = false
         `,

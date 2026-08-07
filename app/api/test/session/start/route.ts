@@ -3,12 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { addActiveParticipant } from "@/lib/leaderboard";
 import { initDraft, readDraftState, DEADLINE_CLEANUP_BUFFER_MS } from "@/lib/draft";
+import { getCachedTemplateById } from "@/lib/mockTemplate";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { mockTestId, examType, branch, durationSecs } = await req.json();
+
+  // The client picks the paper size for random tests, so durationSecs is
+  // user-influenced input — never trust it for the deadline. The template is
+  // the authority; the client value is only a fallback when there's no template.
+  let effectiveDuration = Number(durationSecs);
+  if (mockTestId) {
+    const template = await getCachedTemplateById(mockTestId);
+    if (template?.duration_secs) effectiveDuration = template.duration_secs;
+  }
+  if (!Number.isFinite(effectiveDuration) || effectiveDuration <= 0) {
+    return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
+  }
 
   // Resume existing unexpired draft for this test
   if (mockTestId) {
@@ -48,7 +61,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const expiresAt = new Date(Date.now() + durationSecs * 1000 + DEADLINE_CLEANUP_BUFFER_MS);
+  const expiresAt = new Date(Date.now() + effectiveDuration * 1000 + DEADLINE_CLEANUP_BUFFER_MS);
 
   const draft = await prisma.testSessionDraft.create({
     data: {
@@ -79,7 +92,7 @@ export async function POST(req: NextRequest) {
     draftId: draft.id,
     startedAt: draft.started_at.toISOString(),
     expiresAt: userDeadline.toISOString(),
-    timeLeftSecs: durationSecs,
+    timeLeftSecs: effectiveDuration,
     state: {},
     resumed: false,
   });

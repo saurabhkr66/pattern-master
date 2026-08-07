@@ -2,15 +2,57 @@
 
 import { useState, useMemo } from "react";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { getImageUrl } from "@/lib/imageUtils";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
 import ReportEditorModal from "./ReportEditorModal";
 import BatchProcessPanel from "./BatchProcessPanel";
+
+// Thumbnails for a reported question, so image-related complaints can be
+// triaged from the list without opening the editor. Only "explanation" is an
+// explicit type — everything else is a question image.
+function ReportImages({ images }: { images: any }) {
+  if (!Array.isArray(images)) return null;
+  const shown = images.filter((img: any) => img?.filename?.trim());
+  if (shown.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {shown.map((img: any, idx: number) => (
+        <a key={idx} href={getImageUrl(img.filename)} target="_blank" rel="noopener noreferrer" title={`${img.filename} (${img.type || "question"})`}>
+          <img
+            src={getImageUrl(img.filename)}
+            alt=""
+            className="rounded-lg border dark:border-zinc-800 bg-white dark:bg-black/30 object-contain"
+            style={{ maxHeight: 96, maxWidth: 160 }}
+          />
+        </a>
+      ))}
+    </div>
+  );
+}
 
 const isMissingExplanation = (q: any) => {
   const hasText = q.explanation && q.explanation.trim() !== "";
   const hasImages = q.images && (q.images as any[]).some((img: any) => img.type === "explanation");
   return !hasText && !hasImages;
 };
+
+/**
+ * Sub-topic for a report. PYQ/Generated carry it on the joined Pattern;
+ * mock questions store it inline on the question JSON, since a mock has no
+ * Pattern row to join. Blank when it just repeats the subject — a badge that
+ * says "Optics · Optics" is noise.
+ */
+function topicOf(r: any, subject: string): string | null {
+  const raw =
+    r.pyq?.pattern?.topic_name ||
+    r.question?.pattern?.topic_name ||
+    r.q?.pattern?.topic_name ||
+    r.q?.topic_name ||
+    null;
+  const topic = typeof raw === "string" ? raw.trim() : "";
+  if (!topic || topic.toLowerCase() === subject.toLowerCase()) return null;
+  return topic;
+}
 
 function processReport(r: any) {
   const q = r.q || r.question || r.pyq;
@@ -28,7 +70,7 @@ function processReport(r: any) {
     subject = r.subject || "Unknown";
     type = "Mock";
   }
-  return { ...r, exam, subject, type, q };
+  return { ...r, exam, subject, topic: topicOf(r, subject), type, q };
 }
 
 export default function ReportsClient({ reports, mockTests }: { reports: any[]; mockTests?: any[] }) {
@@ -63,7 +105,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
       if (lr.pyq) { exam = lr.pyq.exam_type || lr.pyq.pattern?.exam_type || "GATE"; subject = lr.pyq.pattern?.subject || "Unknown"; type = "PYQ"; }
       else if (lr.isMock) { exam = lr.exam_type || "JEE_MAIN"; subject = lr.subject || "Unknown"; type = "Mock"; }
       else if (lr.question) { exam = lr.question.pattern?.exam_type || "GATE"; subject = lr.question.pattern?.subject || "Unknown"; type = "Generated"; }
-      return { ...lr, exam, subject, type, q };
+      return { ...lr, exam, subject, topic: topicOf(lr, subject), type, q };
     });
 
     let mockMissingReports: any[] = [];
@@ -81,6 +123,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
                 isMock: true, mock_test_id: selectedTest.id, mock_question_id: q.id,
                 exam_type: selectedTest.exam_type, exam: selectedTest.exam_type,
                 subject: q.subject || q.sectionName || q.topic_name || selectedTest.title,
+                topic: topicOf({ q }, q.subject || q.sectionName || q.topic_name || selectedTest.title),
                 type: "Mock", q,
                 details: `Question in "${selectedTest.title}" has no explanation.`,
               });
@@ -270,10 +313,23 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
                       <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">{r.reason}</span>
                       <span className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 text-[10px] font-bold uppercase">{r.exam}</span>
                       <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 text-[10px] font-bold uppercase">{r.subject}</span>
+                      {/* Sub-topic: which chapter inside the subject, so a flagged
+                          question can be placed without opening the editor. */}
+                      {r.topic && (
+                        <span className="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 text-[10px] font-bold uppercase">{r.topic}</span>
+                      )}
                       <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400 text-[10px] font-bold uppercase">{r.type}</span>
+                      {r.reportCount > 1 && (
+                        <span className="px-2 py-0.5 rounded-lg bg-red-600 text-white text-[10px] font-black uppercase" title={(r.reporterEmails || []).join(", ")}>
+                          👥 {r.reportCount} reports
+                        </span>
+                      )}
                     </div>
                     <div className="text-right text-[10px] text-gray-400 font-medium">
-                      {r.user?.email || 'Unknown'}<br />{new Date(r.created_at).toLocaleDateString()}
+                      {r.reportCount > 1
+                        ? `${r.reportCount} reporters`
+                        : (r.user?.email || 'Unknown')}
+                      <br />{new Date(r.created_at).toLocaleDateString()}
                     </div>
                   </div>
                   {r.details && (
@@ -286,6 +342,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
                       <MathRenderer content={q.question_text} />
                     </div>
                   )}
+                  {q && <ReportImages images={q.images} />}
                   <div className="flex justify-between items-center">
                     <div className="text-[10px] text-gray-400 font-mono">ID: {r.pyq_id || r.question_id || r.mock_question_id}</div>
                     <button onClick={() => openEditor(r)} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-sm">Review & Fix Issue</button>

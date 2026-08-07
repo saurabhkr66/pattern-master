@@ -204,10 +204,15 @@ export async function GET(
           );
         }
 
-        // 3. Guest — long browser cache since there's no user state
+        // 3. Guest — long browser cache since there's no user state.
+        // `Vary: Cookie` is load-bearing: this URL also serves the logged-in
+        // response above, and without it a shared cache keys both on the URL
+        // alone. A guest (or crawler) warming the entry first would then pin
+        // `attempts: []` for s-maxage and serve it to signed-in users, blanking
+        // their attempt/bookmark state for up to 24 h.
         return NextResponse.json(
           { questions: questions.map(transform), pyqs: pyqs.map(transform), total },
-          { headers: { "Cache-Control": "public, s-maxage=86400, max-age=3600" } }
+          { headers: { "Cache-Control": "public, s-maxage=86400, max-age=3600", Vary: "Cookie" } }
         );
 
     } catch (error) {

@@ -63,7 +63,7 @@ export default function BriefPhase({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <BriefStat label="Questions" val={isSpec ? String(selectedMock?.total_questions) : String(config.totalQuestions)} />
               <BriefStat label="Total marks" val={isSpec ? String(selectedMock?.max_score) : String(config.maxScore)} />
-              <BriefStat label="Time" val={isSpec ? fmtDuration(selectedMock?.duration_secs ?? 0) : "3h"} />
+              <BriefStat label="Time" val={fmtDuration(isSpec ? (selectedMock?.duration_secs ?? 0) : config.durationSecs)} />
               <BriefStat label="Sections" val={String(config.sections.length)} />
             </div>
           </div>

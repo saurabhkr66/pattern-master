@@ -54,3 +54,6 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# local image-audit output (88 flagged images + contact sheet)
+/dark-images-preview/

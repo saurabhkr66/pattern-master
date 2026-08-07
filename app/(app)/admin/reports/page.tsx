@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { loadDarkImageWorklist, darkRefsOf, darkLabel } from "@/lib/darkImageAudit";
 import ReportsClient from "./ReportsClient";
 
 export const revalidate = 120;
@@ -38,9 +39,62 @@ export default async function AdminReportsPage() {
     }
   });
 
-  const reportedMockQuestionIds = manualReports
+  // Two users reporting the same question create two separate QuestionReport
+  // rows — without this, both showed up as separate cards in the UI, and
+  // resolving one left the other sitting there as a "duplicate" of an issue
+  // that was already fixed. Group by the underlying question identity so the
+  // admin sees one card with a reporter count; `allReportIds` lets resolving
+  // it clear every row in the group at once (see resolveReport call below).
+  type ManualReport = (typeof manualReports)[number];
+  const reportGroupKey = (r: ManualReport): string =>
+    r.pyq_id ? `pyq:${r.pyq_id}`
+      : r.question_id ? `q:${r.question_id}`
+      : r.mock_question_id ? `mock:${r.mock_question_id}`
+      : `id:${r.id}`;
+
+  const reportGroups = new Map<string, ManualReport[]>();
+  for (const r of manualReports) {
+    const key = reportGroupKey(r);
+    const group = reportGroups.get(key);
+    if (group) group.push(r); else reportGroups.set(key, [r]);
+  }
+
+  // manualReports is ordered created_at desc, so a group's first row is its
+  // most recent report — used as the representative id/timestamp.
+  const groupedManualReports = Array.from(reportGroups.values()).map((group) => {
+    const [primary] = group;
+    const reporterEmails = [...new Set(group.map((g) => g.user?.email).filter((e): e is string => !!e))];
+    const reasons = [...new Set(group.map((g) => g.reason))];
+    const combinedDetails = group
+      .filter((g) => g.details)
+      .map((g) => `${g.user?.email || "user"}: ${g.details}`)
+      .join("\n");
+    return {
+      ...primary,
+      reason: reasons.join(" · "),
+      details: combinedDetails || primary.details,
+      reportCount: group.length,
+      reporterEmails,
+      allReportIds: group.map((g) => g.id),
+    };
+  });
+
+  const reportedMockQuestionIds = groupedManualReports
     .map(r => r.mock_question_id)
     .filter((id): id is string => Boolean(id));
+
+  // Dark-image worklist: a file read, not a query. Drives the extra lookups below.
+  const darkList = await loadDarkImageWorklist();
+  const darkPyqIds = [...new Set(
+    darkList.entries.flatMap(e => e.rows.filter(r => r.model === "pYQ").map(r => r.id))
+  )];
+  const darkGeneratedIds = [...new Set(
+    darkList.entries.flatMap(e => e.rows.filter(r => r.model === "generatedQuestion").map(r => r.id))
+  )];
+  const darkRefs = darkList.entries.map(e => e.ref);
+  // Containment needles: `[{"filename": ref}]` matches an images array holding
+  // that filename, regardless of the entry's other fields (index, type).
+  const darkRefNeedles = darkRefs.map(ref => JSON.stringify([{ filename: ref }]));
 
   // All remaining queries run in parallel
   const [
@@ -49,6 +103,9 @@ export default async function AdminReportsPage() {
     missingMockRows,
     flaggedMockRows,
     reportedMockRows,
+    darkPyqs,
+    darkGenerated,
+    darkMockRows,
   ] = await Promise.all([
     prisma.pYQ.findMany({
       where: { explanation: "", exam_type: { in: EXAMS } },
@@ -56,7 +113,7 @@ export default async function AdminReportsPage() {
       select: {
         id: true, question_text: true, options: true, correct_answer: true,
         explanation: true, question_type: true, exam_type: true, images: true,
-        pattern: { select: { exam_type: true, subject: true } },
+        pattern: { select: { exam_type: true, subject: true, topic_name: true } },
       },
     }),
     // Only id + title needed for the PDF panel dropdown — no questions JSONB
@@ -108,6 +165,45 @@ export default async function AdminReportsPage() {
           WHERE elem->>'id' = ANY(${reportedMockQuestionIds}::text[])
         `
       : Promise.resolve([]),
+    // Questions whose figure the dark-image audit flagged. Looked up by primary
+    // key, so these are cheap despite the wide select.
+    darkPyqIds.length > 0
+      ? prisma.pYQ.findMany({
+          where: { id: { in: darkPyqIds } },
+          select: {
+            id: true, question_text: true, options: true, correct_answer: true,
+            explanation: true, question_type: true, exam_type: true, images: true,
+            pattern: { select: { exam_type: true, subject: true, topic_name: true } },
+          },
+        })
+      : Promise.resolve([]),
+    darkGeneratedIds.length > 0
+      ? prisma.generatedQuestion.findMany({
+          where: { id: { in: darkGeneratedIds } },
+          select: {
+            id: true, question_text: true, options: true, correct_answer: true,
+            explanation: true, question_type: true, images: true,
+            pattern: { select: { exam_type: true, subject: true, topic_name: true } },
+          },
+        })
+      : Promise.resolve([]),
+    // Mock questions carry no ID we can join on, so match on the image ref
+    // itself. Containment rather than unnesting elem->'images': jsonb_array_elements
+    // raises on a non-array value, which would 500 the whole page over one
+    // malformed question. Bounded by LIMIT like the other jsonb scans here.
+    darkRefs.length > 0
+      ? prisma.$queryRaw<{ template_id: string; title: string; exam_type: string; question: any }[]>`
+          SELECT t.id AS template_id, t.title, t.exam_type, elem AS question
+          FROM "MockTestTemplate" t,
+          jsonb_array_elements(t.questions) AS elem
+          WHERE EXISTS (
+            SELECT 1
+            FROM unnest(${darkRefNeedles}::jsonb[]) AS n(needle)
+            WHERE COALESCE(elem->'images', '[]'::jsonb) @> n.needle
+          )
+          LIMIT 100
+        `
+      : Promise.resolve([]),
   ]);
 
   // Build a lookup for reported mock questions so manual reports can reference them
@@ -116,7 +212,7 @@ export default async function AdminReportsPage() {
   );
 
   // Attach question data to manual reports that reference mock questions
-  const enrichedManualReports = manualReports.map(r => {
+  const enrichedManualReports = groupedManualReports.map(r => {
     if (r.mock_question_id && reportedMockQMap[r.mock_question_id]) {
       return { ...r, q: reportedMockQMap[r.mock_question_id].q };
     }
@@ -153,11 +249,75 @@ export default async function AdminReportsPage() {
     details: `AI thinks correct answer is "${row.question.ai_detected_answer}" but stored answer is "${row.question.correct_answer}". Test: "${row.title}"`
   }));
 
+  // Dark/inverted figures. Sorted worst-first and placed at the head of the auto
+  // reports: a 99%-black diagram is unreadable, which outranks a missing
+  // explanation. Fixing one is an ImageKit overwrite (paste onto the image row
+  // in the editor) — it writes nothing to the DB, so these entries persist until
+  // scripts/audit-dark-images.mjs is re-run.
+  const darkDetail = (refs: string[], worst: number, where: string) =>
+    `Figure ${refs.map(r => `"${r}"`).join(", ")} is ${darkLabel(worst)} — likely an inverted or destroyed scan. ${where}`;
+
+  const darkPyqReports = darkPyqs.flatMap(q => {
+    const { refs, worst } = darkRefsOf(q.images, darkList.ratioByRef);
+    if (refs.length === 0) return [];
+    return [{
+      id: `auto-dark-p-${q.id}`,
+      reason: `🖤 Dark Image (${darkLabel(worst)})`,
+      status: "pending",
+      created_at: new Date(),
+      user: { email: "Image Audit" },
+      pyq_id: q.id,
+      pyq: q,
+      _darkRatio: worst,
+      details: darkDetail(refs, worst, "Paste a replacement onto the image row below."),
+    }];
+  });
+
+  const darkGeneratedReports = darkGenerated.flatMap(q => {
+    const { refs, worst } = darkRefsOf(q.images, darkList.ratioByRef);
+    if (refs.length === 0) return [];
+    return [{
+      id: `auto-dark-g-${q.id}`,
+      reason: `🖤 Dark Image (${darkLabel(worst)})`,
+      status: "pending",
+      created_at: new Date(),
+      user: { email: "Image Audit" },
+      question_id: q.id,
+      question: q,
+      _darkRatio: worst,
+      details: darkDetail(refs, worst, "Paste a replacement onto the image row below."),
+    }];
+  });
+
+  const darkMockReports = darkMockRows.flatMap(row => {
+    const { refs, worst } = darkRefsOf(row.question?.images, darkList.ratioByRef);
+    if (refs.length === 0) return [];
+    return [{
+      id: `auto-dark-m-${row.template_id}-${row.question.id}`,
+      reason: `🖤 Dark Image (${darkLabel(worst)})`,
+      status: "pending",
+      created_at: new Date(),
+      user: { email: "Image Audit" },
+      isMock: true,
+      mock_test_id: row.template_id,
+      mock_question_id: row.question.id,
+      exam_type: row.exam_type,
+      subject: row.question.subject || row.question.sectionName || row.question.topic_name || row.title,
+      q: row.question,
+      _darkRatio: worst,
+      details: darkDetail(refs, worst, `Test: "${row.title}".`),
+    }];
+  });
+
+  const darkReports = [...darkPyqReports, ...darkGeneratedReports, ...darkMockReports]
+    .sort((a, b) => b._darkRatio - a._darkRatio);
+
   // Convert them into "virtual reports" so they show up in the UI.
   // Note: AI-detected mismatches for PYQ/GeneratedQuestion are persisted as
   // real QuestionReport rows (see generateAIExplanation) — they flow in via
   // the `manualReports` query above, no virtual entry needed.
   const autoReports = [
+    ...darkReports,
     ...flaggedMockQuestions,
     ...missingPYQs.map(q => ({
       id: `auto-empty-p-${q.id}`,

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { getExamConfig, type ExamType, type SectionConfig } from "@/lib/examConfigs";
+import {
+  getExamConfig,
+  clampRandomCount,
+  randomDurationSecs,
+  scaleExamConfig,
+  type ExamType,
+  type SectionConfig,
+} from "@/lib/examConfigs";
 import type { TestQuestion } from "@/components/test/TestEngine";
 import {
   getCachedTemplateById,
@@ -193,7 +200,20 @@ export async function GET(req: NextRequest) {
     const mockNumber = parseInt(searchParams.get("mock_number") ?? "0", 10);
     const subjectFilters = searchParams.getAll("subject").flatMap((s) => s.split(",")).map((s) => s.trim()).filter(Boolean);
 
-    const config = getExamConfig(examType, branch ?? undefined);
+    const fullConfig = getExamConfig(examType, branch ?? undefined);
+
+    // Random tests are user-sized: `count` is clamped server-side against the
+    // subject-count cap so a crafted URL can't request a 500-question paper.
+    // A missing/garbage count falls back to the cap, so every random template
+    // has a known size and can be reused only at that exact size.
+    // Seeded mocks are untouched — they stay full-length papers.
+    const requestedCount =
+      mode === "random"
+        ? clampRandomCount(parseInt(searchParams.get("count") ?? "", 10), subjectFilters.length)
+        : null;
+    const config = requestedCount !== null
+      ? scaleExamConfig(fullConfig, requestedCount)
+      : fullConfig;
 
     // Strip server-only fields from a stored template's questions JSON.
     // We select only the scalar columns (no `questions`) and then re-fetch
@@ -203,6 +223,8 @@ export async function GET(req: NextRequest) {
       title: true,
       total_questions: true,
       max_score: true,
+      duration_secs: true,
+      sections: true,
       questions: true,
     } as const;
 
@@ -212,19 +234,37 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    /**
+     * Shape a stored template into the client payload. duration_secs and
+     * sections come from the template, never from the static exam config —
+     * a user-sized random paper has its own timer and its own section list,
+     * and resume has to rehydrate with those.
+     */
+    function templateResponse(template: {
+      id: string;
+      title: string;
+      total_questions: number;
+      max_score: number;
+      duration_secs?: number;
+      sections?: unknown;
+      questions: unknown;
+    }) {
+      return NextResponse.json({
+        mockTestId: template.id,
+        title: template.title,
+        questions: safeQuestions(template),
+        totalQuestions: template.total_questions,
+        maxScore: template.max_score,
+        durationSecs: template.duration_secs ?? fullConfig.durationSecs,
+        sections: Array.isArray(template.sections) ? template.sections : fullConfig.sections,
+      });
+    }
+
     // ── DIRECT template lookup (used for session resume) ──
     const templateId = searchParams.get("templateId");
     if (templateId) {
       const template = await getCachedTemplateById(templateId);
-      if (template) {
-        return NextResponse.json({
-          mockTestId: template.id,
-          title: template.title,
-          questions: safeQuestions(template),
-          totalQuestions: template.total_questions,
-          maxScore: template.max_score,
-        });
-      }
+      if (template) return templateResponse(template);
     }
 
     // ── SEEDED: look for an existing frozen template ──
@@ -235,15 +275,7 @@ export async function GET(req: NextRequest) {
         mockNumber
       );
       const template = cachedId ? await getCachedTemplateById(cachedId) : null;
-      if (template) {
-        return NextResponse.json({
-          mockTestId: template.id,
-          title: template.title,
-          questions: safeQuestions(template),
-          totalQuestions: template.total_questions,
-          maxScore: template.max_score,
-        });
-      }
+      if (template) return templateResponse(template);
     }
 
     // ── RANDOM: look for unused template the user hasn't attempted ──
@@ -255,65 +287,64 @@ export async function GET(req: NextRequest) {
           branch: branch ?? null,
           mode: "random",
           subjects: { equals: sortedFilters },
+          // A user-sized paper may only be reused at the same size — otherwise
+          // asking for 10 questions hands back someone's 90-question template.
+          ...(requestedCount !== null ? { total_questions: requestedCount } : {}),
           sessions: { none: { user_id: userId } },
         },
         orderBy: { created_at: "asc" },
         select: TEMPLATE_META_SELECT,
       });
-      if (unusedTemplate) {
-        return NextResponse.json({
-          mockTestId: unusedTemplate.id,
-          title: unusedTemplate.title,
-          questions: safeQuestions(unusedTemplate),
-          totalQuestions: unusedTemplate.total_questions,
-          maxScore: unusedTemplate.max_score,
-        });
-      }
+      if (unusedTemplate) return templateResponse(unusedTemplate);
     }
 
     // ── Generate new questions ──
-    const allSectionQuestions: Array<{
-      sectionIdx: number;
-      sectionName: string;
-      questions: RawQuestion[];
-    }> = [];
-    const includedSectionIndices = new Set<number>();
+    const drafted: Array<{ section: SectionConfig; questions: RawQuestion[] }> = [];
 
-    for (let si = 0; si < config.sections.length; si++) {
-      const sec = config.sections[si];
+    for (const sec of config.sections) {
       const pool = await fetchSectionQuestions(sec, examType, branch, subjectFilters);
       // fetchSectionQuestions returns [] when subject filter has no overlap with this section
       if (pool.length === 0 && subjectFilters.length > 0) continue;
-      const picked = pickSectionQuestions(pool, sec);
-      allSectionQuestions.push({ sectionIdx: si, sectionName: sec.name, questions: picked });
-      includedSectionIndices.add(si);
+      drafted.push({ section: sec, questions: pickSectionQuestions(pool, sec) });
     }
 
-    // Check we have at least some questions
-    const totalGenerated = allSectionQuestions.reduce((sum, s) => sum + s.questions.length, 0);
-    if (totalGenerated === 0) {
+    // Drop sections the bank couldn't fill — otherwise the paper carries an
+    // empty section tab in the header and palette. Matters far more now that a
+    // user-sized paper can be small enough for a whole section to come up dry.
+    const included = drafted.filter((d) => d.questions.length > 0);
+
+    if (included.length === 0) {
       return NextResponse.json(
         { error: "No questions found for this exam/branch. Please try a different exam or check if questions have been seeded." },
         { status: 404 }
       );
     }
 
+    // sectionIndex is a position in `sections` below — the two are built together
+    // so the stored template stays self-consistent for grading and the palette.
+    const sections = included.map(({ section, questions }) => ({
+      ...section,
+      totalQuestions: questions.length,
+      maxScore: questions.reduce((sum, q) => sum + q.marks, 0),
+    }));
+
     // Build question list with metadata (strip correct_answer + explanation from client payload)
     const clientQuestions: TestQuestion[] = [];
     const fullQuestions: Array<TestQuestion & { correct_answer: string; explanation: string }> = [];
 
-    for (const { sectionIdx, sectionName, questions } of allSectionQuestions) {
+    included.forEach(({ section, questions }, sectionIdx) => {
       for (const raw of questions) {
-        const full = toTestQuestion(raw, sectionIdx, sectionName);
+        const full = toTestQuestion(raw, sectionIdx, section.name);
         fullQuestions.push(full);
         const { correct_answer, explanation, ...safe } = full;
         clientQuestions.push(safe);
       }
-    }
+    });
 
-    const maxScore = config.sections
-      .filter((_, i) => includedSectionIndices.has(i))
-      .reduce((sum, sec) => sum + sec.maxScore, 0);
+    const maxScore = sections.reduce((sum, sec) => sum + sec.maxScore, 0);
+    const durationSecs = requestedCount !== null
+      ? randomDurationSecs(fullQuestions.length) // 2 min per question actually delivered
+      : config.durationSecs;
 
     // Determine how many seeded mocks already exist
     const existingCount = await prisma.mockTestTemplate.count({
@@ -322,10 +353,13 @@ export async function GET(req: NextRequest) {
 
     const branchLabel = branch ? ` ${branch}` : "";
     const modeNum = mode === "seeded" ? `#${mockNumber}` : `#${existingCount + 1}`;
+    // User-sized papers are titled by length — "20 Q" is what distinguishes two
+    // random Physics drills, not the serial number.
+    const sizeLabel = requestedCount !== null ? ` · ${fullQuestions.length} Q` : "";
     const title =
       subjectFilters.length > 0
-        ? `${config.label}${branchLabel} — ${subjectFilters.join(", ")} Test ${modeNum}`
-        : `${config.label}${branchLabel} Mock Test ${modeNum}`;
+        ? `${config.label}${branchLabel} — ${subjectFilters.join(", ")} Test ${modeNum}${sizeLabel}`
+        : `${config.label}${branchLabel} Mock Test ${modeNum}${sizeLabel}`;
 
     // Save template (store full questions including answers for grading)
     const template = await prisma.mockTestTemplate.create({
@@ -338,8 +372,8 @@ export async function GET(req: NextRequest) {
         subjects: subjectFilters.sort(),
         total_questions: fullQuestions.length,
         max_score: maxScore,
-        duration_secs: config.durationSecs,
-        sections: config.sections as any,
+        duration_secs: durationSecs,
+        sections: sections as any,
         questions: fullQuestions as any,
       },
     });
@@ -353,6 +387,8 @@ export async function GET(req: NextRequest) {
       questions: clientQuestions,
       totalQuestions: clientQuestions.length,
       maxScore,
+      durationSecs,
+      sections,
     });
   } catch (err) {
     console.error("Test generation error:", err);

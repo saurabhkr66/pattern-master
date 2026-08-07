@@ -1,0 +1,1035 @@
+{
+  "generatedAt": "2026-08-06T03:56:25.557Z",
+  "minRatio": 0.3,
+  "lumaCutoff": 40,
+  "images": [
+    {
+      "ref": "topicwise/cse_for-the-distributions-given-below-w_img1.webp",
+      "ratio": 0.9958,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "7a268e19-bd25-4cf2-a908-1683c3456c4d"
+        }
+      ]
+    },
+    {
+      "ref": "topicwise/cse_fig-below-shows-the-circuit-diagram_img1.webp",
+      "ratio": 0.9936,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "2b8cdd68-53b2-40dd-a7d9-fac1f370aa39"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "1ca7b738-a268-4d0b-93ce-d328414c7529"
+        }
+      ]
+    },
+    {
+      "ref": "topicwise/cse_consider-the-following-circuit-the_img1.webp",
+      "ratio": 0.9927,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "64b409f8-df84-4eb1-92c6-f3edd5224209"
+        }
+      ]
+    },
+    {
+      "ref": "topicwise/cse_the-above-circuit-produces-the-outp_img1.webp",
+      "ratio": 0.9892,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "121bcd37-b2f0-46c5-be95-37c86ea89ffe"
+        }
+      ]
+    },
+    {
+      "ref": "topicwise/cse_the-minimum-boolean-expression-for_img1.webp",
+      "ratio": 0.9767,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "1f958e8f-6b73-4227-8aab-7b98f2d0bd46"
+        }
+      ]
+    },
+    {
+      "ref": "topicwise/cse_the-circuit-given-in-the-figure-bel_img1.webp",
+      "ratio": 0.899,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "42a25378-1c83-4305-91a6-9d745d54e7ab"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "d92ca423-36e2-46d0-8cbc-0acc579fdaf7"
+        }
+      ]
+    },
+    {
+      "ref": "521259_img1.png",
+      "ratio": 0.8898,
+      "rows": [
+        {
+          "model": "generatedQuestion",
+          "id": "4cb41e07-7acb-4bab-ae72-2f995c4e07ef"
+        }
+      ]
+    },
+    {
+      "ref": "q45_opt0_n_images_content_2024_05_02_image1_5994ee041714643113936_png.png",
+      "ratio": 0.8227,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "eeef85c3-d316-4ed4-8361-283fefc8e446"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        }
+      ]
+    },
+    {
+      "ref": "q45_opt2_n_images_content_2024_05_02_image1_1efc42851714643115055_png.png",
+      "ratio": 0.8102,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "eeef85c3-d316-4ed4-8361-283fefc8e446"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        }
+      ]
+    },
+    {
+      "ref": "q45_opt3_n_images_content_2024_05_02_image1_2aa97af11714643115585_png.png",
+      "ratio": 0.8028,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "eeef85c3-d316-4ed4-8361-283fefc8e446"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        }
+      ]
+    },
+    {
+      "ref": "q45_opt1_n_images_content_2024_05_02_image1_74f0bab01714643114475_png.png",
+      "ratio": 0.8021,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "eeef85c3-d316-4ed4-8361-283fefc8e446"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        }
+      ]
+    },
+    {
+      "ref": "structural_organisation_in_animals/neet_structural-organisation-in-animals_q043_img1.webp",
+      "ratio": 0.7976,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "fb1c0631-8a9c-4035-9685-1de53c9d1683"
+        }
+      ]
+    },
+    {
+      "ref": "24_feb_s1_optfix_what-is-the-final-product-majo_img3_optB_20260512_084439.webp",
+      "ratio": 0.7918,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "2f2401e7-30eb-4ce9-b3b6-4803a590152f"
+        }
+      ]
+    },
+    {
+      "ref": "q43_n_images_content_2024_05_02_image1_61e0865c1714643284115_png.png",
+      "ratio": 0.7824,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "615963d0-dc36-4800-b591-d72739c3a323"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "c9c9d8d4-faba-44fd-8c75-8d260b0f8c57"
+        }
+      ]
+    },
+    {
+      "ref": "q34_n_images_content_2024_05_02_image1_cc92d9591714643154475_png.png",
+      "ratio": 0.7075,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "9fcaa86f-efc8-43ff-b704-c995b7aa02e0"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "c9c9d8d4-faba-44fd-8c75-8d260b0f8c57"
+        }
+      ]
+    },
+    {
+      "ref": "principles_of_inheritance_and_variation_questions_part_3/neet_principles-of-inheritance-and-variation-questions-part-3_q032_img3.webp",
+      "ratio": 0.7027,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "9a27a0d9-5c12-4960-86ae-942be2d342bf"
+        }
+      ]
+    },
+    {
+      "ref": "q45_n_images_content_2024_05_02_image1_6c656a551714643113379_png.png",
+      "ratio": 0.698,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "eeef85c3-d316-4ed4-8361-283fefc8e446"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        }
+      ]
+    },
+    {
+      "ref": "cell_the_unit_of_life_questions_part_1/neet_cell-the-unit-of-life-questions-part-1_q019_img1.webp",
+      "ratio": 0.5622,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "be6e622b-8835-475d-96c3-0ce31c95ef00"
+        }
+      ]
+    },
+    {
+      "ref": "cell_the_unit_of_life_questions_part_2/neet_cell-the-unit-of-life-questions-part-2_q065_img1.webp",
+      "ratio": 0.5555,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "c3b83df9-e4ca-4152-b2f8-58cccb32cc3f"
+        }
+      ]
+    },
+    {
+      "ref": "topicwise/cse_the-logic-circuit-given-below-conve_img1.webp",
+      "ratio": 0.5259,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "17f0af7a-15a7-4cb9-b25b-d3e03858a2e1"
+        }
+      ]
+    },
+    {
+      "ref": "q27_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "ce26076b-f46f-457c-a5f6-978de3f33509"
+        },
+        {
+          "model": "pYQ",
+          "id": "541ebb68-a1ec-4ac2-8326-d0f4e6c02fef"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "b809944d-97e1-47b9-aaf4-a09b7b16ee12"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "63339e5c-0b75-4596-aa5a-683b2269cb88"
+        }
+      ]
+    },
+    {
+      "ref": "q16_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "eee0f295-0bfa-4287-bbd3-a524a7c20237"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "23d214f1-5795-4af3-95b5-403d09463f27"
+        }
+      ]
+    },
+    {
+      "ref": "q37_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "e10450a7-2c57-4248-9945-5ab9a7f9c46c"
+        },
+        {
+          "model": "pYQ",
+          "id": "b7dd4507-7209-44ee-b96e-5d2bd35592d1"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "23d214f1-5795-4af3-95b5-403d09463f27"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "e6585a43-9c0b-457d-be5c-ed08153fd85d"
+        }
+      ]
+    },
+    {
+      "ref": "q46_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "52f411ce-16eb-4758-a799-f1b42ed1c38e"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "4cb6fa5e-7395-4b2e-ab7b-c9d547a1d615"
+        }
+      ]
+    },
+    {
+      "ref": "q22_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "d5fe755c-1dbe-4ac5-ab6d-4ef98141ecd3"
+        },
+        {
+          "model": "pYQ",
+          "id": "bafff001-6ba6-407e-8625-66703d4ae9bf"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "63339e5c-0b75-4596-aa5a-683b2269cb88"
+        }
+      ]
+    },
+    {
+      "ref": "q49_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "5b927cfb-7eff-47d0-8081-e8965f4b16fa"
+        },
+        {
+          "model": "pYQ",
+          "id": "5b927cfb-7eff-47d0-8081-e8965f4b16fa"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "30b02efe-546c-4669-b2c2-472a3b4841be"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "30b02efe-546c-4669-b2c2-472a3b4841be"
+        }
+      ]
+    },
+    {
+      "ref": "q33_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "45424f55-db44-4390-add6-7f99163f5526"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "63339e5c-0b75-4596-aa5a-683b2269cb88"
+        }
+      ]
+    },
+    {
+      "ref": "q17_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "8d207316-a4e5-4ec7-93b4-1d9823a7cde7"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "23d214f1-5795-4af3-95b5-403d09463f27"
+        }
+      ]
+    },
+    {
+      "ref": "q19_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "7d6af981-7fdd-453a-93d8-86e6e6ac1064"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "23d214f1-5795-4af3-95b5-403d09463f27"
+        }
+      ]
+    },
+    {
+      "ref": "q4_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "000ec0e8-8350-4fe1-8a6f-935690c31ab1"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "23d214f1-5795-4af3-95b5-403d09463f27"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "b15040a7-c7bd-4821-b1e6-b11ec5bfecec"
+        }
+      ]
+    },
+    {
+      "ref": "q43_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "10c807c7-a319-4122-a0a6-5758845dae05"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "32a5566c-6a7a-44d9-9347-7cbc669e8958"
+        }
+      ]
+    },
+    {
+      "ref": "q53_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "2331318f-a7bc-4dee-baee-5f0a73abc190"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "c9c9d8d4-faba-44fd-8c75-8d260b0f8c57"
+        }
+      ]
+    },
+    {
+      "ref": "q44_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "2a19e281-34d0-4fa8-ac01-dfbd136bbba0"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "4cb6fa5e-7395-4b2e-ab7b-c9d547a1d615"
+        }
+      ]
+    },
+    {
+      "ref": "q59_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "2bcabe07-8b13-450e-8b2c-a4a78e77f211"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "30b02efe-546c-4669-b2c2-472a3b4841be"
+        }
+      ]
+    },
+    {
+      "ref": "q51_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "99002d99-43fe-4ef4-a9d1-0c412a12cae9"
+        },
+        {
+          "model": "pYQ",
+          "id": "9965c8c2-4c77-4c17-8e00-a1c54e994b2f"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "4cb6fa5e-7395-4b2e-ab7b-c9d547a1d615"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "23d214f1-5795-4af3-95b5-403d09463f27"
+        }
+      ]
+    },
+    {
+      "ref": "q42_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "afa17c69-5d66-4b88-8879-f2cc241e7ef1"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "4cb6fa5e-7395-4b2e-ab7b-c9d547a1d615"
+        }
+      ]
+    },
+    {
+      "ref": "q48_exp_epp_in_uploads_production_images_content_2022_05_12_star_png.png",
+      "ratio": 0.462,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "b2c84fe4-65b2-46c1-b3d3-7035a1e7cab6"
+        },
+        {
+          "model": "MockTestTemplate",
+          "id": "b809944d-97e1-47b9-aaf4-a09b7b16ee12"
+        }
+      ]
+    },
+    {
+      "ref": "cell_the_unit_of_life_questions_part_1/neet_cell-the-unit-of-life-questions-part-1_q013_img1.webp",
+      "ratio": 0.4428,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "cb085ecf-4ed9-4791-9a16-eb2155b65771"
+        }
+      ]
+    },
+    {
+      "ref": "Solutions/jee_solutions_part_1_q042_img1.webp",
+      "ratio": 0.4411,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "b0732d07-98ea-43a4-a8ed-c9ff067c3419"
+        }
+      ]
+    },
+    {
+      "ref": "chemical_thermodynamics/jee_chemical_thermodynamics_part_2_q044_img4.webp",
+      "ratio": 0.4387,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6497c3eb-4459-4b5a-add1-206d97951511"
+        }
+      ]
+    },
+    {
+      "ref": "ionic_equilibrium/jee_ionic_equilibrium_part_2_q011_img1.webp",
+      "ratio": 0.4381,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "08eed183-ca07-4d4b-a20f-04657ae7a00a"
+        }
+      ]
+    },
+    {
+      "ref": "ionic_equilibrium/jee_ionic_equilibrium_part_2_q011_img2.webp",
+      "ratio": 0.438,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "08eed183-ca07-4d4b-a20f-04657ae7a00a"
+        }
+      ]
+    },
+    {
+      "ref": "ionic_equilibrium/jee_ionic_equilibrium_part_2_q011_img4.webp",
+      "ratio": 0.4371,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "08eed183-ca07-4d4b-a20f-04657ae7a00a"
+        }
+      ]
+    },
+    {
+      "ref": "chemical_thermodynamics/jee_chemical_thermodynamics_part_2_q044_img3.webp",
+      "ratio": 0.4359,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6497c3eb-4459-4b5a-add1-206d97951511"
+        }
+      ]
+    },
+    {
+      "ref": "ionic_equilibrium/jee_ionic_equilibrium_part_2_q011_img3.webp",
+      "ratio": 0.4326,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "08eed183-ca07-4d4b-a20f-04657ae7a00a"
+        }
+      ]
+    },
+    {
+      "ref": "chemical_thermodynamics/jee_chemical_thermodynamics_part_2_q044_img2.webp",
+      "ratio": 0.4233,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6497c3eb-4459-4b5a-add1-206d97951511"
+        }
+      ]
+    },
+    {
+      "ref": "chemical_thermodynamics/jee_chemical_thermodynamics_part_2_q044_img5.webp",
+      "ratio": 0.4214,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6497c3eb-4459-4b5a-add1-206d97951511"
+        }
+      ]
+    },
+    {
+      "ref": "locomotion_and_movement/neet_locomotion-and-movement_q010_img1.webp",
+      "ratio": 0.4022,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "5360bf0f-508a-4d2c-a14e-178977ab435b"
+        }
+      ]
+    },
+    {
+      "ref": "13_apr_s2_optfix_what-happens-when-methance-und_img4_optC_20260512_092818.webp",
+      "ratio": 0.3953,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "2562e747-70df-4a54-a677-1261388afe3d"
+        }
+      ]
+    },
+    {
+      "ref": "12_apr_s1_optfix_in-the-following-reaction-12-a_img3_optB_20260512_092645.webp",
+      "ratio": 0.3937,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "0e973b47-c642-4eeb-99b0-ae237434855f"
+        }
+      ]
+    },
+    {
+      "ref": "13_apr_s2_optfix_what-happens-when-methance-und_img5_optD_20260512_092818.webp",
+      "ratio": 0.3933,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "2562e747-70df-4a54-a677-1261388afe3d"
+        }
+      ]
+    },
+    {
+      "ref": "gate-ee/ee_a-square-with-sides-of-length-6-mat_img1_20260516171528.webp",
+      "ratio": 0.3917,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "f0a5c845-7267-4479-b4f7-6519fa9534df"
+        }
+      ]
+    },
+    {
+      "ref": "13_apr_s2_optfix_what-happens-when-methance-und_img2_optA_20260512_092816.webp",
+      "ratio": 0.3876,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "2562e747-70df-4a54-a677-1261388afe3d"
+        }
+      ]
+    },
+    {
+      "ref": "13_apr_s2_optfix_what-happens-when-methance-und_img3_optB_20260512_092817.webp",
+      "ratio": 0.3875,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "2562e747-70df-4a54-a677-1261388afe3d"
+        }
+      ]
+    },
+    {
+      "ref": "biomolecules/jee_biomolecules_part_2_q013_img3.webp",
+      "ratio": 0.3799,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "c767b069-d4b5-4e89-983e-2affb067d4f2"
+        }
+      ]
+    },
+    {
+      "ref": "principles_of_inheritance_and_variation_questions_part_3/neet_principles-of-inheritance-and-variation-questions-part-3_q027_img3.webp",
+      "ratio": 0.3784,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "e24d7754-b83f-463b-a40e-adfb5a5070a4"
+        }
+      ]
+    },
+    {
+      "ref": "biomolecules/jee_biomolecules_part_2_q013_img4.webp",
+      "ratio": 0.3701,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "c767b069-d4b5-4e89-983e-2affb067d4f2"
+        }
+      ]
+    },
+    {
+      "ref": "biomolecules/jee_biomolecules_part_2_q013_img5.webp",
+      "ratio": 0.3699,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "c767b069-d4b5-4e89-983e-2affb067d4f2"
+        }
+      ]
+    },
+    {
+      "ref": "Electrochemistry/jee_electrochemistry_part_3_q009_img1.webp",
+      "ratio": 0.3697,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6769b0f0-19df-4a81-9299-aca17fd4a81a"
+        }
+      ]
+    },
+    {
+      "ref": "biomolecules/jee_biomolecules_part_2_q013_img2.webp",
+      "ratio": 0.3664,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "c767b069-d4b5-4e89-983e-2affb067d4f2"
+        }
+      ]
+    },
+    {
+      "ref": "anatomy_of_flowering_plants_questions_part_2/neet_anatomy-of-flowering-plants-questions-part-2_q009_img1.webp",
+      "ratio": 0.3618,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "1283e4a3-e563-4e5b-9d9e-1e8040328032"
+        }
+      ]
+    },
+    {
+      "ref": "Ray Optics and Optical Instruments/jee_ray_optics_and_optical_instruments_part_1_q072_img1.webp",
+      "ratio": 0.3606,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "f8fdb941-7ef0-4e24-ab3f-9b7267fba7b1"
+        }
+      ]
+    },
+    {
+      "ref": "sexual_reproduction_in_flowering_plants_questions_part_2/neet_sexual-reproduction-in-flowering-plants-questions-part-2_q017_img1.webp",
+      "ratio": 0.3595,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "823e9cd0-9051-4d1e-8230-db000bba938e"
+        }
+      ]
+    },
+    {
+      "ref": "02_sep_s2_physics_a-square-shaped-hole-of-side-l_img1_20260513_234357.webp",
+      "ratio": 0.3585,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "c78ea618-bf0e-44c5-8123-26d2b9588fcc"
+        }
+      ]
+    },
+    {
+      "ref": "q1_opt1_on_images_content_2026_03_28_image_580bdc4e1774666619331_png.png",
+      "ratio": 0.3584,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "5a8202d6-0add-4280-a9cd-f4d60f8703cb"
+        }
+      ]
+    },
+    {
+      "ref": "human_reproduction_questions_part_1/neet_human-reproduction-questions-part-1_q032_img1.webp",
+      "ratio": 0.3541,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "2dd756d8-1e15-4a35-8ba5-264b2cc8a5fb"
+        }
+      ]
+    },
+    {
+      "ref": "Chemical kinetics/jee_chemical_kinetics_part_2_q054_img1.webp",
+      "ratio": 0.3445,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6c077d2f-ceaf-45ee-97b2-afde57262165"
+        }
+      ]
+    },
+    {
+      "ref": "q1_opt0_on_images_content_2026_03_28_image_2f52b4671774666641769_png.png",
+      "ratio": 0.3413,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "5a8202d6-0add-4280-a9cd-f4d60f8703cb"
+        }
+      ]
+    },
+    {
+      "ref": "03_sep_s1_chemistry_henrys-constant-in-kbar-for-fo_img1_20260513_234647.webp",
+      "ratio": 0.3407,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "e0ab0eb6-4905-4817-a6f8-0a9b403a0bae"
+        }
+      ]
+    },
+    {
+      "ref": "q1_opt3_on_images_content_2026_03_28_image_cbaccdad1774666694744_png.png",
+      "ratio": 0.339,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "5a8202d6-0add-4280-a9cd-f4d60f8703cb"
+        }
+      ]
+    },
+    {
+      "ref": "Chemical kinetics/jee_chemical_kinetics_part_2_q039_img1.webp",
+      "ratio": 0.3327,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "332fa736-c0d3-4dea-ae27-98c161ecdc6c"
+        }
+      ]
+    },
+    {
+      "ref": "27_aug_s1_optfix_the-major-product-of-the-follo_img3_optB_20260512_085232.webp",
+      "ratio": 0.3293,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "8a861fe6-2a36-4ae5-8b66-c2a4bccc8799"
+        }
+      ]
+    },
+    {
+      "ref": "probability/jee_probability_3_q010_img1.webp",
+      "ratio": 0.3284,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "c750136c-f491-4ad9-b9fe-ca16a44e720a"
+        }
+      ]
+    },
+    {
+      "ref": "principles_of_inheritance_and_variation_questions_part_3/neet_principles-of-inheritance-and-variation-questions-part-3_q004_img1.webp",
+      "ratio": 0.3276,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "d3198687-70b8-4785-933c-c46a43605406"
+        }
+      ]
+    },
+    {
+      "ref": "cell_cycle_and_cell_division/neet_cell-cycle-and-cell-division_q003_img1.webp",
+      "ratio": 0.3239,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6632ce31-3046-4ed2-82d8-04b82fd5721b"
+        }
+      ]
+    },
+    {
+      "ref": "morphology_of_flowering_plants_questions_part_2/neet_morphology-of-flowering-plants-questions-part-2_q007_img1.webp",
+      "ratio": 0.3202,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "008954c9-297f-4aae-af68-55d8d0070c3d"
+        }
+      ]
+    },
+    {
+      "ref": "anatomy_of_flowering_plants_questions_part_2/neet_anatomy-of-flowering-plants-questions-part-2_q002_img1.webp",
+      "ratio": 0.3151,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "bd2d2ba7-096a-4f11-b0dd-614ac20ebe09"
+        }
+      ]
+    },
+    {
+      "ref": "breathing_and_exchange_of_gases/neet_breathing-and-exchange-of-gases_q004_img1.webp",
+      "ratio": 0.3135,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "6ec09af5-5975-4050-b613-e8b1cf02cf00"
+        }
+      ]
+    },
+    {
+      "ref": "Chemical kinetics/jee_chemical_kinetics_part_1_q054_img1.webp",
+      "ratio": 0.3121,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "321528af-2be1-4b48-9628-8514de8d4367"
+        }
+      ]
+    },
+    {
+      "ref": "26_jul_s2_optfix_match-list-i-with-list-ii-list_img1_20260512_085943.webp",
+      "ratio": 0.3116,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "77a22f14-eb36-4c33-b6c1-23d87547da33"
+        }
+      ]
+    },
+    {
+      "ref": "plant_growth_and_development_questions_part_2/neet_plant-growth-and-development-questions-part-2_q002_img1.webp",
+      "ratio": 0.3116,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "0a45aeaf-c3d9-482e-a6b9-31c6d5a78000"
+        }
+      ]
+    },
+    {
+      "ref": "chemical_bonding_and_molecular_structure_part_2/neet_chemical-bonding-and-molecular-structure-part-2_q012_img1.webp",
+      "ratio": 0.3103,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "04f7a29b-fcb6-40d7-b629-75a0482435bb"
+        }
+      ]
+    },
+    {
+      "ref": "optics_questions_part_2/neet_optics-questions-part-2_q001_img1.webp",
+      "ratio": 0.3099,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "56760c60-cfe6-419d-ac2d-5f79ae6daa9c"
+        }
+      ]
+    },
+    {
+      "ref": "anatomy_of_flowering_plants_questions_part_2/neet_anatomy-of-flowering-plants-questions-part-2_q008_img1.webp",
+      "ratio": 0.3077,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "a17aab9d-c6a8-4efb-aa06-f7e1d7b5f024"
+        }
+      ]
+    },
+    {
+      "ref": "q1_opt2_on_images_content_2026_03_28_image_510f57a71774666665524_png.png",
+      "ratio": 0.3057,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "5a8202d6-0add-4280-a9cd-f4d60f8703cb"
+        }
+      ]
+    },
+    {
+      "ref": "q1_exp_on_images_content_2026_03_28_image_510f57a71774666665524_png.png",
+      "ratio": 0.3057,
+      "rows": [
+        {
+          "model": "MockTestTemplate",
+          "id": "5a8202d6-0add-4280-a9cd-f4d60f8703cb"
+        }
+      ]
+    },
+    {
+      "ref": "Coordination Compounds/jee_coordination_compounds_part_3_q082_img1.webp",
+      "ratio": 0.3021,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "ed67148f-6ff2-413c-af8f-2347adf153e5"
+        }
+      ]
+    },
+    {
+      "ref": "ecosystem_questions/neet_ecosystem-questions_q004_img1.webp",
+      "ratio": 0.302,
+      "rows": [
+        {
+          "model": "pYQ",
+          "id": "007fb0ab-2d47-406b-9d6a-a9311210d07f"
+        }
+      ]
+    }
+  ]
+}

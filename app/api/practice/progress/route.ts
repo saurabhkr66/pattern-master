@@ -54,7 +54,16 @@ async function queryProgress(userId: string, exam: string, branch: string) {
 export async function GET(request: Request) {
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ progress: {} });
+    // Flag the unauthenticated case explicitly. An empty `progress` map is
+    // indistinguishable from "solved nothing", and the client persists the map
+    // to localStorage for 6 h — so a single session-less request (Clerk not yet
+    // resolved) used to pin every topic at 0/N until the TTL expired.
+    if (!userId) {
+      return NextResponse.json(
+        { progress: {}, unauthenticated: true },
+        { headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const exam = searchParams.get("exam") || "GATE";

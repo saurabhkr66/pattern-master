@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { VertexAI } from '@google-cloud/vertexai';
 import { auth } from "@clerk/nextjs/server";
 import { rateLimit } from "@/lib/rateLimit";
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-// Vertex AI Initialization (ADC)
-const vertexAI = new VertexAI({
-  project: 'project-27ed127f-554a-419a-b39',
-  location: 'us-central1',
-});
-
-const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch Gemini models
+const GEMINI_MODEL = "gemini-3.5-flash-lite"; // Change this one line to switch Gemini models
 
 export async function POST(req: NextRequest) {
   try {
@@ -105,31 +98,7 @@ Rules:
     const usage = result.response.usageMetadata;
     const generatedExplanation = result.response.text();
 
-    /* --- VERTEX AI METHOD (ADC) (Commented) ---
-    console.log(`[AI] 🚀 Using Vertex AI (ADC) - Model: ${GEMINI_MODEL}`);
-    const model = vertexAI.getGenerativeModel({
-      model: GEMINI_MODEL,
-    });
 
-    const vertexContent = {
-      contents: [{
-        role: 'user',
-        parts: contentParts.map(p => {
-          if (typeof p === 'string') return { text: p };
-          return p; // inlineData structure is compatible
-        })
-      }]
-    };
-
-    const result = await model.generateContent(vertexContent);
-    const usage = result.response.usageMetadata;
-    const generatedExplanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    if (!generatedExplanation.trim()) {
-      console.error("[GENERATE_EXPLANATION] AI returned empty explanation — candidates:", JSON.stringify(result.response.candidates?.length));
-      return NextResponse.json({ error: "AI returned empty explanation" }, { status: 500 });
-    }
-    */
 
     const thoughtsTokens = (usage as any)?.thoughtsTokenCount || 0;
     const highThinkingFlag = thoughtsTokens > 8000;

@@ -57,9 +57,9 @@ const nextConfig: NextConfig = {
       // prod Caddy handles this same redirect first and strips the query; this
       // rule is the fallback for non-Caddy environments.
       {
-        source: "/:p1/:p2/:p3",
+        source: "/:exam/:subject/:topic",
         has: [{ type: "query", key: "page", value: "(?<page>\\d+)" }],
-        destination: "/:p1/:p2/:p3/page/:page",
+        destination: "/:exam/:subject/:topic/page/:page",
         permanent: true,
       },
       { source: "/jee-main-common", destination: "/jee-main", permanent: true },

@@ -182,8 +182,15 @@ export function buildGradingPrompt(q: NormalizedQuestion): string {
       : null,
     "- Do NOT penalise extra correct information, grammar, spelling, or handwriting style unless it changes the meaning.",
     "- The student may answer in English, Hindi, or a mix — grade the content, not the language.",
+    // The scheme is generated FROM the model answer (lib/coachingRubric), so its parts
+    // describe ONE route to the result. Without the alternative-method clause below,
+    // "the parts are FIXED" out-argues the different-but-correct rule above and a
+    // student who solved it another valid way loses every part their method didn't
+    // literally produce. The clause remaps rather than relaxes: a part is still 0 when
+    // the equivalent work is absent or wrong, so the fatal-flaw and no-consolation-
+    // half-mark rules keep their teeth.
     hasRubric
-      ? "- MARK BY COMPONENT using the MARK SCHEME above: award each listed part independently against the student's answer. The parts and their marks are FIXED by the scheme — do NOT invent new parts or re-split the marks."
+      ? "- MARK BY COMPONENT using the MARK SCHEME above: award each listed part independently against the student's answer. The parts and their marks are FIXED by the scheme — do NOT invent new parts or re-split the marks. ALTERNATIVE METHODS: the scheme describes ONE valid route to the answer. If the student reaches the result by a different but valid method, map their work onto the EQUIVALENT parts of the scheme and award those marks — do NOT zero a part merely because their method never needed the specific step the scheme names for it. A part is still 0 when the student has no equivalent work for it, or that work is wrong."
       : "- MARK BY COMPONENT, not holistically: infer the parts the marks are split across from the MODEL ANSWER and the MAXIMUM MARKS (board questions allocate marks per part — e.g. a 3-mark question = definition 1 + reason 1 + balanced equation 1).",
     "- Mark each part INDEPENDENTLY: give a part its full marks only if that part is correct and complete; give that part 0 if it is missing, wrong, or built on a fundamentally incorrect concept/law/formula — EVEN IF the student names a related or 'nearby' idea. Do NOT give a consolation half-mark for being in the right topic area (e.g. citing the WRONG conservation law earns 0 for the reason, not 0.5).",
     "- marks_awarded is the SUM of the per-part marks. Partial credit comes ONLY from parts that are fully correct — never from half-crediting an incorrect part.",
@@ -196,7 +203,14 @@ export function buildGradingPrompt(q: NormalizedQuestion): string {
     "- Do NOT guess illegible handwriting: if any portion cannot be read with reasonable confidence, do NOT invent its content. Grade only what is clearly visible, note the unreadable section in the feedback, and lower confidence accordingly.",
     "",
     "feedback: FIRST a brief per-part breakdown showing each part's marks (e.g. 'Definition ✓ 1/1; Reason ✗ 0/1 — wrong law, cites X but should be Y; Equation ✓ 1/1'), THEN one short sentence of guidance for the student. Write this breakdown BEFORE deciding marks_awarded, and make marks_awarded equal the total of your breakdown.",
-    'confidence: "high" = clearly readable and unambiguous against the model answer; "medium" = readable but the marks involve judgement; "low" = hard to read, ambiguous, or you are unsure.',
+    // Confidence is a ROUTING signal, not a similarity score: lib/coachingScore counts
+    // high/medium automatically and sends "low" to the teacher at 0 marks until they
+    // override. Anchoring it on "unambiguous against the model answer" (as it used to
+    // read) made every different-but-valid method look low-confidence, so the answer
+    // the alternative-method rules had just credited was parked at 0 anyway. Ask
+    // instead how sure the grader is of ITS OWN marks — illegible or unverifiable is
+    // low, merely unfamiliar is not.
+    'confidence: how sure YOU are that the marks you awarded are correct — NOT how closely the answer resembles the model answer. "high" = the answer is clearly readable and you are confident the marks are right (this INCLUDES a different-but-valid method you were able to follow and check); "medium" = readable, but at least one part involved a judgement call that could reasonably go either way; "low" = you genuinely could not decide — handwriting you could not read, reasoning you could not follow, or a claim you cannot verify with your own subject knowledge. A valid answer that simply differs from the model answer is NEVER by itself a reason to lower confidence.',
     hasModelAnswer
       ? "model_answer: leave as an empty string (a model answer was already provided)."
       : "model_answer: the ideal answer you wrote and graded against (required here, since none was provided).",

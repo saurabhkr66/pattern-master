@@ -1,7 +1,6 @@
 import "server-only";
 import { GoogleGenerativeAI, SchemaType, type ResponseSchema, type Schema } from "@google/generative-ai";
 import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
-import { VertexAI } from "@google-cloud/vertexai";
 import sharp from "sharp";
 import { uploadCoachingImage } from "@/lib/coachingImageUpload";
 
@@ -10,47 +9,21 @@ import { uploadCoachingImage } from "@/lib/coachingImageUpload";
 // to every row) and we feed Gemini the exam's SECTION list so it classifies each
 // question into one of those exact names (never invents one).
 
-// Vertex AI vs the Developer API. Set GEMINI_USE_VERTEX=1 in .env.local to route
-// imports through Vertex (uses GCP ADC, not the API key) — its quotas dwarf the
-// Developer free tier's 15 req/min, so local dev stops hitting rate limits. Prod
-// has no such flag, so it keeps using GEMINI_API_KEY. Auth: run once locally
-//   gcloud auth application-default login
-// (or set GOOGLE_APPLICATION_CREDENTIALS to a service-account key).
-const USE_VERTEX = process.env.GEMINI_USE_VERTEX === "1";
-const VERTEX_LOCATION = process.env.VERTEX_LOCATION || "us-central1";
-const vertexAI = USE_VERTEX
-  ? new VertexAI({
-      project: process.env.VERTEX_PROJECT || "project-27ed127f-554a-419a-b39",
-      location: VERTEX_LOCATION,
-      // Gemini 3.x (e.g. gemini-3.1-flash-lite) is served to this project ONLY via
-      // the GLOBAL endpoint — the regional host (us-central1) 404s on 3.x. The
-      // global endpoint lives at aiplatform.googleapis.com, NOT
-      // global-aiplatform.googleapis.com, which is what older @google-cloud/vertexai
-      // builds from location:"global" (→ DNS failure). Pin the host so the swap to
-      // location="global" actually reaches Gemini 3.x.
-      ...(VERTEX_LOCATION === "global"
-        ? { apiEndpoint: "aiplatform.googleapis.com" }
-        : {}),
-    })
-  : null;
-
 // Extraction model. On the Developer API default to gemini-3.1-flash-lite —
 // fast/cheap and fine for pulling structured questions out of a paper. On Vertex
 // default to gemini-2.5-flash for every pass (stronger reader, and flash-lite
 // isn't reliably served there). COACHING_IMPORT_MODEL overrides either.
-const MODEL =
-  process.env.COACHING_IMPORT_MODEL || (USE_VERTEX ? "gemini-2.5-flash" : "gemini-3.1-flash-lite");
+const MODEL = process.env.COACHING_IMPORT_MODEL || "gemini-3.1-flash-lite";
 // The answer-key (Pass 2) pass both READS the printed answers and DERIVES/writes the
 // worked solution — the latter is a reasoning task, so its model is now selectable per
-// import (GENERATION_MODEL_OPTIONS, default DeepSeek V4 Pro; resolveGenerationModel).
+// import (GENERATION_MODEL_OPTIONS — Gemini only, it must read the page; resolveGenerationModel).
 // COACHING_IMPORT_ANSWER_MODEL still overrides the default.
 // Figure detection is a pure spatial-localization task — a flash model with
 // thinking OFF is ideal (and Google recommends thinkingBudget=0 for it). It must
 // NOT inherit COACHING_IMPORT_MODEL: pointing it at Pro both wastes Pro on a
 // non-reasoning task AND breaks it, because Pro rejects thinkingBudget:0 — every
 // detect call would throw and crop 0 figures. So it gets its own flash default.
-const FIGURE_MODEL =
-  process.env.COACHING_IMPORT_FIGURE_MODEL || (USE_VERTEX ? "gemini-2.5-flash" : "gemini-3.1-flash-lite");
+const FIGURE_MODEL = process.env.COACHING_IMPORT_FIGURE_MODEL || "gemini-3.1-flash-lite";
 // Thinking config differs by model GENERATION, and mixing the dialects errors:
 //  - Gemini 3.x controls thinking by LEVEL (MINIMAL|LOW|MEDIUM|HIGH) — a numeric
 //    thinkingBudget is REJECTED. Default LOW: a light reasoning pass that helps the
@@ -130,10 +103,12 @@ const FIGURE_MAX_ATTEMPTS = Math.max(1, Number(process.env.COACHING_IMPORT_FIGUR
 // Blind cross-check (generateComparisonSolutions) batch size. That pass ALWAYS runs
 // and solves every TEXT question with V4 — historically one V4 call per question,
 // which dominates the import's request count. Batching K text questions into one
-// call cuts that count ~K×. Default 5: enough to slash calls without overlong
-// prompts/outputs (each solution is ~60–150 words). Set to 1 to restore the old
-// one-call-per-question behaviour. Only text questions are batched; figure-bearing
-// ones stay per-call (their image must be attached individually).
+// call cuts that count ~K×. Default 5. NOTE: solution length is no longer capped (a
+// multi-part question must have every part worked), so K now scales an OPEN-ENDED
+// output — and this pass's request duration tracks tokens generated. If batches start
+// hitting COACHING_IMPORT_DEEPSEEK_TIMEOUT_MS, lower this before raising the timeout.
+// Set to 1 to restore the old one-call-per-question behaviour. Only text questions are
+// batched; figure-bearing ones stay per-call (their image must be attached individually).
 const COMPARE_BATCH = Math.max(1, Number(process.env.COACHING_IMPORT_COMPARE_BATCH || 5));
 
 function chunk<T>(arr: T[], size: number): T[][] {
@@ -208,7 +183,7 @@ async function callResilient(
       // Rate limited: wait the server's suggested delay (capped) and retry as-is.
       if (/429|quota|rate limit|RESOURCE_EXHAUSTED/i.test(msg)) {
         const wait = Math.min(35, (parseRetryDelaySec(msg) ?? 20) + 1);
-        console.warn(`[import] ${label} rate-limited (${USE_VERTEX ? "Vertex quota" : "Developer free-tier 15/min"}) — waiting ${wait}s [attempt ${attempt}/${MAX_ATTEMPTS}]`);
+        console.warn(`[import] ${label} rate-limited (Developer free-tier 15/min) — waiting ${wait}s [attempt ${attempt}/${MAX_ATTEMPTS}]`);
         await sleep(wait * 1000);
         continue;
       }
@@ -252,7 +227,15 @@ export type ParsedQuestion = {
   solution_alt?: string | null; // the OTHER solution (flash-lite answer-key) — alternate to keep
   solution_alt_hindi?: string | null;
   solution_alt_model?: string; // label for the alternate's source
-  blind_answer?: string; // V4 Pro's OWN (blind) concluded answer — for the agreement badge
+  blind_answer?: string; // the blind solver's OWN concluded answer — for the agreement badge
+  // The blind cross-check already folded a result onto this question. Needed because
+  // that pass runs in TWO phases (text-only during cropping, then post-crop) and a
+  // question solved in the first must not be re-solved in the second — `apply()`
+  // shifts solution → solution_alt, so a second application would overwrite the
+  // Gemini answer-key solution with the blind model's own earlier output (and
+  // mislabel it). `blind_answer` can't serve as this marker: it's only set for
+  // mcq/nat, so every subjective question would be solved twice. Transit-only.
+  blind_solved?: boolean;
   // Transit-only hints from Gemini (never stored):
   number?: number | null; // printed question number — join key for the answer-key pass
   answer_derived?: boolean; // answer was AI-solved (not found in the paper) → flag for review
@@ -287,6 +270,15 @@ const LATEX_RULES = [
   "  • `$\\operatorname{lcm}(a,b,c) = 3780$`  NOT  `LCM(a, b, c) = 3780`",
   "  • `$\\frac{n}{2}$`              NOT  `n/2`",
 ].join("\n");
+
+// Board papers (CBSE especially) print internal choice as "(a) … OR (b) …", and
+// long-answer questions as (i)/(ii)/(a)/(b) parts. A model asked for "the solution"
+// answers the FIRST part and stops — which for a subjective question is what the AI
+// grader later marks student photos against, so half the marking scheme goes missing.
+// Applied to every prompt that writes a solution: extraction, answer key, and the
+// blind cross-check (whose solution can REPLACE the recorded one).
+const MULTIPART_RULE =
+  'MULTI-PART AND "OR" QUESTIONS (CRITICAL): if the question has more than one part — labelled (a)/(b), (i)/(ii), or two alternatives separated by "OR" — the solution MUST answer EVERY part, each introduced by its printed label. NEVER answer only the first part, and NEVER pick between "OR" alternatives: an internal choice means the student may attempt either, so solve BOTH in full, one after the other. Any length guidance is PER PART, not for the whole answer.';
 
 // What the admin declared the paper contains. Pre-declaring focuses the
 // extraction prompt (far more accurate than per-question guessing); "mixed"
@@ -400,6 +392,7 @@ function buildPrompt(
       ? ["Preserve the source language verbatim and faithfully translate the other side; keep math/numbers identical across languages."]
       : ['Extract every field in ENGLISH only — do NOT translate or emit any Hindi (no "*_hindi" fields).']),
     LATEX_RULES,
+    MULTIPART_RULE,
     // Pass 1 captures questions + options + number AND any answers visible in the
     // document (inline or from a printed answer key). The more answers we grab now,
     // the fewer questions need the separate (costlier) answer-key pass.
@@ -492,27 +485,46 @@ function buildResponseSchema(bilingual: boolean): ResponseSchema {
 // collapsed 65 questions to 55 unique numbers, and the number-filtered extraction batch
 // then returned whichever of the two questions numbered 7 the model felt like, which is
 // what "randomly leaving questions out" actually was. (section, number) is unique.
+// Bare integers, deliberately. Asking for {number, section} objects here made the
+// model return one or two entries for a 65-question paper — the heavier per-element
+// shape is enough to make a lite model summarize instead of enumerate, and every
+// downstream count then collapsed. A flat integer list is the shape this pass has
+// always been reliable at, so the section labels come from the separate (and much
+// smaller) SECTION_SCHEMA call below, and only for papers that actually need them.
 const ENUM_SCHEMA: ResponseSchema = {
   type: SchemaType.ARRAY,
-  items: {
-    type: SchemaType.OBJECT,
-    properties: {
-      number: { type: SchemaType.INTEGER },
-      section: { type: SchemaType.STRING, nullable: true },
-    },
-    required: ["number"],
-  },
+  items: { type: SchemaType.INTEGER },
 };
 
-function buildEnumeratePrompt(): string {
+function buildEnumeratePrompt(insist = false): string {
   return [
-    "Look at the attached exam paper and list EVERY question in it, in the order they appear in the document.",
+    ...(insist
+      ? [
+          "Your previous attempt returned only one or two numbers for a full question paper — that was wrong. Go through the document page by page, from the first page to the last, and list EVERY question you find. Do not stop after the first page.",
+        ]
+      : []),
+    "Look at the attached exam paper and list the PRINTED number of EVERY question in it.",
+    "List them in DOCUMENT ORDER — the order they physically appear, top to bottom. Do NOT sort them and do NOT remove repeats.",
+    "IMPORTANT: many papers RESTART numbering at 1 in each section (e.g. Section A is 1-10, then Section B starts again at 1). If that happens, list the restarted numbers again — 1,2,…,10,1,2,3,… — never merge or skip a question because its number already appeared.",
     "Count questions only — ignore the answer key / solutions section so each question is counted once.",
-    'For each question return {"number": <printed number>, "section": <the section heading it appears under>}.',
-    '"section" must be the heading VERBATIM as printed (e.g. "Section A", "Part II", "Physics"). Use null ONLY if the paper has no section headings at all.',
-    "IMPORTANT: many papers RESTART numbering at 1 in each section. Do NOT renumber, merge, or skip a question because its number already appeared — list every question, including repeated numbers, in document order.",
-    "If a question has no printed number, use its 1-based position within its section.",
-    "Output ONLY the JSON array, no prose.",
+    "Return STRICT JSON: an array of integers, e.g. [1,2,3,4,5]. If a question has no printed number, use its 1-based position. Output ONLY the array, no prose.",
+  ].join("\n");
+}
+
+// Second, tiny call — fired ONLY when the integer list above restarts, to name the
+// sections so a batch can be scoped to one. Output is a handful of strings, which
+// keeps it well clear of the "model summarizes instead of enumerating" failure.
+const SECTION_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  items: { type: SchemaType.STRING },
+};
+
+function buildSectionNamesPrompt(count: number): string {
+  return [
+    `This exam paper is split into ${count} groups of questions, each of which restarts its numbering at 1.`,
+    "List the SECTION HEADING of each group, in document order.",
+    'Use the heading VERBATIM as printed (e.g. "Section A", "Part II", "Physics").',
+    `Return STRICT JSON: an array of exactly ${count} strings. Output ONLY the array, no prose.`,
   ].join("\n");
 }
 
@@ -540,6 +552,52 @@ function buildAnswerKeySchema(bilingual: boolean): ResponseSchema {
     },
   };
 }
+
+// Repair pass: re-read the answer CHOICES for MCQs that came back without them.
+// Pass 1 sometimes folds the choices into question_text or just omits them, and the
+// save-time validator rejects an mcq with <2 options ("mcq needs at least 2
+// options") — so without this the admin has to retype them by hand in review.
+function buildOptionsSchema(bilingual: boolean): ResponseSchema {
+  return {
+    type: SchemaType.ARRAY,
+    items: {
+      type: SchemaType.OBJECT,
+      properties: {
+        number: { type: SchemaType.INTEGER },
+        options: { type: SchemaType.ARRAY, items: OPTION_SCHEMA },
+        ...(bilingual ? { options_hindi: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true } } : {}),
+        options_are_figures: { type: SchemaType.BOOLEAN, nullable: true },
+      },
+      required: ["number", "options"],
+    },
+  };
+}
+
+function buildOptionsPrompt(numbers: number[], bilingual: boolean, section?: string | null): string {
+  return [
+    `The attached exam paper contains multiple-choice questions whose ANSWER CHOICES were missed. Read the choices for ${
+      section ? `the questions in section ${JSON.stringify(section)} numbered ` : "question numbers "
+    }${JSON.stringify(numbers)}.`,
+    "Return the choices EXACTLY as printed, in the order shown, with their printed labels (A, B, C, D… or i, ii, iii… — whatever the paper uses).",
+    "Do NOT invent, reword, reorder or renumber a choice. Do NOT solve the questions. Copy only what is printed.",
+    'If a question\'s choices are PICTURES rather than text (mirror-image, "which figure comes next"), still return one entry per choice with its label and text "", and set "options_are_figures" to true.',
+    LATEX_RULES,
+    bilingual ? 'Also fill "options_hindi" with the same labels/order if a Hindi version of the choices is printed; otherwise omit it.' : "",
+    `Return STRICT JSON: an array with one element per question, each {"number": integer, "options": [{"label": string, "text": string}]${
+      bilingual ? ', "options_hindi": [{"label": string, "text": string}]' : ""
+    }, "options_are_figures": boolean}.`,
+    "Output ONLY the JSON array, no prose.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+type OptionsEntry = {
+  number: number;
+  options?: { label: string; text: string }[];
+  options_hindi?: { label: string; text: string }[];
+  options_are_figures?: boolean | null;
+};
 
 type AnswerKeyEntry = {
   number: number;
@@ -590,10 +648,17 @@ function buildAnswerKeyPrompt(
     ].join("\n"),
     'REASON BEFORE ANSWERING (order matters): FIRST write the worked "solution", THEN set "solution_answer" to what it concludes, THEN set "answer". Fill "solution_answer" ALWAYS from your own reasoning (even when a printed answer exists) — it cross-checks the printed key.',
     'CRITICAL — for "answer": do NOT solve a question whose answer is printed in the paper. Read the printed answer verbatim and set derived=false. If the printed key differs from your "solution_answer", KEEP the printed value in "answer" (the disagreement is flagged for review). Set derived=true ONLY as a genuine last resort: after scanning the entire document you are certain the answer is printed NOWHERE — then set "answer" = "solution_answer". derived=true should be RARE; if you are setting it for most questions, you have not located the answer key yet — look again.',
+    // No word cap here on purpose. It used to read "at most ~80 words / 6 lines",
+    // which contradicted the two instructions that matter most: the FULL model answer
+    // for a subjective question (below), and every part of a multi-part / "OR"
+    // question (MULTIPART_RULE). A 5-mark board answer does not fit in 80 words, and
+    // the cap was making the model stop after part (a). Completeness wins; what's left
+    // is the anti-padding guidance, which never conflicted with either.
     bilingual
-      ? "LENGTH LIMIT: keep each worked solution concise — at most ~80 words / 6 lines. Stop once the key reasoning is clear; do NOT repeat steps, restate the question, or pad. The Hindi solution is just a translation of the same length."
-      : "LENGTH LIMIT: keep each worked solution concise — at most ~80 words / 6 lines. Stop once the key reasoning is clear; do NOT repeat steps, restate the question, or pad.",
+      ? "Make each worked solution as long as the question needs and no longer — do NOT repeat steps, restate the question, or pad. The Hindi solution is a translation of the same content."
+      : "Make each worked solution as long as the question needs and no longer — do NOT repeat steps, restate the question, or pad.",
     LATEX_RULES,
+    MULTIPART_RULE,
     bilingual
       ? 'The LaTeX rule above applies ONLY to "solution"/"solution_hindi". The "answer" field is NOT math: emit a plain option label (A, B, C…) or a plain number with NO $ signs, backticks, or LaTeX — e.g. "B" or "42", never "$42$".'
       : 'The LaTeX rule above applies ONLY to "solution". The "answer" field is NOT math: emit a plain option label (A, B, C…) or a plain number with NO $ signs, backticks, or LaTeX — e.g. "B" or "42", never "$42$". Write everything in ENGLISH only — do NOT emit any Hindi.',
@@ -675,7 +740,7 @@ export async function extractQuestions(opts: {
    *  When false the model is asked for — and the schema only allows — English. */
   bilingual?: boolean;
   /** Model for the Pass-2 answer-key pass (derive answers + write worked solutions).
-   *  Validated against GENERATION_MODEL_OPTIONS; defaults to V4 Pro (resolveGenerationModel). */
+   *  Validated against GENERATION_MODEL_OPTIONS; defaults to gemini-3.5-flash-lite (resolveGenerationModel). */
   answerModel?: string | null;
   /** Aborts the whole pipeline when the client disconnects (page refresh/close),
    *  so we stop firing Gemini calls instead of burning quota on a dead request. */
@@ -683,42 +748,23 @@ export async function extractQuestions(opts: {
   /** Optional live-progress sink. Called synchronously as phases/batches finish. */
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<ParsedQuestion[]> {
-  // Vertex authenticates via ADC, not the API key — only require the key on the
-  // Developer API path.
   const key = process.env.GEMINI_API_KEY ?? "";
-  if (!USE_VERTEX && !key) throw new Error("Missing GEMINI_API_KEY");
+  if (!key) throw new Error("Missing GEMINI_API_KEY");
   const qtype = opts.qtype ?? "mixed";
   const bilingual = opts.bilingual ?? false;
-  // Pass-2 answer/solution model — V4 Pro by default (reasoning), Gemini if chosen or
-  // if DeepSeek isn't configured. Pass 1 (extraction) always stays on Gemini (MODEL).
+  // Pass-2 answer/solution model — Gemini only (it reads the key off the page image).
+  // Pass 1 (extraction) always stays on Gemini (MODEL) too.
   const answerModel = resolveGenerationModel(opts.answerModel);
   // Built once per run: drops the *_hindi fields entirely on the English-only path.
   const responseSchema = buildResponseSchema(bilingual);
-  // Always log the backend so "it's still using the API key" is obvious at a glance.
-  console.log(
-    USE_VERTEX
-      ? `[import] backend: Vertex AI (${process.env.VERTEX_LOCATION || "us-central1"}) — extract ${MODEL}, answers ${answerModel}`
-      : `[import] backend: Developer API (GEMINI_API_KEY) — extract ${MODEL}, answers ${answerModel}  [set GEMINI_USE_VERTEX=1 + restart for Vertex]`
-  );
+  console.log(`[import] backend: Developer API (GEMINI_API_KEY) — extract ${MODEL}, answers ${answerModel}`);
   const signal = opts.signal;
   const emit = opts.onEvent ?? (() => {});
 
-  // Resolve media once and reuse across passes. PDFs: the Developer API uploads
-  // via the File API (handles big multi-page papers); Vertex has no File API, so
-  // inline the PDF as base64 (fine for typical request sizes). Images: inline.
-  //
-  // IMPORTANT — media parts are placed BEFORE the text prompt in every call's
-  // `parts` array. Gemini 2.5+ models have IMPLICIT context caching: when
-  // consecutive requests share the same prefix (the media), the server caches it
-  // automatically and charges the discounted "cached read" rate (~90% off input)
-  // for all batches after the first. Keeping media first maximizes cache hits.
+  // Resolve media once and reuse across passes.
   const media: Part[] = [];
   if (opts.pdf) {
-    media.push(
-      USE_VERTEX
-        ? { inlineData: { mimeType: opts.pdf.mimeType || "application/pdf", data: opts.pdf.base64 } }
-        : { fileData: await uploadPdf(opts.pdf, key) }
-    );
+    media.push({ fileData: await uploadPdf(opts.pdf, key) });
   }
   for (const img of opts.images ?? []) {
     media.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } });
@@ -735,66 +781,99 @@ export async function extractQuestions(opts: {
   const sectionOrder = new Map<string, number>();
   emit({ t: "phase", phase: "enumerate" });
   try {
-    const enumParts: Part[] = [...media, { text: buildEnumeratePrompt() }];
-    const raw = await callResilient(key, "enumerate", ENUM_SCHEMA, enumParts, signal);
-    // Tolerate the older bare-integer shape as well as {number, section}.
-    const entries = raw
-      .map((r) => {
-        const o = (typeof r === "object" && r !== null ? r : { number: r }) as {
-          number?: unknown;
-          section?: unknown;
-        };
-        const n = Number(o.number);
-        if (!Number.isFinite(n)) return null;
-        const s = typeof o.section === "string" ? o.section.trim() : "";
-        return { number: n, section: s || null };
-      })
-      .filter((e): e is { number: number; section: string | null } => e !== null);
-
-    // Numbering restarts when the SAME printed number appears under two different
-    // section headings. (A number repeated within one section is just a model
-    // stutter — deduped below, not treated as a restart.)
-    const sectionsFor = new Map<number, Set<string>>();
-    for (const e of entries) {
-      if (!sectionsFor.has(e.number)) sectionsFor.set(e.number, new Set());
-      sectionsFor.get(e.number)!.add(e.section ?? "");
-    }
-    const restarts = [...sectionsFor.values()].some((s) => s.size > 1);
-    const labelled = entries.filter((e) => e.section).length;
-
-    if (restarts && labelled === entries.length) {
-      // Group in first-appearance order, deduping numbers WITHIN a section.
-      const bySection = new Map<string, number[]>();
-      for (const e of entries) {
-        const s = e.section!;
-        if (!bySection.has(s)) {
-          bySection.set(s, []);
-          sectionOrder.set(s, sectionOrder.size);
-        }
-        if (!bySection.get(s)!.includes(e.number)) bySection.get(s)!.push(e.number);
-      }
-      sectionBatches = [...bySection].map(([section, nums]) => ({
-        section,
-        numbers: nums.sort((a, b) => a - b),
-      }));
-      numbers = sectionBatches.flatMap((b) => b.numbers);
-      console.log(
-        `[import] enumerate pass: ${numbers.length} question(s) across ${sectionBatches.length} section(s) with RESTARTING numbering — ` +
-          sectionBatches.map((b) => `"${b.section}"×${b.numbers.length}`).join(", ")
-      );
-    } else {
-      if (restarts) {
-        // Duplicated numbers but the model couldn't name the sections — there is no
-        // key that separates them, so number-filtered batching would drop questions.
-        // Fall back to one un-batched call, which extracts in document order instead.
+    // A bulk import of one or two questions is not a thing anyone does, so a tiny
+    // count means the model summarized instead of enumerating — and since every batch
+    // target downstream is derived from this list, that silently truncates the whole
+    // import. One cheap retry (integers only; the media prefix is cached) is worth it.
+    let seq: number[] = [];
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const enumParts: Part[] = [...media, { text: buildEnumeratePrompt(attempt === 2) }];
+      const label = attempt === 1 ? "enumerate" : "enumerate-retry";
+      const raw = await callResilient(key, label, ENUM_SCHEMA, enumParts, signal);
+      const got = raw.map((n) => Number(n)).filter((n) => Number.isFinite(n));
+      if (got.length > seq.length) seq = got;
+      if (seq.length > 2) break;
+      if (attempt === 1) {
         console.warn(
-          `[import] ⚠ repeated question numbers but ${entries.length - labelled} entr(ies) have no section heading — batching would drop questions, extracting in ONE call instead.`
+          `[import] ⚠ enumerate returned only ${got.length} number(s) — that is almost certainly a bad read of the paper. Retrying once.`
         );
-        numbers = [];
       } else {
-        numbers = [...new Set(entries.map((e) => e.number))].sort((a, b) => a - b);
-        console.log(`[import] enumerate pass: ${numbers.length} question number(s)`);
+        console.warn(
+          `[import] ⚠ enumerate still returned ${seq.length} number(s) after a retry — falling back to one un-batched extraction of the whole paper.`
+        );
       }
+    }
+
+    // Split at every DECREASE: numbering that goes …9,10,1,2… restarted, which is the
+    // whole signal. Deriving it from the sequence means the reliable integer pass
+    // detects the restart on its own — no section labels needed to find it, only to
+    // batch it. A paper with no restart yields exactly one segment.
+    const segments: number[][] = [];
+    for (const n of seq) {
+      if (!segments.length || n <= segments[segments.length - 1].at(-1)!) segments.push([n]);
+      else segments[segments.length - 1].push(n);
+    }
+    // A stutter (…7,7,8… — the model listing a number twice) opens a spurious segment
+    // that then keeps climbing, so length alone can't tell it from a restart. What
+    // does: a stutter segment REPEATS the previous segment's last number, whereas a
+    // real restart drops back to 1. Fold the former back in, minus the duplicate.
+    const merged: number[][] = [];
+    for (const s of segments) {
+      const prev = merged[merged.length - 1];
+      if (prev && s[0] === prev.at(-1)) prev.push(...s.slice(1));
+      else merged.push([...s]);
+    }
+
+    if (merged.length > 1) {
+      // Name the segments so each batch can be scoped to one section.
+      let names: string[] = [];
+      try {
+        names = (
+          await callResilient(key, "sections", SECTION_SCHEMA, [
+            ...media,
+            { text: buildSectionNamesPrompt(merged.length) },
+          ], signal)
+        )
+          .map((s) => String(s ?? "").trim())
+          .filter(Boolean);
+      } catch (e) {
+        console.error("[import] section-name pass failed:", e instanceof Error ? e.message : e);
+      }
+      // Distinct name per segment or the scoping is a lie — fall back to one
+      // un-batched call (document order, no number filter) rather than drop questions.
+      const usable = names.length === merged.length && new Set(names).size === merged.length;
+      if (usable) {
+        merged.forEach((nums, i) => sectionOrder.set(names[i], i));
+        sectionBatches = merged.map((nums, i) => ({
+          section: names[i],
+          numbers: [...new Set(nums)].sort((a, b) => a - b),
+        }));
+        numbers = sectionBatches.flatMap((b) => b.numbers);
+        console.log(
+          `[import] enumerate pass: ${numbers.length} question(s) across ${sectionBatches.length} section(s) with RESTARTING numbering — ` +
+            sectionBatches.map((b) => `"${b.section}"×${b.numbers.length}`).join(", ")
+        );
+      } else {
+        // Names unusable (wrong count, or repeated so they can't identify a section).
+        // Fall back to plain number-range batching — the behaviour before sections
+        // existed. It can miss a question that SHARES a printed number with another
+        // section, but that beats the alternative: one un-batched whole-paper call is
+        // measurably unreliable on long papers (observed returning a single question),
+        // so losing some questions must never be "fixed" by risking all of them.
+        const distinct = new Set(names).size;
+        console.warn(
+          `[import] ⚠ numbering restarts (${merged.length} segments of ${merged
+            .map((s) => s.length)
+            .join("+")}) but the section-name pass returned ${names.length} name(s), only ${distinct} distinct — can't scope a batch to a section. Batching by number range instead; questions sharing a printed number across sections may be missed.`
+        );
+        numbers = [...new Set(seq)].sort((a, b) => a - b);
+      }
+    } else {
+      numbers = [...new Set(seq)].sort((a, b) => a - b);
+      console.log(
+        `[import] enumerate pass: ${numbers.length} question number(s)` +
+          (numbers.length && numbers.length <= 5 ? ` — [${numbers.join(", ")}]` : "")
+      );
     }
   } catch (e) {
     console.error("[import] enumerate pass failed, falling back to single call:", e instanceof Error ? e.message : e);
@@ -849,12 +928,19 @@ export async function extractQuestions(opts: {
       return (a.number ?? 0) - (b.number ?? 0);
     });
   } else {
-    // Un-batched single call. Its scope is the WHOLE paper whenever the enumerate
-    // pass failed (numbers === []), so it must NOT inherit MAX_OUTPUT_TOKENS (sized
-    // for one BATCH_SIZE batch) — that capped a 50-question paper at ~7.5k output
-    // tokens and silently imported only the handful salvaged before MAX_TOKENS.
-    const budget = numbers.length ? outputBudgetFor(numbers.length) : MAX_MODEL_OUTPUT_TOKENS;
-    if (!numbers.length) {
+    // Un-batched single call. It carries NO number filter (see the `undefined` below),
+    // so its scope is the WHOLE paper — ALWAYS, not just when the enumerate pass
+    // failed. Sizing the budget to the enumerate count was therefore wrong whenever
+    // that count was short: a 65-question paper whose enumerate returned 1 number got
+    // 4000+3500=7500 output tokens, blew MAX_TOKENS mid-array, and imported the single
+    // question salvaged from the truncated JSON. Budget is a ceiling, not a spend —
+    // you're billed for tokens produced — so give this call the model's maximum.
+    const budget = MAX_MODEL_OUTPUT_TOKENS;
+    if (numbers.length) {
+      console.log(
+        `[import] ${numbers.length} enumerated question(s) ≤ batch size ${BATCH_SIZE} — extracting the whole paper in ONE call at the ${budget}-token ceiling.`
+      );
+    } else {
       console.warn(
         `[import] ⚠ no question numbers enumerated — extracting the whole paper in ONE call at the ${budget}-token ceiling. A very long paper may still truncate; re-run so the enumerate pass can batch it.`
       );
@@ -872,6 +958,81 @@ export async function extractQuestions(opts: {
     return questions;
   }
   console.log(`[import] pass 1 extracted ${questions.length} question(s)`);
+  // A short extraction is the failure mode that hurts most, because the import still
+  // "succeeds" — you only notice by counting rows in the review UI. Two causes worth
+  // separating in the log: the enumerate pass under-counted (extraction matched a
+  // wrong target), or extraction lost questions the enumerate pass did find.
+  if (numbers.length && questions.length < numbers.length) {
+    console.warn(
+      `[import] ⚠ pass 1 returned ${questions.length} of the ${numbers.length} enumerated question(s) — ${numbers.length - questions.length} missing. Check the batch logs above for a batch that gave up or truncated (MAX_TOKENS).`
+    );
+  }
+
+  // Options repair — re-read the choices for any MCQ that arrived without them.
+  // Runs BEFORE the answer-key pass on purpose: correct_answer is canonicalized
+  // against the option labels (resolveMcqLabel), so an mcq with no options can't
+  // have its answer resolved either. Best-effort; a failure just leaves the
+  // question for the human reviewer, exactly as before.
+  const optionless = questions
+    .map((_, i) => i)
+    .filter((i) => questions[i].question_type === "mcq" && (questions[i].options?.length ?? 0) < 2);
+  if (optionless.length && !signal?.aborted) {
+    console.warn(
+      `[import] ⚠ ${optionless.length} MCQ(s) came back without answer choices — re-reading them from the paper`
+    );
+    // Same section-scoping rule as the answer-key pass: a printed number only
+    // identifies one question within its own section.
+    const optBuckets: { section: string | null; idx: number[] }[] = sectionBatches.length
+      ? [...new Set(optionless.map((i) => questions[i].section ?? ""))].map((section) => ({
+          section: section || null,
+          idx: optionless.filter((i) => (questions[i].section ?? "") === section),
+        }))
+      : [{ section: null, idx: optionless }];
+    const optGroups = optBuckets.flatMap((b) =>
+      chunk(
+        [...new Set(b.idx.map((i) => questions[i].number).filter((n): n is number => typeof n === "number"))],
+        BATCH_SIZE
+      ).map((nums) => ({ section: b.section, numbers: nums, idx: new Set(b.idx) }))
+    );
+    const optResults = await mapLimit(optGroups, CONCURRENCY, async (g) => {
+      if (signal?.aborted) return { g, entries: [] as OptionsEntry[] };
+      const label = `options batch ${g.section ? `${g.section} ` : ""}${g.numbers[0]}–${g.numbers[g.numbers.length - 1]}`;
+      try {
+        const entries = (await callResilient(key, label, buildOptionsSchema(bilingual), [
+          ...media,
+          { text: buildOptionsPrompt(g.numbers, bilingual, g.section) },
+        ], signal, MODEL, outputBudgetFor(g.numbers.length))) as OptionsEntry[];
+        return { g, entries };
+      } catch (e) {
+        console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
+        return { g, entries: [] as OptionsEntry[] };
+      }
+    });
+    let repaired = 0;
+    for (const { g, entries } of optResults) {
+      const byNumber = new Map<number, OptionsEntry>();
+      for (const e of entries) {
+        const n = Number(e?.number);
+        if (Number.isFinite(n) && (e.options?.length ?? 0) >= 2) byNumber.set(n, e);
+      }
+      for (const i of g.idx) {
+        const q = questions[i];
+        if ((q.options?.length ?? 0) >= 2) continue; // already fixed by another batch
+        const entry = typeof q.number === "number" ? byNumber.get(q.number) : undefined;
+        if (!entry) continue;
+        q.options = entry.options;
+        if (bilingual && entry.options_hindi?.length) q.options_hindi = entry.options_hindi;
+        // Picture choices carry empty text legitimately — flag so the figure step
+        // captures the whole question as one image instead of leaving blank options.
+        if (entry.options_are_figures) {
+          q.options_are_figures = true;
+          q.has_diagram = true;
+        }
+        repaired++;
+      }
+    }
+    console.log(`[import] options repair: recovered choices for ${repaired}/${optionless.length} MCQ(s)`);
+  }
 
   // Pass 2 — answer key (number → label [+ solution]) for questions whose answers
   // Pass 1 didn't capture. Now that Pass 1 actively hunts the answer key, this
@@ -921,7 +1082,7 @@ export async function extractQuestions(opts: {
       const group = g.numbers;
       const label = `answer-key batch ${g.section ? `${g.section} ` : ""}${group[0]}–${group[group.length - 1]}`;
       try {
-        // Routed by model id: DeepSeek (V4 Pro) via the OpenAI-compatible client,
+        // Routed by model id: DeepSeek (V4) via the OpenAI-compatible client,
         // Gemini via callResilient. The budget is sized to THIS group so a batch of
         // worked solutions isn't truncated (the 1024 verify default would be).
         const answers = (await callModel(key, label, buildAnswerKeySchema(bilingual), [
@@ -996,12 +1157,13 @@ const TOKEN_PRICES: Record<string, { in: number; out: number }> = {
   "gemini-3.1-flash-lite": { in: 0.25, out: 1.5 }, // was wrongly 0.1/0.4 — corrected
   "gemini-2.5-flash": { in: 0.3, out: 2.5 },
   "gemini-2.5-pro": { in: 1.25, out: 10.0 },
-  // DeepSeek V4 (post-promo steady-state, Jun 2026). Cheap output is why V4 Pro is
-  // a good fit for the reasoning-heavy verify + answer/solution generation passes.
+  // DeepSeek V4 (post-promo steady-state, Jun 2026). Cheap output is why V4 is
+  // a good fit for the reasoning-heavy verify + answer/solution generation passes;
+  // Flash at ~1/3 of Pro's rate is why the bulk blind pass defaults to it.
   // Keyed by the explicit V4 model id. NOTE: the legacy `deepseek-chat` alias maps to
   // V4 FLASH (cheaper/lighter) and is being retired 2026-07-24 — so we pass
-  // `deepseek-v4-pro` explicitly to actually get the Pro model. Cache-hit discount
-  // isn't modelled (cached=0), so the cost shown is a slight over-estimate.
+  // `deepseek-v4-pro` explicitly to actually get the Pro model. Cache hits and
+  // reasoning tokens ARE modelled — see recordDeepSeekUsage.
   "deepseek-v4-pro": { in: 0.435, out: 0.87 },
   "deepseek-v4-flash": { in: 0.14, out: 0.28 },
 };
@@ -1089,35 +1251,16 @@ async function callGeminiJsonArray(
     // for Gemini 2.5 (Pro must think; flash/lite disable it). See thinkingConfigFor.
     thinkingConfig: thinkingConfigFor(modelId),
   };
-  // Vertex (ADC, high quota) for local dev when GEMINI_USE_VERTEX=1; otherwise the
-  // Developer API (GEMINI_API_KEY). Both SDKs share the generateContent shape and
-  // the candidate/finishReason fields the parsing below reads.
-  const model = USE_VERTEX
-    ? vertexAI!.getGenerativeModel({
-        model: modelId,
-        // @ts-ignore — Vertex's generationConfig type differs slightly but accepts these at runtime.
-        generationConfig,
-      })
-    : new GoogleGenerativeAI(apiKey).getGenerativeModel({
-        model: modelId,
-        // @ts-ignore — thinkingConfig isn't in the Developer SDK's type yet.
-        generationConfig,
-      });
+  const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({
+    model: modelId,
+    // @ts-ignore — thinkingConfig isn't in the Developer SDK's type yet.
+    generationConfig,
+  });
 
-  // Retry once on a transient network failure ("fetch failed"), then surface it.
-  // Loosely typed: the Vertex and Developer SDKs return different result types
-  // but share the .response.candidates / finishReason fields read below.
   let res: any;
   for (let attempt = 0; ; attempt++) {
     try {
-      // The Developer SDK takes a 2nd requestOptions arg (AbortSignal); Vertex
-      // doesn't — there the signal.aborted checks in callResilient/the batch loops
-      // are what stop new work.
-      res = USE_VERTEX
-        // @ts-ignore — parts type differs between the two SDKs but is structurally identical.
-        ? await model.generateContent({ contents: [{ role: "user", parts }] })
-        // @ts-ignore
-        : await model.generateContent({ contents: [{ role: "user", parts }] }, { signal });
+      res = await model.generateContent({ contents: [{ role: "user", parts }] }, { signal });
       break;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -1358,22 +1501,32 @@ const DEFAULT_GENERATION_MODEL = process.env.COACHING_IMPORT_ANSWER_MODEL || GEN
 const GENERATION_FALLBACK_MODEL = "gemini-3.5-flash-lite";
 
 // Model for the always-on BLIND cross-check. It solves from the EXTRACTED QUESTION
-// TEXT (no page image needed), so the text-only DeepSeek V4 Pro works here. Default =
-// V4 Pro for reasoning (falls back to Gemini if no DeepSeek key).
+// TEXT (no page image needed), so a text-only DeepSeek V4 model works here. Default =
+// V4 FLASH at reasoning_effort=high (falls back to Gemini if no DeepSeek key).
+//
+// Why FLASH and not Pro: this pass is the import's bulk reasoning workload (every
+// text question, batched), so its cost dominates. Flash is ~3× cheaper per token
+// AND is the only V4 model that honours the effort dial — per DeepSeek's thinking-mode
+// docs, v4-flash maps low/high/max straight through, while v4-pro collapses every
+// effort to "high". So "Flash at high" buys the same reasoning depth Pro would have
+// spent, at Flash's price, and leaves max/low as real knobs. Pro stays selectable.
 export const COMPARE_MODEL_OPTIONS = [
+  { id: "deepseek-v4-flash", label: "DeepSeek V4 Flash (thinking: high)" },
   { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
   { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
   { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
 ] as const;
-const DEFAULT_COMPARE_MODEL = process.env.DEEPSEEK_API_KEY ? "deepseek-v4-pro" : "gemini-3.5-flash-lite";
+const DEFAULT_COMPARE_MODEL =
+  process.env.COACHING_IMPORT_COMPARE_MODEL ||
+  (process.env.DEEPSEEK_API_KEY ? "deepseek-v4-flash" : "gemini-3.5-flash-lite");
 
 // True for any DeepSeek model id — routes to the OpenAI-compatible client, not Gemini.
 const isDeepSeekModel = (id: string) => /deepseek/i.test(id);
 
 // Where every DeepSeek pass lands when the admin switches DeepSeek OFF for an import
-// (the modal's "DeepSeek V4 Pro" toggle). Deliberately the cheap Gemini lite model —
+// (the modal's "DeepSeek V4" toggle). Deliberately the cheap Gemini lite model —
 // the blind cross-check still runs, just with a same-vendor solver.
 export const DEEPSEEK_OFF_MODEL = "gemini-3.5-flash-lite";
 
@@ -1409,9 +1562,40 @@ const resolveCompareModel = (requested?: string | null, allowDeepSeek = true) =>
 
 const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1").replace(/\/$/, "");
 
+// How hard a V4 model thinks before answering. DeepSeek's thinking mode is ON by
+// default at effort "high", but the default is the vendor's to change — the blind
+// solve's whole value is its reasoning depth, so pin it explicitly rather than
+// inherit. Allowed: "low" | "high" | "max".
+//   - deepseek-v4-flash honours all three (this is why the blind pass defaults to it).
+//   - deepseek-v4-pro collapses low/high/max to "high", so the field is a no-op there.
+// NOTE: `thinking: {"type":"enabled"}` is deliberately NOT sent — it's the default,
+// and thinking mode ignores `temperature` (which this client still sends, and which
+// the compare pass steps up to break repetition loops). Sending only the effort keeps
+// the request identical to the one that's already known to work against V4 Pro.
+const DEEPSEEK_REASONING_EFFORT = process.env.COACHING_IMPORT_DEEPSEEK_REASONING_EFFORT || "high";
+
 // Completion budget for a DeepSeek call that doesn't ask for a specific one. Must
 // leave room for a reasoning model's chain of thought, not just the JSON reply.
 const DEEPSEEK_DEFAULT_MAX_TOKENS = Number(process.env.COACHING_IMPORT_DEEPSEEK_MAX_TOKENS) || 4096;
+
+// Hard ceiling on ONE DeepSeek request. V4 is a reasoning model asked here for a
+// batch of worked solutions at a ~21k-token budget, and the blind cross-check fires
+// several of those at once — without a timeout a single slow or wedged request has
+// nothing to stop it, and the import sits on "blind cross-check: solving N…" forever.
+// A timeout is retried like any other transient failure, so a slow-but-alive request
+// costs a retry, not the pass.
+const DEEPSEEK_TIMEOUT_MS = Number(process.env.COACHING_IMPORT_DEEPSEEK_TIMEOUT_MS) || 180_000;
+
+// Timeout attempts allowed before giving up on a call, NOT counting the first.
+// Deliberately 0: the generic MAX_ATTEMPTS=5 retry loop exists for transient faults
+// (a 5xx, a dropped socket), where re-sending the same request is exactly right. A
+// timeout is different — it means this request is too large to finish, so five 180s
+// attempts burn 15 minutes to fail the same way. Failing fast hands control back to
+// the caller, which splits the batch and retries something smaller.
+const DEEPSEEK_TIMEOUT_RETRIES = Math.max(
+  0,
+  Number(process.env.COACHING_IMPORT_DEEPSEEK_TIMEOUT_RETRIES ?? 0)
+);
 
 /**
  * Render an array ResponseSchema as a compact "these keys are required" line for
@@ -1475,15 +1659,38 @@ function coerceJsonArray(text: string): unknown[] {
   return [];
 }
 
-// Fold a DeepSeek (OpenAI-shaped) usage block into the per-model totals. Cached
-// reads aren't modelled (see TOKEN_PRICES note) — all input bills at full rate.
+// Fold a DeepSeek (OpenAI-shaped) usage block into the per-model totals.
+//
+// Two shape differences from Gemini that this has to normalize, or the report lies:
+//  - REASONING. V4 Pro is a reasoning model and reports its chain of thought in
+//    `completion_tokens_details.reasoning_tokens`. Unlike Gemini — where
+//    candidatesTokenCount EXCLUDES thoughts — OpenAI-shaped `completion_tokens`
+//    already INCLUDES them. So reasoning is SUBTRACTED out of output rather than
+//    added on top; getTokenUsage bills (output + thinking), and counting it in both
+//    would double-charge every reasoning token. This is why the report read
+//    "thinking=0" for a model that plainly does think.
+//  - CACHING. DeepSeek splits the prompt into `prompt_cache_hit_tokens` /
+//    `prompt_cache_miss_tokens`, with hits ~10% of the full input rate — the same
+//    ratio as CACHED_INPUT_FACTOR, so hits can feed the existing cached bucket.
 function recordDeepSeekUsage(modelId: string, u: unknown): void {
-  const usage = u as { prompt_tokens?: number; completion_tokens?: number } | undefined;
+  const usage = u as
+    | {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        prompt_cache_hit_tokens?: number;
+        completion_tokens_details?: { reasoning_tokens?: number };
+      }
+    | undefined;
   if (!usage) return;
   const acc = _tokenUsage.get(modelId) ?? { calls: 0, input: 0, cached: 0, output: 0, thinking: 0 };
+  const completion = Number(usage.completion_tokens ?? 0);
+  const reasoning = Number(usage.completion_tokens_details?.reasoning_tokens ?? 0);
   acc.calls += 1;
   acc.input += Number(usage.prompt_tokens ?? 0);
-  acc.output += Number(usage.completion_tokens ?? 0);
+  acc.cached += Number(usage.prompt_cache_hit_tokens ?? 0);
+  // Clamp: never let a reported reasoning count exceed the completion it came from.
+  acc.thinking += Math.min(reasoning, completion);
+  acc.output += Math.max(0, completion - reasoning);
   _tokenUsage.set(modelId, acc);
 }
 
@@ -1496,7 +1703,7 @@ async function callDeepSeekJsonArray(
   parts: Part[],
   signal: AbortSignal | undefined,
   modelId: string,
-  // NOT 1024: V4 Pro is a REASONING model, so its chain of thought draws on the same
+  // NOT 1024: V4 is a REASONING model, so its chain of thought draws on the same
   // completion budget as the reply. At 1024 a long solve consumed the budget before
   // the JSON closed — coerceJsonArray then returned [], and the caller (verify /
   // review, both best-effort) silently recorded "no disagreement" instead of an error.
@@ -1521,17 +1728,22 @@ async function callDeepSeekJsonArray(
     temperature,
     max_tokens: maxTokens,
     response_format: { type: "json_object" },
+    reasoning_effort: DEEPSEEK_REASONING_EFFORT, // see DEEPSEEK_REASONING_EFFORT
   });
 
   let lastErr: unknown;
+  let timeouts = 0;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     if (signal?.aborted) throw new Error("aborted: client disconnected");
     try {
+      // Client abort AND request timeout, whichever fires first. Kept per-attempt so
+      // each retry gets a fresh clock rather than sharing one deadline.
+      const timeout = AbortSignal.timeout(DEEPSEEK_TIMEOUT_MS);
       const res = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
         body,
-        signal,
+        signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
@@ -1559,8 +1771,26 @@ async function callDeepSeekJsonArray(
       return coerceJsonArray(choice?.message?.content ?? "");
     } catch (e) {
       lastErr = e;
-      if (signal?.aborted || (e instanceof Error && /aborted/i.test(e.message))) throw e;
-      console.warn(`[import] ${label} attempt ${attempt}/${MAX_ATTEMPTS} failed: ${e instanceof Error ? e.message : e}`);
+      // Only the CLIENT going away is fatal. A timeout also surfaces as an abort with
+      // "aborted" in its message, so testing the message (as this did) would classify
+      // every timeout as a disconnect and skip the retry that's meant to absorb it —
+      // check the client's own signal instead.
+      if (signal?.aborted) throw e;
+      const timedOut = e instanceof Error && (e.name === "TimeoutError" || /timed? ?out/i.test(e.message));
+      const secs = Math.round(DEEPSEEK_TIMEOUT_MS / 1000);
+      console.warn(
+        `[import] ${label} attempt ${attempt}/${MAX_ATTEMPTS} failed: ${
+          timedOut
+            ? `no response in ${secs}s (COACHING_IMPORT_DEEPSEEK_TIMEOUT_MS)`
+            : e instanceof Error
+              ? e.message
+              : e
+        }`
+      );
+      // See DEEPSEEK_TIMEOUT_RETRIES: a too-large request won't get smaller on retry.
+      if (timedOut && timeouts++ >= DEEPSEEK_TIMEOUT_RETRIES) {
+        throw new Error(`${modelId} did not respond within ${secs}s — request too large to complete`);
+      }
       if (attempt < MAX_ATTEMPTS) await sleep(2000 * attempt);
     }
   }
@@ -1690,7 +1920,7 @@ export async function verifyAnswers(opts: {
   const key = process.env.GEMINI_API_KEY ?? "";
   // The verifier may be Gemini (needs the key / Vertex) or DeepSeek (needs its own
   // key, checked inside its client) — only gate on the Gemini key when Gemini is it.
-  if (!isDeepSeekModel(model) && !USE_VERTEX && !key) return;
+  if (!isDeepSeekModel(model) && !key) return;
   const { questions, signal } = opts;
   const emit = opts.onEvent ?? (() => {});
 
@@ -1782,7 +2012,7 @@ export async function reviewSubjectiveAnswers(opts: {
 }): Promise<void> {
   const model = resolveVerifyModel(opts.model, opts.allowDeepSeek ?? true);
   const key = process.env.GEMINI_API_KEY ?? "";
-  if (!isDeepSeekModel(model) && !USE_VERTEX && !key) return;
+  if (!isDeepSeekModel(model) && !key) return;
   const { questions, signal } = opts;
   const emit = opts.onEvent ?? (() => {});
 
@@ -1825,7 +2055,7 @@ export async function reviewSubjectiveAnswers(opts: {
 }
 
 // ─── Blind cross-check (always on) ───────────────────────────────────────────
-// V4 Pro solves EVERY question FROM SCRATCH (never shown the answer) and writes its
+// V4 Flash (reasoning_effort high) solves EVERY question FROM SCRATCH (never shown the answer) and writes its
 // worked solution into `solution_alt` + its own concluded answer into
 // `blind_answer`. The recorded answer (flash-lite Pass 2) is left untouched —
 // the review UI compares the two answers (and the verify model's, when Verify is on)
@@ -1856,13 +2086,14 @@ function buildSolutionPrompt(q: ParsedQuestion, bilingual: boolean): string {
     `Question: ${q.question_text}`,
     opts,
     q.images?.length ? "The figure this question refers to is attached as an image." : "",
-    // V4 Pro reasons in a hidden reasoning_content field and we only keep `content`,
+    // V4 reasons in a hidden reasoning_content field and we only keep `content`,
     // so we MUST tell it to write the full working INTO the solution itself.
-    "Put the FULL reasoning into the \"solution\" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don't restate the question verbatim. Aim for roughly 60–150 words.",
+    "Put the FULL reasoning into the \"solution\" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don't restate the question verbatim. Take as much space as the question needs and no more — a multi-part question needs every part worked; do not pad a short one.",
     isObjective
       ? 'Also set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words.'
       : 'This is a subjective question — set "answer" to null.',
     LATEX_RULES,
+    MULTIPART_RULE,
     bilingual ? 'Also fill "solution_hindi": a Hindi translation of the same solution (identical math).' : "",
     `Return STRICT JSON: a one-element array [{"answer": string|null, "solution": string${bilingual ? ', "solution_hindi": string' : ""}}].`,
     "Output ONLY the JSON array, no prose.",
@@ -1909,11 +2140,12 @@ function buildSolutionBatchPrompt(qs: ParsedQuestion[], bilingual: boolean): str
     "",
     blocks,
     "",
-    // V4 Pro reasons in a hidden reasoning_content field and we only keep `content`,
+    // V4 reasons in a hidden reasoning_content field and we only keep `content`,
     // so we MUST tell it to write the full working INTO each solution itself.
-    'For EACH question put the FULL reasoning into its "solution" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don\'t restate the question verbatim. Aim for roughly 60–150 words per solution.',
+    'For EACH question put the FULL reasoning into its "solution" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don\'t restate the question verbatim. Take as much space as each question needs and no more — a multi-part question needs every part worked; do not pad a short one.',
     'For an MCQ/NAT question set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words. For a SUBJECTIVE question set "answer" to null.',
     LATEX_RULES,
+    MULTIPART_RULE,
     bilingual ? 'Also fill "solution_hindi" for each: a Hindi translation of the same solution (identical math).' : "",
     `Return STRICT JSON: an array with ONE element per question, each {"id": integer (the id shown above), "answer": string|null, "solution": string${bilingual ? ', "solution_hindi": string' : ""}}. Return every id exactly once.`,
     "Output ONLY the JSON array, no prose.",
@@ -1923,7 +2155,7 @@ function buildSolutionBatchPrompt(qs: ParsedQuestion[], bilingual: boolean): str
 }
 
 /**
- * Blind cross-check (always runs): V4 Pro solves every question from scratch — never
+ * Blind cross-check (always runs): V4 Flash (thinking high) solves every question from scratch — never
  * shown the recorded answer — and stores its worked solution in `solution_alt` and its
  * own concluded answer in `blind_answer`. The recorded `correct_answer`
  * (flash-lite Pass 2) is NOT touched; the review UI compares the two (plus the verify
@@ -1940,6 +2172,12 @@ export async function generateComparisonSolutions(opts: {
   bilingual?: boolean;
   signal?: AbortSignal;
   onEvent?: (ev: ImportEvent) => void;
+  /** Split the cross-check into two phases so text-only questions start during
+   *  cropping. "text-only" processes pure-text questions (no images needed, safe
+   *  to run before cropping). "post-crop" handles questions that gained images
+   *  from cropping, plus any text questions the first phase didn't reach. Omit
+   *  to run everything in one go (backward-compatible). */
+  phase?: "text-only" | "post-crop";
 }): Promise<void> {
   const model = resolveCompareModel(opts.primaryModel, opts.allowDeepSeek ?? true);
   const key = process.env.GEMINI_API_KEY ?? "";
@@ -1958,12 +2196,37 @@ export async function generateComparisonSolutions(opts: {
     !!q.figure_missing;
   const targets = questions.filter((q) => String(q.question_text ?? "").trim() && !needsFigure(q));
   const skipped = questions.filter((q) => String(q.question_text ?? "").trim() && needsFigure(q)).length;
-  if (!targets.length) {
-    console.log(`[import] blind cross-check: nothing to solve (${skipped} figure question(s) kept on flash-lite)`);
+
+  // Split targets into image-bearing and pure-text, then apply the phase filter
+  // so the route can overlap the text-only solve with figure cropping.
+  const phase = opts.phase;
+  let withImages = targets.filter((q) => q.images?.length);
+  let textOnly = targets.filter((q) => !q.images?.length);
+  if (phase === "text-only") {
+    // Images aren't ready yet (cropping runs in parallel) — only text questions.
+    withImages = [];
+  } else if (phase === "post-crop") {
+    // Drop anything the "text-only" phase already solved so it isn't solved twice.
+    // BOTH lists need the filter: a text question whose SOLUTION had a figure was
+    // pure-text when phase 1 ran, then gained an "explanation" image from cropping —
+    // which needsFigure exempts — so it reappears here in withImages. Whatever the
+    // first phase missed (error/timeout) has no marker and is retried.
+    textOnly = textOnly.filter((q) => !q.blind_solved);
+    withImages = withImages.filter((q) => !q.blind_solved);
+  }
+  const activeCount = textOnly.length + withImages.length;
+
+  const phaseLabel = phase ? ` [${phase}]` : "";
+  if (!activeCount) {
+    console.log(`[import] blind cross-check${phaseLabel}: nothing to solve (${skipped} figure question(s) kept on flash-lite)`);
     return;
   }
-  console.log(`[import] blind cross-check: solving ${targets.length} text question(s) with ${model} (${skipped} figure question(s) kept on flash-lite)`);
-  emit({ t: "phase", phase: "compare", total: targets.length });
+  console.log(`[import] blind cross-check${phaseLabel}: solving ${activeCount} question(s) with ${model} (${skipped} figure question(s) kept on flash-lite)`);
+  // The "text-only" phase runs CONCURRENTLY with figure cropping, which owns the
+  // UI label for that window — emitting here would replace "Cropping figures…"
+  // with a compare label milliseconds in, then flip back on the post-crop emit.
+  // The route's cropping label covers both halves of the parallel block.
+  if (phase !== "text-only") emit({ t: "phase", phase: "compare", total: activeCount });
 
   let done = 0;
   let disagree = 0;
@@ -1974,6 +2237,11 @@ export async function generateComparisonSolutions(opts: {
   type BlindResult = { answer?: string; solution?: string; solution_hindi?: string };
   const apply = (q: ParsedQuestion, r: BlindResult | undefined): boolean => {
     if (!r) return false;
+    // Mark BEFORE folding anything in: this is what stops the post-crop phase from
+    // re-solving (and double-shifting solution → solution_alt) a question the
+    // text-only phase already handled. Set for every question type, unlike
+    // blind_answer which only exists for mcq/nat.
+    q.blind_solved = true;
     if (r.solution?.trim()) {
       // Keep flash-lite's answer-key solution as the ALTERNATE so it can still be
       // chosen in review.
@@ -1982,7 +2250,7 @@ export async function generateComparisonSolutions(opts: {
         q.solution_alt_hindi = q.solution_hindi ?? null;
         q.solution_alt_model = "Gemini (answer key)";
       }
-      // V4 Pro is the most advanced model, so its blind solution is the SAVED default.
+      // The blind solve is the reasoning-heavy pass, so its solution is the SAVED default.
       q.solution = r.solution;
       if (bilingual && r.solution_hindi) q.solution_hindi = r.solution_hindi;
     }
@@ -1995,11 +2263,7 @@ export async function generateComparisonSolutions(opts: {
     return false;
   };
 
-  // Figure-bearing questions stay one-per-call so their image is attached to the
-  // solve; pure-text questions are BATCHED (COMPARE_BATCH per call) to cut V4's
-  // request count — this pass is the always-on one. Most questions are text-only.
-  const withImages = targets.filter((q) => q.images?.length);
-  const textOnly = targets.filter((q) => !q.images?.length);
+  // withImages and textOnly were split + phase-filtered above (near `targets`).
 
   // Solve ONE question on its own and fold the result in. Used for single-question
   // groups, figure-bearing questions (their image must be attached), and as the
@@ -2020,9 +2284,17 @@ export async function generateComparisonSolutions(opts: {
     done++;
   };
 
-  // Batched text solves.
+  // Batched text solves. Log the shape up front: this phase is the longest in the
+  // import (a reasoning model writing K worked solutions per call), and with no line
+  // between "solving N question(s)" and "done" it reads as a hang rather than work.
   const groups = chunk(textOnly, COMPARE_BATCH);
-  await mapLimit(groups, CONCURRENCY, async (group) => {
+  console.log(
+    `[import] blind cross-check: ${groups.length} batch(es) of up to ${COMPARE_BATCH}, ${CONCURRENCY} at a time, ${Math.round(
+      DEEPSEEK_TIMEOUT_MS / 1000
+    )}s timeout per request`
+  );
+  let doneGroups = 0;
+  const runGroup = async (group: ParsedQuestion[]): Promise<void> => {
     if (signal?.aborted) return;
     // A 1-question group is just the focused single-question prompt/schema.
     if (group.length === 1) {
@@ -2038,8 +2310,19 @@ export async function generateComparisonSolutions(opts: {
         [{ text: buildSolutionBatchPrompt(group, bilingual) }], model, signal, budget
       )) as (BlindResult & { id?: number })[];
     } catch (e) {
-      console.warn(`[import] ${label} failed:`, e instanceof Error ? e.message : e);
-      done += group.length;
+      // A batch fails mostly because it was too BIG: a reasoning model writing K
+      // worked solutions in one completion scales its generation time with K, so
+      // re-sending the identical request just times out again and abandoning it
+      // costs K questions their cross-check. Halve and retry instead — the split
+      // bottoms out at the single-question path, which always fits.
+      console.warn(
+        `[import] ${label} failed: ${e instanceof Error ? e.message : e} — splitting ${group.length} into ${Math.ceil(
+          group.length / 2
+        )}+${Math.floor(group.length / 2)} and retrying`
+      );
+      const mid = Math.ceil(group.length / 2);
+      await runGroup(group.slice(0, mid));
+      await runGroup(group.slice(mid));
       return;
     }
 
@@ -2079,6 +2362,13 @@ export async function generateComparisonSolutions(opts: {
       }
       await solveOne(q);
     }
+  };
+  await mapLimit(groups, CONCURRENCY, async (group) => {
+    await runGroup(group);
+    doneGroups++;
+    console.log(
+      `[import] blind cross-check${phaseLabel}: batch ${doneGroups}/${groups.length} done — ${done}/${activeCount} question(s) solved`
+    );
   });
 
   // Per-question path for figure-bearing questions (image must be attached).
@@ -2087,7 +2377,7 @@ export async function generateComparisonSolutions(opts: {
     await solveOne(q, true);
   });
 
-  console.log(`[import] blind cross-check done ${done}/${targets.length} — ${disagree} disagree with the recorded answer`);
+  console.log(`[import] blind cross-check${phaseLabel} done ${done}/${activeCount} — ${disagree} disagree with the recorded answer`);
 }
 
 // A rasterized PDF page source, shaped to avoid leaking mupdf types here (the
@@ -2190,23 +2480,13 @@ async function locateFigure(
       // Decoupled figure-only thinking level (G3 figure models). See FIGURE_THINKING_LEVEL.
       thinkingConfig: thinkingConfigFor(FIGURE_MODEL, FIGURE_THINKING_LEVEL),
     };
-    const model = USE_VERTEX
-      ? vertexAI!.getGenerativeModel({
-          model: FIGURE_MODEL, // flash — cheap, fast, spatial
-          // @ts-ignore
-          generationConfig,
-        })
-      : new GoogleGenerativeAI(apiKey).getGenerativeModel({
-          model: FIGURE_MODEL,
-          // @ts-ignore
-          generationConfig,
-        });
+    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({
+      model: FIGURE_MODEL,
+      // @ts-ignore
+      generationConfig,
+    });
 
-    const res: any = USE_VERTEX
-      // @ts-ignore
-      ? await model.generateContent({ contents: [{ role: "user", parts }] })
-      // @ts-ignore
-      : await model.generateContent({ contents: [{ role: "user", parts }] }, { signal });
+    const res: any = await model.generateContent({ contents: [{ role: "user", parts }] }, { signal });
     recordUsage(FIGURE_MODEL, res); // token accounting for the cost summary
 
     let text = "";
@@ -2294,7 +2574,7 @@ export async function cropQuestionImage(
   // toward attempting (recall) is the safe direction here.
   if (!q.has_diagram && !q.options_are_figures && !q.is_figure) return null;
   const key = apiKey ?? process.env.GEMINI_API_KEY ?? "";
-  if (!USE_VERTEX && !key) return null;
+  if (!key) return null;
 
   // Figure-option questions (mirror-image etc.) need the WHOLE question captured,
   // options included — pass "whole" so the box doesn't exclude the choices.
@@ -2361,7 +2641,7 @@ export async function cropSolutionImage(
 ): Promise<StoredImage[] | null> {
   if (!q.solution_has_diagram) return null;
   const key = apiKey ?? process.env.GEMINI_API_KEY ?? "";
-  if (!USE_VERTEX && !key) return null;
+  if (!key) return null;
 
   // Prefer the solution's own page; fall back to the question's page (the solution
   // is often printed right under the question). detectAndCrop also probes ±1.

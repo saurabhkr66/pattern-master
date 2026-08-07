@@ -3,8 +3,13 @@
 import { prisma } from "@/lib/prisma";
 import { createEach } from "@/lib/dbHttp";
 import { Prisma } from "@prisma/client";
+import {
+  GEMINI_MODEL,
+  GEMINI_SEARCH_MODEL,
+  GEMINI_TOPIC_MODEL,
+  type AIModel,
+} from "@/lib/aiModels";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { VertexAI } from '@google-cloud/vertexai';
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
@@ -61,7 +66,7 @@ async function removeMockQuestion(mockTestId: string, questionId: string) {
 }
 
 export async function resolveReport(
-  reportId: string,
+  reportId: string | string[],
   questionId: string,
   questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion" | "pyq",
   updates: {
@@ -116,9 +121,13 @@ export async function resolveReport(
     }
   }
 
-  // Mark report as resolved (skip virtual auto-* report ids).
-  if (!reportId.startsWith("auto-")) {
-    await prisma.$executeRaw`UPDATE "QuestionReport" SET status = 'resolved' WHERE id = ${reportId}`;
+  // Mark report(s) as resolved (skip virtual auto-* report ids). A single
+  // question can carry multiple QuestionReport rows when several users flagged
+  // it separately — resolveReport is called with the whole group's ids so
+  // fixing the question clears all of them, not just the one that was clicked.
+  const realReportIds = (Array.isArray(reportId) ? reportId : [reportId]).filter((id) => !id.startsWith("auto-"));
+  if (realReportIds.length > 0) {
+    await prisma.$executeRaw`UPDATE "QuestionReport" SET status = 'resolved' WHERE id = ANY(${realReportIds}::text[])`;
   }
 
   revalidatePath("/admin/reports");
@@ -214,10 +223,9 @@ export async function deleteMockTest(mockTestId: string) {
 }
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-const GEMINI_MODEL = "gemini-3.1-flash-lite"; // Change this one line to switch Gemini models
-const GEMINI_SEARCH_MODEL = "gemini-3.1-flash"; // Flash-lite doesn't support the googleSearch tool; full Flash does
-const VERTEX_MODEL = "gemini-2.5-pro"; // Vertex AI Gemini 2.5 Pro — needs ADC creds
-const GEMINI_TOPIC_MODEL = "gemini-3.1-flash-lite"; // Specific model for faster topic classification
+// Model ids live in lib/aiModels.ts so the admin picker can render its labels from
+// the SAME constants this dispatcher runs — see the note there. Change them once,
+// there; this file and the dropdown both follow.
 
 // Canonical reason string for auto-flagged QuestionReports from generateAIExplanation.
 // Kept as a constant so the read-side query (and any future cleanup logic) can filter on it.
@@ -227,11 +235,7 @@ const AI_EXPLANATION_REASON = "⚠️ AI Explanation Issue";
 import OpenAI from "openai";
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
-// Vertex AI Initialization (ADC)
-const vertexAI = new VertexAI({
-  project: 'project-27ed127f-554a-419a-b39',
-  location: 'us-central1',
-});
+
 
 /**
  * Helper to fetch a question image and return base64 inline data for the model.
@@ -294,14 +298,14 @@ async function getImageBase64(filename: string) {
   }
 }
 
-type AIModel = "gemini" | "gpt-4o-mini" | "vertex-2.5-pro";
+
 type AIUsage = { input: number; output: number; thoughts: number };
 
 /**
  * Dispatches a single prompt (+ optional inline images) to the chosen model and
  * returns the text + token usage. Shared by generateAIExplanation and
  * reviewQuestionAnswer so the three-provider branching lives in one place.
- * `grounded` enables Google Search (Gemini/Vertex only; ignored for OpenAI).
+ * `grounded` enables Google Search (Gemini only; ignored for OpenAI/DeepSeek).
  */
 async function dispatchAIModel(
   aiModel: AIModel,
@@ -313,6 +317,51 @@ async function dispatchAIModel(
   const contentParts: any[] = [prompt];
   for (const im of fetchedImages) {
     contentParts.push({ inlineData: { data: im.data, mimeType: im.mimeType } });
+  }
+
+  // ── DeepSeek V4 Flash (via Modal / any OpenAI-compatible endpoint) ─────────
+  if (aiModel === "deepseek-v4-flash") {
+    if (fetchedImages.length > 0) {
+      console.warn(
+        `[AI] ${label}: ${fetchedImages.length} image(s) attached — DeepSeek V4 Flash is text-only, falling back to ${GEMINI_MODEL}`
+      );
+      // Fall through to Gemini 3.5 Flash-Lite below
+    } else {
+      const dsKey = process.env.DEEPSEEK_API_KEY;
+      if (!dsKey) throw new Error("DEEPSEEK_API_KEY is not configured");
+      const dsBase = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1").replace(/\/$/, "");
+      console.log(`[AI] 🚀 DeepSeek V4 Flash — ${dsBase}`);
+
+      const res = await fetch(`${dsBase}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${dsKey}` },
+        body: JSON.stringify({
+          model: "deepseek-v4-flash",
+          messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
+          temperature: 0.3,
+          max_tokens: 4096,
+          reasoning_effort: "high",
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`DeepSeek API ${res.status}: ${errText}`);
+      }
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content || "";
+      if (!text.trim()) throw new Error(`DeepSeek V4 Flash returned empty for ${label}`);
+      const u = data.usage;
+      const completion = Number(u?.completion_tokens ?? 0);
+      const reasoning = Number(u?.completion_tokens_details?.reasoning_tokens ?? 0);
+      return {
+        text,
+        usage: {
+          input: Number(u?.prompt_tokens ?? 0),
+          output: Math.max(0, completion - reasoning),
+          thoughts: Math.min(reasoning, completion),
+        },
+      };
+    }
   }
 
   if (aiModel === "gpt-4o-mini" && openai) {
@@ -336,28 +385,7 @@ async function dispatchAIModel(
     };
   }
 
-  if (aiModel === "vertex-2.5-pro") {
-    console.log(`[AI] 🚀 Vertex AI - Model: ${VERTEX_MODEL}${grounded ? " (grounded)" : ""}`);
-    const model = vertexAI.getGenerativeModel({
-      model: VERTEX_MODEL,
-      // @ts-ignore — googleSearch tool type isn't in the Vertex SDK's published types yet
-      ...(grounded ? { tools: [{ googleSearch: {} }] } : {}),
-    });
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: contentParts.map(p => (typeof p === "string" ? { text: p } : p)) }],
-    });
-    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    if (!text.trim()) throw new Error(`Vertex returned empty for ${label}`);
-    const usage = result.response.usageMetadata;
-    return {
-      text,
-      usage: {
-        input: usage?.promptTokenCount ?? 0,
-        output: usage?.candidatesTokenCount ?? 0,
-        thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
-      },
-    };
-  }
+
 
   // Default: Gemini AI Studio. Flash-lite can't ground, so swap to full Flash when grounded.
   const activeModel = grounded ? GEMINI_SEARCH_MODEL : GEMINI_MODEL;
@@ -407,7 +435,7 @@ export async function generateAIExplanation(
   questionId: string,
   questionType: "PYQ" | "GeneratedQuestion" | "MockQuestion",
   mockTestId?: string,
-  aiModel: "gemini" | "gpt-4o-mini" | "vertex-2.5-pro" = "gemini",
+  aiModel: AIModel = "gemini",
   useSearch: boolean = false
 ) {
   console.log(`[AI] Generating explanation for ${questionId} using model: ${aiModel}${useSearch ? " + search" : ""}`);
@@ -417,6 +445,7 @@ export async function generateAIExplanation(
 
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
   if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
 
   // Fetch the question data
   let questionData: any = null;
@@ -744,28 +773,7 @@ Rules:
           totalInputTokens += usage?.promptTokenCount || 0;
           totalOutputTokens += usage?.candidatesTokenCount || 0;
 
-          /* --- VERTEX AI METHOD (ADC) (Commented) ---
-          console.log(`[AI] 🚀 Using Vertex AI (ADC) for Batch - Model: ${GEMINI_MODEL}`);
-          const model = vertexAI.getGenerativeModel({
-            model: GEMINI_MODEL,
-          });
 
-          const vertexContent = {
-            contents: [{
-              role: 'user',
-              parts: contentParts.map(p => typeof p === 'string' ? { text: p } : p)
-            }]
-          };
-
-          const result = await model.generateContent(vertexContent);
-          explanation = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          const u = result.response.usageMetadata;
-          totalInputTokens += u?.promptTokenCount || 0;
-          totalOutputTokens += u?.candidatesTokenCount || 0;
-          if (!explanation.trim()) {
-            throw new Error(`AI returned empty explanation for question ${q.id} — candidates: ${result.response.candidates?.length ?? 0}`);
-          }
-          */
           questionThoughts = (usage as any)?.thoughtsTokenCount || 0;
           if (questionThoughts > 8000) {
             console.warn(`[AI] ⚠️ High thinking tokens: ${questionThoughts} for question ${q.id}`);
@@ -921,28 +929,7 @@ Options: ${JSON.stringify(options)}`;
     const u = result.response.usageMetadata;
     usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
 
-    /* --- VERTEX AI METHOD (ADC) (Commented) ---
-    console.log(`[AI] 🚀 Topic Gen using Vertex AI (ADC) - Model: ${GEMINI_TOPIC_MODEL}`);
-    const model = vertexAI.getGenerativeModel({
-      model: GEMINI_TOPIC_MODEL,
-      generationConfig: {
-        maxOutputTokens: 500,
-        temperature: 0.1, // Keep it precise for topic matching
-      }
-    });
 
-    const vertexContent = {
-      contents: [{
-        role: 'user',
-        parts: contentParts.map(p => typeof p === 'string' ? { text: p } : p)
-      }]
-    };
-
-    const result = await model.generateContent(vertexContent);
-    topic = result.response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Unknown";
-    const u = result.response.usageMetadata;
-    usage = { input: u?.promptTokenCount || 0, output: u?.candidatesTokenCount || 0 };
-    */
   }
 
   // Final check: Ensure the returned topic is actually in our list (avoid AI hallucinations)
@@ -1235,6 +1222,7 @@ export async function reviewQuestionAnswer(
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
   if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
 
   // Fetch the question.
   const qSelect = { id: true, question_text: true, options: true, correct_answer: true, question_type: true, explanation: true, images: true };
@@ -1366,28 +1354,36 @@ export async function resolveExplanation(
   questionId: string,
   source: ReviewSource,
   mockTestId: string | null,
-  decision: "use_ai" | "keep_stored",
+  // "edit" stores hand-corrected text — the admin fixing the explanation IN the
+  // review page rather than choosing between the stored one and the AI's. It clears
+  // the pending flag exactly like the other two, so a question fixed here never
+  // reaches /admin/reports.
+  decision: "use_ai" | "keep_stored" | "edit",
   newExplanation: string | null,
 ) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
   if (decision === "use_ai" && !newExplanation?.trim()) throw new Error("No AI solution text to store as the explanation.");
+  if (decision === "edit" && !newExplanation?.trim()) throw new Error("Explanation can't be empty.");
+
+  // Both "use_ai" and "edit" write newExplanation; only "keep_stored" leaves it.
+  const writes = decision !== "keep_stored";
 
   if (source === "PYQ" || source === "GeneratedQuestion") {
     const data: Record<string, unknown> = {};
-    if (decision === "use_ai") data.explanation = newExplanation;
+    if (writes) data.explanation = newExplanation;
     if (source === "PYQ") {
-      if (decision === "use_ai") await prisma.pYQ.update({ where: { id: questionId }, data });
+      if (writes) await prisma.pYQ.update({ where: { id: questionId }, data });
       await prisma.questionReport.deleteMany({ where: { pyq_id: questionId, reason: AI_EXPLANATION_REASON, status: "pending" } });
     } else {
-      if (decision === "use_ai") await prisma.generatedQuestion.update({ where: { id: questionId }, data });
+      if (writes) await prisma.generatedQuestion.update({ where: { id: questionId }, data });
       await prisma.questionReport.deleteMany({ where: { question_id: questionId, reason: AI_EXPLANATION_REASON, status: "pending" } });
     }
     revalidatePath("/admin/reports");
   } else if (source === "Mock" && mockTestId) {
     const patch: Record<string, unknown> = { ai_explanation_verdict: "ok", ai_explanation_issue: null };
-    if (decision === "use_ai") patch.explanation = newExplanation;
+    if (writes) patch.explanation = newExplanation;
     await patchMockQuestion(mockTestId, questionId, patch);
   } else {
     throw new Error("mockTestId required for Mock questions");
@@ -1447,6 +1443,7 @@ export async function solveReviewQuestion(batchId: string, input: ReviewSolveInp
   if (!isRedisConfigured()) throw new Error("Redis is not configured — batch review requires Upstash Redis.");
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
   if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
 
   const checks = await runReviewChecks(input, aiModel);
 
@@ -1486,15 +1483,41 @@ export async function solveReviewQuestion(batchId: string, input: ReviewSolveInp
  * deleteMany + createMany for QuestionReport flags, and one JSON patch per mock
  * template. Clears the Redis key. Returns a summary.
  */
-export async function commitReviewBatch(batchId: string) {
+export async function commitReviewBatch(
+  batchId: string,
+  // Questions the admin ALREADY resolved from the batch panel while the run was
+  // still going. Without this the commit undoes that work: the staged verdict still
+  // says "mismatch", so the bulk UPDATE sets ai_answer_mismatch back to true and the
+  // report row this deletes gets immediately re-created — a question you fixed
+  // reappears in /admin/reports. Treat a resolved id as not-flagged.
+  resolved?: { answers?: string[]; explanations?: string[] },
+) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
   if (!isRedisConfigured()) throw new Error("Redis is not configured.");
 
   const key = reviewBatchKey(batchId);
-  const verdicts = (await redis.lrange<ReviewVerdict>(key, 0, -1)) ?? [];
-  if (verdicts.length === 0) return { committed: 0, flagged: 0 };
+  const raw = (await redis.lrange<ReviewVerdict>(key, 0, -1)) ?? [];
+  if (raw.length === 0) return { committed: 0, flagged: 0 };
+
+  const answersDone = new Set(resolved?.answers ?? []);
+  const explDone = new Set(resolved?.explanations ?? []);
+  // Clear the flags on already-resolved rows so every downstream write — markers,
+  // report rows, Mock JSON patches — sees the resolved state, not the stale verdict.
+  const verdicts: ReviewVerdict[] = raw.map(v =>
+    answersDone.has(v.id) || explDone.has(v.id)
+      ? {
+        ...v,
+        isMismatch: answersDone.has(v.id) ? false : v.isMismatch,
+        explanationFlagged: explDone.has(v.id) ? false : v.explanationFlagged,
+        explanationIssue: explDone.has(v.id) ? null : v.explanationIssue,
+        // Mock rows persist the verdict itself into JSON — leaving the stale one
+        // would re-mark a resolved explanation as "incomplete" in the mock template.
+        explanationVerdict: explDone.has(v.id) ? "ok" : v.explanationVerdict,
+      }
+      : v,
+  );
 
   const pyq = verdicts.filter(v => v.source === "PYQ");
   const gen = verdicts.filter(v => v.source === "GeneratedQuestion");

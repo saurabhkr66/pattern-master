@@ -243,7 +243,9 @@ export default function QuestionImportModal({
     enumerate: "Reading the paper…",
     extract: "Extracting questions…",
     answers: "Finding answers & solutions…",
-    cropping: "Cropping figures…",
+    // Cropping and the text-only blind cross-check run in parallel server-side —
+    // one label covers both so it doesn't flip back and forth between them.
+    cropping: "Cropping figures & cross-checking…",
     compare: "Generating comparison solutions…",
     verify: "Double-checking answers…",
     review: "Reviewing model answers…",
@@ -380,10 +382,20 @@ export default function QuestionImportModal({
   }
 
   const includedCount = questions.filter((q) => q._include).length;
+  // Review goes full-bleed: it's the step where every question gets read, edited and
+  // ticked, and the 4xl/55vh dialog box left a ~60-question paper scrolling inside a
+  // scroller. The other steps stay a centred dialog — they're short forms.
+  const fullScreen = phase === "review";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4">
-      <div className="my-6 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-y-auto rounded-3xl border border-white/[0.08] bg-[#08090d] p-6 shadow-2xl">
+    <div className={`fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 ${fullScreen ? "p-0" : "p-4"}`}>
+      <div
+        className={`flex w-full flex-col border-white/[0.08] bg-[#08090d] shadow-2xl ${
+          fullScreen
+            ? "h-screen max-w-none overflow-hidden p-4 sm:p-6"
+            : "my-6 max-h-[92vh] max-w-4xl overflow-y-auto rounded-3xl border p-6"
+        }`}
+      >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-400">
@@ -532,14 +544,14 @@ export default function QuestionImportModal({
             </div>
 
             {/* Answer-key model — reads the printed answers off the page (a vision task,
-                so Gemini only). V4 Pro is text-only and can't read the page, so it powers
-                the worked SOLUTIONS via "Compare two solutions" below instead. */}
+                so Gemini only). DeepSeek V4 is text-only and can't read the page, so it
+                powers the worked SOLUTIONS via "Compare two solutions" below instead. */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
               <label className="flex items-center gap-1.5 text-[15px] font-semibold text-white">
                 <Cpu className="h-[18px] w-[18px] text-amber-400/80" /> Answer-key model
               </label>
               <p className="mt-0.5 text-[13px] leading-snug text-slate-400">
-                Reads the printed answers/solutions off the paper. Gemini only — V4 Pro can&apos;t see the page.
+                Reads the printed answers/solutions off the paper. Gemini only — DeepSeek V4 can&apos;t see the page.
               </p>
               <select
                 value={answerModel}
@@ -554,8 +566,10 @@ export default function QuestionImportModal({
               </select>
 
               {/* The blind cross-check itself always runs; this toggle only picks WHO
-                  runs it. On = DeepSeek V4 Pro (different vendor → decorrelated
-                  mistakes). Off = gemini-3.5-flash-lite, same family as the extractor. */}
+                  runs it. On = DeepSeek V4 Flash at reasoning_effort "high" (different
+                  vendor → decorrelated mistakes; Flash is the V4 model that actually
+                  honours the effort dial, at ~1/3 Pro's price).
+                  Off = gemini-3.5-flash-lite, same family as the extractor. */}
               <div
                 onClick={toggleDeepseek}
                 className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] p-2.5"
@@ -563,12 +577,12 @@ export default function QuestionImportModal({
                 <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/80" />
                 <div className="min-w-0 flex-1">
                   <div className="text-[13px] font-semibold text-white">
-                    Blind cross-check with DeepSeek V4 Pro
+                    Blind cross-check with DeepSeek V4 Flash (thinking: high)
                   </div>
                   <p className="mt-0.5 text-[12px] leading-snug text-slate-400">
                     {deepseek ? (
                       <>
-                        V4 Pro independently re-solves every <em>text</em> question (blind — never shown the answer) and
+                        V4 Flash independently re-solves every <em>text</em> question (blind — never shown the answer) and
                         becomes the default solution; review flags where its answer differs. Figure questions stay on
                         Gemini (V4 can&apos;t see images). Turn on Verify below for a 3-way check.
                       </>
@@ -744,7 +758,9 @@ export default function QuestionImportModal({
         )}
 
         {phase === "review" && (
-          <div className="space-y-4">
+          // flex column + min-h-0 so the question list below can own the scroll
+          // instead of the panel — the header and the Save bar stay pinned.
+          <div className="flex min-h-0 flex-1 flex-col space-y-4">
             <p className="text-sm text-slate-400">
               {questions.length} parsed. Edit/untick any, set sections, then save to{" "}
               <span className="text-slate-200">{exam} → {set}</span>. AI can make mistakes — review.
@@ -802,7 +818,7 @@ export default function QuestionImportModal({
                 </div>
               </details>
             )}
-            <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
               {questions.map((q, i) => (
                 <div key={i} className={`rounded-xl border p-3 ${q._include ? "border-slate-700 bg-slate-950" : "border-slate-800 bg-slate-950/40 opacity-60"}`}>
                   <div className="mb-2 flex items-center gap-2">
@@ -886,7 +902,7 @@ export default function QuestionImportModal({
                         AI-solved · verify
                       </span>
                     )}
-                    {/* Blind cross-check: recorded answer (Flash) vs V4 Pro's independent
+                    {/* Blind cross-check: recorded answer (Flash) vs DeepSeek V4's independent
                         solve, plus the Verify model when it ran. Green = agree, red = differ. */}
                     {(q.question_type === "mcq" || q.question_type === "nat") && q.blind_answer && (() => {
                       const flash = (q.correct_answer ?? "").trim();
@@ -1145,7 +1161,7 @@ export default function QuestionImportModal({
                 </div>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2">
               <button onClick={() => setPhase("upload")} className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Back</button>
               <button
                 onClick={commit}

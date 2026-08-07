@@ -1,6 +1,10 @@
 "use client";
 import { Search, Trash2, X } from "lucide-react";
-import { EXAM_CONFIGS, fmtDuration, type ExamConfig, type ExamType } from "@/lib/examConfigs";
+import {
+  EXAM_CONFIGS, fmtDuration, randomQuestionCap, randomDurationSecs,
+  RANDOM_MIN_QUESTIONS,
+  type ExamConfig, type ExamType,
+} from "@/lib/examConfigs";
 import { BE } from "@/lib/theme";
 import type { SeededMock } from "./MockTestPage";
 
@@ -11,6 +15,7 @@ interface SetupPhaseProps {
   selectedMock: SeededMock | null;
   selectedSubjects: string[];
   availableSubjects: string[];
+  randomCount: number;
   seededMocks: SeededMock[];
   mockSearch: string;
   config: ExamConfig | null;
@@ -25,6 +30,7 @@ interface SetupPhaseProps {
   onSelectMock: (mock: SeededMock) => void;
   onSearchChange: (q: string) => void;
   onSubjectsChange: (subjects: string[]) => void;
+  onRandomCountChange: (count: number) => void;
   onDeleteTest: (mockId: string, title: string) => void;
   onContinue: () => void;
   onGoToBrief: (mock: SeededMock) => void;
@@ -33,15 +39,19 @@ interface SetupPhaseProps {
 
 export default function SetupPhase({
   selectedExam, selectedBranch, selectedMode, selectedMock,
-  selectedSubjects, availableSubjects, seededMocks, mockSearch,
+  selectedSubjects, availableSubjects, randomCount, seededMocks, mockSearch,
   config, hasBranches, isAdmin, canContinue,
   examPaperTotal, branchPaperCount,
   onSelectExam, onSelectBranch, onSelectMode, onSelectMock,
-  onSearchChange, onSubjectsChange, onDeleteTest,
+  onSearchChange, onSubjectsChange, onRandomCountChange, onDeleteTest,
   onContinue, onGoToBrief, onLoadAnalysis,
 }: SetupPhaseProps) {
   const isSpec = selectedMode === "seeded";
   const isRandom = selectedMode === "random";
+
+  // More subjects selected → more room to cover each of them.
+  const countCap = randomQuestionCap(selectedSubjects.length);
+  const count = Math.min(Math.max(randomCount, RANDOM_MIN_QUESTIONS), countCap);
 
   return (
     <>
@@ -277,14 +287,53 @@ export default function SetupPhase({
                 <div className="flex items-center justify-center text-[10px] font-bold text-white" style={{ flex: 20, background: BE.bad + '99' }}>Hard 20%</div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="border rounded-xl p-3" style={{ borderColor: BE.line, background: BE.surface }}>
-                <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Questions</div>
-                <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{config?.totalQuestions}</div>
+            <div className="border rounded-xl p-4" style={{ borderColor: BE.line, background: BE.surface }}>
+              <div className="flex items-baseline justify-between mb-1">
+                <div style={{ fontSize: 12, fontWeight: 600, color: BE.text }}>Paper size</div>
+                <div style={{ fontSize: 10.5, color: BE.textMute }}>
+                  max {countCap}
+                  {selectedSubjects.length > 0 && ` · ${selectedSubjects.length} subject${selectedSubjects.length > 1 ? 's' : ''}`}
+                </div>
               </div>
-              <div className="border rounded-xl p-3" style={{ borderColor: BE.line, background: BE.surface }}>
-                <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Duration</div>
-                <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{Math.round((config?.durationSecs ?? 0) / 60)}<span style={{ fontSize: 12, color: BE.textDim }}> min</span></div>
+              <div className="flex items-center gap-3">
+                <button
+                  className="be-btn shrink-0"
+                  aria-label="Fewer questions"
+                  disabled={count <= RANDOM_MIN_QUESTIONS}
+                  onClick={() => onRandomCountChange(count - 1)}
+                  style={{ width: 30, height: 30, padding: 0, fontSize: 16, lineHeight: 1, opacity: count <= RANDOM_MIN_QUESTIONS ? 0.35 : 1 }}
+                >−</button>
+                <input
+                  type="range"
+                  min={RANDOM_MIN_QUESTIONS}
+                  max={countCap}
+                  step={1}
+                  value={count}
+                  onChange={(e) => onRandomCountChange(parseInt(e.target.value, 10))}
+                  className="flex-1 min-w-0"
+                  style={{ accentColor: BE.accent }}
+                  aria-label="Number of questions"
+                />
+                <button
+                  className="be-btn shrink-0"
+                  aria-label="More questions"
+                  disabled={count >= countCap}
+                  onClick={() => onRandomCountChange(count + 1)}
+                  style={{ width: 30, height: 30, padding: 0, fontSize: 16, lineHeight: 1, opacity: count >= countCap ? 0.35 : 1 }}
+                >+</button>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t" style={{ borderColor: BE.line }}>
+                <div>
+                  <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Questions</div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>{count}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: BE.textMute, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Duration</div>
+                  <div style={{ fontFamily: BE.serif, fontSize: 28, fontWeight: 600, color: BE.text }}>
+                    {fmtDuration(randomDurationSecs(count))}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: BE.textMute }}>2 min per question</div>
+                </div>
               </div>
             </div>
           </div>
