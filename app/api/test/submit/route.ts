@@ -370,6 +370,13 @@ export async function POST(req: NextRequest) {
     await revalidateTag("history", "max");
     await revalidateTag("mocks", "max");
     await revalidateTag("leaderboard", "max");
+    // The dashboard/mistakes queries (dashboard/_lib/queries.ts) are tagged
+    // per-user (`dashboard-${userId}` / `mistakes-${userId}`), not by the
+    // generic tags above, so those never got busted on mock submit — only
+    // save-attempt's practice path did. Mock results looked stale/missing on
+    // the dashboard for up to the 300s TTL fallback until it expired.
+    await revalidateTag(`dashboard-${userId}`, { expire: 0 });
+    await revalidateTag(`mistakes-${userId}`, { expire: 0 });
 
     return NextResponse.json(
       {
