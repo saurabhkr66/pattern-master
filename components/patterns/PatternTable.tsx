@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
 import PatternRow from "./PatternRow";
 import ResumeCard from "./ResumeCard";
 import { SlidersHorizontal, X, Loader2 } from "lucide-react";
@@ -44,6 +45,7 @@ export default function PatternTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { userId, isLoaded: authLoaded } = useAuth();
 
   const exam = searchParams.get("exam") || resolvedExam;
   const branch = searchParams.get("branch") || resolvedBranch;
@@ -108,14 +110,18 @@ export default function PatternTable({
   // so React Query's 6 h staleTime is measured from the last *server* read — the
   // server is contacted at most once per 6 h, never on a plain refresh.
   const PROGRESS_TTL = 6 * 60 * 60 * 1000;
-  const progressStorageKey = `be_progress_${exam}_${branch}`;
+  // Scoped by userId — without it, this key survives a sign-out/sign-in on the
+  // same browser and replays the PREVIOUS account's solved counts as "fresh"
+  // for up to 6h on the new account (cross-account progress leak).
+  const progressStorageKey = userId ? `be_progress_${userId}_${exam}_${branch}` : null;
   const [progressReady, setProgressReady] = useState(false);
 
   // Seed the query cache from localStorage before enabling the fetch, so fresh
   // cached data (incl. persisted bumps) skips the network call entirely.
   useEffect(() => {
+    if (!authLoaded) return;
     try {
-      const raw = localStorage.getItem(progressStorageKey);
+      const raw = progressStorageKey ? localStorage.getItem(progressStorageKey) : null;
       if (raw) {
         const parsed = JSON.parse(raw);
         // Never seed from an EMPTY map: it would pin every topic at 0/N for the
@@ -130,7 +136,7 @@ export default function PatternTable({
       }
     } catch { /* ignore corrupt/blocked storage */ }
     setProgressReady(true);
-  }, [exam, branch, progressStorageKey, queryClient]);
+  }, [exam, branch, progressStorageKey, authLoaded, queryClient]);
 
   const { data: progressData } = useQuery({
     queryKey: ["practiceProgress", exam, branch],
@@ -156,7 +162,7 @@ export default function PatternTable({
   // Persist in-memory changes (optimistic bumps) WITHOUT advancing the server-fetch
   // timestamp, so answering questions doesn't reset the 6 h refetch timer.
   useEffect(() => {
-    if (!progressData) return;
+    if (!progressData || !progressStorageKey) return;
     try {
       const raw = localStorage.getItem(progressStorageKey);
       const prev = raw ? JSON.parse(raw) : null;
