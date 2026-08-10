@@ -60,9 +60,11 @@ export async function POST(req: NextRequest) {
         try {
             attempt = await buildAttempt();
         } catch (e: any) {
-            // 23503 = FK violation: User row for this Clerk id is missing.
-            // Sync it from Clerk, then retry once.
-            if (e?.code === "23503") {
+            // P2003 = Prisma's code for a FK violation (the raw Postgres code
+            // "23503" never surfaces here — the query engine normalizes it).
+            // User row for this Clerk id is missing; sync it from Clerk, then
+            // retry once.
+            if (e?.code === "P2003") {
                 await syncUser(userId);
                 attempt = await buildAttempt();
             } else {
