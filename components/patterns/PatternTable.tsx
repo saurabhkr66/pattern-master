@@ -149,7 +149,9 @@ export default function PatternTable({
       // data and retries, instead of persisting 0s for the next 6 h.
       if (json?.unauthenticated || json?.error) throw new Error("progress unavailable");
       try {
-        localStorage.setItem(progressStorageKey, JSON.stringify({ data: json, fetchedAt: Date.now() }));
+        if (progressStorageKey) {
+          localStorage.setItem(progressStorageKey, JSON.stringify({ data: json, fetchedAt: Date.now() }));
+        }
       } catch { /* ignore */ }
       return json;
     },
