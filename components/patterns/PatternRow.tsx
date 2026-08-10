@@ -5,12 +5,14 @@ import { getQuestionUrl } from "@/lib/seo";
 import PracticeButton from "./PracticeButton";
 import MathRenderer from "@/components/ui/MathRenderer";
 import UserNotesEditor from "./UserNotesEditor";
+import ShortNotesTab from "./ShortNotesTab";
 import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { BE } from "@/lib/theme";
+import { isAdmin } from "@/lib/admin";
 import { Bookmark, Loader2 } from "lucide-react";
-import MasteryNotes from "../MasteryNotes";
 import LoadingLogo from "@/components/ui/LoadingLogo";
 
 interface PatternRowProps {
@@ -85,6 +87,8 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   const router = useRouter();
   const rowRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
+  const { user } = useUser();
+  const isCurrentUserAdmin = isAdmin(user?.emailAddresses?.[0]?.emailAddress);
 
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -417,7 +421,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                   </>
                 ) : activeTab === 'notes' ? (
                   <div style={{ padding: '10px 0' }}>
-                    <MasteryNotes data={shortNotes} />
+                    <ShortNotesTab patternId={pattern.id} shortNotes={shortNotes} isAdmin={isCurrentUserAdmin} />
                   </div>
                 ) : (
                   <UserNotesEditor patternId={pattern.id} />

@@ -204,15 +204,17 @@ export async function GET(
           );
         }
 
-        // 3. Guest — long browser cache since there's no user state.
-        // `Vary: Cookie` is load-bearing: this URL also serves the logged-in
-        // response above, and without it a shared cache keys both on the URL
-        // alone. A guest (or crawler) warming the entry first would then pin
-        // `attempts: []` for s-maxage and serve it to signed-in users, blanking
-        // their attempt/bookmark state for up to 24 h.
+        // 3. Guest — browser-only cache. This must NOT be a shared/CDN cache:
+        // Cloudflare's default edge cache does not honor `Vary: Cookie`, so a
+        // `public`+`s-maxage` response here previously got cached at the edge
+        // on the first anonymous hit (crawler, or a signed-in user's own
+        // request racing Clerk's session resolution) with `attempts: []`
+        // baked in — and was then served to signed-in users for up to 24h,
+        // making solved questions render as unsolved despite a correct
+        // (always-private) aggregate progress count elsewhere.
         return NextResponse.json(
           { questions: questions.map(transform), pyqs: pyqs.map(transform), total },
-          { headers: { "Cache-Control": "public, s-maxage=86400, max-age=3600", Vary: "Cookie" } }
+          { headers: { "Cache-Control": "private, s-maxage=60, max-age=0" } }
         );
 
     } catch (error) {
