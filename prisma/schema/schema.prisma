@@ -80,6 +80,9 @@ model PYQ {
   ai_answer_mismatch     Boolean?
   ai_detected_answer     String?
   ai_review_model        String?
+  // AI-classified difficulty ("EASY"|"MEDIUM"|"HARD"), one-time backfill via
+  // scripts/backfill-pyq-difficulty.ts. Null = not yet classified.
+  difficulty             String?
   attempts               Attempt[]
   bookmarks              Bookmark[]
   pattern                Pattern          @relation(fields: [pattern_id], references: [id])
@@ -90,6 +93,7 @@ model PYQ {
   @@index([pattern_id, year(sort: Desc)])
   @@index([pattern_id])
   @@index([ai_reviewed_at])
+  @@index([difficulty])
   // Serves the unfiltered sitemap groupBy by ["exam_type","year"]
   // (lib/sitemap-data.ts) as an index-only scan instead of a full-table
   // seq scan + hash aggregate.

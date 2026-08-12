@@ -4,7 +4,10 @@
       "Bash(python scraper.py)",
       "Bash(npx tsx *)",
       "WebFetch(domain:www.testranking.in)",
-      "PowerShell($ProgressPreference='SilentlyContinue'; $urls=@\\('https://www.testranking.in/user/instruction/3323285/615','https://www.testranking.in/user/test/3323285/615','https://www.testranking.in/user/full-test/3323285/615','https://www.testranking.in/user/specific-instruction/3323285/615','https://www.testranking.in/user/solution-details/3323285/615','https://www.testranking.in/user/analysis/3323285/615'\\); foreach\\($u in $urls\\){ try{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -MaximumRedirection 0 -ErrorAction Stop; \"$u -> $\\($r.StatusCode\\) len=$\\($r.Content.Length\\)\" } catch { $resp=$_.Exception.Response; if\\($resp\\){ \"$u -> $\\([int]$resp.StatusCode\\) loc=$\\($resp.Headers.Location\\)\" } else { \"$u -> ERR $\\($_.Exception.Message\\)\" } } })"
+      "PowerShell($ProgressPreference='SilentlyContinue'; $urls=@\\('https://www.testranking.in/user/instruction/3323285/615','https://www.testranking.in/user/test/3323285/615','https://www.testranking.in/user/full-test/3323285/615','https://www.testranking.in/user/specific-instruction/3323285/615','https://www.testranking.in/user/solution-details/3323285/615','https://www.testranking.in/user/analysis/3323285/615'\\); foreach\\($u in $urls\\){ try{ $r=Invoke-WebRequest -Uri $u -UseBasicParsing -MaximumRedirection 0 -ErrorAction Stop; \"$u -> $\\($r.StatusCode\\) len=$\\($r.Content.Length\\)\" } catch { $resp=$_.Exception.Response; if\\($resp\\){ \"$u -> $\\([int]$resp.StatusCode\\) loc=$\\($resp.Headers.Location\\)\" } else { \"$u -> ERR $\\($_.Exception.Message\\)\" } } })",
+      "Bash(ssh -o BatchMode=yes -o ConnectTimeout=10 root@147.93.169.63 'journalctl -u caddy --since \"10 min ago\" --no-pager | grep -i \"save-attempt\" | tail -20')",
+      "Bash(ssh -o BatchMode=yes -o ConnectTimeout=10 root@147.93.169.63 'cat /etc/caddy/Caddyfile | grep -A3 \"^\\\\s*log\\\\|access_log\"; echo \"---\"; journalctl -u caddy --since \"5 min ago\" --no-pager | tail -30')",
+      "Bash(timeout 15 node --env-file=.env -e ' *)"
     ]
   }
 }
