@@ -177,6 +177,7 @@ export default function AdminQuestionsClient({
         >
           <option value="">All types</option>
           <option value="mcq">MCQ</option>
+          <option value="msq">MSQ</option>
           <option value="nat">Numerical</option>
           <option value="subjective">Subjective</option>
         </select>

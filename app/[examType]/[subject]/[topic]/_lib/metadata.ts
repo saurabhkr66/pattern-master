@@ -101,7 +101,7 @@ export function buildSchemas({
       name:
         q.source === "pyq"
           ? `${topicLabel} – ${exam.fullLabel} ${q.year} ${q.questionType} Question`
-          : `${topicLabel} – ${q.difficulty} Practice Question`,
+          : `${topicLabel} – ${q.difficulty ? `${q.difficulty} ` : ""}Practice Question`,
       url: `${canonical}#q-${q.source}-${q.id}`,
       description: cleanTextForMeta(q.questionText, 120),
     })),

@@ -2,6 +2,7 @@
 
 import { Bookmark } from "lucide-react";
 import { BE } from "@/lib/theme";
+import { normalizeDifficulty, DIFFICULTY_COLORS } from "@/lib/difficulty";
 interface QuestionMetaBarProps {
   question: any;
   topicName: string;
@@ -18,14 +19,18 @@ export default function QuestionMetaBar({
   question, topicName, hasReported, isBookmarked, isBookmarking,
   language, onReport, onToggleBookmark, onLanguageChange,
 }: QuestionMetaBarProps) {
+  // Bank questions carry difficulty_level, PYQs carry difficulty (AI-classified).
+  const difficulty = normalizeDifficulty(question.difficulty_level, question.difficulty);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 10.5, color: BE.textMute, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, marginBottom: 20 }}>
       <span style={{ color: BE.accent }}>{topicName}</span>
       <span>·</span>
-      <span style={{ color: question.difficulty_level === "Hard" ? BE.bad : question.difficulty_level === "Easy" ? BE.good : BE.warn }}>
-        {question.difficulty_level || "Medium"}
-      </span>
-      <span>·</span>
+      {difficulty && (
+        <>
+          <span style={{ color: DIFFICULTY_COLORS[difficulty].fg }}>{difficulty}</span>
+          <span>·</span>
+        </>
+      )}
       <span>{question.question_type || "MCQ"}{/* · {question.marks || 1} mark{(question.marks || 1) > 1 ? "s" : ""} */}</span>
       <span style={{ flex: 1 }} />
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>

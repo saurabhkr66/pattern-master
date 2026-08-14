@@ -4,7 +4,7 @@ import { withCoachingContext } from "@/lib/withCoachingContext";
 import { invalidateCoachingTaxonomy } from "@/lib/coachingTaxonomy";
 import { validateCoachingQuestion } from "@/lib/coachingQuestionValidate";
 
-const TYPES = new Set(["mcq", "nat", "subjective"]);
+const TYPES = new Set(["mcq", "msq", "nat", "subjective"]);
 
 // Folder filters carry "__null__" to mean "the Uncategorized bucket" (grade /
 // subject / set_name IS NULL), distinct from the param being absent (no filter).

@@ -85,7 +85,7 @@ function Switch({ checked }: { checked: boolean }) {
 }
 
 type ParsedQ = {
-  question_type: "mcq" | "nat" | "subjective";
+  question_type: "mcq" | "msq" | "nat" | "subjective";
   question_text: string;
   question_text_hindi?: string | null;
   options?: { label: string; text: string }[];
@@ -116,6 +116,38 @@ type ParsedQ = {
   solution_figure_missing?: boolean;
   _include?: boolean;
 };
+
+/** Types that carry answer choices — mcq picks one label, msq picks several. */
+const hasOptions = (t: ParsedQ["question_type"]) => t === "mcq" || t === "msq";
+
+/** Objective = has one checkable answer (everything but subjective). */
+const isObjective = (t: ParsedQ["question_type"]) => t !== "subjective";
+
+/** Split a stored answer into labels ("A;C" → ["A","C"]); mcq yields one. */
+const answerLabels = (raw: string | null | undefined): string[] =>
+  (raw ?? "")
+    .split(/[;,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+/**
+ * Add/remove one label from an msq answer, keeping the stored string canonical:
+ * ordered by option order and ";"-joined, matching what the import validator
+ * writes and what the student runner submits.
+ */
+function toggleLabel(
+  current: string | undefined,
+  label: string,
+  opts: { label: string }[]
+): string {
+  const picked = new Set(answerLabels(current));
+  if (picked.has(label)) picked.delete(label);
+  else picked.add(label);
+  return opts
+    .map((o) => o.label)
+    .filter((l) => picked.has(l))
+    .join(";");
+}
 
 type UsageRow = {
   model: string;
@@ -841,6 +873,7 @@ export default function QuestionImportModal({
                       className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
                     >
                       <option value="mcq">MCQ</option>
+                      <option value="msq">MSQ</option>
                       <option value="nat">NAT</option>
                       <option value="subjective">Subjective</option>
                     </select>
@@ -904,7 +937,7 @@ export default function QuestionImportModal({
                     )}
                     {/* Blind cross-check: recorded answer (Flash) vs DeepSeek V4's independent
                         solve, plus the Verify model when it ran. Green = agree, red = differ. */}
-                    {(q.question_type === "mcq" || q.question_type === "nat") && q.blind_answer && (() => {
+                    {isObjective(q.question_type) && q.blind_answer && (() => {
                       const flash = (q.correct_answer ?? "").trim();
                       const v4 = (q.blind_answer ?? "").trim();
                       const ver = (q.verify_answer ?? "").trim();
@@ -996,10 +1029,13 @@ export default function QuestionImportModal({
 
                   {/* Answer editor — options/correct answer are the most-missed fields,
                       so they must be reviewable/fixable here before saving. */}
-                  {q.question_type === "mcq" && (
+                  {hasOptions(q.question_type) && (
                     <div className="mt-2 space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] uppercase text-slate-500">Options · select the correct one</p>
+                        <p className="text-[10px] uppercase text-slate-500">
+                          Options · select the correct{" "}
+                          {q.question_type === "msq" ? "ones (one or more)" : "one"}
+                        </p>
                         <button
                           type="button"
                           onClick={() => setQuestions((qs) => qs.map((x, j) => {
@@ -1019,10 +1055,19 @@ export default function QuestionImportModal({
                       {(q.options ?? []).map((opt, oi) => (
                         <div key={oi} className="flex items-center gap-2">
                           <input
-                            type="radio"
+                            type={q.question_type === "msq" ? "checkbox" : "radio"}
                             name={`correct-${i}`}
-                            checked={q.correct_answer === opt.label}
-                            onChange={() => setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, correct_answer: opt.label } : x)))}
+                            checked={
+                              q.question_type === "msq"
+                                ? answerLabels(q.correct_answer).includes(opt.label)
+                                : q.correct_answer === opt.label
+                            }
+                            onChange={() => setQuestions((qs) => qs.map((x, j) => (j === i ? {
+                              ...x,
+                              correct_answer: x.question_type === "msq"
+                                ? toggleLabel(x.correct_answer, opt.label, x.options ?? [])
+                                : opt.label,
+                            } : x)))}
                             className="h-3.5 w-3.5 accent-amber-500"
                           />
                           <span className="w-4 text-xs text-slate-400">{opt.label}</span>

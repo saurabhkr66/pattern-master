@@ -630,6 +630,9 @@ function QuestionCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ explanation: string; verifyText: string; isMismatch: boolean; aiDetectedAnswer: string | null; usage: { input: number; output: number; thoughts: number } } | null>(null);
+  // Google Search grounding is a Gemini-only tool — every other provider falls
+  // back to an ungrounded call server-side, so the button is disabled instead.
+  const supportsGrounding = aiModel === "gemini";
 
   const handleGenerate = async (useSearch: boolean = false) => {
     setLoading(true);
@@ -689,12 +692,12 @@ function QuestionCard({
             </button>
             <button
               onClick={() => handleGenerate(true)}
-              disabled={loading || aiModel === "gpt-4o-mini" || aiModel === "deepseek-v4-flash"}
-              title={aiModel === "gpt-4o-mini" || aiModel === "deepseek-v4-flash" ? "Search grounding is only available on Gemini" : "Generate with Google Search grounding"}
+              disabled={loading || !supportsGrounding}
+              title={!supportsGrounding ? "Search grounding is only available on Gemini" : "Generate with Google Search grounding"}
               className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                 loading
                   ? "bg-sky-100 text-sky-600 dark:bg-sky-500/10 animate-pulse"
-                  : aiModel === "gpt-4o-mini" || aiModel === "deepseek-v4-flash"
+                  : !supportsGrounding
                   ? "bg-gray-100 text-gray-300 dark:bg-zinc-800 dark:text-zinc-600 cursor-not-allowed"
                   : "bg-sky-500 text-white hover:bg-sky-600 shadow shadow-sky-500/20"
               }`}

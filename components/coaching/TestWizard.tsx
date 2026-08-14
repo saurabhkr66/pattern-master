@@ -884,6 +884,7 @@ function AllCoachingsPicker({
         <select value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
           <option value="">All types</option>
           <option value="mcq">MCQ</option>
+          <option value="msq">MSQ</option>
           <option value="nat">Numerical</option>
           <option value="subjective">Subjective</option>
         </select>
@@ -897,7 +898,7 @@ function AllCoachingsPicker({
         ) : (
           questions
             // This picker is super-admin only, so subjective is allowed here.
-            .filter((qq) => ["mcq", "nat", "subjective"].includes(qq.question_type))
+            .filter((qq) => ["mcq", "msq", "nat", "subjective"].includes(qq.question_type))
             .map((qq) => (
               <QuestionRow
                 key={qq.id}

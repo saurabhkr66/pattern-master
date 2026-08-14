@@ -4,6 +4,7 @@ import {
   toSlug,
   type ExamSeoInfo,
 } from "@/lib/seo";
+import { normalizeDifficulty } from "@/lib/difficulty";
 
 // Indexed slug lookup — Postgres maintains exam_slug/branch_slug/subject_slug/
 // topic_slug as STORED generated columns and the pattern_slug_lookup index
@@ -51,6 +52,8 @@ export type CombinedQuestion =
       explanationHindi?: string | null;
       questionType: string;
       year: number;
+      // AI-classified, normalized to "Easy"|"Medium"|"Hard"; null = unclassified.
+      difficulty: string | null;
       images?: { index: number; filename: string; type?: string }[] | null;
     } & HtmlFields)
   | ({
@@ -64,7 +67,7 @@ export type CombinedQuestion =
       explanation: string;
       explanationHindi?: string | null;
       questionType: string;
-      difficulty: string;
+      difficulty: string | null;
       images?: { index: number; filename: string; type?: string }[] | null;
     } & HtmlFields);
 
@@ -101,6 +104,7 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
         explanation_hindi: true,
         year: true,
         question_type: true,
+        difficulty: true,
         images: true,
         question_html: true,
         explanation_html: true,
@@ -163,7 +167,9 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
         totalQ,
       };
     },
-    ["topic-pattern-page", patternId, String(page), String(size)],
+    // "v2" = PYQ difficulty added to pyqSelect; retires the 7-day-cached
+    // payloads that predate the column.
+    ["topic-pattern-page", "v2", patternId, String(page), String(size)],
     { revalidate: 604800, tags: ["patterns"] },
   )();
 
@@ -313,6 +319,7 @@ export function combineQuestions(
       explanationHindi: q.explanation_hindi,
       questionType: q.question_type,
       year: q.year,
+      difficulty: normalizeDifficulty(q.difficulty),
       images: (q.images as any) ?? null,
       questionHtml: q.question_html ?? null,
       questionHtmlHindi: q.question_html_hindi ?? null,
@@ -332,7 +339,7 @@ export function combineQuestions(
       explanation: q.explanation,
       explanationHindi: q.explanation_hindi,
       questionType: q.question_type,
-      difficulty: q.difficulty_level,
+      difficulty: normalizeDifficulty(q.difficulty_level),
       images: (q.images as any) ?? null,
       questionHtml: q.question_html ?? null,
       questionHtmlHindi: q.question_html_hindi ?? null,

@@ -1,5 +1,6 @@
 import QuestionViewer from "@/components/question/QuestionViewer";
 import type { CombinedQuestion } from "../_lib/dataFetch";
+import { DIFFICULTY_CLASSES, type DifficultyLabel } from "@/lib/difficulty";
 
 interface Props {
   pageQuestions: CombinedQuestion[];
@@ -28,14 +29,11 @@ export default function QuestionList({ pageQuestions, start, examLabel, practice
                   {examLabel} {q.year}
                 </span>
               )}
-              {q.source === "gq" && (
+              {q.difficulty && (
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    q.difficulty === "Hard"
-                      ? "bg-red-500/10 text-red-400"
-                      : q.difficulty === "Medium"
-                      ? "bg-yellow-500/10 text-yellow-400"
-                      : "bg-emerald-500/10 text-emerald-400"
+                    DIFFICULTY_CLASSES[q.difficulty as DifficultyLabel] ??
+                    DIFFICULTY_CLASSES.Medium
                   }`}
                 >
                   {q.difficulty}

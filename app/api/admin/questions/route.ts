@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCoachingActor } from "@/lib/coachingAuth";
 
-const TYPES = new Set(["mcq", "nat", "subjective"]);
+const TYPES = new Set(["mcq", "msq", "nat", "subjective"]);
 
 // GET /api/admin/questions?q=&grade=&subject=&type=&set=&coachingId=&orphaned=1
 export async function GET(req: NextRequest) {

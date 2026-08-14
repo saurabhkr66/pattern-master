@@ -77,6 +77,7 @@ const getStaticQuestions = (id: string, skip = 0, take = 0) =>
               question_type: true,
               marks: true,
               images: true,
+              difficulty: true,
             },
             orderBy: { year: "desc" },
           },
@@ -104,7 +105,10 @@ const getStaticQuestions = (id: string, skip = 0, take = 0) =>
         }
       };
     },
-    ["pattern-questions-static", id, String(skip), String(take)],
+    // "v2" = PYQ difficulty added to the select. Bumping the key retires the
+    // already-cached difficulty-less payloads instead of serving them for the
+    // rest of their 24h window.
+    ["pattern-questions-static", "v2", id, String(skip), String(take)],
     { revalidate: 86400, tags: ["patterns"] }
   )();
 

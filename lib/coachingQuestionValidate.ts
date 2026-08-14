@@ -7,7 +7,10 @@ import type { Prisma } from "@prisma/client";
 
 export type Option = { label: string; text: string };
 
-const TYPES = new Set(["mcq", "nat", "subjective"]);
+const TYPES = new Set(["mcq", "msq", "nat", "subjective"]);
+
+/** Types that carry answer choices — options + label-based correct answers. */
+const OPTION_TYPES = new Set(["mcq", "msq"]);
 
 export type ValidatedQuestion = {
   question_type: string;
@@ -65,10 +68,65 @@ function normalizeMcqAnswer(raw: string, options: Option[]): string {
   const byText = options.find((o) => o.text.toLowerCase() === s.toLowerCase());
   if (byText) return byText.label;
   // Leading letter inside decoration: "A)", "A.", "(A)", "Option A", "Ans: A".
-  const m = s.match(/(?:option|ans(?:wer)?[:.\s]*)?\(?\s*([A-Za-z0-9]+)\s*[).:\-]/i);
-  const lead = m?.[1] ?? (/^[A-Za-z0-9]+$/.test(s) ? s : "");
+  // The word prefix is stripped FIRST: the pattern below only fires when the
+  // token is followed by punctuation, so an undecorated "Option A" / "Ans: A"
+  // would otherwise fall through and be rejected. Matching above still runs on
+  // the original string, so an option genuinely labelled "Answer" is unaffected.
+  const bare = s.replace(/^(?:option|ans(?:wer)?)\b[:.\s]*/i, "").trim();
+  const m = bare.match(/(?:option|ans(?:wer)?[:.\s]*)?\(?\s*([A-Za-z0-9]+)\s*[).:\-]/i);
+  const lead = m?.[1] ?? (/^[A-Za-z0-9]+$/.test(bare) ? bare : "");
   const byLead = lead && options.find((o) => o.label.toLowerCase() === lead.toLowerCase());
   return byLead ? byLead.label : "";
+}
+
+// Connectives a human-written multi-answer wraps its labels in ("Both A and C",
+// "A and C only"). Dropped before resolution so they aren't mistaken for labels.
+const MSQ_NOISE = /^(and|or|both|only|all|of|the|these|option|options|ans|answer|answers)$/i;
+
+/**
+ * Map a free-form MSQ answer to the canonical ";"-joined label list the engine
+ * stores (see scoreQuestion in lib/resolveQuestions). Accepts every shape a paper,
+ * an AI extraction, or a pasted JSON file realistically produces:
+ *   "A;C" · "A,C" · "A, C" · "AC" · "(A) (C)" · ["A","C"] (arrives as "A,C")
+ * Each piece goes through normalizeMcqAnswer, so option TEXT and decorated labels
+ * resolve too. Output is deduped and ordered by option order so two imports of the
+ * same answer never disagree on string form. Returns "" if any piece is unresolvable
+ * — a partially-understood multi-answer is worse than a rejected row.
+ */
+function normalizeMsqAnswer(raw: string, options: Option[]): string {
+  const s = raw.trim();
+  if (!s) return "";
+
+  // Whole-string match first: an option's own label or text may legitimately
+  // contain a separator ("A, B and C only" as a single choice on some papers).
+  const whole = normalizeMcqAnswer(s, options);
+  const separated = s
+    .split(/[;,/|]+|\s+/)
+    .map((p) => p.trim())
+    .filter((p) => p && !MSQ_NOISE.test(p));
+  if (whole && separated.length === 1) return whole;
+
+  let pieces = separated;
+  // Bare concatenation ("ACD") — only expand when EVERY character is a real
+  // single-char label, so a text answer or a multi-char label isn't shredded.
+  if (
+    pieces.length === 1 &&
+    pieces[0].length > 1 &&
+    !normalizeMcqAnswer(pieces[0], options) &&
+    [...pieces[0]].every((ch) => options.some((o) => o.label.toLowerCase() === ch.toLowerCase()))
+  ) {
+    pieces = [...pieces[0]];
+  }
+
+  const labels: string[] = [];
+  for (const piece of pieces) {
+    const label = normalizeMcqAnswer(piece, options);
+    if (!label) return ""; // unresolvable piece → reject the whole row
+    if (!labels.includes(label)) labels.push(label);
+  }
+  const order = new Map(options.map((o, i) => [o.label, i]));
+  labels.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+  return labels.join(";");
 }
 
 export function validateCoachingQuestion(
@@ -96,14 +154,21 @@ export function validateCoachingQuestion(
   let correct_answer = "";
   let nat_tolerance: number | null = null;
 
-  if (type === "mcq") {
+  if (OPTION_TYPES.has(type)) {
     options = normOptions(body.options);
-    if (options.length < 2) return { error: "mcq needs at least 2 options" };
-    correct_answer = normalizeMcqAnswer(String(body.correct_answer ?? ""), options);
+    if (options.length < 2) return { error: `${type} needs at least 2 options` };
+    // An answer list may arrive as a real array (["A","C"]) or as a string in any
+    // of the shapes normalizeMsqAnswer accepts; join arrays explicitly rather than
+    // leaning on String() coercion so an element containing a comma survives.
+    const rawAnswer = Array.isArray(body.correct_answer)
+      ? body.correct_answer.map((v) => String(v).trim()).filter(Boolean).join(";")
+      : String(body.correct_answer ?? "");
+    correct_answer =
+      type === "msq"
+        ? normalizeMsqAnswer(rawAnswer, options)
+        : normalizeMcqAnswer(rawAnswer, options);
     if (!correct_answer) {
-      return {
-        error: `correct_answer "${String(body.correct_answer ?? "")}" matches no option label`,
-      };
+      return { error: `correct_answer "${rawAnswer}" matches no option label` };
     }
   } else if (type === "nat") {
     correct_answer = String(body.correct_answer ?? "").trim();
@@ -117,8 +182,9 @@ export function validateCoachingQuestion(
   }
   // subjective: no options, no correct_answer; solution acts as the model answer.
 
-  // Hindi options only kept for mcq, and only when at least one has text.
-  const optionsHi = type === "mcq" ? normOptions(body.options_hindi) : [];
+  // Hindi options only kept for the option-bearing types, and only when at least
+  // one has text.
+  const optionsHi = OPTION_TYPES.has(type) ? normOptions(body.options_hindi) : [];
 
   return {
     data: {

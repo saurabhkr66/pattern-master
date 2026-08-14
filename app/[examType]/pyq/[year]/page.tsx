@@ -15,6 +15,7 @@ import {
   type ExamSeoInfo,
 } from "@/lib/seo";
 import FeatureBanner from "@/components/ui/FeatureBanner";
+import { normalizeDifficulty, DIFFICULTY_CLASSES, type DifficultyLabel } from "@/lib/difficulty";
 
 const BASE = "https://battleexam.com";
 
@@ -92,6 +93,7 @@ interface SubjectGroup {
     question_type: string;
     marks: number;
     topic: string | null;
+    difficulty: string | null;
     pattern: { topic_name: string; subject: string };
   }[];
 }
@@ -123,6 +125,7 @@ export default async function YearPYQPage({
         question_type: true,
         marks: true,
         topic: true,
+        difficulty: true,
         pattern: { select: { topic_name: true, subject: true } },
       },
       orderBy: [{ pattern: { subject: "asc" } }, { id: "asc" }],
@@ -153,7 +156,9 @@ export default async function YearPYQPage({
     if (!subjectMap.has(subj)) {
       subjectMap.set(subj, { subject: subj, questions: [] });
     }
-    subjectMap.get(subj)!.questions.push(q);
+    // Normalize the AI-classified difficulty once here so the row markup can
+    // just read it (DB stores "EASY"|"MEDIUM"|"HARD").
+    subjectMap.get(subj)!.questions.push({ ...q, difficulty: normalizeDifficulty(q.difficulty) });
   }
   const groups = Array.from(subjectMap.values());
 
@@ -318,6 +323,15 @@ export default async function YearPYQPage({
                           >
                             {q.marks}M
                           </span>
+                          {q.difficulty && (
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                DIFFICULTY_CLASSES[q.difficulty as DifficultyLabel]
+                              }`}
+                            >
+                              {q.difficulty}
+                            </span>
+                          )}
                           <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
                             {q.pattern.topic_name}
                           </span>

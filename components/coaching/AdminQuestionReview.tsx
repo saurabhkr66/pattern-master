@@ -43,6 +43,31 @@ const asOptions = (raw: unknown): Option[] =>
       }))
     : [];
 
+/** Types that carry answer choices — mcq picks one label, msq picks several. */
+const hasOptions = (t: string) => t === "mcq" || t === "msq";
+
+/** Split a stored answer into labels ("A;C" → ["A","C"]); mcq yields one. */
+const answerLabels = (raw: string | null | undefined): string[] =>
+  (raw ?? "")
+    .split(/[;,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+/**
+ * Add/remove one label from an msq answer, keeping the stored string canonical:
+ * ordered by option order and ";"-joined, matching what the validator writes and
+ * what AssignmentRunner submits.
+ */
+function toggleLabel(current: string | null | undefined, label: string, opts: Option[]): string {
+  const picked = new Set(answerLabels(current));
+  if (picked.has(label)) picked.delete(label);
+  else picked.add(label);
+  return opts
+    .map((o) => o.label)
+    .filter((l) => picked.has(l))
+    .join(";");
+}
+
 export default function AdminQuestionReview() {
   const sp = useSearchParams();
   const [q, setQ] = useState(sp.get("q") ?? "");
@@ -122,7 +147,7 @@ export default function AdminQuestionReview() {
       question_text_hindi: item.question_text_hindi ?? "",
       solution_hindi: item.solution_hindi ?? "",
     };
-    if (item.question_type === "mcq") {
+    if (hasOptions(item.question_type)) {
       const kept = (item.options ?? []).filter((o) => o.text.trim());
       body.options = kept;
       body.correct_answer = item.correct_answer ?? "";
@@ -229,6 +254,8 @@ function Card({
   onDelete: () => void;
 }) {
   const opts = item.options ?? [];
+  const isMulti = item.question_type === "msq";
+  const picked = answerLabels(item.correct_answer);
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-950 p-4">
       {/* Header row: type + placement + actions */}
@@ -239,6 +266,7 @@ function Card({
           className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-white"
         >
           <option value="mcq">MCQ</option>
+          <option value="msq">MSQ</option>
           <option value="nat">NAT</option>
           <option value="subjective">Subjective</option>
         </select>
@@ -297,17 +325,25 @@ function Card({
         </div>
       )}
 
-      {/* MCQ options + correct radio */}
-      {item.question_type === "mcq" && (
+      {/* MCQ/MSQ options + correct answer picker (radio for one, checkbox for many) */}
+      {hasOptions(item.question_type) && (
         <div className="mt-2 space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/60 p-2">
-          <p className="text-[10px] uppercase text-slate-500">Options · select the correct one</p>
+          <p className="text-[10px] uppercase text-slate-500">
+            Options · select the correct {isMulti ? "ones (one or more)" : "one"}
+          </p>
           {opts.map((opt, oi) => (
             <div key={oi} className="flex items-center gap-2">
               <input
-                type="radio"
+                type={isMulti ? "checkbox" : "radio"}
                 name={`correct-${item.id}`}
-                checked={item.correct_answer === opt.label}
-                onChange={() => onChange({ correct_answer: opt.label })}
+                checked={isMulti ? picked.includes(opt.label) : item.correct_answer === opt.label}
+                onChange={() =>
+                  onChange({
+                    correct_answer: isMulti
+                      ? toggleLabel(item.correct_answer, opt.label, opts)
+                      : opt.label,
+                  })
+                }
                 className="h-3.5 w-3.5 accent-amber-500"
               />
               <span className="w-4 text-xs text-slate-400">{opt.label}</span>

@@ -92,7 +92,9 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
     });
     allowSubjective = !!coaching?.subjective_enabled;
   }
-  const allowedTypes = allowSubjective ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
+  const allowedTypes = allowSubjective
+    ? ["mcq", "msq", "nat", "subjective"]
+    : ["mcq", "msq", "nat"];
   const [coachingValid, pyqValid] = await Promise.all([
     coachingIds.length
       ? prisma.coachingQuestion.findMany({

@@ -1,4 +1,3 @@
-import "server-only";
 import {
   GoogleGenerativeAI,
   SchemaType,
@@ -19,6 +18,36 @@ export type Difficulty = (typeof DIFFICULTY_VALUES)[number];
 
 const MODEL = process.env.PYQ_DIFFICULTY_MODEL || GEMINI_MODEL;
 const MAX_RETRIES = 4;
+
+/** Model id that will actually run, for startup logging. */
+export function activeDifficultyModel(): string {
+  return MODEL;
+}
+
+// Free-tier gemini-3.5-flash-lite caps at 15 requests/minute. Default to 12 to
+// leave headroom (network jitter, other admin AI calls sharing the same key).
+// This gates every call GLOBALLY (across all CONCURRENCY workers) so raising
+// CONCURRENCY in the script increases how many calls are in flight waiting on a
+// slow response, NOT how fast new requests are allowed to start.
+const RPM = parseInt(process.env.AI_RPM || process.env.GEMINI_RPM || "12", 10);
+const MIN_INTERVAL_MS = Math.ceil(60_000 / RPM);
+let nextSlotAt = 0;
+
+async function waitForRateLimitSlot(): Promise<void> {
+  const now = Date.now();
+  const slot = Math.max(now, nextSlotAt);
+  nextSlotAt = slot + MIN_INTERVAL_MS;
+  if (slot > now) await new Promise((r) => setTimeout(r, slot - now));
+}
+
+// The free tier also caps at 1,500 requests/DAY (resets midnight Pacific). That
+// exhaustion looks like a 429 too, but backing off 30s and retrying is pointless
+// — it won't recover for hours. Detected separately so the caller can abort the
+// whole run instead of burning through every remaining row marking it "failed".
+export function isDailyQuotaExceeded(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /perday|daily|requests? per day/i.test(msg);
+}
 
 export type DifficultyQuestion = {
   id: string;
@@ -71,6 +100,12 @@ function difficultyModel() {
   });
 }
 
+// question_text can carry an inline base64 image data URI (legacy rows) — strip
+// it before sending to Gemini (pure noise/wasted tokens, the real image already
+// goes in separately via q.images) and before it ever hits a console log.
+export const stripBase64Text = (text: string) =>
+  (text || "").replace(/data:image\/[^;]+;base64,[^"'\s)]{100,}/g, "[image]");
+
 function questionBlock(q: DifficultyQuestion): string {
   const options =
     q.options && Array.isArray(q.options) && (q.options as unknown[]).length
@@ -79,7 +114,7 @@ function questionBlock(q: DifficultyQuestion): string {
   return [
     `--- QUESTION id=${q.id} ---`,
     `Exam: ${q.exam_type}  Year: ${q.year}  Subject: ${q.subject}  Topic: ${q.topic_name}  Type: ${q.question_type}`,
-    `QUESTION:\n${q.question_text}`,
+    `QUESTION:\n${stripBase64Text(q.question_text)}`,
     options,
     `\nCORRECT ANSWER: ${q.correct_answer}`,
     q.images.length ? `(${q.images.length} image(s) attached for this question, labeled id=${q.id})` : "",
@@ -102,6 +137,26 @@ const INTRO = [
 ].join("\n");
 
 /**
+ * Keeps only entries whose id is a string and whose difficulty is one of the
+ * three allowed values. Anything malformed is dropped rather than guessed at,
+ * so the caller can retry those rows.
+ */
+function collectResults(items: unknown[]): Map<string, Difficulty> {
+  const result = new Map<string, Difficulty>();
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    const id = (item as { id?: unknown }).id;
+    const rawDifficulty = (item as { difficulty?: unknown }).difficulty;
+    if (typeof id !== "string") continue;
+    const difficulty = typeof rawDifficulty === "string" ? rawDifficulty.trim().toUpperCase() : "";
+    if (DIFFICULTY_VALUES.includes(difficulty as Difficulty)) {
+      result.set(id, difficulty as Difficulty);
+    }
+  }
+  return result;
+}
+
+/**
  * Classifies one group of questions in a single Gemini call. Returns a map of
  * id -> difficulty for every id the model actually returned; ids missing from
  * the response (or with a malformed value) are simply absent from the map —
@@ -120,29 +175,25 @@ export async function classifyDifficultyBatch(
     }
   }
 
-  const model = difficultyModel();
   for (let attempt = 0; ; attempt++) {
+    await waitForRateLimitSlot();
     try {
-      const res = await model.generateContent(parts);
+      const res = await difficultyModel().generateContent(parts);
       const parsed = JSON.parse(res.response.text()) as unknown;
       if (!Array.isArray(parsed)) throw new Error("difficulty classifier did not return an array");
-
-      const result = new Map<string, Difficulty>();
-      for (const item of parsed) {
-        if (!item || typeof item !== "object") continue;
-        const id = (item as { id?: unknown }).id;
-        const rawDifficulty = (item as { difficulty?: unknown }).difficulty;
-        if (typeof id !== "string") continue;
-        const difficulty = typeof rawDifficulty === "string" ? rawDifficulty.trim().toUpperCase() : "";
-        if (DIFFICULTY_VALUES.includes(difficulty as Difficulty)) {
-          result.set(id, difficulty as Difficulty);
-        }
-      }
+      const result = collectResults(parsed);
       if (result.size === 0) throw new Error("difficulty classifier returned no valid entries");
       return result;
     } catch (err) {
+      // Daily quota won't recover within this process's lifetime — fail fast.
+      if (isDailyQuotaExceeded(err)) throw err;
       if (!isRetryable(err) || attempt >= MAX_RETRIES) throw err;
       const backoff = Math.min(30_000, 1000 * 2 ** attempt) + Math.random() * 500;
+      // Say so explicitly — otherwise a stalled retry loop is indistinguishable
+      // from real progress in the console.
+      console.warn(
+        `  ↻ retry ${attempt + 1}/${MAX_RETRIES} for group of ${questions.length} in ${(backoff / 1000).toFixed(1)}s — ${err instanceof Error ? err.message.slice(0, 120) : err}`,
+      );
       await new Promise((r) => setTimeout(r, backoff));
     }
   }

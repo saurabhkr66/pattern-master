@@ -34,7 +34,9 @@ export default async function NewTestPage() {
     select: { subjective_enabled: true },
   });
   const allowSubjective = !!actor?.isSuperAdmin || !!coaching?.subjective_enabled;
-  const allowedTypes = allowSubjective ? ["mcq", "nat", "subjective"] : ["mcq", "nat"];
+  const allowedTypes = allowSubjective
+    ? ["mcq", "msq", "nat", "subjective"]
+    : ["mcq", "msq", "nat"];
   const [questions, batches] = await Promise.all([
     prisma.coachingQuestion.findMany({
       where: { coaching_id: coachingId, question_type: { in: allowedTypes } },

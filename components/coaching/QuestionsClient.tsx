@@ -9,8 +9,32 @@ import { display, Btn, Card, Pill, PageHead } from "@/components/coaching/ui";
 const inputCls =
   "w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white outline-none focus:border-amber-500";
 
-type QType = "mcq" | "nat" | "subjective";
+type QType = "mcq" | "msq" | "nat" | "subjective";
 type Option = { label: string; text: string };
+
+/** Types that carry answer choices — mcq picks one label, msq picks several. */
+const hasOptions = (t: QType) => t === "mcq" || t === "msq";
+
+/** Split a stored answer into labels ("A;C" → ["A","C"]); mcq yields one. */
+const answerLabels = (raw: string): string[] =>
+  raw
+    .split(/[;,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+/**
+ * Add/remove one label from an msq answer, kept canonical: ordered by option
+ * order and ";"-joined, matching what the validator stores and scoreQuestion reads.
+ */
+function toggleLabel(current: string, label: string, opts: Option[]): string {
+  const picked = new Set(answerLabels(current));
+  if (picked.has(label)) picked.delete(label);
+  else picked.add(label);
+  return opts
+    .map((o) => o.label)
+    .filter((l) => picked.has(l))
+    .join(";");
+}
 
 type QuestionRow = {
   id: string;
@@ -37,12 +61,14 @@ type Leaf = { grade: string | null; subject: string | null; set: string | null }
 
 const TYPE_LABELS: Record<string, string> = {
   mcq: "MCQ",
+  msq: "MSQ",
   nat: "Numerical",
   subjective: "Subjective",
 };
 
 const TYPE_TONE: Record<string, string> = {
   mcq: "bg-sky-500/15 text-sky-400",
+  msq: "bg-emerald-500/15 text-emerald-400",
   nat: "bg-amber-500/15 text-amber-400",
   subjective: "bg-violet-500/15 text-violet-400",
 };
@@ -213,6 +239,7 @@ export default function QuestionsClient({
         >
           <option value="">All types</option>
           <option value="mcq">MCQ</option>
+          <option value="msq">MSQ</option>
           <option value="nat">Numerical</option>
           <option value="subjective">Subjective</option>
         </select>
@@ -521,7 +548,7 @@ function QuestionsTable({
                         <span className="line-clamp-2 text-slate-300">{qq.question_text}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <Pill tone={qq.question_type === "mcq" ? "amber" : qq.question_type === "subjective" ? "accent" : "slate"}>
+                        <Pill tone={qq.question_type === "mcq" || qq.question_type === "msq" ? "amber" : qq.question_type === "subjective" ? "accent" : "slate"}>
                           {TYPE_LABELS[qq.question_type] ?? qq.question_type}
                         </Pill>
                       </td>
@@ -745,7 +772,7 @@ function QuestionFormModal({
         question_text_hindi: questionTextHi,
         solution_hindi: solutionHi,
       };
-      if (type === "mcq") {
+      if (hasOptions(type)) {
         const kept = options.filter((o) => o.text.trim());
         body.options = kept;
         body.correct_answer = correct;
@@ -815,6 +842,7 @@ function QuestionFormModal({
                   className={`mt-1 ${inputCls}`}
                 >
                   <option value="mcq">MCQ</option>
+                  <option value="msq">MSQ (multiple correct)</option>
                   <option value="nat">Numerical (NAT)</option>
                   {/* Authoring subjective is super-admin-only (AI import). Coaching
                       admins can't pick it when creating, but the option still shows
@@ -846,16 +874,22 @@ function QuestionFormModal({
             />
 
             {/* Type-specific answer fields */}
-            {type === "mcq" && (
+            {hasOptions(type) && (
               <div className="space-y-2">
-                <span className="block text-sm text-slate-300">Options (select the correct one)</span>
+                <span className="block text-sm text-slate-300">
+                  Options (select the correct {type === "msq" ? "ones — one or more" : "one"})
+                </span>
                 {options.map((opt, i) => (
                   <div key={opt.label} className="flex items-center gap-2">
                     <input
-                      type="radio"
+                      type={type === "msq" ? "checkbox" : "radio"}
                       name="correct"
-                      checked={correct === opt.label}
-                      onChange={() => setCorrect(opt.label)}
+                      checked={
+                        type === "msq" ? answerLabels(correct).includes(opt.label) : correct === opt.label
+                      }
+                      onChange={() =>
+                        setCorrect(type === "msq" ? toggleLabel(correct, opt.label, options) : opt.label)
+                      }
                       className="h-4 w-4 accent-amber-500"
                     />
                     <span className="w-5 text-slate-400">{opt.label}</span>
@@ -945,7 +979,7 @@ function QuestionFormModal({
               {showHindi && (
                 <div className="space-y-3 border-t border-slate-800 p-3">
                   <PreviewField label="प्रश्न (Hindi)" value={questionTextHi} onChange={setQuestionTextHi} rows={3} />
-                  {type === "mcq" && (
+                  {hasOptions(type) && (
                     <div className="space-y-2">
                       <span className="block text-sm text-slate-300">विकल्प (Hindi)</span>
                       {options.map((opt) => (

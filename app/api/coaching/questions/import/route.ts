@@ -275,7 +275,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
               // Figure MCQs have their choices inside the image, so option text is empty —
               // which the validator would drop. Use each option's label as its text so the
               // A/B/C/D choices survive and render as selectable buttons next to the figure.
-              if (q.images?.length && q.question_type === "mcq" && Array.isArray(q.options)) {
+              if (
+                q.images?.length &&
+                (q.question_type === "mcq" || q.question_type === "msq") &&
+                Array.isArray(q.options)
+              ) {
                 q.options = q.options.map((o) => ({ label: o.label, text: (o.text ?? "").trim() || o.label }));
               }
               // A figure was expected (drawn diagram or picture-options) but no image

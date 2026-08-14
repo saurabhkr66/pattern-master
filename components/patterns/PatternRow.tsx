@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { BE } from "@/lib/theme";
+import { normalizeDifficulty, DIFFICULTY_COLORS } from "@/lib/difficulty";
 import { isAdmin } from "@/lib/admin";
 import { Bookmark, Loader2 } from "lucide-react";
 import LoadingLogo from "@/components/ui/LoadingLogo";
@@ -39,6 +40,7 @@ const fetchPatternQuestions = async (patternId: string, lang = "en", skip = 0, t
 const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride, language }: any) => {
   const [isHovered, setIsHovered] = useState(false);
   const isPyq = isPyqOverride !== undefined ? isPyqOverride : q._isPyq;
+  const difficulty = normalizeDifficulty(q.difficulty_level, q.difficulty);
   const statusDot = !q.attempts?.length 
     ? BE.textMute 
     : q.attempts[0].is_correct ? BE.good : BE.bad;
@@ -64,6 +66,14 @@ const QuestionCard = memo(({ q, i, pattern, onSelect, isPyqOverride, language }:
         <span>· {q.exam_type}</span>
         {/* <span>· {q.marks}M</span> */}
         <span style={{ flex: 1 }} />
+        {difficulty && (
+          <span style={{
+            fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4,
+            letterSpacing: 0.5,
+            color: DIFFICULTY_COLORS[difficulty].fg,
+            background: DIFFICULTY_COLORS[difficulty].bg,
+          }}>{difficulty}</span>
+        )}
         {q.isBookmarked && (
           <Bookmark size={11} fill={BE.accent} stroke="none" />
         )}

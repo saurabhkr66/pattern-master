@@ -208,7 +208,7 @@ export type UploadImage = { mimeType: string; base64: string };
 type StoredImage = { index: number; filename: string; type?: "question" | "explanation" };
 
 export type ParsedQuestion = {
-  question_type: "mcq" | "nat" | "subjective";
+  question_type: "mcq" | "msq" | "nat" | "subjective";
   question_text: string;
   question_text_hindi?: string | null;
   options?: { label: string; text: string }[];
@@ -280,6 +280,13 @@ const LATEX_RULES = [
 const MULTIPART_RULE =
   'MULTI-PART AND "OR" QUESTIONS (CRITICAL): if the question has more than one part — labelled (a)/(b), (i)/(ii), or two alternatives separated by "OR" — the solution MUST answer EVERY part, each introduced by its printed label. NEVER answer only the first part, and NEVER pick between "OR" alternatives: an internal choice means the student may attempt either, so solve BOTH in full, one after the other. Any length guidance is PER PART, not for the whole answer.';
 
+// Multiple-correct detection. "mcq" is the default on purpose: mislabelling a
+// single-answer question as "msq" makes a student who ticks the right option
+// still score 0 (msq is all-or-nothing), so the model must see explicit evidence
+// of multi-correct before choosing it.
+const MSQ_RULE =
+  'MULTIPLE-CORRECT ("msq"): use question_type "msq" ONLY when the paper explicitly says more than one choice can be correct — wording like "one or more", "may be correct", "select all that apply", "choose all correct", a section header such as "Multiple Correct Answer Type"/"MSQ", or a printed answer key giving TWO OR MORE labels for that question (e.g. "12. A, C"). In that case set "correct_answer" (and "solution_answer") to EVERY correct label joined with a semicolon, in option order: "A;C". If the paper does not clearly indicate multi-correct, use "mcq" with a SINGLE label — never guess "msq".';
+
 // What the admin declared the paper contains. Pre-declaring focuses the
 // extraction prompt (far more accurate than per-question guessing); "mixed"
 // keeps auto-detection for papers with an objective section + a written section.
@@ -288,18 +295,18 @@ export type ImportQType = "objective" | "subjective" | "mixed";
 function qtypeInstructions(qtype: ImportQType): string[] {
   if (qtype === "objective") {
     return [
-      'EVERY question in this paper is objective: "mcq" (has answer choices) or "nat" (the answer is a single number). NEVER use "subjective".',
+      'EVERY question in this paper is objective: "mcq" (answer choices, exactly ONE correct), "msq" (answer choices, MORE THAN ONE may be correct) or "nat" (the answer is a single number). NEVER use "subjective".',
     ];
   }
   if (qtype === "subjective") {
     return [
-      'EVERY question in this paper is "subjective" (written/long-form answer). NEVER use "mcq" or "nat"; leave "options" empty and "correct_answer" as "".',
+      'EVERY question in this paper is "subjective" (written/long-form answer). NEVER use "mcq", "msq" or "nat"; leave "options" empty and "correct_answer" as "".',
       'For each question, capture its model answer / worked solution into "solution" (and "solution_hindi") if the paper has one — it is what the AI grader marks student answers against.',
       'If a question shows its marks (e.g. "[3 marks]", "(5)", "2M"), set "max_marks" to that number; otherwise use 5.',
     ];
   }
   return [
-    'If a question has no choices at all: use "nat" when the answer is a single number, otherwise "subjective". If unsure between nat and subjective, prefer "subjective". Do NOT label something "mcq" unless you captured its options.',
+    'If a question has no choices at all: use "nat" when the answer is a single number, otherwise "subjective". If unsure between nat and subjective, prefer "subjective". Do NOT label something "mcq"/"msq" unless you captured its options.',
     'For subjective questions, capture the model answer into "solution" and any printed marks (e.g. "[3 marks]") into "max_marks".',
   ];
 }
@@ -365,14 +372,14 @@ function buildPrompt(
       ...(bilingual
         ? ['  "question_text_hindi": string,      // Hindi translation (translate if the source is English; keep LaTeX/numbers identical)']
         : []),
-      '  "question_type": "mcq" | "nat" | "subjective",',
-      '  "options": [{"label":"A","text":string}, ...],        // English (mcq only)',
+      '  "question_type": "mcq" | "msq" | "nat" | "subjective",',
+      '  "options": [{"label":"A","text":string}, ...],        // English (mcq/msq only)',
       ...(bilingual
-        ? ['  "options_hindi": [{"label":"A","text":string}, ...],  // Hindi, same labels/order (mcq only)']
+        ? ['  "options_hindi": [{"label":"A","text":string}, ...],  // Hindi, same labels/order (mcq/msq only)']
         : []),
       '  "solution": string | null,          // English worked solution — WRITE THIS FIRST, before deciding the answer',
       ...(bilingual ? ['  "solution_hindi": string | null,    // Hindi'] : []),
-      '  "solution_answer": string | null,   // the option label (mcq) / number (nat) your "solution" above arrives at',
+      '  "solution_answer": string | null,   // the option label (mcq) / ALL correct labels ";"-joined e.g. "A;C" (msq) / number (nat) your "solution" above arrives at',
       '  "correct_answer": string,           // the PRINTED answer if the paper prints one; else copy "solution_answer"',
       '  "max_marks": number,',
       '  "nat_tolerance": number | null,',
@@ -396,9 +403,10 @@ function buildPrompt(
     // Pass 1 captures questions + options + number AND any answers visible in the
     // document (inline or from a printed answer key). The more answers we grab now,
     // the fewer questions need the separate (costlier) answer-key pass.
-    'For question_type "mcq" you MUST capture EVERY answer choice into "options" (labels A, B, C, D… in the order shown). The answer choices are part of the question — do NOT drop them or fold them into question_text.',
+    'For question_type "mcq" and "msq" you MUST capture EVERY answer choice into "options" (labels A, B, C, D… in the order shown). The answer choices are part of the question — do NOT drop them or fold them into question_text.',
+    MSQ_RULE,
     'Always include the printed question "number".',
-    'REASON BEFORE ANSWERING (order matters): for every objective question, FIRST write the worked "solution", THEN set "solution_answer" to the option label (mcq) / number (nat) that your solution arrives at. Never pick the answer before working it out — fill these fields in this order.',
+    'REASON BEFORE ANSWERING (order matters): for every objective question, FIRST write the worked "solution", THEN set "solution_answer" to the option label (mcq) / every correct label ";"-joined (msq) / number (nat) that your solution arrives at. Never pick the answer before working it out — fill these fields in this order.',
     '"solution_answer" is ALWAYS your own reasoned answer — fill it even when the paper prints an answer key; it is how we cross-check the printed key.',
     'ANSWERS for "correct_answer": scan the ENTIRE document — answer key, solutions section, end tables (e.g. "1-B 2-C") — for the PRINTED answer. If you find one, set "correct_answer" to it (and if a worked solution is printed, use it for "solution"). If NO printed answer exists anywhere, leave "correct_answer" null (a separate pass handles it). Do NOT force "correct_answer" to match "solution_answer": if the printed key differs from your reasoning, KEEP the printed value — the disagreement is recorded for human review.',
     ...qtypeInstructions(qtype),
@@ -440,7 +448,11 @@ function buildResponseSchema(bilingual: boolean): ResponseSchema {
     number: { type: SchemaType.INTEGER, nullable: true },
     question_text: { type: SchemaType.STRING },
     ...(bilingual ? { question_text_hindi: { type: SchemaType.STRING, nullable: true } } : {}),
-    question_type: { type: SchemaType.STRING, format: "enum", enum: ["mcq", "nat", "subjective"] },
+    question_type: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: ["mcq", "msq", "nat", "subjective"],
+    },
     options: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true },
     ...(bilingual ? { options_hindi: { type: SchemaType.ARRAY, items: OPTION_SCHEMA, nullable: true } } : {}),
     // Reasoning-first: solution + the answer the solution concludes are emitted
@@ -639,8 +651,8 @@ function buildAnswerKeyPrompt(
       '  "number": integer,            // the question number this answer belongs to',
       '  "solution": string | null,    // worked explanation in English — WRITE FIRST, all math in $...$ / $$...$$ LaTeX',
       ...(bilingual ? ['  "solution_hindi": string | null, // Hindi translation of the solution (math identical)'] : []),
-      '  "solution_answer": string | null, // the option label / number your "solution" above concludes (your own reasoning)',
-      '  "answer": string,             // the PRINTED answer (option label A/B/C… for mcq, numeric value for nat); if none is printed, copy "solution_answer"',
+      '  "solution_answer": string | null, // the option label / number your "solution" above concludes (your own reasoning); for a multiple-correct question, ALL correct labels ";"-joined ("A;C")',
+      '  "answer": string,             // the PRINTED answer (option label A/B/C… for mcq, ALL correct labels ";"-joined like "A;C" when the key gives more than one, numeric value for nat); if none is printed, copy "solution_answer"',
       '  "derived": boolean,           // true if YOU solved it (not found in the paper), false if read from the paper',
       '  "solution_has_diagram": boolean, // true if the PRINTED worked solution contains a drawn figure/diagram/graph the explanation refers to',
       '  "solution_page": integer | null  // 0-based page the solution figure is on (null for image uploads)',
@@ -975,7 +987,7 @@ export async function extractQuestions(opts: {
   // question for the human reviewer, exactly as before.
   const optionless = questions
     .map((_, i) => i)
-    .filter((i) => questions[i].question_type === "mcq" && (questions[i].options?.length ?? 0) < 2);
+    .filter((i) => isOptionType(questions[i]) && (questions[i].options?.length ?? 0) < 2);
   if (optionless.length && !signal?.aborted) {
     console.warn(
       `[import] ⚠ ${optionless.length} MCQ(s) came back without answer choices — re-reading them from the paper`
@@ -1110,8 +1122,8 @@ export async function extractQuestions(opts: {
   // and the saved answer wouldn't match a label either. Resolve in place; leave it
   // untouched if it can't be pinned to an option (don't destroy a raw value).
   for (const q of questions) {
-    if (q.question_type === "mcq" && q.correct_answer) {
-      const label = resolveMcqLabel(q.correct_answer, q.options);
+    if (isOptionType(q) && q.correct_answer) {
+      const label = resolveAnswerLabels(q, q.correct_answer);
       if (label) q.correct_answer = label;
     }
   }
@@ -1383,7 +1395,7 @@ function mergeAnswers(
     // the prompt ("$42$" → "42", "`B`" → "B") so MCQ/NAT matching still works.
     const ans = entry.answer ? String(entry.answer).replace(/[$`]/g, "").trim() : "";
     if (!ans) return;
-    q.correct_answer = q.question_type === "mcq" ? resolveMcqLabel(ans, q.options) ?? ans : ans;
+    q.correct_answer = isOptionType(q) ? resolveAnswerLabels(q, ans) ?? ans : ans;
     if (entry.solution && !q.solution) q.solution = entry.solution;
     if (entry.solution_hindi && !q.solution_hindi) q.solution_hindi = entry.solution_hindi;
     if (entry.solution_answer && !q.solution_answer)
@@ -1451,6 +1463,68 @@ function resolveMcqLabel(raw: string, options?: { label: string; text: string }[
     if (i >= 0 && i < options.length) return options[i].label;
   }
   return null;
+}
+
+/** True for the option-bearing types, whose answers are option LABELS. */
+function isOptionType(q: ParsedQuestion): boolean {
+  return q.question_type === "mcq" || q.question_type === "msq";
+}
+
+/** Objective = has one checkable answer (everything but subjective). */
+function isObjectiveType(q: ParsedQuestion): boolean {
+  return isOptionType(q) || q.question_type === "nat";
+}
+
+// Connectives a human-written multi-answer wraps its labels in ("Both A and C",
+// "A and C only"). Dropped before resolution because resolveMcqLabel's positional
+// fallback would otherwise read "Both" as its leading letter B and invent a label.
+const MSQ_NOISE = /^(and|or|both|only|all|of|the|these|option|options|ans|answer|answers)$/i;
+
+/**
+ * MSQ counterpart of resolveMcqLabel: canonicalize a multi-answer value ("A, C",
+ * "AC", "(A) and (C)") to the ";"-joined, option-ordered form the engine stores
+ * and scores (see scoreQuestion in lib/resolveQuestions). Returns null when ANY
+ * piece can't be pinned to an option — same contract as resolveMcqLabel, so
+ * callers keep the raw value rather than storing a half-understood answer.
+ */
+function resolveMsqLabels(
+  raw: string,
+  options?: { label: string; text: string }[] | null
+): string | null {
+  const s = raw.trim();
+  if (!s) return null;
+  let pieces = s
+    .split(/[;,/|]+|\s+/)
+    .map((p) => p.trim())
+    .filter((p) => p && !MSQ_NOISE.test(p));
+  // Bare concatenation ("ACD") — only split when EVERY character is a real label,
+  // so a multi-char label or an option's text isn't shredded into letters.
+  if (
+    pieces.length === 1 &&
+    pieces[0].length > 1 &&
+    options?.length &&
+    !options.some((o) => o.label.toLowerCase() === pieces[0].toLowerCase()) &&
+    [...pieces[0]].every((ch) => options.some((o) => o.label.toLowerCase() === ch.toLowerCase()))
+  ) {
+    pieces = [...pieces[0]];
+  }
+  const labels: string[] = [];
+  for (const piece of pieces) {
+    const label = resolveMcqLabel(piece, options);
+    if (!label) return null;
+    if (!labels.includes(label)) labels.push(label);
+  }
+  if (!labels.length) return null;
+  const order = new Map((options ?? []).map((o, i) => [o.label, i]));
+  labels.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+  return labels.join(";");
+}
+
+/** Canonicalize an answer for whichever option type the question is. */
+function resolveAnswerLabels(q: ParsedQuestion, raw: string): string | null {
+  return q.question_type === "msq"
+    ? resolveMsqLabels(raw, q.options)
+    : resolveMcqLabel(raw, q.options);
 }
 
 // ─── Pass 3: independent answer verification ─────────────────────────────────
@@ -1833,7 +1907,7 @@ const VERIFY_SCHEMA: ResponseSchema = {
 
 function buildVerifyPrompt(q: ParsedQuestion): string {
   const opts =
-    q.question_type === "mcq" && q.options?.length
+    isOptionType(q) && q.options?.length
       ? `Options:\n${q.options.map((o) => `${o.label}. ${o.text || "(see figure)"}`).join("\n")}`
       : "";
   return [
@@ -1844,9 +1918,11 @@ function buildVerifyPrompt(q: ParsedQuestion): string {
     opts,
     q.images?.length ? "The figure this question refers to is attached as an image." : "",
     'Return STRICT JSON: a one-element array [{"answer": string, "confidence": number}].',
-    q.question_type === "mcq"
-      ? 'For "answer" output ONLY the correct option label (A, B, C, D…) — a single letter, no text, no $, no punctuation.'
-      : 'For "answer" output ONLY the numeric value — digits (and a sign/decimal if needed), no units, no $, no words.',
+    q.question_type === "msq"
+      ? 'This question has MORE THAN ONE correct option. For "answer" output EVERY correct option label joined with a semicolon and nothing else (e.g. "A;C") — no text, no $, no punctuation beyond the semicolons. Check EACH option independently before answering.'
+      : q.question_type === "mcq"
+        ? 'For "answer" output ONLY the correct option label (A, B, C, D…) — a single letter, no text, no $, no punctuation.'
+        : 'For "answer" output ONLY the numeric value — digits (and a sign/decimal if needed), no units, no $, no words.',
     '"confidence" is your 0..1 certainty in that answer.',
     "Output ONLY the JSON array, no prose.",
   ]
@@ -1879,9 +1955,11 @@ async function figureParts(q: ParsedQuestion): Promise<Part[]> {
 function answersDisagree(q: ParsedQuestion, aiRaw: string): boolean {
   const stored = (q.correct_answer ?? "").trim();
   if (!stored || !aiRaw.trim()) return false;
-  if (q.question_type === "mcq") {
-    const ai = resolveMcqLabel(aiRaw, q.options);
-    const cur = resolveMcqLabel(stored, q.options);
+  if (isOptionType(q)) {
+    // Both sides canonicalize to option order, so msq's ";"-joined lists compare
+    // as plain strings ("A;C" vs "C;A" can't happen).
+    const ai = resolveAnswerLabels(q, aiRaw);
+    const cur = resolveAnswerLabels(q, stored);
     if (!ai || !cur) return false; // couldn't pin either to a label → don't flag
     return ai.toUpperCase() !== cur.toUpperCase();
   }
@@ -1897,7 +1975,7 @@ function answersDisagree(q: ParsedQuestion, aiRaw: string): boolean {
 
 /** Resolve the verifier's raw answer to the value we show in the review badge. */
 function verifyDisplay(q: ParsedQuestion, aiRaw: string): string {
-  if (q.question_type === "mcq") return resolveMcqLabel(aiRaw, q.options) ?? aiRaw.trim().toUpperCase();
+  if (isOptionType(q)) return resolveAnswerLabels(q, aiRaw) ?? aiRaw.trim().toUpperCase();
   return aiRaw.replace(/[$`]/g, "").trim();
 }
 
@@ -1925,9 +2003,7 @@ export async function verifyAnswers(opts: {
   const emit = opts.onEvent ?? (() => {});
 
   // Only objective questions that actually have a captured answer can be cross-checked.
-  const targets = questions.filter(
-    (q) => (q.question_type === "mcq" || q.question_type === "nat") && !!q.correct_answer
-  );
+  const targets = questions.filter((q) => isObjectiveType(q) && !!q.correct_answer);
   if (!targets.length) return;
   console.log(`[import] verifying ${targets.length} objective answer(s) with ${model}`);
   emit({ t: "phase", phase: "verify", total: targets.length });
@@ -2075,10 +2151,10 @@ const SOLUTION_ONLY_SCHEMA: ResponseSchema = {
 
 function buildSolutionPrompt(q: ParsedQuestion, bilingual: boolean): string {
   const opts =
-    q.question_type === "mcq" && q.options?.length
+    isOptionType(q) && q.options?.length
       ? `Options:\n${q.options.map((o) => `${o.label}. ${o.text || "(see figure)"}`).join("\n")}`
       : "";
-  const isObjective = q.question_type === "mcq" || q.question_type === "nat";
+  const isObjective = isObjectiveType(q);
   return [
     "You are INDEPENDENTLY solving ONE exam question from scratch to produce a worked solution. Decide the answer using ONLY your own reasoning.",
     "Do NOT assume any answer has been provided, and do NOT rely on any answer key — solve it yourself from first principles.",
@@ -2089,9 +2165,11 @@ function buildSolutionPrompt(q: ParsedQuestion, bilingual: boolean): string {
     // V4 reasons in a hidden reasoning_content field and we only keep `content`,
     // so we MUST tell it to write the full working INTO the solution itself.
     "Put the FULL reasoning into the \"solution\" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don't restate the question verbatim. Take as much space as the question needs and no more — a multi-part question needs every part worked; do not pad a short one.",
-    isObjective
-      ? 'Also set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words.'
-      : 'This is a subjective question — set "answer" to null.',
+    q.question_type === "msq"
+      ? 'This is an MSQ — MORE THAN ONE option can be correct. Evaluate EVERY option independently in your solution, then set "answer" to ALL correct labels joined with a semicolon (e.g. "A;C"). No $ signs, no words.'
+      : isObjective
+        ? 'Also set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words.'
+        : 'This is a subjective question — set "answer" to null.',
     LATEX_RULES,
     MULTIPART_RULE,
     bilingual ? 'Also fill "solution_hindi": a Hindi translation of the same solution (identical math).' : "",
@@ -2126,7 +2204,7 @@ function buildSolutionBatchPrompt(qs: ParsedQuestion[], bilingual: boolean): str
   const blocks = qs
     .map((q, i) => {
       const opts =
-        q.question_type === "mcq" && q.options?.length
+        isOptionType(q) && q.options?.length
           ? `Options:\n${q.options.map((o) => `${o.label}. ${o.text || "(see figure)"}`).join("\n")}`
           : "";
       return [`--- Question id=${i + 1} (type: ${q.question_type.toUpperCase()}) ---`, q.question_text, opts]
@@ -2144,6 +2222,7 @@ function buildSolutionBatchPrompt(qs: ParsedQuestion[], bilingual: boolean): str
     // so we MUST tell it to write the full working INTO each solution itself.
     'For EACH question put the FULL reasoning into its "solution" field: state the approach, show EACH step of the working with a short explanation of WHY, then state the final answer. Be thorough and self-contained — do not skip steps. Don\'t restate the question verbatim. Take as much space as each question needs and no more — a multi-part question needs every part worked; do not pad a short one.',
     'For an MCQ/NAT question set "answer" to the SINGLE answer your solution concludes — the option label (A, B, C…) for MCQ, or the numeric value for NAT. No $ signs, no words. For a SUBJECTIVE question set "answer" to null.',
+    'For an MSQ question MORE THAN ONE option can be correct: evaluate EVERY option independently in the solution, then set "answer" to ALL correct labels joined with a semicolon (e.g. "A;C").',
     LATEX_RULES,
     MULTIPART_RULE,
     bilingual ? 'Also fill "solution_hindi" for each: a Hindi translation of the same solution (identical math).' : "",
@@ -2256,7 +2335,7 @@ export async function generateComparisonSolutions(opts: {
     }
     // Record V4's own (blind) answer and compare it to the recorded one.
     const aiRaw = r.answer ? String(r.answer) : "";
-    if (aiRaw && (q.question_type === "mcq" || q.question_type === "nat")) {
+    if (aiRaw && isObjectiveType(q)) {
       q.blind_answer = verifyDisplay(q, aiRaw);
       return answersDisagree(q, aiRaw);
     }

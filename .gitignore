@@ -48,9 +48,26 @@ next-env.d.ts
 
 .claude/scheduled_tasks.lock
 
-# telegram poster runtime artifacts
+# one-off migration mappings (~28MB). The Cloudinary->ImageKit move is done;
+# these are regenerable output, not source.
+/cloudinary_assets.json
+/cloudinary_mapping.json
+/migration_mapping.json
+/imagekit_mapping.json
+
+# Local tooling + the CSV/JSON/txt audit output it produces. None of it ships.
+# Listed as directory *contents* (`/scripts/*`) rather than the directory
+# (`/scripts/`) on purpose: git does not descend into an excluded directory, so
+# the `!` re-includes below only work against contents.
+/scripts/*
+# ...except the Telegram poster, which is live production code — the VPS cron
+# (deploy/telegram-daily.sh) and the `npm run tg:*` scripts run it from here, so
+# it has to survive a fresh clone.
+!/scripts/telegram/
 /scripts/telegram/.posted.json
 /scripts/telegram/preview-*.png
+# ...and the broken-image list, which is the only record of the 340 that 404.
+!/scripts/missing-images.csv
 
 # clerk configuration (can include secrets)
 /.clerk/
