@@ -30,6 +30,10 @@ interface Props {
   onMarkReviewAndNext: (q: TestQuestion) => void;
   onPrev: () => void;
   onNext: () => void;
+  // Negative marks deducted per mark, from the active section's ExamConfig.
+  // Defaults to 1/3 (GATE) so existing mock/coaching callers are unchanged; a
+  // paper with no negative marking (DPP) passes 0 and the warning disappears.
+  negativePerMark?: number;
 }
 
 export default function QuestionPane({
@@ -38,10 +42,14 @@ export default function QuestionPane({
   onMcq, onMsq, onNat, onSubjPhotos, subjectiveUpload,
   onToggleBookmark, onToggleReview, onClearResponse, onMarkReviewAndNext,
   onPrev, onNext,
+  negativePerMark = 1 / 3,
 }: Props) {
-  const negMarking = currentQ.question_type === "MCQ"
-    ? `−${(currentQ.marks / 3).toFixed(2)} if wrong`
-    : null;
+  // Was hardcoded to marks/3, which silently told DPP students they'd lose
+  // 0.33 per wrong answer on a paper that has no negative marking at all.
+  const negMarking =
+    currentQ.question_type === "MCQ" && negativePerMark > 0
+      ? `−${(currentQ.marks * negativePerMark).toFixed(2)} if wrong`
+      : null;
 
   // Bilingual: show the EN/हिन्दी toggle only when this question carries Hindi.
   // Empty Hindi fields fall back to English (mirrors QuestionViewer).

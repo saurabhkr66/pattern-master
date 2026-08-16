@@ -74,6 +74,11 @@ export function buildResultData(
       marks: q.marks, awarded: typeof q.awardedMarks === "number" ? q.awardedMarks : undefined,
       subject: q.subject || "General", topic: q.topic || undefined, explanation: q.explanation,
       timeSpentSecs: q.timeSpentSecs || 0,
+      // Figures. Both coaching and DPP put `images` on their breakdown items and
+      // ExpandedQuestion renders them, but this mapper used to drop the field —
+      // so every diagram question in a result analysis showed its text with no
+      // figure. Mock breakdowns simply don't set it, so they are unaffected.
+      images: Array.isArray(q.images) ? q.images : undefined,
       subjective: q.subjective || undefined,
     })),
   };

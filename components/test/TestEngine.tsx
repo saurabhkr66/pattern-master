@@ -32,8 +32,18 @@ interface Props {
   userName?: string;
   // Autosave target. Defaults to the consumer Redis-draft endpoint; coaching
   // tests point this at their own (attempt-scoped) save route.
-  saveEndpoint?: string;
+  //
+  // `null` = LOCAL-ONLY draft: snapshots still go to IndexedDB (so a refresh
+  // recovers answers) but nothing is pushed to a server. DPP runs use this —
+  // they are short, solo, and have no draft store, and without it every autosave
+  // would POST to the mock endpoint and park a permanent "error" in the header.
+  saveEndpoint?: string | null;
   autosaveIntervalMs?: number;
+  // Upper bound on the random delay before the timer-expiry auto-submit fires.
+  // Defaults to 20 s, which exists to spread a whole batch of students hitting
+  // submit at once. A solo runner (DPP) has no thundering herd, and the delay
+  // just reads as a frozen screen — pass 0 there.
+  submitJitterMs?: number;
   // Photo-answer upload config for SUBJECTIVE questions (coaching tests only).
   // undefined → consumer flow, engine behavior unchanged.
   subjectiveUpload?: { endpoint: string; attemptId: string };
@@ -54,6 +64,7 @@ export default function TestEngine({
   userName,
   saveEndpoint = "/api/test/session/save",
   autosaveIntervalMs = 1_200_000,
+  submitJitterMs = 20000,
   subjectiveUpload,
 }: Props) {
   // Group questions by section (stable sort keeps in-section order) so global
@@ -91,6 +102,10 @@ export default function TestEngine({
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [timeSpent, setTimeSpent] = useState<Record<string, number>>(s.timeSpentMap ?? {});
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error" | null>(null);
+  // Gates the local write-through until the IndexedDB recovery pass has run, so
+  // the mount write cannot clobber the snapshot recovery is about to read. No
+  // draft → nothing to recover → open immediately.
+  const [draftReady, setDraftReady] = useState(!draftId);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -153,6 +168,11 @@ export default function TestEngine({
     // Write locally first so a failed/blocked network call still leaves a
     // recoverable copy on disk.
     await saveLocalDraft(draftId, state, false, Date.now());
+    // Local-only mode: the IndexedDB write above IS the save. Report success so
+    // the header shows "saved" rather than an error for a draft that is working
+    // exactly as designed. The entry stays `synced: false`, which is what makes
+    // the recovery effect below re-apply it on the next mount.
+    if (!saveEndpoint) return true;
     try {
       const res = await fetch(saveEndpoint, {
         method: "PATCH",
@@ -202,16 +222,22 @@ export default function TestEngine({
           clearInterval(timerRef.current!);
           if (!autoSubmittedRef.current) {
             autoSubmittedRef.current = true;
-            // Random 0–20 s jitter so a full batch of students doesn't hit the
-            // submit endpoint simultaneously when their timers all reach zero
-            // (1000 students / 20 s ≈ 50 submits/s — comfortable for the box).
-            // The budget must stay inside SUBMIT_GRACE_SECS (60 s): 20 s jitter
-            // + retry backoff + network slack. Answers are snapshotted NOW, at
-            // expiry — the jitter delays only the network call, so the wait
-            // grants no extra answering time.
+            // Random jitter (default 0–20 s) so a full batch of students doesn't
+            // hit the submit endpoint simultaneously when their timers all reach
+            // zero (1000 students / 20 s ≈ 50 submits/s — comfortable for the
+            // box). The budget must stay inside SUBMIT_GRACE_SECS (60 s): 20 s
+            // jitter + retry backoff + network slack. Answers are snapshotted
+            // NOW, at expiry — the jitter delays only the network call, so the
+            // wait grants no extra answering time.
+            //
+            // Solo runners pass submitJitterMs={0}: with no herd to spread there
+            // is nothing to gain, and the delay just looks like a frozen screen.
             const answersAtExpiry = buildAnswers();
             const elapsedSecs = Math.round((Date.now() - startTimeRef.current) / 1000);
-            setTimeout(() => { onSubmit(answersAtExpiry, elapsedSecs); }, Math.random() * 20000);
+            setTimeout(
+              () => { onSubmit(answersAtExpiry, elapsedSecs); },
+              Math.random() * submitJitterMs
+            );
           }
           return 0;
         }
@@ -247,11 +273,18 @@ export default function TestEngine({
   // IndexedDB writes are cheap and local, so unlike the throttled server save we
   // persist on every meaningful state change. timeSpent (ticks every second) is
   // deliberately excluded — its latest value rides along on the next snapshot.
+  //
+  // Held until the recovery pass below has run. This effect is declared FIRST,
+  // so on mount it would otherwise write the current (possibly empty) state over
+  // the local snapshot before recovery gets to read it. Callers that seed
+  // `initialState` from a server draft never noticed — their mount state isn't
+  // empty. A local-only draft (DPP) has no server seed, so without this gate a
+  // refresh restores nothing: the wipe wins the race every time.
   useEffect(() => {
-    if (!draftId) return;
+    if (!draftId || !draftReady) return;
     saveLocalDraft(draftId, buildDraftState(), false, Date.now());
   }, [
-    draftId, buildDraftState,
+    draftId, draftReady, buildDraftState,
     mcqSelected, msqSelected, natValues, subjPhotos,
     statuses, markedReview, currentQId, activeSectionIdx,
   ]);
@@ -267,20 +300,26 @@ export default function TestEngine({
     if (!draftId || recoveredRef.current) return;
     recoveredRef.current = true;
     (async () => {
-      const local = await loadLocalDraft(draftId);
-      if (!local || local.synced) return; // nothing newer than the server
-      const ls = local.state as DraftState;
-      if (ls.mcqAnswers) setMcqSelected(ls.mcqAnswers);
-      if (ls.msqAnswers) setMsqSelected(ls.msqAnswers);
-      if (ls.natValues) setNatValues(ls.natValues);
-      if (ls.subjPhotos) setSubjPhotos(ls.subjPhotos);
-      if (ls.statuses) setStatuses(ls.statuses as Record<string, QStatus>);
-      if (ls.markedReview) setMarkedReview(new Set(ls.markedReview));
-      if (ls.timeSpentMap) setTimeSpent(ls.timeSpentMap);
-      if (ls.currentQId) setCurrentQId(ls.currentQId);
-      if (typeof ls.activeSectionIdx === "number") setActiveSectionIdx(ls.activeSectionIdx);
-      // Push the recovered answers back to the server now that we're loaded.
-      flushToServer();
+      // Whatever happens below, release the write-through gate — a draft that
+      // cannot be read must not also stop new answers being saved.
+      try {
+        const local = await loadLocalDraft(draftId);
+        if (!local || local.synced) return; // nothing newer than the server
+        const ls = local.state as DraftState;
+        if (ls.mcqAnswers) setMcqSelected(ls.mcqAnswers);
+        if (ls.msqAnswers) setMsqSelected(ls.msqAnswers);
+        if (ls.natValues) setNatValues(ls.natValues);
+        if (ls.subjPhotos) setSubjPhotos(ls.subjPhotos);
+        if (ls.statuses) setStatuses(ls.statuses as Record<string, QStatus>);
+        if (ls.markedReview) setMarkedReview(new Set(ls.markedReview));
+        if (ls.timeSpentMap) setTimeSpent(ls.timeSpentMap);
+        if (ls.currentQId) setCurrentQId(ls.currentQId);
+        if (typeof ls.activeSectionIdx === "number") setActiveSectionIdx(ls.activeSectionIdx);
+        // Push the recovered answers back to the server now that we're loaded.
+        flushToServer();
+      } finally {
+        setDraftReady(true);
+      }
     })();
   }, [draftId, flushToServer]);
 
@@ -311,6 +350,7 @@ export default function TestEngine({
       const state = buildDraftState();
       // Local backup first — synchronous-ish and reliable even as the page dies.
       saveLocalDraft(draftId, state, false, Date.now());
+      if (!saveEndpoint) return; // local-only draft — nothing to push
       try {
         fetch(saveEndpoint, {
           method: "PATCH",
@@ -490,6 +530,9 @@ export default function TestEngine({
           question={currentQ}
           globalIdx={globalIdx}
           totalQuestions={questions.length}
+          // From the active section, so a paper with no negative marking (DPP)
+          // doesn't display GATE's 1/3 penalty.
+          negativePerMark={config.sections[activeSectionIdx]?.negativePerMark ?? 1 / 3}
           curMcq={curMcq}
           curMsq={curMsq}
           curNat={curNat}

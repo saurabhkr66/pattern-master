@@ -6,8 +6,11 @@
 //   topics     → per-topic pages (roots + /page/N + /notes); isolated here so
 //                its heavy aggregations never block the sitemap index
 //   pyq-years  → year-wise PYQ index
-//   papers     → seeded paper pages
-//   mock-N     → Nth chunk of mock test instances
+//   papers     → seeded paper pages (full questions + solutions inline)
+//
+// Retired: "mock-N". Per-mock-instance URLs are thin start screens that
+// duplicate the paper pages above — see lib/sitemap-data.ts. Those ids now
+// fall through to the 404 below, which is how Google drops them.
 //
 // Replaces the previous `app/sitemap.ts` metadata file. The metadata
 // convention was abandoned because it claims /sitemap.xml at build time

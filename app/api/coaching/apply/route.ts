@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { randomCode } from "@/lib/shortCode";
 
 // Public, unauthenticated endpoint for a coaching to apply for access from
 // /for-coachings. Creates a "pending" + inactive Coaching; a super admin
@@ -14,12 +15,6 @@ function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function randomCode(len = 6): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
-}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);

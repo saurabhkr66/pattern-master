@@ -8,7 +8,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
-import { fetchPattern, combineQuestions, unslug } from "../../_lib/dataFetch";
+import { fetchPattern, fetchTopicLabels, combineQuestions, unslug } from "../../_lib/dataFetch";
 import { buildTopicMetadata, buildSchemas } from "../../_lib/metadata";
 import TopicHeader from "../../_components/TopicHeader";
 import QuestionList from "../../_components/QuestionList";
@@ -42,19 +42,39 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { examType, subject, topic, pageNum: pageNumStr } = await params;
   const pageNum = parseInt(pageNumStr, 10);
-  if (isNaN(pageNum) || pageNum < 2) return { title: "Not Found" };
+
+  // Every unresolvable case must be decided HERE, before the body streams and
+  // locks the status at 200 — see the long note in ../../page.tsx. Returning
+  // `{ title: "Not Found" }` (the previous behaviour) left a 200 soft 404.
+  //
+  // `/page/1` and junk like `/page/abc` redirect to the topic root rather than
+  // 404: page 1 is a real surface, it just lives at the root URL.
+  const basePath = `/${examType}/${subject}/${topic}`;
+  if (isNaN(pageNum) || pageNum < 2) redirect(basePath);
 
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found" };
+  if (!exam) notFound();
+
+  // Real Pattern names for the labels, plus totalQ so the description can state
+  // the actual question range on this page instead of repeating page 1's.
+  const labels = await fetchTopicLabels(exam, unslug(subject), topic);
+  if (!labels) notFound();
+
+  // Out-of-range pages (/page/99 on an 11-page topic) were the same soft 404.
+  // totalQ is already loaded, so the bound is free to enforce here.
+  const totalPages = Math.max(1, Math.ceil(labels.totalQ / PAGE_SIZE));
+  if (pageNum > totalPages) notFound();
 
   return buildTopicMetadata({
     exam,
     examType,
     subject,
     topic,
-    subjectLabel: unslug(subject),
-    topicLabel: unslug(topic),
+    subjectLabel: labels.subject,
+    topicLabel: labels.topicName,
     pageNum,
+    totalQ: labels.totalQ,
+    pageSize: PAGE_SIZE,
   });
 }
 
@@ -73,11 +93,14 @@ export default async function TopicPageN({
   const exam = parseExamSlug(examType);
   if (!exam) notFound();
 
-  const subjectLabel = unslug(subject);
-  const topicLabel = unslug(topic);
+  // Lookup key only — display labels come from the Pattern row below.
+  const subjectKey = unslug(subject);
 
-  const pattern = await fetchPattern(exam, subjectLabel, topic, pageNum, PAGE_SIZE);
+  const pattern = await fetchPattern(exam, subjectKey, topic, pageNum, PAGE_SIZE);
   if (!pattern) notFound();
+
+  const subjectLabel = pattern.subject;
+  const topicLabel = pattern.topic_name;
 
   const canonical = `${BASE}${basePath}/page/${pageNum}`;
   const year = new Date().getFullYear() + 1;
@@ -147,6 +170,8 @@ export default async function TopicPageN({
           gqCount={pattern.questions.length}
           year={year}
           shortNotes={pattern.short_notes}
+          pageNum={pageNum}
+          totalPages={totalPages}
         />
 
         <QuestionList

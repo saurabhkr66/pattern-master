@@ -84,19 +84,29 @@ export function getCachedWeakTopic(userId: string) {
           t.count
         FROM (
           SELECT
-            COALESCE(q.pattern_id, p.pattern_id) as pattern_id,
+            COALESCE(q.pattern_id, p.pattern_id, d.pattern_id) as pattern_id,
             COUNT(*)::bigint as count
           FROM (
-            SELECT question_id, pyq_id, is_correct,
+            SELECT question_id, pyq_id, dpp_question_id, is_correct,
                    ROW_NUMBER() OVER (
-                     PARTITION BY COALESCE(question_id, pyq_id)
+                     PARTITION BY COALESCE(question_id, pyq_id, dpp_question_id)
                      ORDER BY created_at DESC
                    ) as rn
             FROM "Attempt"
             WHERE user_id = ${userId} AND mock_question_id IS NULL
+              -- Legacy mock rows have all refs NULL and would otherwise collapse
+              -- into one partition together with each other.
+              AND COALESCE(question_id, pyq_id, dpp_question_id) IS NOT NULL
           ) latest
           LEFT JOIN "GeneratedQuestion" q ON q.id = latest.question_id
           LEFT JOIN "PYQ" p ON p.id = latest.pyq_id
+          -- DPP rows DO belong here, unlike in currentMistakesCount above: a DPP
+          -- is scoped to exactly one Pattern, so a missed DPP question is as
+          -- honest a "weak topic" signal as any other. (The count above excludes
+          -- them only because the mistake room's DPP tab is fed from
+          -- DppRun.answers, and counting both would double up.)
+          LEFT JOIN "DppQuestion" dq ON dq.id = latest.dpp_question_id
+          LEFT JOIN "Dpp" d ON d.id = dq.dpp_id
           WHERE latest.rn = 1 AND latest.is_correct = false
           GROUP BY 1
         ) t
@@ -132,6 +142,7 @@ export function getCachedRecentAttempts(userId: string) {
           created_at: true,
           question_id: true,
           pyq_id: true,
+          dpp_question_id: true,
           question: {
             select: {
               id: true,
@@ -146,6 +157,23 @@ export function getCachedRecentAttempts(userId: string) {
               pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true, branch: true } },
             },
           },
+          // DPP rows leave question_id AND pyq_id null, so without this relation
+          // they render as "Unknown · Unknown" in Recent activity and as
+          // text-less cards with a broken /practice?patternId=unknown link in
+          // Critical review. The topic comes from the parent Dpp's Pattern.
+          dpp_question: {
+            select: {
+              id: true,
+              question_text: true,
+              dpp: {
+                select: {
+                  id: true,
+                  name: true,
+                  pattern: { select: { topic_name: true, subject: true, id: true, exam_type: true, branch: true } },
+                },
+              },
+            },
+          },
         },
         orderBy: { created_at: "desc" },
         take: 20,
@@ -154,7 +182,9 @@ export function getCachedRecentAttempts(userId: string) {
       const latestRecentAttempts: any[] = [];
       const seenQ = new Set<string>();
       recentAttempts.forEach((a) => {
-        const qId = a.question_id ?? a.pyq_id ?? a.id;
+        // Falling back to the attempt id would make every DPP row distinct, so a
+        // single 20-question sheet could fill the whole list.
+        const qId = a.question_id ?? a.pyq_id ?? a.dpp_question_id ?? a.id;
         if (!seenQ.has(qId)) {
           latestRecentAttempts.push(a);
           seenQ.add(qId);

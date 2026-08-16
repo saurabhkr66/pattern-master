@@ -8,6 +8,7 @@ import type { SubmitAnswer } from "@/components/test/TestEngine";
 import { recordSubmission } from "@/lib/leaderboard";
 import { getCachedTemplateById } from "@/lib/mockTemplate";
 import { clearDraft } from "@/lib/draft";
+import { isAnswerCorrect } from "@/lib/objectiveGrade";
 interface BreakdownItem {
   questionId: string; source: string; sectionIndex: number; sectionName: string;
   questionType: string; marks: number; isOptional: boolean; counted: boolean;
@@ -22,39 +23,9 @@ interface SectionScore {
 }
 
 /* ── Checking helpers ── */
-function checkNat(userAnswer: string, correctAnswer: string): boolean {
-  if (!userAnswer) return false;
-  const ca = correctAnswer.trim();
-  const val = parseFloat(userAnswer.trim());
-  if (ca.includes(":") && !ca.toLowerCase().includes(" to ")) {
-    const [minStr, maxStr] = ca.split(":");
-    return !isNaN(val) && val >= parseFloat(minStr) && val <= parseFloat(maxStr);
-  }
-  if (/ to /i.test(ca)) {
-    const [minStr, maxStr] = ca.split(/ to /i);
-    return !isNaN(val) && val >= parseFloat(minStr) && val <= parseFloat(maxStr);
-  }
-  return userAnswer.trim() === ca;
-}
-
-function checkMsq(userAnswer: string, correctAnswer: string): boolean {
-  if (!userAnswer) return false;
-  const userSet = userAnswer.split(/[;,]/).map((s) => s.trim().toUpperCase()).filter(Boolean).sort();
-  const correctSet = correctAnswer.split(/[;,]/).map((s) => s.trim().toUpperCase()).filter(Boolean).sort();
-  return JSON.stringify(userSet) === JSON.stringify(correctSet);
-}
-
-function checkMcq(userAnswer: string, correctAnswer: string): boolean {
-  if (!userAnswer) return false;
-  return userAnswer.trim().toUpperCase() === correctAnswer.trim().toUpperCase();
-}
-
-function isAnswerCorrect(questionType: string, userAnswer: string, correctAnswer: string): boolean {
-  if (questionType === "MCQ") return checkMcq(userAnswer, correctAnswer);
-  if (questionType === "MSQ") return checkMsq(userAnswer, correctAnswer);
-  if (questionType === "NAT") return checkNat(userAnswer, correctAnswer);
-  return false;
-}
+// checkMcq/checkMsq/checkNat/isAnswerCorrect moved verbatim to
+// lib/objectiveGrade.ts so the DPP submit path grades identically. Behaviour is
+// unchanged; see the import at the top of this file.
 
 /* ── Negative marking ── */
 function negativeScore(questionType: string, marks: number, negativePerMark: number): number {

@@ -236,6 +236,10 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
         }
         const cropCtx = { images, renderer };
         const apiKey = process.env.GEMINI_API_KEY ?? "";
+        // ImageKit folder segment under /pattern-master. The crop chain now takes
+        // a folder rather than a bare coaching id, so the DPP import can share it
+        // while keeping its figures in /pattern-master/dpp/<id>.
+        const imageFolder = `coaching/${coachingId}`;
         // Diagnostics: figures the MODEL flagged vs. crops we actually produced. If
         // flagged>0 but cropped==0 the detection step is broken; if flagged==0 the
         // model isn't identifying the figures (prompt/model side).
@@ -260,12 +264,12 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
                 flagged++;
                 if (pdf && typeof q.page !== "number") noPage++;
               }
-              q.images = await cropQuestionImage(cropCtx, q, coachingId, apiKey, req.signal);
+              q.images = await cropQuestionImage(cropCtx, q, imageFolder, apiKey, req.signal);
               if (q.images?.length) cropped++;
               // Capture figure(s) drawn inside the worked SOLUTION (tagged type:"explanation"
               // so they render with the solution, not the question). Appended to the same
               // images array — the renderer filters by type. Best-effort like the question crop.
-              const solImgs = await cropSolutionImage(cropCtx, q, coachingId, apiKey, req.signal);
+              const solImgs = await cropSolutionImage(cropCtx, q, imageFolder, apiKey, req.signal);
               if (solImgs?.length) {
                 const imgs = q.images ?? [];
                 q.images = [...imgs, ...solImgs.map((im, k) => ({ ...im, index: imgs.length + k }))];

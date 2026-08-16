@@ -1,0 +1,114 @@
+// ─── DPP (Daily Practice Problems) ────────────────────────────────────────────
+//
+// Operator-curated problem sets under a topic. ADMIN-ONLY for now: no student
+// surface, no public route, no sitemap entry. See docs/dpp-implementation-plan.md.
+//
+// Why these are NOT columns on GeneratedQuestion (the rejected v1 design):
+//   1. A DPP is created empty and filled afterwards — by paste or PDF import.
+//      Membership-as-columns cannot express a sheet that has no questions yet.
+//   2. GeneratedQuestion.semantic_hash is globally @unique, so a curated sheet
+//      could not reuse a question that already exists in the bank — backwards
+//      for curation, where you often WANT the known-good classic question.
+//   3. GeneratedQuestion.pattern_id is required, so DPP rows would immediately
+//      surface in the practice feed, on public topic pages, in topic counts and
+//      in the sitemap — five call sites that all read by pattern_id with no
+//      source filter. Own tables make that structurally impossible instead of
+//      relying on a filter nobody remembers to add.
+//
+// The back-relation `dpps Dpp[]` lives on Pattern in schema.prisma (Prisma can't
+// split one model across files).
+
+/// A named, curated problem set under one topic. Names are scoped per-topic, so
+/// "DPP 1" exists independently under Kinematics and under Thermodynamics.
+model Dpp {
+  id         String   @id @default(uuid())
+  pattern_id String
+  name       String // free text; defaults to "DPP {order}" but renameable
+  order      Int // sort position within the topic; drives the default name
+  status     String   @default("draft") // authoring lifecycle: draft | ready
+  // RELEASED TO STUDENTS. Not an SEO/indexing flag — DPP has no public content
+  // surface and every /dpp route is noindex. Student-facing reads require
+  // `is_public: true AND status: "ready"`, so an operator can unrelease a sheet
+  // without losing its "reviewed" state.
+  is_public  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  pattern   Pattern       @relation(fields: [pattern_id], references: [id])
+  questions DppQuestion[]
+  runs      DppRun[] // scored test-mode attempts — see dpprun.prisma
+
+  // The unique constraint already provides the btree on (pattern_id, order) that
+  // the topic-scoped listing needs, so no separate @@index — a second identical
+  // index would only cost writes.
+  @@unique([pattern_id, order])
+}
+
+/// One question inside a DPP.
+///
+/// ⚠️ These rows DO carry attempts now (practice mode writes one per answer), so
+/// the cascade from Dpp reaches them and then hits Attempt. That edge is
+/// deliberately `SetNull` rather than Cascade — see the note on
+/// `Attempt.dpp_question_id`. Deleting a DPP therefore orphans its attempt rows
+/// instead of deleting them, which preserves the dashboard streak. Still no
+/// bookmarks or reports: both endpoints FK GeneratedQuestion and are hidden for
+/// DPP rows in the UI.
+model DppQuestion {
+  id               String  @id @default(uuid())
+  dpp_id           String
+  order            Int // 1..N position within the DPP
+  question_text    String
+  // FLAT string array where each item STARTS WITH ITS OWN LABEL: "A. newton".
+  //
+  // ⚠️ The app has two incompatible conventions for deriving an option's letter:
+  //   • AnswerSelector / PracticeButton / FlashcardDeck / MistakeCard read
+  //     `option.trim().charAt(0)` — the label inside the string. These rows are
+  //     stored for that contract.
+  //   • TestEngine / QuestionPane use the ARRAY INDEX (QuestionPane.tsx:174) and
+  //     strip the prefix for display, so they only agree with the above when the
+  //     stored order already matches label order.
+  //
+  // lib/dppAdapter does NOT sort — it preserves input order (its tests assert
+  // that), because for the charAt(0) family order is irrelevant. Anything
+  // feeding these rows into TestEngine MUST go through `orderedOptions()` in
+  // lib/dppPaper.ts first, which sorts by label and returns the label array to
+  // grade against. Skipping it silently mis-grades every out-of-order question.
+  options          Json
+  correct_answer   String
+  explanation      String
+  question_type    String  @default("MCQ") // MCQ | NAT | MSQ (never subjective)
+  difficulty_level String?
+  marks            Int     @default(1)
+  images           Json?
+
+  question_text_hindi String?
+  options_hindi       Json?
+  explanation_hindi   String?
+
+  // ── Extractor review flags ──────────────────────────────────────────────────
+  // In the rejected v1 design these lived in Redis for 7 days, because
+  // GeneratedQuestion had nowhere to put them and half-vetted rows could not be
+  // allowed near the practice feed. As columns on a table nothing public reads,
+  // both problems vanish and review state survives a browser refresh for free.
+  // Three independent answers can exist for one question, and the reviewer needs
+  // all of them to adjudicate a dispute:
+  //   correct_answer  the recorded answer (Gemini answer-key pass)
+  //   blind_answer    the blind cross-check solver's own conclusion
+  //   verify_answer   the opt-in independent verify pass's conclusion
+  // answer_disputed is raised by the VERIFY pass, so storing the flag without
+  // verify_answer leaves the editor showing "disputed" with nothing to compare.
+  answer_disputed Boolean? // an independent solve disagreed with correct_answer
+  blind_answer    String? // what the blind cross-check answered
+  verify_answer   String? // what the independent verify pass answered
+  figure_missing  Boolean? // references a figure that failed to crop
+  reviewed        Boolean  @default(false) // operator has vetted this row
+  source          String? // "paste" | "pdf_import"
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  dpp      Dpp       @relation(fields: [dpp_id], references: [id], onDelete: Cascade)
+  attempts Attempt[] // practice-mode answers; Attempt lives in schema.prisma
+
+  @@index([dpp_id, order])
+}

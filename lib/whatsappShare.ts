@@ -23,6 +23,37 @@ export function openWhatsApp(text: string, phone?: string | null): void {
   window.open(buildWaUrl(text, phone), "_blank", "noopener,noreferrer");
 }
 
+export function canNativeShare(): boolean {
+  return typeof navigator !== "undefined" && typeof navigator.share === "function";
+}
+
+/**
+ * Open the OS share sheet, falling back to WhatsApp where there isn't one.
+ *
+ * The share sheet is what reaches Telegram / Instagram / SMS — channels a wa.me
+ * link cannot. Must be called from a user gesture, same as openWhatsApp.
+ *
+ * A dismissed sheet (AbortError) returns silently: the user cancelled on
+ * purpose, and popping WhatsApp open afterwards would override that. Only a
+ * genuine failure falls through.
+ */
+export async function shareOrWhatsApp(o: {
+  title?: string;
+  text: string;
+  url: string;
+}): Promise<void> {
+  if (canNativeShare()) {
+    try {
+      await navigator.share({ title: o.title, text: o.text, url: o.url });
+      return;
+    } catch (e) {
+      if ((e as { name?: string } | null)?.name === "AbortError") return;
+      // Anything else (unsupported payload, permission) → WhatsApp below.
+    }
+  }
+  openWhatsApp(`${o.text}\n\n${o.url}`);
+}
+
 // Built at click time on the admin's device, so the local timezone is the
 // admin's — which is what their students share.
 function fmtDate(iso: string): string {

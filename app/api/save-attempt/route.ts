@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": "60" } });
         }
 
-        const { questionId, pyqId, mockQuestionId, isCorrect, userAnswer, timeSpent } = body;
+        const { questionId, pyqId, mockQuestionId, dppQuestionId, isCorrect, userAnswer, timeSpent } = body;
 
-        if ((!questionId && !pyqId && !mockQuestionId) || isCorrect === undefined) {
+        if ((!questionId && !pyqId && !mockQuestionId && !dppQuestionId) || isCorrect === undefined) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -49,6 +49,11 @@ export async function POST(req: NextRequest) {
                     question_id: questionId || null,
                     pyq_id: pyqId || null,
                     mock_question_id: mockQuestionId || null,
+                    // DPP practice answers. Note these are the ONLY attempt rows
+                    // that intentionally leave question_id and pyq_id null while
+                    // still being a real question — the raw queries in
+                    // mistakes/review/dashboard must COALESCE this column too.
+                    dpp_question_id: dppQuestionId || null,
                     is_correct: isCorrect,
                     user_answer: userAnswer ? String(userAnswer) : null,
                     user_id: userId,

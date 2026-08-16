@@ -11,13 +11,15 @@
 //
 // Child sitemap ids: "0" (light hub: static + exam/subject/mock-landing/pyq
 // hubs), "topics" (heavy per-topic pages, isolated so its aggregations can't
-// time out the index), "pyq-years", "papers", and "mock-N" (chunked instances).
+// time out the index), "pyq-years", and "papers".
+//
+// Per-mock-instance URLs (/mock-tests/<exam>/<branch>/<id>) are NOT submitted —
+// see the note on listSitemapIds below.
 
 import { prisma } from "@/lib/prisma";
-import { toSlug, buildExamSlug, paperSlug, paperYear, TOPIC_PAGE_SIZE } from "@/lib/seo";
+import { toSlug, buildExamSlug, paperSlug, paperYear } from "@/lib/seo";
 
 export const BASE = "https://battleexam.com";
-export const CHUNK_SIZE = 10_000; // generous headroom under Google's 50K cap
 
 export type UrlEntry = {
   url: string;
@@ -42,27 +44,24 @@ function logFail(label: string) {
   };
 }
 
-function chunkCount(rows: number): number {
-  return Math.max(1, Math.ceil(rows / CHUNK_SIZE));
-}
-
 // Returns the set of sitemap ids that should appear in the index.
-// "0" is the hub; "mock-N" are chunked mock-test instances; "pyq-years" is the year-wise PYQ index.
+// "0" is the hub; "pyq-years" is the year-wise PYQ index; "papers" and "topics"
+// are the two rich content buckets.
+//
+// Per-mock-instance URLs are deliberately absent. Each one is a ~130-word start
+// screen — a title, three stat tiles and four generic instruction bullets — with
+// nothing varying between them but the name and the numbers. Worse, for every
+// seeded mock the SAME exam paper is already published as a paper page with the
+// full questions and solutions inline (/gate-ece/pyq/2014/set-4 renders ~24,800
+// words; its mock-instance twin renders 131). Submitting both asked Google to
+// index 273 thin near-duplicates of pages we already submit properly.
+//
+// The pages stay live and every instance is linked from its mock landing page
+// (/mock-tests/<exam>/<branch>), so users and crawlers still reach them — we
+// just stop nominating them for indexing. Do not re-add them here; if these
+// ever need to rank, give them real content first.
 export async function listSitemapIds(): Promise<string[]> {
   const ids: string[] = ["0"];
-
-  const mockCount = await prisma.mockTestTemplate.count().catch((e) => {
-    console.error("[sitemap] mock count failed:", e);
-    return 0;
-  });
-
-  if (mockCount > 0) {
-    for (let i = 0; i < chunkCount(mockCount); i++) {
-      ids.push(`mock-${i}`);
-    }
-  } else {
-    console.warn("[sitemap] mock bucket is empty — skipping");
-  }
 
   const pyqYearCount = await prisma.pYQ
     .groupBy({ by: ["exam_type", "year"] })
@@ -213,21 +212,20 @@ export async function buildHubSitemap(): Promise<UrlEntry[]> {
 // sitemap ("topics") so its full-table aggregations never block the sitemap
 // index or the lighter hub. Cached 24h at the edge like every other child.
 //
-// NOTE ON SCALE: this emits every topic root + each /page/N + /notes into a
-// single urlset. At the current scale (hundreds of patterns → low thousands of
-// URLs) that stays comfortably under Google's 50K-per-sitemap cap. If topic
-// URLs ever approach that, chunk this the way buildMockChunk does (topics-N)
-// and have listSitemapIds() push one id per chunk.
+// SCOPE: topic ROOTS + /notes only. `/page/N` pagination URLs are deliberately
+// NOT submitted — see the note in the pagination block below.
+//
+// NOTE ON SCALE: at the current scale (hundreds of patterns) this stays far
+// under Google's 50K-per-sitemap cap. If topic URLs ever approach that, split
+// this into numbered children (topics-0, topics-1, …) and have listSitemapIds()
+// push one id per chunk.
 export async function buildTopicsSitemap(): Promise<UrlEntry[]> {
-  // Per-topic freshness + depth. The Pattern table has no timestamp column and
-  // its questions paginate at TOPIC_PAGE_SIZE per page, so for every topic we
-  // derive two things from its child questions (both tables carry created_at and
-  // are indexed by pattern_id):
+  // Per-topic freshness + depth. The Pattern table has no timestamp column, so
+  // for every topic we derive two things from its child questions (both tables
+  // carry created_at and are indexed by pattern_id):
   //   • lastmod → newest question added (max of PYQ/generated). Freshly seeded
   //               topics advertise a recent date and get recrawled promptly.
-  //   • count   → total questions, to emit every pagination page (/page/2…N).
-  //               Without this only page 1 of each topic was in the sitemap and
-  //               ~90% of question pages stayed invisible to Google.
+  //   • count   → total questions, used to drop question-less topics (below).
   const [gqAgg, pyqAgg] = await Promise.all([
     prisma.generatedQuestion
       .groupBy({ by: ["pattern_id"], _max: { created_at: true }, _count: true })
@@ -257,9 +255,6 @@ export async function buildTopicsSitemap(): Promise<UrlEntry[]> {
     // "Practice Questions & PYQs" shell, which is thin/misleading content. Once
     // the topic is seeded it re-enters the sitemap automatically (count-driven).
     if (totalQ === 0) return [];
-    // Mirror the topic page's own pagination math — Math.max(1, ceil(totalQ /
-    // PAGE_SIZE)) — so we never emit a /page/N the route would 404.
-    const totalPages = Math.max(1, Math.ceil(totalQ / TOPIC_PAGE_SIZE));
 
     const entries: UrlEntry[] = [
       {
@@ -269,16 +264,17 @@ export async function buildTopicsSitemap(): Promise<UrlEntry[]> {
         priority: 0.85,
       },
     ];
-    // Page 1 is the canonical primary surface; deeper pages get a slightly lower
-    // priority so crawlers still treat the topic root as the lead URL.
-    for (let p = 2; p <= totalPages; p++) {
-      entries.push({
-        url: `${base}/page/${p}`,
-        ...(lastmod ? { lastmod } : {}),
-        changefreq: "weekly",
-        priority: 0.7,
-      });
-    }
+    // `/page/2…N` is INTENTIONALLY not submitted.
+    //
+    // Submitting them put ~1,500 pagination URLs into this sitemap against only
+    // ~460 topic roots — 75% of everything we asked Google to index. Google
+    // almost never indexes deep paginated list pages, so they all landed in
+    // "Crawled – currently not indexed" (~2,900 URLs in Search Console), buried
+    // the roots we actually want ranked, and burned crawl budget getting there.
+    //
+    // The pages stay live, `index, follow`, and linked from TopicPagination, so
+    // Googlebot still reaches every question by crawling the chain from page 1 —
+    // we just stop *asking* for them to be indexed. Do not re-add them here.
     // Dedicated concept-notes page — only when the topic actually has notes
     // (the /notes route notFound()s otherwise, so an empty entry would 404).
     if (r.short_notes && r.short_notes.trim().length > 0) {
@@ -348,41 +344,15 @@ export async function buildPyqYearsSitemap(): Promise<UrlEntry[]> {
   return entries;
 }
 
-export async function buildMockChunk(chunkIdx: number): Promise<UrlEntry[]> {
-  const offset = chunkIdx * CHUNK_SIZE;
-  const rows = await prisma.mockTestTemplate
-    .findMany({
-      select: { id: true, exam_type: true, branch: true, created_at: true },
-      orderBy: { id: "asc" },
-      skip: offset,
-      take: CHUNK_SIZE,
-    })
-    .catch(logFail(`mock chunk @${offset}`));
-
-  return rows.map((t) => ({
-    url: `${BASE}/mock-tests/${toSlug(t.exam_type)}/${toSlug(t.branch || "All Subjects")}/${t.id}`,
-    lastmod: t.created_at.toISOString(),
-    changefreq: "monthly",
-    priority: 0.75,
-  }));
-}
-
-// Resolves a sitemap id (e.g. "0", "mock-3", "pyq-years") to its URL entries.
-// Returns null when the id is unrecognised.
+// Resolves a sitemap id (e.g. "0", "topics", "pyq-years") to its URL entries.
+// Returns null when the id is unrecognised, which the route turns into a 404 —
+// that is the correct answer for the retired "mock-N" ids Google still has
+// registered, and is how they get dropped from its sitemap list.
 export async function buildSitemapById(id: string): Promise<UrlEntry[] | null> {
   if (id === "0") return buildHubSitemap();
   if (id === "topics") return buildTopicsSitemap();
   if (id === "pyq-years") return buildPyqYearsSitemap();
   if (id === "papers") return buildPaperPagesSitemap();
-
-  const dashIdx = id.lastIndexOf("-");
-  if (dashIdx === -1) return null;
-
-  const kind = id.slice(0, dashIdx);
-  const chunkIdx = parseInt(id.slice(dashIdx + 1), 10);
-  if (Number.isNaN(chunkIdx)) return null;
-
-  if (kind === "mock") return buildMockChunk(chunkIdx);
   return null;
 }
 

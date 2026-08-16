@@ -2,7 +2,7 @@ import "server-only";
 import { GoogleGenerativeAI, SchemaType, type ResponseSchema, type Schema } from "@google/generative-ai";
 import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 import sharp from "sharp";
-import { uploadCoachingImage } from "@/lib/coachingImageUpload";
+import { uploadImportImage } from "@/lib/coachingImageUpload";
 
 // Gemini-powered bulk import: extract questions from photos / a PDF, translate to
 // the other language, and crop any diagrams. The admin supplies Exam + Set (applied
@@ -2465,8 +2465,8 @@ type PageRenderer = { render(pageIndex: number): { png: Buffer; width: number; h
 export type CropContext = { images: UploadImage[]; renderer?: PageRenderer | null };
 
 /** Upload a PNG crop to ImageKit; returns its URL (passed through by getImageUrl) or null. */
-async function uploadCrop(png: Buffer, coachingId: string): Promise<string | null> {
-  return uploadCoachingImage(png, coachingId, "png");
+async function uploadCrop(png: Buffer, folder: string): Promise<string | null> {
+  return uploadImportImage(png, folder, "png");
 }
 
 /**
@@ -2639,7 +2639,7 @@ async function locateFigure(
 export async function cropQuestionImage(
   ctx: CropContext,
   q: ParsedQuestion,
-  coachingId: string,
+  folder: string,
   apiKey?: string,
   signal?: AbortSignal
 ): Promise<StoredImage[] | null> {
@@ -2657,7 +2657,7 @@ export async function cropQuestionImage(
 
   // Figure-option questions (mirror-image etc.) need the WHOLE question captured,
   // options included — pass "whole" so the box doesn't exclude the choices.
-  const imgs = await detectAndCrop(ctx, q, coachingId, key, signal, q.options_are_figures ? "whole" : "tight", q.page);
+  const imgs = await detectAndCrop(ctx, q, folder, key, signal, q.options_are_figures ? "whole" : "tight", q.page);
   return imgs.length ? imgs : null;
 }
 
@@ -2675,7 +2675,7 @@ export async function cropQuestionImage(
 async function detectAndCrop(
   ctx: CropContext,
   q: ParsedQuestion,
-  coachingId: string,
+  folder: string,
   key: string,
   signal: AbortSignal | undefined,
   mode: "tight" | "whole" | "solution",
@@ -2697,7 +2697,7 @@ async function detectAndCrop(
     const use = mode === "whole" ? boxes.slice(0, 1) : boxes;
     const out: StoredImage[] = [];
     for (const box of use) {
-      const url = await cropBoxAndUpload(src, box, coachingId);
+      const url = await cropBoxAndUpload(src, box, folder);
       if (url) out.push({ index: out.length, filename: url, ...(explanation ? { type: "explanation" as const } : {}) });
     }
     if (out.length) return out; // found figures on this candidate page — done
@@ -2714,7 +2714,7 @@ async function detectAndCrop(
 export async function cropSolutionImage(
   ctx: CropContext,
   q: ParsedQuestion,
-  coachingId: string,
+  folder: string,
   apiKey?: string,
   signal?: AbortSignal
 ): Promise<StoredImage[] | null> {
@@ -2725,7 +2725,7 @@ export async function cropSolutionImage(
   // Prefer the solution's own page; fall back to the question's page (the solution
   // is often printed right under the question). detectAndCrop also probes ±1.
   const page = typeof q.solution_page === "number" ? q.solution_page : q.page;
-  const imgs = await detectAndCrop(ctx, q, coachingId, key, signal, "solution", page);
+  const imgs = await detectAndCrop(ctx, q, folder, key, signal, "solution", page);
   return imgs.length ? imgs : null;
 }
 
@@ -2762,7 +2762,7 @@ async function resolveSourcePage(
 }
 
 /** Crop the normalized [ymin,xmin,ymax,xmax] (0..1000) box out of a page and upload it. */
-async function cropBoxAndUpload(src: PageSource, box: number[], coachingId: string): Promise<string | null> {
+async function cropBoxAndUpload(src: PageSource, box: number[], folder: string): Promise<string | null> {
   try {
     const [ymin, xmin, ymax, xmax] = box;
     const { W, H } = src;
@@ -2776,7 +2776,7 @@ async function cropBoxAndUpload(src: PageSource, box: number[], coachingId: stri
     if (width <= 10 || height <= 10) return null; // too small = bad detection
 
     const cropped = await sharp(src.png).extract({ left, top, width, height }).png().toBuffer();
-    return await uploadCrop(cropped, coachingId);
+    return await uploadCrop(cropped, folder);
   } catch {
     return null;
   }

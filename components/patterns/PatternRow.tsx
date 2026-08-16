@@ -6,6 +6,7 @@ import PracticeButton from "./PracticeButton";
 import MathRenderer from "@/components/ui/MathRenderer";
 import UserNotesEditor from "./UserNotesEditor";
 import ShortNotesTab from "./ShortNotesTab";
+import DppTabPanel from "@/components/dpp/DppTabPanel";
 import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
@@ -103,7 +104,7 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-  const [activeTab, setActiveTab] = useState<"bank" | "pyq" | "notes" | "review-notes">("pyq");
+  const [activeTab, setActiveTab] = useState<TabId>("pyq");
   const [visibleBank, setVisibleBank] = useState(12);
   const [visiblePyqs, setVisiblePyqs] = useState(12);
   const [questionStatusFilter, setQuestionStatusFilter] = useState<"all" | "unsolved" | "wrong" | "correct">("all");
@@ -343,17 +344,23 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
         <div style={{ padding: '0 4px 20px' }}>
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 2, marginTop: 4, marginBottom: 16, borderBottom: `1px solid ${BE.line}`, overflowX: 'auto' }}>
-            {(pattern.isMock ? [
+            {(pattern.isMock ? ([
                { id: 'bank', label: 'Questions', n: pattern.questionsCount, icon: 'bank' }
-            ] : [
+            ] as TabDef[]) : [
               { id: 'bank', label: 'Question bank', n: pattern.questionsCount, icon: 'bank' },
               { id: 'pyq',  label: 'Previous year', n: pattern.pyqsCount, icon: 'pyq' },
+              // Only shown when this topic has at least one RELEASED DPP, so
+              // most topics keep the tab strip exactly as it was. dppCount comes
+              // from /api/practice/topics as a filtered relation count.
+              ...(pattern.dppCount > 0
+                ? [{ id: 'dpp', label: 'DPP', n: pattern.dppCount, icon: 'dpp' }]
+                : []),
               { id: 'notes', label: 'Mastery notes', icon: 'notes' },
               { id: 'review-notes', label: 'My notes', icon: 'pencil', dot: true },
-            ]).map(t => {
+            ] as TabDef[]).map(t => {
               const active = t.id === activeTab;
               return (
-                <div key={t.id} onClick={() => { setActiveTab(t.id as any); setSelectedQuestion(null); setIsGenerating(false); }}
+                <div key={t.id} onClick={() => { setActiveTab(t.id); setSelectedQuestion(null); setIsGenerating(false); }}
                   style={{
                     padding: '10px 14px', fontSize: 12, fontWeight: 600,
                     color: active ? BE.accent : BE.textDim,
@@ -429,6 +436,10 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
                       </div>
                     )}
                   </>
+                ) : activeTab === 'dpp' ? (
+                  <div style={{ padding: '10px 0' }}>
+                    <DppTabPanel patternId={pattern.id} topicName={pattern.topic_name} />
+                  </div>
                 ) : activeTab === 'notes' ? (
                   <div style={{ padding: '10px 0' }}>
                     <ShortNotesTab patternId={pattern.id} shortNotes={shortNotes} isAdmin={isCurrentUserAdmin} />
@@ -445,6 +456,12 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   );
 }
 
+// The tab strip is heterogeneous (only some tabs carry a count or a dot), so it
+// gets an explicit type — otherwise the array widens and `setActiveTab` needs an
+// `as any` cast that silently accepts a typo'd tab id.
+type TabId = "bank" | "pyq" | "notes" | "review-notes" | "dpp";
+type TabDef = { id: TabId; label: string; icon: string; n?: number; dot?: boolean };
+
 function TabIcon({ kind, active, className }: { kind: string, active: boolean, className?: string }) {
   const c = active ? BE.accent : BE.textDim;
   const props = { viewBox: "0 0 14 14", fill: "none", stroke: c, strokeWidth: "1.5", className };
@@ -452,5 +469,7 @@ function TabIcon({ kind, active, className }: { kind: string, active: boolean, c
   if (kind === 'pyq')  return <svg {...props as any}><rect x="2.5" y="2" width="9" height="10" rx="1"/><path d="M4.5 5h5M4.5 7.5h5M4.5 10h3"/></svg>;
   if (kind === 'notes')return <svg {...props as any}><path d="M3 2.5h6l2 2v7a1 1 0 01-1 1H3a1 1 0 01-1-1v-8a1 1 0 011-1z"/><path d="M9 2.5v2h2"/></svg>;
   if (kind === 'pencil')return <svg {...props as any}><path d="M2 12l2-.5 7.5-7.5-1.5-1.5L2.5 10 2 12z"/></svg>;
+  // DPP: a lightning bolt — a short, timed, finishable set.
+  if (kind === 'dpp')  return <svg {...props as any}><path d="M7.5 1.5L3 8h3.5L6 12.5 11 6H7.5l.5-4.5z"/></svg>;
   return null;
 }

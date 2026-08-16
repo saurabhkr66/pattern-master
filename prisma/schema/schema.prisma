@@ -38,6 +38,7 @@ model Pattern {
   questions         GeneratedQuestion[]
   pyqs              PYQ[]
   userNotes         UserNote[]
+  dpps              Dpp[] // admin-only curated problem sets — see dpp.prisma
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
   @@index([exam_type, branch, subject], map: "pattern_subject_lookup")
@@ -152,14 +153,27 @@ model Attempt {
   time_spent       Int?
   mock_question_id String?
   mock_test_id     String?
+  /// A DPP practice answer. FOURTH nullable question ref on this table — every
+  /// raw query that partitions attempts by question MUST include it in its
+  /// COALESCE, or all DPP rows collapse into a single NULL partition and all but
+  /// one silently vanish. Sites: app/(app)/mistakes/page.tsx,
+  /// app/(app)/review/page.tsx, app/(app)/dashboard/_lib/queries.ts.
+  ///
+  /// SetNull, not Cascade: deleting a DPP must not retroactively erase the fact
+  /// that a student practised on a given day, which is what the dashboard streak
+  /// counts. An orphaned row keeps its date and drops out of the mistake queries
+  /// via their `IS NOT NULL` guards.
+  dpp_question_id  String?
   MockTestTemplate MockTestTemplate?  @relation(fields: [mock_test_id], references: [id])
   pyq              PYQ?               @relation(fields: [pyq_id], references: [id])
   question         GeneratedQuestion? @relation(fields: [question_id], references: [id])
+  dpp_question     DppQuestion?       @relation(fields: [dpp_question_id], references: [id], onDelete: SetNull)
   user             User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, is_correct, created_at(sort: Desc)])
   @@index([question_id, user_id, is_correct])
   @@index([pyq_id, user_id, is_correct])
+  @@index([dpp_question_id, user_id, is_correct])
 }
 
 model TestSession {

@@ -22,21 +22,27 @@ export default async function CriticalReviewSection({ userId }: { userId: string
   if (recentFailures.length === 0) return null;
 
   const reviewItems = recentFailures.map((a: any) => {
-    const q = a.question ?? a.pyq;
-    const pattern = q?.pattern ?? {
+    // A DPP question is not in GeneratedQuestion or PYQ, so the generic
+    // /practice feed cannot serve it — its own practice route can. Resolved
+    // first so the branch below is a single decision.
+    const dppQ = a.dpp_question;
+    const q = a.question ?? a.pyq ?? dppQ;
+    const pattern = (dppQ ? dppQ.dpp?.pattern : q?.pattern) ?? {
       topic_name: "Unknown",
       subject: "Unknown",
       id: "unknown",
       exam_type: "GATE",
     };
-    const patternId = q?.pattern?.id || "unknown";
+    const patternId = pattern?.id || "unknown";
     return {
       id: a.id,
       question_text: q?.question_text,
       topic_name: pattern?.topic_name,
       subject: pattern?.subject,
       age: formatDistanceToNow(new Date(a.created_at), { addSuffix: true }).replace("about ", "").replace("almost ", ""),
-      practiceUrl: `/practice?patternId=${patternId}&questionId=${q?.id || ""}&subject=${encodeURIComponent(pattern?.subject || "All")}${(pattern as any)?.exam_type ? `&exam=${encodeURIComponent((pattern as any).exam_type)}` : ""}${(pattern as any)?.branch ? `&branch=${encodeURIComponent((pattern as any).branch)}` : ""}`,
+      practiceUrl: dppQ
+        ? `/dpp/${dppQ.dpp?.id}/practice`
+        : `/practice?patternId=${patternId}&questionId=${q?.id || ""}&subject=${encodeURIComponent(pattern?.subject || "All")}${(pattern as any)?.exam_type ? `&exam=${encodeURIComponent((pattern as any).exam_type)}` : ""}${(pattern as any)?.branch ? `&branch=${encodeURIComponent((pattern as any).branch)}` : ""}`,
     };
   });
 

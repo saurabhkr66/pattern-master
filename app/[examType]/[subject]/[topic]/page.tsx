@@ -13,7 +13,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
-import { fetchPattern, fetchRelatedTopics, combineQuestions, unslug } from "./_lib/dataFetch";
+import { fetchPattern, fetchRelatedTopics, fetchTopicLabels, combineQuestions, unslug } from "./_lib/dataFetch";
 import { buildTopicMetadata, buildSchemas } from "./_lib/metadata";
 import TopicHeader from "./_components/TopicHeader";
 import PracticeModePromo from "./_components/PracticeModePromo";
@@ -50,16 +50,41 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { examType, subject, topic } = await params;
 
+  // WHY the 404 checks live in generateMetadata and not just the page body:
+  //
+  // app/loading.tsx puts a Suspense boundary at the root, so every route
+  // streams. Once streaming starts the HTTP status is already flushed and can
+  // no longer be changed — so notFound() in the page body renders the 404 UI
+  // but the response stays "200 OK" (see node_modules/next/dist/docs/01-app/
+  // 03-api-reference/03-file-conventions/loading.md, "Status Codes": "ensure
+  // the resource exists before the response body is streamed").
+  //
+  // The result was a soft 404 on every unmatched topic URL: 200, a real-looking
+  // <title>, ~30 words of chrome, and contradictory robots tags (generateMetadata's
+  // "index, follow" plus the not-found boundary's "noindex"). Google discovered
+  // thousands of these from the old per-question and -common URL shapes, kept
+  // them in the crawl set because 200 means "this is a page", and filed them
+  // under Soft 404 / "Crawled – currently not indexed".
+  //
+  // generateMetadata resolves BEFORE the body streams, so throwing here still
+  // produces a real 404. Keep the page-body notFound() calls as the backstop.
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found" };
+  if (!exam) notFound();
+
+  // Real names from the Pattern row — "SQL", "DBMS", "B+ Tree" — not unslug()'s
+  // title-cased slug ("Sql", "Dbms", "B Plus Tree"), which put terms nobody
+  // searches for into every <title>. unslug() still resolves the lookup itself
+  // (toSlug round-trips it), so it stays as the pre-DB fallback.
+  const labels = await fetchTopicLabels(exam, unslug(subject), topic);
+  if (!labels) notFound();
 
   return buildTopicMetadata({
     exam,
     examType,
     subject,
     topic,
-    subjectLabel: unslug(subject),
-    topicLabel: unslug(topic),
+    subjectLabel: labels.subject,
+    topicLabel: labels.topicName,
     pageNum: 1,
   });
 }
@@ -75,14 +100,18 @@ export default async function TopicPage({
   const exam = parseExamSlug(examType);
   if (!exam) notFound();
 
-  const subjectLabel = unslug(subject);
-  const topicLabel = unslug(topic);
+  // Lookup key only — toSlug() turns this straight back into `subject`, so its
+  // casing is irrelevant. Display labels come from the Pattern row below.
+  const subjectKey = unslug(subject);
 
   const [pattern, relatedTopics] = await Promise.all([
-    fetchPattern(exam, subjectLabel, topic, pageNum, PAGE_SIZE),
-    fetchRelatedTopics(exam, subjectLabel, topic),
+    fetchPattern(exam, subjectKey, topic, pageNum, PAGE_SIZE),
+    fetchRelatedTopics(exam, subjectKey, topic),
   ]);
   if (!pattern) notFound();
+
+  const subjectLabel = pattern.subject;
+  const topicLabel = pattern.topic_name;
 
   const basePath = `/${examType}/${subject}/${topic}`;
   const canonical = `${BASE}${basePath}`;

@@ -26,9 +26,19 @@ interface PracticeButtonProps {
   initialQueue?: any[];
   isPyqMode?: boolean;
   onExit?: () => void;
+  /** Mirror the current question id into `/practice?q=…`. Default true, which is
+   *  what the practice feed wants. Any host on another route MUST pass false —
+   *  the effect hardcodes `/practice`, so it would navigate the user off the
+   *  page they're on with every question change. */
+  urlSync?: boolean;
+  /** Called instead of generating more questions when a finite queue runs out.
+   *  Without it, `handleNextFromQueue` falls through to `handleGenerate()` and
+   *  POSTs `/api/generate-question` — so finishing a fixed set (a DPP) would
+   *  silently fire AI generation and append an unrelated question. */
+  onComplete?: () => void;
 }
 
-export default function PracticeButton({ patternId, topicName, initialQuestion, initialQueue, isPyqMode: _propIsPyqMode, onExit }: PracticeButtonProps) {
+export default function PracticeButton({ patternId, topicName, initialQuestion, initialQueue, isPyqMode: _propIsPyqMode, onExit, urlSync = true, onComplete }: PracticeButtonProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
@@ -116,11 +126,12 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
   }, [question?.id]);
 
   useEffect(() => {
+    if (!urlSync) return;
     if (!question?.id) return;
     const params = new URLSearchParams(window.location.search);
     params.set("q", question.id);
     router.replace(`/practice?${params.toString()}`, { scroll: false });
-  }, [question?.id, router]);
+  }, [question?.id, router, urlSync]);
 
   useEffect(() => {
     if (question && containerRef.current) {
@@ -166,6 +177,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
   const handleGenerateExplanation = async () => {
     if (!question || isGeneratingExplanation) return;
+    // The endpoint resolves the question by id against GeneratedQuestion / PYQ /
+    // MockQuestion — a DPP id matches none of them. ExplanationPanel hides the
+    // button for DPP rows; fix the sheet in /admin/dpp instead.
+    if (question._isDpp) return;
     setIsGeneratingExplanation(true);
     const isMock = question.isMock || patternId?.startsWith("mock-");
     const mockTestId = isMock ? patternId.replace("mock-", "") : undefined;
@@ -232,14 +247,17 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       setHasReported(false);
       setGeneratedExplanation(null);
       setAiUsage(null);
+    } else if (onComplete) {
+      // A finite set that has been worked through. Checked BEFORE isPyqMode so a
+      // host with a fixed queue always gets its own ending, never generation.
+      setIsFullscreen(false);
+      onComplete();
+    } else if (isPyqMode) {
+      setIsFullscreen(false);
+      if (onExit) onExit();
+      else setQuestion(null);
     } else {
-      if (isPyqMode) {
-        setIsFullscreen(false);
-        if (onExit) onExit();
-        else setQuestion(null);
-      } else {
-        handleGenerate();
-      }
+      handleGenerate();
     }
   };
 
@@ -308,20 +326,37 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     if (type === "MCQ" && !finalAnswerOverride) setSelectedAnswer(finalAnswer);
     setIsRevealed(true);
 
+    const isDpp = Boolean(question._isDpp);
+
     // Did this question already count toward the solved total BEFORE this attempt?
     // The server counts DISTINCT correctly-answered questions per pattern, so we
     // only bump on the FIRST correct solve — never on re-solves, never for mocks.
+    //
+    // ⚠️ Never for DPP either, and this is NOT the same reason as mocks. The
+    // solved count is rendered against a denominator of bank + PYQ questions
+    // only (see /api/practice/progress, which joins GeneratedQuestion and PYQ
+    // and has no DPP arm). Counting a DPP solve in the numerator would let the
+    // progress bar climb past 100% on a topic with a released DPP. If DPP is
+    // ever meant to count, the denominator has to grow in the same commit.
     const wasAlreadySolved = (question.attempts || []).some((a: any) => a?.is_correct);
-    const shouldIncrement = isCorrect && !wasAlreadySolved && !question.isMock;
+    const shouldIncrement = isCorrect && !wasAlreadySolved && !question.isMock && !isDpp;
 
-    queryClient.setQueryData(["patternQuestions", patternId], (oldData: any) => {
-      if (!oldData) return oldData;
-      const newAttempt = { is_correct: isCorrect, user_answer: finalAnswer, created_at: new Date().toISOString() };
-      const updateArray = (arr: any[]) => (arr || []).map(q =>
-        q.id === question.id ? { ...q, attempts: [newAttempt, ...(q.attempts || [])] } : q
-      );
-      return { ...oldData, questions: updateArray(oldData.questions), pyqs: updateArray(oldData.pyqs) };
-    });
+    // setQueriesData (prefix match), NOT setQueryData (exact match): PatternRow
+    // reads ["patternQuestions", patternId, language], so an exact-key write to
+    // the 2-element key lands in an entry nothing renders — the card keeps
+    // showing "Not attempted" until staleTime lapses or the page reloads.
+    // Skipped for DPP: that cache holds the topic's bank + PYQ arrays, which a
+    // DPP question is not a member of, so the map would be a no-op scan.
+    if (!isDpp) {
+      queryClient.setQueriesData({ queryKey: ["patternQuestions", patternId] }, (oldData: any) => {
+        if (!oldData) return oldData;
+        const newAttempt = { is_correct: isCorrect, user_answer: finalAnswer, created_at: new Date().toISOString() };
+        const updateArray = (arr: any[]) => (arr || []).map(q =>
+          q.id === question.id ? { ...q, attempts: [newAttempt, ...(q.attempts || [])] } : q
+        );
+        return { ...oldData, questions: updateArray(oldData.questions), pyqs: updateArray(oldData.pyqs) };
+      });
+    }
 
     // Optimistically bump the solved count so the progress bar ticks up instantly —
     // no refetch (which the endpoint's `private, max-age=30` would serve stale anyway),
@@ -354,9 +389,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        questionId: (question._isPyq || question.isMock) ? undefined : question.id,
+        questionId: (question._isPyq || question.isMock || isDpp) ? undefined : question.id,
         pyqId: question._isPyq ? question.id : undefined,
         mockQuestionId: question.isMock ? question.id : undefined,
+        dppQuestionId: isDpp ? question.id : undefined,
         isCorrect,
         userAnswer: finalAnswer,
         timeSpent: seconds,
@@ -395,6 +431,10 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
 
   const handleToggleBookmark = async () => {
     if (!question || isBookmarking) return;
+    // Bookmark.question_id FKs GeneratedQuestion, same as Attempt — see the note
+    // in handleSubmit. QuestionMetaBar hides the button for DPP; this is the
+    // belt to that braces.
+    if (question._isDpp) return;
     if (!isSignedIn) { setShowSignInModal(true); return; }
     setIsBookmarking(true);
     const prev = isBookmarked;
@@ -412,7 +452,9 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setIsBookmarked(data.bookmarked);
-      queryClient.setQueryData(["patternQuestions", patternId], (oldData: any) => {
+      // Prefix match, same reason as the attempt write above — the read key
+      // carries a trailing `language` element.
+      queryClient.setQueriesData({ queryKey: ["patternQuestions", patternId] }, (oldData: any) => {
         if (!oldData) return oldData;
         const updateArray = (arr: any[]) => (arr || []).map(q =>
           q.id === question.id ? { ...q, isBookmarked: data.bookmarked } : q

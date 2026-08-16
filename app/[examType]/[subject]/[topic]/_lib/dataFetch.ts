@@ -26,6 +26,15 @@ const getPatternBySlug = (examSlug: string, branchSlug: string, subjectSlug: str
     { revalidate: 86400, tags: ["patterns"] },
   )();
 
+// Slug → human label, used ONLY to resolve the pattern lookup (toSlug() round-
+// trips it back, so the casing here never matters) and as a last-resort display
+// fallback before the DB row is available.
+//
+// Do NOT use this for anything user- or crawler-visible: it title-cases the
+// slug, so "sql" → "Sql", "dbms" → "Dbms", "b-plus-tree" → "B Plus Tree". Those
+// are not the terms anyone searches for, and they were leaking into every topic
+// <title> and <h1>. Display labels come from Pattern.subject / Pattern.topic_name
+// (see fetchTopicLabels), which hold the real, correctly-cased names.
 export function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -79,6 +88,7 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
         select: {
           id: true,
           subject: true,
+          topic_name: true,
           atomic_logic: true,
           short_notes: true,
           _count: { select: { pyqs: true, questions: true } },
@@ -160,6 +170,7 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
       return {
         id: meta.id,
         subject: meta.subject,
+        topic_name: meta.topic_name,
         atomic_logic: meta.atomic_logic,
         short_notes: meta.short_notes,
         pyqs,
@@ -169,7 +180,10 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
     },
     // "v2" = PYQ difficulty added to pyqSelect; retires the 7-day-cached
     // payloads that predate the column.
-    ["topic-pattern-page", "v2", patternId, String(page), String(size)],
+    // "v3" = topic_name added to the meta select (real display label). MUST be
+    // bumped alongside any select change or the 7-day cache serves payloads
+    // missing the new field.
+    ["topic-pattern-page", "v3", patternId, String(page), String(size)],
     { revalidate: 604800, tags: ["patterns"] },
   )();
 
@@ -190,6 +204,55 @@ export async function fetchPattern(
   return getPatternPage(match.id, pageNum, pageSize);
 }
 
+// Display labels + question count for a topic, with no question payload.
+//
+// generateMetadata() runs separately from the page body and needs the real
+// Pattern.subject / Pattern.topic_name to build <title> and the description —
+// but it has no use for 20 questions' worth of HTML. This keeps its own tiny
+// cache entry so metadata never deserializes the full page payload.
+//
+// totalQ is returned so the description can say "Page N of M" without a second
+// lookup (pagination pages must not share page 1's description verbatim).
+const getTopicLabels = (patternId: string) =>
+  unstable_cache(
+    async () => {
+      const meta = await prisma.pattern.findUnique({
+        where: { id: patternId },
+        select: {
+          subject: true,
+          topic_name: true,
+          _count: { select: { pyqs: true, questions: true } },
+        },
+      });
+      if (!meta) return null;
+
+      return {
+        subject: meta.subject,
+        topicName: meta.topic_name,
+        totalQ: meta._count.pyqs + meta._count.questions,
+      };
+    },
+    ["topic-labels", patternId],
+    { revalidate: 604800, tags: ["patterns"] },
+  )();
+
+export type TopicLabels = NonNullable<Awaited<ReturnType<typeof getTopicLabels>>>;
+
+export async function fetchTopicLabels(
+  exam: ExamSeoInfo,
+  subjectLabel: string,
+  topicSlug: string,
+): Promise<TopicLabels | null> {
+  const examSlug    = toSlug(exam.examType);
+  const branchSlug  = exam.branch ? toSlug(exam.branch) : "common";
+  const subjectSlug = toSlug(subjectLabel);
+
+  const match = await getPatternBySlug(examSlug, branchSlug, subjectSlug, topicSlug);
+  if (!match) return null;
+
+  return getTopicLabels(match.id);
+}
+
 // Lightweight lookup for the dedicated notes page: just the concept notes and
 // counts, no questions loaded. Separate cache key from the paginated question
 // fetch so the notes route stays cheap.
@@ -201,6 +264,7 @@ const getTopicNotes = (patternId: string) =>
         select: {
           id: true,
           subject: true,
+          topic_name: true,
           atomic_logic: true,
           short_notes: true,
           _count: { select: { pyqs: true, questions: true } },
@@ -211,6 +275,7 @@ const getTopicNotes = (patternId: string) =>
       return {
         id: meta.id,
         subject: meta.subject,
+        topic_name: meta.topic_name,
         atomic_logic: meta.atomic_logic,
         short_notes: meta.short_notes,
         pyqCount: meta._count.pyqs,
@@ -218,7 +283,8 @@ const getTopicNotes = (patternId: string) =>
         totalQ: meta._count.pyqs + meta._count.questions,
       };
     },
-    ["topic-notes", patternId],
+    // "v2" = topic_name added to the select; retires cached payloads without it.
+    ["topic-notes", "v2", patternId],
     { revalidate: 604800, tags: ["patterns"] },
   )();
 

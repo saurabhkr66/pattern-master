@@ -23,7 +23,17 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
               topic_name: true,
               subject: true,
               atomic_logic: true,
-              _count: { select: { questions: true, pyqs: true } },
+              _count: {
+                select: {
+                  questions: true,
+                  pyqs: true,
+                  // Only RELEASED sheets count — is_public is the "released to
+                  // students" switch and status is the authoring lifecycle, so
+                  // both are required. A filtered relation count keeps this to
+                  // the same single query.
+                  dpps: { where: { is_public: true, status: "ready" } },
+                },
+              },
             },
             orderBy: { topic_name: "asc" },
           });
@@ -32,9 +42,14 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
 
       const mappedTopicsBase = topicPatterns.map((p) => ({
         ...p,
+        // DPP questions are NOT added to totalQuestions: a DPP is a separate,
+        // finishable unit, and its questions live in DppQuestion — counting them
+        // here would inflate the topic's "questions to practice" figure with
+        // content the practice feed never serves.
         totalQuestions: p._count.questions + p._count.pyqs,
         questionsCount: p._count.questions,
         pyqsCount: p._count.pyqs,
+        dppCount: p._count.dpps,
         solvedQuestions: 0,
         questions: [],
         pyqs: [],
@@ -68,6 +83,7 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
           totalQuestions: m.total_questions,
           questionsCount: m.total_questions,
           pyqsCount: 0,
+          dppCount: 0, // a mock is not a topic, so it never has DPPs
           solvedQuestions: 0,
           questions: [],
           pyqs: [],
@@ -80,7 +96,10 @@ const getTopicsBase = (examType: string, branch: string, subject: string) =>
       return { subjects: [], topics: mappedTopicsBase };
     },
     ["topics-base", examType, branch, subject],
-    { revalidate: 3600, tags: ["patterns"] }
+    // "dpp" is here so releasing/unreleasing a sheet can refresh dppCount
+    // WITHOUT busting "patterns", which also backs the public topic pages and
+    // the whole question feed. Either tag invalidates this entry.
+    { revalidate: 3600, tags: ["patterns", "dpp"] }
   )();
 
 // Module-level factory so unstable_cache deduplicates across concurrent requests.

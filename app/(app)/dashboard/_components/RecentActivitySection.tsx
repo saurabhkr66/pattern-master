@@ -12,8 +12,10 @@ export default async function RecentActivitySection({ userId }: { userId: string
       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10, color: BE.text }}>Recent activity</div>
       <div style={{ border: `1px solid ${BE.line}`, borderRadius: 10, overflow: "hidden", background: BE.surface }}>
         {lastFiveAttempts.map((attempt: any, i: number, arr: any[]) => {
-          const topicName = attempt.question?.pattern?.topic_name ?? attempt.pyq?.pattern?.topic_name ?? "Unknown";
-          const subject = attempt.question?.pattern?.subject ?? attempt.pyq?.pattern?.subject ?? "Unknown";
+          const pattern =
+            attempt.question?.pattern ?? attempt.pyq?.pattern ?? attempt.dpp_question?.dpp?.pattern;
+          const topicName = pattern?.topic_name ?? "Unknown";
+          const subject = pattern?.subject ?? "Unknown";
           const when = formatDistanceToNow(new Date(attempt.created_at), { addSuffix: true }).replace("about ", "").replace("almost ", "");
           const r = attempt.is_correct ? "correct" : "wrong";
 

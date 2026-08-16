@@ -21,6 +21,10 @@ export default function QuestionMetaBar({
 }: QuestionMetaBarProps) {
   // Bank questions carry difficulty_level, PYQs carry difficulty (AI-classified).
   const difficulty = normalizeDifficulty(question.difficulty_level, question.difficulty);
+  // Report and Bookmark both key off a FK to GeneratedQuestion / PYQ /
+  // MockQuestion. A DPP question is in none of those tables, so both actions
+  // would 500 — hide them rather than ship two buttons that always fail.
+  const canPersist = !question._isDpp;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 10.5, color: BE.textMute, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, marginBottom: 20 }}>
       <span style={{ color: BE.accent }}>{topicName}</span>
@@ -33,6 +37,7 @@ export default function QuestionMetaBar({
       )}
       <span>{question.question_type || "MCQ"}{/* · {question.marks || 1} mark{(question.marks || 1) > 1 ? "s" : ""} */}</span>
       <span style={{ flex: 1 }} />
+      {canPersist && (
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <button
           onClick={onReport}
@@ -66,6 +71,7 @@ export default function QuestionMetaBar({
           <Bookmark size={14} fill={isBookmarked ? BE.accent : "none"} strokeWidth={isBookmarked ? 0 : 2} />
         </button>
       </div>
+      )}
       <span style={{ fontFamily: BE.mono, textTransform: "none", letterSpacing: 0, fontWeight: 500, opacity: 0.6 }}>
         #{question.id?.slice(-5)}
       </span>

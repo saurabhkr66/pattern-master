@@ -1,0 +1,84 @@
+// ─── DPP runs + the challenge loop ────────────────────────────────────────────
+//
+// One student's scored attempt at one DPP, and the referral edge that brought
+// them there. See the approved plan: signed-in only, noindex, no public content.
+//
+// Only TEST-mode runs are recorded. Practice mode (untimed, reveal-as-you-go)
+// deliberately writes nothing — a practice score is not comparable, so ranking
+// one against a test run would be dishonest. If practice tracking is ever
+// wanted, add a `mode` column then rather than storing half-empty rows now.
+//
+// Why not reuse TestSession (investigated, rejected):
+//   1. Lifecycle. TestSession has no status/started_at — it is created AT SUBMIT.
+//      A time-based tiebreak needs a row that exists while in progress, which
+//      would force every TestSession reader to start filtering on completeness.
+//   2. Leakage. app/api/test/history/route.ts filters by user_id only (no
+//      mock_test_id filter) and selects `mock_test: { title }`, so DPP rows
+//      would immediately surface in test history as title-less entries.
+//
+// `answers` is deliberately kept byte-compatible with TestSession.answers (the
+// BreakdownItem[] shape) so buildResultData/TestAnalysis work unchanged and any
+// future merge is a UNION, not a migration.
+//
+// ⚠️ Rows written before 2026-08-16 are NOT: they carry `question_text` /
+// `question_type` where the shared shape uses `questionText` / `questionType`,
+// so buildResultData read undefined and the result page rendered every question
+// blank. Always read this column through normalizeDppBreakdown() in
+// lib/dppResult.ts, which accepts both spellings — never by a direct cast, which
+// type-checks and then silently yields undefined.
+
+/// One student's scored attempt at one DPP. Self-referencing: `challenged_from_id`
+/// points at the run whose share link brought this person in, which makes the
+/// whole referral tree a single recursive query.
+model DppRun {
+  id      String  @id @default(uuid())
+  dpp_id  String
+  /// Clerk user id. Deliberately NOT a FK to User: app/(app)/layout.tsx creates
+  /// the User row lazily on first (app) navigation, so someone who signs up and
+  /// lands straight on a DPP has a Clerk session with no User row yet — an FK
+  /// would make the run write fail.
+  ///
+  /// NULLABLE: an anonymous visitor can start and submit a run before signing
+  /// in (the sign-in wall gates the SCORE, not the attempt — see the DPP growth
+  /// plan). Null means "unclaimed" — the run's `id` is the only credential
+  /// needed to claim it at /dpp/claim/[runId], since it's an unguessable UUID
+  /// nobody else was ever shown. A null-user run never gets a share_code (see
+  /// the submit route), so it is never publicly reachable at /dpp/r/[code]
+  /// before it's claimed — the score stays gated until then.
+  user_id String?
+
+  /// Server-authoritative timing. Elapsed is derived from started_at at submit;
+  /// the client's reported timeTakenSecs is discarded for ranking, so cheating
+  /// can only make your own time worse.
+  started_at   DateTime  @default(now())
+  submitted_at DateTime?
+  status       String    @default("in_progress") // in_progress | submitted
+
+  score           Float?
+  max_score       Float?
+  correct_count   Int?
+  wrong_count     Int?
+  skipped_count   Int?
+  time_taken_secs Int?
+  /// BreakdownItem[] — same shape as TestSession.answers (see header).
+  answers         Json?
+
+  /// Minted at submit, not lazily on the Challenge click: a lazy mint costs an
+  /// extra write at the moment of highest intent and adds a spinner failure
+  /// mode. The code reveals nothing by existing; `shared_at` records whether
+  /// they actually chose to challenge someone.
+  share_code         String?   @unique
+  shared_at          DateTime?
+  /// Which channel the CHILD arrived through (?via=wa|copy), so the loop is
+  /// measurable without a second table.
+  source_channel     String?
+  challenged_from_id String?
+
+  dpp             Dpp      @relation(fields: [dpp_id], references: [id], onDelete: Cascade)
+  challenged_from DppRun?  @relation("ChallengeTree", fields: [challenged_from_id], references: [id], onDelete: SetNull)
+  challenges      DppRun[] @relation("ChallengeTree")
+
+  @@index([dpp_id, score(sort: Desc), time_taken_secs]) // "score to beat" / future leaderboard
+  @@index([user_id, submitted_at(sort: Desc)]) // "my DPP runs"
+  @@index([challenged_from_id]) // referral-tree analytics
+}

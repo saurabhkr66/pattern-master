@@ -8,12 +8,16 @@ import ImageKit, { toFile } from "@imagekit/nodejs";
 const ik = new ImageKit({ privateKey: process.env.IMAGEKIT_PRIVATE_KEY! });
 
 /**
- * Upload an image buffer to ImageKit under the coaching's folder; returns its
- * URL, or null on failure (callers treat a missing figure as best-effort).
+ * Upload an image buffer to ImageKit under `/pattern-master/<folder>`; returns
+ * its URL, or null on failure (callers treat a missing figure as best-effort).
+ *
+ * `folder` is a path SEGMENT chosen by the caller — "coaching/<id>" for the
+ * coaching import, "dpp/<id>" for a DPP import — so the two pipelines can share
+ * every crop/upload code path while keeping their figures in separate folders.
  */
-export async function uploadCoachingImage(
+export async function uploadImportImage(
   buf: Buffer,
-  coachingId: string,
+  folder: string,
   ext = "png"
 ): Promise<string | null> {
   try {
@@ -22,7 +26,7 @@ export async function uploadCoachingImage(
     const result = await ik.files.upload({
       file,
       fileName,
-      folder: `/pattern-master/coaching/${coachingId}`,
+      folder: `/pattern-master/${folder.replace(/^\/+|\/+$/g, "")}`,
       useUniqueFileName: true,
     });
     return result.url ?? null;
@@ -41,4 +45,16 @@ export async function uploadCoachingImage(
     });
     return null;
   }
+}
+
+/**
+ * Coaching-specific wrapper, kept so existing call sites (the review step's
+ * manual paste-a-screenshot replace route) need no change.
+ */
+export async function uploadCoachingImage(
+  buf: Buffer,
+  coachingId: string,
+  ext = "png"
+): Promise<string | null> {
+  return uploadImportImage(buf, `coaching/${coachingId}`, ext);
 }

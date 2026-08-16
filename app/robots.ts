@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
     "/test",
     "/review",
     "/mistakes",
+    "/bookmarks", // auth-gated: returns a 200 empty shell to crawlers → soft 404
     "/api/",
     "/sign-in",
     "/sign-up",

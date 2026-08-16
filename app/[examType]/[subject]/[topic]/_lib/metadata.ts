@@ -12,18 +12,44 @@ interface MetaArgs {
   subjectLabel: string;
   topicLabel: string;
   pageNum: number;
+  // Total questions in the topic. Drives the "Page N of M / questions X–Y"
+  // description on pagination pages. Omit on page 1 (it doesn't use them).
+  totalQ?: number;
+  pageSize?: number;
 }
 
 export function buildTopicMetadata({
   exam, examType, subject, topic, subjectLabel, topicLabel, pageNum,
+  totalQ, pageSize,
 }: MetaArgs): Metadata {
   const year = new Date().getFullYear() + 1;
   const basePath = `${BASE}/${examType}/${subject}/${topic}`;
   const canonical = pageNum === 1 ? basePath : `${basePath}/page/${pageNum}`;
-  const pageSuffix = pageNum > 1 ? ` – Page ${pageNum}` : "";
+
+  const totalPages =
+    totalQ && pageSize ? Math.max(1, Math.ceil(totalQ / pageSize)) : null;
+  const pageSuffix =
+    pageNum > 1
+      ? totalPages
+        ? ` – Page ${pageNum} of ${totalPages}`
+        : ` – Page ${pageNum}`
+      : "";
 
   const title = `${topicLabel} – ${exam.fullLabel} ${subjectLabel} Practice Questions & PYQs${pageSuffix}`;
-  const description = `Practise ${topicLabel} for ${exam.fullLabel} ${year} with all previous year questions and AI-generated practice questions. Solutions and explanations included. Free on BattleExam.`;
+
+  // Pagination pages MUST NOT reuse page 1's description verbatim. Every
+  // /page/N previously shipped a byte-identical description and an H1 that
+  // differed only by a page number, which is exactly the near-duplicate
+  // signature that parked ~1,500 of them in "Crawled – currently not indexed".
+  // Naming the actual question range makes each page distinguishable.
+  let description: string;
+  if (pageNum > 1 && totalQ && pageSize) {
+    const first = (pageNum - 1) * pageSize + 1;
+    const last = Math.min(pageNum * pageSize, totalQ);
+    description = `${topicLabel} questions ${first}–${last} of ${totalQ} for ${exam.fullLabel} ${subjectLabel}. Previous year questions and practice problems with step-by-step solutions. Page ${pageNum}${totalPages ? ` of ${totalPages}` : ""} on BattleExam.`;
+  } else {
+    description = `Practise ${topicLabel} for ${exam.fullLabel} ${year} with all previous year questions and AI-generated practice questions. Solutions and explanations included. Free on BattleExam.`;
+  }
 
   const keywords = [
     `${topicLabel} ${exam.examLabel}`,

@@ -53,8 +53,9 @@ warm() {
 log "warm-sitemap start"
 
 # Warm the index first, then every child sitemap it lists. Parsing the index
-# (rather than a hard-coded list) means new chunks — mock-1, mock-2, … as the
-# mock bank grows — get warmed automatically without editing this script.
+# (rather than a hard-coded list) means the set of children can change — buckets
+# added, split into numbered chunks, or retired, as the mock-N bucket was — and
+# they still get warmed correctly without editing this script.
 warm "/sitemap.xml"
 children=$(curl -sS --max-time "$MAXTIME" "$ORIGIN/sitemap.xml" \
   | grep -oE '/sitemap/[^<]+\.xml' || true)

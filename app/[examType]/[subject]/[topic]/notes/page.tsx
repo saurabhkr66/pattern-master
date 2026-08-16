@@ -11,7 +11,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug } from "@/lib/seo";
-import { fetchTopicNotes, unslug } from "../_lib/dataFetch";
+import { fetchTopicNotes, fetchTopicLabels, unslug } from "../_lib/dataFetch";
 import MathRenderer from "@/components/ui/MathRenderer";
 
 const BASE = "https://battleexam.com";
@@ -36,11 +36,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { examType, subject, topic } = await params;
 
+  // Decided before the body streams, or the status is stuck at 200 — see the
+  // note in ../page.tsx. (A pattern that exists but has no short_notes still
+  // falls through to the body's notFound(); resolving that here would cost an
+  // extra query for a case the sitemap never advertises.)
   const exam = parseExamSlug(examType);
-  if (!exam) return { title: "Not Found" };
+  if (!exam) notFound();
 
-  const subjectLabel = unslug(subject);
-  const topicLabel = unslug(topic);
+  // Real Pattern names, not unslug()'s title-cased slug — see dataFetch.unslug.
+  const labels = await fetchTopicLabels(exam, unslug(subject), topic);
+  if (!labels) notFound();
+  const subjectLabel = labels.subject;
+  const topicLabel = labels.topicName;
   const year = new Date().getFullYear() + 1;
   const canonical = `${BASE}/${examType}/${subject}/${topic}/notes`;
 
@@ -98,11 +105,14 @@ export default async function TopicNotesPage({
   const exam = parseExamSlug(examType);
   if (!exam) notFound();
 
-  const subjectLabel = unslug(subject);
-  const topicLabel = unslug(topic);
+  // Lookup key only — display labels come from the Pattern row below.
+  const subjectKey = unslug(subject);
 
-  const data = await fetchTopicNotes(exam, subjectLabel, topic);
+  const data = await fetchTopicNotes(exam, subjectKey, topic);
   if (!data) notFound();
+
+  const subjectLabel = data.subject;
+  const topicLabel = data.topic_name;
 
   const hasNotes = !!data.short_notes && data.short_notes.trim().length > 0;
   if (!hasNotes) notFound();

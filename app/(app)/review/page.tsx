@@ -26,6 +26,10 @@ function getCachedReviewCards(userId: string) {
                  ) as rn
           FROM "Attempt"
           WHERE user_id = ${userId} AND mock_question_id IS NULL
+            -- Same guard as app/(app)/mistakes/page.tsx: DPP practice answers
+            -- and legacy mock rows carry no bank/PYQ ref, so COALESCE collapses
+            -- them into one null partition that this page cannot render.
+            AND COALESCE(question_id, pyq_id) IS NOT NULL
         ) t
         WHERE rn = 1 AND is_correct = false
         ORDER BY created_at DESC

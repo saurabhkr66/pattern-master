@@ -56,12 +56,21 @@ export default function middleware(req: NextRequest, event: NextFetchEvent) {
 export const config = {
   matcher: [
     "/",
-    // Existing consumer routes + coaching-admin added
-    "/(account|onboarding|sso-callback|dashboard|practice|test|review|mistakes|bookmarks|admin|coaching-admin)(/.*)?",
+    // Existing consumer routes + coaching-admin + dpp.
+    //
+    // /dpp/* MUST be listed: this matcher is an allowlist, and auth() throws on
+    // a path clerkMiddleware never ran for. Every DPP page calls auth() — some
+    // to gate, and /dpp/r/[runCode] to decide between the public teaser and the
+    // owner's full result. Note the bare clerkMiddleware() below does not gate,
+    // so a signed-out visitor still reaches /dpp/r/[runCode] and each page
+    // enforces its own rule.
+    "/(account|onboarding|sso-callback|dashboard|practice|test|review|mistakes|bookmarks|admin|coaching-admin|dpp)(/.*)?",
     // Student-facing pages (public profile, join, login, dashboard, test, result)
     "/c/(.*)",
-    // API routes — exclude static share-card and search; include student API
-    "/api/((?!share-card|search).*)",
+    // API routes — exclude the two public OG-image endpoints and search; include
+    // student API. dpp-card is hit by WhatsApp/social crawlers that carry no
+    // session, so there is nothing for Clerk to do but add edge latency.
+    "/api/((?!share-card|dpp-card|search).*)",
     "/trpc/(.*)",
   ],
 };

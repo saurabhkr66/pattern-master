@@ -126,16 +126,30 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
           subject: true,
           atomic_logic: true,
           short_notes: true,
-          _count: { select: { questions: true, pyqs: true } },
+          _count: {
+            select: {
+              questions: true,
+              pyqs: true,
+              // Released sheets only — is_public is the "released to students"
+              // switch, status is the authoring lifecycle, and PatternRow shows
+              // the DPP tab only when this is > 0. A filtered relation count
+              // keeps it in the same query.
+              dpps: { where: { is_public: true, status: "ready" } },
+            },
+          },
         },
         orderBy: { topic_name: "asc" },
       });
 
       const mappedTopics = topicPatterns.map((p) => ({
         ...p,
+        // DPP questions are deliberately NOT added to totalQuestions: they live
+        // in DppQuestion and the practice feed never serves them, so counting
+        // them would inflate the topic's "questions to practice" figure.
         totalQuestions: p._count.questions + p._count.pyqs,
         questionsCount: p._count.questions,
         pyqsCount: p._count.pyqs,
+        dppCount: p._count.dpps,
         solvedQuestions: 0,
         questions: [],
         pyqs: [],
@@ -170,6 +184,7 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
           totalQuestions: m.total_questions,
           questionsCount: m.total_questions,
           pyqsCount: 0,
+          dppCount: 0, // a mock is not a topic, so it never has DPPs
           solvedQuestions: 0,
           questions: [],
           pyqs: [],
@@ -179,8 +194,14 @@ const getTopicsForSubject = (examType: string, branch: string | null, subject: s
 
       return mappedTopics;
     },
-    [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v2`],
-    { revalidate: 86400, tags: ["patterns"] }
+    // "-v3": the payload now carries dppCount. Bumping the key retires the
+    // already-cached v2 entries instead of serving dppCount-less topics (and so
+    // no DPP tab) for the rest of their 24h window.
+    [`topics-static-${examType}-${branch || "all"}-${subject || "all"}-v3`],
+    // "dpp" alongside "patterns" so releasing a sheet refreshes this WITHOUT
+    // busting "patterns", which also backs the public topic pages and the whole
+    // question feed.
+    { revalidate: 86400, tags: ["patterns", "dpp"] }
   )();
 };
 

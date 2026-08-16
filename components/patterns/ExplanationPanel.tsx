@@ -58,7 +58,10 @@ export default function ExplanationPanel({
               )}
             </div>
           )}
-          {isAdmin && (
+          {/* Same reason as the generate button below: quickEditExplanation
+              writes to GeneratedQuestion / PYQ / MockQuestion. DPP sheets are
+              edited in /admin/dpp, which owns their review state. */}
+          {isAdmin && !question._isDpp && (
             <button
               onClick={onToggleEdit}
               className="px-2 py-1 text-[10px] font-bold rounded bg-amber-500 text-white hover:bg-amber-600 transition-colors"
@@ -102,12 +105,18 @@ export default function ExplanationPanel({
               {!question.explanation && !generatedExplanation ? (
                 <div className="flex flex-col items-center justify-center py-6 gap-3">
                   <p className="text-xs text-gray-500 font-medium">No explanation is available for this question yet.</p>
-                  <button
-                    onClick={onGenerateExplanation}
-                    className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2"
-                  >
-                    ✨ Generate AI Logic
-                  </button>
+                  {/* The generator resolves the question id against
+                      GeneratedQuestion / PYQ / MockQuestion; a DPP row is in
+                      none of them, so the button would always fail. DPP
+                      explanations are authored in /admin/dpp. */}
+                  {!question._isDpp && (
+                    <button
+                      onClick={onGenerateExplanation}
+                      className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2"
+                    >
+                      ✨ Generate AI Logic
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>

@@ -1,6 +1,9 @@
 export interface TestQuestion {
   id: string;
-  source: "pyq" | "template";
+  // "dpp" = a DppQuestion served by lib/dppPaper. It never reaches the mock
+  // submit route (DPP has its own), but the union has to admit it so the DPP
+  // paper builder can be honest about what it emits.
+  source: "pyq" | "template" | "dpp";
   sectionIndex: number;
   sectionName: string;
   isOptional: boolean;
@@ -22,7 +25,7 @@ export interface TestQuestion {
 
 export interface SubmitAnswer {
   questionId: string;
-  source: "pyq" | "template";
+  source: "pyq" | "template" | "dpp";
   sectionIndex: number;
   isOptional: boolean;
   questionType: string;

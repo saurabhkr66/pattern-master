@@ -13,12 +13,20 @@ interface Props {
   gqCount: number;
   year: number;
   shortNotes: string | null;
+  // Pagination context. Page 1 omits both; pages 2+ pass them so the H1 says
+  // which slice of the topic this is — without it every /page/N shipped an H1
+  // byte-identical to page 1's, which is a near-duplicate signal.
+  pageNum?: number;
+  totalPages?: number;
 }
 
 export default function TopicHeader({
   examType, subject, topic, subjectLabel, topicLabel, examFullLabel,
   atomicLogic, totalQ, pyqCount, gqCount, year, shortNotes,
+  pageNum = 1, totalPages,
 }: Props) {
+  const pageSuffix =
+    pageNum > 1 ? ` – Page ${pageNum}${totalPages ? ` of ${totalPages}` : ""}` : "";
   // The full notes live on their own SEO page (.../[topic]/notes); here we only
   // surface a link to them so the questions page stays question-focused.
   const hasNotes = !!shortNotes && shortNotes.trim().length > 0;
@@ -44,11 +52,19 @@ export default function TopicHeader({
         <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2">
           {examFullLabel} · {subjectLabel}
         </p>
+        {/*
+          Built as a single interpolated string rather than mixed JSX text and
+          expressions. The mixed form rendered as "…Programming In CPractice
+          Questions" in production: JSX strips a text node's leading whitespace
+          when the node starts on a new line, so the space between the last
+          expression and "Practice" silently disappeared on reformat. One string
+          makes the spacing immune to how this block gets wrapped.
+        */}
         <h1
           className="text-3xl md:text-4xl font-black mb-3"
           style={{ color: "var(--text-primary)" }}
         >
-          {topicLabel} – {examFullLabel} {subjectLabel} Practice Questions &amp; PYQs
+          {`${topicLabel} – ${examFullLabel} ${subjectLabel} Practice Questions & PYQs${pageSuffix}`}
         </h1>
         {atomicLogic && (
           <p

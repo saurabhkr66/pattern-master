@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCoachingActor } from "@/lib/coachingAuth";
+import { randomCode } from "@/lib/shortCode";
 
 function slugify(s: string): string {
   return s
@@ -8,13 +9,6 @@ function slugify(s: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function randomCode(len = 6): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
 }
 
 async function requireSuperAdmin() {

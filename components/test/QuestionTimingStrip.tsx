@@ -229,7 +229,14 @@ export default function QuestionTimingStrip({ questions }: { questions: ResultDa
             <div style={{ fontSize: 12, color: BE.textDim, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
               {plainPreview(active.question_text).slice(0, 90) || "—"}
             </div>
-            <div style={{ fontSize: 11, color: BE.textMute, fontFamily: BE.mono, marginTop: 3 }}>{active.subject}</div>
+            {/* Subject alone is too coarse to locate a question — on a DPP every
+                row shares one subject, so the line read as a constant. Topic is
+                already on ResultData; show it when it adds something. */}
+            <div style={{ fontSize: 11, color: BE.textMute, fontFamily: BE.mono, marginTop: 3 }}>
+              {active.topic && active.topic !== active.subject
+                ? `${active.subject} · ${active.topic}`
+                : active.subject}
+            </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
             <span style={{ fontFamily: BE.mono, fontSize: 13, fontWeight: 600, color: BE.text }}>{fmtTime(active.timeSpentSecs)}</span>
