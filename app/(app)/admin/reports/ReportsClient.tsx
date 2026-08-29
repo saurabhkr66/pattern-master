@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { getImageUrl } from "@/lib/imageUtils";
 import { EXAM_CONFIGS, GATE_BRANCHES } from "@/lib/examConfigs";
+import type { AIModel } from "@/lib/aiModels";
 import ReportEditorModal from "./ReportEditorModal";
 import BatchProcessPanel from "./BatchProcessPanel";
 
@@ -83,7 +84,7 @@ export default function ReportsClient({ reports, mockTests }: { reports: any[]; 
     ai_answer_mismatch: false, ai_detected_answer: null as string | null,
     question_type: "MCQ",
   });
-  const [selectedAIModel, setSelectedAIModel] = useState<"gemini" | "gpt-4o-mini">("gemini");
+  const [selectedAIModel, setSelectedAIModel] = useState<AIModel>("gemini");
 
   // Filters
   const [filterExam, setFilterExam] = useState("all");

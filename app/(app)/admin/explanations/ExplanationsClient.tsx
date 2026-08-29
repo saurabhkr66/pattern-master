@@ -5,6 +5,7 @@ import { generateAIExplanation, getGateCsePyqsMissingExplanation, getTopicsForEx
 import MathRenderer from "@/components/ui/MathRenderer";
 import { displayBranch } from "@/lib/seo";
 import { getImageUrl } from "@/lib/imageUtils";
+import { AI_MODEL_OPTIONS, type AIModel } from "@/lib/aiModels";
 
 // Canonical image shape stored in DB JSONB — matches the practice page renderer.
 type QuestionImage = { index: number; filename: string; type?: string };
@@ -164,7 +165,7 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
   };
   const [batchLog, setBatchLog] = useState<BatchEntry[]>([]);
   const [batchDone, setBatchDone] = useState(false);
-  const [aiModel, setAiModel] = useState<"gemini" | "gpt-4o-mini" | "deepseek-v4-flash">("gemini");
+  const [aiModel, setAiModel] = useState<AIModel>("gemini");
   const [previewId, setPreviewId] = useState<string | null>(null);
 
   // Remove a question from local state once it gets an explanation
@@ -560,13 +561,13 @@ export default function ExplanationsClient({ initialData, examTypes }: Props) {
         <div className="flex items-center gap-2">
           <select
             value={aiModel}
-            onChange={e => setAiModel(e.target.value as any)}
+            onChange={e => setAiModel(e.target.value as AIModel)}
             disabled={batchRunning}
             className="px-2 py-2 rounded-lg text-[10px] font-bold bg-white dark:bg-zinc-900 border dark:border-zinc-700 outline-none"
           >
-            <option value="gemini">Gemini Flash (Free)</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="deepseek-v4-flash">DeepSeek V4 Flash (Modal)</option>
+            {AI_MODEL_OPTIONS.map(opt => (
+              <option key={opt.id} value={opt.id}>{opt.label} ({opt.hint})</option>
+            ))}
           </select>
           <button
             onClick={handleBatchRun}
@@ -623,7 +624,7 @@ function QuestionCard({
   onPreview,
 }: {
   question: QuestionRow;
-  aiModel: "gemini" | "gpt-4o-mini" | "deepseek-v4-flash";
+  aiModel: AIModel;
   onDone: () => void;
   onPreview: () => void;
 }) {

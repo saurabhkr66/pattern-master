@@ -3,6 +3,7 @@
 import { generateAIExplanation, resolveReport, deleteQuestion } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
 import { getImageUrl } from "@/lib/imageUtils";
+import { AI_MODEL_OPTIONS, type AIModel } from "@/lib/aiModels";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface FormData {
@@ -32,9 +33,9 @@ interface EditingReport {
 interface ReportEditorModalProps {
   editingReport: EditingReport;
   formData: FormData;
-  selectedAIModel: "gemini" | "gpt-4o-mini";
+  selectedAIModel: AIModel;
   onFormChange: (data: FormData) => void;
-  onModelChange: (model: "gemini" | "gpt-4o-mini") => void;
+  onModelChange: (model: AIModel) => void;
   onClose: () => void;
   onSaved: (reportId: string) => void;
   onDeleted: () => void;
@@ -483,11 +484,12 @@ export default function ReportEditorModal({
               <div className="flex items-center gap-2">
                 <select
                   value={selectedAIModel}
-                  onChange={(e) => onModelChange(e.target.value as any)}
+                  onChange={(e) => onModelChange(e.target.value as AIModel)}
                   className="px-2 py-1.5 rounded-lg text-[10px] font-bold bg-gray-50 dark:bg-zinc-800 border dark:border-zinc-700 outline-none"
                 >
-                  <option value="gemini">Gemini</option>
-                  <option value="gpt-4o-mini">GPT-4o Mini</option>
+                  {AI_MODEL_OPTIONS.map(opt => (
+                    <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  ))}
                 </select>
                 <button
                   type="button"

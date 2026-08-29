@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toggleManualFlag } from "@/app/actions/admin";
 import MathRenderer from "@/components/ui/MathRenderer";
+import { AI_MODEL_OPTIONS, type AIModel } from "@/lib/aiModels";
 
 type LogEntry = {
   id: string;
@@ -278,8 +279,8 @@ function LiveFeedModal({
 interface BatchProcessPanelProps {
   mockTests: any[];
   reports: any[];
-  selectedAIModel: "gemini" | "gpt-4o-mini";
-  onModelChange: (model: "gemini" | "gpt-4o-mini") => void;
+  selectedAIModel: AIModel;
+  onModelChange: (model: AIModel) => void;
   onBatchComplete: (processedIds: string[]) => void;
 }
 
@@ -624,11 +625,12 @@ export default function BatchProcessPanel({
                     <div className="flex items-center gap-2">
                       <select
                         value={selectedAIModel}
-                        onChange={(e) => onModelChange(e.target.value as any)}
+                        onChange={(e) => onModelChange(e.target.value as AIModel)}
                         className="px-2 py-2 rounded-lg text-[10px] font-bold bg-white dark:bg-zinc-800 border dark:border-zinc-700 outline-none"
                       >
-                        <option value="gemini">Gemini Flash</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        {AI_MODEL_OPTIONS.map(opt => (
+                          <option key={opt.id} value={opt.id}>{opt.label}</option>
+                        ))}
                       </select>
                       <button
                         onClick={() => handleBatchProcess(test.id)}
