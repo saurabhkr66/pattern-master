@@ -7,6 +7,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { IST_DAY_SQL, addDays, computeStreak, dayKey, istDayAnchor } from "@/lib/activityDay";
 
 export const runtime = "nodejs"; // Prisma requires Node.js runtime
 export const dynamic = "force-dynamic";
@@ -52,21 +53,17 @@ function heatColor(n: number) {
   return C.h4;
 }
 
-function toISO(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
 // ── Build 12-week heatmap grid (columns = weeks, rows = Mon-Sun) ─────────────
+// Days are IST civil days here and in the query below — the shared definition
+// lives in lib/activityDay.ts so this card and the dashboard can never disagree
+// about which day an attempt belongs to.
 function buildHeatmap(countByDate: Map<string, number>): number[][] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = istDayAnchor();
 
   // Go back 83 days so we have exactly 12 weeks (84 cells)
   const cells: number[] = [];
   for (let i = 83; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    cells.push(countByDate.get(toISO(d)) ?? 0);
+    cells.push(countByDate.get(dayKey(addDays(today, -i))) ?? 0);
   }
 
   // Split into 12 columns of 7
@@ -75,25 +72,6 @@ function buildHeatmap(countByDate: Map<string, number>): number[][] {
     weeks.push(cells.slice(w * 7, w * 7 + 7));
   }
   return weeks;
-}
-
-// ── Streak (consecutive days ending today or yesterday) ──────────────────────
-function computeStreak(dateSet: Set<string>): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  let cursor = new Date(today);
-
-  // Allow streak to extend from yesterday if nothing done today yet
-  if (!dateSet.has(toISO(cursor))) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  let streak = 0;
-  while (dateSet.has(toISO(cursor))) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
 }
 
 
@@ -118,19 +96,19 @@ export async function GET(req: NextRequest) {
     prisma.user.findUnique({ where: { id: userId }, select: { email: true } }),
 
     prisma.$queryRaw<{
-      date: Date | string | null;
+      date: string | null;
       count: bigint;
       correct_total: bigint;
       grand_total: bigint;
     }[]>`
       SELECT
-        DATE(created_at) AS date,
+        ${IST_DAY_SQL} AS date,
         COUNT(*)::bigint AS count,
         SUM(COUNT(*)) FILTER (WHERE is_correct) OVER ()::bigint  AS correct_total,
         SUM(COUNT(*)) OVER ()::bigint                            AS grand_total
       FROM "Attempt"
       WHERE user_id = ${userId} AND created_at >= ${eightWeeksAgo}
-      GROUP BY DATE(created_at)
+      GROUP BY ${IST_DAY_SQL}
     `,
 
     getTotalGatePatterns(),
@@ -165,15 +143,12 @@ export async function GET(req: NextRequest) {
   const dateSet     = new Set<string>();
   for (const row of statRows) {
     if (!row.date) continue;
-    const key = typeof row.date === "string"
-      ? row.date.slice(0, 10)
-      : toISO(new Date(row.date));
     const n = Number(row.count);
-    countByDate.set(key, n);
-    if (n > 0) dateSet.add(key);
+    countByDate.set(row.date, n);
+    if (n > 0) dateSet.add(row.date);
   }
 
-  const streak = computeStreak(dateSet);
+  const streak = computeStreak((day) => dateSet.has(day));
   const weeks  = buildHeatmap(countByDate);
 
   // Display name: capitalise the part before @

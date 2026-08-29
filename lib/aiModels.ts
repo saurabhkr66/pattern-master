@@ -20,12 +20,14 @@ export const GEMINI_TOPIC_MODEL = "gemini-3.1-flash-lite";
 
 export type AIModel =
   | "gemini"
-  | "gpt-4o-mini"
-  | "deepseek-v4-flash";
+  | "gpt-5.6-luna"
+  | "deepseek-v4-flash"
+  | "glm-5.2";
 
 /** Picker entries, in menu order. `label` names the MODEL, `hint` names who pays. */
 export const AI_MODEL_OPTIONS: { id: AIModel; label: string; hint: string }[] = [
   { id: "gemini", label: GEMINI_MODEL, hint: "API key" },
-  { id: "gpt-4o-mini", label: "gpt-4o-mini", hint: "OpenAI key" },
+  { id: "gpt-5.6-luna", label: "gpt-5.6-luna", hint: "OpenAI key" },
   { id: "deepseek-v4-flash", label: "DeepSeek V4 Flash", hint: "Modal" },
+  { id: "glm-5.2", label: "GLM 5.2", hint: "OpenRouter (free)" },
 ];

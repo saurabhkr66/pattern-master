@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   getQuestionsForReview,
   getReviewExamTypes,
   getReviewTopics,
   getMockReviewFilters,
   reviewQuestionAnswer,
-  solveReviewQuestion,
+  solveBatchReviewQuestions,
   commitReviewBatch,
   resolveReviewMismatch,
   resolveExplanation,
@@ -247,6 +247,15 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
   // stale and the commit would re-flag questions the admin had just fixed.
   const resolvedAnswersRef = useRef<Set<string>>(new Set());
   const resolvedExplRef = useRef<Set<string>>(new Set());
+  // Abort controller lets us stop the batch loop on unmount (page refresh) or
+  // when the admin clicks the Stop button. In-flight server actions finish, but
+  // no NEW chunks are dispatched.
+  const batchAbortRef = useRef<AbortController | null>(null);
+
+  // Cleanup: abort any running batch when the component unmounts.
+  useEffect(() => {
+    return () => { batchAbortRef.current?.abort(); };
+  }, []);
 
   // Resolve an answer mismatch straight from the batch detail popup.
   const handleResolveEntry = async (entry: BatchEntry, decision: "use_ai" | "keep_stored") => {
@@ -293,9 +302,18 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
     }
   };
 
+  const handleStopBatch = useCallback(() => {
+    batchAbortRef.current?.abort();
+  }, []);
+
   const handleBatchRun = async () => {
     if (batchRunning || questions.length === 0) return;
-    if (!window.confirm(`Blind-solve and review ${questions.length} shown ${SOURCE_LABELS[source]} questions using ${aiModel}?\n\nResults are staged in Redis during the run and written to the DB once at the end. Mismatches get flagged into Reports; reviewed questions won't reappear.`)) return;
+    if (!window.confirm(`Blind-solve and review ${questions.length} shown ${SOURCE_LABELS[source]} questions using ${aiModel} (3 per prompt)?\n\nResults are staged in Redis during the run and written to the DB once at the end. Mismatches get flagged into Reports; reviewed questions won't reappear.`)) return;
+
+    // Abort any previous run, then create a fresh controller for this one.
+    batchAbortRef.current?.abort();
+    const abortCtrl = new AbortController();
+    batchAbortRef.current = abortCtrl;
 
     // One batch id ties this run's verdicts together in Redis until we commit.
     const batchId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -312,42 +330,67 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
 
     let done = 0, failed = 0, mismatches = 0, explFlags = 0;
     let anySolved = false;
-    for (let i = 0; i < batch.length; i++) {
-      const q = batch[i];
-      const label = `${q.year ? q.year + " · " : ""}${q.subject} · ${q.question_text.substring(0, 60)}...`;
+    const CHUNK_SIZE = 3;
+    for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
+      // ── Check abort before dispatching a new chunk ──────────────────────
+      if (abortCtrl.signal.aborted) break;
+
+      const chunk = batch.slice(i, i + CHUNK_SIZE);
       try {
-        // AI-only call: stages the verdict in Redis, does NOT touch the DB.
-        const res = await solveReviewQuestion(
+        // AI call: packs up to 3 questions into one prompt, stages verdicts in Redis.
+        const results = await solveBatchReviewQuestions(
           batchId,
-          {
+          chunk.map(q => ({
             id: q.id, source: q.questionType, mockTestId: q.mockTestId,
             question_text: q.question_text, options: q.options, correct_answer: q.correct_answer,
             question_type: q.question_type, explanation: q.explanation, images: q.images,
-          },
+          })),
           aiModel,
         );
-        done++;
-        anySolved = true;
-        if (res.isMismatch) mismatches++;
-        if (res.explanationFlagged) explFlags++;
-        setBatchLog(prev => [...prev, {
-          id: q.id, label, status: "ok", isMismatch: res.isMismatch,
-          aiDetectedAnswer: res.aiDetectedAnswer, verifyText: res.verifyText,
-          explanationVerdict: res.explanationVerdict, explanationIssue: res.explanationIssue,
-          explanationReviewText: res.explanationReviewText, explanationFlagged: res.explanationFlagged,
-          question: q, tokens: res.usage,
-        }]);
-        removeFromList(q.id);
+
+        // Check abort again after the call returns — don't process stale results
+        // if the user stopped or refreshed while we were waiting.
+        if (abortCtrl.signal.aborted) break;
+
+        for (let j = 0; j < chunk.length; j++) {
+          const q = chunk[j];
+          const res = results[j];
+          const label = `${q.year ? q.year + " · " : ""}${q.subject} · ${q.question_text.substring(0, 60)}...`;
+          if (res) {
+            done++;
+            anySolved = true;
+            if (res.isMismatch) mismatches++;
+            if (res.explanationFlagged) explFlags++;
+            setBatchLog(prev => [...prev, {
+              id: q.id, label, status: "ok", isMismatch: res.isMismatch,
+              aiDetectedAnswer: res.aiDetectedAnswer, verifyText: res.verifyText,
+              explanationVerdict: res.explanationVerdict, explanationIssue: res.explanationIssue,
+              explanationReviewText: res.explanationReviewText, explanationFlagged: res.explanationFlagged,
+              question: q, tokens: res.usage,
+            }]);
+            removeFromList(q.id);
+          } else {
+            failed++;
+            setBatchLog(prev => [...prev, { id: q.id, label, status: "fail" }]);
+          }
+        }
       } catch {
-        failed++;
-        setBatchLog(prev => [...prev, { id: q.id, label, status: "fail" }]);
+        if (abortCtrl.signal.aborted) break;
+        // Entire chunk failed — mark all questions in it as failed.
+        for (const q of chunk) {
+          failed++;
+          const label = `${q.year ? q.year + " · " : ""}${q.subject} · ${q.question_text.substring(0, 60)}...`;
+          setBatchLog(prev => [...prev, { id: q.id, label, status: "fail" }]);
+        }
       }
       setBatchProgress({ done: done + failed, total: batch.length, failed, mismatches, explFlags });
-      if (i < batch.length - 1) await new Promise(r => setTimeout(r, 2200)); // ~27 RPM
+      if (i + CHUNK_SIZE < batch.length && !abortCtrl.signal.aborted) {
+        await new Promise(r => setTimeout(r, 2200));
+      }
     }
 
-    // Single DB write for the whole batch.
-    if (anySolved) {
+    // Single DB write for the whole batch (skip if aborted with nothing solved).
+    if (anySolved && !abortCtrl.signal.aborted) {
       await runCommit(batchId);
     }
     setBatchRunning(false);
@@ -726,6 +769,11 @@ export default function AiReviewClient({ initialExamTypes, initialData }: Props)
           <button onClick={handleBatchRun} disabled={batchRunning || questions.length === 0} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${batchRunning ? "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 animate-pulse" : questions.length === 0 ? "bg-gray-100 text-gray-400 cursor-default" : "bg-purple-500 text-white hover:bg-purple-600 shadow-lg shadow-purple-500/20"}`}>
             {batchRunning ? "⏳ Reviewing..." : `Review All (${questions.length})`}
           </button>
+          {batchRunning && (
+            <button onClick={handleStopBatch} className="px-3 py-2 rounded-xl text-xs font-bold bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg shadow-red-500/20">
+              ⏹ Stop
+            </button>
+          )}
         </div>
       </div>
 

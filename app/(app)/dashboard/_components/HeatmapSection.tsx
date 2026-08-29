@@ -1,4 +1,4 @@
-import { startOfDay, subDays } from "date-fns";
+import { addDays, dayKey, istDayAnchor } from "@/lib/activityDay";
 import { BE } from "@/lib/theme";
 import { getCachedStatsActivity } from "../_lib/queries";
 
@@ -9,13 +9,13 @@ export default async function HeatmapSection({ userId }: { userId: string }) {
   const { activityData, currentStreak, correctAttempts } = await getCachedStatsActivity(userId);
 
   const heatCells = [];
-  const today = startOfDay(new Date());
+  // IST civil days, matching how the query buckets them (lib/activityDay.ts).
+  const today = istDayAnchor();
 
   for (let w = 0; w < WEEKS; w++) {
     const col = [];
     for (let d = 0; d < 7; d++) {
-      const targetDate = subDays(today, (WEEKS - 1 - w) * 7 + (6 - d));
-      const dateStr = targetDate.toISOString().split("T")[0];
+      const dateStr = dayKey(addDays(today, -((WEEKS - 1 - w) * 7 + (6 - d))));
       const count = activityData[dateStr] || 0;
       let level = 0;
       if (count > 0) {
@@ -34,7 +34,7 @@ export default async function HeatmapSection({ userId }: { userId: string }) {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2, color: BE.text }}>Mastery wall</div>
-          <div style={{ fontSize: 12, color: BE.textDim }}>Questions correctly solved, last 26 weeks</div>
+          <div style={{ fontSize: 12, color: BE.textDim }}>Questions attempted, last 26 weeks</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: BE.textMute }}>
           Less {HEAT_COLORS.map((c, i) => <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: c }} />)} More

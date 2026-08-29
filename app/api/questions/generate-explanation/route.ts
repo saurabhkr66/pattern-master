@@ -59,19 +59,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Format prompt
-    const prompt = `You are an expert educator. Provide a concise and precise explanation for this question.
+    const prompt = `You are an expert educator. Provide a complete, detailed step-by-step explanation for this question.
     
 Question: ${questionData.question_text}
 Options: ${JSON.stringify(questionData.options)}
 Target Answer: ${questionData.correct_answer}
 
 Rules:
-1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
-2. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
-3. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
-4. Keep it concise: 5-7 lines max. Only the key steps and logic.
-5. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
-6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your goal is to provide a complete, step-by-step derivation that leads to this exact answer.
+2. MANDATORY FORMAT: Structure the explanation into clear, numbered steps (Step 1: ..., Step 2: ..., Step 3: ...).
+3. DO NOT SKIP STEPS: Show all intermediate formulas, substitutions, and algebraic/numeric calculations clearly. Explain WHY each step is done so a student can easily follow along and understand every detail.
+4. Provide a thorough, comprehensive, and self-contained explanation — do NOT shorten, compress, or omit any details or steps.
+5. Use LaTeX ($, $$) for all math. Wrap main equations in $$ (block math) for clarity.
+6. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
+7. NO character-level spacing (e.g., do NOT write "G i v e n"). Write normal flowing text.
+8. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.
 `;
 
     // Send text-only to Gemini — skips downloading images from Cloudinary,
@@ -111,8 +113,16 @@ Rules:
 
     // Clean up the tag
     const cleanExplanation = generatedExplanation
-      .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
-      .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D]\.?/gi, "")
+      .replace(/^```(markdown|latex)?\s*/i, "")
+      .replace(/```\s*$/, "")
+      .replace(/\[CORRECT_OPTION:\s*[^\]\n]+\]/gi, "")
+      .replace(/\[ANSWER_\d+:\s*[^\]\n]+\]/gi, "")
+      .replace(/\[ANSWER:\s*[^\]\n]+\]/gi, "")
+      .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D0-9.\-]+/gi, "")
+      .replace(/Correct option is\s*[A-D0-9.\-]+/gi, "")
+      .replace(/Q\d+\s*\([^)]*\):?/gi, "")
+      .replace(/Q\d+:?/gi, "")
+      .replace(/===== QUESTION \d+ =====/gi, "")
       .trim();
 
     // Save back to database

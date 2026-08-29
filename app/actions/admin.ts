@@ -257,6 +257,53 @@ async function dispatchAIModel(
     contentParts.push({ inlineData: { data: im.data, mimeType: im.mimeType } });
   }
 
+  // ── GLM 5.2 via OpenRouter (z-ai/glm-5.2:free — free, text-only with reasoning) ─
+  if (aiModel === "glm-5.2") {
+    const orKey = process.env.OPENROUTER_API_KEY?.trim();
+    if (!orKey) throw new Error("OPENROUTER_API_KEY is not configured");
+    console.log(`[AI] 🚀 GLM 5.2 (OpenRouter) — z-ai/glm-5.2:free`);
+
+    const msgContent: any[] = [{ type: "text", text: prompt }];
+    for (const im of fetchedImages) {
+      msgContent.push({
+        type: "image_url",
+        image_url: { url: `data:${im.mimeType};base64,${im.data}` },
+      });
+    }
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${orKey}`,
+      },
+      body: JSON.stringify({
+        model: "z-ai/glm-5.2:free",
+        messages: [{ role: "user", content: msgContent }],
+        temperature: 0.3,
+        max_tokens: 12288,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`OpenRouter API ${res.status}: ${errText}`);
+    }
+
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || "";
+    if (!text.trim()) throw new Error(`GLM 5.2 returned empty for ${label}`);
+    const u = data.usage;
+    return {
+      text,
+      usage: {
+        input: Number(u?.prompt_tokens ?? 0),
+        output: Number(u?.completion_tokens ?? 0),
+        thoughts: 0,
+      },
+    };
+  }
+
   // ── DeepSeek V4 Flash (via Modal / any OpenAI-compatible endpoint) ─────────
   if (aiModel === "deepseek-v4-flash") {
     if (fetchedImages.length > 0) {
@@ -277,7 +324,7 @@ async function dispatchAIModel(
           model: "deepseek-v4-flash",
           messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
           temperature: 0.3,
-          max_tokens: 4096,
+          max_tokens: 12288,
           reasoning_effort: "high",
         }),
       });
@@ -302,7 +349,7 @@ async function dispatchAIModel(
     }
   }
 
-  if (aiModel === "gpt-4o-mini" && openai) {
+  if (aiModel === "gpt-5.6-luna" && openai) {
     const messages: any[] = [{ role: "user", content: [{ type: "text", text: prompt }] }];
     for (const im of fetchedImages) {
       messages[0].content.push({
@@ -310,15 +357,21 @@ async function dispatchAIModel(
         image_url: { url: `data:${im.mimeType};base64,${im.data}`, detail: "low" },
       });
     }
-    const response = await openai.chat.completions.create({ model: "gpt-4o-mini", messages });
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.6-luna",
+      messages,
+      reasoning_effort: "high",
+    } as any);
     const text = response.choices[0].message.content || "";
-    if (!text.trim()) throw new Error(`GPT-4o-mini returned empty for ${label}`);
+    if (!text.trim()) throw new Error(`gpt-5.6-luna returned empty for ${label}`);
+    const completion = Number(response.usage?.completion_tokens ?? 0);
+    const reasoning = Number((response.usage as any)?.completion_tokens_details?.reasoning_tokens ?? 0);
     return {
       text,
       usage: {
         input: response.usage?.prompt_tokens ?? 0,
-        output: response.usage?.completion_tokens ?? 0,
-        thoughts: 0,
+        output: Math.max(0, completion - reasoning),
+        thoughts: reasoning,
       },
     };
   }
@@ -349,6 +402,23 @@ async function dispatchAIModel(
       thoughts: (usage as any)?.thoughtsTokenCount ?? 0,
     },
   };
+}
+
+// Helper to strip system/prompt tags (e.g. Q1 (NAT):, [CORRECT_OPTION: X], [ANSWER: ...])
+// leaked by AI models at the end of generated explanations.
+function cleanAIExplanationText(explanation: string): string {
+  return explanation
+    .replace(/^```(markdown|latex)?\s*/i, "")
+    .replace(/```\s*$/, "")
+    .replace(/\[CORRECT_OPTION:\s*[^\]\n]+\]/gi, "")
+    .replace(/\[ANSWER_\d+:\s*[^\]\n]+\]/gi, "")
+    .replace(/\[ANSWER:\s*[^\]\n]+\]/gi, "")
+    .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D0-9.\-]+/gi, "")
+    .replace(/Correct option is\s*[A-D0-9.\-]+/gi, "")
+    .replace(/Q\d+\s*\([^)]*\):?/gi, "")
+    .replace(/Q\d+:?/gi, "")
+    .replace(/===== QUESTION \d+ =====/gi, "")
+    .trim();
 }
 
 // Normalize answers for compare: uppercase, split on comma/semicolon, sort,
@@ -382,8 +452,9 @@ export async function generateAIExplanation(
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
 
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
-  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "gpt-5.6-luna" && !openai) throw new Error("OPENAI_API_KEY is not configured");
   if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
+  if (aiModel === "glm-5.2" && !process.env.OPENROUTER_API_KEY?.trim()) throw new Error("OPENROUTER_API_KEY is not configured");
 
   // Fetch the question data
   let questionData: any = null;
@@ -432,7 +503,7 @@ Rules:
 - The [ANSWER: ...] tag is REQUIRED on the last line.`;
 
   // === PROMPT 2: Explanation that derives the stored target answer ===
-  const textPrompt = `You are an expert educator. Provide a concise and precise explanation for this question.
+  const textPrompt = `You are an expert educator. Provide a complete, detailed step-by-step explanation for this question.
 
 Question type: ${qType}
 Question: ${cleanQuestionText}
@@ -440,12 +511,14 @@ Options: ${JSON.stringify(questionData.options)}
 Target Answer: ${questionData.correct_answer}
 
 Rules:
-1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
-2. Use LaTeX ($, $$) for all math and chemical formulas. Wrap ALL math symbols, variables, equations, and chemical formulas (like $KMnO_4$) in $ for inline math or $$ for block math.
-3. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
-4. Keep it concise: 5-7 lines max. Only the key steps.
-5. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words. Do NOT write with character-level spacing (e.g., do NOT write "G i v e n").
-6. Do not restate the final answer letter at the end — the consumer already has it.`;
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your goal is to provide a complete, step-by-step derivation that leads to this exact answer.
+2. MANDATORY FORMAT: Structure the explanation into clear, numbered steps (Step 1: ..., Step 2: ..., Step 3: ...).
+3. DO NOT SKIP STEPS: Show all intermediate formulas, substitutions, and algebraic/numeric calculations clearly. Explain WHY each step is done so a student can easily follow along and understand every detail.
+4. Provide a thorough, comprehensive, and self-contained explanation — do NOT shorten, compress, or omit any details or steps.
+5. Use LaTeX ($, $$) for all math and chemical formulas. Wrap ALL math symbols, variables, equations, and chemical formulas (like $KMnO_4$) in $ for inline math or $$ for block math.
+6. Use proper KaTeX for limits/integrals: e.g., \int_{0}^{1} or \Big|_0^1. NEVER use $_0^1$.
+7. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words.
+8. Do not restate the final answer letter at the end — the consumer already has it.`;
 
   console.log(`[AI] Debug - Explanation prompt length: ${textPrompt.length}, options length: ${JSON.stringify(questionData.options).length}`);
 
@@ -496,15 +569,8 @@ Rules:
 
   let explanation = explainCall.text;
 
-  // Clean markdown artifacts
-  explanation = explanation.replace(/^```(markdown|latex)?\s*/i, '').replace(/```\s*$/, '').trim();
-
-  // Clean up the tag and any redundant natural language conclusions
-  const cleanExplanation = explanation
-    .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
-    .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D]\.?/gi, "")
-    .replace(/Correct option is\s*[A-D]\.?/gi, "")
-    .trim();
+  // Clean markdown artifacts and model leakage tags
+  const cleanExplanation = cleanAIExplanationText(explainCall.text);
 
   // Token totals across both calls (verification + explanation).
   const totalInput = verifyCall.usage.input + explainCall.usage.input;
@@ -637,19 +703,21 @@ export async function processMockTestExplanations(mockTestId: string, aiModel: "
         let cleanQText = q.question_text || "";
         cleanQText = cleanQText.replace(/data:image\/[^;]+;base64,[^"'\s)]+/g, '[IMAGE_REMOVED_FROM_TEXT]');
 
-        const prompt = `You are an expert educator. Provide a concise  and precise explanation for this question.
+        const prompt = `You are an expert educator. Provide a complete, detailed step-by-step explanation for this question.
 
 Question: ${cleanQText}
 Options: ${JSON.stringify(q.options)}
 Target Answer: ${q.correct_answer}
 
 Rules:
-1. CRITICAL: The 'Target Answer' provided is 100% correct. Your ONLY goal is to provide a step-by-step derivation that leads to this specific answer.
-2. Use LaTeX ($, $$) for all math and chemical formulas. Wrap ALL math symbols, variables, equations, and chemical formulas (like $KMnO_4$) in $ for inline math or $$ for block math.
-3. Use proper KaTeX for limits: e.g., \Big|_0^1. NEVER use $_0^1$.
-4. Keep it concise: 6-8 lines max. Only the key steps.
-5. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words. Do NOT write with character-level spacing (e.g., do NOT write "G i v e n").
-6. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
+1. CRITICAL: The 'Target Answer' provided is 100% correct. Your goal is to provide a complete, step-by-step derivation that leads to this exact answer.
+2. MANDATORY FORMAT: Structure the explanation into clear, numbered steps (Step 1: ..., Step 2: ..., Step 3: ...).
+3. DO NOT SKIP STEPS: Show all intermediate formulas, substitutions, and algebraic/numeric calculations clearly. Explain WHY each step is done so a student can easily follow along and understand every detail.
+4. Provide a thorough, comprehensive, and self-contained explanation — do NOT shorten, compress, or omit any details or steps.
+5. Use LaTeX ($, $$) for all math and chemical formulas. Wrap ALL math symbols, variables, equations, and chemical formulas (like $KMnO_4$) in $ for inline math or $$ for block math.
+6. Use proper KaTeX for limits: e.g., \Big|_0^1. NEVER use $_0^1$.
+7. Write normal flowing text with proper spaces between words. Do NOT remove spaces between words.
+8. MANDATORY: End with [CORRECT_OPTION: X] where X is A, B, C, or D.`;
 
         const contentParts: any[] = [prompt];
 
@@ -724,11 +792,7 @@ Rules:
         const isMismatch = aiDetectedAnswer && aiDetectedAnswer !== q.correct_answer?.toUpperCase();
 
         // Clean Explanation
-        const cleanExplanation = explanation
-          .replace(/\[CORRECT_OPTION:\s*[A-D]\]/gi, "")
-          .replace(/(Therefore|Hence|So|Thus),?\s*(the)?\s*(correct)?\s*(option|answer)\s*(is)?\s*:?\s*[A-D]\.?/gi, "")
-          .replace(/Correct option is\s*[A-D]\.?/gi, "")
-          .trim();
+        const cleanExplanation = cleanAIExplanationText(explanation);
 
         fixed++;
         await patchMockQuestion(mockTestId, q.id, {
@@ -991,7 +1055,7 @@ export async function getTopicsForExam(examType: string, branch: string | null) 
     orderBy: [{ subject: "asc" }, { topic_name: "asc" }],
   });
 
-  return rows.map(r => ({ topic: r.topic_name, subject: r.subject }));
+  return rows.map((r: { topic_name: string; subject: string }) => ({ topic: r.topic_name, subject: r.subject }));
 }
 
 // ─── AI Answer Review (admin/ai-review) ───────────────────────────────────────
@@ -1055,6 +1119,8 @@ async function runReviewChecks(
   const optionsJson = JSON.stringify(q.options);
 
   // Prompt 1 — independent blind solve (answer is NOT revealed).
+  const reasoningInstruction = "Provide a complete, concise step-by-step derivation. Show all formulas, substitutions, and calculations clearly. Then output your final answer.";
+
   const verifyPrompt = `You are solving an exam question independently. Decide the correct answer using only your own reasoning — do not assume any answer has been provided.
 
 Question type: ${qType}
@@ -1062,7 +1128,7 @@ Question: ${cleanQuestionText}
 Options: ${optionsJson}
 
 Rules:
-- Reason briefly (under 4 lines), then output your final answer.
+- ${reasoningInstruction}
 - ${answerFormatHint(qType)}
 - The [ANSWER: ...] tag is REQUIRED on the last line.`;
 
@@ -1143,6 +1209,196 @@ Reason briefly (under 4 lines), then output EXACTLY these two lines:
 }
 
 /**
+ * Batched version of runReviewChecks — packs up to 3 questions into a single AI
+ * prompt (one for blind-solve, one for explanation grading) to reduce API calls
+ * by ~3×.  Falls back to individual per-question calls when any question in the
+ * batch carries images, since reliably associating inline images with their
+ * respective questions is fragile across providers.
+ *
+ * Returns one ReviewChecks per input question, in the same order.
+ */
+async function runBatchReviewChecks(
+  questions: Array<{ id: string; question_text: string; options: any; correct_answer: string; question_type?: string | null; explanation?: string | null; images?: any }>,
+  aiModel: AIModel,
+): Promise<ReviewChecks[]> {
+  if (questions.length === 0) return [];
+  if (questions.length === 1) return [await runReviewChecks(questions[0], aiModel)];
+
+  // GLM 5.2: fire 1 question per API call, all concurrently (the client already
+  // chunks into groups of 3, so this means 3 parallel calls instead of 1 packed prompt).
+  if (aiModel === "glm-5.2") {
+    return Promise.all(questions.map(q => runReviewChecks(q, aiModel)));
+  }
+
+  const count = questions.length;
+
+  // ── Load images for all questions (skip explanation-type images) ────────────
+  // Images are numbered globally (Image 1, Image 2, …) so the AI can associate
+  // each image with its question via the label in the prompt text.
+  const allFetchedImages: Array<{ data: string; mimeType: string }> = [];
+  // Track which global image indices belong to each question.
+  const imageRanges: Array<{ start: number; count: number }> = [];
+  for (const q of questions) {
+    const rawImgs = Array.isArray(q.images)
+      ? (q.images as Array<{ index?: number; filename?: string; type?: string }>).filter(i => i?.filename && i?.type !== "explanation")
+      : [];
+    const startIdx = allFetchedImages.length;
+    for (const img of rawImgs) {
+      const r = await getImageBase64(img.filename!);
+      if (r) allFetchedImages.push(r);
+    }
+    imageRanges.push({ start: startIdx, count: allFetchedImages.length - startIdx });
+  }
+
+  // ── Prompt 1 — batched blind solve ──────────────────────────────────────────
+  const questionBlocks = questions.map((q, i) => {
+    const clean = stripBase64Text(q.question_text).replace(
+      /data:image\/[^;]+;base64,[^"'\s)]+/g, "[IMAGE_REMOVED]",
+    );
+    const qType = (q.question_type || "MCQ").toUpperCase();
+    const range = imageRanges[i];
+    let imageNote = "";
+    if (range.count > 0) {
+      if (range.count === 1) {
+        imageNote = `\n[See Image ${range.start + 1} below]`;
+      } else {
+        imageNote = `\n[See Images ${range.start + 1}–${range.start + range.count} below]`;
+      }
+    }
+    return `===== QUESTION ${i + 1} =====\nQuestion type: ${qType}\nQuestion: ${clean}\nOptions: ${JSON.stringify(q.options)}${imageNote}`;
+  }).join("\n\n");
+
+  const answerRules = questions.map((q, i) => {
+    const qType = (q.question_type || "MCQ").toUpperCase();
+    const hint = qType === "MSQ" ? "comma-separated letters"
+      : qType === "NAT" ? "numeric value"
+        : "single letter A/B/C/D";
+    return `  Q${i + 1} (${qType}): [ANSWER_${i + 1}: ${hint}]`;
+  }).join("\n");
+
+  const solutionTemplate = questions.map((_, i) =>
+    `--- SOLUTION ${i + 1} ---\n[step-by-step reasoning]\n[ANSWER_${i + 1}: your answer]`,
+  ).join("\n\n");
+
+  const verifyPrompt = `You are solving ${count} exam questions independently. For each question, decide the correct answer using only your own reasoning — do not assume any answer has been provided.
+
+${questionBlocks}
+
+Rules:
+- Solve each question separately. Provide a complete, detailed step-by-step derivation in clear numbered steps (Step 1: ..., Step 2: ...). Show all intermediate formulas, substitutions, and calculations clearly. DO NOT skip steps.
+- Use this exact structure:
+
+${solutionTemplate}
+
+Answer format per question:
+${answerRules}
+- ALL [ANSWER_N: ...] tags are REQUIRED on their own line.`;
+
+  // ── Prompt 2 — batched explanation grade ────────────────────────────────────
+  const explEntries = questions.map((q, i) => ({
+    idx: i,
+    explanation: stripBase64Text((q.explanation || "").trim()),
+  }));
+  const withExpl = explEntries.filter(e => e.explanation);
+
+  let gradePrompt: string | null = null;
+  if (withExpl.length > 0) {
+    const gradeBlocks = withExpl.map(({ idx, explanation }) => {
+      const q = questions[idx];
+      const clean = stripBase64Text(q.question_text).replace(
+        /data:image\/[^;]+;base64,[^"'\s)]+/g, "[IMAGE_REMOVED]",
+      );
+      const qType = (q.question_type || "MCQ").toUpperCase();
+      const range = imageRanges[idx];
+      let imageNote = "";
+      if (range.count > 0) {
+        imageNote = range.count === 1
+          ? `\n[See Image ${range.start + 1} below]`
+          : `\n[See Images ${range.start + 1}–${range.start + range.count} below]`;
+      }
+      return `===== QUESTION ${idx + 1} =====\nQuestion type: ${qType}\nQuestion: ${clean}\nOptions: ${JSON.stringify(q.options)}\nStated correct answer: ${q.correct_answer}${imageNote}\nProvided explanation:\n"""\n${explanation}\n"""`;
+    }).join("\n\n");
+
+    const verdictTags = withExpl.map(({ idx }) =>
+      `[VERDICT_${idx + 1}: ok | error | no_derive | incomplete]\n[ISSUE_${idx + 1}: one concise sentence, or "none"]`,
+    ).join("\n");
+
+    gradePrompt = `You are a STRICT grader checking worked solutions for mistakes. Assume they MAY be wrong — do not rubber-stamp them.
+
+${gradeBlocks}
+
+For each question, check in order:
+1. Does any step contain a mathematical or logical ERROR?
+2. Does the reasoning actually DERIVE the stated correct answer (not just assert it)?
+3. Is it INCOMPLETE — skips essential steps, or too thin to justify the answer?
+
+Reason briefly (under 3 lines per question), then output EXACTLY:
+${verdictTags}`;
+  }
+
+  // ── Fire both prompts in parallel ──────────────────────────────────────────
+  const ids = questions.map(q => q.id).join(",");
+  const [verify, grade] = await Promise.all([
+    dispatchAIModel(aiModel, verifyPrompt, allFetchedImages, false, `batch:${ids}`),
+    gradePrompt ? dispatchAIModel(aiModel, gradePrompt, allFetchedImages, false, `batch:${ids}:expl`) : Promise.resolve(null),
+  ]);
+
+  // ── Parse per-question results ─────────────────────────────────────────────
+  const solutionTexts: string[] = new Array(count).fill(verify.text);
+  for (let i = 0; i < count; i++) {
+    const marker = `--- SOLUTION ${i + 1} ---`;
+    const start = verify.text.indexOf(marker);
+    if (start < 0) continue;
+    const after = verify.text.substring(start + marker.length);
+    const nextMarker = `--- SOLUTION ${i + 2} ---`;
+    const nextStart = i < count - 1 ? after.indexOf(nextMarker) : -1;
+    solutionTexts[i] = (nextStart >= 0 ? after.substring(0, nextStart) : after).trim();
+  }
+
+  const results: ReviewChecks[] = [];
+  for (let i = 0; i < count; i++) {
+    const q = questions[i];
+    const tag = i + 1;
+
+    // Answer
+    const rawAiAnswer = verify.text.match(new RegExp(`\\[ANSWER_${tag}:\\s*([^\\]\\n]+)\\]`, "i"))?.[1].trim() ?? null;
+    const isMismatch = !!rawAiAnswer && normalizeAnswer(rawAiAnswer) !== (q.correct_answer ? normalizeAnswer(q.correct_answer) : "");
+    const verifyText = cleanAIExplanationText(solutionTexts[i]);
+
+    // Explanation grade
+    let explanationVerdict: ExplanationVerdict = "skipped";
+    let explanationIssue: string | null = null;
+    let explanationReviewText = "";
+    const storedExpl = stripBase64Text((q.explanation || "").trim());
+    if (grade && storedExpl) {
+      const vRaw = (grade.text.match(new RegExp(`\\[VERDICT_${tag}:\\s*([^\\]\\n]+)\\]`, "i"))?.[1] ?? "ok").trim().toLowerCase();
+      explanationVerdict = (["ok", "error", "no_derive", "incomplete"].includes(vRaw) ? vRaw : "ok") as ExplanationVerdict;
+      const issueRaw = grade.text.match(new RegExp(`\\[ISSUE_${tag}:\\s*([^\\]]+)\\]`, "i"))?.[1]?.trim() ?? "";
+      explanationIssue = !issueRaw || /^none$/i.test(issueRaw) ? null : issueRaw;
+      explanationReviewText = grade.text
+        .replace(/\[VERDICT_\d+:[^\]]*\]/gi, "")
+        .replace(/\[ISSUE_\d+:[^\]]*\]/gi, "")
+        .replace(/^```(markdown|latex)?\s*/i, "")
+        .replace(/```\s*$/, "")
+        .trim();
+    }
+    const explanationFlagged = explanationVerdict !== "ok" && explanationVerdict !== "skipped";
+
+    results.push({
+      rawAiAnswer, isMismatch, verifyText,
+      explanationVerdict, explanationIssue, explanationReviewText, explanationFlagged,
+      usage: {
+        input: Math.round((verify.usage.input + (grade?.usage.input ?? 0)) / count),
+        output: Math.round((verify.usage.output + (grade?.usage.output ?? 0)) / count),
+        thoughts: Math.round((verify.usage.thoughts + (grade?.usage.thoughts ?? 0)) / count),
+      },
+    });
+  }
+
+  return results;
+}
+
+/**
  * Solves ONE question blind (no stored answer revealed) and records the review.
  * Cheaper than generateAIExplanation — runs a single verification call, never
  * regenerates the explanation. On mismatch it flags via QuestionReport (PYQ /
@@ -1159,8 +1415,9 @@ export async function reviewQuestionAnswer(
   if (!userId) throw new Error("Unauthorized");
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
-  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "gpt-5.6-luna" && !openai) throw new Error("OPENAI_API_KEY is not configured");
   if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
+  if (aiModel === "glm-5.2" && !process.env.OPENROUTER_API_KEY?.trim()) throw new Error("OPENROUTER_API_KEY is not configured");
 
   // Fetch the question.
   const qSelect = { id: true, question_text: true, options: true, correct_answer: true, question_type: true, explanation: true, images: true };
@@ -1380,8 +1637,9 @@ export async function solveReviewQuestion(batchId: string, input: ReviewSolveInp
   if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
   if (!isRedisConfigured()) throw new Error("Redis is not configured — batch review requires Upstash Redis.");
   if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
-  if (aiModel === "gpt-4o-mini" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "gpt-5.6-luna" && !openai) throw new Error("OPENAI_API_KEY is not configured");
   if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
+  if (aiModel === "glm-5.2" && !process.env.OPENROUTER_API_KEY?.trim()) throw new Error("OPENROUTER_API_KEY is not configured");
 
   const checks = await runReviewChecks(input, aiModel);
 
@@ -1413,6 +1671,75 @@ export async function solveReviewQuestion(batchId: string, input: ReviewSolveInp
     explanationFlagged: checks.explanationFlagged,
     usage: checks.usage,
   };
+}
+
+/**
+ * Batched version of solveReviewQuestion — packs up to 3 questions into a single
+ * AI prompt, stages all verdicts in Redis, and returns per-question results.
+ * Falls back to individual prompts for questions with images.
+ */
+export async function solveBatchReviewQuestions(
+  batchId: string,
+  inputs: ReviewSolveInput[],
+  aiModel: AIModel = "gemini",
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  if (!checkIsAdmin(await getAdminEmail(userId))) throw new Error("Forbidden");
+  if (!isRedisConfigured()) throw new Error("Redis is not configured — batch review requires Upstash Redis.");
+  if (aiModel === "gemini" && !genAI) throw new Error("GEMINI_API_KEY is not configured");
+  if (aiModel === "gpt-5.6-luna" && !openai) throw new Error("OPENAI_API_KEY is not configured");
+  if (aiModel === "deepseek-v4-flash" && !process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY is not configured");
+  if (aiModel === "glm-5.2" && !process.env.OPENROUTER_API_KEY?.trim()) throw new Error("OPENROUTER_API_KEY is not configured");
+
+  const checksArr = await runBatchReviewChecks(inputs, aiModel);
+
+  // Stage all verdicts in Redis in one pipeline.
+  const key = reviewBatchKey(batchId);
+  const pipe = redis.pipeline();
+  const results: Array<{
+    verifyText: string;
+    aiDetectedAnswer: string | null;
+    isMismatch: boolean;
+    explanationVerdict: ExplanationVerdict;
+    explanationIssue: string | null;
+    explanationReviewText: string;
+    explanationFlagged: boolean;
+    usage: { input: number; output: number; thoughts: number };
+  }> = [];
+
+  for (let i = 0; i < inputs.length; i++) {
+    const input = inputs[i];
+    const checks = checksArr[i];
+    const verdict: ReviewVerdict = {
+      id: input.id,
+      source: input.source,
+      mockTestId: input.mockTestId,
+      correctAnswer: input.correct_answer,
+      aiDetectedAnswer: checks.rawAiAnswer,
+      isMismatch: checks.isMismatch,
+      explanationVerdict: checks.explanationVerdict,
+      explanationIssue: checks.explanationIssue,
+      explanationFlagged: checks.explanationFlagged,
+      reviewedAt: new Date().toISOString(),
+      model: aiModel,
+    };
+    pipe.rpush(key, verdict);
+    results.push({
+      verifyText: checks.verifyText,
+      aiDetectedAnswer: checks.rawAiAnswer,
+      isMismatch: checks.isMismatch,
+      explanationVerdict: checks.explanationVerdict,
+      explanationIssue: checks.explanationIssue,
+      explanationReviewText: checks.explanationReviewText,
+      explanationFlagged: checks.explanationFlagged,
+      usage: checks.usage,
+    });
+  }
+  pipe.expire(key, REVIEW_BATCH_TTL);
+  await pipe.exec();
+
+  return results;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
-import { startOfDay, subMonths } from "date-fns";
+import { subMonths } from "date-fns";
+import { IST_DAY_SQL, computeStreak } from "@/lib/activityDay";
 
 export function getCachedStatsActivity(userId: string) {
   return unstable_cache(
@@ -13,11 +14,14 @@ export function getCachedStatsActivity(userId: string) {
           where: { user_id: userId },
           _count: true,
         }),
+        // Bucketed by IST civil day, not UTC — see lib/activityDay.ts. The key
+        // comes back as TEXT, so it drops straight into `activityData` with no
+        // Date round-trip to shift it.
         prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE(created_at) as date, COUNT(*)::bigint as count
+          SELECT ${IST_DAY_SQL} as date, COUNT(*)::bigint as count
           FROM "Attempt"
           WHERE user_id = ${userId} AND created_at >= ${sixMonthsAgo}
-          GROUP BY DATE(created_at)
+          GROUP BY ${IST_DAY_SQL}
           ORDER BY date
         `,
         prisma.$queryRaw<{ count: bigint }[]>`
@@ -48,19 +52,10 @@ export function getCachedStatsActivity(userId: string) {
 
       const activityData: Record<string, number> = {};
       activityRows.forEach((row) => {
-        const dateStr = typeof row.date === "string" ? row.date : new Date(row.date).toISOString().split("T")[0];
-        activityData[dateStr] = Number(row.count);
+        activityData[row.date] = Number(row.count);
       });
 
-      let currentStreak = 0;
-      const today = startOfDay(new Date());
-      const checkDate = new Date(today);
-      const toISO = (d: Date) => d.toISOString().split("T")[0];
-      if (!activityData[toISO(checkDate)]) checkDate.setDate(checkDate.getDate() - 1);
-      while (activityData[toISO(checkDate)]) {
-        currentStreak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      }
+      const currentStreak = computeStreak((day) => Boolean(activityData[day]));
 
       return { totalAttempted, correctAttempts, currentMistakesCount, activityData, currentStreak };
     },
