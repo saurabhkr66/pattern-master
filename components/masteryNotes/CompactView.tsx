@@ -1,7 +1,7 @@
 "use client";
 
 import MathInline from "@/components/ui/MathInline";
-import MathRenderer from "@/components/ui/MathRenderer";
+import NotesRenderer from "@/components/ui/NotesRenderer";
 import { T, type MasteryNoteBlock, type MasteryNoteItem } from "./types";
 import { htmlToMarkdown, hasText } from "./mathText";
 
@@ -53,7 +53,7 @@ export default function CompactView({ blocks }: { blocks: MasteryNoteBlock[] }) 
           </div>
           <div className="min-w-0">
             {l.prose ? (
-              <MathRenderer
+              <NotesRenderer
                 content={l.value}
                 className="prose prose-sm dark:prose-invert max-w-none text-[12px] leading-relaxed
                   prose-p:my-1 prose-li:my-0.5 prose-headings:text-[12px] prose-headings:my-1

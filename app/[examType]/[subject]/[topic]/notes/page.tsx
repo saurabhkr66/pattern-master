@@ -12,7 +12,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug } from "@/lib/seo";
 import { fetchTopicNotes, fetchTopicLabels, unslug } from "../_lib/dataFetch";
-import MathRenderer from "@/components/ui/MathRenderer";
+import NotesRenderer from "@/components/ui/NotesRenderer";
 
 const BASE = "https://battleexam.com";
 
@@ -203,7 +203,7 @@ export default async function TopicNotesPage({
           >
             📘 {topicLabel} – Concept Summary
           </h2>
-          <MathRenderer
+          <NotesRenderer
             content={data.short_notes as string}
             className="prose prose-sm dark:prose-invert max-w-none
               leading-relaxed

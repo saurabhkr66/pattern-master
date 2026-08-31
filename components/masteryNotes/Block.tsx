@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import MathRenderer from "@/components/ui/MathRenderer";
+import NotesRenderer from "@/components/ui/NotesRenderer";
 import MathInline from "@/components/ui/MathInline";
 import { DefCard, NoteCard, PropCard, TipCard, PitfallCard } from "./cards";
 import type { MasteryNoteBlock, MasteryNoteItem } from "./types";
@@ -54,7 +54,7 @@ export default function Block({ block }: { block: MasteryNoteBlock }) {
     return (
       <div className="mb-3">
         <BlockLabel label={label} />
-        <MathRenderer
+        <NotesRenderer
           content={(items as string[]).join('\n')}
           className="prose prose-sm dark:prose-invert max-w-none text-[13.5px] leading-relaxed
             prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-[var(--text-primary)]
