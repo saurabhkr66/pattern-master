@@ -106,28 +106,37 @@ export default function ShortNotesTab({ patternId, shortNotes, isAdmin }: ShortN
 
       {error && <div style={{ fontSize: 11, color: BE.bad, marginBottom: 8 }}>{error}</div>}
 
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder="Paste or write the short notes for this topic here…"
-        style={{
-          width: '100%', minHeight: 320, padding: 14, fontSize: 13, lineHeight: 1.6,
-          background: BE.surface, color: BE.text, border: `1px solid ${BE.line}`,
-          borderRadius: 10, resize: 'vertical', fontFamily: BE.mono, outline: 'none',
-        }}
-      />
-
-      <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${BE.line}` }}>
-        <div style={{ fontSize: 10.5, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
-          Preview
-        </div>
-        {draft.trim() ? (
-          <MasteryNotes data={draft} />
-        ) : (
-          <div style={{ fontSize: 12, color: BE.textMute, padding: '20px 0', textAlign: 'center' }}>
-            Nothing to preview yet.
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+            Markdown
           </div>
-        )}
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Paste or write the short notes for this topic here…"
+            style={{
+              width: '100%', minHeight: 480, padding: 14, fontSize: 13, lineHeight: 1.6,
+              background: BE.surface, color: BE.text, border: `1px solid ${BE.line}`,
+              borderRadius: 10, resize: 'vertical', fontFamily: BE.mono, outline: 'none',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: BE.textMute, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+            Live preview
+          </div>
+          <div style={{ border: `1px solid ${BE.line}`, borderRadius: 10, overflow: 'auto', minHeight: 480 }}>
+            {draft.trim() ? (
+              <MasteryNotes data={draft} />
+            ) : (
+              <div style={{ fontSize: 12, color: BE.textMute, padding: '20px 0', textAlign: 'center' }}>
+                Nothing to preview yet.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

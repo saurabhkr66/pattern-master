@@ -8,6 +8,20 @@ const nextConfig: NextConfig = {
   // node_modules at runtime (used by lib/pdfRaster for figure-question cropping).
   serverExternalPackages: ['mupdf'],
 
+  // PM2 runs the app in cluster mode (deploy/ecosystem.config.cjs, one worker
+  // per vCPU). Next tracks tag revalidation in a per-process in-memory map, so
+  // revalidateTag() on the worker that served a write never reached the other
+  // worker — an admin save could look "reverted" until a request happened to
+  // land back on the worker that saw it. This handler shares tag invalidations
+  // across workers via the existing Upstash Redis instance.
+  //
+  // NOTE: `cacheHandler` (singular) is the one that backs unstable_cache / ISR
+  // / route handlers, which is what this app uses. `cacheHandlers` (plural) is
+  // a different subsystem that only serves the `'use cache'` directive — this
+  // codebase has no `'use cache'`, so it is deliberately not configured.
+  // See lib/cache-handler.js for the full explanation.
+  cacheHandler: require.resolve('./lib/cache-handler.js'),
+
   // Use standard build to support dynamic API routes and Prisma
   // (Switching to 'export' requires refactoring all Server Components to Client Components)
 

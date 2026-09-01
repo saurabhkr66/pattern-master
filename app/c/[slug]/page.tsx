@@ -11,6 +11,19 @@ import { Card, LogoBadge, AMBER_GRAD, AMBER_GLOW, display } from "@/components/c
 // DB. Busted immediately on coaching edit via revalidatePath("/c/<slug>") in
 // the admin update/delete route; this is just the backstop.
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+// REQUIRED for the `revalidate` above to do anything. Without a
+// generateStaticParams export, Next classifies this route as `ƒ` (dynamic) and
+// never registers it in the prerender manifest — `revalidate` silently becomes
+// a no-op, the page is server-rendered on every request, and the
+// revalidatePath("/c/<slug>") calls in the admin update/delete route have no
+// cache entry to drop. An empty array is enough to flip it to `●` (ISR); with
+// dynamicParams the page is still generated on first visit. Same pattern as
+// the public exam/topic pages.
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  return [];
+}
 
 // cache() dedupes the lookup across generateMetadata + the page within one
 // render (they'd otherwise both query on an uncached render).
