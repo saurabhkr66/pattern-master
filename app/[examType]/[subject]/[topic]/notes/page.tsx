@@ -22,7 +22,10 @@ interface PageParams {
   topic: string;
 }
 
-export const revalidate = 86400;
+// 30 days — see the note in ../page.tsx. Tag invalidation, not the clock,
+// is what keeps this fresh; the short window only forced cold re-renders.
+// Mastery-notes edits reach here via revalidateTag("patterns").
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {

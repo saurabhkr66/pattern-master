@@ -24,7 +24,9 @@ interface PageParams {
   year: string;
 }
 
-export const revalidate = 86400;
+// 30 days — see the note in ../../[subject]/[topic]/page.tsx. Past-exam
+// content does not change once seeded; tag invalidation covers real edits.
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {

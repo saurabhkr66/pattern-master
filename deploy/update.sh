@@ -39,4 +39,18 @@ echo ">> Warming sitemap ISR cache..."
 sleep 5  # let the reloaded cluster workers start accepting connections
 bash deploy/warm-sitemap.sh || echo "   (sitemap warm failed — non-fatal; cron will retry)"
 
+# The build also wiped every rendered PAGE, and nothing is prebuilt
+# (generateStaticParams returns [] on all public SEO routes), so the whole
+# content surface is cold too. Left alone, Googlebot is the one that pays for
+# each cold render — which is what pinned average crawl response time at ~2.3s
+# for HTML. Warm them ourselves instead.
+#
+# Detached, unlike the sitemap warm: ~665 sitemap URLs at concurrency 2 is a
+# ~13 minute pass, and the deploy must not block on it. The site is already
+# live and serving at this point — this only decides whether the first visitor
+# to each page waits, or we did.
+echo ">> Warming page ISR cache in the background..."
+nohup bash deploy/warm-pages.sh >/dev/null 2>&1 &
+echo "   (running detached — follow with: tail -f ~/warm-pages.log)"
+
 echo ">> Done. Live."

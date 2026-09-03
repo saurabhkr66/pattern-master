@@ -31,7 +31,21 @@ interface PageParams {
   topic: string;
 }
 
-export const revalidate = 86400;
+// 30 days, not 24 hours. The old 24h window bought no freshness — the data
+// layer is tag-invalidated (`tags: ["patterns"]` in _lib/dataFetch.ts) and
+// app/api/patterns/[id]/short-notes/route.ts fires revalidateTag("patterns"),
+// which invalidates every page that read the tag, not just the data entry.
+// So edits still land immediately; the clock was only forcing re-renders.
+//
+// It was actively hurting crawling. generateStaticParams returns [] (below),
+// so nothing is prebuilt and every URL is cold on first request. With ~375
+// useful Googlebot crawls/day spread over the whole topic surface, a given
+// page gets revisited on a scale of WEEKS — always after a 24h entry expired,
+// so Googlebot paid for a cold render nearly every time. GSC crawl stats had
+// average response time at 1.2s blended, ~2.3s once the (fast) redirect half
+// of the requests is backed out. A 30-day window outlives the revisit
+// interval, so a page rendered once stays warm until the content changes.
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 // Empty array still flips this route's build classification from `ƒ` (dynamic)

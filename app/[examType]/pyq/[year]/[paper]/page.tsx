@@ -29,7 +29,11 @@ interface PageParams {
   paper: string;
 }
 
-export const revalidate = 86400;
+// 30 days — see the note in ../../../[subject]/[topic]/page.tsx. These are the
+// heaviest public pages (full questions + solutions inline), so a cold render
+// here is the most expensive thing Googlebot can trigger. Past-exam content
+// does not change once seeded; tag invalidation covers real edits.
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {

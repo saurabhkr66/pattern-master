@@ -16,7 +16,10 @@ interface PageParams {
   examType: string;
 }
 
-export const revalidate = 86400;
+// 30 days — see the note in [subject]/[topic]/page.tsx. Tag invalidation, not
+// the clock, is what keeps this fresh; the short window only forced cold
+// re-renders that Googlebot paid for on nearly every visit.
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {

@@ -25,7 +25,9 @@ interface PageParams {
   pageNum: string;
 }
 
-export const revalidate = 86400;
+// 30 days — see the note in ../../page.tsx. Tag invalidation, not the clock,
+// is what keeps this fresh; the short window only forced cold re-renders.
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 // See note in ../../page.tsx — required to flip build classification to ●

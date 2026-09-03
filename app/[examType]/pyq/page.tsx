@@ -17,7 +17,10 @@ interface PageParams {
   examType: string;
 }
 
-export const revalidate = 86400;
+// 30 days — see the note in ../[subject]/[topic]/page.tsx. PYQ content is
+// past-exam papers: it does not change once seeded, so the clock was pure
+// cache churn. Tag invalidation still covers real edits.
+export const revalidate = 2592000;
 export const dynamicParams = true;
 
 export async function generateStaticParams(): Promise<PageParams[]> {

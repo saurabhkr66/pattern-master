@@ -45,7 +45,9 @@ function unslug(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export const revalidate = 86400; // revalidate daily
+// 30 days — see the note in [topic]/page.tsx. Tag invalidation, not the clock,
+// is what keeps this fresh; the short window only forced cold re-renders.
+export const revalidate = 2592000;
 export const dynamicParams = true; // generate pages on first visit, then cache
 
 export async function generateStaticParams(): Promise<PageParams[]> {
