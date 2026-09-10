@@ -87,6 +87,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
   // an unknown/missing value just falls back to the default.
   const verifyModel = String(form.get("verifyModel") ?? "").trim() || undefined;
 
+  // Which model READS the paper (Pass 1: enumerate → extract → options repair).
+  // Gemini or the vision-capable DeepSeek Flash; re-validated server-side
+  // (resolveExtractModel), which also refuses a model that can't accept images.
+  const extractModel = String(form.get("extractModel") ?? "").trim() || undefined;
+
   // Which model derives answers + writes worked solutions (Pass 2). Super admin picks
   // it; re-validated server-side (resolveGenerationModel) against the allowlist.
   const answerModel = String(form.get("answerModel") ?? "").trim() || undefined;
@@ -200,7 +205,11 @@ export const POST = withCoachingContext(async (req, { coachingId, actor }) => {
           sections,
           qtype,
           bilingual,
+          extractModel,
           answerModel,
+          // The modal's DeepSeek kill switch covers the reading passes too now that
+          // they can run on it — off means every pass falls back to Gemini.
+          allowDeepSeek,
           // Catalog wins when present (school classes); else the typed list.
           topicsBySection: hasCatalog ? topicsBySection : undefined,
           topics: hasCatalog ? undefined : topics,

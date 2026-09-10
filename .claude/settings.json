@@ -9,10 +9,17 @@
       "Read(//c/Users/saura/Desktop/images/topicwise/**)",
       "Read(//c/Users/saura/Desktop/**)",
       "Bash(npx tsx *)",
-      "WebSearch"
+      "WebSearch",
+      "Read(//c/Users/saura/Desktop/projects/jee-command-center/**)",
+      "Bash(npm i *)",
+      "Bash(mv vitest.config.ts vitest.config.mts)",
+      "Bash(npx vitest *)",
+      "Bash(npm run *)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\saura\\Desktop\\projects\\practicepaper-scraper"
+      "c:\\Users\\saura\\Desktop\\projects\\practicepaper-scraper",
+      "c:\\Users\\saura\\Desktop\\projects\\jee-command-center\\lib",
+      "c:\\Users\\saura\\Desktop\\projects\\jee-command-center"
     ]
   }
 }

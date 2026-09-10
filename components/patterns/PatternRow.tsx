@@ -17,6 +17,9 @@ import { isAdmin } from "@/lib/admin";
 import { Bookmark, Loader2 } from "lucide-react";
 import LoadingLogo from "@/components/ui/LoadingLogo";
 
+// Shared across every row so the choice sticks while browsing topics.
+const PYQ_ORDER_KEY = "be_pyq_year_order";
+
 interface PatternRowProps {
   pattern: any;
   isHighlighted?: boolean;
@@ -108,8 +111,27 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   const [visibleBank, setVisibleBank] = useState(12);
   const [visiblePyqs, setVisiblePyqs] = useState(12);
   const [questionStatusFilter, setQuestionStatusFilter] = useState<"all" | "unsolved" | "wrong" | "correct">("all");
+  // Which end of the PYQ archive to start from. The API always returns
+  // newest-first; "old" flips it so a user can work forward chronologically.
+  const [pyqYearOrder, setPyqYearOrder] = useState<"new" | "old">("new");
 
   const isSubjectLevel = !!pattern.isSubjectLevel;
+
+  // Read the saved choice after mount (not in the initial state) so server and
+  // client render the same thing. It is a browsing preference, so localStorage
+  // is enough — it just saves re-picking "oldest" on every topic.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PYQ_ORDER_KEY);
+      if (saved === "old" || saved === "new") setPyqYearOrder(saved);
+    } catch {}
+  }, []);
+
+  const chooseYearOrder = useCallback((order: "new" | "old") => {
+    setPyqYearOrder(order);
+    setVisiblePyqs(12);
+    try { localStorage.setItem(PYQ_ORDER_KEY, order); } catch {}
+  }, []);
 
   useEffect(() => {
     if (isOpen && rowRef.current) {
@@ -223,7 +245,18 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
   };
 
   const displayedBank = useMemo(() => applyFilters(questions.map((q: any, i: number) => ({ ...q, _originalIndex: i }))), [questions, questionStatusFilter]);
-  const displayedPyqs = useMemo(() => applyFilters(pyqs.map((p: any, i: number) => ({ ...p, _isPyq: true, _isSubjectPyq: false, _originalIndex: i }))), [pyqs, questionStatusFilter]);
+  const displayedPyqs = useMemo(() => {
+    // Sort BEFORE numbering so the #NN labels follow the order on screen, and
+    // before applyFilters so the wrong/unseen/correct grouping keeps the chosen
+    // year direction inside each group. This list also becomes the practice
+    // queue, so flipping it changes where a session starts.
+    const ordered = [...pyqs].sort((a: any, b: any) => {
+      if (a.year == null) return 1;
+      if (b.year == null) return -1;
+      return pyqYearOrder === "old" ? a.year - b.year : b.year - a.year;
+    });
+    return applyFilters(ordered.map((p: any, i: number) => ({ ...p, _isPyq: true, _isSubjectPyq: false, _originalIndex: i })));
+  }, [pyqs, questionStatusFilter, pyqYearOrder]);
 
   const queue = useMemo(() => {
     if (!selectedQuestion) return [];
@@ -397,18 +430,36 @@ export default function PatternRow({ pattern, isHighlighted, isOpen, onToggle, d
               <>
                 {activeTab === 'bank' || activeTab === 'pyq' ? (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
                       <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', padding: 3, borderRadius: 8, border: `1px solid ${BE.line}`, transition: 'border-color 0.2s' }} className="hover:border-amber-500/30">
                         {['all', 'unsolved', 'wrong', 'correct'].map(x => (
                           <div key={x} onClick={() => setQuestionStatusFilter(x as any)}
-                            style={{ 
-                              padding: '4px 10px', fontSize: 11.5, borderRadius: 5, 
-                              color: questionStatusFilter === x ? BE.text : BE.textDim, 
-                              background: questionStatusFilter === x ? 'rgba(255,255,255,0.08)' : 'transparent', 
-                              cursor: 'pointer', fontWeight: 500, textTransform: 'capitalize' 
+                            style={{
+                              padding: '4px 10px', fontSize: 11.5, borderRadius: 5,
+                              color: questionStatusFilter === x ? BE.text : BE.textDim,
+                              background: questionStatusFilter === x ? 'rgba(255,255,255,0.08)' : 'transparent',
+                              cursor: 'pointer', fontWeight: 500, textTransform: 'capitalize'
                             }}>{x}</div>
                         ))}
                       </div>
+                      {/* Year direction — PYQs only; bank questions carry no year. */}
+                      {activeTab === 'pyq' && pyqs.length > 1 && (
+                        <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', padding: 3, borderRadius: 8, border: `1px solid ${BE.line}`, transition: 'border-color 0.2s' }} className="hover:border-amber-500/30">
+                          {([
+                            { id: 'new', label: 'Newest first' },
+                            { id: 'old', label: 'Oldest first' },
+                          ] as const).map(o => (
+                            <div key={o.id} onClick={() => chooseYearOrder(o.id)}
+                              title={o.id === 'old' ? 'Start from the oldest year' : 'Start from the latest year'}
+                              style={{
+                                padding: '4px 10px', fontSize: 11.5, borderRadius: 5,
+                                color: pyqYearOrder === o.id ? BE.text : BE.textDim,
+                                background: pyqYearOrder === o.id ? 'rgba(255,255,255,0.08)' : 'transparent',
+                                cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap'
+                              }}>{o.label}</div>
+                          ))}
+                        </div>
+                      )}
                       <div style={{ flex: 1 }} />
                       {pattern.isMock && (
                         <button

@@ -3,20 +3,26 @@ import { GoogleGenerativeAI, SchemaType, type ResponseSchema, type Schema } from
 import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 import sharp from "sharp";
 import { uploadImportImage } from "@/lib/coachingImageUpload";
+import { pdfPageRenderer } from "@/lib/pdfRaster";
 
 // Gemini-powered bulk import: extract questions from photos / a PDF, translate to
 // the other language, and crop any diagrams. The admin supplies Exam + Set (applied
 // to every row) and we feed Gemini the exam's SECTION list so it classifies each
 // question into one of those exact names (never invents one).
 
-// Extraction model. On the Developer API default to gemini-3.1-flash-lite —
+// DEFAULT extraction model. On the Developer API default to gemini-3.1-flash-lite —
 // fast/cheap and fine for pulling structured questions out of a paper. On Vertex
 // default to gemini-2.5-flash for every pass (stronger reader, and flash-lite
 // isn't reliably served there). COACHING_IMPORT_MODEL overrides either.
+// The extraction pass is now ALSO selectable per import (EXTRACT_MODEL_OPTIONS —
+// Gemini or the vision-capable DeepSeek Flash; resolveExtractModel), so this is the
+// fallback the picker starts from rather than the only model that can run.
 const MODEL = process.env.COACHING_IMPORT_MODEL || "gemini-3.1-flash-lite";
 // The answer-key (Pass 2) pass both READS the printed answers and DERIVES/writes the
-// worked solution — the latter is a reasoning task, so its model is now selectable per
-// import (GENERATION_MODEL_OPTIONS — Gemini only, it must read the page; resolveGenerationModel).
+// worked solution — the latter is a reasoning task, so its model is selectable per
+// import (GENERATION_MODEL_OPTIONS; resolveGenerationModel). It needs a MULTIMODAL
+// model (it reads the key off the page), which since DeepSeek-V4.1-Flash gained
+// vision means Gemini OR DeepSeek Flash — not Gemini alone as it used to.
 // COACHING_IMPORT_ANSWER_MODEL still overrides the default.
 // Figure detection is a pure spatial-localization task — a flash model with
 // thinking OFF is ideal (and Google recommends thinkingBudget=0 for it). It must
@@ -728,6 +734,86 @@ async function uploadPdf(pdf: UploadImage, apiKey: string): Promise<{ mimeType: 
   return { mimeType: pdf.mimeType || "application/pdf", fileUri: uri };
 }
 
+// ─── PDF → page images (the DeepSeek path) ───────────────────────────────────
+// Gemini reads a PDF natively via the File API (uploadPdf above). DeepSeek's
+// chat-completions API takes IMAGES only — no fileUri, no application/pdf — so when
+// a reading pass runs on DeepSeek the paper has to be rasterized page by page first.
+// Rendered pages are re-encoded as JPEG: a 180dpi PNG page is ~1-2MB, and DeepSeek
+// caps ONE request at 64MiB of inline media, so a 40-page paper only fits as JPEG.
+const PDF_RASTER_SCALE = Number(process.env.COACHING_IMPORT_PDF_RASTER_SCALE) || 2.0;
+// Longest edge of a rasterized page. DeepSeek tokenizes an image down to a few
+// hundred tokens regardless, so pixels past this buy nothing but request size.
+const PDF_RASTER_MAX_EDGE = Number(process.env.COACHING_IMPORT_PDF_RASTER_EDGE) || 2200;
+// DeepSeek's per-request ceiling is 64MiB of inline media; warn well before it.
+const INLINE_MEDIA_WARN_BYTES = 45_000_000;
+
+async function rasterizePdfToParts(pdf: UploadImage): Promise<Part[]> {
+  const renderer = pdfPageRenderer(Buffer.from(pdf.base64, "base64"), PDF_RASTER_SCALE);
+  const parts: Part[] = [];
+  for (let i = 0; i < renderer.pageCount; i++) {
+    const page = renderer.render(i);
+    if (!page) continue;
+    let buf = page.png;
+    let mimeType = "image/png";
+    try {
+      buf = await sharp(page.png)
+        .resize({ width: PDF_RASTER_MAX_EDGE, height: PDF_RASTER_MAX_EDGE, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 82 })
+        .toBuffer();
+      mimeType = "image/jpeg";
+    } catch {
+      /* sharp failed — send the raw PNG page through */
+    }
+    parts.push({ inlineData: { mimeType, data: buf.toString("base64") } });
+  }
+  return parts;
+}
+
+/**
+ * Build the media prefix every reading pass re-sends.
+ *
+ * A PDF takes one of two shapes depending on who has to read it: a Gemini File API
+ * reference (cheap to re-send, and what keeps the implicit context cache warm), or
+ * rasterized page images when ANY of `models` is a DeepSeek id — DeepSeek cannot
+ * accept a fileUri, and one media array is shared by both reading passes, so a single
+ * DeepSeek pick forces the image shape for everyone. Gemini reads page images fine;
+ * it just pays for them inline.
+ */
+async function resolveMedia(
+  pdf: UploadImage | undefined,
+  images: UploadImage[] | undefined,
+  key: string,
+  models: string[]
+): Promise<Part[]> {
+  const media: Part[] = [];
+  if (pdf) {
+    if (models.some(isDeepSeekModel)) {
+      const pages = await rasterizePdfToParts(pdf);
+      console.log(
+        `[import] PDF rasterized to ${pages.length} page image(s) — a reading pass runs on DeepSeek (${models
+          .filter(isDeepSeekModel)
+          .join(", ")}), which cannot read a PDF.`
+      );
+      media.push(...pages);
+    } else {
+      media.push({ fileData: await uploadPdf(pdf, key) });
+    }
+  }
+  for (const img of images ?? []) {
+    media.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } });
+  }
+  const inlineBytes = media.reduce(
+    (n, p) => n + ("inlineData" in p ? p.inlineData.data.length : 0),
+    0
+  );
+  if (inlineBytes > INLINE_MEDIA_WARN_BYTES) {
+    console.warn(
+      `[import] ⚠ media prefix is ≈${(inlineBytes / 1e6).toFixed(1)}MB inline and is re-sent on EVERY batch — near the vendor request-body limit. Lower COACHING_IMPORT_PDF_RASTER_EDGE / COACHING_IMPORT_MAX_IMAGE_EDGE, or split the paper.`
+    );
+  }
+  return media;
+}
+
 /** Call Gemini to extract + translate questions from the uploaded media. */
 /**
  * Live progress events emitted during extraction so the UI can show what's
@@ -738,6 +824,12 @@ async function uploadPdf(pdf: UploadImage, apiKey: string): Promise<{ mimeType: 
  */
 export type ImportEvent =
   | { t: "phase"; phase: "enumerate" | "extract" | "answers" | "verify" | "review" | "compare"; total?: number }
+  // The models the two READING passes actually resolved to, emitted before the first
+  // call. Both picks can be silently downgraded (no DEEPSEEK_API_KEY, the DeepSeek
+  // switch off, a model that can't accept images), and the resolution only ever
+  // appeared in the server log — so the admin had no way to tell from the browser
+  // whether the vendor they chose is the one doing the work.
+  | { t: "models"; extract: string; answers: string }
   | { t: "questions"; items: ParsedQuestion[]; done: number; total: number }
   | { t: "usage"; rows: TokenUsageRow[] };
 
@@ -751,9 +843,16 @@ export async function extractQuestions(opts: {
   /** Opt into Hindi translation of every question/option/solution (default OFF).
    *  When false the model is asked for — and the schema only allows — English. */
   bilingual?: boolean;
+  /** Model for the Pass-1 READING passes (enumerate → extract → options repair).
+   *  Validated against EXTRACT_MODEL_OPTIONS; defaults to MODEL (resolveExtractModel).
+   *  May be a vision-capable DeepSeek id, in which case a PDF is rasterized rather
+   *  than uploaded to Gemini's File API (see resolveMedia). */
+  extractModel?: string | null;
   /** Model for the Pass-2 answer-key pass (derive answers + write worked solutions).
    *  Validated against GENERATION_MODEL_OPTIONS; defaults to gemini-3.5-flash-lite (resolveGenerationModel). */
   answerModel?: string | null;
+  /** false → a DeepSeek pick on either pass degrades to DEEPSEEK_OFF_MODEL (modal toggle). */
+  allowDeepSeek?: boolean;
   /** Aborts the whole pipeline when the client disconnects (page refresh/close),
    *  so we stop firing Gemini calls instead of burning quota on a dead request. */
   signal?: AbortSignal;
@@ -761,26 +860,47 @@ export async function extractQuestions(opts: {
   onEvent?: (ev: ImportEvent) => void;
 }): Promise<ParsedQuestion[]> {
   const key = process.env.GEMINI_API_KEY ?? "";
-  if (!key) throw new Error("Missing GEMINI_API_KEY");
   const qtype = opts.qtype ?? "mixed";
   const bilingual = opts.bilingual ?? false;
-  // Pass-2 answer/solution model — Gemini only (it reads the key off the page image).
-  // Pass 1 (extraction) always stays on Gemini (MODEL) too.
-  const answerModel = resolveGenerationModel(opts.answerModel);
+  const allowDeepSeek = opts.allowDeepSeek ?? true;
+  // Both reading passes are vendor-selectable now that DeepSeek-V4.1-Flash reads
+  // images: Pass 1 (question text + options) and Pass 2 (the printed answer key).
+  const extractModel = resolveExtractModel(opts.extractModel, allowDeepSeek);
+  const answerModel = resolveGenerationModel(opts.answerModel, allowDeepSeek);
+  // Every pass that isn't DeepSeek needs the Gemini key — and the figure-cropping
+  // stage downstream always does — so only skip the guard when BOTH reading passes
+  // are on DeepSeek (a Gemini-key-less run is still degraded, just not fatal here).
+  if (!key && !(isDeepSeekModel(extractModel) && isDeepSeekModel(answerModel))) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
   // Built once per run: drops the *_hindi fields entirely on the English-only path.
   const responseSchema = buildResponseSchema(bilingual);
-  console.log(`[import] backend: Developer API (GEMINI_API_KEY) — extract ${MODEL}, answers ${answerModel}`);
+  console.log(`[import] backend: extract ${extractModel}, answers ${answerModel}`);
   const signal = opts.signal;
   const emit = opts.onEvent ?? (() => {});
+  emit({ t: "models", extract: extractModel, answers: answerModel });
 
   // Resolve media once and reuse across passes.
-  const media: Part[] = [];
-  if (opts.pdf) {
-    media.push({ fileData: await uploadPdf(opts.pdf, key) });
-  }
-  for (const img of opts.images ?? []) {
-    media.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } });
-  }
+  const media = await resolveMedia(opts.pdf, opts.images, key, [extractModel, answerModel]);
+
+  /**
+   * Dispatch one Pass-1 reading call to whichever vendor `extractModel` names.
+   * Gemini keeps the exact budget it always had (callResilient's default when the
+   * caller passes none); DeepSeek's completion budget must ALSO cover its chain of
+   * thought, so a budget sized for answer-only output gets a floor.
+   */
+  const extract = (label: string, schema: ResponseSchema, parts: Part[], maxTokens?: number) =>
+    callModel(
+      key,
+      label,
+      schema,
+      parts,
+      extractModel,
+      signal,
+      isDeepSeekModel(extractModel)
+        ? Math.max(maxTokens ?? MAX_OUTPUT_TOKENS, DEEPSEEK_DEFAULT_MAX_TOKENS)
+        : maxTokens
+    );
 
   // Pass 0 — enumerate the printed question numbers so the heavy passes can be
   // batched under the output-token limit. Counts questions only (ignores the
@@ -801,7 +921,7 @@ export async function extractQuestions(opts: {
     for (let attempt = 1; attempt <= 2; attempt++) {
       const enumParts: Part[] = [...media, { text: buildEnumeratePrompt(attempt === 2) }];
       const label = attempt === 1 ? "enumerate" : "enumerate-retry";
-      const raw = await callResilient(key, label, ENUM_SCHEMA, enumParts, signal);
+      const raw = await extract(label, ENUM_SCHEMA, enumParts);
       const got = raw.map((n) => Number(n)).filter((n) => Number.isFinite(n));
       if (got.length > seq.length) seq = got;
       if (seq.length > 2) break;
@@ -841,10 +961,10 @@ export async function extractQuestions(opts: {
       let names: string[] = [];
       try {
         names = (
-          await callResilient(key, "sections", SECTION_SCHEMA, [
+          await extract("sections", SECTION_SCHEMA, [
             ...media,
             { text: buildSectionNamesPrompt(merged.length) },
-          ], signal)
+          ])
         )
           .map((s) => String(s ?? "").trim())
           .filter(Boolean);
@@ -910,10 +1030,10 @@ export async function extractQuestions(opts: {
       const group = g.numbers;
       const label = `pass-1 batch ${g.section ? `${g.section} ` : ""}${group[0]}–${group[group.length - 1]}`;
       try {
-        const got = (await callResilient(key, label, responseSchema, [
+        const got = (await extract(label, responseSchema, [
           ...media,
           { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, group, bilingual, g.section) },
-        ], signal)) as ParsedQuestion[];
+        ])) as ParsedQuestion[];
         // The batch prompt pins the section, but a model can still omit it — stamp it
         // so the answer-key join below always has the label it needs.
         if (g.section) for (const q of got) if (!q.section) q.section = g.section;
@@ -958,10 +1078,10 @@ export async function extractQuestions(opts: {
       );
     }
     emit({ t: "phase", phase: "extract", total: numbers.length });
-    questions = (await callResilient(key, "pass-1", responseSchema, [
+    questions = (await extract("pass-1", responseSchema, [
       ...media,
       { text: buildPrompt(opts.sections, qtype, opts.topics, opts.topicsBySection, undefined, bilingual) },
-    ], signal, MODEL, budget)) as ParsedQuestion[];
+    ], budget)) as ParsedQuestion[];
     emit({ t: "questions", items: questions, done: questions.length, total: questions.length });
   }
   // Client disconnected during pass 1 — stop now, skip the answer-key pass.
@@ -1010,10 +1130,10 @@ export async function extractQuestions(opts: {
       if (signal?.aborted) return { g, entries: [] as OptionsEntry[] };
       const label = `options batch ${g.section ? `${g.section} ` : ""}${g.numbers[0]}–${g.numbers[g.numbers.length - 1]}`;
       try {
-        const entries = (await callResilient(key, label, buildOptionsSchema(bilingual), [
+        const entries = (await extract(label, buildOptionsSchema(bilingual), [
           ...media,
           { text: buildOptionsPrompt(g.numbers, bilingual, g.section) },
-        ], signal, MODEL, outputBudgetFor(g.numbers.length))) as OptionsEntry[];
+        ], outputBudgetFor(g.numbers.length))) as OptionsEntry[];
         return { g, entries };
       } catch (e) {
         console.error(`[import] ${label} gave up:`, e instanceof Error ? e.message : e);
@@ -1178,6 +1298,16 @@ const TOKEN_PRICES: Record<string, { in: number; out: number }> = {
   // reasoning tokens ARE modelled — see recordDeepSeekUsage.
   "deepseek-v4-pro": { in: 0.435, out: 0.87 },
   "deepseek-v4-flash": { in: 0.14, out: 0.28 },
+  // DeepSeek-V4.1-Flash (`deepseek-flash`), the vision-capable model the reading
+  // passes can now run on. PEAK rates (01:00-04:00 and 06:00-10:00 UTC Mon-Fri);
+  // off-peak is half, so a daytime-IST import bills at roughly HALF what this
+  // reports. Images bill as ordinary input tokens — a few hundred per page, which is
+  // why a DeepSeek read of a long paper costs so much less than a Gemini one.
+  // Its cache-hit rate is ~2% of the miss rate, not the 10% CACHED_INPUT_FACTOR used
+  // here, so cached input is likewise over-charged in the estimate — deliberately, an
+  // over-report is the safe direction for a cost display.
+  "deepseek-flash": { in: 0.3, out: 1.2 },
+  "deepseek-v4-flash-vision-exp": { in: 0.3, out: 1.2 },
 };
 
 type UsageAcc = { calls: number; input: number; cached: number; output: number; thinking: number };
@@ -1553,22 +1683,53 @@ function resolveAnswerLabels(q: ParsedQuestion, raw: string): string | null {
 // Pro id — the legacy `deepseek-chat` alias resolves to V4 Flash (and retires 2026-07-24).
 export const VERIFY_MODEL_OPTIONS = [
   { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash (default)" },
-  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
+  // V4.1 Flash is the DeepSeek pick that can SEE a cropped figure — a figure
+  // question verified by V4 Pro is solved from its stem alone.
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash (vision)" },
+  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro (text-only)" },
   { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (cheapest)" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash (previous default)" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
 ] as const;
 const DEFAULT_VERIFY_MODEL = process.env.COACHING_IMPORT_VERIFY_MODEL || VERIFY_MODEL_OPTIONS[0].id;
 
+// ─── Vision-capable DeepSeek ─────────────────────────────────────────────────
+// DeepSeek was text-only when this pipeline was written, which is why every pass
+// that had to LOOK at the paper was pinned to Gemini. DeepSeek-V4.1-Flash
+// (`deepseek-flash`, formerly `deepseek-v4-flash-vision-exp`) accepts image input, so
+// the reading passes are now vendor-selectable too. The V4 PRO id is NOT vision —
+// keep it off any pass that needs to see the page.
+//
+// Caveat worth knowing before switching a dense paper over: DeepSeek tokenizes each
+// image down to a few hundred tokens, whereas Gemini spends far more per page. That
+// makes DeepSeek cheap, and fine for clean typeset text — but Gemini remains the
+// stronger reader for small print, handwriting and cramped multi-column scans.
+const DEEPSEEK_VISION_MODELS = new Set(["deepseek-flash", "deepseek-v4-flash-vision-exp"]);
+/** Can this model be shown an image at all? (Every non-DeepSeek model here can.) */
+const isVisionCapable = (id: string) => !isDeepSeekModel(id) || DEEPSEEK_VISION_MODELS.has(id);
+
+// Selectable PASS-1 (reading) models — enumerate → extract → options repair. Must be
+// MULTIMODAL: this pass reads the questions off the page. COACHING_IMPORT_MODEL still
+// sets the default (MODEL), which is what the picker starts on.
+export const EXTRACT_MODEL_OPTIONS = [
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (default)" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash (stronger reader)" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash (vision)" },
+] as const;
+const EXTRACT_FALLBACK_MODEL = "gemini-3.1-flash-lite";
+
 // Selectable ANSWER-KEY (Pass 2) models. This pass READS the answer key off the page
-// images and returns JSON, so it must be MULTIMODAL — DeepSeek V4 is TEXT-ONLY on the
-// API (rejects image input), so only Gemini is offered here. (V4 Pro's reasoning
-// is used for SOLUTION writing via the comparison pass instead, which works from text.)
+// images and returns JSON, so it must be MULTIMODAL — which now includes DeepSeek
+// Flash. (V4 Pro is text-only and stays out; its reasoning powers SOLUTION writing
+// via the comparison pass instead, which works from text.)
 export const GENERATION_MODEL_OPTIONS = [
   { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (default)" },
   { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash (stronger reader)" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash (vision)" },
 ] as const;
 // Env override of the default keeps the existing COACHING_IMPORT_ANSWER_MODEL knob.
 const DEFAULT_GENERATION_MODEL = process.env.COACHING_IMPORT_ANSWER_MODEL || GENERATION_MODEL_OPTIONS[0].id;
@@ -1586,7 +1747,10 @@ const GENERATION_FALLBACK_MODEL = "gemini-3.5-flash-lite";
 // spent, at Flash's price, and leaves max/low as real knobs. Pro stays selectable.
 export const COMPARE_MODEL_OPTIONS = [
   { id: "deepseek-v4-flash", label: "DeepSeek V4 Flash (thinking: high)" },
-  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" },
+  // Same family, addressed by its CURRENT id — and vision-capable, so a figure
+  // question's cropped image reaches it instead of being dropped.
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash (vision, thinking: high)" },
+  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro (text-only)" },
   { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
   { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite" },
@@ -1629,8 +1793,19 @@ function resolveModel(
 }
 const resolveVerifyModel = (requested?: string | null, allowDeepSeek = true) =>
   resolveModel(requested, VERIFY_MODEL_OPTIONS, DEFAULT_VERIFY_MODEL, VERIFY_MODEL_OPTIONS[0].id, allowDeepSeek);
-const resolveGenerationModel = (requested?: string | null) =>
-  resolveModel(requested, GENERATION_MODEL_OPTIONS, DEFAULT_GENERATION_MODEL, GENERATION_FALLBACK_MODEL);
+const resolveGenerationModel = (requested?: string | null, allowDeepSeek = true) =>
+  resolveModel(requested, GENERATION_MODEL_OPTIONS, DEFAULT_GENERATION_MODEL, GENERATION_FALLBACK_MODEL, allowDeepSeek);
+// Pass-1 reader. Guarded by isVisionCapable on top of the allowlist: a text-only id
+// (or a future one) reaching this pass would silently read a blank page — every image
+// part is dropped for it — and "extracted" nothing, so fall back to Gemini instead.
+const resolveExtractModel = (requested?: string | null, allowDeepSeek = true) => {
+  const model = resolveModel(requested, EXTRACT_MODEL_OPTIONS, MODEL, EXTRACT_FALLBACK_MODEL, allowDeepSeek);
+  if (!isVisionCapable(model)) {
+    console.warn(`[import] extraction model "${model}" cannot read images — falling back to ${EXTRACT_FALLBACK_MODEL}`);
+    return EXTRACT_FALLBACK_MODEL;
+  }
+  return model;
+};
 const resolveCompareModel = (requested?: string | null, allowDeepSeek = true) =>
   resolveModel(requested, COMPARE_MODEL_OPTIONS, DEFAULT_COMPARE_MODEL, GENERATION_FALLBACK_MODEL, allowDeepSeek);
 
@@ -1677,9 +1852,21 @@ const DEEPSEEK_TIMEOUT_RETRIES = Math.max(
  * Returns "" for a schema this can't describe, so the prompt is left untouched.
  */
 function schemaHint(schema: ResponseSchema): string {
-  const items = (schema as { items?: { properties?: Record<string, unknown>; required?: string[] } }).items;
+  const items = (schema as {
+    items?: { properties?: Record<string, unknown>; required?: string[]; type?: string };
+  }).items;
   const props = items?.properties;
-  if (!props) return "";
+  // Array of plain scalars (the enumerate + section-name passes). json_object mode
+  // can't return a bare array, so name the wrapper key explicitly — otherwise the
+  // model invents its own shape and coerceJsonArray has to guess at it.
+  if (!props) {
+    const t = items?.type;
+    return t
+      ? `\n\nRESPONSE SHAPE (strict): reply with a JSON object {"results": [ ... ]} whose array holds ${String(
+          t
+        ).toLowerCase()} values only — no objects, no prose, no other keys.`
+      : "";
+  }
   const required = new Set(items?.required ?? []);
   const keys = Object.keys(props).map((k) => (required.has(k) ? `"${k}" (REQUIRED)` : `"${k}"`));
   return (
@@ -1690,20 +1877,42 @@ function schemaHint(schema: ResponseSchema): string {
 }
 
 // Convert the Gemini-style Part[] the prompts build into OpenAI chat "content".
-// IMPORTANT: DeepSeek's V4 API is TEXT-ONLY — it rejects `image_url`
-// content ("unknown variant `image_url`, expected `text`"). So we DROP inline images
-// here and send text only. DeepSeek is therefore only used for text-based reasoning
-// (solution writing / blind verify from the question text); anything that must READ the
-// page (the answer-key pass) stays on Gemini. Returns the text content + the number of
-// images dropped (so the caller can log it).
-function partsToOpenAIContent(parts: Part[]): { content: unknown[]; droppedImages: number } {
+//
+// Images travel as OpenAI-shaped `image_url` parts holding a base64 data URI — the
+// same shape DeepSeek's vision guide documents. A model that is NOT vision-capable
+// (V4 Pro, and the older text-only V4 ids that rejected image_url outright with
+// "unknown variant `image_url`, expected `text`") gets text only, with its images
+// counted so the caller can say so in the log: those passes solve from the extracted
+// question text, so dropping the page is correct rather than fatal.
+//
+// A `fileData` part (a Gemini File API PDF) can never be sent to DeepSeek in any
+// shape. resolveMedia rasterizes the PDF to page images whenever a DeepSeek model is
+// in play precisely so this branch stays empty; it's counted separately so a future
+// path that skips that step shows up as a loud number instead of a blank read.
+function partsToOpenAIContent(
+  parts: Part[],
+  modelId: string
+): { content: unknown[]; droppedImages: number; droppedFiles: number } {
+  const vision = isVisionCapable(modelId);
   const content: unknown[] = [];
   let droppedImages = 0;
-  for (const p of parts as unknown as Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>) {
+  let droppedFiles = 0;
+  for (const p of parts as unknown as Array<{
+    text?: string;
+    inlineData?: { mimeType: string; data: string };
+    fileData?: { mimeType: string; fileUri: string };
+  }>) {
     if (p.text) content.push({ type: "text", text: p.text });
-    else if (p.inlineData) droppedImages++;
+    else if (p.inlineData) {
+      if (!vision) droppedImages++;
+      else
+        content.push({
+          type: "image_url",
+          image_url: { url: `data:${p.inlineData.mimeType || "image/jpeg"};base64,${p.inlineData.data}` },
+        });
+    } else if (p.fileData) droppedFiles++;
   }
-  return { content, droppedImages };
+  return { content, droppedImages, droppedFiles };
 }
 
 // Parse a model's text reply into the one-element array the verify/review callers
@@ -1786,9 +1995,15 @@ async function callDeepSeekJsonArray(
 ): Promise<unknown[]> {
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) throw new Error("DEEPSEEK_API_KEY not set");
-  const { content, droppedImages } = partsToOpenAIContent(parts);
+  const { content, droppedImages, droppedFiles } = partsToOpenAIContent(parts, modelId);
   if (droppedImages) {
     console.warn(`[import] ${label}: ${droppedImages} image(s) dropped — ${modelId} is text-only (solves from text)`);
+  }
+  if (droppedFiles) {
+    // Should be unreachable: resolveMedia rasterizes a PDF for any DeepSeek pass.
+    console.error(
+      `[import] ⚠ ${label}: ${droppedFiles} PDF reference(s) dropped — ${modelId} cannot read a Gemini File API upload, so this call sees NO page.`
+    );
   }
   // DeepSeek's response_format only supports `json_object` — it cannot enforce a
   // JSON Schema the way Gemini's responseSchema does, so the shape is prompt-only

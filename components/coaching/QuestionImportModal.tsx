@@ -46,21 +46,37 @@ const DEEPSEEK_OFF_MODEL = "gemini-3.5-flash-lite";
 // (the server re-validates against that allowlist). First entry is the default.
 const VERIFY_MODELS = [
   { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", hint: "Default · strong reader, multimodal" },
-  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Different vendor · decorrelated errors, cheap" },
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash", hint: "Different vendor · sees figures, cheap" },
+  { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", hint: "Different vendor · text-only, no figures" },
   { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", hint: "Same as extractor · cheapest" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Previous default" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Older generation" },
 ] as const;
 
+// Selectable EXTRACTION models — mirrors EXTRACT_MODEL_OPTIONS in lib/coachingImport.ts.
+// Drives Pass 1: enumerate the question numbers, read every question + its options off
+// the page, and re-read any choices that were missed. Must be able to SEE the paper, so
+// the DeepSeek entry is the vision-capable V4.1 Flash — V4 Pro is text-only and isn't
+// offered. First entry is the default (matches MODEL server-side).
+const EXTRACT_MODELS = [
+  { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Default · fast, proven on dense papers" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", hint: "Newer lite generation" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", hint: "Stronger reader · small print, scans" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Previous stronger reader" },
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash", hint: "Vision · much cheaper, best on clean typeset text" },
+] as const;
+
 // Selectable answer-key models — mirrors GENERATION_MODEL_OPTIONS in
 // lib/coachingImport.ts. Drives the Pass-2 pass that READS the printed answer key off
-// the page. Gemini-only: it needs to see the images, and DeepSeek is text-only.
-// (V4 Pro's reasoning powers the worked SOLUTIONS via "Compare two solutions" below.)
+// the page, so it needs vision: Gemini, or DeepSeek V4.1 Flash now that it sees images.
+// (V4 Pro stays text-only — its reasoning powers the worked SOLUTIONS via the blind
+// cross-check below instead.)
 const GENERATION_MODELS = [
   { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", hint: "Default · reads the printed key" },
   { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", hint: "Stronger reader" },
   { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", hint: "Older generation" },
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", hint: "Previous stronger reader" },
+  { id: "deepseek-flash", label: "DeepSeek V4.1 Flash", hint: "Vision · cheapest reader" },
 ] as const;
 
 const ACCENT: Record<string, string> = {
@@ -182,6 +198,9 @@ export default function QuestionImportModal({
   const [verify, setVerify] = useState(false);
   // Which model runs the verify/review pass when it's on. Default = Gemini 3 Flash.
   const [verifyModel, setVerifyModel] = useState<string>(VERIFY_MODELS[0].id);
+  // Extraction model (Pass 1, reads the questions off the page). Default = Gemini 3.1
+  // flash-lite; DeepSeek V4.1 Flash is the cheaper vision alternative.
+  const [extractModel, setExtractModel] = useState<string>(EXTRACT_MODELS[0].id);
   // Answer-key model (Pass 2, reads the printed key). Default = Gemini flash-lite.
   const [answerModel, setAnswerModel] = useState<string>(GENERATION_MODELS[0].id);
   // DeepSeek V4 Pro powers the always-on blind cross-check (and is offered as a
@@ -195,6 +214,11 @@ export default function QuestionImportModal({
     const next = !deepseek;
     setDeepseek(next);
     if (!next && verifyModel.startsWith("deepseek")) setVerifyModel(DEEPSEEK_OFF_MODEL);
+    // Same for the two READING passes: the server degrades a DeepSeek pick to
+    // DEEPSEEK_OFF_MODEL when the switch is off, so move the UI with it rather than
+    // leave a select claiming a model that won't run.
+    if (!next && extractModel.startsWith("deepseek")) setExtractModel(DEEPSEEK_OFF_MODEL);
+    if (!next && answerModel.startsWith("deepseek")) setAnswerModel(DEEPSEEK_OFF_MODEL);
   };
   // Hindi translation is opt-in (default OFF) — most papers are English-only and
   // translating every field roughly doubles the token cost. Turn on for bilingual papers.
@@ -263,6 +287,10 @@ export default function QuestionImportModal({
     total: 0,
   });
   const [liveQuestions, setLiveQuestions] = useState<(ParsedQ & { number?: number })[]>([]);
+  // What the server RESOLVED the two reading passes to — not what was picked here.
+  // A DeepSeek pick can be downgraded server-side (no key, switch off, no vision), and
+  // without this the only clue was the server console.
+  const [runModels, setRunModels] = useState<{ extract: string; answers: string } | null>(null);
 
   const [sections, setSections] = useState<string[]>([]);
   const [topicsBySection, setTopicsBySection] = useState<Record<string, string[]>>({});
@@ -290,6 +318,7 @@ export default function QuestionImportModal({
     setBusy(true);
     setLiveQuestions([]);
     setUsage([]);
+    setRunModels(null); // stale from a previous run would misreport this one
     setProgress({ label: "Uploading…", done: 0, total: 0 });
     try {
       const fd = new FormData();
@@ -298,6 +327,7 @@ export default function QuestionImportModal({
       fd.set("qtype", qtype);
       fd.set("verify", verify ? "1" : "0");
       if (verify) fd.set("verifyModel", verifyModel);
+      fd.set("extractModel", extractModel);
       fd.set("answerModel", answerModel);
       fd.set("deepseek", deepseek ? "1" : "0");
       fd.set("hindi", hindi ? "1" : "0");
@@ -350,6 +380,8 @@ export default function QuestionImportModal({
               done: typeof ev.done === "number" ? ev.done : p.done,
               total: typeof ev.total === "number" ? ev.total : p.total,
             }));
+          } else if (ev.t === "models") {
+            setRunModels({ extract: String(ev.extract ?? ""), answers: String(ev.answers ?? "") });
           } else if (ev.t === "usage") {
             setUsage((ev.rows as UsageRow[]) ?? []);
           } else if (ev.t === "done") {
@@ -462,6 +494,16 @@ export default function QuestionImportModal({
               <Loader2 className="h-4 w-4 animate-spin" />
               {progress.label || "Working…"}
             </div>
+            {/* Which models are ACTUALLY running — a DeepSeek pick silently degrades to
+                Gemini when the key is missing, the DeepSeek switch is off, or the model
+                can't read images, and the cost summary below only appears at the end. */}
+            {runModels && (
+              <p className="-mt-2 text-xs text-slate-500">
+                Reading the paper with <span className="text-slate-300">{runModels.extract}</span> · answer key with{" "}
+                <span className="text-slate-300">{runModels.answers}</span>
+                {" · figures always on Gemini"}
+              </p>
+            )}
             <div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                 <div
@@ -575,22 +617,55 @@ export default function QuestionImportModal({
               </div>
             </div>
 
-            {/* Answer-key model — reads the printed answers off the page (a vision task,
-                so Gemini only). DeepSeek V4 is text-only and can't read the page, so it
-                powers the worked SOLUTIONS via "Compare two solutions" below instead. */}
+            {/* Extraction model — Pass 1, reads the questions + options off the page.
+                A vision task, so the list is Gemini plus DeepSeek V4.1 Flash (which
+                gained image input); the server refuses any model that can't see. */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+              <label className="flex items-center gap-1.5 text-[15px] font-semibold text-white">
+                <Cpu className="h-[18px] w-[18px] text-amber-400/80" /> Extraction model
+              </label>
+              <p className="mt-0.5 text-[13px] leading-snug text-slate-400">
+                Reads every question and its answer choices off the paper. Gemini is the safer reader on small print,
+                handwriting and cramped scans; DeepSeek V4.1 Flash costs a fraction of it and does well on clean
+                typeset papers.
+              </p>
+              <select
+                value={extractModel}
+                onChange={(e) => setExtractModel(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500/60 sm:max-w-md"
+              >
+                {EXTRACT_MODELS.filter((m) => deepseek || !m.id.startsWith("deepseek")).map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label} — {m.hint}
+                  </option>
+                ))}
+              </select>
+              {extractModel.startsWith("deepseek") && (
+                <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.06] px-2.5 py-2 text-[12px] leading-snug text-amber-200/90">
+                  A PDF is rasterized to page images before it&apos;s sent — DeepSeek can&apos;t read a PDF directly.
+                  Figure detection and cropping still run on Gemini. Compare the review output against a Gemini run
+                  before you trust it on a dense paper.
+                </p>
+              )}
+            </div>
+
+            {/* Answer-key model — reads the printed answers off the page. Also a vision
+                task: Gemini, or DeepSeek V4.1 Flash. V4 Pro stays text-only and powers
+                the worked SOLUTIONS via the blind cross-check below instead. */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
               <label className="flex items-center gap-1.5 text-[15px] font-semibold text-white">
                 <Cpu className="h-[18px] w-[18px] text-amber-400/80" /> Answer-key model
               </label>
               <p className="mt-0.5 text-[13px] leading-snug text-slate-400">
-                Reads the printed answers/solutions off the paper. Gemini only — DeepSeek V4 can&apos;t see the page.
+                Reads the printed answers/solutions off the paper, and solves anything the paper doesn&apos;t answer.
+                Needs to see the page, so: Gemini or DeepSeek V4.1 Flash.
               </p>
               <select
                 value={answerModel}
                 onChange={(e) => setAnswerModel(e.target.value)}
                 className="mt-2 w-full rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-amber-500/60 sm:max-w-md"
               >
-                {GENERATION_MODELS.map((m) => (
+                {GENERATION_MODELS.filter((m) => deepseek || !m.id.startsWith("deepseek")).map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.label} — {m.hint}
                   </option>

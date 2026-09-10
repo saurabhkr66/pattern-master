@@ -588,7 +588,7 @@ function Footer() {
               <a href="#how">How it works</a>
               <a href="#features">Features</a>
               <a href="#faq">FAQ</a>
-              <Link href="/for-coachings">For coachings</Link>
+              {/* "For coachings" link hidden — coaching is direct-link only for now. */}
             </div>
           </div>
         </div>

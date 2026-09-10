@@ -19,8 +19,6 @@ import {
   ClipboardList,
   Bookmark,
   Trash2,
-  GraduationCap,
-  Building2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
@@ -229,42 +227,12 @@ export default function Header() {
 
             <nav className="flex flex-col p-4 gap-2">
 
-              {/* Coaching entry — always available, for both signed-in and
-                  signed-out users (coaching students may not have a Clerk account). */}
-              <Link
-                href="/coaching"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl nav-item ${
-                  pathname.startsWith("/coaching") ? "nav-item-active" : ""
-                }`}
-                style={
-                  pathname.startsWith("/coaching")
-                    ? undefined
-                    : { color: "var(--text-secondary)" }
-                }
-              >
-                <GraduationCap size={18} />
-                My Coaching
-              </Link>
-
-              {/* Teacher entry — sits next to the student "My Coaching" door. */}
-              <Link
-                href="/for-coachings"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl nav-item ${
-                  pathname.startsWith("/for-coachings") ? "nav-item-active" : ""
-                }`}
-                style={
-                  pathname.startsWith("/for-coachings")
-                    ? undefined
-                    : { color: "var(--text-secondary)" }
-                }
-              >
-                <Building2 size={18} />
-                For Coachings
-              </Link>
-
-              <div className="border-t my-1" style={{ borderColor: "var(--border)" }} />
+              {/* Coaching entries ("My Coaching" → /coaching, "For Coachings"
+                  → /for-coachings) are hidden from the consumer menu — the
+                  coaching module is reached by direct link only (join code,
+                  /c/[slug], /coaching-admin). Same reasoning as the mounted-out
+                  CoachingRail in app/layout.tsx. Restore both links here when we
+                  want coaching discoverable to normal users again. */}
 
               {navLinks.map(({ href, label, icon: Icon, disabled, prefetch }) => {
                 const content = (

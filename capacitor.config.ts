@@ -11,10 +11,16 @@ const config: CapacitorConfig = {
   webDir: 'out',
 
   server: {
-    // www is the canonical host (apex 307-redirects to www). Pointing the
-    // WebView directly at www avoids the redirect, which keeps the Capacitor
-    // bridge origin stable and matches where Clerk sets its cookies.
-    url: 'https://www.battleexam.com',
+    // The apex is the canonical host — deploy/Caddyfile 301-redirects
+    // www -> apex (www was getting crawled as a duplicate site). This URL MUST
+    // be the origin the server actually serves, not one that redirects:
+    // Bridge.java injects the native-bridge script (which defines
+    // Capacitor.PluginHeaders) into this single origin only, ignoring
+    // allowNavigation. Land on any other origin and androidBridge still exists
+    // — so isNativePlatform() is true — but every plugin call throws
+    // "not implemented on android". It also keeps us same-origin with the
+    // Clerk FAPI proxy at battleexam.com/__clerk.
+    url: 'https://battleexam.com',
     allowNavigation: [
       'battleexam.com',
       '*.battleexam.com',
