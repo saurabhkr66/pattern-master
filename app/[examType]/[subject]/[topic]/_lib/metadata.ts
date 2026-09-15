@@ -68,6 +68,18 @@ export function buildTopicMetadata({
     title,
     description,
     keywords,
+    // Pages 2+ are noindex,follow. They were never in the sitemap, but that only
+    // withholds a hint — TopicPagination links every one of them, so Google
+    // crawled and queued the lot (topics run to 20+ pages; ~3k URLs sitewide).
+    // With a ~650/day crawl budget that pushed "By purpose" to 88% Discovery,
+    // starving the 1,025 sitemap URLs. `follow` keeps the questions on those
+    // pages reachable so link equity still flows to them.
+    //
+    // The earlier fix here — making each page's description name its own
+    // question range (see the note above) — was aimed at the same problem and
+    // did not move it; uniqueness does not make a paginated slice worth
+    // indexing. Withholding the index directive is what frees the budget.
+    ...(pageNum > 1 && { robots: { index: false, follow: true } }),
     alternates: { canonical },
     openGraph: {
       title,

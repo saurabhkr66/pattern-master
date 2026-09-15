@@ -15,14 +15,12 @@ export default function robots(): MetadataRoute.Robots {
     "/mistakes",
     "/bookmarks", // auth-gated: returns a 200 empty shell to crawlers → soft 404
     "/api/",
-    // Clerk Frontend API proxy (app/__clerk/[[...rest]]/route.ts). Every page
-    // ships ClerkProvider from the root layout, so on each render Googlebot
-    // loaded clerk.browser.js and fired /__clerk/v1/environment + /v1/client —
-    // JSON responses averaging ~1.2s (VPS → Clerk FAPI hop). Google also
-    // discovered the bare "https://battleexam.com/__clerk" string sitting in
-    // every page's RSC flight payload and re-crawled it. Together these were
-    // 48% of all crawl requests (28.3K/90d) on a ~650/day budget. The upstream
-    // x-robots-tag: noindex stops indexing but NOT crawling — only this does.
+    // Clerk Frontend API proxy (app/__clerk/[[...rest]]/route.ts). ClerkProvider
+    // is in the root layout, so every public page embeds the bare proxy URL in
+    // its RSC flight payload and Googlebot loads clerk.browser.js on render.
+    // Small in absolute terms (clerk.battleexam.com was 3 requests / 90d), but
+    // there is nothing for a crawler to gain here — the upstream already sends
+    // x-robots-tag: noindex, which stops indexing but NOT crawling.
     // Safe to block: no public page gates content on Clerk's isLoaded, so a
     // crawler that never executes Clerk sees the same server-rendered HTML.
     "/__clerk",
