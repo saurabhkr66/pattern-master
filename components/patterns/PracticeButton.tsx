@@ -338,8 +338,35 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     // and has no DPP arm). Counting a DPP solve in the numerator would let the
     // progress bar climb past 100% on a topic with a released DPP. If DPP is
     // ever meant to count, the denominator has to grow in the same commit.
-    const wasAlreadySolved = (question.attempts || []).some((a: any) => a?.is_correct);
+    //
+    // `question` is a snapshot taken when the card opened (and the queue/history
+    // hold older snapshots still), so it alone is not enough: re-opening a
+    // question via Previous, or re-solving after a page-less re-render, would
+    // see `attempts: []` and bump a second time. The patternQuestions cache is
+    // patched on every submit, so consult it as well. `isSolved` is the
+    // server's "any correct attempt ever" flag — `attempts` only carries the
+    // latest attempt, so a wrong retry of a solved question must not hide it.
+    const isSolvedQ = (q: any) =>
+      Boolean(q?.isSolved) || (q?.attempts || []).some((a: any) => a?.is_correct);
+    const cachedQ = isDpp
+      ? null
+      : queryClient
+          .getQueriesData<any>({ queryKey: ["patternQuestions", patternId] })
+          .flatMap(([, data]) => [...(data?.questions ?? []), ...(data?.pyqs ?? [])])
+          .find((q: any) => q?.id === question.id);
+    const wasAlreadySolved = isSolvedQ(question) || isSolvedQ(cachedQ);
     const shouldIncrement = isCorrect && !wasAlreadySolved && !question.isMock && !isDpp;
+
+    const newAttempt = { is_correct: isCorrect, user_answer: finalAnswer, created_at: new Date().toISOString() };
+    const applyAttempt = (q: any) => ({
+      ...q,
+      attempts: [newAttempt, ...(q.attempts || [])],
+      isSolved: Boolean(q.isSolved) || isCorrect,
+    });
+
+    // Keep the local snapshot in step with the cache so a second submit of the
+    // same object (Previous → re-answer) sees the attempt it just made.
+    setQuestion((prev: any) => (prev?.id === question.id ? applyAttempt(prev) : prev));
 
     // setQueriesData (prefix match), NOT setQueryData (exact match): PatternRow
     // reads ["patternQuestions", patternId, language], so an exact-key write to
@@ -350,9 +377,8 @@ export default function PracticeButton({ patternId, topicName, initialQuestion, 
     if (!isDpp) {
       queryClient.setQueriesData({ queryKey: ["patternQuestions", patternId] }, (oldData: any) => {
         if (!oldData) return oldData;
-        const newAttempt = { is_correct: isCorrect, user_answer: finalAnswer, created_at: new Date().toISOString() };
         const updateArray = (arr: any[]) => (arr || []).map(q =>
-          q.id === question.id ? { ...q, attempts: [newAttempt, ...(q.attempts || [])] } : q
+          q.id === question.id ? applyAttempt(q) : q
         );
         return { ...oldData, questions: updateArray(oldData.questions), pyqs: updateArray(oldData.pyqs) };
       });

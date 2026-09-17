@@ -116,7 +116,7 @@ const getStaticQuestions = (id: string, skip = 0, take = 0) =>
 // Single UNION ALL query — 1 DB connection instead of 2 concurrent ones.
 async function getUserState(userId: string, questionIds: string[], pyqIds: string[]) {
   const allIds = [...questionIds, ...pyqIds];
-  if (allIds.length === 0) return { attemptMap: {}, bookmarkSet: new Set<string>() };
+  if (allIds.length === 0) return { attemptMap: {}, solvedSet: new Set<string>(), bookmarkSet: new Set<string>() };
 
   const qClause = questionIds.length > 0 ? Prisma.sql`OR question_id::text = ANY(${questionIds})` : Prisma.empty;
   const pClause = pyqIds.length > 0 ? Prisma.sql`OR pyq_id::text = ANY(${pyqIds})` : Prisma.empty;
@@ -144,17 +144,23 @@ async function getUserState(userId: string, questionIds: string[], pyqIds: strin
   `);
 
   const attemptMap: Record<string, { is_correct: boolean; created_at: Date }> = {};
+  // Questions with ANY correct attempt, not just a correct LATEST one. The
+  // progress count is COUNT(DISTINCT correctly-answered), so a question solved
+  // last week and missed today is still "solved" for the counter — the client
+  // must not bump it again on the next correct answer.
+  const solvedSet = new Set<string>();
   const bookmarkSet = new Set<string>();
 
   for (const r of rows) {
     if (r.type === "a") {
       if (!attemptMap[r.id]) attemptMap[r.id] = { is_correct: r.is_correct!, created_at: r.created_at! };
+      if (r.is_correct) solvedSet.add(r.id);
     } else {
       bookmarkSet.add(r.id);
     }
   }
 
-  return { attemptMap, bookmarkSet };
+  return { attemptMap, solvedSet, bookmarkSet };
 }
 
 // Strip Hindi-only fields when the client requests English (default).
@@ -194,11 +200,12 @@ export async function GET(
           const questionIds = isMock ? [] : questions.map((q: any) => q.id);
           const pyqIds = isMock ? [] : pyqs.map((q: any) => q.id);
 
-          const { attemptMap, bookmarkSet } = await getUserState(userId, questionIds, pyqIds);
+          const { attemptMap, solvedSet, bookmarkSet } = await getUserState(userId, questionIds, pyqIds);
 
           const hydrate = (q: any) => transform({
             ...q,
             attempts: attemptMap[q.id] ? [{ id: q.id, is_correct: attemptMap[q.id].is_correct, created_at: attemptMap[q.id].created_at }] : [],
+            isSolved: solvedSet.has(q.id),
             isBookmarked: bookmarkSet.has(q.id),
           });
 
