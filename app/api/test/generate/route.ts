@@ -39,7 +39,12 @@ interface RawQuestion {
   images: unknown;
 }
 
-/* ── Fetch questions for a section ── */
+/* ── Pick + fetch questions for a section ── */
+// Two-step: sample from the section's WHOLE eligible pool using an id-only
+// query (a few bytes per row), then load full content just for the picks.
+// The old single query took the first `4× needed` rows in physical order and
+// shuffled those, so every random paper drew from the same small slice of the
+// bank no matter how large it was.
 async function fetchSectionQuestions(
   section: SectionConfig,
   examType: string,
@@ -95,13 +100,7 @@ async function fetchSectionQuestions(
   const marksFilter = neededMarks ? { marks: { in: neededMarks } } : {};
   const typeFilter = neededTypes && neededTypes.length > 0 ? { question_type: { in: neededTypes } } : {};
 
-  // Load 4× the needed count so shuffle has variety, but don't pull the whole table.
-  const totalNeeded = section.markDistribution.length > 0
-    ? section.markDistribution.reduce((sum, b) => sum + b.count, 0)
-    : section.totalQuestions;
-  const takeLimit = Math.max(totalNeeded * 4, 50);
-
-  const pyqs = await prisma.pYQ.findMany({
+  const candidates = await prisma.pYQ.findMany({
     where: {
       ...marksFilter,
       ...typeFilter,
@@ -111,6 +110,14 @@ async function fetchSectionQuestions(
         ...pyqSubjectFilter,
       },
     },
+    select: { id: true, marks: true, question_type: true },
+  });
+
+  const pickedIds = pickSectionQuestions(shuffle(candidates), section).map((c) => c.id);
+  if (pickedIds.length === 0) return [];
+
+  const pyqs = await prisma.pYQ.findMany({
+    where: { id: { in: pickedIds } },
     select: {
       id: true,
       question_text: true,
@@ -123,10 +130,14 @@ async function fetchSectionQuestions(
       images: true,
       pattern: { select: { subject: true } },
     },
-    take: takeLimit,
   });
 
-  const normalized: RawQuestion[] = pyqs.map((q) => ({
+  // `IN (...)` returns rows in arbitrary order — restore the picked order so
+  // the paper keeps its band layout and shuffle.
+  const byId = new Map(pyqs.map((q) => [q.id, q]));
+  const ordered = pickedIds.map((id) => byId.get(id)).filter((q) => q !== undefined);
+
+  return ordered.map((q) => ({
     id: q.id,
     source: "pyq" as const,
     question_text: q.question_text,
@@ -139,13 +150,13 @@ async function fetchSectionQuestions(
     subject: q.pattern?.subject ?? "Unknown",
     images: q.images,
   }));
-
-  return shuffle(normalized);
 }
 
 /* ── Pick questions for a section respecting type + mark distribution ── */
-function pickSectionQuestions(pool: RawQuestion[], section: SectionConfig): RawQuestion[] {
-  const picked: RawQuestion[] = [];
+type PickCandidate = { id: string; marks: number; question_type: string };
+
+function pickSectionQuestions<T extends PickCandidate>(pool: T[], section: SectionConfig): T[] {
+  const picked: T[] = [];
 
   if (section.markDistribution.length > 0) {
     for (const band of section.markDistribution) {
@@ -302,10 +313,10 @@ export async function GET(req: NextRequest) {
     const drafted: Array<{ section: SectionConfig; questions: RawQuestion[] }> = [];
 
     for (const sec of config.sections) {
-      const pool = await fetchSectionQuestions(sec, examType, branch, subjectFilters);
-      // fetchSectionQuestions returns [] when subject filter has no overlap with this section
-      if (pool.length === 0 && subjectFilters.length > 0) continue;
-      drafted.push({ section: sec, questions: pickSectionQuestions(pool, sec) });
+      // Returns [] when the subject filter has no overlap with this section or
+      // the bank can't fill it; empty sections are dropped just below.
+      const questions = await fetchSectionQuestions(sec, examType, branch, subjectFilters);
+      drafted.push({ section: sec, questions });
     }
 
     // Drop sections the bank couldn't fill — otherwise the paper carries an

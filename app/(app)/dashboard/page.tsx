@@ -1,7 +1,9 @@
 import { Suspense } from "react";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getFirstName } from "@/lib/clerkProfile";
+import { joinExamLabels } from "@/lib/seo";
 import DashboardHeader from "./_components/DashboardHeader";
 import SuggestedNextSection from "./_components/SuggestedNextSection";
 import StatsSection from "./_components/StatsSection";
@@ -18,14 +20,15 @@ import {
 
 export const metadata: Metadata = {
   title: "Dashboard – BattleExam",
-  description: "Track your GATE CSE prep progress, accuracy, streaks and review wrong answers.",
+  // Exam-agnostic: the dashboard serves every exam, not just GATE CSE.
+  description: `Track your ${joinExamLabels()} prep progress, accuracy, streaks and review wrong answers.`,
 };
 
 export default async function DashboardPage() {
-  const [{ userId }, clerkUser] = await Promise.all([auth(), currentUser()]);
-  if (!userId || !clerkUser) redirect("/sign-in");
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
 
-  const firstName = clerkUser.firstName || clerkUser.username || "Learner";
+  const firstName = (await getFirstName(userId)) || "Learner";
 
   return (
     <div className="be-screen" style={{ minHeight: "100%" }}>

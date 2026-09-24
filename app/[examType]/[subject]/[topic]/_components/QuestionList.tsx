@@ -1,3 +1,4 @@
+import Link from "next/link";
 import QuestionViewer from "@/components/question/QuestionViewer";
 import type { CombinedQuestion } from "../_lib/dataFetch";
 import { DIFFICULTY_CLASSES, type DifficultyLabel } from "@/lib/difficulty";
@@ -7,9 +8,12 @@ interface Props {
   start: number;
   examLabel: string;
   practiceHref: string;
+  // Topic root (/exam/subject/topic). When set, question-type chips link to
+  // that topic's /type/<slug> page.
+  basePath?: string;
 }
 
-export default function QuestionList({ pageQuestions, start, examLabel, practiceHref }: Props) {
+export default function QuestionList({ pageQuestions, start, examLabel, practiceHref, basePath }: Props) {
   return (
     <section className="space-y-6">
       {pageQuestions.map((q, i) => {
@@ -48,6 +52,14 @@ export default function QuestionList({ pageQuestions, start, examLabel, practice
               >
                 {q.questionType}
               </span>
+              {q.source === "pyq" && q.subPattern && basePath && (
+                <Link
+                  href={`${basePath}/type/${q.subPattern.slug}`}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 hover:underline"
+                >
+                  {`🏷 ${q.subPattern.name} · asked ${q.subPattern.count}×`}
+                </Link>
+              )}
             </div>
 
             <QuestionViewer

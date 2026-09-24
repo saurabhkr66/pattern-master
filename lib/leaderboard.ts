@@ -3,13 +3,18 @@ import { pusherServer, mockChannel, PUSHER_EVENTS } from "@/lib/pusher-server";
 import { prisma } from "@/lib/prisma";
 
 /* ── Key helpers ─────────────────────────────────────────────────────────── */
+// "lb2" = one ranked entry per user (their FIRST attempt). The old "lb:" keys
+// held one entry per session, so retakes stacked; the new prefix forces a
+// clean re-hydration from the DB instead of inheriting those duplicates.
 const k = {
-  lb: (id: string) => `lb:${id}`,
-  meta: (id: string) => `lb:meta:${id}`,
-  dist: (id: string) => `lb:dist:${id}`,
+  lb: (id: string) => `lb2:${id}`,
+  meta: (id: string) => `lb2:meta:${id}`,
+  dist: (id: string) => `lb2:dist:${id}`,
+  // userId → sessionId of the attempt that is ranked for that user.
+  ranked: (id: string) => `lb2:user:${id}`,
   active: (id: string) => `active:${id}`,
-  hydrated: (id: string) => `lb:hydrated:${id}`,
-  hydrateLock: (id: string) => `lb:hydrate-lock:${id}`,
+  hydrated: (id: string) => `lb2:hydrated:${id}`,
+  hydrateLock: (id: string) => `lb2:hydrate-lock:${id}`,
 };
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -75,7 +80,7 @@ async function hydrateFromDb(mockId: string): Promise<void> {
     const already = await redis.get(k.hydrated(mockId));
     if (already) return;
 
-    const sessions = await prisma.testSession.findMany({
+    const allSessions = await prisma.testSession.findMany({
       where: { mock_test_id: mockId },
       select: {
         id: true,
@@ -85,6 +90,16 @@ async function hydrateFromDb(mockId: string): Promise<void> {
         time_taken_secs: true,
         created_at: true,
       },
+      orderBy: { created_at: "asc" },
+    });
+
+    // Only each user's first attempt is ranked — a retake after seeing the
+    // solutions is practice, not a fair leaderboard entry.
+    const seenUsers = new Set<string>();
+    const sessions = allSessions.filter((s) => {
+      if (seenUsers.has(s.user_id)) return false;
+      seenUsers.add(s.user_id);
+      return true;
     });
 
     if (sessions.length === 0) {
@@ -101,6 +116,7 @@ async function hydrateFromDb(mockId: string): Promise<void> {
 
     const pipeline = redis.pipeline();
     const metaUpdates: Record<string, string> = {};
+    const rankedUpdates: Record<string, string> = {};
     const distCounts: Record<string, number> = {};
 
     for (const s of sessions) {
@@ -117,12 +133,14 @@ async function hydrateFromDb(mockId: string): Promise<void> {
         member: s.id,
       });
       metaUpdates[s.id] = JSON.stringify(payload);
+      rankedUpdates[s.user_id] = s.id;
       const bucket = scoreBucket(s.score, s.max_score);
       distCounts[bucket] = (distCounts[bucket] ?? 0) + 1;
     }
 
     if (Object.keys(metaUpdates).length > 0) {
       pipeline.hset(k.meta(mockId), metaUpdates);
+      pipeline.hset(k.ranked(mockId), rankedUpdates);
     }
     for (const [bucket, count] of Object.entries(distCounts)) {
       pipeline.hincrby(k.dist(mockId), bucket, count);
@@ -151,6 +169,24 @@ export async function recordSubmission(input: {
   if (!isRedisConfigured()) return;
 
   const { mockId, sessionId, userId, score, maxScore, timeTakenSecs } = input;
+
+  // Hydrate first so the per-user "ranked" map reflects attempts that predate
+  // this Redis state — otherwise a retake could claim the user's slot.
+  await ensureHydrated(mockId);
+
+  // Claim this user's single leaderboard slot. HSETNX only succeeds for the
+  // user's first submission; retakes are still saved (history/analysis) but
+  // never ranked.
+  const claimed = await redis.hsetnx(k.ranked(mockId), userId, sessionId);
+  if (!claimed) {
+    await redis.zrem(k.active(mockId), userId);
+    // Hydration may have just ranked this very session from the DB (first-ever
+    // read of this mock) — it is then already on the board and only the live
+    // event is missing.
+    const rankedSession = await redis.hget<string>(k.ranked(mockId), userId);
+    if (rankedSession !== sessionId) return;
+  }
+
   // Email lookup lives here (not in the submit route) so the DB round-trip
   // stays off the submit response's critical path — the caller invokes us
   // fire-and-forget.
@@ -161,15 +197,17 @@ export async function recordSubmission(input: {
   const now = Date.now();
   const payload: MetaPayload = { name, score, maxScore, time: timeTakenSecs, at: now };
 
-  const pipeline = redis.pipeline();
-  pipeline.zadd(k.lb(mockId), {
-    score: compositeScore(score, timeTakenSecs),
-    member: sessionId,
-  });
-  pipeline.hset(k.meta(mockId), { [sessionId]: JSON.stringify(payload) });
-  pipeline.hincrby(k.dist(mockId), scoreBucket(score, maxScore), 1);
-  pipeline.zrem(k.active(mockId), userId);
-  await pipeline.exec();
+  if (claimed) {
+    const pipeline = redis.pipeline();
+    pipeline.zadd(k.lb(mockId), {
+      score: compositeScore(score, timeTakenSecs),
+      member: sessionId,
+    });
+    pipeline.hset(k.meta(mockId), { [sessionId]: JSON.stringify(payload) });
+    pipeline.hincrby(k.dist(mockId), scoreBucket(score, maxScore), 1);
+    pipeline.zrem(k.active(mockId), userId);
+    await pipeline.exec();
+  }
 
   if (pusherServer) {
     await pusherServer

@@ -13,9 +13,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
-import { fetchPattern, fetchRelatedTopics, fetchTopicLabels, combineQuestions, unslug } from "./_lib/dataFetch";
+import {
+  fetchPattern, fetchRelatedTopics, fetchTopicLabels, fetchSubPatternSummary,
+  subPatternChips, combineQuestions, unslug,
+} from "./_lib/dataFetch";
 import { buildTopicMetadata, buildSchemas } from "./_lib/metadata";
 import TopicHeader from "./_components/TopicHeader";
+import PatternBreakdown from "./_components/PatternBreakdown";
 import PracticeModePromo from "./_components/PracticeModePromo";
 import QuestionList from "./_components/QuestionList";
 import TopicPagination from "./_components/TopicPagination";
@@ -124,6 +128,10 @@ export default async function TopicPage({
   ]);
   if (!pattern) notFound();
 
+  // Needs pattern.id, so it can't join the Promise.all above; it's its own
+  // small cache entry, so this is a cache read, not a second cold query.
+  const subPatterns = await fetchSubPatternSummary(pattern.id);
+
   const subjectLabel = pattern.subject;
   const topicLabel = pattern.topic_name;
 
@@ -131,7 +139,7 @@ export default async function TopicPage({
   const canonical = `${BASE}${basePath}`;
   const year = new Date().getFullYear() + 1;
 
-  const pageQuestions = combineQuestions(pattern.pyqs, pattern.questions);
+  const pageQuestions = combineQuestions(pattern.pyqs, pattern.questions, subPatternChips(subPatterns));
 
   const totalQ = pattern.totalQ;
   const totalPages = Math.max(1, Math.ceil(totalQ / PAGE_SIZE));
@@ -196,6 +204,13 @@ export default async function TopicPage({
           shortNotes={pattern.short_notes}
         />
 
+        <PatternBreakdown
+          summary={subPatterns}
+          topicLabel={topicLabel}
+          examLabel={exam.examLabel}
+          basePath={basePath}
+        />
+
         <PracticeModePromo topicLabel={topicLabel} practiceHref={practiceHref} />
 
         <QuestionList
@@ -203,6 +218,7 @@ export default async function TopicPage({
           start={start}
           examLabel={exam.examLabel}
           practiceHref={practiceHref}
+          basePath={basePath}
         />
 
         <TopicPagination pageNum={pageNum} totalPages={totalPages} basePath={basePath} />

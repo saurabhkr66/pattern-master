@@ -39,6 +39,7 @@ model Pattern {
   pyqs              PYQ[]
   userNotes         UserNote[]
   dpps              Dpp[] // admin-only curated problem sets — see dpp.prisma
+  subPatterns       SubPattern[] // question-types inside this chapter — see subpattern.prisma
 
   @@unique([exam_type, branch, topic_name], name: "pattern_identifier")
   @@index([exam_type, branch, subject], map: "pattern_subject_lookup")
@@ -84,6 +85,12 @@ model PYQ {
   // AI-classified difficulty ("EASY"|"MEDIUM"|"HARD"), one-time backfill via
   // scripts/backfill-pyq-difficulty.ts. Null = not yet classified.
   difficulty             String?
+  // Question-type sorting (scripts/build-subpatterns.ts). solving_idea = AI
+  // one-liner "concept + method" the grouping is built from; sub_pattern_id =
+  // the pile this PYQ landed in. Both null until the script has run.
+  solving_idea           String?
+  sub_pattern_id         String?
+  subPattern             SubPattern?      @relation(fields: [sub_pattern_id], references: [id], onDelete: SetNull)
   attempts               Attempt[]
   bookmarks              Bookmark[]
   pattern                Pattern          @relation(fields: [pattern_id], references: [id])
@@ -95,6 +102,7 @@ model PYQ {
   @@index([pattern_id])
   @@index([ai_reviewed_at])
   @@index([difficulty])
+  @@index([sub_pattern_id])
   // Serves the unfiltered sitemap groupBy by ["exam_type","year"]
   // (lib/sitemap-data.ts) as an index-only scan instead of a full-table
   // seq scan + hash aggregate.

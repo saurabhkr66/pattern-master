@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getFirstName } from "@/lib/clerkProfile";
 import { getDppPaper } from "@/lib/dppPaper";
 import DppRunner from "@/components/dpp/DppRunner";
 
@@ -62,7 +63,8 @@ export default async function DppRunPage({ params }: { params: Promise<{ runId: 
   // instantly auto-submits an empty paper.
   if (expiresAt.getTime() <= Date.now()) redirect(`/dpp/${run.dpp_id}`);
 
-  const user = await currentUser();
+  // Guests (unclaimed run) have no name to fetch.
+  const firstName = userId ? await getFirstName(userId) : null;
 
   return (
     <DppRunner
@@ -70,7 +72,7 @@ export default async function DppRunPage({ params }: { params: Promise<{ runId: 
       questions={paper.questions}
       config={paper.config}
       title={`${paper.name} · ${paper.topicName}`}
-      userName={user?.firstName ?? undefined}
+      userName={firstName ?? undefined}
       expiresAt={expiresAt.toISOString()}
     />
   );

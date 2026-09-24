@@ -1,0 +1,28 @@
+// ─── Sub-patterns (question-types inside a chapter) ──────────────────────────
+//
+// A Pattern row is effectively a chapter ("Rotational Motion") holding 100+ PYQs.
+// A SubPattern is one distinct SOLVING METHOD inside it ("Rolling on incline"),
+// discovered by AI in scripts/build-subpatterns.ts and then checked by an admin
+// at /admin/sub-patterns. Only `reviewed` rows are ever shown publicly.
+//
+// Back-relations live in schema.prisma: `subPatterns` on Pattern and
+// `sub_pattern_id` / `subPattern` on PYQ (Prisma can't split a model across files).
+
+model SubPattern {
+  id         String   @id @default(uuid())
+  pattern_id String
+  name       String // "Rolling on incline"
+  slug       String // "rolling-on-incline" — URL segment under /<topic>/type/
+  method     String // one-line solving idea
+  trick      String? // formula / tip shown to students
+  sort_order Int      @default(0)
+  // Admin sign-off. The script never touches a chapter that has any reviewed
+  // row, and public pages only read reviewed rows.
+  reviewed   Boolean  @default(false)
+  created_at DateTime @default(now())
+  pattern    Pattern  @relation(fields: [pattern_id], references: [id], onDelete: Cascade)
+  pyqs       PYQ[]
+
+  @@unique([pattern_id, slug])
+  @@index([pattern_id])
+}

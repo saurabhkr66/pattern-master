@@ -8,9 +8,12 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { parseExamSlug, TOPIC_PAGE_SIZE } from "@/lib/seo";
-import { fetchPattern, fetchTopicLabels, combineQuestions, unslug } from "../../_lib/dataFetch";
+import {
+  fetchPattern, fetchTopicLabels, fetchSubPatternSummary, subPatternChips, combineQuestions, unslug,
+} from "../../_lib/dataFetch";
 import { buildTopicMetadata, buildSchemas } from "../../_lib/metadata";
 import TopicHeader from "../../_components/TopicHeader";
+import PatternBreakdown from "../../_components/PatternBreakdown";
 import QuestionList from "../../_components/QuestionList";
 import TopicPagination from "../../_components/TopicPagination";
 import SignupCTA from "../../_components/SignupCTA";
@@ -101,13 +104,15 @@ export default async function TopicPageN({
   const pattern = await fetchPattern(exam, subjectKey, topic, pageNum, PAGE_SIZE);
   if (!pattern) notFound();
 
+  const subPatterns = await fetchSubPatternSummary(pattern.id);
+
   const subjectLabel = pattern.subject;
   const topicLabel = pattern.topic_name;
 
   const canonical = `${BASE}${basePath}/page/${pageNum}`;
   const year = new Date().getFullYear() + 1;
 
-  const pageQuestions = combineQuestions(pattern.pyqs, pattern.questions);
+  const pageQuestions = combineQuestions(pattern.pyqs, pattern.questions, subPatternChips(subPatterns));
 
   const totalQ = pattern.totalQ;
   const totalPages = Math.max(1, Math.ceil(totalQ / PAGE_SIZE));
@@ -176,11 +181,19 @@ export default async function TopicPageN({
           totalPages={totalPages}
         />
 
+        <PatternBreakdown
+          summary={subPatterns}
+          topicLabel={topicLabel}
+          examLabel={exam.examLabel}
+          basePath={basePath}
+        />
+
         <QuestionList
           pageQuestions={pageQuestions}
           start={start}
           examLabel={exam.examLabel}
           practiceHref={practiceHref}
+          basePath={basePath}
         />
 
         <TopicPagination pageNum={pageNum} totalPages={totalPages} basePath={basePath} />

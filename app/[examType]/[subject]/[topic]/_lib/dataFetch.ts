@@ -64,6 +64,8 @@ export type CombinedQuestion =
       // AI-classified, normalized to "Easy"|"Medium"|"Hard"; null = unclassified.
       difficulty: string | null;
       images?: { index: number; filename: string; type?: string }[] | null;
+      // Question-type chip; null when the PYQ has none or its chapter isn't reviewed.
+      subPattern?: SubPatternChip | null;
     } & HtmlFields)
   | ({
       source: "gq";
@@ -79,6 +81,30 @@ export type CombinedQuestion =
       difficulty: string | null;
       images?: { index: number; filename: string; type?: string }[] | null;
     } & HtmlFields);
+
+// Shared by the paginated topic page and the per-type page. Any change here
+// must bump BOTH cache keys ("topic-pattern-page" and "topic-subpattern-page").
+const PYQ_SELECT = {
+  id: true,
+  question_text: true,
+  question_text_hindi: true,
+  options: true,
+  options_hindi: true,
+  correct_answer: true,
+  explanation: true,
+  explanation_hindi: true,
+  year: true,
+  question_type: true,
+  difficulty: true,
+  images: true,
+  question_html: true,
+  explanation_html: true,
+  options_html: true,
+  question_html_hindi: true,
+  explanation_html_hindi: true,
+  options_html_hindi: true,
+  sub_pattern_id: true,
+} as const;
 
 const getPatternPage = (patternId: string, page: number, size: number) =>
   unstable_cache(
@@ -103,26 +129,6 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
       const offset = (page - 1) * size;
       const end = offset + size;
 
-      const pyqSelect = {
-        id: true,
-        question_text: true,
-        question_text_hindi: true,
-        options: true,
-        options_hindi: true,
-        correct_answer: true,
-        explanation: true,
-        explanation_hindi: true,
-        year: true,
-        question_type: true,
-        difficulty: true,
-        images: true,
-        question_html: true,
-        explanation_html: true,
-        options_html: true,
-        question_html_hindi: true,
-        explanation_html_hindi: true,
-        options_html_hindi: true,
-      } as const;
       const gqSelect = {
         id: true,
         question_text: true,
@@ -150,7 +156,7 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
               orderBy: [{ year: "desc" }, { id: "asc" }],
               skip: offset,
               take: Math.min(end, pyqCount) - offset,
-              select: pyqSelect,
+              select: PYQ_SELECT,
             })
           : Promise.resolve([]);
 
@@ -183,7 +189,8 @@ const getPatternPage = (patternId: string, page: number, size: number) =>
     // "v3" = topic_name added to the meta select (real display label). MUST be
     // bumped alongside any select change or the 7-day cache serves payloads
     // missing the new field.
-    ["topic-pattern-page", "v3", patternId, String(page), String(size)],
+    // "v4" = sub_pattern_id added to PYQ_SELECT (question-type chips).
+    ["topic-pattern-page", "v4", patternId, String(page), String(size)],
     { revalidate: 604800, tags: ["patterns"] },
   )();
 
@@ -364,6 +371,119 @@ export async function fetchRelatedTopics(
   return getRelatedTopics(examSlug, branchSlug, subjectSlug, currentTopicSlug, limit);
 }
 
+export type SubPatternChip = { name: string; slug: string; count: number };
+
+// ─── Question-types (sub-patterns) ───────────────────────────────────────────
+//
+// Built by scripts/build-subpatterns.ts, checked at /admin/sub-patterns. Only
+// REVIEWED types are public. The catch-all "Other / mixed" pile (and any pile
+// of one) is never shown as a type — it's a leftover bucket, not a method.
+const HIDDEN_TYPE_SLUG = "other-mixed";
+
+export type SubPatternSummaryItem = {
+  id: string;
+  name: string;
+  slug: string;
+  method: string;
+  trick: string | null;
+  count: number;
+  years: number[];
+};
+
+export type SubPatternSummary = {
+  types: SubPatternSummaryItem[];
+  pyqCount: number;
+  // % of the chapter's PYQs covered by the 5 biggest types.
+  coverageTop5: number;
+};
+
+const getSubPatternSummary = (patternId: string) =>
+  unstable_cache(
+    async (): Promise<SubPatternSummary> => {
+      const [types, pyqCount] = await Promise.all([
+        prisma.subPattern.findMany({
+          where: { pattern_id: patternId, reviewed: true },
+          select: { id: true, name: true, slug: true, method: true, trick: true, pyqs: { select: { year: true } } },
+        }),
+        prisma.pYQ.count({ where: { pattern_id: patternId } }),
+      ]);
+
+      const items = types
+        .filter((t) => t.slug !== HIDDEN_TYPE_SLUG && t.pyqs.length >= 2)
+        .map((t) => ({
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          method: t.method,
+          trick: t.trick,
+          count: t.pyqs.length,
+          years: [...new Set(t.pyqs.map((q) => q.year))].sort((a, b) => a - b),
+        }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+      const top5 = items.slice(0, 5).reduce((s, t) => s + t.count, 0);
+      return {
+        types: items,
+        pyqCount,
+        coverageTop5: pyqCount ? Math.round((top5 / pyqCount) * 100) : 0,
+      };
+    },
+    ["topic-subpatterns", "v1", patternId],
+    { revalidate: 604800, tags: ["patterns"] },
+  )();
+
+export function fetchSubPatternSummary(patternId: string) {
+  return getSubPatternSummary(patternId);
+}
+
+/** id → chip, for tagging questions in QuestionList. */
+export function subPatternChips(summary: SubPatternSummary | null): Map<string, SubPatternChip> {
+  return new Map((summary?.types ?? []).map((t) => [t.id, { name: t.name, slug: t.slug, count: t.count }]));
+}
+
+// One type's page: every PYQ in it (a type is small — no pagination).
+const getSubPatternPage = (patternId: string, typeSlug: string) =>
+  unstable_cache(
+    async () => {
+      const type = await prisma.subPattern.findUnique({
+        where: { pattern_id_slug: { pattern_id: patternId, slug: typeSlug } },
+        select: { id: true, name: true, slug: true, method: true, trick: true, reviewed: true },
+      });
+      if (!type || !type.reviewed || type.slug === HIDDEN_TYPE_SLUG) return null;
+      const pyqs = await prisma.pYQ.findMany({
+        where: { sub_pattern_id: type.id },
+        orderBy: [{ year: "desc" }, { id: "asc" }],
+        select: PYQ_SELECT,
+      });
+      if (pyqs.length < 2) return null;
+      return { type, pyqs };
+    },
+    ["topic-subpattern-page", "v1", patternId, typeSlug],
+    { revalidate: 604800, tags: ["patterns"] },
+  )();
+
+/** Resolves the chapter by slug, then the type. null → 404. */
+export async function fetchSubPatternPage(
+  exam: ExamSeoInfo,
+  subjectLabel: string,
+  topicSlug: string,
+  typeSlug: string,
+) {
+  const examSlug    = toSlug(exam.examType);
+  const branchSlug  = exam.branch ? toSlug(exam.branch) : "common";
+  const subjectSlug = toSlug(subjectLabel);
+
+  const match = await getPatternBySlug(examSlug, branchSlug, subjectSlug, topicSlug);
+  if (!match) return null;
+
+  const [page, labels] = await Promise.all([
+    getSubPatternPage(match.id, typeSlug),
+    getTopicLabels(match.id),
+  ]);
+  if (!page || !labels) return null;
+  return { patternId: match.id, labels, ...page };
+}
+
 export function combineQuestions(
   pyqs: Awaited<ReturnType<typeof fetchPattern>> extends infer T
     ? T extends { pyqs: infer P } ? P : never
@@ -371,6 +491,7 @@ export function combineQuestions(
   questions: Awaited<ReturnType<typeof fetchPattern>> extends infer T
     ? T extends { questions: infer Q } ? Q : never
     : never,
+  chips?: Map<string, SubPatternChip>,
 ): CombinedQuestion[] {
   return [
     ...(pyqs as any[]).map((q): CombinedQuestion => ({
@@ -386,6 +507,7 @@ export function combineQuestions(
       questionType: q.question_type,
       year: q.year,
       difficulty: normalizeDifficulty(q.difficulty),
+      subPattern: (q.sub_pattern_id && chips?.get(q.sub_pattern_id)) || null,
       images: (q.images as any) ?? null,
       questionHtml: q.question_html ?? null,
       questionHtmlHindi: q.question_html_hindi ?? null,
