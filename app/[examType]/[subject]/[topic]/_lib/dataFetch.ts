@@ -5,6 +5,7 @@ import {
   type ExamSeoInfo,
 } from "@/lib/seo";
 import { normalizeDifficulty } from "@/lib/difficulty";
+import { countByYear, type YearCount } from "@/lib/yearCounts";
 
 // Indexed slug lookup — Postgres maintains exam_slug/branch_slug/subject_slug/
 // topic_slug as STORED generated columns and the pattern_slug_lookup index
@@ -388,6 +389,9 @@ export type SubPatternSummaryItem = {
   trick: string | null;
   count: number;
   years: number[];
+  // Questions of this type per year, oldest first (JEE-style multi-shift
+  // years routinely have 2+).
+  yearCounts: YearCount[];
 };
 
 export type SubPatternSummary = {
@@ -418,6 +422,7 @@ const getSubPatternSummary = (patternId: string) =>
           trick: t.trick,
           count: t.pyqs.length,
           years: [...new Set(t.pyqs.map((q) => q.year))].sort((a, b) => a - b),
+          yearCounts: countByYear(t.pyqs.map((q) => q.year)),
         }))
         .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
@@ -428,7 +433,8 @@ const getSubPatternSummary = (patternId: string) =>
         coverageTop5: pyqCount ? Math.round((top5 / pyqCount) * 100) : 0,
       };
     },
-    ["topic-subpatterns", "v1", patternId],
+    // "v2" = yearCounts added.
+    ["topic-subpatterns", "v2", patternId],
     { revalidate: 604800, tags: ["patterns"] },
   )();
 

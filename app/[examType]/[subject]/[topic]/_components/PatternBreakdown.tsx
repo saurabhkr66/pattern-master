@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MathInline from "@/components/ui/MathInline";
 import type { SubPatternSummary, SubPatternSummaryItem } from "../_lib/dataFetch";
 
 interface Props {
@@ -79,7 +80,9 @@ function TypeCard({
   examLabel: string;
   basePath: string;
 }) {
-  const asked = new Set(type.years);
+  const perYear = new Map(type.yearCounts.map((y) => [y.year, y.count]));
+  const peak = Math.max(1, ...type.yearCounts.map((y) => y.count));
+  const summary = type.yearCounts.map((y) => `${y.year}: ${y.count}`).join(", ");
   return (
     <li
       className="p-4 rounded-xl border"
@@ -91,13 +94,18 @@ function TypeCard({
             {rank <= 3 && <span aria-hidden>🔥 </span>}
             {type.name}
           </p>
+          {/* method/trick carry $…$ KaTeX (see lib/subPatterns discovery prompt). */}
           <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-            {type.method}
+            <MathInline content={type.method} />
           </p>
           {type.trick && (
-            <p className="text-xs mt-1 font-mono" style={{ color: "var(--text-muted)" }}>
-              {`Trick: ${type.trick}`}
-            </p>
+            <div
+              className="flex items-baseline gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg text-sm w-fit max-w-full overflow-x-auto"
+              style={{ background: "var(--bg-surface)", color: "var(--text-primary)" }}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400 shrink-0">Trick</span>
+              <MathInline content={type.trick} />
+            </div>
           )}
         </div>
         <div className="text-right shrink-0">
@@ -108,22 +116,35 @@ function TypeCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
-        <div
-          className="flex items-center gap-1"
-          aria-label={`Asked in ${type.years.join(", ")}`}
-          title={`Asked in ${type.years.join(", ")}`}
-        >
-          {axis.map((y) => (
-            <span
-              key={y}
-              className={`w-2 h-2 rounded-full ${asked.has(y) ? "bg-orange-400" : ""}`}
-              style={asked.has(y) ? undefined : { background: "var(--border)" }}
-            />
-          ))}
-          <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>
-            {`${axis[0]}–${axis[axis.length - 1]}`}
-          </span>
+      <div className="flex items-end justify-between gap-3 mt-3 flex-wrap">
+        {/* Questions per year: count on top, bar scaled to this type's busiest
+            year, 2-digit year below. Scrolls sideways on long exam histories. */}
+        <div className="overflow-x-auto max-w-full">
+          <div className="flex items-end gap-1" role="img" aria-label={`Questions per year: ${summary}`} title={summary}>
+            {axis.map((y) => {
+              const n = perYear.get(y) ?? 0;
+              return (
+                <div key={y} className="flex flex-col items-center w-6 shrink-0">
+                  <span
+                    className="text-[10px] font-bold leading-none mb-0.5"
+                    style={{ color: n ? "var(--text-primary)" : "transparent" }}
+                  >
+                    {n || "0"}
+                  </span>
+                  <span
+                    className={`w-3 rounded-sm ${n ? "bg-orange-400" : ""}`}
+                    style={{
+                      height: n ? `${4 + Math.round((n / peak) * 16)}px` : "2px",
+                      ...(n ? {} : { background: "var(--border)" }),
+                    }}
+                  />
+                  <span className="text-[9px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    {`'${String(y).slice(2)}`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
         <Link
           href={`${basePath}/type/${type.slug}`}

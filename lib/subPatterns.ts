@@ -195,6 +195,12 @@ export async function discoverSubPatterns(
     "- name: 2–6 words a student would recognise (e.g. \"Rolling on incline\", \"Parallel axis theorem\"). No numbering, no chapter name prefix.",
     "- method: one line, how to solve this type.",
     "- trick: the key formula or shortcut, or null if there is none.",
+    // method/trick are rendered with KaTeX (components/ui/MathRenderer) on
+    // public pages, so formulas must be real LaTeX, inline only — display
+    // math ($$…$$) mid-sentence is ignored by remark-math and leaks raw TeX.
+    "- Write EVERY formula, symbol or equation in method and trick as KaTeX-compatible LaTeX wrapped in single dollar signs,",
+    "  e.g. $a = \\frac{g\\sin\\theta}{1 + k^2/r^2}$, $I = I_{cm} + Md^2$, $\\Delta U = nC_v\\Delta T$.",
+    "  Never use $$…$$, \\[…\\], \\(…\\) or Unicode math symbols like θ, ², √, → outside the dollar signs. Words stay as plain text.",
     existing.length
       ? `- These types ALREADY exist, do NOT repeat them: ${existing.map((e) => `"${e}"`).join(", ")}`
       : "",
@@ -285,5 +291,69 @@ export async function assignSubPatterns(
       return out;
     },
     `assignment of ${items.length} notes`,
+  );
+}
+
+// ─── Fix formulas: plain-text math → $…$ KaTeX ───────────────────────────────
+//
+// Types discovered before the LaTeX rule was added carry plain-text math
+// ("(a1x+b1y+c1)/sqrt(a1^2+b1^2)"), which the renderer shows as-is. One call
+// per chapter rewrites only the math parts; wording is kept.
+
+const LATEXIFY_SCHEMA: ResponseSchema = {
+  type: SchemaType.ARRAY,
+  items: {
+    type: SchemaType.OBJECT,
+    properties: {
+      id: { type: SchemaType.STRING },
+      method: { type: SchemaType.STRING },
+      trick: { type: SchemaType.STRING, nullable: true },
+    },
+    required: ["id", "method"],
+  },
+};
+
+export type LatexifyItem = { id: string; method: string; trick: string | null };
+
+export async function latexifyTypes(ctx: ChapterContext, items: LatexifyItem[]): Promise<Map<string, LatexifyItem>> {
+  if (items.length === 0) return new Map();
+
+  const prompt = [
+    "Rewrite the math in each method/trick below as KaTeX-compatible LaTeX. Change NOTHING else.",
+    "",
+    "Rules:",
+    "- Wrap every formula, equation, symbol or variable expression in single dollar signs: $…$.",
+    "  e.g. \"(a1x+b1y+c1)/sqrt(a1^2+b1^2)\" → \"$\\frac{a_1x+b_1y+c_1}{\\sqrt{a_1^2+b_1^2}}$\", \"E = hc/lambda\" → \"$E = \\frac{hc}{\\lambda}$\".",
+    "- Use subscripts for indices (a1 → a_1), \\frac, \\sqrt, \\pm, Greek letters (\\lambda, \\theta), \\Delta, \\cdot as appropriate.",
+    "- Keep every word of plain-language text exactly as it is. If there is no math, return the text unchanged.",
+    "- Text already inside $…$ is kept as is.",
+    "- Never use $$…$$, \\[…\\] or \\(…\\).",
+    "- trick: return null if the input trick is null.",
+    "Return ONE entry per item, using the EXACT id given.",
+    "",
+    contextLine(ctx),
+    "",
+    "ITEMS:",
+    JSON.stringify(items),
+  ].join("\n");
+
+  const wanted = new Map(items.map((i) => [i.id, i]));
+  return generateJson(
+    jsonModel(LATEXIFY_SCHEMA, 8192),
+    [{ text: prompt }],
+    (parsed) => {
+      if (!Array.isArray(parsed)) throw new Error("latexify did not return an array");
+      const out = new Map<string, LatexifyItem>();
+      for (const r of parsed as Array<{ id?: unknown; method?: unknown; trick?: unknown }>) {
+        if (typeof r?.id !== "string" || !wanted.has(r.id)) continue;
+        const method = typeof r.method === "string" ? r.method.trim() : "";
+        if (!method) continue;
+        const trick = typeof r.trick === "string" && r.trick.trim() ? r.trick.trim() : null;
+        out.set(r.id, { id: r.id, method: method.slice(0, 400), trick: trick?.slice(0, 400) ?? null });
+      }
+      if (out.size === 0) throw new Error("latexify returned no valid entries");
+      return out;
+    },
+    `latexify ${items.length} types`,
   );
 }

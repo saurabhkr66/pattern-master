@@ -9,10 +9,17 @@
 // updateMany/$transaction.
 
 import { revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { stripBase64Text } from "@/lib/geminiPacing";
 import { toSlug } from "@/lib/seo";
+import { buildChapter, MIN_PYQS, QuotaExhausted } from "@/lib/subPatternBuilder";
+import { getSortJob, setSortJob, isJobActive, type SortJob } from "@/lib/subPatternJobs";
+import { getDailyUsage, type DailyUsage } from "@/lib/geminiPacing";
+import { estimateSortCalls } from "@/lib/subPatternEstimate";
+import { latexifyTypes } from "@/lib/subPatterns";
+import { isDailyQuotaExceeded } from "@/lib/geminiPacing";
 
 // Every write can change a public topic page (breakdown box, chips, type page).
 function invalidate() {
@@ -220,4 +227,186 @@ export async function setChapterReviewed(patternId: string, reviewed: boolean): 
   await requireAdmin();
   await prisma.$executeRaw`UPDATE "SubPattern" SET reviewed = ${reviewed} WHERE pattern_id = ${patternId}`;
   invalidate();
+}
+
+// ─── "Sort with AI" from the admin page ──────────────────────────────────────
+//
+// Same pipeline as scripts/build-subpatterns.ts, one chapter per click. The
+// run takes a minute or two (Gemini calls are paced to AI_RPM), so it goes in
+// after(): the action returns at once and the page polls getSortProgress().
+
+export async function listSortExams(): Promise<string[]> {
+  await requireAdmin();
+  const rows = await prisma.pattern.findMany({
+    distinct: ["exam_type"],
+    select: { exam_type: true },
+    orderBy: { exam_type: "asc" },
+  });
+  return rows.map((r) => r.exam_type);
+}
+
+export type SortableChapter = {
+  id: string;
+  branch: string;
+  subject: string;
+  topic_name: string;
+  pyqs: number;
+  // PYQs that still need a solving note (the expensive, image-bearing step).
+  pendingNotes: number;
+  types: number;
+  reviewed: boolean;
+};
+
+/** Chapters of one exam with enough PYQs to sort, biggest first within a subject. */
+export async function listSortableChapters(examType: string): Promise<SortableChapter[]> {
+  await requireAdmin();
+  const rows = await prisma.$queryRaw<
+    Array<{ id: string; branch: string; subject: string; topic_name: string; pyqs: bigint; pending_notes: bigint; types: bigint; reviewed: boolean | null }>
+  >`
+    SELECT p.id, p.branch, p.subject, p.topic_name,
+           (SELECT COUNT(*) FROM "PYQ" q WHERE q.pattern_id = p.id) AS pyqs,
+           (SELECT COUNT(*) FROM "PYQ" q WHERE q.pattern_id = p.id AND q.solving_idea IS NULL) AS pending_notes,
+           (SELECT COUNT(*) FROM "SubPattern" s WHERE s.pattern_id = p.id) AS types,
+           (SELECT BOOL_OR(s.reviewed) FROM "SubPattern" s WHERE s.pattern_id = p.id) AS reviewed
+    FROM "Pattern" p
+    WHERE p.exam_type = ${examType}
+      AND (SELECT COUNT(*) FROM "PYQ" q WHERE q.pattern_id = p.id) >= ${MIN_PYQS}
+    ORDER BY p.branch, p.subject, pyqs DESC
+  `;
+  return rows.map(({ pending_notes, ...r }) => ({
+    ...r,
+    pyqs: Number(r.pyqs),
+    pendingNotes: Number(pending_notes),
+    types: Number(r.types),
+    reviewed: !!r.reviewed,
+  }));
+}
+
+/** Free-tier Gemini usage today (requests counted by lib/geminiPacing). */
+export async function getGeminiBudget(): Promise<DailyUsage> {
+  await requireAdmin();
+  return getDailyUsage();
+}
+
+export async function startSortChapter(patternId: string, redo: boolean): Promise<void> {
+  await requireAdmin();
+  if (isJobActive(await getSortJob(patternId))) throw new Error("Already sorting this chapter");
+
+  const [reviewed, unreviewed] = await Promise.all([
+    prisma.subPattern.count({ where: { pattern_id: patternId, reviewed: true } }),
+    prisma.subPattern.count({ where: { pattern_id: patternId, reviewed: false } }),
+  ]);
+  if (reviewed > 0) throw new Error("This chapter is already reviewed — edit its types below instead");
+  if (unreviewed > 0 && !redo) throw new Error("This chapter is already sorted — tick “Redo” to rebuild it");
+
+  // Don't start what today's free-tier quota can't finish: a run that dies
+  // halfway leaves notes but no piles, and burns the rest of the day's budget.
+  const [total, pending, usage] = await Promise.all([
+    prisma.pYQ.count({ where: { pattern_id: patternId } }),
+    prisma.pYQ.count({ where: { pattern_id: patternId, solving_idea: null } }),
+    getDailyUsage(),
+  ]);
+  const needed = estimateSortCalls(total, pending);
+  const left = usage.limit - usage.used;
+  if (needed > left) {
+    const hours = Math.ceil(usage.resetsInMs / 3600_000);
+    throw new Error(
+      `Not enough Gemini quota left today: this chapter needs ~${needed} requests, ${Math.max(0, left)} left. Resets in ~${hours}h.`,
+    );
+  }
+
+  const startedAt = Date.now();
+  let job: SortJob = { state: "running", step: "notes", message: null, startedAt, updatedAt: startedAt };
+  await setSortJob(patternId, job);
+
+  const save = async (patch: Partial<SortJob>) => {
+    job = { ...job, ...patch, updatedAt: Date.now() };
+    await setSortJob(patternId, job).catch(() => {});
+  };
+
+  after(async () => {
+    // Heartbeat on log lines (throttled) so a long notes step isn't mistaken
+    // for a dead job by isJobActive().
+    let lastBeat = Date.now();
+    try {
+      const res = await buildChapter(patternId, {
+        redo,
+        onStep: (step) => save({ step }),
+        log: () => {
+          if (Date.now() - lastBeat > 30_000) {
+            lastBeat = Date.now();
+            void save({});
+          }
+        },
+      });
+      if (res.status === "skipped") await save({ state: "skipped", step: null, message: res.reason });
+      else await save({ state: "done", step: null, message: `Sorted ${res.total} PYQs into ${res.piles.length} types` });
+    } catch (e) {
+      const message = e instanceof QuotaExhausted ? e.message : `Failed: ${e instanceof Error ? e.message : String(e)}`;
+      await save({ state: "error", step: null, message });
+    }
+  });
+}
+
+export type SortProgress = { job: SortJob | null; active: boolean; notesDone: number; total: number };
+
+export async function getSortProgress(patternId: string): Promise<SortProgress> {
+  await requireAdmin();
+  const [job, total, notesDone] = await Promise.all([
+    getSortJob(patternId),
+    prisma.pYQ.count({ where: { pattern_id: patternId } }),
+    prisma.pYQ.count({ where: { pattern_id: patternId, solving_idea: { not: null } } }),
+  ]);
+  return { job, active: isJobActive(job), notesDone, total };
+}
+
+// ─── Fix formulas ────────────────────────────────────────────────────────────
+//
+// Chapters sorted before the LaTeX rule have plain-text math in method/trick.
+// One Gemini call per chapter rewrites it as $…$ KaTeX (lib/subPatterns →
+// latexifyTypes). Types already using $…$ everywhere are left out of the call.
+
+/** Returns how many types changed. */
+export async function fixChapterFormulas(patternId: string): Promise<number> {
+  await requireAdmin();
+  const [pattern, types] = await Promise.all([
+    prisma.pattern.findUnique({
+      where: { id: patternId },
+      select: { exam_type: true, subject: true, topic_name: true },
+    }),
+    prisma.subPattern.findMany({
+      where: { pattern_id: patternId },
+      select: { id: true, method: true, trick: true },
+    }),
+  ]);
+  if (!pattern) throw new Error("Chapter not found");
+
+  const hasMath = (s: string | null) => !s || s.includes("$");
+  const todo = types.filter((t) => !(hasMath(t.method) && hasMath(t.trick)));
+  if (todo.length === 0) return 0;
+
+  const usage = await getDailyUsage();
+  if (usage.used >= usage.limit) throw new Error("No Gemini quota left today — try after the reset.");
+
+  let fixed: Awaited<ReturnType<typeof latexifyTypes>>;
+  try {
+    fixed = await latexifyTypes(pattern, todo);
+  } catch (e) {
+    if (isDailyQuotaExceeded(e)) throw new Error("Daily Gemini quota exhausted — try after the reset.");
+    throw e;
+  }
+
+  let changed = 0;
+  for (const t of todo) {
+    const f = fixed.get(t.id);
+    if (!f || (f.method === t.method && f.trick === t.trick)) continue;
+    // Keep an existing trick if the model dropped it.
+    await prisma.subPattern.update({
+      where: { id: t.id },
+      data: { method: f.method, trick: f.trick ?? t.trick },
+    });
+    changed++;
+  }
+  if (changed) invalidate();
+  return changed;
 }

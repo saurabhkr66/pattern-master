@@ -10,13 +10,17 @@ import {
   moveQuestion,
   deleteSubPattern,
   setChapterReviewed,
+  fixChapterFormulas,
   type SubPatternChapter,
   type ChapterPiles,
   type Pile,
   type PileQuestion,
 } from "@/app/actions/subPatterns";
 import MathRenderer from "@/components/ui/MathRenderer";
+import MathInline from "@/components/ui/MathInline";
 import { getImageUrl } from "@/lib/imageUtils";
+import SortPanel from "./SortPanel";
+import { countByYear } from "@/lib/yearCounts";
 
 const card = "rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900";
 const input =
@@ -29,6 +33,7 @@ export default function SubPatternsClient({ initialChapters }: { initialChapters
   const [data, setData] = useState<ChapterPiles | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const reload = useCallback(async (patternId: string) => {
     if (!patternId) return;
@@ -49,6 +54,7 @@ export default function SubPatternsClient({ initialChapters }: { initialChapters
   // Every mutation: run, surface errors, then re-read the chapter.
   const act = async (fn: () => Promise<unknown>) => {
     setError(null);
+    setNotice(null);
     setBusy(true);
     try {
       await fn();
@@ -59,11 +65,21 @@ export default function SubPatternsClient({ initialChapters }: { initialChapters
     }
   };
 
+  // A finished "Sort with AI" run opens that chapter in the review UI below.
+  const openChapter = (patternId: string) => {
+    if (patternId === selected) reload(patternId);
+    else setSelected(patternId);
+  };
+
+  const sortPanel = <SortPanel onSorted={openChapter} />;
+
   if (chapters.length === 0) {
     return (
-      <div className={`${card} p-6 text-sm text-gray-600 dark:text-gray-400`}>
-        No chapters sorted yet. Run{" "}
-        <code className="font-mono">PATTERN_ID=… npx tsx --env-file=.env scripts/build-subpatterns.ts</code> first.
+      <div className="space-y-6">
+        {sortPanel}
+        <div className={`${card} p-6 text-sm text-gray-600 dark:text-gray-400`}>
+          No chapters sorted yet. Pick one above and click “Sort with AI”.
+        </div>
       </div>
     );
   }
@@ -73,6 +89,9 @@ export default function SubPatternsClient({ initialChapters }: { initialChapters
 
   return (
     <div className="space-y-6">
+      {sortPanel}
+
+      <h2 className="text-lg font-black text-gray-900 dark:text-white pt-2">Review sorted chapters</h2>
       <div className={`${card} p-4 flex flex-wrap items-center gap-3`}>
         <select className={`${input} md:w-auto flex-1`} value={selected} onChange={(e) => setSelected(e.target.value)}>
           {chapters.map((c) => (
@@ -91,9 +110,25 @@ export default function SubPatternsClient({ initialChapters }: { initialChapters
             {current.reviewed ? "Unpublish chapter" : "Mark chapter reviewed (publish)"}
           </button>
         )}
+        {current && (
+          <button
+            className={`${btn} bg-purple-600 text-white`}
+            disabled={busy}
+            title="Rewrite plain-text formulas in every method/trick of this chapter as LaTeX (1 Gemini request)"
+            onClick={() =>
+              act(async () => {
+                const n = await fixChapterFormulas(current.id);
+                setNotice(n ? `Converted formulas in ${n} type${n > 1 ? "s" : ""}.` : "All formulas are already LaTeX.");
+              })
+            }
+          >
+            ∑ Fix formulas
+          </button>
+        )}
       </div>
 
       {error && <div className="rounded-xl p-3 text-sm bg-red-500/10 text-red-500">{error}</div>}
+      {notice && <div className="rounded-xl p-3 text-sm bg-green-500/10 text-green-600">{notice}</div>}
 
       {data && (
         <>
@@ -130,7 +165,9 @@ function PileCard({ pile, rank, total, piles, busy, act }: { pile: Pile; rank: n
   const [mergeInto, setMergeInto] = useState("");
 
   const dirty = name !== pile.name || method !== pile.method || trick !== (pile.trick ?? "");
-  const years = [...new Set(pile.questions.map((q) => q.year))].sort((a, b) => a - b);
+  const perYear = countByYear(pile.questions.map((q) => q.year))
+    .map(({ year, count }) => (count > 1 ? `${year}×${count}` : `${year}`))
+    .join(", ");
   const share = total ? Math.round((pile.questions.length / total) * 100) : 0;
 
   return (
@@ -138,15 +175,15 @@ function PileCard({ pile, rank, total, piles, busy, act }: { pile: Pile; rank: n
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs font-black text-gray-400">#{rank}</span>
         <span className="text-lg font-black text-orange-500">{pile.questions.length}×</span>
-        <span className="text-xs text-gray-500">{share}% · {years.join(", ")}</span>
+        <span className="text-xs text-gray-500">{share}% · {perYear}</span>
         {share > 25 && <span className="text-xs font-bold text-amber-500">too broad?</span>}
         {pile.questions.length <= 1 && <span className="text-xs font-bold text-amber-500">tiny — merge?</span>}
       </div>
 
       <div className="grid gap-2 md:grid-cols-3">
         <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
-        <input className={input} value={method} onChange={(e) => setMethod(e.target.value)} placeholder="Method (one line)" />
-        <input className={input} value={trick} onChange={(e) => setTrick(e.target.value)} placeholder="Trick / formula (optional)" />
+        <MathField value={method} onChange={setMethod} placeholder="Method — formulas in $…$" />
+        <MathField value={trick} onChange={setTrick} placeholder="Trick, e.g. $a = \frac{g\sin\theta}{1+k^2/r^2}$" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -188,6 +225,35 @@ function PileCard({ pile, rank, total, piles, busy, act }: { pile: Pile; rank: n
 
       {open && <QuestionRows questions={pile.questions} piles={piles} currentId={pile.id} busy={busy} act={act} />}
     </div>
+  );
+}
+
+// Shows the value rendered (what students see); click to edit the raw $…$
+// LaTeX, blur to go back. Avoids a raw-TeX input that looks like a render bug.
+function MathField({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const [editing, setEditing] = useState(false);
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        className={`${input} font-mono`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => setEditing(false)}
+        onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
+        placeholder={placeholder}
+      />
+    );
+  }
+  return (
+    <button
+      type="button"
+      title="Click to edit"
+      onClick={() => setEditing(true)}
+      className={`${input} text-left min-h-[38px] overflow-x-auto hover:border-orange-400 cursor-text`}
+    >
+      {value.trim() ? <MathInline content={value} /> : <span className="text-gray-400">{placeholder}</span>}
+    </button>
   );
 }
 

@@ -11,7 +11,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { parseExamSlug } from "@/lib/seo";
+import { parseExamSlug, cleanTextForMeta } from "@/lib/seo";
+import { countByYear } from "@/lib/yearCounts";
+import MathInline from "@/components/ui/MathInline";
 import { fetchSubPatternPage, combineQuestions, unslug } from "../../_lib/dataFetch";
 import QuestionList from "../../_components/QuestionList";
 import SignupCTA from "../../_components/SignupCTA";
@@ -56,7 +58,10 @@ export async function generateMetadata({
   const span = `${Math.min(...years)}–${Math.max(...years)}`;
   const canonical = `${BASE}/${p.examType}/${p.subject}/${p.topic}/type/${p.typeSlug}`;
   const title = `${type.name} – ${labels.topicName} ${exam.examLabel} PYQs (${pyqs.length} Questions)`;
-  const description = `All ${pyqs.length} ${exam.fullLabel} previous-year questions of the "${type.name}" type in ${labels.topicName} (${span}), with solutions. Method: ${type.method}`;
+  // method carries $…$ KaTeX; cleanTextForMeta strips it for the plain-text snippet.
+  const description = cleanTextForMeta(
+    `All ${pyqs.length} ${exam.fullLabel} previous-year questions of the "${type.name}" type in ${labels.topicName} (${span}), with solutions. Method: ${type.method}`,
+  );
 
   return {
     title,
@@ -84,7 +89,8 @@ export default async function SubPatternPage({
 
   const { exam, type, pyqs, labels, patternId } = data;
   const topicPath = `/${p.examType}/${p.subject}/${p.topic}`;
-  const years = [...new Set(pyqs.map((q) => q.year))].sort((a, b) => a - b);
+  // Newest first, matching the question order below.
+  const perYear = countByYear(pyqs.map((q) => q.year)).reverse();
 
   const chip = new Map([[type.id, { name: type.name, slug: type.slug, count: pyqs.length }]]);
   const questions = combineQuestions(pyqs as never, [] as never, chip);
@@ -118,22 +124,33 @@ export default async function SubPatternPage({
         <h1 className="text-3xl md:text-4xl font-black mb-3" style={{ color: "var(--text-primary)" }}>
           {`${type.name} – ${exam.examLabel} PYQs`}
         </h1>
-        <p className="text-sm font-bold text-orange-400 mb-4">
-          {`Asked ${pyqs.length} times in ${exam.examLabel} · ${years.join(", ")}`}
+        <p className="text-sm font-bold text-orange-400 mb-3">
+          {`Asked ${pyqs.length} times in ${exam.examLabel} across ${perYear.length} years`}
         </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {perYear.map(({ year, count }) => (
+            <span
+              key={year}
+              className="text-xs font-bold px-2.5 py-1 rounded-full border"
+              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+            >
+              {`${year}: ${count} Q${count > 1 ? "s" : ""}`}
+            </span>
+          ))}
+        </div>
         <div
           className="p-4 rounded-2xl border space-y-2"
           style={{ background: "var(--bg-surface)", borderColor: "var(--border)" }}
         >
-          <p className="text-sm" style={{ color: "var(--text-primary)" }}>
-            <span className="font-bold">How to solve: </span>
-            {type.method}
-          </p>
+          <div className="text-sm" style={{ color: "var(--text-primary)" }}>
+            <span className="font-bold block mb-1">How to solve</span>
+            <MathInline content={type.method} />
+          </div>
           {type.trick && (
-            <p className="text-sm font-mono" style={{ color: "var(--text-secondary)" }}>
-              <span className="font-bold font-sans">Trick: </span>
-              {type.trick}
-            </p>
+            <div className="text-sm overflow-x-auto" style={{ color: "var(--text-primary)" }}>
+              <span className="font-bold block mb-1 text-orange-400">Trick</span>
+              <MathInline content={type.trick} className="text-base" />
+            </div>
           )}
         </div>
       </header>
